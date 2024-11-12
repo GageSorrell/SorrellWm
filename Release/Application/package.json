@@ -1,0 +1,18 @@
+{
+  "name": "SorrellWm",
+  "version": "1.0.0",
+  "description": "@TODO",
+  "license": "MIT",
+  "author": {
+    "name": "Gage Sorrell",
+    "email": "gage@sorrell.sh",
+    "url": "https://github.com/GageSorrell"
+  },
+  "main": "./Distribution/Main/Main.js",
+  "scripts": {
+    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {}
+}
