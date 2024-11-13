@@ -9,7 +9,9 @@
 #include <napi.h>
 #include <string>
 #include <Windows.h>
+#include <iostream>
 #include "js_native_api_types.h"
 
 void RegisterActivationKey();
+
 void KeyboardListener(MSG Message);

@@ -1,0 +1,33 @@
+#pragma once
+
+#include "EventDispatcher.h"
+
+typedef size_t ListenerId;
+typedef std::function<void()> Listener;
+
+template<typename EventType>
+ListenerId FEventDispatcher<EventType>::RegisterListener(Listener listener)
+{
+    ListenerId id = nextListenerId++;
+    listeners.emplace_back(id, listener);
+    return id;
+}
+
+template<typename EventType>
+void FEventDispatcher<EventType>::UnregisterListener(ListenerId id)
+{
+    auto &listenerList = listeners[event];
+    listenerList.erase(
+        std::remove_if(listenerList.begin(), listenerList.end(),
+                        [id](const auto &pair) { return pair.first == id; }),
+        listenerList.end());
+}
+
+template<typename EventType>
+void FEventDispatcher<EventType>::DispatchEvent(EventType Event)
+{
+    for (const auto &[id, listener] : listeners)
+    {
+        listener(Event);
+    }
+}

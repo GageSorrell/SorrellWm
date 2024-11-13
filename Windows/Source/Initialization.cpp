@@ -20,6 +20,7 @@
 #include <codecvt>
 #include <map>
 #include "js_native_api_types.h"
+#include "MessageLoop/MessageLoop.h"
 
 #pragma comment(lib, "dwmapi.lib")
 
@@ -543,92 +544,6 @@
 //     }
 // }
 
-// class FMessageLoop : public Napi::AsyncProgressQueueWorker<std::string>
-// {
-// public:
-//     FMessageLoop(
-//         Napi::Function& OkCallback,
-//         Napi::Function& ErrorCallback,
-//         Napi::Function& ProgressCallback,
-//         Napi::Env& Environment
-//     )
-//     : Napi::AsyncProgressQueueWorker<std::string>(OkCallback)
-//     , Environment(Environment)
-//     {
-//         this->ErrorCallback.Reset(ErrorCallback, 1);
-//         this->ProgressCallback.Reset(ProgressCallback, 1);
-//     }
-
-
-//     ~FMessageLoop() { }
-
-//     virtual void Execute(const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress& Progress) override
-//     {
-//         std::cout << "EXECUTED ASYNC WORKER" << std::endl;
-//     WNDCLASS wc = {};
-//     wc.lpfnWndProc = WindowProc;
-//     wc.hInstance = GetModuleHandle(NULL);
-//     wc.lpszClassName = "SorrellWm";
-
-//     RegisterClass(&wc);
-
-//     HWND Handle = CreateWindowEx(
-//         0,
-//         wc.lpszClassName,
-//         "SorrellWm",
-//         0,
-//         0,
-//         0,
-//         0,
-//         0,
-//         HWND_MESSAGE,
-//         nullptr,
-//         wc.hInstance,
-//         nullptr
-//     );
-
-//     RegisterHotKeys();
-
-//         MSG msg;
-//         while (GetMessage(&msg, NULL, 0, 0) > 0)
-//         {
-//             std::cout << "Message received by Win32" << std::endl;
-//             std::string Dummy = "Dummy Message";
-//             if (msg.message == WM_HOTKEY && msg.wParam == 1)
-//             {
-//                 std::string ActivationHotKey = "ActivationHotKey";
-//                 Progress.Send(&ActivationHotKey, 1);
-//             }
-//             TranslateMessage(&msg);
-//             DispatchMessage(&msg);
-//         }
-
-//         UnregisterHotKey(NULL, 1);
-//     }
-
-//     virtual void OnOK()
-//     {
-//         Napi::HandleScope Scope(Napi::Env());
-
-//         std::string Foo = "OnOK";
-//         Callback().Call({ Napi::String::New(Environment, Foo) });
-//     }
-
-//     virtual void OnProgress(const std::string* Data, size_t Count) override
-//     {
-//         Napi::HandleScope Scope(Napi::Env());
-
-//         if (!this->ProgressCallback.IsEmpty())
-//         {
-//             ProgressCallback.Call(Receiver().Value(), { Napi::String::New(Environment, *Data) });
-//         }
-//     }
-// private:
-//     Napi::FunctionReference ProgressCallback;
-//     Napi::FunctionReference ErrorCallback;
-//     Napi::Env Environment;
-// };
-
 // Napi::Value GetForegroundWindowNode(const Napi::CallbackInfo& Information)
 // {
 //     Napi::Env Environment = Information.Env();
@@ -642,42 +557,39 @@ Napi::Value GetMe(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
     return Napi::String::New(Environment, "CalledBack");
-
-    // return ToNode::Window(Environment, WindowHandleMap, FocusedWindow);
 }
 
-// Napi::Value InitializeWindowProcedure(const Napi::CallbackInfo& Information)
-// {
-//     Napi::Env Environment = Information.Env();
+Napi::Value InitializeMessageLoop(const Napi::CallbackInfo& Information)
+{
+    Napi::Env Environment = Information.Env();
 
-//     Napi::Function ErrorCallback = Information[0].As<Napi::Function>();
-//     Napi::Function OkCallback = Information[1].As<Napi::Function>();
-//     Napi::Function ProgressCallback = Information[2].As<Napi::Function>();
-//     FMessageLoop* MessageLoopWorker = new FMessageLoop(OkCallback, ErrorCallback, ProgressCallback, Environment);
-//     MessageLoopWorker->Queue();
+    Napi::Function ErrorCallback = Information[0].As<Napi::Function>();
+    Napi::Function OkCallback = Information[1].As<Napi::Function>();
+    Napi::Function ProgressCallback = Information[2].As<Napi::Function>();
+    FMessageLoop* MessageLoop = new FMessageLoop(OkCallback, ErrorCallback, ProgressCallback, Environment);
+    MessageLoop->Queue();
 
-//     // std::thread MessageThread;
+    // std::thread MessageThread;
 
-//     // Napi::Function HandleMessage = Information[0].As<Napi::Function>();
-//     // Napi::ThreadSafeFunction ThreadSafeFunction = Napi::ThreadSafeFunction::New(
-//     //     Environment,
-//     //     HandleMessage,
-//     //     "HandleMessage",
-//     //     0,
-//     //     1,
-//     //     [&](Napi::Env)
-//     //     {
-//     //         MessageThread.join();
-//     //     }
-//     // );
+    // Napi::Function HandleMessage = Information[0].As<Napi::Function>();
+    // Napi::ThreadSafeFunction ThreadSafeFunction = Napi::ThreadSafeFunction::New(
+    //     Environment,
+    //     HandleMessage,
+    //     "HandleMessage",
+    //     0,
+    //     1,
+    //     [&](Napi::Env)
+    //     {
+    //         MessageThread.join();
+    //     }
+    // );
 
-//     // MessageThread = std::thread(MessageLoop, ThreadSafeFunction);
+    // MessageThread = std::thread(MessageLoop, ThreadSafeFunction);
 
+    return Environment.Undefined();
+}
 
-//     return Environment.Undefined();
-// }
-
-Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
+void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
 {
     typedef Napi::Value (*FFunctionPointer)(const Napi::CallbackInfo&);
 
@@ -714,8 +626,13 @@ Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
             Napi::Function::New(Environment, FunctionDefinition.second)
         );
     }
+}
+
+Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
+{
+    ExportFunctions(Environment, Exports);
 
     return Exports;
 }
 
-NODE_API_MODULE(windows, Init)
+NODE_API_MODULE(WindowsApi, Init)

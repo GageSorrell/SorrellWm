@@ -15,7 +15,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
-import { GetMe } from "Windows";
+import { GetMe } from "windows";
 console.log("GetMe: ", GetMe());
 
 class AppUpdater {

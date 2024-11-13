@@ -95,6 +95,7 @@
   },
   "dependencies": {
     "@electron/notarize": "^2.3.2",
+    "@sorrellwm/windows": "file:Windows",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.8",
     "electron-updater": "^6.1.4",
