@@ -154,8 +154,8 @@
     "webpack-merge": "^5.9.0"
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.erb.ElectronReact",
+    "productName": "SorrellWm",
+    "appId": "org.sorrell.wm",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [

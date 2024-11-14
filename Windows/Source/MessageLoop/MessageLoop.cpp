@@ -7,7 +7,7 @@ FMessageLoop::FMessageLoop(
     Napi::Env& Environment
 )
 : Napi::AsyncProgressQueueWorker<std::string>(OkCallback)
-, FEventDispatcher<std::pair<MSG, const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress&>>()
+, FEventDispatcher<FMessage>()
 , Environment(Environment)
 {
     this->ErrorCallback.Reset(ErrorCallback, 1);
@@ -56,12 +56,25 @@ void FMessageLoop::Execute(const Napi::AsyncProgressQueueWorker<std::string>::Ex
     while (GetMessage(&Message, NULL, 0, 0) > 0)
     {
         std::cout << "Message received by Win32" << std::endl;
-        Dispatch(std::pair<MSG, const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress&>(Message, Progress));
+        Dispatch(FMessage(Message, Progress));
         TranslateMessage(&Message);
         DispatchMessage(&Message);
     }
 
-    UnregisterHotKey(NULL, 1);
+    UnhookHooks();
+}
+
+void FMessageLoop::UnhookHooks()
+{
+    for(HHOOK Hook : Hooks)
+    {
+        UnhookWindowsHookEx(Hook);
+    }
+}
+
+void FMessageLoop::RegisterHook(HHOOK Hook)
+{
+    Hooks.push_back(Hook);
 }
 
 void FMessageLoop::OnOK()

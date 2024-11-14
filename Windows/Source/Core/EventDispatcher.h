@@ -3,6 +3,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <iostream>
+
 template<typename EventType>
 class FEventDispatcher
 {

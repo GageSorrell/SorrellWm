@@ -12,7 +12,11 @@
 #include <map>
 #include "js_native_api_types.h"
 
-class FMessageLoop : public Napi::AsyncProgressQueueWorker<std::string>, public FEventDispatcher<std::pair<MSG, const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress&>>
+
+typedef std::pair<MSG, const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress&> FMessage;
+typedef std::function<void(FMessage)> FMessageCallback;
+
+class FMessageLoop : public Napi::AsyncProgressQueueWorker<std::string>, public FEventDispatcher<FMessage>
 {
 public:
     FMessageLoop(
@@ -24,6 +28,8 @@ public:
 
     ~FMessageLoop() { }
 
+    void RegisterHook(HHOOK Hook);
+
     virtual void Execute(const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress& Progress) override;
 
     virtual void OnOK();
@@ -33,4 +39,6 @@ private:
     Napi::FunctionReference ProgressCallback;
     Napi::FunctionReference ErrorCallback;
     Napi::Env Environment;
+    void UnhookHooks();
+    std::vector<HHOOK> Hooks;
 };

@@ -15,7 +15,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
-import { InitializeMessageLoop } from "windows";
+import { GetFocusedWindow, InitializeMessageLoop } from "windows";
 
 const OnProgress = (Argument: unknown): void =>
 {

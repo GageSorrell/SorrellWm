@@ -21,6 +21,8 @@
 #include <map>
 #include "js_native_api_types.h"
 #include "MessageLoop/MessageLoop.h"
+#include "Keyboard.h"
+#include "Core/WindowUtilities.h"
 
 #pragma comment(lib, "dwmapi.lib")
 
@@ -569,6 +571,10 @@ Napi::Value InitializeMessageLoop(const Napi::CallbackInfo& Information)
     FMessageLoop* MessageLoop = new FMessageLoop(OkCallback, ErrorCallback, ProgressCallback, Environment);
     MessageLoop->Queue();
 
+    // @TODO Find better place to register listeners
+    MessageLoop->RegisterHook(RegisterActivationKey());
+    MessageLoop->Subscribe(KeyboardListener);
+
     // std::thread MessageThread;
 
     // Napi::Function HandleMessage = Information[0].As<Napi::Function>();
@@ -596,7 +602,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     const std::map<std::string, FFunctionPointer> FunctionDefinitions =
     {
         { "GetMe", GetMe },
-        { "InitializeMessageLoop", InitializeMessageLoop }
+        { "InitializeMessageLoop", InitializeMessageLoop },
+        { "GetFocusedWindow", GetFocusedWindow }
         // { "GetMonitorFromRect", MonitorFromRectNode },
         // { "GetMonitorFromWindow", MonitorFromWindowNode },
         // { "GetMonitorHandles", GetMonitorHandles },

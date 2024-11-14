@@ -73,3 +73,10 @@ export function InitializeMessageLoop(
     OkCallback: (() => void),
     ProgressCallback: ((Argument: unknown) => void)
 ): void;
+
+export type HWindow =
+{
+    Handle: string;
+};
+
+export function GetFocusedWindow(): HWindow;
