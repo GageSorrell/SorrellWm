@@ -2,9 +2,11 @@
 
 void RegisterActivationKey()
 {
-    if (RegisterHotKey(nullptr, 1, 0, VK_F22))
+    // @TODO Go back to using F22 once Moonlander is flashed
+    // if (RegisterHotKey(nullptr, 1, 0, VK_F22))
+    if (RegisterHotKey(nullptr, 1, 0, VK_OEM_PLUS))
     {
-        std::cout << "Registered activation key F22!" << std::endl;
+        std::cout << "Registered activation key OEM_PLUS!" << std::endl;
     }
 }
 

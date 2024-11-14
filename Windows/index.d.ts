@@ -66,3 +66,10 @@
 // ): boolean;
 
 export function GetMe(): void;
+
+/** @TODO The signatures of the arguments are probably wrong. */
+export function InitializeMessageLoop(
+    ErrorCallback: (() => void),
+    OkCallback: (() => void),
+    ProgressCallback: ((Argument: unknown) => void)
+): void;

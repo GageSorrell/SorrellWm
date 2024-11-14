@@ -596,6 +596,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     const std::map<std::string, FFunctionPointer> FunctionDefinitions =
     {
         { "GetMe", GetMe },
+        { "InitializeMessageLoop", InitializeMessageLoop }
         // { "GetMonitorFromRect", MonitorFromRectNode },
         // { "GetMonitorFromWindow", MonitorFromWindowNode },
         // { "GetMonitorHandles", GetMonitorHandles },

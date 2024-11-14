@@ -15,8 +15,21 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
-import { GetMe } from "windows";
-console.log("GetMe: ", GetMe());
+import { InitializeMessageLoop } from "windows";
+
+const OnProgress = (Argument: unknown): void =>
+{
+    console.log(Argument);
+};
+
+console.log(
+    "InitializeMessageLoop",
+    InitializeMessageLoop(
+        (() => { }),
+        (() => { }),
+        OnProgress
+    )
+);
 
 class AppUpdater {
   constructor() {
