@@ -67,11 +67,14 @@
 
 export function GetMe(): void;
 
+/** @TODO Temporary; replace with separate type for each callback. */
+export type FMessageLoopCallback = (Argument: unknown) => void;
+
 /** @TODO The signatures of the arguments are probably wrong. */
 export function InitializeMessageLoop(
-    ErrorCallback: (() => void),
-    OkCallback: (() => void),
-    ProgressCallback: ((Argument: unknown) => void)
+    ErrorCallback: FMessageLoopCallback,
+    OkCallback: FMessageLoopCallback,
+    ProgressCallback: FMessageLoopCallback
 ): void;
 
 export type HWindow =
@@ -80,3 +83,4 @@ export type HWindow =
 };
 
 export function GetFocusedWindow(): HWindow;
+export function CaptureWindowScreenshot(Handle: HWindow): string;

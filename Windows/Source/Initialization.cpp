@@ -10,21 +10,17 @@
     #define NAPI_VERSION 2147483647
 #endif
 
-#include <napi.h>
+#include "Core/Core.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
 #include <dwmapi.h>
-#include <Windows.h>
 #include <codecvt>
 #include <map>
-#include "js_native_api_types.h"
 #include "MessageLoop/MessageLoop.h"
 #include "Keyboard.h"
 #include "Core/WindowUtilities.h"
-
-#pragma comment(lib, "dwmapi.lib")
 
 // using namespace Utilities;
 
@@ -603,7 +599,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     {
         { "GetMe", GetMe },
         { "InitializeMessageLoop", InitializeMessageLoop },
-        { "GetFocusedWindow", GetFocusedWindow }
+        { "GetFocusedWindow", GetFocusedWindow },
+        { "CaptureWindowScreenshot", CaptureWindowScreenshot }
         // { "GetMonitorFromRect", MonitorFromRectNode },
         // { "GetMonitorFromWindow", MonitorFromWindowNode },
         // { "GetMonitorHandles", GetMonitorHandles },
@@ -636,9 +633,32 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     }
 }
 
+void InitializeTempDirectory()
+{
+    std::wstring TempPath = GetTempPath();
+    // Step 3: Check if the directory exists
+    DWORD attributes = GetFileAttributesW(TempPath.c_str());
+
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        // Directory does not exist; attempt to create it
+        if (CreateDirectoryW(TempPath.c_str(), NULL)) {
+            std::wcout << L"Directory created successfully: " << TempPath << std::endl;
+        } else {
+            std::wcerr << L"Error: Failed to create directory '" << TempPath << L"'. Error code: " << GetLastError() << std::endl;
+        }
+    } else if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+        // Directory already exists
+        std::wcout << L"Directory already exists: " << TempPath << std::endl;
+    } else {
+        // Path exists but is not a directory
+        std::wcerr << L"Error: The path '" << TempPath << L"' exists but is not a directory." << std::endl;
+    }
+}
+
 Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
 {
     ExportFunctions(Environment, Exports);
+    InitializeTempDirectory();
 
     return Exports;
 }
