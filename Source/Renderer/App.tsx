@@ -33,7 +33,11 @@ function Hello() {
 
     return (
         <div>
-            <img src={ BackgroundImage } style={{ width: "100%", height: "100%" }} ref={ BackgroundImageElement }/>
+            <img
+                className="DEBUG_Draggable"
+                src={ BackgroundImage }
+                style={{ width: "auto", height: "100%", position: "absolute", top: 0, left: 0 }}
+                ref={ BackgroundImageElement }/>
       {/* <div className="Hello">
         <img width="200" alt="icon" src={icon} />
       </div>

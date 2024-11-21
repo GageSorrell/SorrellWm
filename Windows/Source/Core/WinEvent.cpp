@@ -142,10 +142,11 @@ Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
     }
 
     RECT clientRect;
-    if (!GetClientRect(WindowToCoverHandle, &clientRect)) {
-    // if (!GetWindowRect(WindowToCoverHandle, &clientRect)) {
-        std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
-    }
+    DwmGetWindowAttribute(WindowToCoverHandle, DWMWA_EXTENDED_FRAME_BOUNDS, &clientRect, sizeof(clientRect));
+    // if (!GetClientRect(WindowToCoverHandle, &clientRect)) {
+    // // if (!GetWindowRect(WindowToCoverHandle, &clientRect)) {
+    //     std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
+    // }
 
     RECT MainClientRect;
     if (!GetClientRect(SorrellWmMainWindow, &MainClientRect)) {
@@ -154,22 +155,22 @@ Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
 
     // Convert client coordinates to screen coordinates
     POINT topLeft = { clientRect.left, clientRect.top };
-    if (!ClientToScreen(WindowToCoverHandle, &topLeft)) {
-        std::cerr << "ClientToScreen failed. Error: " << GetLastError() << std::endl;
-    }
+    // if (!ClientToScreen(WindowToCoverHandle, &topLeft)) {
+    //     std::cerr << "ClientToScreen failed. Error: " << GetLastError() << std::endl;
+    // }
 
-    std::cout << clientRect.left << std::endl << clientRect.top << std::endl << clientRect.bottom << std::endl << clientRect.right << std::endl;
+    // std::cout << clientRect.left << std::endl << clientRect.top << std::endl << clientRect.bottom << std::endl << clientRect.right << std::endl;
 
-    UINT Dpi = GetDpiForWindow(WindowToCoverHandle);
+    // UINT Dpi = GetDpiForWindow(WindowToCoverHandle);
     // const int TitleBarHeight = GetSystemMetrics(SM_CYCAPTION);
 
     // Calculate scaling factor
-    double ScalingFactor = static_cast<double>(Dpi) / 96.0;
+    // double ScalingFactor = static_cast<double>(Dpi) / 96.0;
 
     // Retrieve title bar height and frame thickness
-    const int TitleBarHeight = static_cast<int>(GetSystemMetrics(SM_CYCAPTION) * ScalingFactor);
-    const int FrameWidth = static_cast<int>(GetSystemMetrics(SM_CXFRAME) * ScalingFactor);
-    const int FrameHeight = static_cast<int>(GetSystemMetrics(SM_CYFRAME) * ScalingFactor);
+    // const int TitleBarHeight = static_cast<int>(GetSystemMetrics(SM_CYCAPTION) * ScalingFactor);
+    // const int FrameWidth = static_cast<int>(GetSystemMetrics(SM_CXFRAME) * ScalingFactor);
+    // const int FrameHeight = static_cast<int>(GetSystemMetrics(SM_CYFRAME) * ScalingFactor);
 
     BOOL enabled = TRUE; // TRUE to disable transitions
     HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &enabled, sizeof(enabled));
@@ -186,13 +187,18 @@ Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
     // );
 
     SetForegroundWindow(SorrellWmMainWindow);
+    // Shift everything by one since the screenshot clips the window by 1 pixel
     SetWindowPos(
         SorrellWmMainWindow,
         nullptr,
-        clientRect.left + topLeft.x - FrameWidth,
-        clientRect.top + topLeft.y - TitleBarHeight - FrameHeight,
-        clientRect.right - clientRect.left + 2 * FrameWidth,
-        clientRect.bottom - clientRect.top + TitleBarHeight + 2 * FrameHeight,
+        clientRect.left,
+        clientRect.top,
+        clientRect.right - clientRect.left,
+        clientRect.bottom - clientRect.top,
+        // clientRect.left + topLeft.x - FrameWidth,
+        // clientRect.top + topLeft.y - TitleBarHeight - FrameHeight,
+        // clientRect.right - clientRect.left + 2 * FrameWidth,
+        // clientRect.bottom - clientRect.top + TitleBarHeight + 2 * FrameHeight,
         SWP_SHOWWINDOW
     );
 }

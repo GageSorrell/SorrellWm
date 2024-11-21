@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
+  "scripts":
+  {
     "build": "cmake-js compile --out ../build",
     "start": "npm run build"
   },

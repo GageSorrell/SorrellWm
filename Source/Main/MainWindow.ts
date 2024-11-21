@@ -1,12 +1,10 @@
 import { BrowserWindow, app, ipcMain, screen } from "electron";
-import type { FActivationKeyState } from "./Keyboard.Types";
 import { CaptureWindowScreenshot, CoverWindow, GetFocusedWindow, GetWindowLocationAndSize, Test, type HWindow } from "@sorrellwm/windows";
 import path from "path";
 import * as Fs from "fs";
 
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
-import Main from "electron/main";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
