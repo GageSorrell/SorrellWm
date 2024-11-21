@@ -71,16 +71,33 @@ export function GetMe(): void;
 export type FMessageLoopCallback = (Argument: unknown) => void;
 
 /** @TODO The signatures of the arguments are probably wrong. */
-export function InitializeMessageLoop(
-    ErrorCallback: FMessageLoopCallback,
-    OkCallback: FMessageLoopCallback,
-    ProgressCallback: FMessageLoopCallback
-): void;
+export function InitializeMessageLoop(EmptyCallback: (() => void)): void;
 
 export type HWindow =
 {
     Handle: string;
 };
 
+export type FVector2D =
+{
+    X: number;
+    Y: number;
+};
+
+export type FBox =
+    FVector2D &
+    {
+        Width: number;
+        Height: number;
+    };
+
 export function GetFocusedWindow(): HWindow;
 export function CaptureWindowScreenshot(Handle: HWindow): string;
+export function InitializeIpc(Callback: ((Channel: string, Message: unknown) => void)): void;
+export function InitializeHooks(): void;
+export function GetWindowLocationAndSize(Handle: HWindow): FBox;
+export function InitializeWinEvents(): void;
+export function CoverWindow(Handle: HWindow): void;
+export function Test(): void;
+export function TestTwo(): void;
+export function GetTitlebarHeight(): number;

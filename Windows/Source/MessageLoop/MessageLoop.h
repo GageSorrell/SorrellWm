@@ -1,7 +1,7 @@
 #pragma once
 
 #include <napi.h>
-#include "../Core/EventDispatcher.h"
+#include "../Core/Dispatcher.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -12,33 +12,23 @@
 #include <map>
 #include "js_native_api_types.h"
 
-
-typedef std::pair<MSG, const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress&> FMessage;
-typedef std::function<void(FMessage)> FMessageCallback;
-
-class FMessageLoop : public Napi::AsyncProgressQueueWorker<std::string>, public FEventDispatcher<FMessage>
+/**
+ * Allows any function to step into the Win32 message loop.
+ *
+ * Nothing is sent to Node via this class; the `Napi::AsyncProgressQueueWorker` class
+ * is just a simple way of running a Win32 message loop via the `node-addon-api`.
+ */
+class FMessageLoop : public Napi::AsyncProgressQueueWorker<int>, public TDispatcher<MSG>
 {
 public:
-    FMessageLoop(
-        Napi::Function& OkCallback,
-        Napi::Function& ErrorCallback,
-        Napi::Function& ProgressCallback,
-        Napi::Env& Environment
-    );
+    FMessageLoop(Napi::Function OkCallback);
 
     ~FMessageLoop() { }
 
     void RegisterHook(HHOOK Hook);
 
-    virtual void Execute(const Napi::AsyncProgressQueueWorker<std::string>::ExecutionProgress& Progress) override;
+    virtual void Execute(const Napi::AsyncProgressQueueWorker<int>::ExecutionProgress& Progress) override;
 
-    virtual void OnOK();
-
-    virtual void OnProgress(const std::string* Data, size_t Count) override;
-private:
-    Napi::FunctionReference ProgressCallback;
-    Napi::FunctionReference ErrorCallback;
-    Napi::Env Environment;
-    void UnhookHooks();
-    std::vector<HHOOK> Hooks;
+    /** This must be overridden so that `AsyncProgressQueueWorker` can be extended, but we don't use it. */
+    virtual void OnProgress(const int* _Data, size_t Count) override;
 };

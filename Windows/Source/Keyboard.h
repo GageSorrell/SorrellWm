@@ -6,6 +6,7 @@
 #include <iostream>
 #include "MessageLoop/MessageLoop.h"
 #include "js_native_api_types.h"
+#include "Core/Globals.h"
+#include "Core/InterProcessCommunication.h"
 
-HHOOK RegisterActivationKey();
-void KeyboardListener(FMessage Message);
+void RegisterActivationKey();

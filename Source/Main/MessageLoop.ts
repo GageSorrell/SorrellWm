@@ -4,31 +4,13 @@
  * License:   MIT
  */
 
-import { InitializeMessageLoop } from "Windows";
-
 /** This file must be side-effect imported by `Main`. */
 
-/** @TODO */
-const OnError = (Argument: unknown): void =>
-{
-    console.error("OnError", Argument);
-};
-
-/** @TODO */
-const OnOk = (Argument: unknown): void =>
-{
-    console.log("OnOK", Argument);
-};
-
-/** @TODO */
-const OnProgress = (Argument: unknown): void =>
-{
-    console.log("OnProgress", Argument);
-};
+import { InitializeMessageLoop } from "@sorrellwm/windows";
 
 const RunInitializeMessageLoop = (): void =>
 {
-    InitializeMessageLoop(OnOk, OnError, OnProgress);
+    InitializeMessageLoop(() => { });
 };
 
 RunInitializeMessageLoop();

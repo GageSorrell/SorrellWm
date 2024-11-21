@@ -11,6 +11,12 @@
 #endif
 
 #include "Core/Core.h"
+#include "Core/InterProcessCommunication.h"
+#include "Core/WinEvent.h"
+#include "Core/WindowUtilities.h"
+#include "Keyboard.h"
+#include "MessageLoop/MessageLoop.h"
+#include "Core/Globals.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -18,9 +24,6 @@
 #include <dwmapi.h>
 #include <codecvt>
 #include <map>
-#include "MessageLoop/MessageLoop.h"
-#include "Keyboard.h"
-#include "Core/WindowUtilities.h"
 
 // using namespace Utilities;
 
@@ -557,38 +560,63 @@ Napi::Value GetMe(const Napi::CallbackInfo& Information)
     return Napi::String::New(Environment, "CalledBack");
 }
 
+Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
+{
+    Napi::Env Environment = Information.Env();
+
+    Napi::Function Callback = Information[0].As<Napi::Function>();
+
+    GGlobals::Ipc = new FIpc(Environment, Callback);
+}
+
+void HooksExitCleanup(void* _)
+{
+    GGlobals::Hook->OnExit();
+}
+
+void ShutdownGdiPlus(void* _)
+{
+    Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+}
+
+/**
+ * When other things need to be initialized by a callback (with no data needed),
+ * their initializations should be added here, and the function should be renamed
+ * to be more generic.
+ */
+Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
+{
+    Napi::Env Environment = Information.Env();
+    GGlobals::Hook = new FHook();
+    napi_add_env_cleanup_hook(Environment, HooksExitCleanup, nullptr);
+    napi_add_env_cleanup_hook(Environment, ShutdownGdiPlus, nullptr);
+
+    // @TODO Find better place to register listeners
+    RegisterActivationKey();
+
+    return Environment.Undefined();
+}
+
 Napi::Value InitializeMessageLoop(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
 
-    Napi::Function ErrorCallback = Information[0].As<Napi::Function>();
-    Napi::Function OkCallback = Information[1].As<Napi::Function>();
-    Napi::Function ProgressCallback = Information[2].As<Napi::Function>();
-    FMessageLoop* MessageLoop = new FMessageLoop(OkCallback, ErrorCallback, ProgressCallback, Environment);
-    MessageLoop->Queue();
+    /** We have to pass a callback function to the AsyncWorker. */
+    const Napi::Function EmptyCallback = Information[0].As<Napi::Function>();
 
-    // @TODO Find better place to register listeners
-    MessageLoop->RegisterHook(RegisterActivationKey());
-    MessageLoop->Subscribe(KeyboardListener);
-
-    // std::thread MessageThread;
-
-    // Napi::Function HandleMessage = Information[0].As<Napi::Function>();
-    // Napi::ThreadSafeFunction ThreadSafeFunction = Napi::ThreadSafeFunction::New(
-    //     Environment,
-    //     HandleMessage,
-    //     "HandleMessage",
-    //     0,
-    //     1,
-    //     [&](Napi::Env)
-    //     {
-    //         MessageThread.join();
-    //     }
-    // );
-
-    // MessageThread = std::thread(MessageLoop, ThreadSafeFunction);
+    GGlobals::MessageLoop = new FMessageLoop(EmptyCallback);
+    GGlobals::MessageLoop->Queue();
 
     return Environment.Undefined();
+}
+
+void InitializeGdiPlus()
+{
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    Gdiplus::Status status = Gdiplus::GdiplusStartup(&GGlobals::GdiPlus, &gdiplusStartupInput, nullptr);
+    if (status != Gdiplus::Ok) {
+        std::cout << "GDI+ initialization failed." << std::endl;
+    }
 }
 
 void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
@@ -599,8 +627,18 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     {
         { "GetMe", GetMe },
         { "InitializeMessageLoop", InitializeMessageLoop },
+        { "InitializeIpc", InitializeIpc },
+        { "InitializeHooks", InitializeHooks },
+        { "InitializeWinEvents", FWinEvent::Initialize },
         { "GetFocusedWindow", GetFocusedWindow },
-        { "CaptureWindowScreenshot", CaptureWindowScreenshot }
+        { "GetWindowLocationAndSize", GetWindowLocationAndSize },
+        { "CaptureWindowScreenshot", CaptureWindowScreenshot },
+        { "GetTitlebarHeight", GetTitlebarHeight },
+        { "GetWindowByName", GetWindowByName },
+        { "SetForegroundWindow", SetForegroundWindowNode },
+        { "CoverWindow", FWinEvent::CoverWindow },
+        { "Test", FWinEvent::Test },
+        { "TestTwo", FWinEvent::TestTwo }
         // { "GetMonitorFromRect", MonitorFromRectNode },
         // { "GetMonitorFromWindow", MonitorFromWindowNode },
         // { "GetMonitorHandles", GetMonitorHandles },
@@ -655,10 +693,13 @@ void InitializeTempDirectory()
     }
 }
 
+
+
 Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
 {
     ExportFunctions(Environment, Exports);
     InitializeTempDirectory();
+    InitializeGdiPlus();
 
     return Exports;
 }

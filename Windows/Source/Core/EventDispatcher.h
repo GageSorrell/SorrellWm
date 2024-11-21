@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+/** @deprecated */
 template<typename EventType>
 class FEventDispatcher
 {

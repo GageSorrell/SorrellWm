@@ -181,117 +181,253 @@ std::string GetGdiplusStatusString(Gdiplus::Status status) {
     }
 }
 
-std::string CaptureWindowScreenshot_Internal(HWND hwnd) {
+// std::string CaptureWindowScreenshot_Internal(HWND hwnd) {
+//     // Initialize GDI+
+//     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+//     ULONG_PTR gdiplusToken;
+//     Gdiplus::Status status = Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
+//     if (status != Gdiplus::Ok) {
+//         std::cerr << "GDI+ initialization failed." << std::endl;
+//         return "";
+//     }
+
+//     // Get window dimensions
+//     RECT rect;
+//     if (!GetWindowRect(hwnd, &rect)) {
+//         std::cerr << "GetWindowRect failed. Error: " << GetLastError() << std::endl;
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+//     int width = rect.right - rect.left;
+//     int height = rect.bottom - rect.top;
+
+//     // Create device contexts and bitmap
+//     HDC hdcWindow = GetDC(hwnd);
+//     if (!hdcWindow) {
+//         std::cerr << "GetDC failed. Error: " << GetLastError() << std::endl;
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+
+//     HDC hdcMemDC = CreateCompatibleDC(hdcWindow);
+//     if (!hdcMemDC) {
+//         std::cerr << "CreateCompatibleDC failed. Error: " << GetLastError() << std::endl;
+//         ReleaseDC(hwnd, hdcWindow);
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+
+//     HBITMAP hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
+//     if (!hBitmap) {
+//         std::cerr << "CreateCompatibleBitmap failed. Error: " << GetLastError() << std::endl;
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(hwnd, hdcWindow);
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+
+//     SelectObject(hdcMemDC, hBitmap);
+
+//     // Use PrintWindow with PW_RENDERFULLCONTENT
+//     BOOL success = PrintWindow(hwnd, hdcMemDC, PW_RENDERFULLCONTENT);
+//     if (!success) {
+//         std::cerr << "PrintWindow failed. Error: " << GetLastError() << std::endl;
+//         DeleteObject(hBitmap);
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(hwnd, hdcWindow);
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+
+//     // Optionally, verify bitmap content here
+
+//     // Save bitmap to a temporary file
+//     std::wstring HandleString = StringToWString(HandleToString(hwnd));
+//     std::wstring tempPath = L"%TEMP%\\SorrellWm\\Screenshot-" +
+//         // StringToWString(HandleToString(hwnd)) +
+//         HandleString +
+//         // L"-" +
+//         // GetTimestamp() +
+//         L".png";
+
+//     wchar_t resolvedPath[MAX_PATH];
+//     DWORD ret = ExpandEnvironmentStringsW(tempPath.c_str(), resolvedPath, MAX_PATH);
+//     if (ret == 0 || ret > MAX_PATH) {
+//         std::cerr << "ExpandEnvironmentStringsW failed. Error: " << GetLastError() << std::endl;
+//         DeleteObject(hBitmap);
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(hwnd, hdcWindow);
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+
+//     Gdiplus::Bitmap bitmap(hBitmap, nullptr);
+//     CLSID pngClsid;
+//     if (GetEncoderClsid(L"image/png", &pngClsid) == -1) {
+//         std::cerr << "GetEncoderClsid failed." << std::endl;
+//         DeleteObject(hBitmap);
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(hwnd, hdcWindow);
+//         Gdiplus::GdiplusShutdown(gdiplusToken);
+//         return "";
+//     }
+
+//     status = bitmap.Save(resolvedPath, &pngClsid, nullptr);
+//     if (status != Gdiplus::Ok) {
+//         std::cerr << "Bitmap.Save failed."
+//             << WStringToString(resolvedPath)
+//             << std::endl
+//             << WStringToString(HandleString)
+//             << std::endl
+//             << GetGdiplusStatusString(status)
+//             << std::endl;
+//     } else {
+//         std::cout << "Screenshot saved to " << std::string("screenshot.png") << std::endl;
+//     }
+
+//     // Clean up
+//     DeleteObject(hBitmap);
+//     DeleteDC(hdcMemDC);
+//     ReleaseDC(hwnd, hdcWindow);
+//     Gdiplus::GdiplusShutdown(gdiplusToken);
+
+//     return "CaptureWindowScreenshotError";
+// }
+
+std::string CaptureWindowScreenshot_Internal(HWND hwnd)
+{
     // Initialize GDI+
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     Gdiplus::Status status = Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
     if (status != Gdiplus::Ok) {
-        std::cerr << "GDI+ initialization failed." << std::endl;
+        std::wcerr << L"GDI+ initialization failed." << std::endl;
         return "";
     }
 
-    // Get window dimensions
-    RECT rect;
-    if (!GetWindowRect(hwnd, &rect)) {
-        std::cerr << "GetWindowRect failed. Error: " << GetLastError() << std::endl;
+    std::cout << "Stop One" << std::endl;
+
+    // Get **client** window dimensions instead of the entire window
+    RECT clientRect;
+    if (!GetClientRect(hwnd, &clientRect)) {
+        std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
-    int width = rect.right - rect.left;
-    int height = rect.bottom - rect.top;
+
+    std::cout << "Stop Two" << std::endl;
+    // Convert client coordinates to screen coordinates
+    POINT topLeft = { clientRect.left, clientRect.top };
+    if (!ClientToScreen(hwnd, &topLeft)) {
+        std::cerr << "ClientToScreen failed. Error: " << GetLastError() << std::endl;
+        Gdiplus::GdiplusShutdown(gdiplusToken);
+        return "";
+    }
+
+    // Calculate width and height from clientRect
+    int width = clientRect.right - clientRect.left;
+    int height = clientRect.bottom - clientRect.top;
 
     // Create device contexts and bitmap
-    HDC hdcWindow = GetDC(hwnd);
-    if (!hdcWindow) {
-        std::cerr << "GetDC failed. Error: " << GetLastError() << std::endl;
+    HDC hdcScreen = GetDC(NULL); // Use screen DC to capture specific area
+    if (!hdcScreen) {
+        std::cout << "GetDC(NULL) failed. Error: " << GetLastError() << std::endl;
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
 
-    HDC hdcMemDC = CreateCompatibleDC(hdcWindow);
+    std::cout << "Stop Three" << std::endl;
+    HDC hdcMemDC = CreateCompatibleDC(hdcScreen);
     if (!hdcMemDC) {
-        std::cerr << "CreateCompatibleDC failed. Error: " << GetLastError() << std::endl;
-        ReleaseDC(hwnd, hdcWindow);
+        std::cout << "CreateCompatibleDC failed. Error: " << GetLastError() << std::endl;
+        ReleaseDC(NULL, hdcScreen);
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
 
-    HBITMAP hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hdcScreen, width, height);
     if (!hBitmap) {
-        std::cerr << "CreateCompatibleBitmap failed. Error: " << GetLastError() << std::endl;
+        std::cout << "CreateCompatibleBitmap failed. Error: " << GetLastError() << std::endl;
         DeleteDC(hdcMemDC);
-        ReleaseDC(hwnd, hdcWindow);
+        ReleaseDC(NULL, hdcScreen);
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
 
     SelectObject(hdcMemDC, hBitmap);
 
-    // Use PrintWindow with PW_RENDERFULLCONTENT
-    BOOL success = PrintWindow(hwnd, hdcMemDC, PW_RENDERFULLCONTENT);
+    // **Use BitBlt instead of PrintWindow to exclude shadows and non-client areas**
+    BOOL success = BitBlt(hdcMemDC, 0, 0, width, height, hdcScreen, topLeft.x, topLeft.y, SRCCOPY);
     if (!success) {
-        std::cerr << "PrintWindow failed. Error: " << GetLastError() << std::endl;
+        std::cout << "BitBlt failed. Error: " << GetLastError() << std::endl;
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
-        ReleaseDC(hwnd, hdcWindow);
+        ReleaseDC(NULL, hdcScreen);
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
 
     // Optionally, verify bitmap content here
 
-    // Save bitmap to a temporary file
+    // Construct the file path: %TEMP%\SorrellWm\Screenshot-<HandleString>-<Timestamp>.png
     std::wstring HandleString = StringToWString(HandleToString(hwnd));
     std::wstring tempPath = L"%TEMP%\\SorrellWm\\Screenshot-" +
-        // StringToWString(HandleToString(hwnd)) +
         HandleString +
-        // L"-" +
-        // GetTimestamp() +
+        L"-" +
+        GetFileNameTimestamp() +
         L".png";
 
     wchar_t resolvedPath[MAX_PATH];
     DWORD ret = ExpandEnvironmentStringsW(tempPath.c_str(), resolvedPath, MAX_PATH);
     if (ret == 0 || ret > MAX_PATH) {
-        std::cerr << "ExpandEnvironmentStringsW failed. Error: " << GetLastError() << std::endl;
+        std::cout << "ExpandEnvironmentStringsW failed. Error: " << GetLastError() << std::endl;
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
-        ReleaseDC(hwnd, hdcWindow);
+        ReleaseDC(NULL, hdcScreen);
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
 
+    std::wcout << "ResolvedPath is " << resolvedPath << std::endl;
+
     Gdiplus::Bitmap bitmap(hBitmap, nullptr);
     CLSID pngClsid;
     if (GetEncoderClsid(L"image/png", &pngClsid) == -1) {
-        std::cerr << "GetEncoderClsid failed." << std::endl;
+        std::cout << "GetEncoderClsid failed." << std::endl;
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
-        ReleaseDC(hwnd, hdcWindow);
+        ReleaseDC(NULL, hdcScreen);
         Gdiplus::GdiplusShutdown(gdiplusToken);
         return "";
     }
 
     status = bitmap.Save(resolvedPath, &pngClsid, nullptr);
     if (status != Gdiplus::Ok) {
-        std::cerr << "Bitmap.Save failed."
-            << WStringToString(resolvedPath)
-            << std::endl
-            << WStringToString(HandleString)
-            << std::endl
-            << GetGdiplusStatusString(status)
-            << std::endl;
+        std::cout << "Bitmap.Save failed: "
+                  << WStringToString(resolvedPath)
+                  << std::endl
+                  << WStringToString(HandleString)
+                  << std::endl
+                  << GetGdiplusStatusString(status)
+                  << std::endl;
     } else {
-        std::cout << "Screenshot saved to " << std::string("screenshot.png") << std::endl;
+        std::cout << "Screenshot saved to " << resolvedPath << std::endl;
     }
 
-    // Clean up
-    DeleteObject(hBitmap);
-    DeleteDC(hdcMemDC);
-    ReleaseDC(hwnd, hdcWindow);
-    Gdiplus::GdiplusShutdown(gdiplusToken);
+    std::cout << "Last Stop" << std::endl;
 
-    return "CaptureWindowScreenshotError";
+    // Clean up
+    std::cout << "0" << std::endl;
+    DeleteObject(hBitmap);
+    std::cout << "1" << std::endl;
+    DeleteDC(hdcMemDC);
+    std::cout << "2" << std::endl;
+    ReleaseDC(NULL, hdcScreen);
+    std::cout << "3" << std::endl;
+    Gdiplus::GdiplusShutdown(gdiplusToken);
+    std::cout << "4" << std::endl;
+
+    return WStringToString(resolvedPath);
 }
 
 /**
@@ -299,8 +435,8 @@ std::string CaptureWindowScreenshot_Internal(HWND hwnd) {
  */
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index)
 {
-    Napi::Object HandleString = CallbackInfo[Index].As<Napi::Object>();
-    return DecodeHandle(HandleString);
+    Napi::Object HandleObject = CallbackInfo[Index].As<Napi::Object>();
+    return DecodeHandle(HandleObject);
 }
 
 /**
@@ -308,10 +444,225 @@ HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& C
  */
 Napi::Value CaptureWindowScreenshot(const Napi::CallbackInfo& CallbackInfo)
 {
-    const Napi::Env Environment = CallbackInfo.Env();
+    Napi::Env Environment = CallbackInfo.Env();
 
-    HWND Handle = GetHandleArgument(Environment, CallbackInfo, 0);
-    std::string ScreenshotPath = CaptureWindowScreenshot_Internal(Handle);
+    HWND hwnd = GetHandleArgument(Environment, CallbackInfo, 0);
+    // Initialize GDI+
+    // Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    // ULONG_PTR gdiplusToken;
+    // Gdiplus::Status status = Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
+    // if (status != Gdiplus::Ok) {
+    //     std::cout << "GDI+ initialization failed." << std::endl;
+    //     // return "";
+    // }
+
+    std::cout << "Stop One" << std::endl;
+
+    // Get **client** window dimensions instead of the entire window
+    RECT clientRect;
+    if (!GetClientRect(hwnd, &clientRect)) {
+        std::cout << "GetClientRect failed. Error: " << GetLastError() << std::endl;
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    std::cout << "Stop Two" << std::endl;
+    // Convert client coordinates to screen coordinates
+    POINT topLeft = { clientRect.left, clientRect.top };
+    if (!ClientToScreen(hwnd, &topLeft)) {
+        std::cout << "ClientToScreen failed. Error: " << GetLastError() << std::endl;
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    // Calculate width and height from clientRect
+    int width = clientRect.right - clientRect.left;
+    int height = clientRect.bottom - clientRect.top;
+
+    // Create device contexts and bitmap
+    HDC hdcScreen = GetDC(NULL); // Use screen DC to capture specific area
+    if (!hdcScreen) {
+        std::cout << "GetDC(NULL) failed. Error: " << GetLastError() << std::endl;
+        std::cout << GetLastError() << std::endl;
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    std::cout << "Stop Three" << std::endl;
+    HDC hdcMemDC = CreateCompatibleDC(hdcScreen);
+    if (!hdcMemDC) {
+        std::cout << "CreateCompatibleDC failed. Error: " << GetLastError() << std::endl;
+        ReleaseDC(NULL, hdcScreen);
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    HBITMAP hBitmap = CreateCompatibleBitmap(hdcScreen, width, height);
+    if (!hBitmap) {
+        std::cout << "CreateCompatibleBitmap failed. Error: " << GetLastError() << std::endl;
+        DeleteDC(hdcMemDC);
+        ReleaseDC(NULL, hdcScreen);
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    SelectObject(hdcMemDC, hBitmap);
+
+    // **Use BitBlt instead of PrintWindow to exclude shadows and non-client areas**
+    BOOL success = BitBlt(hdcMemDC, 0, 0, width, height, hdcScreen, topLeft.x, topLeft.y, SRCCOPY);
+    if (!success) {
+        std::cout << "BitBlt failed. Error: " << GetLastError() << std::endl;
+        DeleteObject(hBitmap);
+        DeleteDC(hdcMemDC);
+        ReleaseDC(NULL, hdcScreen);
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    // Optionally, verify bitmap content here
+
+    // Construct the file path: %TEMP%\SorrellWm\Screenshot-<HandleString>-<Timestamp>.png
+    std::wstring HandleString = StringToWString(HandleToString(hwnd));
+    std::wstring tempPath = L"%TEMP%\\SorrellWm\\Screenshot-" +
+        HandleString +
+        L"-" +
+        GetFileNameTimestamp() +
+        L".png";
+
+    wchar_t resolvedPath[MAX_PATH];
+    DWORD ret = ExpandEnvironmentStringsW(tempPath.c_str(), resolvedPath, MAX_PATH);
+    if (ret == 0 || ret > MAX_PATH) {
+        std::cout << "ExpandEnvironmentStringsW failed. Error: " << GetLastError() << std::endl;
+        DeleteObject(hBitmap);
+        DeleteDC(hdcMemDC);
+        ReleaseDC(NULL, hdcScreen);
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    std::wcout << "ResolvedPath is " << resolvedPath << std::endl;
+
+    Gdiplus::Bitmap bitmap(hBitmap, nullptr);
+    CLSID pngClsid;
+    if (GetEncoderClsid(L"image/png", &pngClsid) == -1) {
+        std::cout << "GetEncoderClsid failed." << std::endl;
+        DeleteObject(hBitmap);
+        DeleteDC(hdcMemDC);
+        ReleaseDC(NULL, hdcScreen);
+        Gdiplus::GdiplusShutdown(GGlobals::GdiPlus);
+        // return "";
+    }
+
+    Gdiplus::Status status = bitmap.Save(resolvedPath, &pngClsid, nullptr);
+    if (status != Gdiplus::Ok) {
+        std::cout << "Bitmap.Save failed: "
+                  << WStringToString(resolvedPath)
+                  << std::endl
+                  << WStringToString(HandleString)
+                  << std::endl
+                  << GetGdiplusStatusString(status)
+                  << std::endl;
+    } else {
+        std::cout << "Screenshot saved to " << resolvedPath << std::endl;
+    }
+
+    std::cout << "Last Stop" << std::endl;
+
+    // Clean up
+    std::cout << "0" << std::endl;
+    DeleteObject(hBitmap);
+    std::cout << "1" << std::endl;
+    DeleteDC(hdcMemDC);
+    std::cout << "2" << std::endl;
+    ReleaseDC(NULL, hdcScreen);
+    std::cout << "3" << std::endl;
+    // Gdiplus::GdiplusShutdown(gdiplusToken);
+    std::cout << "4" << std::endl;
+    std::string ScreenshotPath = WStringToString(resolvedPath);
+    // std::cout << "Going to call Internal function." << std::endl;
+    // std::string ScreenshotPath = CaptureWindowScreenshot_Internal(Handle);
+    // std::cout << "Done with Internal function." << std::endl;
+    // std::cout << GetLastError() << std::endl;
+    // std::cout << ScreenshotPath << std::endl;
+
 
     return Napi::String::New(Environment, ScreenshotPath);
+    // return Napi::String::New(Environment, "");
+}
+
+Napi::Value GetTitlebarHeight(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    const int TitleBarHeight = GetSystemMetrics(SM_CYCAPTION);
+    return Napi::Number::New(Environment, TitleBarHeight);
+}
+
+Napi::Value GetWindowLocationAndSize(const Napi::CallbackInfo& info)
+{
+    Napi::Env env = info.Env();
+
+    HWND hwnd = DecodeHandle(info[0].As<Napi::Object>());
+
+    RECT rect;
+    if (!GetWindowRect(hwnd, &rect)) {
+        Napi::Error::New(env, "Failed to get window rectangle").ThrowAsJavaScriptException();
+        return Napi::Object::New(env);
+    }
+
+    HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    if (!hMonitor)
+    {
+        Napi::Error::New(env, "Failed to get monitor").ThrowAsJavaScriptException();
+        return Napi::Object::New(env);
+    }
+
+    MONITORINFO monitorInfo = { 0 };
+    monitorInfo.cbSize = sizeof(MONITORINFO);
+    if (!GetMonitorInfo(hMonitor, &monitorInfo))
+    {
+        Napi::Error::New(env, "Failed to get monitor information").ThrowAsJavaScriptException();
+        return Napi::Object::New(env);
+    }
+
+    int absoluteX = rect.left - monitorInfo.rcMonitor.left;
+    int absoluteY = rect.top - monitorInfo.rcMonitor.top;
+
+    std::cout << "Left: " << rect.left << std::endl;
+    std::cout << "Top: " << rect.top << std::endl;
+    std::cout << "Monitor Left: " << monitorInfo.rcMonitor.left << std::endl;
+    std::cout << "Monitor Top: " << monitorInfo.rcMonitor.top << std::endl;
+
+    Napi::Object result = Napi::Object::New(env);
+
+    result.Set("MonitorX", Napi::Number::New(env, monitorInfo.rcMonitor.left));
+    result.Set("MonitorY", Napi::Number::New(env, monitorInfo.rcMonitor.top));
+    result.Set("X", Napi::Number::New(env, rect.left));
+    result.Set("Y", Napi::Number::New(env, rect.top));
+    result.Set("Width", Napi::Number::New(env, rect.right - rect.left));
+    result.Set("Height", Napi::Number::New(env, rect.bottom - rect.top));
+
+    return result;
+}
+
+Napi::Value GetWindowByName(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    std::string WindowNameString = CallbackInfo[0].As<Napi::String>();
+    LPCSTR WindowName = WindowNameString.c_str();
+
+    HWND Window = FindWindow(NULL, WindowName);
+
+    return EncodeHandle(Environment, Window);
+}
+
+Napi::Value SetForegroundWindowNode(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    HWND WindowToFocus = GetHandleArgument(Environment, CallbackInfo, 0);
+
+    SetForegroundWindow(WindowToFocus);
+
+    return Environment.Undefined();
 }

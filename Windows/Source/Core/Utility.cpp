@@ -17,10 +17,24 @@ std::tm convertToUTC(std::time_t time)
     return tm_utc;
 }
 
-/**
- * Get the current time as a wstring, ISO timestamp.
- * Intended for writing file names.
- */
+std::wstring GetFileNameTimestamp()
+{
+    auto now = std::chrono::system_clock::now();
+        std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+        std::tm tm_now;
+
+        // Use localtime_s for thread safety on Windows, or localtime_r on POSIX
+    #ifdef _WIN32
+        localtime_s(&tm_now, &now_time_t);
+    #else
+        localtime_r(&now_time_t, &tm_now);
+    #endif
+
+        std::wstringstream wss;
+        wss << std::put_time(&tm_now, L"%Y%m%d%H%M%S");
+        return wss.str();
+}
+
 std::wstring GetTimestamp()
 {
     // Get current time

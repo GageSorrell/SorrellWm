@@ -1,16 +1,24 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
 import "./MessageLoop";
+import "./Hook";
+import "./NodeIpc";
+import "./Keyboard";
+
+setTimeout((): void =>
+{
+    import("./MainWindow");
+});
+
 import path from "path";
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { CaptureWindowScreenshot, GetFocusedWindow, type HWindow } from "Windows";
 
-const CurrentWindow: HWindow = GetFocusedWindow();
-console.log(CaptureWindowScreenshot(CurrentWindow));
+// const CurrentWindow: HWindow = GetFocusedWindow();
+// console.log(CaptureWindowScreenshot(CurrentWindow));
 
 class AppUpdater {
     constructor()

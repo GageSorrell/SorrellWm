@@ -73,10 +73,24 @@
 			"xtr1common": "cpp",
 			"xtree": "cpp",
 			"xutility": "cpp",
-			"cstdarg": "cpp"
+			"cstdarg": "cpp",
+			"array": "cpp",
+			"chrono": "cpp",
+			"condition_variable": "cpp",
+			"deque": "cpp",
+			"forward_list": "cpp",
+			"queue": "cpp",
+			"ranges": "cpp",
+			"span": "cpp"
 		},
 		"javascript.validate.enable": false,
 		"javascript.format.enable": false,
-		"typescript.format.enable": false
+		"typescript.format.enable": false,
+		"cSpell.words": [
+			"CYCAPTION",
+			"HHOOK",
+			"HWND",
+			"Napi"
+		]
 	}
 }

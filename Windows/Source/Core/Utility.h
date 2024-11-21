@@ -15,6 +15,13 @@
 #include <chrono>
 #include <ctime>
 
-std::tm convertToUTC(std::time_t time);
+/**
+ * Get the current time as a wstring, ISO timestamp.
+ * Intended for writing file names.
+ */
 std::wstring GetTimestamp();
+
+/** `GetTimestamp`, with punctuation removed, so that file names can include the time. */
+std::wstring GetFileNameTimestamp();
+
 std::wstring GetTempPath();
