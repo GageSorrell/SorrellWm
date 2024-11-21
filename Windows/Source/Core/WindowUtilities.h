@@ -21,6 +21,7 @@ DECLARE_EXPORTED_FUNCTION(GetWindowLocationAndSize)
 DECLARE_EXPORTED_FUNCTION(GetTitlebarHeight)
 DECLARE_EXPORTED_FUNCTION(SetForegroundWindowNode)
 DECLARE_EXPORTED_FUNCTION(GetWindowByName)
+DECLARE_EXPORTED_FUNCTION(GetThemeColor)
 
 Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle);
 HWND DecodeHandle(const Napi::Object& Object);

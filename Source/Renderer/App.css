@@ -19,3 +19,21 @@ body {
 {
     -webkit-app-region: drag;
 }
+
+.BackgroundImage
+{
+    width: auto;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: 0.25s opacity ease, 0.25s filter ease;
+    filter: "none";
+    mix-blend-mode: multiply;
+}
+
+.BackgroundImageBlurred
+{
+    filter: blur(4px);
+    opacity: 0.5;
+}

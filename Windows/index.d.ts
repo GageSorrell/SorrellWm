@@ -91,6 +91,8 @@ export type FBox =
         Height: number;
     };
 
+export type FColor = `#${ string }`;
+
 export function GetFocusedWindow(): HWindow;
 export function CaptureWindowScreenshot(Handle: HWindow): string;
 export function InitializeIpc(Callback: ((Channel: string, Message: unknown) => void)): void;
@@ -101,3 +103,4 @@ export function CoverWindow(Handle: HWindow): void;
 export function Test(): void;
 export function TestTwo(): void;
 export function GetTitlebarHeight(): number;
+export function GetThemeColor(): FColor;

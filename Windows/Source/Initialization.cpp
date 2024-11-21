@@ -637,6 +637,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetWindowByName", GetWindowByName },
         { "SetForegroundWindow", SetForegroundWindowNode },
         { "CoverWindow", FWinEvent::CoverWindow },
+        { "GetThemeColor", GetThemeColor },
         { "Test", FWinEvent::Test },
         { "TestTwo", FWinEvent::TestTwo }
         // { "GetMonitorFromRect", MonitorFromRectNode },

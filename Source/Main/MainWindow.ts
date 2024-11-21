@@ -1,5 +1,5 @@
 import { BrowserWindow, app, ipcMain, screen } from "electron";
-import { CaptureWindowScreenshot, CoverWindow, GetFocusedWindow, GetWindowLocationAndSize, Test, type HWindow } from "@sorrellwm/windows";
+import { CaptureWindowScreenshot, CoverWindow, GetFocusedWindow, GetThemeColor, GetWindowLocationAndSize, Test, type HWindow } from "@sorrellwm/windows";
 import path from "path";
 import * as Fs from "fs";
 
@@ -53,7 +53,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         skipTaskbar: true,
         webPreferences:
         {
-            devTools: false,
+            devTools: true,
             nodeIntegration: true,
             preload: app.isPackaged
                 ? path.join(__dirname, 'Preload.js')
@@ -100,8 +100,10 @@ function OnActivation(State: string): void
         const ScreenshotPath: string = CaptureWindowScreenshot(GetFocusedWindow());
         const Screenshot: Buffer = Fs.readFileSync(ScreenshotPath);
         const ScreenshotEncoded: string = `data:image/png;base64,${ Screenshot.toString("base64") }`;
-        MainWindow?.webContents.on("BackgroundImageBack", (_): void =>
+        ipcMain.on("GetThemeColor", async (Event, Argument) =>
         {
+            // Event.reply(GetThemeColor());
+            MainWindow?.webContents.send("GetThemeColor", GetThemeColor());
         });
         ipcMain.on("BackgroundImage", async (Event, Argument) =>
         {

@@ -792,3 +792,31 @@ Napi::Value SetForegroundWindowNode(const Napi::CallbackInfo& CallbackInfo)
 
     return Environment.Undefined();
 }
+
+Napi::Value GetThemeColor(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    DWORD color;       // Variable to store the color (ARGB format)
+    BOOL isOpaque;     // Variable to store whether the color is opaque
+
+    HRESULT result = DwmGetColorizationColor(&color, &isOpaque);
+    if (FAILED(result))
+    {
+        std::cerr << "Failed to retrieve taskbar color." << std::endl;
+        return Napi::String::New(Environment, "");
+    }
+
+    // Extract the RGB components from the ARGB value
+    BYTE r = (color >> 16) & 0xFF; // Red component
+    BYTE g = (color >> 8) & 0xFF;  // Green component
+    BYTE b = color & 0xFF;         // Blue component
+
+    // Convert to a hex string
+    std::ostringstream hexStream;
+    hexStream << "#" << std::setfill('0') << std::setw(2) << std::hex << (int)r
+              << std::setw(2) << (int)g
+              << std::setw(2) << (int)b;
+
+    return Napi::String::New(Environment, hexStream.str());
+}

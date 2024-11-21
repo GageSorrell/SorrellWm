@@ -3,6 +3,8 @@ import icon from '../../Resource/icon.svg';
 import './App.css';
 import { useEffect, useRef, useState, type EffectCallback } from 'react';
 import { ipcRenderer } from 'electron';
+import { animated, easings, useSpring } from '@react-spring/web';
+import { GetThemeColor } from './Api';
 
 function Hello() {
     const [ BackgroundImage, SetBackgroundImage ] = useState<string>("");
@@ -10,12 +12,46 @@ function Hello() {
     // const [ width, SetWidth ] = useState<number>(200);
     const HasLoadedBackgroundImage = useRef<boolean>(false);
     const BackgroundImageElement = useRef<HTMLImageElement>(null);
+    const SystemColor: string = "#CC00CC";
+    // const [ styles, api ] = useSpring(() =>
+    // {
+    //     return {
+    //         from:
+    //         {
+    //             filter: "blur(0%)",
+    //             backgroundColor: "#FFFFFF"
+    //         },
+    //         to:
+    //         {
+    //             filter: "blur(75%)",
+    //             backgroundColor: SystemColor
+    //         },
+    //         config:
+    //         {
+    //             duration: 250,
+    //             easing: easings.easeInOutExpo
+    //         }
+    //     };
+    // });
+
     useEffect((): void =>
     {
         window.electron.ipcRenderer.on("BackgroundImage", (Event: Electron.IpcRendererEvent) =>
         {
             console.log("Received image!");
             SetBackgroundImage((_Old: string): string => Event as unknown as string);
+            // api.start({
+            //     from:
+            //     {
+            //         filter: "blur(0%)",
+            //         backgroundColor: "#FFFFFF"
+            //     },
+            //     to:
+            //     {
+            //         filter: "blur(75%)",
+            //         backgroundColor: SystemColor
+            //     }
+            // });
         });
 
         console.log("Adding load event listener");
@@ -29,47 +65,72 @@ function Hello() {
                 window.electron.ipcRenderer.sendMessage("BackgroundImage");
             }
         });
-    }, [ ]);
+    }, [ SystemColor ]);
+
+    // const [ Blur, SetBlur ] = useState<number>(0);
+    // useEffect((): void =>
+    // {
+    //     if (BackgroundImage !== "")
+    //     {
+    //         SetBlur(0.5);
+    //     }
+    // }, [ BackgroundImage ]);
+    // useEffect((): void =>
+    // {
+    //     if (Blur > 0 && Blur < 4)
+    //     {
+    //         setTimeout((): void =>
+    //         {
+    //             SetBlur((Old: number): number =>
+    //             {
+    //                 return Old + 0.5;
+    //             });
+    //         }, 1000);
+    //     }
+    // }, [ Blur ]);
+
+    /* @TODO Instead of delaying arbitrarily, the main thread should let the renderer      *
+     * know when the window is done moving, and the blur animation should be started then. */
+    const [ ImageClasses, SetImageClasses ] = useState<string>("BackgroundImage");
+    useEffect((): void =>
+    {
+        if (BackgroundImage !== "")
+        {
+            setTimeout((): void =>
+            {
+                SetImageClasses((_Old: string): string =>
+                {
+                    return "BackgroundImage BackgroundImageBlurred";
+                });
+            }, 100);
+            GetThemeColor();
+        }
+    }, [ BackgroundImage ]);
 
     return (
-        <div>
+        <div style={{ backgroundColor: SystemColor }}>
             <img
-                className="DEBUG_Draggable"
+                key="BackgroundImage"
                 src={ BackgroundImage }
-                style={{ width: "auto", height: "100%", position: "absolute", top: 0, left: 0 }}
-                ref={ BackgroundImageElement }/>
-      {/* <div className="Hello">
-        <img width="200" alt="icon" src={icon} />
-      </div>
-      <h1>electron-react-boilerplate</h1>
-      <div className="Hello">
-        <a
-          href="https://electron-react-boilerplate.js.org/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              📚
-            </span>
-            Read our docs
-          </button>
-        </a>
-        <a
-          href="https://github.com/sponsors/electron-react-boilerplate"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="folded hands">
-              🙏
-            </span>
-            Donate
-          </button>
-        </a>
-      </div> */}
-    </div>
-  );
+                // style={{ filter: `blur(${ Blur }px)` }}
+                // style={{
+                //     width: "auto",
+                //     height: "100%",
+                //     position: "absolute",
+                //     top: 0,
+                //     // animation: ""
+                //     transition: "opacity 0.25s ease, filter 0.25s ease",
+                //     filter: BackgroundImage === "" ? "none" : "blur(0.75)",
+                //     mixBlendMode: "multiply",
+                //     left: 0,
+                //     // ...styles
+                // }}
+                // className={ BackgroundImage === "" ? "BackgroundImage" : "BackgroundImage BackgroundImageBlurred" }
+                className={ ImageClasses }
+                ref={ BackgroundImageElement }
+            />
+        </div>
+    );
 }
 
 export default function App() {
