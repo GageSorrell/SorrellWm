@@ -18,8 +18,8 @@ export const Unsubscribe = (Id: number): void =>
 
 function OnMessage(Channel: string, Message: unknown)
 {
-    console.log(`OnMessage: Received event on channel \`${ Channel }\`.`);
-    console.log(`There are ${ Listeners.size }`);
+    // console.log(`OnMessage: Received event on channel \`${ Channel }\`.`);
+    // console.log(`There are ${ Listeners.size }`);
     Listeners.forEach((Callback: FIpcCallbackSerialized): void =>
     {
         if (Callback.Channel === Channel)

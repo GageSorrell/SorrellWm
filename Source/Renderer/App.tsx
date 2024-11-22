@@ -108,7 +108,7 @@ function Hello() {
     }, [ BackgroundImage ]);
 
     return (
-        <div style={{ backgroundColor: SystemColor }}>
+        <div style={{ backgroundColor: SystemColor, overflow: "hidden" }}>
             <img
                 key="BackgroundImage"
                 src={ BackgroundImage }

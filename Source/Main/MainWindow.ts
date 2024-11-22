@@ -53,7 +53,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         skipTaskbar: true,
         webPreferences:
         {
-            devTools: true,
+            devTools: false,
             nodeIntegration: true,
             preload: app.isPackaged
                 ? path.join(__dirname, 'Preload.js')
@@ -115,6 +115,13 @@ function OnActivation(State: string): void
         {
         }, 500);
         // console.log("After calling `CoverWindow`", (MainWindow as BrowserWindow).getPosition());
+    }
+    else
+    {
+        // @TODO Close window if in-use
+        // MainWindow?.webContents.send("CloseFoo");
+        const { x, y } = GetLeastInvisiblePosition();
+        MainWindow?.setPosition(-1000, 0);
     }
 }
 

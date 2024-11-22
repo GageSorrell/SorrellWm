@@ -30,6 +30,7 @@ body {
     transition: 0.25s opacity ease, 0.25s filter ease;
     filter: "none";
     mix-blend-mode: multiply;
+    overflow: hidden;
 }
 
 .BackgroundImageBlurred

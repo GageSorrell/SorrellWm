@@ -153,38 +153,10 @@ Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
         std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
     }
 
-    // Convert client coordinates to screen coordinates
     POINT topLeft = { clientRect.left, clientRect.top };
-    // if (!ClientToScreen(WindowToCoverHandle, &topLeft)) {
-    //     std::cerr << "ClientToScreen failed. Error: " << GetLastError() << std::endl;
-    // }
 
-    // std::cout << clientRect.left << std::endl << clientRect.top << std::endl << clientRect.bottom << std::endl << clientRect.right << std::endl;
-
-    // UINT Dpi = GetDpiForWindow(WindowToCoverHandle);
-    // const int TitleBarHeight = GetSystemMetrics(SM_CYCAPTION);
-
-    // Calculate scaling factor
-    // double ScalingFactor = static_cast<double>(Dpi) / 96.0;
-
-    // Retrieve title bar height and frame thickness
-    // const int TitleBarHeight = static_cast<int>(GetSystemMetrics(SM_CYCAPTION) * ScalingFactor);
-    // const int FrameWidth = static_cast<int>(GetSystemMetrics(SM_CXFRAME) * ScalingFactor);
-    // const int FrameHeight = static_cast<int>(GetSystemMetrics(SM_CYFRAME) * ScalingFactor);
-
-    BOOL enabled = TRUE; // TRUE to disable transitions
-    HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &enabled, sizeof(enabled));
-    std::cout << "Result: " << SUCCEEDED(hr) << std::endl;
-
-    // SetWindowPos(
-    //     SorrellWmMainWindow,
-    //     nullptr,
-    //     MainClientRect.left,
-    //     MainClientRect.top,
-    //     clientRect.right - clientRect.left + 2 * FrameWidth,
-    //     clientRect.bottom - clientRect.top + TitleBarHeight + 2 * FrameHeight,
-    //     SWP_SHOWWINDOW
-    // );
+    BOOL TransitionsDisabled = TRUE;
+    HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &TransitionsDisabled, sizeof(TransitionsDisabled));
 
     SetForegroundWindow(SorrellWmMainWindow);
     // Shift everything by one since the screenshot clips the window by 1 pixel

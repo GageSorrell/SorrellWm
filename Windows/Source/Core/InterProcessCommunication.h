@@ -23,7 +23,7 @@ public:
     {
         Napi::HandleScope Scope(Environment);
 
-        std::cout << "Sending IPC with no message on channel " + Channel + "." << std::endl;
+        // std::cout << "Sending IPC with no message on channel " + Channel + "." << std::endl;
         Callback.Call({ Napi::String::New(Environment, Channel) });
     }
 
