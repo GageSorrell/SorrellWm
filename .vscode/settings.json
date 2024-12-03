@@ -1,23 +1,36 @@
 {
-"[cpp]":{
+    "[cpp]":
+    {
     "editor.defaultFormatter": "xaver.clang-format"
-},
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+    },
 
-  "search.exclude": {
-    ".git": true,
-    ".eslintcache": true,
-    // ".erb/dll": true,
-    "Release/{build,app/Distribution}": true,
-    "node_modules": true,
-    "npm-debug.log.*": true,
-    "test/**/__snapshots__": true,
-    "package-lock.json": true,
-    "*.{css,sass,scss}.d.ts": true
-  }
+  	"eslint.enable": true,
+	"eslint.options":
+	{
+		"overrideConfigFile": "./Configuration/.eslintrc.js"
+	},
+  	"eslint.workingDirectories":
+	[
+        { "!cwd": false, "directory": "**" }
+  	],
+    "eslint.validate":
+    [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    ],
+
+    "search.exclude":
+    {
+        ".git": true,
+        ".eslintcache": true,
+        // ".erb/dll": true,
+        "Release/{build,app/Distribution}": true,
+        "node_modules": true,
+        "npm-debug.log.*": true,
+        "test/**/__snapshots__": true,
+        "package-lock.json": true,
+        "*.{css,sass,scss}.d.ts": true
+    }
 }

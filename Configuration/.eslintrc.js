@@ -4,7 +4,8 @@
  */
 
 /* eslint-disable-next-line no-undef */
-module.exports = {
+module.exports =
+{
     extends:
     [
         "eslint:recommended",
@@ -176,10 +177,10 @@ module.exports = {
             extensions: [".js", ".jsx", ".ts", ".tsx"],
             moduleDirectory: ["node_modules", "src/"],
         },
-        webpack:
-        {
-            config: require.resolve("./.erb/configs/webpack.config.eslint.ts"),
-        },
+        // webpack:
+        // {
+        //     config: require.resolve("Application/.erb/configs/webpack.config.eslint.ts"),
+        // },
         typescript: { },
     },
     "import/parsers":
