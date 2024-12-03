@@ -1,0 +1,16 @@
+{
+    "File Header (JavaScript / TypeScript)":
+    {
+        "prefix": "CopyrightHeader",
+        "body":
+        [
+            "/* File:    $TM_FILENAME",
+	        " * Author:  Gage Sorrell <gage@sorrell.sh>",
+	        " * License: MIT",
+            " */",
+            "\n"
+        ],
+        "description": "Inserts license information.",
+        "scope": "javascript,typescript,javascriptreact,typescriptreact"
+    }
+}

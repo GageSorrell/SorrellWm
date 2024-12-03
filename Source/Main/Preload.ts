@@ -1,29 +1,43 @@
-// Disable no-unused-vars, broken for spread args
-/* eslint no-unused-vars: off */
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+/* File:    Preload.ts
+ * Author:  Gage Sorrell <gage@sorrell.sh>
+ * License: MIT
+ */
 
-export type Channels = 'ipc-example';
+import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
 
-const electronHandler = {
-  ipcRenderer: {
-    sendMessage(channel: Channels, ...args: unknown[]) {
-      ipcRenderer.send(channel, ...args);
-    },
-    on(channel: Channels, func: (...args: unknown[]) => void) {
-      const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
-        func(...args);
-      ipcRenderer.on(channel, subscription);
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const ElectronHandler =
+{
+    ipcRenderer:
+    {
+        on(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
+        {
+            const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
+            {
+                return InFunction(...args);
+            };
 
-      return () => {
-        ipcRenderer.removeListener(channel, subscription);
-      };
-    },
-    once(channel: Channels, func: (...args: unknown[]) => void) {
-      ipcRenderer.once(channel, (_event, ...args) => func(...args));
-    },
-  },
+            ipcRenderer.on(Channel, subscription);
+
+            return () =>
+            {
+                ipcRenderer.removeListener(Channel, subscription);
+            };
+        },
+        once(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
+        {
+            ipcRenderer.once(
+                Channel,
+                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => InFunction(..._Arguments)
+            );
+        },
+        sendMessage(Channel: string, ...Arguments: Array<unknown>)
+        {
+            ipcRenderer.send(Channel, ...Arguments);
+        }
+    }
 };
 
-contextBridge.exposeInMainWorld('electron', electronHandler);
+contextBridge.exposeInMainWorld("electron", ElectronHandler);
 
-export type ElectronHandler = typeof electronHandler;
+export type FElectronHandler = typeof ElectronHandler;

@@ -90,7 +90,8 @@
 			"CYCAPTION",
 			"HHOOK",
 			"HWND",
-			"Napi"
+			"Napi",
+			"sorrellwm"
 		]
 	}
 }

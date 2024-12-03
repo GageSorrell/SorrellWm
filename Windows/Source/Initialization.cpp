@@ -636,6 +636,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetTitlebarHeight", GetTitlebarHeight },
         { "GetWindowByName", GetWindowByName },
         { "SetForegroundWindow", SetForegroundWindowNode },
+        { "TestFun", TestFun },
+        { "GetIsLightMode", GetIsLightMode },
         { "CoverWindow", FWinEvent::CoverWindow },
         { "GetThemeColor", GetThemeColor },
         { "Test", FWinEvent::Test },

@@ -155,10 +155,10 @@ Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
 
     POINT topLeft = { clientRect.left, clientRect.top };
 
-    BOOL TransitionsDisabled = TRUE;
-    HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &TransitionsDisabled, sizeof(TransitionsDisabled));
+    // BOOL TransitionsDisabled = TRUE;
+    // HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &TransitionsDisabled, sizeof(TransitionsDisabled));
 
-    SetForegroundWindow(SorrellWmMainWindow);
+    // SetForegroundWindow(SorrellWmMainWindow);
     // Shift everything by one since the screenshot clips the window by 1 pixel
     SetWindowPos(
         SorrellWmMainWindow,

@@ -793,6 +793,50 @@ Napi::Value SetForegroundWindowNode(const Napi::CallbackInfo& CallbackInfo)
     return Environment.Undefined();
 }
 
+Napi::Value TestFun(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    LPCSTR WindowName = "SorrellWm Main Window";
+    HWND SorrellWmMainWindow = FindWindow(NULL, WindowName);
+    if (SorrellWmMainWindow != nullptr)
+    {
+        SetWindowPos(SorrellWmMainWindow, nullptr, 2048, 2048, 0, 0, SWP_NOSIZE);
+
+        RECT MyRect;
+        GetWindowRect(SorrellWmMainWindow, &MyRect);
+        std::cout << "TestFun" << MyRect.left << " " << MyRect.top << std::endl;
+    }
+
+    return Environment.Undefined();
+}
+
+Napi::Value GetIsLightMode(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    HKEY hKey;
+    DWORD appsUseLightTheme = 1;
+    DWORD size = sizeof(appsUseLightTheme);
+
+    // Open the registry key
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                     "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                     0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        // Read the AppsUseLightTheme value
+        if (RegQueryValueEx(hKey, "AppsUseLightTheme", nullptr, nullptr,
+                            reinterpret_cast<LPBYTE>(&appsUseLightTheme), &size) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return Napi::Boolean::New(Environment, appsUseLightTheme != 0);
+        }
+        RegCloseKey(hKey);
+    }
+
+    return Napi::Boolean::New(Environment, true);
+}
+
 Napi::Value GetThemeColor(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();

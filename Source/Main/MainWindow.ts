@@ -1,8 +1,18 @@
-import { BrowserWindow, app, ipcMain, screen } from "electron";
-import { CaptureWindowScreenshot, CoverWindow, GetFocusedWindow, GetThemeColor, GetWindowLocationAndSize, Test, type HWindow } from "@sorrellwm/windows";
-import path from "path";
-import * as Fs from "fs";
+/* File:    MainWindow.ts
+ * Author:  Gage Sorrell <gage@sorrell.sh>
+ * License: MIT
+ */
 
+import * as Fs from "fs";
+import * as Path from "path";
+import { BrowserWindow, app, ipcMain, screen } from "electron";
+import {
+    CaptureWindowScreenshot,
+    CoverWindow,
+    GetFocusedWindow,
+    GetIsLightMode,
+    GetThemeColor,
+    TestFun} from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
 
@@ -10,123 +20,110 @@ let MainWindow: BrowserWindow | undefined = undefined;
 
 const GetLeastInvisiblePosition = (): { x: number; y: number } =>
 {
-    // Fetch all monitors using Electron
-    const displays = screen.getAllDisplays();
+    const Displays: Array<Electron.Display> = screen.getAllDisplays();
 
-    // Gather the bounds of all monitors
-    const monitorBounds: Array<{ left: number; right: number; top: number; bottom: number }> = displays.map((display) =>
+    type FMonitorBounds = { left: number; right: number; top: number; bottom: number };
+    const MonitorBounds: Array<FMonitorBounds> = Displays.map((display: Electron.Display): FMonitorBounds =>
     {
         return {
+            bottom: display.bounds.y + display.bounds.height,
             left: display.bounds.x,
             right: display.bounds.x + display.bounds.width,
-            top: display.bounds.y,
-            bottom: display.bounds.y + display.bounds.height,
+            top: display.bounds.y
         };
     });
 
-    // Sort monitors by their leftmost position and topmost position
-    monitorBounds.sort((a, b) => a.left - b.left || a.top - b.top);
+    MonitorBounds.sort((A: FMonitorBounds, B: FMonitorBounds) => A.left - B.left || A.top - B.top);
 
-    // Calculate the farthest visible X and Y positions
-    const farthestRight = Math.max(...monitorBounds.map((bounds) => bounds.right));
-    const farthestBottom = Math.max(...monitorBounds.map((bounds) => bounds.bottom));
+    const MaxRight: number = Math.max(...MonitorBounds.map((bounds: FMonitorBounds) => bounds.right));
+    const MaxBottom: number = Math.max(...MonitorBounds.map((bounds: FMonitorBounds) => bounds.bottom));
 
-    // Calculate the first X and Y coordinates just outside all monitors
-    const invisibleX = (farthestRight + 1) * 2;
-    const invisibleY = (farthestBottom + 1) * 2;
+    const InvisibleX: number = (MaxRight + 1) * 2;
+    const InvisibleY: number = (MaxBottom + 1) * 2;
 
-    return { x: invisibleX, y: invisibleY };
+    return {
+        x: InvisibleX,
+        y: InvisibleY
+    };
 };
 
 const LaunchMainWindow = async (): Promise<void> =>
 {
-    console.log("Launching main window...");
-    // const FocusedWindow: HWindow = GetFocusedWindow();
-    // const Screenshot: string = CaptureWindowScreenshot(FocusedWindow);
-    // const FocusedWindowBounds = GetWindowLocationAndSize(FocusedWindow);
-    // console.log(FocusedWindowBounds);
+    console.log("Launching main window.");
     MainWindow = new BrowserWindow({
         alwaysOnTop: true,
         frame: true,
+        height: 900,
+        show: true,
+        skipTaskbar: true,
         title: "SorrellWm Main Window",
         titleBarStyle: "hidden",
-        skipTaskbar: true,
+        transparent: true,
         webPreferences:
         {
             devTools: false,
             nodeIntegration: true,
             preload: app.isPackaged
-                ? path.join(__dirname, 'Preload.js')
-                : path.join(__dirname, '../../.erb/dll/preload.js'),
+                ? Path.join(__dirname, "Preload.js")
+                : Path.join(__dirname, "../../.erb/dll/preload.js")
         },
-        // width: FocusedWindowBounds.Width,
-        // height: FocusedWindowBounds.Height,
         width: 900,
-        height: 900,
-        show: true,
         ...GetLeastInvisiblePosition()
-        // x: 0,
-        // y: 0
     });
-    MainWindow.on("page-title-updated", (Event: Electron.Event, Title: string, ExplicitSet: boolean): void =>
-    {
-        Event.preventDefault();
-        MainWindow?.webContents.closeDevTools();
-    });
+
+    MainWindow.on(
+        "page-title-updated",
+        (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
+        {
+            Event.preventDefault();
+            MainWindow?.webContents.closeDevTools();
+        }
+    );
 
     MainWindow.loadURL(resolveHtmlPath("index.html"));
-    // console.log("Before ready to show");
-    // Ref.once("ready-to-show", () =>
-    // {
-    //     console.log("Ready to show!");
-    //     Ref.show();
-    // });
-
-    // Ref.on("show", (Event: Electron.Event, IsAlwaysOnTop: boolean): void =>
-    // {
-    //     console.log("Covering window...");
-    //     CoverWindow(GetFocusedWindow());
-    // });
 };
 
 function OnActivation(State: string): void
 {
     if (State === "Down")
     {
-        // @TODO Check to see if we actually should create a new window...
-        // SummonMainWindow();
-        console.log("Summoning Main Window...", (MainWindow as BrowserWindow).getPosition());
-        // Test();
         const ScreenshotPath: string = CaptureWindowScreenshot(GetFocusedWindow());
         const Screenshot: Buffer = Fs.readFileSync(ScreenshotPath);
         const ScreenshotEncoded: string = `data:image/png;base64,${ Screenshot.toString("base64") }`;
-        ipcMain.on("GetThemeColor", async (Event, Argument) =>
+
+        // @TODO These calls only need to be made once.  Move to an init function.
+
+        ipcMain.on("GetThemeColor", async (_Event: Electron.Event, _Argument: unknown) =>
         {
-            // Event.reply(GetThemeColor());
             MainWindow?.webContents.send("GetThemeColor", GetThemeColor());
         });
-        ipcMain.on("BackgroundImage", async (Event, Argument) =>
+
+        ipcMain.on("GetIsLightMode", async (_Event: Electron.Event, _Argument:  unknown) =>
         {
-            console.log("BackgroundImage received by Main");
+            const IsLightMode: boolean = GetIsLightMode();
+            MainWindow?.webContents.send("GetIsLightMode", IsLightMode);
+        });
+
+        ipcMain.on("BackgroundImage", async (_Event: Electron.Event, _Argument: unknown) =>
+        {
             CoverWindow(GetFocusedWindow());
         });
         MainWindow?.webContents.send("BackgroundImage", ScreenshotEncoded);
-        setTimeout((): void =>
-        {
-        }, 500);
-        // console.log("After calling `CoverWindow`", (MainWindow as BrowserWindow).getPosition());
     }
     else
     {
-        // @TODO Close window if in-use
-        // MainWindow?.webContents.send("CloseFoo");
-        const { x, y } = GetLeastInvisiblePosition();
-        MainWindow?.setPosition(-1000, 0);
+        MainWindow?.on("closed", (_: Electron.Event): void =>
+        {
+            LaunchMainWindow();
+        });
+        MainWindow?.close();
+
+        TestFun();
     }
 }
 
-app
-  .whenReady()
-  .then(LaunchMainWindow)
-  .catch(console.log);
+app.whenReady()
+    .then(LaunchMainWindow)
+    .catch(console.log);
+
 Keyboard.Subscribe(OnActivation);
