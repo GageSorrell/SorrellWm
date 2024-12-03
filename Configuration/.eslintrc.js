@@ -14,8 +14,7 @@ module.exports =
     ignorePatterns:
     [
         "**/Distribution/*",
-        "**/Intermediate/*",
-        "Script/AddComponent/Resource/*"
+        "**/Intermediate/*"
     ],
     parser: "@typescript-eslint/parser",
     parserOptions:
@@ -113,20 +112,19 @@ module.exports =
             "allman",
             { allowSingleLine: true }
         ],
-        /* Enforce naming convention for variables to be in PascalCase */
         curly: [ "error", "all" ],
-        "header/header":
-        [
-            2,
-            "block",
-            [
-                { pattern: " File:  .*" },
-                { pattern: " \\* Author:  .*"},
-                { pattern: " \\* License: MIT" },
-                { pattern: " " }
-            ],
-            2
-        ],
+        // "header/header":
+        // [
+        //     2,
+        //     "block",
+        //     [
+        //         { pattern: " File:  .*" },
+        //         { pattern: " \\* Author:  .*"},
+        //         { pattern: " \\* License: MIT" },
+        //         { pattern: " " }
+        //     ],
+        //     2
+        // ],
         "no-multiple-empty-lines": [ "error", { max: 1, maxBOF: 0, maxEOF: 1 } ],
         "quote-props": [ "error", "as-needed" ],
         quotes: [ "error", "double" ],
@@ -175,7 +173,7 @@ module.exports =
         node:
         {
             extensions: [".js", ".jsx", ".ts", ".tsx"],
-            moduleDirectory: ["node_modules", "src/"],
+            moduleDirectory: ["Application/node_modules", "Application/src/"],
         },
         // webpack:
         // {
@@ -183,9 +181,9 @@ module.exports =
         // },
         typescript: { },
     },
-    "import/parsers":
-    {
-        "@typescript-eslint/parser": [ ".ts", ".tsx" ],
-    },
+    // "import/parsers":
+    // {
+    //     "@typescript-eslint/parser": [ ".ts", ".tsx" ],
+    // },
   },
 };
