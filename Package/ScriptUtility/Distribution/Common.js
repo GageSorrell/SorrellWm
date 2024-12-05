@@ -4,17 +4,27 @@
  * License:   MIT
  */
 import chalk from "chalk";
-export const Run = (MainFunction, ScriptTitle, Description) => {
+import * as Path from "path";
+const PrintBanner = (ScriptTitle, ScriptDescription) => {
     const TerminalWidth = process.stdout.columns;
-    const Title = "🪟 SorrellWm";
+    const Title = "🪟  SorrellWm";
     const Padding = Math.max(0, TerminalWidth - Title.length);
     const PaddingLeftNum = Math.floor(Padding / 2);
     const PaddingRightNum = Math.ceil(Padding / 2);
     const PaddingLeft = " ".repeat(PaddingLeftNum);
     const PaddingRight = " ".repeat(PaddingRightNum);
     const PaddedText = PaddingLeft + Title + PaddingRight;
-    console.log(chalk.bgBlue.white(PaddedText));
-    console.log("Foo");
+    const EmptyLine = chalk.bgBlue(" ".repeat(TerminalWidth));
+    console.log(chalk.bgBlue.white(PaddedText +
+        EmptyLine +
+        " " + chalk.bold(ScriptTitle + ": ") + ScriptDescription +
+        EmptyLine));
+};
+export const Run = (MainFunction, ScriptTitle, ScriptDescription) => {
+    PrintBanner(ScriptTitle, ScriptDescription);
     MainFunction();
+};
+export const GetMonorepoPath = () => {
+    return import.meta.dirname.split(Path.sep).slice(0, -3).join(Path.sep);
 };
 //# sourceMappingURL=Common.js.map

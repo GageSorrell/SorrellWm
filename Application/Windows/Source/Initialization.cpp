@@ -25,6 +25,9 @@
 #include <codecvt>
 #include <map>
 
+/* BEGIN AUTO-GENERATED REGION: INCLUDES. */
+/* END AUTO-GENERATED REGION. */
+
 // using namespace Utilities;
 
 // std::map<std::string, HWND> WindowHandleMap;
@@ -623,6 +626,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
 {
     typedef Napi::Value (*FFunctionPointer)(const Napi::CallbackInfo&);
 
+    /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
     const std::map<std::string, FFunctionPointer> FunctionDefinitions =
     {
         { "GetMe", GetMe },
@@ -664,6 +668,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         // { "GetDwmMargins", GetDwmMargins },
         // { "GetMonitorRefreshRate", GetMonitorRefreshRate }
     };
+    /* END AUTO-GENERATED REGION. */
 
     for(const std::pair<std::string, FFunctionPointer> FunctionDefinition : FunctionDefinitions)
     {

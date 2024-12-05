@@ -5,8 +5,9 @@
  */
 
 import chalk from "chalk";
+import * as Path from "path";
 
-export const Run = (MainFunction: (() => Promise<void>), ScriptTitle: string, Description: string): void =>
+const PrintBanner = (ScriptTitle: string, ScriptDescription: string): void =>
 {
     const TerminalWidth: number = process.stdout.columns;
     const Title: string = "🪟  SorrellWm";
@@ -16,8 +17,24 @@ export const Run = (MainFunction: (() => Promise<void>), ScriptTitle: string, De
     const PaddingLeft: string = " ".repeat(PaddingLeftNum);
     const PaddingRight: string = " ".repeat(PaddingRightNum);
     const PaddedText: string = PaddingLeft + Title + PaddingRight;
-    console.log(chalk.bgBlue.white(PaddedText));
-    console.log("Foo");
+    const EmptyLine: string = chalk.bgBlue(" ".repeat(TerminalWidth));
+    console.log(
+        chalk.bgBlue.white(
+            PaddedText +
+            EmptyLine +
+            " " + chalk.bold(ScriptTitle + ": ") + ScriptDescription +
+            EmptyLine
+        )
+    );
+};
 
+export const Run = (MainFunction: (() => Promise<void>), ScriptTitle: string, ScriptDescription: string): void =>
+{
+    PrintBanner(ScriptTitle, ScriptDescription);
     MainFunction();
+};
+
+export const GetMonorepoPath = (): string =>
+{
+    return import.meta.dirname.split(Path.sep).slice(0, -3).join(Path.sep);
 };

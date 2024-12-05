@@ -15,6 +15,8 @@
 #include "String.h"
 #include "Utility.h"
 
+DECLARE_NAPI_FUNCTION(MyFunction, FlagA, FlagB, FWindow)
+
 DECLARE_EXPORTED_FUNCTION(GetFocusedWindow)
 DECLARE_EXPORTED_FUNCTION(CaptureWindowScreenshot)
 DECLARE_EXPORTED_FUNCTION(GetWindowLocationAndSize)
