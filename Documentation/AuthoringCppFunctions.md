@@ -19,7 +19,27 @@ The following code demonstrates the structure of a call to the macro.
 ```
 where `...Arguments` are of the form `ArgumentName, ArgumentType`, *i.e.*, there should always be an even number of macro arguments which describe arguments of the function.
 
+## Further Notes
+
+### Valid Names
+
+Function names and function argument names cannot be any of the flag names.
+
+### `Initialization.cpp`
+
+The `node-addon-api` setup is done in `Initialization.cpp`, which is to say that all exported functions are referenced in this file.
+
+An `#include` statement is generated for you in `Initialization.cpp`, but if the order matters, you must add the statement yourself in a valid order.
+The build tool will see that an `#include` statement already exists, and will forego generating one.
+
 ## Flags
+
+### `ExportName="${ ... }"`
+
+Specify a custom name to export function as.
+This name will be used in Node to call the C++ function.
+
+*Note:* you must use double-quotes.
 
 ### `Renderer`
 

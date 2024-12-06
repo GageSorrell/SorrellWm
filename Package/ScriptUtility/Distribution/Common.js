@@ -27,4 +27,9 @@ export const Run = (MainFunction, ScriptTitle, ScriptDescription) => {
 export const GetMonorepoPath = () => {
     return import.meta.dirname.split(Path.sep).slice(0, -3).join(Path.sep);
 };
+export const GetRef = (InitialValue) => {
+    return {
+        Current: InitialValue
+    };
+};
 //# sourceMappingURL=Common.js.map

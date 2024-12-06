@@ -6,6 +6,7 @@
 
 import chalk from "chalk";
 import * as Path from "path";
+import type { TRef } from "./Common.Types.js";
 
 const PrintBanner = (ScriptTitle: string, ScriptDescription: string): void =>
 {
@@ -37,4 +38,11 @@ export const Run = (MainFunction: (() => Promise<void>), ScriptTitle: string, Sc
 export const GetMonorepoPath = (): string =>
 {
     return import.meta.dirname.split(Path.sep).slice(0, -3).join(Path.sep);
+};
+
+export const GetRef = <T>(InitialValue?: T): TRef<T> =>
+{
+    return {
+        Current: InitialValue
+    };
 };

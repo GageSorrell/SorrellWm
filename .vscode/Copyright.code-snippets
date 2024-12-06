@@ -4,9 +4,10 @@
         "prefix": "CopyrightHeader",
         "body":
         [
-            "/* File:    $TM_FILENAME",
-	        " * Author:  Gage Sorrell <gage@sorrell.sh>",
-	        " * License: MIT",
+            "/* File:      $TM_FILENAME",
+	        " * Author:    Gage Sorrell <gage@sorrell.sh>",
+            " * Copyright: (c) 2024 Sorrell Intellectual Properties",
+	        " * License:   MIT",
             " */",
             "\n"
         ],
