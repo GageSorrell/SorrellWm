@@ -160,6 +160,8 @@ Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
 
     // SetForegroundWindow(SorrellWmMainWindow);
     // Shift everything by one since the screenshot clips the window by 1 pixel
+
+    std::cout << "Wee Woo " << clientRect.left << " " << clientRect.top << std::endl;
     SetWindowPos(
         SorrellWmMainWindow,
         nullptr,

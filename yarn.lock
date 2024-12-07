@@ -146,18 +146,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sorrellwm/build@workspace:Script/Build":
-  version: 0.0.0-use.local
-  resolution: "@sorrellwm/build@workspace:Script/Build"
-  dependencies:
-    "@types/node": "npm:^22.10.1"
-    ScriptUtility: "npm:1.0.0"
-    chalk: "npm:^5.3.0"
-    ora: "npm:^8.1.1"
-    typescript: "npm:^5.7.2"
-  languageName: unknown
-  linkType: soft
-
 "@stylistic/eslint-plugin@npm:^2.11.0":
   version: 2.11.0
   resolution: "@stylistic/eslint-plugin@npm:2.11.0"
@@ -317,7 +305,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ScriptUtility@npm:1.0.0, ScriptUtility@workspace:Package/ScriptUtility":
+"ScriptUtility@workspace:Package/ScriptUtility":
   version: 0.0.0-use.local
   resolution: "ScriptUtility@workspace:Package/ScriptUtility"
   dependencies:

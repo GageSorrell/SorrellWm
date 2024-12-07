@@ -11,8 +11,7 @@ import {
     CoverWindow,
     GetFocusedWindow,
     GetIsLightMode,
-    GetThemeColor,
-    TestFun} from "@sorrellwm/windows";
+    GetThemeColor } from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
 
@@ -71,6 +70,11 @@ const LaunchMainWindow = async (): Promise<void> =>
         ...GetLeastInvisiblePosition()
     });
 
+    MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
+    {
+        MainWindow?.webContents.send("Navigate", "Main");
+    });
+
     MainWindow.on(
         "page-title-updated",
         (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
@@ -80,7 +84,37 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
+    ipcMain.on("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    {
+        const StringifiedArguments: string = Arguments
+            .map((Argument: unknown): string =>
+            {
+                return typeof Argument === "string"
+                    ? Argument
+                    : JSON.stringify(Argument);
+            })
+            .join();
+
+        const Birdie: string = "🐥 ";
+        let OutString: string = Birdie;
+        for (let Index: number = 0; Index < StringifiedArguments.length; Index++)
+        {
+            const Character: string = StringifiedArguments[Index];
+            if (Character === "\n" && Index !== StringifiedArguments.length - 1)
+            {
+                OutString += Birdie + Character;
+            }
+            else
+            {
+                OutString += Character;
+            }
+        }
+
+        console.log(OutString);
+    });
+
     MainWindow.loadURL(resolveHtmlPath("index.html"));
+    console.log("Launched MainWindow with Component argument.");
 };
 
 function OnActivation(State: string): void
@@ -104,21 +138,18 @@ function OnActivation(State: string): void
             MainWindow?.webContents.send("GetIsLightMode", IsLightMode);
         });
 
-        ipcMain.on("BackgroundImage", async (_Event: Electron.Event, _Argument: unknown) =>
-        {
-            CoverWindow(GetFocusedWindow());
-        });
         MainWindow?.webContents.send("BackgroundImage", ScreenshotEncoded);
+        CoverWindow(GetFocusedWindow());
     }
     else
     {
-        MainWindow?.on("closed", (_: Electron.Event): void =>
-        {
-            LaunchMainWindow();
-        });
-        MainWindow?.close();
+        // MainWindow?.on("closed", (_: Electron.Event): void =>
+        // {
+        //     LaunchMainWindow();
+        // });
+        // MainWindow?.close();
 
-        TestFun();
+        // TestFun();
     }
 }
 

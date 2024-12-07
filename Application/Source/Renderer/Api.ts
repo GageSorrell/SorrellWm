@@ -10,6 +10,10 @@ type FSend = (Channel: string, ...Arguments: Array<unknown>) => void;
 export const On: FOn = window.electron.ipcRenderer.on;
 export const Once: FOnce = window.electron.ipcRenderer.once;
 export const Send: FSend = window.electron.ipcRenderer.sendMessage;
+export const Log = (...Arguments: Array<unknown>): void =>
+{
+    window.electron.ipcRenderer.sendMessage("Log", ...Arguments);
+};
 
 // export const GetThemeColor = async (): Promise<FColor> =>
 // {
@@ -77,4 +81,10 @@ const WrapApiCall = <T>(Channel: string): (() => Promise<T>) =>
     };
 };
 
-export const GetIsLightMode = WrapApiCall("GetIsLightMode");
+// export const GetIsLightMode = WrapApiCall("GetIsLightMode");
+
+export const UseLightMode = (): Readonly<[ IsLightMode: boolean | undefined ]> =>
+{
+    const [ IsLightMode ]
+    return [ IsLightMode ] as const;
+};

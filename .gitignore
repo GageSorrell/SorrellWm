@@ -18,7 +18,7 @@ node_modules
 
 Release/Application/Distribution
 Release/Build
-.erb/dll
+Application/.erb/dll
 
 .idea
 npm-debug.log.*
@@ -26,6 +26,5 @@ npm-debug.log.*
 *.sass.d.ts
 *.scss.d.ts
 
-build
-Windows/node_modules
-Distribution
+Application/build
+Application/Windows/node_modules

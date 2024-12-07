@@ -104,6 +104,11 @@ const createWindow = async () =>
 
     MainWindow.loadURL(resolveHtmlPath("index.html"));
 
+    MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
+    {
+        MainWindow?.webContents.send("Navigate", "TestWindow");
+    });
+
     MainWindow.on("ready-to-show", () =>
     {
         if (!MainWindow)

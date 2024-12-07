@@ -5,6 +5,7 @@
 
 import "./App.css";
 import {
+    type FC,
     type MutableRefObject,
     type ReactElement,
     type RefObject,
@@ -12,11 +13,22 @@ import {
     useMemo,
     useRef,
     useState } from "react";
-import { Route, MemoryRouter as Router, Routes } from "react-router-dom";
-import { GetIsLightMode } from "./Api";
+import { Route, MemoryRouter as Router, Routes, useNavigate, type NavigateFunction } from "react-router-dom";
+import { GetIsLightMode, Log } from "./Api";
 import { GetThemeColor } from "@sorrellwm/windows";
 
-const Hello = (): ReactElement =>
+export const TestWindow = (): ReactElement =>
+{
+    useEffect((): void =>
+    {
+        Log("Loaded TestWindow!");
+    }, [ ]);
+    return (
+        <div style={{ width: "10rem", height: "10rem", backgroundColor: "pink" }}><span>p</span></div>
+    );
+};
+
+export const Main = (): ReactElement =>
 {
     const [ BackgroundImage, SetBackgroundImage ] = useState<string>("");
     const HasLoadedBackgroundImage: MutableRefObject<boolean> = useRef<boolean>(false);
@@ -25,20 +37,23 @@ const Hello = (): ReactElement =>
 
     useEffect((): void =>
     {
+        Log("Loaded Main page!");
         window.electron.ipcRenderer.on("BackgroundImage", (..._Arguments: Array<unknown>) =>
         {
+            Log("MainWindow: BackgroundImage received!");
             SetBackgroundImage((_Old: string): string => Event as unknown as string);
         });
 
         BackgroundImageElement.current?.addEventListener("load", (): void =>
         {
+            Log("LoadEventListener");
             if (!HasLoadedBackgroundImage.current)
             {
                 HasLoadedBackgroundImage.current = true;
                 window.electron.ipcRenderer.sendMessage("BackgroundImage");
             }
         });
-    }, [ SystemColor ]);
+    }, [ ]);
 
     const [ ImageClasses, SetImageClasses ] = useState<string>("BackgroundImage");
     useEffect((): void =>
@@ -55,6 +70,11 @@ const Hello = (): ReactElement =>
         }
     }, [ BackgroundImage ]);
 
+    useEffect((): void =>
+    {
+        Log("BackgroundImage received!");
+    }, [ ]);
+
     const ColorImageClasses: string = useMemo<string>((): string =>
     {
         if (ImageClasses.includes("Blurred"))
@@ -67,7 +87,8 @@ const Hello = (): ReactElement =>
         }
     }, [ ImageClasses ]);
 
-    const [ ThemeColor, SetThemeColor ] = useState<string>(window.electron.GetThemeColor());
+    // const [ ThemeColor, SetThemeColor ] = useState<string>(window.electron.GetThemeColor());
+    const [ ThemeColor, SetThemeColor ] = useState<string>("#CC00CC");
 
     // useEffect((): void =>
     // {
@@ -122,14 +143,46 @@ const Hello = (): ReactElement =>
             </div>
         </div>
     );
-}
+};
 
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Hello />} />
-      </Routes>
-    </Router>
-  );
-}
+// export default function App() {
+//   return (
+//     <Router>
+//       <Routes>
+//         <Route path="/" element={<Hello />} />
+//       </Routes>
+//     </Router>
+//   );
+// }
+
+const IpcNavigator = (): undefined =>
+{
+    const Navigator: NavigateFunction = useNavigate();
+    useEffect((): void =>
+    {
+        window.electron.ipcRenderer.on("Navigate", (...Arguments: Array<unknown>): void =>
+        {
+            const HasRoute: boolean = Arguments.length > 0 && typeof Arguments[0] === "string";
+            if (HasRoute)
+            {
+                const Route: string = Arguments[0] as string;
+                Navigator(Route);
+            }
+        });
+    }, [ Navigator ]);
+
+    return undefined;
+};
+
+export const App = (): ReactElement =>
+{
+    return (
+        <Router>
+            <IpcNavigator/>
+            <Routes>
+                <Route path="/" element={<Main />} />
+                <Route path="/TestWindow" element={<TestWindow />} />
+            </Routes>
+        </Router>
+    );
+};
