@@ -1,0 +1,23 @@
+{
+  "name": "Build",
+  "packageManager": "yarn@4.5.3",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Build SorrellWm.",
+  "main": "./Distribution/index.js",
+  "scripts":
+  {
+    "build": "tsc",
+    "start": "node ./Distribution/index.js"
+  },
+  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "license": "MIT",
+  "devDependencies":
+  {
+    "ScriptUtility": "1.0.0",
+    "@types/node": "^22.10.1",
+    "chalk": "^5.3.0",
+    "ora": "^8.1.1",
+    "typescript": "^5.7.2"
+  }
+}
