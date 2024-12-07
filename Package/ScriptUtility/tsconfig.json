@@ -1,36 +1,11 @@
-// {
-//     "$schema": "https://json.schemastore.org/tsconfig",
-//     "compilerOptions": {
-//         "allowJs": true,
-//         "outDir": "./Distribution",
-//         "rootDir": "./Source",
-//         "esModuleInterop": true,
-//         "module": "ESNext",
-//         "moduleResolution": "Node",
-//         "resolveJsonModule": true,
-//         "skipLibCheck": true,
-//         "lib": [ "ES2019" ],
-//         "declaration": true,
-//         "sourceMap": true,
-//         "strict": true,
-//         "target": "ES2019",
-//         "composite": true
-//     },
-//     "include": [
-//         "Source"
-//     ],
-//     "exclude": [
-//         "node_modules"
-//     ],
-//     "references": []
-// }
-
 {
-  "extends": "../../Configuration/tsconfig.Script.json",
-  "compilerOptions": {
-    "outDir": "./Distribution",
-    "rootDir": "./Source"
-  },
-  "include": [ "Source" ],
-  "references": []
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "../../Configuration/tsconfig.Script.json",
+    "compilerOptions":
+    {
+        "outDir": "./Distribution",
+        "rootDir": "./Source"
+    },
+    "include": [ "Source" ],
+    "references": [ ]
 }

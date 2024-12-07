@@ -6,17 +6,24 @@
 
 import * as Fs from "fs";
 import * as Path from "path";
-import { GetMonorepoPath, GetRef, InsertLine, Run, type TRef } from "ScriptUtility";
-import type { FRegisteredFunction, FFlag, FFunctionArgument, FFlagKey, FSimpleFlagKey, FComplexFlagKey, FComplexFlag } from "./index.Types.js";
-import { compileFunction } from "vm";
+import type {
+    FComplexFlag,
+    FComplexFlagKey,
+    FFlag,
+    FFlagKey,
+    FFunctionArgument,
+    FRegisteredFunction,
+    FSimpleFlagKey } from "./index.Types.js";
+import { GetMonorepoPath, GetRef, Run, type TRef } from "ScriptUtility";
 import { register } from "module";
-import { resolveObjectURL } from "buffer";
 
 /* Comment: This file uses the following naming convention for C++ files:
  *    * `Source` files end in `.cpp`
  *    * `Header` files end in `.h`
  *    * **`Cpp` files refer to either**
  */
+
+const FileHeader: string = "/* File:      GeneratedTypes.d.ts\n * Author:    Gage Sorrell <gage@sorrell.sh>\n * Copyright: (c) 2024 Gage Sorrell\n * License:   MIT\n */\n\n/* AUTO-GENERATED FILE. */\n";
 
 const MacroName: string = "DECLARE_NAPI_FUNCTION";
 const MacroSimpleFlagKeys: Readonly<Array<FSimpleFlagKey>> =
@@ -37,6 +44,7 @@ const MacroFlagKeys: Readonly<Array<FFlagKey>> =
     "Renderer"
 ] as const;
 
+/** Get the argument vector as it would appear in a TypeScript function definition. */
 const GetArgumentVector = (RegisteredFunction: FRegisteredFunction): string =>
 {
     let OutString = "";
@@ -51,6 +59,12 @@ const GetArgumentVector = (RegisteredFunction: FRegisteredFunction): string =>
     });
 
     return OutString;
+};
+
+/** Get a comma-separated list of a function's arguments, without type definitions. */
+const GetArguments = (RegisteredFunction: FRegisteredFunction): string =>
+{
+    return RegisteredFunction.Arguments.map((Argument: FFunctionArgument): string => Argument.Name).join(", ");
 };
 
 const GetExportName = (RegisteredFunction: FRegisteredFunction): string =>
@@ -175,10 +189,8 @@ const GetCppFiles = async (): Promise<Array<string>> =>
         });
 };
 
-const Main = async (): Promise<void> =>
+const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<FRegisteredFunction>> =>
 {
-    const CppFiles: Array<string> = await GetCppFiles();
-    // 2. Across all header files, find all macro calls that register functions
     const RegisteredFunctions: Array<FRegisteredFunction> = [ ];
     for await (const FilePath of CppFiles)
     {
@@ -188,11 +200,13 @@ const Main = async (): Promise<void> =>
         {
             const MacroArgumentVectorStartIndex: number = Contents.indexOf("(", MacroCallIndex) + 1;
             const MacroArgumentVectorEndIndex: number = Contents.indexOf(")", MacroArgumentVectorStartIndex);
-            const MacroArgumentVectorString: string = Contents.substring(MacroArgumentVectorStartIndex, MacroArgumentVectorEndIndex);
-            const MacroArgumentVector: Array<string> = MacroArgumentVectorString.split(",").map((Argument: string): string =>
-            {
-                return Argument.trim();
-            });
+            const MacroArgumentVectorString: string =
+                Contents.substring(MacroArgumentVectorStartIndex, MacroArgumentVectorEndIndex);
+            const MacroArgumentVector: Array<string> =
+                MacroArgumentVectorString.split(",").map((Argument: string): string =>
+                {
+                    return Argument.trim();
+                });
             const Name: string = MacroArgumentVector[0];
             const ReturnType: string = MacroArgumentVector[1];
             const Flags: Array<FFlag> = MacroFlagKeys.map((MacroFlag: FFlagKey): FFlag =>
@@ -245,25 +259,30 @@ const Main = async (): Promise<void> =>
             });
 
             RegisteredFunctions.push({
-                Name,
-                FilePath,
-                ReturnType,
                 Arguments,
-                Flags
+                FilePath,
+                Flags,
+                Name,
+                ReturnType
             });
         }
     }
 
-    // 3a. Add include statement to Initialization.cpp, if not already present
+    return RegisteredFunctions;
+};
+
+const PatchInitializationFile = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
+{
     const InitializationFilePath: string = Path.resolve(
         GetMonorepoPath(),
         "Application",
         "Windows",
         "Initialization.cpp"
     );
-    const InitializationSourceFile: Array<string> = (await Fs.promises.readFile(InitializationFilePath, { encoding: "utf-8" })).split("\n");
-    const IncludesRegionBeginComment: string = "/* BEGIN AUTO-GENERATED REGION: INCLUDES. */"
-    const ExportsRegionBeginComment: string = "/* BEGIN AUTO-GENERATED REGION: EXPORTS. */"
+    const InitializationSourceFile: Array<string> =
+        (await Fs.promises.readFile(InitializationFilePath, { encoding: "utf-8" })).split("\n");
+    const IncludesRegionBeginComment: string = "/* BEGIN AUTO-GENERATED REGION: INCLUDES. */";
+    const ExportsRegionBeginComment: string = "/* BEGIN AUTO-GENERATED REGION: EXPORTS. */";
     const IncludesRegionStartIndex: number = InitializationSourceFile.indexOf(IncludesRegionBeginComment) + 1;
     const ExportsRegionStartIndex: number = InitializationSourceFile.indexOf(ExportsRegionBeginComment) + 1;
     const GetIncludeStatement = (RegisteredFunction: FRegisteredFunction): string =>
@@ -291,22 +310,205 @@ const Main = async (): Promise<void> =>
             InitializationSourceFile.splice(ExportsRegionStartIndex, 0, ExportStatement);
         }
     }
+};
 
-    // 4. Generate `index.d.ts`
-    const Declarations: Array<string> = RegisteredFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
-    {
-        const ExportName: string = GetExportName(RegisteredFunction);
-        const ArgumentVector: string = GetArgumentVector(RegisteredFunction);
-        return `export function ${ ExportName }(${ ArgumentVector }): ${ RegisteredFunction.ReturnType }`;
-    });
+const GenerateTypesDeclarationsFile = async (
+    RegisteredFunctions: Array<FRegisteredFunction>
+): Promise<void> =>
+{
+    const Declarations: Array<string> =
+        RegisteredFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
+        {
+            const ExportName: string = GetExportName(RegisteredFunction);
+            const ArgumentVector: string = GetArgumentVector(RegisteredFunction);
+            return `export function ${ ExportName }(${ ArgumentVector }): ${ RegisteredFunction.ReturnType }`;
+        });
 
-    const GeneratedTypesFileHeader: string = `/* File:      GeneratedTypes.d.ts\n * Author:    Gage Sorrell <gage@sorrell.sh>\n * Copyright: (c) 2024 Gage Sorrell\n * License:   MIT\n */\n\n/* AUTO-GENERATED FILE. */\n`;
-    const GeneratedTypesFileContents: string = GeneratedTypesFileHeader + Declarations.join("\n");
+    /* eslint-disable @stylistic/max-len */
+    const GeneratedTypesFileContents: string = FileHeader + Declarations.join("\n");
     const GeneratedTypesFilePath: string = Path.resolve(GetMonorepoPath(), "Application", "Windows", "GeneratedTypes.d.ts");
+    /* eslint-enable @stylistic/max-len */
 
     await Fs.promises.writeFile(GeneratedTypesFilePath, GeneratedTypesFileContents);
+};
+
+const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
+{
+    const ExposedFunctions: Array<FRegisteredFunction> = RegisteredFunctions.filter((RegisteredFunction: FRegisteredFunction): boolean =>
+    {
+        return RegisteredFunction.Flags.map((Flag: FFlag): string => Flag.Name).includes("Renderer");
+    });
 
     // 5. For functions marked `Renderer`, generate IPC code for main to receive request from renderer
+
+    // Each `Renderer` function should have:
+    //    1. A `ipcMain.handle` call whose channel is the function name, and function calls the C++ function
+    //    2. An anonymous function that calls `ipcRenderer.invoke` declared in the file that calls `exposeInMainWorld`, and whose name is the function name (but prefixed/suffixed with something like `_Internal`)
+    //    3. A function in a Renderer module that shares the same name and signature as the actual JS function, and calls the exposed IPC function and returns the result
+    const HandleCallsFilePath: string = Path.resolve(GetMonorepoPath(), "Application", "Source", "Main", "RendererFunctions.ts");
+
+    const HandleStatements: Array<string> = ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
+    {
+        const FunctionName: string = GetExportName(RegisteredFunction);
+        return `ipcMain.handle(${ FunctionName }, (${ GetArgumentVector(RegisteredFunction) }): Promise<void> =>
+        {
+            return ${ FunctionName }(${ GetArguments(RegisteredFunction) });
+        })`;
+    });
+
+    const HandleFileImportStatement: string = `import { ${ ExposedFunctions.map(GetExportName).join(", ") } } from "@sorrellwm/windows";\n`;
+    const EslintDisableStatement: string = "\n/* eslint-disable */\n\n";
+
+    const HandleCallsFile: string = FileHeader + EslintDisableStatement + HandleFileImportStatement + HandleStatements;
+
+    await Fs.promises.writeFile(HandleCallsFilePath, HandleCallsFile);
+
+    const ExposedCalls: string = ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
+    {
+        const FunctionName: string = GetExportName(RegisteredFunction);
+        const Arguments: string = GetArguments(RegisteredFunction);
+        const ReturnType: string = RegisteredFunction.ReturnType;
+        const HasArguments: boolean = Arguments !== "";
+        return HasArguments
+            ? `${ FunctionName }: (${ GetArgumentVector(RegisteredFunction) }): ${ ReturnType } => ipcRenderer.invoke("${ FunctionName }", ${ Arguments })`
+            : `${ FunctionName }: (): ${ ReturnType } => ipcRenderer.invoke("${ FunctionName }")`;
+    }).join(",\n");
+
+    const PreloadContents: string = `
+/* File:    Preload.ts
+ * Author:  Gage Sorrell <gage@sorrell.sh>
+ * License: MIT
+ */
+
+import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
+
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const ElectronHandler =
+{
+    ipcRenderer:
+    {
+        on(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
+        {
+            const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
+            {
+                return InFunction(...args);
+            };
+
+            ipcRenderer.on(Channel, subscription);
+
+            return () =>
+            {
+                ipcRenderer.removeListener(Channel, subscription);
+            };
+        },
+        once(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
+        {
+            ipcRenderer.once(
+                Channel,
+                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => InFunction(..._Arguments)
+            );
+        },
+        sendMessage(Channel: string, ...Arguments: Array<unknown>)
+        {
+            ipcRenderer.send(Channel, ...Arguments);
+        }
+    },
+    ${ ExposedCalls }
+};
+
+contextBridge.exposeInMainWorld("electron", ElectronHandler);
+
+export type FElectronHandler = typeof ElectronHandler;
+
+\n`;
+
+    const PreloadPath: string = Path.resolve(
+        GetMonorepoPath(),
+        "Application",
+        "Source",
+        "Main",
+        "Preload.ts"
+    );
+
+    await Fs.promises.writeFile(PreloadPath, PreloadContents);
+
+    const IpcFilePath: string = Path.resolve(
+        GetMonorepoPath(),
+        "Application",
+        "Source",
+        "Renderer",
+        "Ipc.ts"
+    );
+
+    const GetImportLine = (RegisteredFunctions: FRegisteredFunction): string =>
+    {
+        const FunctionName: string = GetExportName(RegisteredFunctions);
+        return `${ FunctionName } as ${ FunctionName }Imported`;
+    };
+
+    /* eslint-disable-next-line @stylistic/max-len */
+    const IpcFileImportStatement: string = `import { ${ ExposedFunctions.map(GetImportLine).join(", ") } } from "@sorrellwm/windows";\n`;
+    const IpcFileExportedFunctions: string =
+        ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
+        {
+            const FunctionName: string = GetExportName(RegisteredFunction);
+            return `export const ${ FunctionName } = window.electron.${ FunctionName }Imported`;
+        }).join("\n");
+    const IpcFileContents: string =
+        FileHeader +
+        IpcFileImportStatement +
+        IpcFileExportedFunctions +
+        "\n";
+
+    await Fs.promises.writeFile(IpcFilePath, IpcFileContents);
+};
+
+type FRegisteredFunctionHook =
+    <TReturnType, TArgumentTypeVector extends Array<unknown>>(
+        InitialValue: TReturnType,
+        ...Arguments: TArgumentTypeVector
+    ) => Readonly<[ ReturnValue: TReturnType ]>;
+
+const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
+{
+    // The hook should be in an auto-generated module, with this pattern:
+
+    //     const MakeHookFunctionDefinition: string = `
+    // const MakeHook = (FunctionName: string): FRegisteredFunctionHook =>
+    // {
+    //     return <TReturnType, TArgumentTypeVector extends Array<unknown>>(
+    //         InitialValue: TReturnType,
+    //         ...Arguments: TArgumentTypeVector
+    //     ): Readonly<[ ReturnValue: TReturnType ]> =>
+    //     {
+    //         const [ ReturnValue, SetReturnValue ] = useState<TReturnType>(InitialValue);
+
+    //         window.electron[FunctionName](...Arguments);
+
+    //         return [ ReturnValue ] as const;
+    //     };
+    // };\n`;
+
+    const GeneratedModulePath: string = Path.resolve(
+        GetMonorepoPath(),
+        "Application",
+        "Source",
+        "Renderer",
+        "Hooks.Generated.ts"
+    );
+
+
+};
+
+const Main = async (): Promise<void> =>
+{
+    const CppFiles: Array<string> = await GetCppFiles();
+    const RegisteredFunctions: Array<FRegisteredFunction> = await GetFunctionDeclarations(CppFiles);
+    await Promise.all([
+        () => PatchInitializationFile(RegisteredFunctions),
+        () => GenerateTypesDeclarationsFile(RegisteredFunctions),
+        () => GenerateIpcCode(RegisteredFunctions)
+    ]);
     // 6. For functions marked `Renderer` *and* `Hook`, Generate React hook for functions
 };
 

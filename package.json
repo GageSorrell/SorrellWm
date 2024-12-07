@@ -10,7 +10,7 @@
   "scripts": {
     "build": "cd ./Script/Build && npm run build && npm run start",
     "setup": "yarn run set-up",
-    "set-up": " cd ./Package/ScriptUtility && npm run build && cd ../../Script/Build && npm run build"
+    "set-up": " cd ./Package/ScriptUtility && npm run build && cd ../../Script/Build && npm run build && cd ../../Application/Windows && npm link && cd .. && npm link --save @sorrellwm/windows && echo \"The build tool has been built and the repo's Win32 package has been linked via npm to the app.\""
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^2.11.0",
