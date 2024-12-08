@@ -1,11 +1,15 @@
+
 /* File:    Preload.ts
  * Author:  Gage Sorrell <gage@sorrell.sh>
  * License: MIT
  */
 
-import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
+/* eslint-disable */
 
-/* eslint-disable-next-line @typescript-eslint/typedef */
+import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
+import { GetFocusedWindow, HWindow } from "@sorrellwm/windows";
+
+
 const ElectronHandler =
 {
     ipcRenderer:
@@ -35,9 +39,12 @@ const ElectronHandler =
         {
             ipcRenderer.send(Channel, ...Arguments);
         }
-    }
+    },
+    GetFocusedWindow: (): HWindow => ipcRenderer.invoke("GetFocusedWindow")
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);
 
 export type FElectronHandler = typeof ElectronHandler;
+
+

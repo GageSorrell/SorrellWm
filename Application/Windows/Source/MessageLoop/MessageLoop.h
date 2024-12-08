@@ -1,16 +1,12 @@
 #pragma once
 
-#include <napi.h>
+#include "../Core/Core.h"
+#include <iostream>
 #include "../Core/Dispatcher.h"
-#include <string>
 #include <sstream>
 #include <iomanip>
-#include <iostream>
-#include <dwmapi.h>
-#include <Windows.h>
 #include <codecvt>
 #include <map>
-#include "js_native_api_types.h"
 
 /**
  * Allows any function to step into the Win32 message loop.

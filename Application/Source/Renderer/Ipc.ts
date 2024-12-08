@@ -5,3 +5,7 @@
  */
 
 /* AUTO-GENERATED FILE. */
+
+/* eslint-disable */
+
+export const GetFocusedWindow = window.electron.GetFocusedWindow;

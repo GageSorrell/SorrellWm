@@ -10,6 +10,9 @@ export type FMessageLoopCallback = (Argument: unknown) => void;
 /** @TODO The signatures of the arguments are probably wrong. */
 export function InitializeMessageLoop(EmptyCallback: (() => void)): void;
 
+export function InitializeBlurWorker(EmptyCallback: (() => void)): void;
+export function CaptureImage(Handle: HWindow): void;
+
 export type HWindow =
 {
     Handle: string;
@@ -30,12 +33,15 @@ export type FBox =
 
 export type FColor = `#${ string }`;
 
+/** @TODO Export these via macro, and remove this type declaration. */
+export function CoverWindow(Handle: HWindow): void;
+
 // Functions that are used in this project:
 
 // export function GetFocusedWindow(): HWindow;
 // export function CaptureWindowScreenshot(Handle: HWindow): string;
-// export function InitializeIpc(Callback: ((Channel: string, Message: unknown) => void)): void;
-// export function InitializeHooks(): void;
+export function InitializeIpc(Callback: ((Channel: string, Message: unknown) => void)): void;
+export function InitializeHooks(): void;
 // export function GetWindowLocationAndSize(Handle: HWindow): FBox;
 // export function InitializeWinEvents(): void;
 // export function CoverWindow(Handle: HWindow): void;
@@ -89,3 +95,5 @@ export type FColor = `#${ string }`;
 //     Width: number,
 //     Height: number
 // ): boolean;
+
+export function StartBlurOverlayNew(Handle: HWindow): void;

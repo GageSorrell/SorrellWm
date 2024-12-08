@@ -4,5 +4,4 @@
  */
 
 export * from "./Core";
-export * from "./GeneratedTypes";
-
+export * from "./Types.Generated";

@@ -8,6 +8,7 @@
 
 // @TODO `#include` everything that *every* file should `#include`.
 #include <napi.h>
+#include <string>
 #include <Windows.h>
 #include "js_native_api_types.h"
 #include "Typedefs.h"

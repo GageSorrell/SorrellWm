@@ -8,5 +8,4 @@
 
 #include <functional>
 
-#define DECLARE_EXPORTED_FUNCTION(FunctionName) Napi::Value FunctionName(const Napi::CallbackInfo& Information);
-#define DECLARE_NAPI_FUNCTION(...)
+#define DECLARE_NAPI_FUNCTION(FunctionName, ...) Napi::Value FunctionName(const Napi::CallbackInfo& Information);

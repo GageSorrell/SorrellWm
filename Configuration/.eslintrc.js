@@ -68,7 +68,7 @@ module.exports =
                 custom:
                 {
                     match: true,
-                    regex: "^(F|I|P|T|S|A|Y|C|K|N)[A-Z][a-zA-Z0-9]+$|^T|^U|^K|^Y|^A$"
+                    regex: "^(H|F|I|P|T|S|A|Y|C|K|N)[A-Z][a-zA-Z0-9]+$|^T|^U|^K|^Y|^A|^H$"
                 },
                 format: [ "PascalCase" ],
                 selector: "typeLike"

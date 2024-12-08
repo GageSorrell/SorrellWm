@@ -25,6 +25,8 @@
 #include <codecvt>
 #include <map>
 
+#include "CaptureImage.h"
+
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
 /* END AUTO-GENERATED REGION. */
 
@@ -626,9 +628,9 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
 {
     typedef Napi::Value (*FFunctionPointer)(const Napi::CallbackInfo&);
 
-    /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
     const std::map<std::string, FFunctionPointer> FunctionDefinitions =
     {
+        /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "GetMe", GetMe },
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },
@@ -644,8 +646,11 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetIsLightMode", GetIsLightMode },
         { "CoverWindow", FWinEvent::CoverWindow },
         { "GetThemeColor", GetThemeColor },
+        { "StartBlurOverlay", StartBlurOverlay },
         { "Test", FWinEvent::Test },
-        { "TestTwo", FWinEvent::TestTwo }
+        { "TestTwo", FWinEvent::TestTwo },
+        { "CaptureImage", CaptureImage }
+        /* END AUTO-GENERATED REGION. */
         // { "GetMonitorFromRect", MonitorFromRectNode },
         // { "GetMonitorFromWindow", MonitorFromWindowNode },
         // { "GetMonitorHandles", GetMonitorHandles },
@@ -668,7 +673,6 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         // { "GetDwmMargins", GetDwmMargins },
         // { "GetMonitorRefreshRate", GetMonitorRefreshRate }
     };
-    /* END AUTO-GENERATED REGION. */
 
     for(const std::pair<std::string, FFunctionPointer> FunctionDefinition : FunctionDefinitions)
     {
@@ -700,8 +704,6 @@ void InitializeTempDirectory()
         std::wcerr << L"Error: The path '" << TempPath << L"' exists but is not a directory." << std::endl;
     }
 }
-
-
 
 Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
 {

@@ -1,5 +1,11 @@
-import { InitializeIpc } from "@sorrellwm/windows";
+/* File:      NodeIpc.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2024 Sorrell Intellectual Properties
+ * License:   MIT
+ */
+
 import type { FIpcCallback, FIpcCallbackSerialized } from "./NodeIpc.Types";
+import { InitializeIpc } from "@sorrellwm/windows";
 
 let NextListenerId: number = 0;
 const Listeners: Map<number, FIpcCallbackSerialized> = new Map<number, FIpcCallbackSerialized>();
@@ -7,7 +13,7 @@ const Listeners: Map<number, FIpcCallbackSerialized> = new Map<number, FIpcCallb
 export const Subscribe = (Channel: string, Callback: FIpcCallback): number =>
 {
     const Id: number = NextListenerId++;
-    Listeners.set(Id, { Channel, Callback });
+    Listeners.set(Id, { Callback, Channel });
     return Id;
 };
 
@@ -18,8 +24,6 @@ export const Unsubscribe = (Id: number): void =>
 
 function OnMessage(Channel: string, Message: unknown)
 {
-    // console.log(`OnMessage: Received event on channel \`${ Channel }\`.`);
-    // console.log(`There are ${ Listeners.size }`);
     Listeners.forEach((Callback: FIpcCallbackSerialized): void =>
     {
         if (Callback.Channel === Channel)

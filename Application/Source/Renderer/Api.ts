@@ -57,34 +57,34 @@ export const Log = (...Arguments: Array<unknown>): void =>
 //     return ThemeColor;
 // };
 
-const WrapApiCall = <T>(Channel: string): (() => Promise<T>) =>
-{
-    return async () =>
-    {
-        let Cleanup: (() => void) = () => { };
-        const OutData: T = await new Promise<T>((Resolve, _Reject): void =>
-        {
-            window.electron.ipcRenderer.sendMessage(Channel);
-            window.electron.ipcRenderer.once(Channel, (Data: T): void =>
-            {
-                Resolve(Data);
-            });
-            Cleanup = window.electron.ipcRenderer.on(Channel, (Data: T) =>
-            {
-                Resolve(Data);
-            });
-        });
+// const WrapApiCall = <T>(Channel: string): (() => Promise<T>) =>
+// {
+//     return async () =>
+//     {
+//         let Cleanup: (() => void) = () => { };
+//         const OutData: T = await new Promise<T>((Resolve, _Reject): void =>
+//         {
+//             window.electron.ipcRenderer.sendMessage(Channel);
+//             window.electron.ipcRenderer.once(Channel, (Data: T): void =>
+//             {
+//                 Resolve(Data);
+//             });
+//             Cleanup = window.electron.ipcRenderer.on(Channel, (Data: T) =>
+//             {
+//                 Resolve(Data);
+//             });
+//         });
 
-        Cleanup();
+//         Cleanup();
 
-        return OutData;
-    };
-};
+//         return OutData;
+//     };
+// };
 
 // export const GetIsLightMode = WrapApiCall("GetIsLightMode");
 
-export const UseLightMode = (): Readonly<[ IsLightMode: boolean | undefined ]> =>
-{
-    const [ IsLightMode ]
-    return [ IsLightMode ] as const;
-};
+// export const UseLightMode = (): Readonly<[ IsLightMode: boolean | undefined ]> =>
+// {
+//     const [ IsLightMode ]
+//     return [ IsLightMode ] as const;
+// };

@@ -12,6 +12,6 @@
             "\n"
         ],
         "description": "Inserts license information.",
-        "scope": "javascript,typescript,javascriptreact,typescriptreact"
+        "scope": "javascript,typescript,javascriptreact,typescriptreact,cpp"
     }
 }

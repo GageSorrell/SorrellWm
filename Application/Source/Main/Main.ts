@@ -12,6 +12,8 @@ import "./Keyboard";
 setTimeout((): void =>
 {
     import("./MainWindow");
+    import("./RendererFunctions.Generated");
+    import("./BlurWorker");
 });
 
 import { BrowserWindow, app, shell } from "electron";

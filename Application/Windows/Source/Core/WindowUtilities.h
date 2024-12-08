@@ -11,22 +11,27 @@
 #include <string>
 #include <sstream>
 #include <gdiplus.h>
+#include <dwmapi.h>
 #include <iostream>
 #include "String.h"
 #include "Utility.h"
+#include <cmath>
+#include <chrono>
+#include <thread>
+#include "../ThirdParty/Blur.h"
 
-DECLARE_NAPI_FUNCTION(MyFunction, FlagA, FlagB, FWindow)
+DECLARE_NAPI_FUNCTION(GetFocusedWindow, HWindow, Renderer, Hook)
+DECLARE_NAPI_FUNCTION(CaptureWindowScreenshot, string, Handle, HWindow)
+DECLARE_NAPI_FUNCTION(GetWindowLocationAndSize, FBox, Handle, HWindow)
+DECLARE_NAPI_FUNCTION(GetTitlebarHeight, number)
+DECLARE_NAPI_FUNCTION(SetForegroundWindowNode, void, ExportName="SetForegroundWindow", Handle, HWindow)
+DECLARE_NAPI_FUNCTION(GetWindowByName, HWindow, Name, string)
+DECLARE_NAPI_FUNCTION(TestFun, void)
+DECLARE_NAPI_FUNCTION(GetIsLightMode, boolean)
+DECLARE_NAPI_FUNCTION(GetThemeColor, FColor)
+DECLARE_NAPI_FUNCTION(StartBlurOverlay, void, Handle, HWindow)
 
-DECLARE_EXPORTED_FUNCTION(GetFocusedWindow)
-DECLARE_EXPORTED_FUNCTION(CaptureWindowScreenshot)
-DECLARE_EXPORTED_FUNCTION(GetWindowLocationAndSize)
-DECLARE_EXPORTED_FUNCTION(GetTitlebarHeight)
-DECLARE_EXPORTED_FUNCTION(SetForegroundWindowNode)
-DECLARE_EXPORTED_FUNCTION(GetWindowByName)
-DECLARE_EXPORTED_FUNCTION(TestFun)
-DECLARE_EXPORTED_FUNCTION(GetIsLightMode)
-DECLARE_EXPORTED_FUNCTION(GetThemeColor)
-
+HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);
 Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle);
 HWND DecodeHandle(const Napi::Object& Object);
 std::string CaptureWindowScreenshot_Internal(HWND hwnd);

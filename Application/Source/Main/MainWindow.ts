@@ -7,11 +7,14 @@ import * as Fs from "fs";
 import * as Path from "path";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import {
+    CaptureImage,
     CaptureWindowScreenshot,
     CoverWindow,
     GetFocusedWindow,
     GetIsLightMode,
-    GetThemeColor } from "@sorrellwm/windows";
+    GetThemeColor,
+    StartBlurOverlay,
+    StartBlurOverlayNew } from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
 
@@ -121,25 +124,31 @@ function OnActivation(State: string): void
 {
     if (State === "Down")
     {
-        const ScreenshotPath: string = CaptureWindowScreenshot(GetFocusedWindow());
-        const Screenshot: Buffer = Fs.readFileSync(ScreenshotPath);
-        const ScreenshotEncoded: string = `data:image/png;base64,${ Screenshot.toString("base64") }`;
+        // StartBlurOverlay(GetFocusedWindow());
 
-        // @TODO These calls only need to be made once.  Move to an init function.
+        CaptureImage(GetFocusedWindow());
 
-        ipcMain.on("GetThemeColor", async (_Event: Electron.Event, _Argument: unknown) =>
-        {
-            MainWindow?.webContents.send("GetThemeColor", GetThemeColor());
-        });
+        // StartBlurOverlayNew(GetFocusedWindow(), () => { });
+        // // const ScreenshotPath: string = CaptureWindowScreenshot(GetFocusedWindow());
+        // // const Screenshot: Buffer = Fs.readFileSync(ScreenshotPath);
+        // // const ScreenshotEncoded: string = `data:image/png;base64,${ Screenshot.toString("base64") }`;
+        // const ScreenshotEncoded: string = "";
 
-        ipcMain.on("GetIsLightMode", async (_Event: Electron.Event, _Argument:  unknown) =>
-        {
-            const IsLightMode: boolean = GetIsLightMode();
-            MainWindow?.webContents.send("GetIsLightMode", IsLightMode);
-        });
+        // // @TODO These calls only need to be made once.  Move to an init function.
 
-        MainWindow?.webContents.send("BackgroundImage", ScreenshotEncoded);
-        CoverWindow(GetFocusedWindow());
+        // ipcMain.on("GetThemeColor", async (_Event: Electron.Event, _Argument: unknown) =>
+        // {
+        //     MainWindow?.webContents.send("GetThemeColor", GetThemeColor());
+        // });
+
+        // ipcMain.on("GetIsLightMode", async (_Event: Electron.Event, _Argument:  unknown) =>
+        // {
+        //     const IsLightMode: boolean = GetIsLightMode();
+        //     MainWindow?.webContents.send("GetIsLightMode", IsLightMode);
+        // });
+
+        // MainWindow?.webContents.send("BackgroundImage", ScreenshotEncoded);
+        // // CoverWindow(GetFocusedWindow());
     }
     else
     {

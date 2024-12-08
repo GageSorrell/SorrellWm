@@ -81,18 +81,40 @@
 			"forward_list": "cpp",
 			"queue": "cpp",
 			"ranges": "cpp",
-			"span": "cpp"
+			"span": "cpp",
+			"*.rh": "cpp"
 		},
 		"javascript.validate.enable": false,
 		"javascript.format.enable": false,
 		"typescript.format.enable": false,
 		"cSpell.words": [
-			"CYCAPTION",
-			"Edata",
-			"HHOOK",
-			"HWND",
-			"Napi",
-			"sorrellwm"
-		]
+            "allman",
+            "CYCAPTION",
+            "dwmapi",
+            "DWMWA",
+            "Edata",
+            "Gdiplus",
+            "GHND",
+            "HBITMAP",
+            "HGDIOBJ",
+            "HHOOK",
+            "HINSTANCE",
+            "HREDRAW",
+            "HWND",
+            "KBDLLHOOKSTRUCT",
+            "lpfn",
+            "lpsz",
+            "LPWSTR",
+            "Napi",
+            "OVERLAPPEDWINDOW",
+            "PAINTSTRUCT",
+            "RENDERFULLCONTENT",
+            "sorrellwm",
+            "TOOLWINDOW",
+            "WNDCLASS",
+            "WNDCLASSEX",
+            "WNDCLASSEXA",
+            "WNDCLASSEXW"
+        ]
 	}
 }

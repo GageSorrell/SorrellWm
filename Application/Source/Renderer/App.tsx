@@ -5,7 +5,7 @@
 
 import "./App.css";
 import {
-    type FC,
+    type CSSProperties,
     type MutableRefObject,
     type ReactElement,
     type RefObject,
@@ -13,18 +13,43 @@ import {
     useMemo,
     useRef,
     useState } from "react";
-import { Route, MemoryRouter as Router, Routes, useNavigate, type NavigateFunction } from "react-router-dom";
-import { GetIsLightMode, Log } from "./Api";
-import { GetThemeColor } from "@sorrellwm/windows";
+import { type NavigateFunction, Route, MemoryRouter as Router, Routes, useNavigate } from "react-router-dom";
+import { Log } from "./Api";
+import type { HWindow } from "@sorrellwm/windows";
 
 export const TestWindow = (): ReactElement =>
 {
+    const [ Index, SetIndex ] = useState<number>(0);
     useEffect((): void =>
     {
         Log("Loaded TestWindow!");
+        const InductiveStep = (): void =>
+        {
+            SetIndex((Old: number): number => (Old + 1) % 4);
+
+            setTimeout(InductiveStep, 500);
+        };
+
+        InductiveStep();
     }, [ ]);
+
+    const Colors: Array<string> =
+    [
+        "pink",
+        "cyan",
+        "purple",
+        "red"
+    ];
+
+    const style: CSSProperties =
+    {
+        backgroundColor: Colors[Index],
+        height: "10rem",
+        width: "10rem"
+    };
+
     return (
-        <div style={{ width: "10rem", height: "10rem", backgroundColor: "pink" }}><span>p</span></div>
+        <div { ...{ style } }><span>pink</span></div>
     );
 };
 
@@ -97,19 +122,19 @@ export const Main = (): ReactElement =>
 
     const [ BaseColor, SetBaseColor ] = useState<string>("");
 
-    useEffect((): void =>
-    {
-        GetIsLightMode().then((IsLightMode: boolean) =>
-        {
-            SetBaseColor(IsLightMode ? "#FFFFFF" : "#CCCCCC");
-        });
-    }, [ ]);
+    // useEffect((): void =>
+    // {
+    //     GetIsLightMode().then((IsLightMode: boolean) =>
+    //     {
+    //         SetBaseColor(IsLightMode ? "#FFFFFF" : "#CCCCCC");
+    //     });
+    // }, [ ]);
 
     return (
-        <div style={{ backgroundColor: SystemColor, overflow: "hidden" }}>
-            <div className={ ColorImageClasses } style={{ backgroundColor: ThemeColor }}/>
-            <div className={ ColorImageClasses } style={{ backgroundColor: BaseColor }}/>
-            <img
+        <div style={{ backgroundColor: SystemColor, overflow: "hidden", width: "100%", height: "100%", margin: 0, padding: 0 }}>
+            {/* <div className={ ColorImageClasses } style={{ backgroundColor: ThemeColor }}/>
+            <div className={ ColorImageClasses } style={{ backgroundColor: BaseColor }}/> */}
+            {/* <img
                 alt=""
                 key="BackgroundImage"
                 src={ BackgroundImage }
@@ -129,31 +154,21 @@ export const Main = (): ReactElement =>
                 // className={ BackgroundImage === "" ? "BackgroundImage" : "BackgroundImage BackgroundImageBlurred" }
                 className={ ImageClasses }
                 ref={ BackgroundImageElement }
-            />
-            <div style={{
+            /> */}
+            <div style={ {
                 alignItems: "center",
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "center",
                 width: "100%"
-            }}>
-                <span style={{ fontWeight: 300 }}>
+            } }>
+                <span style={ { fontWeight: 300 } }>
                     SorrellWm
                 </span>
             </div>
         </div>
     );
 };
-
-// export default function App() {
-//   return (
-//     <Router>
-//       <Routes>
-//         <Route path="/" element={<Hello />} />
-//       </Routes>
-//     </Router>
-//   );
-// }
 
 const IpcNavigator = (): undefined =>
 {
