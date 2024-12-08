@@ -69,3 +69,22 @@ std::wstring GetTempPath()
     std::wstring targetPath = tempPath + L"\\SorrellWm";
     return targetPath;
 }
+
+BOOL GetDwmWindowRect(HWND Handle, RECT* Rect)
+{
+    HRESULT Result = DwmGetWindowAttribute(
+        Handle,
+        DWMWA_EXTENDED_FRAME_BOUNDS,
+        Rect,
+        sizeof(Rect)
+    );
+
+    if (FAILED(Result))
+    {
+        return GetWindowRect(Handle, Rect);
+    }
+    else
+    {
+        return TRUE;
+    }
+}

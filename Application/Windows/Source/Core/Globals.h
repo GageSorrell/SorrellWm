@@ -3,9 +3,8 @@
 #include "../MessageLoop/MessageLoop.h"
 #include "InterProcessCommunication.h"
 #include "Hook.h"
+#include "Log.h"
 #include <string>
-
-std::string GetLastErrorAsString();
 
 class FBlurWorker;
 

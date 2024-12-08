@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <dwmapi.h>
 
 /**
  * Get the current time as a wstring, ISO timestamp.
@@ -25,3 +26,5 @@ std::wstring GetTimestamp();
 std::wstring GetFileNameTimestamp();
 
 std::wstring GetTempPath();
+
+BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);

@@ -6,17 +6,18 @@
 import * as Fs from "fs";
 import * as Path from "path";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
-import {
-    CaptureImage,
-    CaptureWindowScreenshot,
-    CoverWindow,
-    GetFocusedWindow,
-    GetIsLightMode,
-    GetThemeColor,
-    StartBlurOverlay,
-    StartBlurOverlayNew } from "@sorrellwm/windows";
+// import {
+//     BlurBackground,
+//     CaptureWindowScreenshot,
+//     CoverWindow,
+//     GetFocusedWindow,
+//     GetIsLightMode,
+//     GetThemeColor,
+//     StartBlurOverlay,
+//     StartBlurOverlayNew } from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
+import { MyBlur } from "@sorrellwm/windows";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -122,11 +123,14 @@ const LaunchMainWindow = async (): Promise<void> =>
 
 function OnActivation(State: string): void
 {
+    console.log("OnActivaoit");
     if (State === "Down")
     {
+        console.log("Going to call MyBlur...");
+        MyBlur();
         // StartBlurOverlay(GetFocusedWindow());
 
-        CaptureImage(GetFocusedWindow());
+        // CaptureImage(GetFocusedWindow());
 
         // StartBlurOverlayNew(GetFocusedWindow(), () => { });
         // // const ScreenshotPath: string = CaptureWindowScreenshot(GetFocusedWindow());

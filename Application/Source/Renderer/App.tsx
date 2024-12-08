@@ -49,7 +49,9 @@ export const TestWindow = (): ReactElement =>
     };
 
     return (
-        <div { ...{ style } }><span>pink</span></div>
+        <div style={{ width: "100%", height: "100%", backgroundColor: "#00CC00", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <div { ...{ style } }><span>pink</span></div>
+        </div>
     );
 };
 

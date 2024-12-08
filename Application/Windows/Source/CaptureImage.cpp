@@ -8,6 +8,8 @@
 
 #define MAX_LOADSTRING 100
 
+bool HasDrawn = false;
+
 HINSTANCE hInst;
 // WCHAR szTitle[MAX_LOADSTRING] = L"CaptureImageTitle";
 // WCHAR szWindowClass[MAX_LOADSTRING] = L"CaptureImageClass";
@@ -64,14 +66,24 @@ BOOL InitInstance(HINSTANCE hInstance)
 {
     hInst = hInstance;
 
+    HDC ScreenDc = GetDC(NULL);
+
+    BITMAP structBitmapHeader;
+    memset( &structBitmapHeader, 0, sizeof(BITMAP) );
+
+    HGDIOBJ hBitmap = GetCurrentObject(ScreenDc, OBJ_BITMAP);
+    GetObject(hBitmap, sizeof(BITMAP), &structBitmapHeader);
+
+    std::cout << "Init: " << structBitmapHeader.bmWidth << " " << structBitmapHeader.bmHeight << std::endl;
+
     HWND hWnd = CreateWindowA(
         szWindowClass,
         "CaptureImageWindow",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT,
         0,
-        CW_USEDEFAULT,
         0,
+        structBitmapHeader.bmWidth,
+        structBitmapHeader.bmHeight,
         nullptr,
         nullptr,
         hInstance,
@@ -114,19 +126,148 @@ BOOL InitInstance(HINSTANCE hInstance)
 //      Note: This function attempts to create a file called captureqwsx.bmp
 //
 
+void MultiplyPixelsWithColor(const char* HexColor, unsigned char* PixelArray, int Width, int Height)
+{
+    if (!HexColor || !PixelArray || Width <= 0 || Height <= 0)
+    {
+        std::cout << "Invalid arguments!!" << std::endl;
+    }
+
+    // Skip leading '#' if present
+    const char* colorStr = HexColor;
+    if (*colorStr == '#')
+    {
+        colorStr++;
+    }
+
+    // Ensure the length is at least 6 for RRGGBB
+    // We do not strictly validate beyond that here, but this can be extended.
+    // If not properly formatted, sscanf will fail to parse.
+    if (std::strlen(colorStr) < 6)
+    {
+        std::cout << "Hex color string is too short." << std::endl;
+    }
+
+    unsigned int red = 0, green = 0, blue = 0;
+
+    // Parse the RRGGBB hex color. Example: "FFA07A"
+    // %2x reads two hex chars as one byte
+    int result = std::sscanf(colorStr, "%2x%2x%2x", &red, &green, &blue);
+    if (result != 3)
+    {
+        std::cout << "Failed to parse hex color string." << std::endl;
+    }
+
+    // For each pixel, we have B, G, R in PixelArray:
+    // PixelArray[i+0] = Blue
+    // PixelArray[i+1] = Green
+    // PixelArray[i+2] = Red
+
+    // We must multiply:
+    // Blue component by (blue/255)
+    // Green component by (green/255)
+    // Red component by (red/255)
+
+    int totalPixels = Width * Height;
+    for (int p = 0; p < totalPixels; p++)
+    {
+        int i = p * 4;
+
+        // Multiply and scale each channel
+        unsigned char originalRed = PixelArray[i + 0];
+        unsigned char originalGreen = PixelArray[i + 1];
+        unsigned char originalBlue = PixelArray[i + 2];
+
+        PixelArray[i + 0] = static_cast<unsigned char>((originalRed  * red)  / 255);
+        PixelArray[i + 1] = static_cast<unsigned char>((originalGreen * green) / 255);
+        PixelArray[i + 2] = static_cast<unsigned char>((originalBlue   * blue)   / 255);
+        // PixelArray[i] = static_cast<unsigned char>(originalRed / 2);
+        // PixelArray[i + 1] = static_cast<unsigned char>(originalGreen / 2);
+    }
+}
+
+void DrawSorrellWindow(HWND MainWindow, HDC HdcTarget)
+{
+    // Find the target window named "SorrellWm"
+    HWND SorrellWnd = FindWindowA(NULL, "SorrellWm");
+    if (!SorrellWnd)
+    {
+        // If window not found, do nothing
+        std::cout << "Test window not found." << std::endl;
+        return;
+    }
+
+    // Get device contexts
+    // HDC HdcTarget = GetDC(SorrellWnd);
+    HDC HdcMain = GetDC(MainWindow);
+
+    if (!HdcTarget || !HdcMain)
+    {
+        std::cout << "Something is wrong here." << std::endl;
+        if (HdcTarget) ReleaseDC(SorrellWnd, HdcTarget);
+        if (HdcMain) ReleaseDC(MainWindow, HdcMain);
+        return;
+    }
+
+    // Get the size of the target window
+    RECT TargetRect;
+    GetClientRect(SorrellWnd, &TargetRect);
+    int Width = TargetRect.right - TargetRect.left;
+    int Height = TargetRect.bottom - TargetRect.top;
+    std::cout << "At line 217, Width is " << Width << " and Height is " << Height << std::endl;
+
+    // Create a compatible DC and bitmap for the target content
+    HDC HdcMem = CreateCompatibleDC(HdcTarget);
+    std::cout << "Line 222" << std::endl;
+    HBITMAP HbmScreen = CreateCompatibleBitmap(HdcTarget, Width, Height);
+    std::cout << "Line 223" << std::endl;
+    SelectObject(HdcMem, HbmScreen);
+    std::cout << "Line 224" << std::endl;
+
+    // BitBlt the target window into the memory DC
+    BitBlt(HdcMem, 0, 0, Width, Height, HdcTarget, 0, 0, SRCCOPY);
+
+    // Now BitBlt the memory DC onto the main window
+    RECT ClientRect;
+    GetClientRect(MainWindow, &ClientRect);
+    int MainWidth = ClientRect.right - ClientRect.left;
+    int MainHeight = ClientRect.bottom - ClientRect.top;
+
+    // Center the captured image in the main window (optional)
+    // int DestX = (MainWidth - Width) / 2;
+    // int DestY = (MainHeight - Height) / 2;
+
+    std::cout << "Line 241" << std::endl;
+    BitBlt(HdcMain, 0, 0, Width, Height, HdcMem, 0, 0, SRCCOPY);
+    std::cout << "Line 243" << std::endl;
+
+    // Cleanup
+    DeleteObject(HbmScreen);
+    DeleteDC(HdcMem);
+    ReleaseDC(SorrellWnd, HdcTarget);
+    ReleaseDC(MainWindow, HdcMain);
+    std::cout << "Line 250" << std::endl;
+}
+
 int CaptureImageInternal(HWND hWnd)
 {
     HDC hdcScreen;
     HDC hdcWindow;
     HDC hdcMemDC = NULL;
     HBITMAP hbmScreen = NULL;
-    BITMAP bmpScreen;
+    BITMAP bmpScreen = { 0 };
     DWORD dwBytesWritten = 0;
     DWORD dwSizeofDIB = 0;
-    HANDLE hFile = NULL;
+    // HANDLE hFile = NULL;
     char* lpbitmap = NULL;
     HANDLE hDIB = NULL;
+    HANDLE hDIBOther = NULL;
     DWORD dwBmpSize = 0;
+
+    if (HasDrawn)
+    {
+        return 0;
+    }
 
     // Retrieve the handle to a display device context for the client
     // area of the window.
@@ -146,25 +287,30 @@ int CaptureImageInternal(HWND hWnd)
     RECT rcClient;
     GetClientRect(hWnd, &rcClient);
 
-    // This is the best stretch mode.
-    SetStretchBltMode(hdcWindow, HALFTONE);
-
-    // The source DC is the entire screen, and the destination DC is the current window (HWND).
-    if (!StretchBlt(hdcWindow,
-        0, 0,
-        rcClient.right, rcClient.bottom,
-        hdcScreen,
-        0, 0,
-        GetSystemMetrics(SM_CXSCREEN),
-        GetSystemMetrics(SM_CYSCREEN),
-        SRCCOPY))
+    if (!BitBlt(hdcWindow, 0, 0, (rcClient.right - rcClient.left) / 2, (rcClient.bottom - rcClient.top) / 2, hdcScreen, 0, 0, SRCCOPY))
     {
-        std::cout << "StretchBlt has failed" << std::endl;
-        goto done;
+        std::cout << "BitBlt Failed" << std::endl;
+        std::cout << GetLastErrorAsString() << std::endl;
     }
+    // // This is the best stretch mode.
+    // SetStretchBltMode(hdcWindow, HALFTONE);
+
+    // // The source DC is the entire screen, and the destination DC is the current window (HWND).
+    // if (!StretchBlt(hdcWindow,
+    //     0, 0,
+    //     rcClient.right, rcClient.bottom,
+    //     hdcScreen,
+    //     0, 0,
+    //     GetSystemMetrics(SM_CXSCREEN),
+    //     GetSystemMetrics(SM_CYSCREEN),
+    //     SRCCOPY))
+    // {
+    //     std::cout << "StretchBlt has failed" << std::endl;
+    //     goto done;
+    // }
 
     // Create a compatible bitmap from the Window DC.
-    hbmScreen = CreateCompatibleBitmap(hdcWindow, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+    hbmScreen = CreateCompatibleBitmap(hdcWindow, (rcClient.right - rcClient.left) / 2, (rcClient.bottom - rcClient.top) / 2);
 
     if (!hbmScreen)
     {
@@ -178,7 +324,7 @@ int CaptureImageInternal(HWND hWnd)
     // Bit block transfer into our compatible memory DC.
     if (!BitBlt(hdcMemDC,
         0, 0,
-        rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
+        (rcClient.right - rcClient.left) / 2, (rcClient.bottom - rcClient.top) / 2,
         hdcWindow,
         0, 0,
         SRCCOPY))
@@ -190,13 +336,11 @@ int CaptureImageInternal(HWND hWnd)
     // Get the BITMAP from the HBITMAP.
     GetObject(hbmScreen, sizeof(BITMAP), &bmpScreen);
 
-    int width = bmpScreen.bmWidth;
-    int height = bmpScreen.bmHeight;
+    int width = bmpScreen.bmWidth / 2;
+    int height = bmpScreen.bmHeight / 2;
     int bitCount = 24; // 24 bits means 3 bytes per pixel: B, G, R
     int bytesPerPixel = bitCount / 8;
-    int imageSize = width * height * bytesPerPixel;
-    unsigned char* pixelData = new unsigned char[imageSize];
-    unsigned char* BlurredImage = new unsigned char[imageSize];
+    // int imageSize = width * height * bytesPerPixel;
 
     // BITMAPFILEHEADER   bmfHeader;
     // BITMAPINFOHEADER   bi;
@@ -220,17 +364,24 @@ int CaptureImageInternal(HWND hWnd)
     bi.biPlanes = 1;
     bi.biBitCount = static_cast<WORD>(bitCount);
     bi.biCompression = BI_RGB;
-    bi.biSizeImage = imageSize;
+    bi.biSizeImage = 0;
     BITMAPINFO bmpInfo = { 0 };
     bmpInfo.bmiHeader = bi;
 
-    dwBmpSize = ((bmpScreen.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmpScreen.bmHeight;
+    dwBmpSize = (((bmpScreen.bmWidth / 2) * bi.biBitCount + 31) / 32) * 4 * (bmpScreen.bmHeight / 2);
 
-    // Starting with 32-bit Windows, GlobalAlloc and LocalAlloc are implemented as wrapper functions that
-    // call HeapAlloc using a handle to the process's default heap. Therefore, GlobalAlloc and LocalAlloc
-    // have greater overhead than HeapAlloc.
-    hDIB = GlobalAlloc(GHND, dwBmpSize);
-    lpbitmap = (char*)GlobalLock(hDIB);
+    std::cout << "bmpScreen.bmHeight is " << bmpScreen.bmHeight << std::endl;
+    std::cout << "bmpScreen.bmWidth is " << bmpScreen.bmWidth << std::endl;
+    std::cout << "bit.biBitCount is " << bi.biBitCount << std::endl;
+
+    // hDIB = GlobalAlloc(GHND, dwBmpSize);
+    // hDIBOther = GlobalAlloc(GHND, dwBmpSize);
+    hDIB = GlobalAlloc(GPTR, dwBmpSize);
+    hDIBOther = GlobalAlloc(GPTR, dwBmpSize);
+    // lpbitmap = (char*)GlobalLock(hDIB);
+    unsigned char* pixelData = (unsigned char*) GlobalLock(hDIB);
+    unsigned char* BlurredImage = (unsigned char*) GlobalLock(hDIB);
+    std::cout << "After GlobalAlloc calls" << std::endl;
 
     // // Gets the "bits" from the bitmap, and copies them into a buffer
     // // that's pointed to by lpbitmap.
@@ -245,17 +396,21 @@ int CaptureImageInternal(HWND hWnd)
         std::cout << GetLastErrorAsString() << std::endl;
         std::cout << hdcWindow << "\n" << hbmScreen << "\n" << height << "\n" << pixelData[0] << "\n" << bmpInfo.bmiHeader.biWidth << "\n" << DIB_RGB_COLORS << std::endl;
     }
+    std::cout << "After First GetDIBits call" << std::endl;
 
-    Blur(
-        pixelData,
-        BlurredImage,
-        width,
-        height,
-        3,
-        10,
-        3,
-        kExtend
-    );
+    // Blur(
+    //     pixelData,
+    //     BlurredImage,
+    //     width,
+    //     height,
+    //     3,
+    //     2,
+    //     3,
+    //     kExtend
+    // );
+    BlurredImage = pixelData;
+
+    MultiplyPixelsWithColor("#00FAFF", BlurredImage, width, height);
 
     int xDest = 0;
     int yDest = 0;
@@ -263,12 +418,12 @@ int CaptureImageInternal(HWND hWnd)
     int ySrc = 0;
 
     if (SetDIBitsToDevice(hdcWindow,
-                          xDest,
-                          yDest,
+                          0,
+                          0,
                           static_cast<DWORD>(width),
                           static_cast<DWORD>(height),
-                          xSrc,
-                          ySrc,
+                          0,
+                          0,
                           0,
                           static_cast<UINT>(height),
                           BlurredImage,
@@ -279,6 +434,9 @@ int CaptureImageInternal(HWND hWnd)
         std::cout << "SetDIBitsToDevice failed." << std::endl;
         std::cout << GetLastErrorAsString() << std::endl;
     }
+
+    HasDrawn = true;
+    std::cout << "After HasDrawn" << std::endl;
 
     // // A file is created, this is where we will save the screen capture.
     // hFile = CreateFile("captureqwsx.bmp",
@@ -305,11 +463,15 @@ int CaptureImageInternal(HWND hWnd)
     // WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
 
     // Unlock and Free the DIB from the heap.
+    std::cout << "Immediately before Global calls." << std::endl;
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
+    GlobalUnlock(hDIBOther);
+    GlobalFree(hDIBOther);
+    std::cout << "After Global calls." << std::endl;
 
     // Close the handle for the file that was created.
-    CloseHandle(hFile);
+    // CloseHandle(hFile);
 
     // Clean up.
 done:
@@ -317,6 +479,8 @@ done:
     DeleteObject(hdcMemDC);
     ReleaseDC(NULL, hdcScreen);
     ReleaseDC(hWnd, hdcWindow);
+
+    std::cout << "Made it through CaptureImageInternal" << std::endl;
 
     return 0;
 }
@@ -406,7 +570,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-        CaptureImageInternal(hWnd);
+        if (hdc == nullptr)
+        {
+            std::cout << "WM_PAINT NULLPTR" << std::endl;
+        }
+        else
+        {
+            std::cout << "wm_paint NOT nullptr" << std::endl;
+        }
+
+        // CaptureImageInternal(hWnd);
+        DrawSorrellWindow(hWnd, hdc);
         EndPaint(hWnd, &ps);
     }
     break;

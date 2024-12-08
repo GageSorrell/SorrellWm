@@ -25,6 +25,7 @@
 #include <codecvt>
 #include <map>
 
+#include "BlurBackground.h"
 #include "CaptureImage.h"
 
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
@@ -649,6 +650,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "StartBlurOverlay", StartBlurOverlay },
         { "Test", FWinEvent::Test },
         { "TestTwo", FWinEvent::TestTwo },
+        { "MyBlur", MyBlur },
         { "CaptureImage", CaptureImage }
         /* END AUTO-GENERATED REGION. */
         // { "GetMonitorFromRect", MonitorFromRectNode },

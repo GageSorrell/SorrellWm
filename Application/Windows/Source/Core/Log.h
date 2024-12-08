@@ -5,3 +5,8 @@
  */
 
 #pragma once
+
+#include "Core.h"
+
+std::string GetLastErrorAsString();
+void LogLastWindowsError();
