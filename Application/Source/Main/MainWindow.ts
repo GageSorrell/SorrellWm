@@ -17,7 +17,7 @@ import { BrowserWindow, app, ipcMain, screen } from "electron";
 //     StartBlurOverlayNew } from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
-import { MyBlur, TearDown } from "@sorrellwm/windows";
+import { MyBlur, TearDown, type FBlurReturnType, type FThemeMode } from "@sorrellwm/windows";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -55,7 +55,7 @@ const LaunchMainWindow = async (): Promise<void> =>
     console.log("Launching main window.");
     MainWindow = new BrowserWindow({
         alwaysOnTop: true,
-        frame: true,
+        frame: false,
         height: 900,
         show: true,
         skipTaskbar: true,
@@ -65,6 +65,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         webPreferences:
         {
             devTools: false,
+            // devTools: true,
             nodeIntegration: true,
             preload: app.isPackaged
                 ? Path.join(__dirname, "Preload.js")
@@ -84,7 +85,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
         {
             Event.preventDefault();
-            MainWindow?.webContents.closeDevTools();
+            // MainWindow?.webContents.openDevTools();
         }
     );
 
@@ -126,7 +127,9 @@ function OnActivation(State: string): void
     if (State === "Down")
     {
         console.log("Going to call MyBlur...");
-        MyBlur();
+        const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
+        MainWindow?.webContents.send("Summoned");
+
         // StartBlurOverlay(GetFocusedWindow());
 
         // CaptureImage(GetFocusedWindow());
@@ -151,11 +154,22 @@ function OnActivation(State: string): void
         // });
 
         // MainWindow?.webContents.send("BackgroundImage", ScreenshotEncoded);
-        // // CoverWindow(GetFocusedWindow());
     }
     else
     {
+        // MainWindow?.webContents.send("TearDown");
         TearDown();
+        // ipcMain.on("TearDown", (): void =>
+        // {
+        //     TearDown();
+        //     setTimeout((): void =>
+        //     {
+        //         const { x, y } = GetLeastInvisiblePosition();
+        //         MainWindow?.setPosition(x, y, false);
+        //     }, 100);
+        // });
+        // MainWindow?.webContents.send("TearDown");
+
         // MainWindow?.on("closed", (_: Electron.Event): void =>
         // {
         //     LaunchMainWindow();

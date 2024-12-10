@@ -8,9 +8,9 @@
 
 /* eslint-disable */
 
-import type { HWindow, FBox, FColor } from "./Core";
+import type { FBlurReturnType, HWindow, FBox, FColor } from "./Core";
 
-export function MyBlur(): void;
+export function MyBlur(): FBlurReturnType;
 export function TearDown(): void;
 export function CaptureImage(): void;
 export function GetFocusedWindow(): HWindow;

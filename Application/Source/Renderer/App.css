@@ -2,18 +2,20 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
-body {
-  position: relative;
-  color: white;
-  height: 100vh;
-  padding: 0;
-  margin: 0;
-  font-family: "Segoe UI";
-  overflow-y: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  user-select: none;
+body
+{
+    background-color: #00000000;
+    position: relative;
+    color: white;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+    font-family: "Segoe UI";
+    overflow-y: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
 }
 
 .DEBUG_Draggable
@@ -59,4 +61,38 @@ body {
 .BackgroundColorOn
 {
     opacity: 1;
+}
+
+.FadeIn
+{
+    display: flex;
+    animation: fadeInFromNone 0.2s ease-out;
+    animation-play-state: running;
+    animation-iteration-count: 1;
+}
+
+.FadeOut
+{
+    display: flex;
+    animation: fadeInFromNone 0.2s ease-out;
+    animation-direction: reverse;
+    animation-play-state: running;
+    animation-iteration-count: 1;
+}
+
+@keyframes fadeInFromNone {
+    0% {
+        /* display: none; */
+        opacity: 0;
+    }
+
+    1% {
+        /* display: flex; */
+        opacity: 0;
+    }
+
+    100% {
+        /* display: flex; */
+        opacity: 1;
+    }
 }

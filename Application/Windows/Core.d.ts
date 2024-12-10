@@ -96,4 +96,15 @@ export function InitializeHooks(): void;
 //     Height: number
 // ): boolean;
 
+export type FThemeMode =
+    | "Dark"
+    | "Light"
+    | "Indeterminate";
+
+export type FBlurReturnType =
+{
+    BackgroundWindow: HWindow;
+    ThemeMode: FThemeMode;
+};
+
 export function StartBlurOverlayNew(Handle: HWindow): void;

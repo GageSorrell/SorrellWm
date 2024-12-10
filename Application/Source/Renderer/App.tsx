@@ -77,119 +77,165 @@ export const TestWindow = (): ReactElement =>
 
 export const Main = (): ReactElement =>
 {
-    const [ BackgroundImage, SetBackgroundImage ] = useState<string>("");
-    const HasLoadedBackgroundImage: MutableRefObject<boolean> = useRef<boolean>(false);
-    const BackgroundImageElement: RefObject<HTMLImageElement> = useRef<HTMLImageElement>(null);
-    const SystemColor: string = "#CC00CC";
+    // const [ Opacity, SetOpacity ] = useState<number>(0);
+    // useEffect((): void =>
+    // {
 
+    // });
+    const DivRef: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
+    const [ FadeClass, SetFadeClass ] = useState<string>("");
     useEffect((): void =>
     {
-        Log("Loaded Main page!");
-        window.electron.ipcRenderer.on("BackgroundImage", (..._Arguments: Array<unknown>) =>
+        window.electron.ipcRenderer.on("TearDown", (): void =>
         {
-            Log("MainWindow: BackgroundImage received!");
-            SetBackgroundImage((_Old: string): string => Event as unknown as string);
-        });
-
-        BackgroundImageElement.current?.addEventListener("load", (): void =>
-        {
-            Log("LoadEventListener");
-            if (!HasLoadedBackgroundImage.current)
-            {
-                HasLoadedBackgroundImage.current = true;
-                window.electron.ipcRenderer.sendMessage("BackgroundImage");
-            }
-        });
-    }, [ ]);
-
-    const [ ImageClasses, SetImageClasses ] = useState<string>("BackgroundImage");
-    useEffect((): void =>
-    {
-        if (BackgroundImage !== "")
-        {
+            // SetFadeClass("FadeOut");
             setTimeout((): void =>
             {
-                SetImageClasses((_Old: string): string =>
-                {
-                    return "BackgroundImage BackgroundImageBlurred";
-                });
+                // SetFadeClass("");
+                window.electron.ipcRenderer.sendMessage("TearDown");
             }, 100);
-        }
-    }, [ BackgroundImage ]);
+        });
+        // const LogOpacity = (): void =>
+        // {
+        //     if (DivRef.current)
+        //     {
+        //         const DivOpacity: number = parseFloat(window.getComputedStyle(DivRef.current).getPropertyValue("opacity"));
+        //         // console.log(DivOpacity);
+        //         // Log("DivRef " + DivOpacity);
+        //         if (DivOpacity < 1 && 0 < DivOpacity)
+        //         {
+        //             Log("DivRef " + DivOpacity);
+        //         }
+        //     }
 
-    useEffect((): void =>
-    {
-        Log("BackgroundImage received!");
+        //     setTimeout(LogOpacity, 10);
+        // };
+
+        // LogOpacity();
+
+        window.electron.ipcRenderer.on("Summoned", (): void =>
+        {
+            // SetFadeClass("FadeIn");
+        });
     }, [ ]);
-
-    const ColorImageClasses: string = useMemo<string>((): string =>
-    {
-        if (ImageClasses.includes("Blurred"))
-        {
-            return "BackgroundColor BackgroundColorOn";
-        }
-        else
-        {
-            return "BackgroundColor";
-        }
-    }, [ ImageClasses ]);
-
-    // const [ ThemeColor, SetThemeColor ] = useState<string>(window.electron.GetThemeColor());
-    const [ ThemeColor, SetThemeColor ] = useState<string>("#CC00CC");
+    return (
+        <div style={{ width: "100%", height: "100%" }} ref={ DivRef }>
+            <span style={{ color: "black" }}>SorrellWm</span>
+        </div>
+    );
+    // const [ BackgroundImage, SetBackgroundImage ] = useState<string>("");
+    // const HasLoadedBackgroundImage: MutableRefObject<boolean> = useRef<boolean>(false);
+    // const BackgroundImageElement: RefObject<HTMLImageElement> = useRef<HTMLImageElement>(null);
+    // const SystemColor: string = "#CC00CC";
 
     // useEffect((): void =>
     // {
-    //     GetThemeColor().then((InThemeColor: string) => SetThemeColor(InThemeColor));
-    // }, [ ]);
-
-    const [ BaseColor, SetBaseColor ] = useState<string>("");
-
-    // useEffect((): void =>
-    // {
-    //     GetIsLightMode().then((IsLightMode: boolean) =>
+    //     Log("Loaded Main page!");
+    //     window.electron.ipcRenderer.on("BackgroundImage", (..._Arguments: Array<unknown>) =>
     //     {
-    //         SetBaseColor(IsLightMode ? "#FFFFFF" : "#CCCCCC");
+    //         Log("MainWindow: BackgroundImage received!");
+    //         SetBackgroundImage((_Old: string): string => Event as unknown as string);
+    //     });
+
+    //     BackgroundImageElement.current?.addEventListener("load", (): void =>
+    //     {
+    //         Log("LoadEventListener");
+    //         if (!HasLoadedBackgroundImage.current)
+    //         {
+    //             HasLoadedBackgroundImage.current = true;
+    //             window.electron.ipcRenderer.sendMessage("BackgroundImage");
+    //         }
     //     });
     // }, [ ]);
 
-    return (
-        <div style={{ backgroundColor: SystemColor, overflow: "hidden", width: "100%", height: "100%", margin: 0, padding: 0 }}>
-            {/* <div className={ ColorImageClasses } style={{ backgroundColor: ThemeColor }}/>
-            <div className={ ColorImageClasses } style={{ backgroundColor: BaseColor }}/> */}
-            {/* <img
-                alt=""
-                key="BackgroundImage"
-                src={ BackgroundImage }
-                // style={{ filter: `blur(${ Blur }px)` }}
-                // style={{
-                //     width: "auto",
-                //     height: "100%",
-                //     position: "absolute",
-                //     top: 0,
-                //     // animation: ""
-                //     transition: "opacity 0.25s ease, filter 0.25s ease",
-                //     filter: BackgroundImage === "" ? "none" : "blur(0.75)",
-                //     mixBlendMode: "multiply",
-                //     left: 0,
-                //     // ...styles
-                // }}
-                // className={ BackgroundImage === "" ? "BackgroundImage" : "BackgroundImage BackgroundImageBlurred" }
-                className={ ImageClasses }
-                ref={ BackgroundImageElement }
-            /> */}
-            <div style={ {
-                alignItems: "center",
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                width: "100%"
-            } }>
-                <span style={ { fontWeight: 300 } }>
-                    SorrellWm
-                </span>
-            </div>
-        </div>
-    );
+    // const [ ImageClasses, SetImageClasses ] = useState<string>("BackgroundImage");
+    // useEffect((): void =>
+    // {
+    //     if (BackgroundImage !== "")
+    //     {
+    //         setTimeout((): void =>
+    //         {
+    //             SetImageClasses((_Old: string): string =>
+    //             {
+    //                 return "BackgroundImage BackgroundImageBlurred";
+    //             });
+    //         }, 100);
+    //     }
+    // }, [ BackgroundImage ]);
+
+    // useEffect((): void =>
+    // {
+    //     Log("BackgroundImage received!");
+    // }, [ ]);
+
+    // const ColorImageClasses: string = useMemo<string>((): string =>
+    // {
+    //     if (ImageClasses.includes("Blurred"))
+    //     {
+    //         return "BackgroundColor BackgroundColorOn";
+    //     }
+    //     else
+    //     {
+    //         return "BackgroundColor";
+    //     }
+    // }, [ ImageClasses ]);
+
+    // // const [ ThemeColor, SetThemeColor ] = useState<string>(window.electron.GetThemeColor());
+    // const [ ThemeColor, SetThemeColor ] = useState<string>("#CC00CC");
+
+    // // useEffect((): void =>
+    // // {
+    // //     GetThemeColor().then((InThemeColor: string) => SetThemeColor(InThemeColor));
+    // // }, [ ]);
+
+    // const [ BaseColor, SetBaseColor ] = useState<string>("");
+
+    // // useEffect((): void =>
+    // // {
+    // //     GetIsLightMode().then((IsLightMode: boolean) =>
+    // //     {
+    // //         SetBaseColor(IsLightMode ? "#FFFFFF" : "#CCCCCC");
+    // //     });
+    // // }, [ ]);
+
+    // return (
+    //     <div style={{ backgroundColor: SystemColor, overflow: "hidden", width: "100%", height: "100%", margin: 0, padding: 0 }}>
+    //         {/* <div className={ ColorImageClasses } style={{ backgroundColor: ThemeColor }}/>
+    //         <div className={ ColorImageClasses } style={{ backgroundColor: BaseColor }}/> */}
+    //         {/* <img
+    //             alt=""
+    //             key="BackgroundImage"
+    //             src={ BackgroundImage }
+    //             // style={{ filter: `blur(${ Blur }px)` }}
+    //             // style={{
+    //             //     width: "auto",
+    //             //     height: "100%",
+    //             //     position: "absolute",
+    //             //     top: 0,
+    //             //     // animation: ""
+    //             //     transition: "opacity 0.25s ease, filter 0.25s ease",
+    //             //     filter: BackgroundImage === "" ? "none" : "blur(0.75)",
+    //             //     mixBlendMode: "multiply",
+    //             //     left: 0,
+    //             //     // ...styles
+    //             // }}
+    //             // className={ BackgroundImage === "" ? "BackgroundImage" : "BackgroundImage BackgroundImageBlurred" }
+    //             className={ ImageClasses }
+    //             ref={ BackgroundImageElement }
+    //         /> */}
+    //         <div style={ {
+    //             alignItems: "center",
+    //             display: "flex",
+    //             flexDirection: "row",
+    //             justifyContent: "center",
+    //             width: "100%"
+    //         } }>
+    //             <span style={ { fontWeight: 300 } }>
+    //                 SorrellWm
+    //             </span>
+    //         </div>
+    //     </div>
+    // );
 };
 
 const IpcNavigator = (): undefined =>
