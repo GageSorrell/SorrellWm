@@ -16,7 +16,7 @@ export class TDispatcher<T = unknown>
         this.Listeners.delete(Id);
     }
 
-    public const Dispatch = (Message: T): void =>
+    public Dispatch = (Message: T): void =>
     {
         if (this.Listeners.size > 0)
         {

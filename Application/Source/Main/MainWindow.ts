@@ -17,7 +17,7 @@ import { BrowserWindow, app, ipcMain, screen } from "electron";
 //     StartBlurOverlayNew } from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
-import { MyBlur } from "@sorrellwm/windows";
+import { MyBlur, TearDown } from "@sorrellwm/windows";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -123,7 +123,6 @@ const LaunchMainWindow = async (): Promise<void> =>
 
 function OnActivation(State: string): void
 {
-    console.log("OnActivaoit");
     if (State === "Down")
     {
         console.log("Going to call MyBlur...");
@@ -156,6 +155,7 @@ function OnActivation(State: string): void
     }
     else
     {
+        TearDown();
         // MainWindow?.on("closed", (_: Electron.Event): void =>
         // {
         //     LaunchMainWindow();

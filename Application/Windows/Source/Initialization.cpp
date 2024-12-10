@@ -651,6 +651,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "Test", FWinEvent::Test },
         { "TestTwo", FWinEvent::TestTwo },
         { "MyBlur", MyBlur },
+        { "TearDown", TearDown },
         { "CaptureImage", CaptureImage }
         /* END AUTO-GENERATED REGION. */
         // { "GetMonitorFromRect", MonitorFromRectNode },

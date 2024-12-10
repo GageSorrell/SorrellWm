@@ -21,14 +21,14 @@ void FMessageLoop::Execute(const Napi::AsyncProgressQueueWorker<int>::ExecutionP
 {
     std::cout << "EXECUTED ASYNC WORKER" << std::endl;
 
-    WNDCLASS wc = {};
+    WNDCLASSA wc = {};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = "SorrellWm";
 
-    RegisterClass(&wc);
+    RegisterClassA(&wc);
 
-    HWND Handle = CreateWindowEx(
+    HWND Handle = CreateWindowExA(
         0,
         wc.lpszClassName,
         "SorrellWm",

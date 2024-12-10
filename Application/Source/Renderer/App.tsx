@@ -41,15 +41,35 @@ export const TestWindow = (): ReactElement =>
         "red"
     ];
 
+    const [ left, SetLeft ] = useState<number>(0);
+    useEffect((): void =>
+    {
+        const Animate = (): void =>
+        {
+            // Log("Animated!");
+            SetLeft((Old: number) =>
+            {
+                // Log(`Old is ${ Old }.`);
+                return (Old + 2) % 24;
+            });
+            setTimeout(Animate, 100);
+        };
+
+        Animate();
+    }, [ ]);
+
     const style: CSSProperties =
     {
+        position: "absolute",
+        top: 0,
+        left: `${ Math.floor(left * 100) / 100 }rem`,
         backgroundColor: Colors[Index],
         height: "10rem",
         width: "10rem"
     };
 
     return (
-        <div style={{ width: "100%", height: "100%", backgroundColor: "#00CC00", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "#00CC00", display: "flex", justifyContent: "center", alignItems: "center" }}>
             <div { ...{ style } }><span>pink</span></div>
         </div>
     );

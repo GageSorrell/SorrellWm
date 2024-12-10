@@ -33,27 +33,26 @@ class FKeyboard extends TDispatcher<FActivationKeyState>
     public constructor()
     {
         super();
-
     }
 
     private IsKeyDown: boolean = false;
 
-    public const OnActivationKeyUp = (): void =>
+    public OnActivationKeyUp = (): void =>
     {
         this.IsKeyDown = false;
-        console.log("Going to dispatch...");
+        // console.log("Going to dispatch...");
         this.Dispatch("Up");
-        console.log("Finished dispatch");
+        // console.log("Finished dispatch");
     }
 
-    public const OnActivationKeyDown = (): void =>
+    public OnActivationKeyDown = (): void =>
     {
         if (!this.IsKeyDown)
         {
             this.IsKeyDown = true;
-            console.log("Going to dispatch...", this);
+            // console.log("Going to dispatch...", this);
             this.Dispatch("Down");
-            console.log("Finished dispatch");
+            // console.log("Finished dispatch");
         }
     }
 }

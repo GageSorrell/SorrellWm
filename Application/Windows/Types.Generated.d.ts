@@ -11,6 +11,7 @@
 import type { HWindow, FBox, FColor } from "./Core";
 
 export function MyBlur(): void;
+export function TearDown(): void;
 export function CaptureImage(): void;
 export function GetFocusedWindow(): HWindow;
 export function CaptureWindowScreenshot(Handle: HWindow): string;

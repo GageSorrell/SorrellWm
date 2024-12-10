@@ -8,3 +8,4 @@
 #include <stdlib.h>
 
 DECLARE_NAPI_FUNCTION(MyBlur, void);
+DECLARE_NAPI_FUNCTION(TearDown, void);

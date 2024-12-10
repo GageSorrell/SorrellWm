@@ -410,11 +410,22 @@ static RECT WindowRect;
 static HWND Handle;
 static float MinSigma = 1.f;
 static float Sigma = MinSigma;
-static float MaxSigma = 1.5f;
+static float MaxSigma = 10.f;
+static constexpr std::size_t FairlyHighResolution = 3840 * 2160 * 3;
+static std::vector<BYTE> BlurredScreenshotData(FairlyHighResolution);
+static std::vector<BYTE> ScreenshotData(FairlyHighResolution);
+static BYTE* BlurredScreenshot;
+static BYTE* Screenshot;
+static bool CalledOnce = false;
+
+static int BlurCount = 0;
+static std::vector<BYTE> TestScreenshotData(FairlyHighResolution);
+static BYTE* TestScreenshot;
 
 // BYTE* g_pBits = NULL;
-BYTE* Screenshot = NULL;
-LPBITMAPINFO g_lpBmi = NULL;
+// BYTE* Screenshot = NULL;
+LPBITMAPINFO ScreenshotBmi = NULL;
+LPBITMAPINFO BlurredBmi = NULL;
 
 LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE* &pBits)
 {
@@ -424,7 +435,7 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE* &pBits)
 
 	// Allocate memory for the bitmap info header.
 	if((lpBmi = (LPBITMAPINFO)malloc(iBmiSize)) == NULL){
-		std::cout << "Error allocating BitmapInfo!\n";
+		// std::cout << "Error allocating BitmapInfo!\n";
 		return NULL;
 	}
 
@@ -432,7 +443,7 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE* &pBits)
 
 	// Allocate memory for the DIB surface.
 	if((pBits = (BYTE*)malloc(iSurfaceSize)) == NULL) {
-		std::cout << "Error allocating memory for bitmap bits\n";
+		// std::cout << "Error allocating memory for bitmap bits\n";
 		return NULL;
 	}
 
@@ -588,7 +599,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     HDC hdcMemDC = CreateCompatibleDC(ScreenDc);
     if (!hdcMemDC)
     {
-        std::cout << "Failed to create compatible DC." << std::endl;
+        // std::cout << "Failed to create compatible DC." << std::endl;
         ReleaseDC(SourceHandle, ScreenDc);
         return false;
     }
@@ -605,10 +616,12 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     // Create a DIB section
     // void* pvBits = NULL;
     // HBITMAP hBitmap = CreateDIBSection(ScreenDc, g_lpBmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
-    HBITMAP hBitmap = CreateDIBSection(ScreenDc, g_lpBmi, DIB_RGB_COLORS, (void**) Screenshot, NULL, 0);
+    ScreenshotData.reserve(DIB_WIDTH * DIB_HEIGHT * 3);
+    Screenshot = ScreenshotData.data();
+    HBITMAP hBitmap = CreateDIBSection(ScreenDc, ScreenshotBmi, DIB_RGB_COLORS, (void**) Screenshot, NULL, 0);
     if (!hBitmap)
     {
-        std::cout << "Failed to create DIB section." << std::endl;
+        // std::cout << "Failed to create DIB section." << std::endl;
         LogLastWindowsError();
         DeleteDC(hdcMemDC);
         ReleaseDC(SourceHandle, ScreenDc);
@@ -616,14 +629,14 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        std::cout << "Made DIB Section." << std::endl;
+        // std::cout << "Made DIB Section." << std::endl;
     }
 
     // Select the bitmap into the memory DC
     HGDIOBJ hOld = SelectObject(hdcMemDC, hBitmap);
     if (!hOld)
     {
-        std::cout << "Failed to select bitmap into DC." << std::endl;
+        // std::cout << "Failed to select bitmap into DC." << std::endl;
         LogLastWindowsError();
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
@@ -632,13 +645,13 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        std::cout << "hOld has been selected." << std::endl;
+        // std::cout << "hOld has been selected." << std::endl;
     }
 
     // Bit-block transfer into our compatible memory DC
     if (!BitBlt(hdcMemDC, 0, 0, Width, Height, ScreenDc, WindowRect.left, WindowRect.top, SRCCOPY))
     {
-        std::cout << "BitBlt failed." << std::endl;
+        // std::cout << "BitBlt failed." << std::endl;
         SelectObject(hdcMemDC, hOld);
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
@@ -647,25 +660,23 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." << std::endl;
+        // std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." << std::endl;
     }
 
     // // Allocate memory for the pixel data
     SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
-    Screenshot = new (std::nothrow) BYTE[bufferSize];
-    if (!Screenshot)
-    {
-        std::cout << "Failed to allocate memory for screenshot." << std::endl;
+    ScreenshotData.reserve(bufferSize);
+    // Screenshot = new (std::nothrow) BYTE[bufferSize];
+    if (!Screenshot) {
+        // std::cout << "Failed to allocate memory for screenshot." << std::endl;
         LogLastWindowsError();
         SelectObject(hdcMemDC, hOld);
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
         ReleaseDC(NULL, ScreenDc);
         return false;
-    }
-    else
-    {
-        std::cout << "Screenshot is GOOD!" << std::endl;
+    } else {
+        // std::cout << "Screenshot is GOOD!" << std::endl;
     }
 
     // // Retrieve the bitmap bits
@@ -684,17 +695,17 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     // g_lpBmi->bmiHeader.biBitCount = 24;
     // g_lpBmi->bmiHeader.biCompression = BI_RGB;
 
-    int scanLines = GetDIBits(ScreenDc, hBitmap, 0, Height, Screenshot, g_lpBmi, DIB_RGB_COLORS);
+    int scanLines = GetDIBits(ScreenDc, hBitmap, 0, Height, Screenshot, ScreenshotBmi, DIB_RGB_COLORS);
     if (scanLines == 0)
     {
-        std::cout << "GetDIBits failed." << std::endl;
+        // std::cout << "GetDIBits failed." << std::endl;
         LogLastWindowsError();
-        delete[] Screenshot;
+        // delete[] Screenshot;
         Screenshot = nullptr;
     }
     else
     {
-        std::cout << "There are " << scanLines << " scanLines!" << std::endl;
+        // std::cout << "There are " << scanLines << " scanLines!" << std::endl;
     }
 
     //     // // Optional: Add a newline every 10 bytes for better readability
@@ -720,177 +731,176 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     return true;
 }
 
-int CaptureAnImage(HWND SourceHandle)
+// int CaptureAnImage(HWND SourceHandle)
+// {
+//     HDC hdcScreen;
+//     HDC hdcWindow;
+//     HDC hdcMemDC = NULL;
+//     HBITMAP hbmScreen = NULL;
+//     BITMAP bmpScreen;
+//     DWORD dwBytesWritten = 0;
+//     DWORD dwSizeofDIB = 0;
+//     HANDLE hFile = NULL;
+//     char* lpbitmap = NULL;
+//     HANDLE hDIB = NULL;
+//     DWORD dwBmpSize = 0;
+
+//     // Retrieve the handle to a display device context for the client
+//     // area of the window.
+//     hdcScreen = GetDC(NULL);
+//     hdcWindow = GetDC(SourceHandle);
+
+//     // Create a compatible DC, which is used in a BitBlt from the window DC.
+//     hdcMemDC = CreateCompatibleDC(hdcWindow);
+
+//     if (!hdcMemDC)
+//     {
+//         // std::cout << "CreateCompatibleDC has failed" << std::endl;
+//         goto done;
+//     }
+
+//     // // Get the client area for size calculation.
+//     // RECT rcClient;
+//     // GetClientRect(SourceHandle, &rcClient);
+
+//     // This is the best stretch mode.
+//     SetStretchBltMode(hdcWindow, HALFTONE);
+
+//     // The source DC is the entire screen, and the destination DC is the current window (HWND).
+//     // if (!StretchBlt(hdcWindow,
+//     //     0, 0,
+//     //     rcClient.right, rcClient.bottom,
+//     //     hdcScreen,
+//     //     0, 0,
+//     //     GetSystemMetrics(SM_CXSCREEN),
+//     //     GetSystemMetrics(SM_CYSCREEN),
+//     //     SRCCOPY))
+//     // {
+//     //     MessageBox(SourceHandle, L"StretchBlt has failed", L"Failed", MB_OK);
+//     //     goto done;
+//     // }
+//     if (!BitBlt(
+//         hdcWindow,
+//         WindowRect.left,
+//         WindowRect.top,
+//         WindowRect.right,
+//         WindowRect.bottom,
+//         hdcScreen,
+//         0,
+//         0,
+//         SRCCOPY))
+//     {
+//         std::cout << "StretchBlt has failed" << std::endl;
+//         goto done;
+//     }
+
+//     // Create a compatible bitmap from the Window DC.
+//     hbmScreen = CreateCompatibleBitmap(hdcWindow, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
+
+//     if (!hbmScreen)
+//     {
+//         std::cout << "CreateCompatibleBitmap Failed" << std::endl;
+//         goto done;
+//     }
+
+//     // Select the compatible bitmap into the compatible memory DC.
+//     SelectObject(hdcMemDC, hbmScreen);
+
+//     // Bit block transfer into our compatible memory DC.
+//     if (!BitBlt(hdcMemDC,
+//         0, 0,
+//         WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top,
+//         hdcWindow,
+//         0, 0,
+//         SRCCOPY))
+//     {
+//         std::cout << "BitBlt has failed" << std::endl;
+//         LogLastWindowsError();
+//         goto done;
+//     }
+
+//     GetObject(hbmScreen, sizeof(BITMAP), &bmpScreen);
+
+//     BITMAPFILEHEADER bmfHeader;
+//     BITMAPINFOHEADER bi;
+
+//     bi.biSize = sizeof(BITMAPINFOHEADER);
+//     bi.biWidth = bmpScreen.bmWidth;
+//     bi.biHeight = bmpScreen.bmHeight;
+//     bi.biPlanes = 1;
+//     bi.biBitCount = 24;
+//     bi.biCompression = BI_RGB;
+//     bi.biSizeImage = 0;
+//     bi.biXPelsPerMeter = 0;
+//     bi.biYPelsPerMeter = 0;
+//     bi.biClrUsed = 0;
+//     bi.biClrImportant = 0;
+
+//     dwBmpSize = ((bmpScreen.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmpScreen.bmHeight;
+
+//     // Starting with 32-bit Windows, GlobalAlloc and LocalAlloc are implemented as wrapper functions that
+//     // call HeapAlloc using a handle to the process's default heap. Therefore, GlobalAlloc and LocalAlloc
+//     // have greater overhead than HeapAlloc.
+//     hDIB = GlobalAlloc(GHND, dwBmpSize);
+//     lpbitmap = (char*)GlobalLock(hDIB);
+
+//     // Gets the "bits" from the bitmap, and copies them into a buffer
+//     // that's pointed to by lpbitmap.
+//     GetDIBits(hdcWindow, hbmScreen, 0,
+//         (UINT)bmpScreen.bmHeight,
+//         lpbitmap,
+//         (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+
+//     Screenshot = (BYTE*) lpbitmap;
+
+//     // // A file is created, this is where we will save the screen capture.
+//     // hFile = CreateFile(L"captureqwsx.bmp",
+//     //     GENERIC_WRITE,
+//     //     0,
+//     //     NULL,
+//     //     CREATE_ALWAYS,
+//     //     FILE_ATTRIBUTE_NORMAL, NULL);
+
+//     // // Add the size of the headers to the size of the bitmap to get the total file size.
+//     // dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+
+//     // // Offset to where the actual bitmap bits start.
+//     // bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+
+//     // // Size of the file.
+//     // bmfHeader.bfSize = dwSizeofDIB;
+
+//     // // bfType must always be BM for Bitmaps.
+//     // bmfHeader.bfType = 0x4D42; // BM.
+
+//     // WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
+//     // WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
+//     // WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
+
+//     // Unlock and Free the DIB from the heap.
+//     GlobalUnlock(hDIB);
+//     GlobalFree(hDIB);
+
+//     // Close the handle for the file that was created.
+//     // CloseHandle(hFile);
+
+//     // Clean up.
+// done:
+//     DeleteObject(hbmScreen);
+//     DeleteObject(hdcMemDC);
+//     ReleaseDC(NULL, hdcScreen);
+//     ReleaseDC(SourceHandle, hdcWindow);
+
+//     return 0;
+// }
+
+void Render(HWND hWnd)
 {
-    HDC hdcScreen;
-    HDC hdcWindow;
-    HDC hdcMemDC = NULL;
-    HBITMAP hbmScreen = NULL;
-    BITMAP bmpScreen;
-    DWORD dwBytesWritten = 0;
-    DWORD dwSizeofDIB = 0;
-    HANDLE hFile = NULL;
-    char* lpbitmap = NULL;
-    HANDLE hDIB = NULL;
-    DWORD dwBmpSize = 0;
+    // // Get a random x- and y-coordinate and plot pixel
+    // int x = rand() % lpBmi->bmiHeader.biWidth;
+    // int y = rand() % lpBmi->bmiHeader.biHeight;
 
-    // Retrieve the handle to a display device context for the client
-    // area of the window.
-    hdcScreen = GetDC(NULL);
-    hdcWindow = GetDC(SourceHandle);
-
-    // Create a compatible DC, which is used in a BitBlt from the window DC.
-    hdcMemDC = CreateCompatibleDC(hdcWindow);
-
-    if (!hdcMemDC)
-    {
-        std::cout << "CreateCompatibleDC has failed" << std::endl;
-        goto done;
-    }
-
-    // // Get the client area for size calculation.
-    // RECT rcClient;
-    // GetClientRect(SourceHandle, &rcClient);
-
-    // This is the best stretch mode.
-    SetStretchBltMode(hdcWindow, HALFTONE);
-
-    // The source DC is the entire screen, and the destination DC is the current window (HWND).
-    // if (!StretchBlt(hdcWindow,
-    //     0, 0,
-    //     rcClient.right, rcClient.bottom,
-    //     hdcScreen,
-    //     0, 0,
-    //     GetSystemMetrics(SM_CXSCREEN),
-    //     GetSystemMetrics(SM_CYSCREEN),
-    //     SRCCOPY))
-    // {
-    //     MessageBox(SourceHandle, L"StretchBlt has failed", L"Failed", MB_OK);
-    //     goto done;
-    // }
-    if (!BitBlt(
-        hdcWindow,
-        WindowRect.left,
-        WindowRect.top,
-        WindowRect.right,
-        WindowRect.bottom,
-        hdcScreen,
-        0,
-        0,
-        SRCCOPY))
-    {
-        std::cout << "StretchBlt has failed" << std::endl;
-        goto done;
-    }
-
-    // Create a compatible bitmap from the Window DC.
-    hbmScreen = CreateCompatibleBitmap(hdcWindow, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
-
-    if (!hbmScreen)
-    {
-        std::cout << "CreateCompatibleBitmap Failed" << std::endl;
-        goto done;
-    }
-
-    // Select the compatible bitmap into the compatible memory DC.
-    SelectObject(hdcMemDC, hbmScreen);
-
-    // Bit block transfer into our compatible memory DC.
-    if (!BitBlt(hdcMemDC,
-        0, 0,
-        WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top,
-        hdcWindow,
-        0, 0,
-        SRCCOPY))
-    {
-        std::cout << "BitBlt has failed" << std::endl;
-        LogLastWindowsError();
-        goto done;
-    }
-
-    // Get the BITMAP from the HBITMAP.
-    GetObject(hbmScreen, sizeof(BITMAP), &bmpScreen);
-
-    BITMAPFILEHEADER   bmfHeader;
-    BITMAPINFOHEADER   bi;
-
-    bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = bmpScreen.bmWidth;
-    bi.biHeight = bmpScreen.bmHeight;
-    bi.biPlanes = 1;
-    bi.biBitCount = 24;
-    bi.biCompression = BI_RGB;
-    bi.biSizeImage = 0;
-    bi.biXPelsPerMeter = 0;
-    bi.biYPelsPerMeter = 0;
-    bi.biClrUsed = 0;
-    bi.biClrImportant = 0;
-
-    dwBmpSize = ((bmpScreen.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmpScreen.bmHeight;
-
-    // Starting with 32-bit Windows, GlobalAlloc and LocalAlloc are implemented as wrapper functions that
-    // call HeapAlloc using a handle to the process's default heap. Therefore, GlobalAlloc and LocalAlloc
-    // have greater overhead than HeapAlloc.
-    hDIB = GlobalAlloc(GHND, dwBmpSize);
-    lpbitmap = (char*)GlobalLock(hDIB);
-
-    // Gets the "bits" from the bitmap, and copies them into a buffer
-    // that's pointed to by lpbitmap.
-    GetDIBits(hdcWindow, hbmScreen, 0,
-        (UINT)bmpScreen.bmHeight,
-        lpbitmap,
-        (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-
-    Screenshot = (BYTE*) lpbitmap;
-
-    // // A file is created, this is where we will save the screen capture.
-    // hFile = CreateFile(L"captureqwsx.bmp",
-    //     GENERIC_WRITE,
-    //     0,
-    //     NULL,
-    //     CREATE_ALWAYS,
-    //     FILE_ATTRIBUTE_NORMAL, NULL);
-
-    // // Add the size of the headers to the size of the bitmap to get the total file size.
-    // dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-
-    // // Offset to where the actual bitmap bits start.
-    // bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
-
-    // // Size of the file.
-    // bmfHeader.bfSize = dwSizeofDIB;
-
-    // // bfType must always be BM for Bitmaps.
-    // bmfHeader.bfType = 0x4D42; // BM.
-
-    // WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
-    // WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
-    // WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
-
-    // Unlock and Free the DIB from the heap.
-    GlobalUnlock(hDIB);
-    GlobalFree(hDIB);
-
-    // Close the handle for the file that was created.
-    // CloseHandle(hFile);
-
-    // Clean up.
-done:
-    DeleteObject(hbmScreen);
-    DeleteObject(hdcMemDC);
-    ReleaseDC(NULL, hdcScreen);
-    ReleaseDC(SourceHandle, hdcWindow);
-
-    return 0;
-}
-
-void Render(HWND hWnd, LPBITMAPINFO lpBmi, void* pBits)
-{
-	// // Get a random x- and y-coordinate and plot pixel
-	// int x = rand() % lpBmi->bmiHeader.biWidth;
-	// int y = rand() % lpBmi->bmiHeader.biHeight;
-
-	// PutPixel(x, y, rand() % 256, rand() % 256, rand() % 256, lpBmi, pBits);
+    // PutPixel(x, y, rand() % 256, rand() % 256, rand() % 256, lpBmi, pBits);
 
     // CaptureForegroundWindowPixels();
     HWND SourceHandle = FindWindowA(0, "SorrellWm");
@@ -908,18 +918,21 @@ void Render(HWND hWnd, LPBITMAPINFO lpBmi, void* pBits)
 	InvalidateRect(hWnd, NULL, FALSE);
 }
 
-static DWORD startTime = 0;
-static const UINT_PTR TIMER_ID = 1;
-static int FramesElapsed = 0;
-const float Duration = 500.f;
+static DWORD BlurStartTime = 0;
+static DWORD FadeStartTime = 0;
+static DWORD BlurLastTimestamp = 0;
+static DWORD FadeLastTimestamp = 0;
+static const UINT_PTR BlurTimerId = 1;
+static const UINT_PTR FadeTimerId = 2;
+static const int Duration = 5000;
+static const int MsPerFrame = static_cast<int>(1000 / 90);
 
 BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 {
-    startTime = GetTickCount();
-    SetTimer(hWnd, 1, 1000 / 60, NULL);
+    BlurLastTimestamp = BlurStartTime;
+    SetTimer(hWnd, BlurTimerId, MsPerFrame, NULL);
 	// Create a new DIB
-	std::cout << DIB_WIDTH << ", " << DIB_HEIGHT << ", " << DIB_DEPTH << std::endl;
-	if((g_lpBmi = CreateDIB(DIB_WIDTH, DIB_HEIGHT, DIB_DEPTH, Screenshot)) == NULL)
+	if((ScreenshotBmi = CreateDIB(DIB_WIDTH, DIB_HEIGHT, DIB_DEPTH, Screenshot)) == NULL)
     {
         std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
 		return FALSE;
@@ -928,31 +941,45 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
     {
         std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
     }
+	if((BlurredBmi = CreateDIB(DIB_WIDTH, DIB_HEIGHT, DIB_DEPTH, BlurredScreenshot)) == NULL)
+    {
+        std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
+		return FALSE;
+	}
+    else
+    {
+        std::cout << "BlurredBmi was created." << std::endl;
+    }
 
 	return TRUE;
 }
 
 void OnDestroy(HWND hWnd)
 {
-    KillTimer(Handle, TIMER_ID);
 	if(Screenshot)
     {
 		free(Screenshot);
 	}
 
-	if(g_lpBmi)
+	if(ScreenshotBmi)
     {
-		free(g_lpBmi);
+		free(ScreenshotBmi);
 	}
-
-	PostQuitMessage(0);
+	if(BlurredBmi)
+    {
+		free(BlurredBmi);
+	}
 }
 
 void OnPaint(HWND hWnd)
 {
-    std::cout << "PAINting..." << std::endl;
 	static PAINTSTRUCT ps;
 	static HDC hDC;
+
+    // if (CalledOnce)
+    // {
+    //     return;
+    // }
 
 	hDC = BeginPaint(hWnd, &ps);
 
@@ -964,7 +991,7 @@ void OnPaint(HWND hWnd)
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
-    std::cout << "OnPaint: Made BITMAPINFO" << std::endl;
+    // std::cout << "OnPaint: Made BITMAPINFO" << std::endl;
 
     // for (LONG Index = 0; Index < DIB_WIDTH * DIB_HEIGHT * 3; Index++)
     // {
@@ -972,32 +999,44 @@ void OnPaint(HWND hWnd)
     // }
     // std::cout << "OnPaint: Made Screenshot red." << std::endl;
 
-    std::cout << "DIB_WIDTH and height are " << DIB_WIDTH << ", " << DIB_HEIGHT << std::endl;
+    // std::cout << "DIB_WIDTH and height are " << DIB_WIDTH << ", " << DIB_HEIGHT << std::endl;
 
+    BlurCount++;
+    if (BlurCount > 100000 || BlurCount % 10 > 0)
+    {
+        return;
+    }
+
+    std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
+    // CalledOnce = true;
     SIZE_T bufferSize = static_cast<SIZE_T>(DIB_WIDTH) * DIB_HEIGHT * 3;
-    BYTE* BlurredScreenshot = new (std::nothrow) BYTE[bufferSize];
-    Blur(Screenshot, BlurredScreenshot, DIB_WIDTH, DIB_HEIGHT, 3, Sigma, 3, kExtend);
+    // BYTE* BlurredScreenshot = new (std::nothrow) BYTE[bufferSize];
+    BlurredScreenshotData.reserve(bufferSize);
+    BlurredScreenshot = BlurredScreenshotData.data();
+    TestScreenshotData = std::vector<BYTE>(ScreenshotData);
+    TestScreenshot = TestScreenshotData.data();
+    Blur(TestScreenshot, BlurredScreenshot, DIB_WIDTH, DIB_HEIGHT, 3, Sigma, 3, kExtend);
 
     int result = SetDIBitsToDevice(
-        hDC,
-        0,
-        0,
-        DIB_WIDTH,
-        DIB_HEIGHT,
-        0,
-        0,
-        0,
-        DIB_HEIGHT,
-        BlurredScreenshot,
-        g_lpBmi,
-        DIB_RGB_COLORS
-    );
+            hDC,
+            0,
+            0,
+            DIB_WIDTH,
+            DIB_HEIGHT,
+            0,
+            0,
+            0,
+            DIB_HEIGHT,
+            BlurredScreenshot,
+            BlurredBmi,
+            DIB_RGB_COLORS
+        );
 
-    std::cout << "PAINT result is " << result << std::endl;
+    // std::cout << "PAINT result is " << result << std::endl;
 
     if (result == GDI_ERROR)
     {
-        std::cout << "SetDIBitsToDevice failed with error: " << std::endl;
+        // std::cout << "SetDIBitsToDevice failed with error: " << std::endl;
         LogLastWindowsError();
     }
     // SetDIBitsToDevice(
@@ -1020,7 +1059,7 @@ void OnPaint(HWND hWnd)
 	// GetClientRect(hWnd, &rc);
 	// StretchDIBits(hDC, 0, 0, rc.right - rc.left, rc.bottom - rc.top, 0, 0, DIB_WIDTH, DIB_HEIGHT, (BYTE*)g_pBits, g_lpBmi, DIB_RGB_COLORS, SRCCOPY);
 
-    std::cout << "Finished paint" << std::endl;
+    // std::cout << "Finished paint" << std::endl;
 	EndPaint(hWnd, &ps);
 }
 
@@ -1040,30 +1079,111 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBkgnd);
         case WM_TIMER:
         {
-            if (wParam == TIMER_ID)
+            DWORD currentTime = GetTickCount();
+            DWORD elapsedTime = 0;
+            switch (wParam)
             {
-                FramesElapsed++;
-                DWORD currentTime = GetTickCount();
-                DWORD elapsedTime = currentTime - startTime;
-                std::cout << "WM_TIMER Fired! " << std::endl;
-                if (elapsedTime >= Duration)
-                {
-                    Sigma = MaxSigma;
-                    KillTimer(hWnd, TIMER_ID);
-                }
-                else
-                {
-                    const float Alpha = elapsedTime / Duration;
-                    const float Factor = 1.f - std::exp(-1.f * (elapsedTime / Duration));
-                    Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
-                    std::cout << "Alpha is " << Alpha << ", Eased Sigma is " << Sigma << std::endl;
-                }
+                case BlurTimerId:
+                    if (BlurStartTime == 0)
+                    {
+                        BlurStartTime = GetTickCount();
+                    }
+                    elapsedTime = currentTime - BlurStartTime;
+                    if (elapsedTime == 0)
+                    {
+                        InvalidateRect(hWnd, NULL, FALSE);
+                    }
+                    // std::cout << "WM_TIMER Fired! " << std::endl;
+                    if (elapsedTime >= Duration)
+                    {
+                        std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime) << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
+                        Sigma = MaxSigma;
+                        InvalidateRect(hWnd, NULL, FALSE);
+                        KillTimer(hWnd, BlurTimerId);
+                    }
+                    else if (currentTime - BlurLastTimestamp >= MsPerFrame)
+                    {
+                        const float Alpha = static_cast<float>((float) elapsedTime / (float) Duration);
+                        // const float Factor = 1.f - std::exp(-2.f * (elapsedTime / Duration));
+                        const float Factor = 1 - std::pow(2, -10.f * Alpha);
+                        Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
+                        InvalidateRect(hWnd, NULL, FALSE);
+                        std::cout << std::setprecision(4) << "Sigma is " << Sigma << " at time " << currentTime << " with Factor " << Factor << " and Alpha " << Alpha << std::endl;
+                        // std::cout << "Alpha is " << Alpha << ", Eased Sigma is "
+                        // << Sigma << std::endl; InvalidateRect(hWnd, NULL, FALSE);
+
+                        BlurLastTimestamp = currentTime;
+                    }
+                    else
+                    {
+                        std::cout << std::setprecision(4) << "WM_TIMER came too soon, " << currentTime << " " << BlurLastTimestamp << std::endl;
+                    }
+                    return 0;
+                case FadeTimerId:
+                    elapsedTime = currentTime - FadeStartTime;
+                    if (elapsedTime >= Duration)
+                    {
+                        std::cout << "Destroying window..." << std::endl;
+                        DestroyWindow(hWnd);
+                    }
+                    // InvalidateRect(hWnd, NULL, FALSE);
+                    if (elapsedTime == 0)
+                    {
+                        InvalidateRect(hWnd, NULL, FALSE);
+                    }
+                    if (elapsedTime >= Duration)
+                    {
+                        std::cout << std::setprecision(2) << "For the Fade timer, elapsedTime >= Duration: " << std::to_string(static_cast<unsigned int>(elapsedTime)) << " >= " << Duration << std::endl;
+                        KillTimer(hWnd, FadeTimerId);
+                        SetLayeredWindowAttributes(Handle, 0, 0, LWA_ALPHA);
+                    }
+                    else if (currentTime - FadeLastTimestamp >= MsPerFrame)
+                    {
+                        // const float EasedAlpha = std::exp(-2.f * (1.f - (elapsedTime / Duration)));
+                        const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float) elapsedTime / (float) Duration));
+                        unsigned char Transparency = static_cast<unsigned char>(std::clamp(std::round(255.f - 255.f * EasedAlpha), 0.f, 255.f));
+                        InvalidateRect(hWnd, NULL, FALSE);
+                        std::cout << std::setprecision(4) << "Transparency is " << +(Transparency) << " at time " << currentTime << " with EasedAlpha " << EasedAlpha << std::endl;
+
+                        SetLayeredWindowAttributes(Handle, 0, Transparency, LWA_ALPHA);
+
+                        FadeLastTimestamp = currentTime;
+                    }
+                    else
+                    {
+                        std::cout << "WM_TIMER came too soon, " << currentTime << " " << FadeLastTimestamp << std::endl;
+                    }
+                    return 0;
             }
-            return 0;
         }
 	}
 
 	return DefWindowProc(hWnd, iMsg, wParam, lParam);
+}
+
+Napi::Value TearDown(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    std::cout << "Tearing down window!" << std::endl;
+
+    /* @TODO If this is called while the blur is still animating, then the fade animation should only take the length of time that the blur animation played. */
+
+    BOOL KillResult = KillTimer(Handle, BlurTimerId);
+    if (!KillResult)
+    {
+        std::cout << "KillTimer for BlurTimerId returned " << KillResult << std::endl;
+        LogLastWindowsError();
+    }
+
+    FadeStartTime = GetTickCount();
+    FadeLastTimestamp = FadeStartTime;
+    int SetTimerResult = SetTimer(Handle, FadeTimerId, MsPerFrame, NULL);
+    std::cout << "SetTimer for FadeTimerId returned " << SetTimerResult << std::endl;
+    std::cout << "Called everything!" << std::endl;
+    LogLastWindowsError();
+
+    return Environment.Undefined();
 }
 
 Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
@@ -1074,7 +1194,7 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
     HWND SourceHandle = FindWindowA(0, "SorrellWm");
     if (SourceHandle == nullptr)
     {
-        std::cout << "SourceHandle was the nullptr." << std::endl;
+        // std::cout << "SourceHandle was the nullptr." << std::endl;
     }
 
 	MSG msg;
@@ -1094,14 +1214,14 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
     DIB_WIDTH = WindowRect.right - WindowRect.left;
 
 	RegisterClassExA(&WindowClass);
-	std::cout << "Registered window class!" << std::endl;
+	// std::cout << "Registered window class!" << std::endl;
 
 	Handle = CreateWindowExA(
 		NULL,
 		g_szAppName,
 		NULL,
 		// WS_OVERLAPPEDWINDOW,
-        WS_EX_TOOLWINDOW | WS_POPUP,
+        WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE,
         WindowRect.left,
         WindowRect.top,
 		WindowRect.right - WindowRect.left,
@@ -1112,16 +1232,38 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
 		NULL
 	);
 
+    SetWindowLong(Handle, GWL_EXSTYLE, GetWindowLong(Handle, GWL_EXSTYLE) | WS_EX_LAYERED);
+
+    BOOL attrib = TRUE;
+    DwmSetWindowAttribute(Handle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib, sizeof(attrib));
+
     // SetWindowLong(Handle, GWL_STYLE, 0);
 
-	std::cout << "Created window!" << std::endl;
+	// std::cout << "Created window!" << std::endl;
 
-	std::cout << "Going to Render..." << std::endl;
-	Render(Handle, g_lpBmi, Screenshot);
-	std::cout << "Rendered!" << std::endl;
+	// std::cout << "Going to Render..." << std::endl;
+	Render(Handle);
+	// std::cout << "Rendered!" << std::endl;
+
+    // BLENDFUNCTION BlendFunction = { 0 };
+    // BlendFunction.AlphaFormat = AC_SRC_ALPHA;
+    // BlendFunction.BlendFlags = 0;
+    // BlendFunction.BlendOp = AC_SRC_OVER;
+    // BlendFunction.SourceConstantAlpha = 255;
 
 	ShowWindow(Handle, SW_SHOWNOACTIVATE);
 	UpdateWindow(Handle);
+    BOOL LayeredSuccess = SetLayeredWindowAttributes(Handle, 0, 255, LWA_ALPHA);
+    if (LayeredSuccess)
+    {
+        std::cout << "SetLayeredWindowAttributes was SUCCESSFUL." << std::endl;
+    }
+    else
+    {
+        std::cout << "SetLayeredWindowAttributes FAILED." << std::endl;
+        LogLastWindowsError();
+    }
+
 	// while(1) {
 	// 	if(PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
     //     {
