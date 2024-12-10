@@ -76,15 +76,18 @@ BOOL GetDwmWindowRect(HWND Handle, RECT* Rect)
         Handle,
         DWMWA_EXTENDED_FRAME_BOUNDS,
         Rect,
-        sizeof(Rect)
+        sizeof(RECT)
     );
 
     if (FAILED(Result))
     {
+        std::cout << "Got WindowRect via GetWindowRect: " << std::hex << Result << std::endl;
         return GetWindowRect(Handle, Rect);
     }
     else
     {
+        std::cout << "Got WindowRect via DwmGetWindowAttribute." << std::endl;
         return TRUE;
     }
+    return TRUE;
 }

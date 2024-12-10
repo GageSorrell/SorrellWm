@@ -418,7 +418,6 @@ static BYTE* BlurredScreenshot;
 static BYTE* Screenshot;
 static bool CalledOnce = false;
 
-static int BlurCount = 0;
 static std::vector<BYTE> TestScreenshotData(FairlyHighResolution);
 static BYTE* TestScreenshot;
 
@@ -572,11 +571,11 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     //     return false;
     // }
 
-    if (!GetDwmWindowRect(SourceHandle, &WindowRect))
-    {
-        std::cout << "Failed to get window rectangle." << std::endl;
-        return false;
-    }
+    // if (!GetDwmWindowRect(SourceHandle, &WindowRect))
+    // {
+    //     std::cout << "Failed to get window rectangle." << std::endl;
+    //     return false;
+    // }
 
     std::cout << "Left: " << WindowRect.left << "\nRight: " << WindowRect.right << "\nTop: " << WindowRect.top << "\nBottom: " << WindowRect.bottom << std::endl;
 
@@ -894,7 +893,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 //     return 0;
 // }
 
-void Render(HWND hWnd)
+void Render(HWND hWnd, HWND SourceHandle)
 {
     // // Get a random x- and y-coordinate and plot pixel
     // int x = rand() % lpBmi->bmiHeader.biWidth;
@@ -903,7 +902,6 @@ void Render(HWND hWnd)
     // PutPixel(x, y, rand() % 256, rand() % 256, rand() % 256, lpBmi, pBits);
 
     // CaptureForegroundWindowPixels();
-    HWND SourceHandle = FindWindowA(0, "SorrellWm");
     BOOL Captured = CaptureWindowScreenshot(SourceHandle);
     if (Captured)
     {
@@ -924,7 +922,7 @@ static DWORD BlurLastTimestamp = 0;
 static DWORD FadeLastTimestamp = 0;
 static const UINT_PTR BlurTimerId = 1;
 static const UINT_PTR FadeTimerId = 2;
-static const int Duration = 5000;
+static const int Duration = 250;
 static const int MsPerFrame = static_cast<int>(1000 / 90);
 
 BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
@@ -956,11 +954,6 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 
 void OnDestroy(HWND hWnd)
 {
-	if(Screenshot)
-    {
-		free(Screenshot);
-	}
-
 	if(ScreenshotBmi)
     {
 		free(ScreenshotBmi);
@@ -970,6 +963,8 @@ void OnDestroy(HWND hWnd)
 		free(BlurredBmi);
 	}
 }
+
+static bool PaintedOnce = false;
 
 void OnPaint(HWND hWnd)
 {
@@ -1001,38 +996,32 @@ void OnPaint(HWND hWnd)
 
     // std::cout << "DIB_WIDTH and height are " << DIB_WIDTH << ", " << DIB_HEIGHT << std::endl;
 
-    BlurCount++;
-    if (BlurCount > 100000 || BlurCount % 10 > 0)
-    {
-        return;
-    }
-
     std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
     // CalledOnce = true;
     SIZE_T bufferSize = static_cast<SIZE_T>(DIB_WIDTH) * DIB_HEIGHT * 3;
     // BYTE* BlurredScreenshot = new (std::nothrow) BYTE[bufferSize];
     BlurredScreenshotData.reserve(bufferSize);
     BlurredScreenshot = BlurredScreenshotData.data();
-    TestScreenshotData = std::vector<BYTE>(ScreenshotData);
-    TestScreenshot = TestScreenshotData.data();
-    Blur(TestScreenshot, BlurredScreenshot, DIB_WIDTH, DIB_HEIGHT, 3, Sigma, 3, kExtend);
+    // TestScreenshotData = std::vector<BYTE>(ScreenshotData);
+    // TestScreenshotData(ScreenshotData);
+    // TestScreenshotData.reserve(bufferSize);
+    // copy(ScreenshotData, TestScreenshotData, back_inserter());
+    // TestScreenshot = TestScreenshotData.data();
+    Screenshot = ScreenshotData.data();
+    Blur(Screenshot, BlurredScreenshot, DIB_WIDTH, DIB_HEIGHT, 3, Sigma, 3, kExtend);
 
-    int result = SetDIBitsToDevice(
-            hDC,
-            0,
-            0,
-            DIB_WIDTH,
-            DIB_HEIGHT,
-            0,
-            0,
-            0,
-            DIB_HEIGHT,
-            BlurredScreenshot,
-            BlurredBmi,
-            DIB_RGB_COLORS
-        );
+    int result =
+        SetDIBitsToDevice(hDC, 0, 0, DIB_WIDTH, DIB_HEIGHT, 0, 0, 0, DIB_HEIGHT,
+                          BlurredScreenshot, BlurredBmi, DIB_RGB_COLORS);
 
     // std::cout << "PAINT result is " << result << std::endl;
+
+    if (!PaintedOnce)
+    {
+        PaintedOnce = true;
+        ShowWindow(hWnd, SW_SHOW);
+        SetForegroundWindow(Handle);
+    }
 
     if (result == GDI_ERROR)
     {
@@ -1124,6 +1113,7 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                     if (elapsedTime >= Duration)
                     {
                         std::cout << "Destroying window..." << std::endl;
+                        ShowWindow(hWnd, SW_HIDE);
                         DestroyWindow(hWnd);
                     }
                     // InvalidateRect(hWnd, NULL, FALSE);
@@ -1167,6 +1157,25 @@ Napi::Value TearDown(const Napi::CallbackInfo& CallbackInfo)
 
     std::cout << "Tearing down window!" << std::endl;
 
+    BOOL Shadow = false;
+    BOOL SystemSuccess = SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
+    if (Shadow)
+    {
+        std::cout << "Shadow is TRUE" << std::endl;
+    }
+    else
+    {
+        std::cout << "Shadow is FALSE" << std::endl;
+    }
+    if (SystemSuccess)
+    {
+        std::cout << "SystemSuccess is TRUE" << std::endl;
+    }
+    else
+    {
+        std::cout << "SystemSuccess is FALSE" << std::endl;
+    }
+
     /* @TODO If this is called while the blur is still animating, then the fade animation should only take the length of time that the blur animation played. */
 
     BOOL KillResult = KillTimer(Handle, BlurTimerId);
@@ -1191,23 +1200,30 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
     Napi::Env Environment = CallbackInfo.Env();
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
-    HWND SourceHandle = FindWindowA(0, "SorrellWm");
-    if (SourceHandle == nullptr)
-    {
-        // std::cout << "SourceHandle was the nullptr." << std::endl;
-    }
+    // HWND SourceHandle = FindWindowA(0, "SorrellWm");
+    // if (SourceHandle == nullptr)
+    // {
+    //     // std::cout << "SourceHandle was the nullptr." << std::endl;
+    // }
 
 	MSG msg;
 	WNDCLASSEXA WindowClass;
 
 	WindowClass.cbSize = sizeof(WindowClass);
-	// WindowClass.style = CS_VREDRAW | CS_HREDRAW;
+	WindowClass.style = CS_VREDRAW | CS_HREDRAW;
 	WindowClass.lpfnWndProc = BlurWndProc;
 	WindowClass.cbClsExtra = 0;
 	WindowClass.cbWndExtra = 0;
 	WindowClass.hInstance = hInstance;
 	WindowClass.lpszMenuName = NULL;
 	WindowClass.lpszClassName = g_szAppName;
+
+    HWND SourceHandle = GetForegroundWindow();
+    if (SourceHandle == nullptr)
+    {
+        std::cout << "MyBlur was called, but GetForegroundWindow gave the nullptr." << std::endl;
+        return Environment.Undefined();
+    }
 
     GetDwmWindowRect(SourceHandle, &WindowRect);
     DIB_HEIGHT = WindowRect.bottom - WindowRect.top;
@@ -1242,7 +1258,8 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
 	// std::cout << "Created window!" << std::endl;
 
 	// std::cout << "Going to Render..." << std::endl;
-	Render(Handle);
+
+	Render(Handle, SourceHandle);
 	// std::cout << "Rendered!" << std::endl;
 
     // BLENDFUNCTION BlendFunction = { 0 };
@@ -1253,6 +1270,13 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
 
 	ShowWindow(Handle, SW_SHOWNOACTIVATE);
 	UpdateWindow(Handle);
+    SetWindowPos(
+        Handle,
+        GetNextWindow(SourceHandle, GW_HWNDPREV),
+        0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+    );
+
     BOOL LayeredSuccess = SetLayeredWindowAttributes(Handle, 0, 255, LWA_ALPHA);
     if (LayeredSuccess)
     {
