@@ -1044,6 +1044,12 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 	return TRUE;
 }
 
+// Where to pick up...
+// Currently, activating the WM works correctly when the SourceHandle
+// is the window created by Electron at launch.
+// Otherwise, for any other window, it works right the first time, but
+// then only shows SorrellWmMainWindow when fading to zero opacity.
+
 void OnDestroy(HWND hWnd)
 {
 	if(ScreenshotBmi)
