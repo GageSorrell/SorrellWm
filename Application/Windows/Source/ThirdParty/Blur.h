@@ -125,9 +125,8 @@ inline void horizontal_blur_extend(const T * in, T * out, const int w, const int
         if constexpr(kernel == kLarge)
         {
             // initial accumulation
-            for(int j=0; j<r; j++)
-            for(int ch=0; ch<C; ++ch)
-            {
+            for (int j = 0; j < r; j++)
+              for (int ch = 0; ch < C; ++ch) {
                 // prefilling the accumulator with the last value seems slower than/equal to this ternary
                 acc[ch] += j < w ? in[(begin+j)*C+ch] : lv[ch];
             }

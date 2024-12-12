@@ -127,7 +127,8 @@ function OnActivation(State: string): void
     if (State === "Down")
     {
         console.log("Going to call MyBlur...");
-        const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
+        // const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
+        MyBlur();
         MainWindow?.webContents.send("Summoned");
 
         // StartBlurOverlay(GetFocusedWindow());

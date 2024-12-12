@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <stdlib.h>
 #include "Core/WindowUtilities.h"
+#include <cstddef>
+#include <cstdint>
 
 DECLARE_NAPI_FUNCTION(MyBlur, FBlurReturnType);
 DECLARE_NAPI_FUNCTION(TearDown, void);
