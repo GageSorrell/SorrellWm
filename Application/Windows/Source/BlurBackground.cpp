@@ -6,23 +6,22 @@
 
 #include "BlurBackground.h"
 
-static char g_szAppName[] = "Example4";
-static char g_szAppTitle[] = "Example 4";
-
+static const char* WindowTitle = "SorrellWm Blurred Background";
+static const char* WindowClassName = WindowTitle;
 static int Depth = 24;
 static int ChannelsNum = 3;
+static RECT WindowRect;
 static int Width = 320;
 static int Height = 240;
-static RECT WindowRect;
-static HWND BackgroundHandle;
-static float MinSigma = 1.f;
+static HWND BackgroundHandle = nullptr;
+static const float MinSigma = 1.f;
+static const float MaxSigma = 10.f;
 static float Sigma = MinSigma;
-static float MaxSigma = 10.f;
-static constexpr std::size_t FairlyHighResolution = 3840 * 2160 * 3;
+static const std::size_t FairlyHighResolution = 3840 * 2160 * 3;
 static std::vector<BYTE> BlurredScreenshotData(FairlyHighResolution);
 static std::vector<BYTE> ScreenshotData(FairlyHighResolution);
-static BYTE* BlurredScreenshot;
-static BYTE* Screenshot;
+static BYTE* Screenshot = nullptr;
+static BYTE* BlurredScreenshot = nullptr;
 static bool CalledOnce = false;
 static double Luminance = 0.f;
 static double BrightnessScalar = 1.f;
@@ -38,35 +37,36 @@ static const UINT_PTR FadeTimerId = 2;
 static const int Duration = 200;
 static const int MsPerFrame = static_cast<int>(1000 / 90);
 static HWND SourceHandle = nullptr;
+static bool PaintedOnce = false;
 
 LPBITMAPINFO ScreenshotBmi = NULL;
 LPBITMAPINFO BlurredBmi = NULL;
 
-double CalculateScalingFactor(double averageLuminance)
+double CalculateScalingFactor(double AverageLuminance)
 {
-    double d_dark = std::abs(averageLuminance - 85.l);
-    double d_light = std::abs(170.l - averageLuminance);
+    double d_dark = std::abs(AverageLuminance - 85.l);
+    double d_light = std::abs(170.l - AverageLuminance);
 
     if (d_dark < d_light)
     {
-        if (averageLuminance <= 85.l)
+        if (AverageLuminance <= 85.l)
         {
             return 1.l;
         }
         else
         {
-            return 85.l / averageLuminance;
+            return 85.l / AverageLuminance;
         }
     }
     else
     {
-        if (averageLuminance >= 170.l)
+        if (AverageLuminance >= 170.l)
         {
             return 1.l;
         }
         else
         {
-            return 170.l / averageLuminance;
+            return 170.l / AverageLuminance;
         }
     }
 }
@@ -329,12 +329,6 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 	return TRUE;
 }
 
-// Where to pick up...
-// Currently, activating the WM works correctly when the SourceHandle
-// is the window created by Electron at launch.
-// Otherwise, for any other window, it works right the first time, but
-// then only shows SorrellWmMainWindow when fading to zero opacity.
-
 void OnDestroy(HWND hWnd)
 {
 	if(ScreenshotBmi)
@@ -349,8 +343,6 @@ void OnDestroy(HWND hWnd)
     WindowRect = RECT();
     BackgroundHandle = nullptr;
     Sigma = MinSigma;
-    // BlurredScreenshotData(FairlyHighResolution);
-    // ScreenshotData(FairlyHighResolution);
     CalledOnce = false;
     Luminance = 0.f;
     BrightnessScalar = 1.f;
@@ -384,40 +376,37 @@ void GetBackgroundMode() {
     double d_dark = std::abs(Luminance - 85.0);
     double d_light = std::abs(170.0 - Luminance);
 
-    if (d_dark < d_light) {
-                ThemeMode = "Dark";
-                // if (averageLuminance <= 85.0)
-                // {
-                //     ThemeMode = "Dark";
-                // }
-                // else
-                // {
-                //     ThemeMode = "Dark Mode Target: Scale Down";
-                // }
-    } else {
-                ThemeMode = "Light";
-                // if (averageLuminance >= 170.0)
-                // {
-                //     return "Light Mode Background";
-                // }
-                // else
-                // {
-                //     return "Light Mode Target: Scale Up";
-                // }
+    if (d_dark < d_light)
+    {
+        ThemeMode = "Dark";
+        // if (averageLuminance <= 85.0)
+        // {
+        //     ThemeMode = "Dark";
+        // }
+        // else
+        // {
+        //     ThemeMode = "Dark Mode Target: Scale Down";
+        // }
+    }
+    else
+    {
+        ThemeMode = "Light";
+        // if (averageLuminance >= 170.0)
+        // {
+        //     return "Light Mode Background";
+        // }
+        // else
+        // {
+        //     return "Light Mode Target: Scale Up";
+        // }
     }
 }
-static bool PaintedOnce = false;
 
 void OnPaint(HWND hWnd) {
-    static PAINTSTRUCT ps;
+    static PAINTSTRUCT PaintStruct;
     static HDC hDC;
 
-    // if (CalledOnce)
-    // {
-    //     return;
-    // }
-
-    hDC = BeginPaint(hWnd, &ps);
+    hDC = BeginPaint(hWnd, &PaintStruct);
 
     BITMAPINFO bmi;
     ZeroMemory(&bmi, sizeof(BITMAPINFO));
@@ -485,7 +474,7 @@ void OnPaint(HWND hWnd) {
         SetForegroundWindow(SorrellWmMainWindow);
     }
 
-    EndPaint(hWnd, &ps);
+    EndPaint(hWnd, &PaintStruct);
 }
 
 BOOL OnEraseBkgnd(HWND hWnd, HDC hdc)
@@ -493,19 +482,20 @@ BOOL OnEraseBkgnd(HWND hWnd, HDC hdc)
     return TRUE;
 }
 
-LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam,
-                             LPARAM lParam) {
-    switch (iMsg) {
-                HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
-                HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
-                HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
-                // HANDLE_MSG(hWnd, WM_TIMER, OnTimer);
-                HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBkgnd);
-    case WM_TIMER: {
-                DWORD currentTime = GetTickCount();
-                DWORD elapsedTime = 0;
-                switch (wParam) {
-                case BlurTimerId:
+LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (iMsg)
+    {
+        HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
+        HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
+        HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
+        HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBkgnd);
+    case WM_TIMER:
+        DWORD currentTime = GetTickCount();
+        DWORD elapsedTime = 0;
+        switch (wParam)
+        {
+            case BlurTimerId:
             if (BlurStartTime == 0) {
               BlurStartTime = GetTickCount();
               InvalidateRect(SorrellWmMainWindow, NULL, FALSE);
@@ -514,7 +504,6 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam,
             if (elapsedTime == 0) {
               InvalidateRect(hWnd, NULL, FALSE);
             }
-            // std::cout << "WM_TIMER Fired! " << std::endl;
             if (elapsedTime >= Duration) {
               std::cout << std::setprecision(10)
                         << "For the blur timer, elapsedTime >= Duration: "
@@ -533,20 +522,12 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam,
             } else if (currentTime - BlurLastTimestamp >= MsPerFrame) {
               const float Alpha =
                   static_cast<float>((float)elapsedTime / (float)Duration);
-              // const float Factor = 1.f - std::exp(-2.f * (elapsedTime /
-              // Duration));
               const float Factor = 1 - std::pow(2, -10.f * Alpha);
               Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
               InvalidateRect(hWnd, NULL, FALSE);
 
-              // std::cout << std::setprecision(4) << "Sigma is " << Sigma << "
-              // at time " << currentTime << " with Factor " << Factor << " and
-              // Alpha " << Alpha << std::endl;
-
               unsigned char Transparency = static_cast<unsigned char>(
                   std::clamp(std::round(255.f * Alpha), 0.f, 255.f));
-              // unsigned char Transparency = static_cast<unsigned
-              // char>(std::round(255 * Alpha));
               BOOL Res = SetLayeredWindowAttributes(SorrellWmMainWindow, 0,
                                                     Transparency, LWA_ALPHA);
               if (!Res) {
@@ -555,8 +536,6 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam,
                           << std::endl;
                 LogLastWindowsError();
               }
-              // std::cout << static_cast<int>(Transparency) << " " << Alpha <<
-              // " " << Res << std::endl;
 
               BlurLastTimestamp = currentTime;
             } else {
@@ -689,7 +668,7 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
     WindowClass.cbWndExtra = 0;
     WindowClass.hInstance = hInstance;
     WindowClass.lpszMenuName = NULL;
-    WindowClass.lpszClassName = g_szAppName;
+    WindowClass.lpszClassName = WindowClassName;
 
     SourceHandle = GetForegroundWindow();
     if (SourceHandle == nullptr || SourceHandle == SorrellWmMainWindow) {
@@ -707,7 +686,7 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
     // std::cout << "Registered window class!" << std::endl;
 
     BackgroundHandle = CreateWindowExA(
-        NULL, g_szAppName, NULL,
+        NULL, WindowClassName, NULL,
         // WS_OVERLAPPEDWINDOW,
         WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE, WindowRect.left,
         WindowRect.top, WindowRect.right - WindowRect.left,
