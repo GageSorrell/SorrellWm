@@ -510,8 +510,7 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
     /* eslint-disable-next-line @stylistic/max-len */
     const PreloadImportStatement: string = `import { ${ ExposedFunctions.map(GetExportName).join(", ") }, ${ CoreTypeImports } } from "@sorrellwm/windows";\n`;
 
-    const PreloadContents: string = `
-/* File:    Preload.ts
+    const PreloadContents: string = `/* File:    Preload.ts
  * Author:  Gage Sorrell <gage@sorrell.sh>
  * License: MIT
  */
