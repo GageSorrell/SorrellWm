@@ -14,7 +14,7 @@ static int ChannelsNum = 3;
 static int Width = 320;
 static int Height = 240;
 static RECT WindowRect;
-static HWND Handle;
+static HWND BackgroundHandle;
 static float MinSigma = 1.f;
 static float Sigma = MinSigma;
 static float MaxSigma = 10.f;
@@ -347,7 +347,7 @@ void OnDestroy(HWND hWnd)
 	}
 
     WindowRect = RECT();
-    Handle = nullptr;
+    BackgroundHandle = nullptr;
     Sigma = MinSigma;
     // BlurredScreenshotData(FairlyHighResolution);
     // ScreenshotData(FairlyHighResolution);
@@ -583,7 +583,7 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam,
                                static_cast<unsigned int>(elapsedTime))
                         << " >= " << Duration << std::endl;
               KillTimer(hWnd, FadeTimerId);
-              SetLayeredWindowAttributes(Handle, 0, 0, LWA_ALPHA);
+              SetLayeredWindowAttributes(BackgroundHandle, 0, 0, LWA_ALPHA);
               SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255,
                                          LWA_ALPHA);
               // Might not need this, and it is expensive...
@@ -605,7 +605,7 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam,
                         << +(Transparency) << " at time " << currentTime
                         << " with EasedAlpha " << EasedAlpha << std::endl;
 
-              SetLayeredWindowAttributes(Handle, 0, Transparency, LWA_ALPHA);
+              SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
               SetLayeredWindowAttributes(SorrellWmMainWindow, 0,
                                          MainWindowTransparency, LWA_ALPHA);
 
@@ -645,7 +645,7 @@ Napi::Value TearDown(const Napi::CallbackInfo &CallbackInfo) {
      * animation should only take the length of time that the blur animation
      * played. */
 
-    BOOL KillResult = KillTimer(Handle, BlurTimerId);
+    BOOL KillResult = KillTimer(BackgroundHandle, BlurTimerId);
     if (!KillResult) {
                 std::cout << "KillTimer for BlurTimerId returned " << KillResult
                           << std::endl;
@@ -654,7 +654,7 @@ Napi::Value TearDown(const Napi::CallbackInfo &CallbackInfo) {
 
     FadeStartTime = GetTickCount();
     FadeLastTimestamp = FadeStartTime;
-    int SetTimerResult = SetTimer(Handle, FadeTimerId, MsPerFrame, NULL);
+    int SetTimerResult = SetTimer(BackgroundHandle, FadeTimerId, MsPerFrame, NULL);
 
     return Environment.Undefined();
 }
@@ -706,28 +706,28 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
     RegisterClassExA(&WindowClass);
     // std::cout << "Registered window class!" << std::endl;
 
-    Handle = CreateWindowExA(
+    BackgroundHandle = CreateWindowExA(
         NULL, g_szAppName, NULL,
         // WS_OVERLAPPEDWINDOW,
         WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE, WindowRect.left,
         WindowRect.top, WindowRect.right - WindowRect.left,
         WindowRect.bottom - WindowRect.top, NULL, NULL, hInstance, NULL);
 
-    SetWindowLong(Handle, GWL_EXSTYLE,
-                  GetWindowLong(Handle, GWL_EXSTYLE) | WS_EX_LAYERED);
+    SetWindowLong(BackgroundHandle, GWL_EXSTYLE,
+                  GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED);
 
     BOOL attrib = TRUE;
-    DwmSetWindowAttribute(Handle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib,
+    DwmSetWindowAttribute(BackgroundHandle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib,
                           sizeof(attrib));
 
-    // SetWindowLong(Handle, GWL_STYLE, 0);
+    // SetWindowLong(BackgroundHandle, GWL_STYLE, 0);
 
-    Render(Handle, SourceHandle);
+    Render(BackgroundHandle, SourceHandle);
 
-    ShowWindow(Handle, SW_SHOWNOACTIVATE);
-    UpdateWindow(Handle);
+    ShowWindow(BackgroundHandle, SW_SHOWNOACTIVATE);
+    UpdateWindow(BackgroundHandle);
     SetWindowPos(
-        Handle,
+        BackgroundHandle,
         GetNextWindow(SourceHandle, GW_HWNDPREV),
         0,
         0,
@@ -736,7 +736,7 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
     );
 
-    BOOL LayeredSuccess = SetLayeredWindowAttributes(Handle, 0, 255, LWA_ALPHA);
+    BOOL LayeredSuccess = SetLayeredWindowAttributes(BackgroundHandle, 0, 255, LWA_ALPHA);
     if (LayeredSuccess)
     {
                 std::cout << "SetLayeredWindowAttributes was SUCCESSFUL."
