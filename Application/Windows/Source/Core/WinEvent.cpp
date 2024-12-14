@@ -2,76 +2,38 @@
 
 std::atomic<HWND> WindowToCover(nullptr);
 
-void CALLBACK WinEventProc(HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD)
+void FWinEvent::DispatchFromEventProc(DWORD Event)
 {
-    // if (event != EVENT_OBJECT_CREATE || hwnd == nullptr)
-    // {
-    //     return;
-    // }
-
-    // // Get the window title
-    // char title[256];
-    // if (GetWindowTextA(hwnd, title, sizeof(title)) > 0)
-    // {
-    //     std::string windowTitle(title);
-
-    //     if (windowTitle == "SorrellWm Main Window")
-    //     {
-    //         // @TODO ??
-    //         // GGlobals::Ipc->Send("Main");
-
-    //         if (WindowToCover != nullptr)
-    //         {
-    //             char WindowToCoverTitle[256];
-    //             if (GetWindowTextA(WindowToCover, WindowToCoverTitle, sizeof(WindowToCoverTitle)) > 0)
-    //             {
-    //                 std::string windowTitle(WindowToCoverTitle);
-    //                 std::cout << "Window to cover has name " << WindowToCoverTitle << "." << std::endl;
-    //             }
-    //         }
-    //     }
-    // }
+    GGlobals::WinEvent->Dispatch(Event);
 }
 
-Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& info)
+void CALLBACK WinEventProc(HWINEVENTHOOK, DWORD Event, HWND Handle, LONG, LONG, DWORD, DWORD)
 {
-    Napi::Env env = info.Env();
+    FWinEvent::DispatchFromEventProc(Event);
+}
 
-    // if (info.Length() < 1 || !info[0].IsFunction())
-    // {
-    //     Napi::TypeError::New(env, "Expected a function as the first argument").ThrowAsJavaScriptException();
-    //     return env.Null();
-    // }
-
-    // // Create a ThreadSafeFunction to call the provided JavaScript callback
-    // Napi::Function jsCallback = info[0].As<Napi::Function>();
-    // threadSafeCallback = Napi::ThreadSafeFunction::New(
-    //     env,
-    //     jsCallback,
-    //     "Window Monitoring Callback",
-    //     0,
-    //     1
-    // );
+Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
 
     // Set up the event hook
     eventHook = SetWinEventHook(
-        EVENT_OBJECT_CREATE,   // Event type
-        EVENT_OBJECT_CREATE,   // Same for the end range
-        nullptr,               // No DLL handle
-        WinEventProc,          // Callback function
-        0,                     // Monitor all processes
-        0,                     // Monitor all threads
-        WINEVENT_OUTOFCONTEXT  // Hook type
+        EVENT_OBJECT_CREATE,
+        EVENT_OBJECT_CREATE,
+        nullptr,
+        WinEventProc,
+        0,
+        0,
+        WINEVENT_OUTOFCONTEXT
     );
 
     if (!eventHook)
     {
-        Napi::Error::New(env, "Failed to set up event hook").ThrowAsJavaScriptException();
-        return env.Null();
+        Napi::Error::New(Environment, "Failed to set up event hook").ThrowAsJavaScriptException();
+        return Environment.Null();
     }
 
-    // return Napi::Boolean::New(env, true);
-    return env.Undefined();
+    return Environment.Undefined();
 }
 
 // Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& info)
@@ -117,7 +79,7 @@ Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& info)
 // @TODO Register this in `Initialization.cpp`
 void FWinEvent::OnExit(void* _)
 {
-    if (eventHook)
+    if (FWinEvent::eventHook)
     {
         UnhookWinEvent(eventHook);
         eventHook = nullptr;

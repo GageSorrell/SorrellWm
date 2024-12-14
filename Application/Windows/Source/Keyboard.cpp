@@ -6,6 +6,8 @@
 
 #include "Keyboard.h"
 
+#include "Core/Hook.h"
+
 HHOOK ActivationKeyHook = NULL;
 
 LRESULT CALLBACK ActivationKeyProc(int nCode, WPARAM wParam, LPARAM lParam)

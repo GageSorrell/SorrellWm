@@ -1,0 +1,14 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+Language: Cpp
+DerivePointerAlignment: false
+PointerAlignment: Left
+ColumnLimit: 120
+BinPackParameters: true
+PenaltyBreakAssignment: 10000
+AlignAfterOpenBracket: DontAlign
+BinPackArguments: false
+BreakBeforeBraces: Allman
+cppcoreguidelines-pro-bounds-pointer-arithmetic
+---

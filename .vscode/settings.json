@@ -1,15 +1,15 @@
 {
     "[cpp]":
     {
-    "editor.defaultFormatter": "xaver.clang-format"
+    "editor.defaultFormatter": "xaver.clang-format",
     },
-
   	"eslint.enable": true,
     "eslint.nodePath": "node_modules",
 	"eslint.options":
 	{
 		"overrideConfigFile": "./Configuration/.eslintrc.js"
 	},
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
     "eslint.useFlatConfig": false,
   	"eslint.workingDirectories":
 	[

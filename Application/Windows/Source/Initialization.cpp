@@ -13,6 +13,7 @@
 #include "Core/Core.h"
 #include "Core/InterProcessCommunication.h"
 #include "Core/WinEvent.h"
+#include "Core/Hook.h"
 #include "Core/WindowUtilities.h"
 #include "Keyboard.h"
 #include "MessageLoop/MessageLoop.h"
@@ -597,8 +598,12 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
     napi_add_env_cleanup_hook(Environment, HooksExitCleanup, nullptr);
     napi_add_env_cleanup_hook(Environment, ShutdownGdiPlus, nullptr);
 
+    GGlobals::WinEvent = new FWinEvent();
+    InitializeBlurBackground();
+
     // @TODO Find better place to register listeners
     RegisterActivationKey();
+
 
     return Environment.Undefined();
 }

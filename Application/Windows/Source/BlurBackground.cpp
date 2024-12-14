@@ -6,13 +6,27 @@
 
 #include "BlurBackground.h"
 
+#include "Core/Globals.h"
+#include "Core/Utility.h"
+#include <Windowsx.h>
+#include "ThirdParty/Blur.h"
+#include <algorithm>
+#include <cstdlib>
+#include "Core/WinEvent.h"
+#include "Core/WindowUtilities.h"
+#include <algorithm>
+#include <cstdint>
+
+/* Just for profiling; temporary. */
+#include "Development/Profiling.h"
+
 static const char* WindowTitle = "SorrellWm Blurred Background";
 static const char* WindowClassName = WindowTitle;
 static int Depth = 24;
+static int Width;
+static int Height;
 static int ChannelsNum = 3;
 static RECT WindowRect;
-static int Width = 320;
-static int Height = 240;
 static HWND BackgroundHandle = nullptr;
 static const float MinSigma = 1.f;
 static const float MaxSigma = 10.f;
@@ -38,37 +52,41 @@ static const int Duration = 200;
 static const int MsPerFrame = static_cast<int>(1000 / 90);
 static HWND SourceHandle = nullptr;
 static bool PaintedOnce = false;
+static const int MinDeferResolution = 1920 * 1080 + 1;
 
-LPBITMAPINFO ScreenshotBmi = NULL;
-LPBITMAPINFO BlurredBmi = NULL;
+LPBITMAPINFO ScreenshotBmi = nullptr;
+LPBITMAPINFO BlurredBmi = nullptr;
 
 double CalculateScalingFactor(double AverageLuminance)
 {
-    double d_dark = std::abs(AverageLuminance - 85.l);
-    double d_light = std::abs(170.l - AverageLuminance);
+    const double DarkThreshold = std::abs(AverageLuminance - 85.l);
+    const double LightThreshold = std::abs(170.l - AverageLuminance);
+    double ScalingFactor;
 
-    if (d_dark < d_light)
+    if (DarkThreshold < LightThreshold)
     {
         if (AverageLuminance <= 85.l)
         {
-            return 1.l;
+            ScalingFactor = 1.l;
         }
         else
         {
-            return 85.l / AverageLuminance;
+            ScalingFactor = 85.l / AverageLuminance;
         }
     }
     else
     {
         if (AverageLuminance >= 170.l)
         {
-            return 1.l;
+            ScalingFactor = 1.l;
         }
         else
         {
-            return 170.l / AverageLuminance;
+            ScalingFactor = 170.l / AverageLuminance;
         }
     }
+
+    return ScalingFactor;
 }
 
 void ApplyScalingFactor(BYTE* PixelData, int width, int height, int channelsNum, double scalingFactor)
@@ -78,114 +96,117 @@ void ApplyScalingFactor(BYTE* PixelData, int width, int height, int channelsNum,
         return;
     }
 
-    size_t totalPixels = static_cast<size_t>(width) * height;
+    const size_t TotalPixels = static_cast<size_t>(width) * height;
 
-    for (size_t Index = 0; Index < totalPixels; ++Index)
+    for (size_t PixelIndex = 0; PixelIndex < TotalPixels; ++PixelIndex)
     {
-        size_t index = Index * channelsNum;
+        const size_t ColorIndex = PixelIndex * channelsNum;
 
-        BYTE blue = PixelData[index];
-        BYTE green = PixelData[index + 1];
-        BYTE red = PixelData[index + 2];
+        const BYTE Blue = PixelData[ColorIndex];
+        const BYTE Green = PixelData[ColorIndex + 1];
+        const BYTE Red = PixelData[ColorIndex + 2];
 
-        int scaled_red = static_cast<int>(red * scalingFactor);
-        int scaled_green = static_cast<int>(green * scalingFactor);
-        int scaled_blue = static_cast<int>(blue * scalingFactor);
+        const int ScaledRed = static_cast<int>(Red * scalingFactor);
+        const int ScaledGreen = static_cast<int>(Green * scalingFactor);
+        const int ScaledBlue = static_cast<int>(Blue * scalingFactor);
 
-        PixelData[index + 2] = static_cast<BYTE>(std::clamp(scaled_red, 0, 255));
-        PixelData[index + 1] = static_cast<BYTE>(std::clamp(scaled_green, 0, 255));
-        PixelData[index]     = static_cast<BYTE>(std::clamp(scaled_blue, 0, 255));
+        PixelData[ColorIndex + 2] = static_cast<BYTE>(std::clamp(ScaledRed, 0, 255));
+        PixelData[ColorIndex + 1] = static_cast<BYTE>(std::clamp(ScaledGreen, 0, 255));
+        PixelData[ColorIndex] = static_cast<BYTE>(std::clamp(ScaledBlue, 0, 255));
     }
 }
 
-double CalculateAverageLuminance(const BYTE* pixelData, int width, int height, int channelsNum)
+double CalculateAverageLuminance(const BYTE* PixelData, int width, int height, int channelsNum)
 {
-    if (!pixelData || width <= 0 || height <= 0 || (channelsNum != 3 && channelsNum != 4))
+    if (!PixelData || width <= 0 || height <= 0 || (channelsNum != 3 && channelsNum != 4))
     {
         return -1.l;
     }
 
     double TotalLuminance = 0.l;
-    size_t totalPixels = static_cast<size_t>(width) * height;
+    const size_t TotalPixels = static_cast<size_t>(width) * height;
 
-    for (size_t i = 0; i < totalPixels; ++i) {
-        size_t index = i * channelsNum;
+    for (size_t PixelIndex = 0; PixelIndex < TotalPixels; ++PixelIndex)
+    {
+        const size_t ColorIndex = PixelIndex * channelsNum;
 
-        BYTE blue = pixelData[index];
-        BYTE green = pixelData[index + 1];
-        BYTE red = pixelData[index + 2];
-        // BYTE alpha = (channelsNum == 4) ? pixelData[index + 3] : 255;
+        const BYTE Blue = PixelData[ColorIndex];
+        const BYTE Green = PixelData[ColorIndex + 1];
+        const BYTE Red = PixelData[ColorIndex + 2];
 
         // Calculate luminance using Rec. 709
-        double luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+        const double AdjustedLuminance = 0.2126l * Red + 0.7152l * Green + 0.0722l * Blue;
 
-        TotalLuminance += luminance;
+        TotalLuminance += AdjustedLuminance;
     }
 
-    double averageLuminance = TotalLuminance / static_cast<double>(totalPixels);
+    double averageLuminance = TotalLuminance / static_cast<double>(TotalPixels);
     return averageLuminance;
 }
 
-
-LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE* &pBits)
+LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
 {
-	LPBITMAPINFO lpBmi;
-	int iBmiSize = sizeof(BITMAPINFO);
-	int iSurfaceSize = cx * cy * (sizeof(BYTE) * 3);
+    LPBITMAPINFO lpBmi;
+    const int iBmiSize = sizeof(BITMAPINFO);
+    const int iSurfaceSize = cx * cy * (sizeof(BYTE) * 3);
 
-	// Allocate memory for the bitmap info header.
-	if((lpBmi = (LPBITMAPINFO)malloc(iBmiSize)) == NULL){
-		// std::cout << "Error allocating BitmapInfo!\n";
-		return NULL;
-	}
+    // Allocate memory for the bitmap info header.
+    if ((lpBmi = (LPBITMAPINFO)malloc(iBmiSize)) == nullptr)
+    {
+        // std::cout << "Error allocating BitmapInfo!\n";
+        return nullptr;
+    }
 
-	ZeroMemory(lpBmi, iBmiSize);
+    ZeroMemory(lpBmi, iBmiSize);
 
-	// Allocate memory for the DIB surface.
-	if((pBits = (BYTE*)malloc(iSurfaceSize)) == NULL) {
-		// std::cout << "Error allocating memory for bitmap bits\n";
-		return NULL;
-	}
+    // Allocate memory for the DIB surface.
+    if ((pBits = (BYTE*)malloc(iSurfaceSize)) == nullptr)
+    {
+        // std::cout << "Error allocating memory for bitmap bits\n";
+        return nullptr;
+    }
 
-	ZeroMemory(pBits, iSurfaceSize);
+    ZeroMemory(pBits, iSurfaceSize);
 
-	// Initialize bitmap info header
-	lpBmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	lpBmi->bmiHeader.biWidth = cx;
-	// lpBmi->bmiHeader.biHeight = -(signed)cy;		// <-- NEGATIVE MEANS TOP DOWN!!!
-	lpBmi->bmiHeader.biHeight = (signed)cy;
-	lpBmi->bmiHeader.biPlanes = 1;
-	lpBmi->bmiHeader.biSizeImage = 0;
-	lpBmi->bmiHeader.biXPelsPerMeter = 0;
-	lpBmi->bmiHeader.biYPelsPerMeter = 0;
-	lpBmi->bmiHeader.biClrUsed = 0;
-	lpBmi->bmiHeader.biClrImportant = 0;
-	lpBmi->bmiHeader.biCompression = BI_RGB;
+    // Initialize bitmap info header
+    lpBmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    lpBmi->bmiHeader.biWidth = cx;
+    // lpBmi->bmiHeader.biHeight = -(signed)cy;		// <-- NEGATIVE MEANS
+    // TOP DOWN!!!
+    lpBmi->bmiHeader.biHeight = (signed)cy;
+    lpBmi->bmiHeader.biPlanes = 1;
+    lpBmi->bmiHeader.biSizeImage = 0;
+    lpBmi->bmiHeader.biXPelsPerMeter = 0;
+    lpBmi->bmiHeader.biYPelsPerMeter = 0;
+    lpBmi->bmiHeader.biClrUsed = 0;
+    lpBmi->bmiHeader.biClrImportant = 0;
+    lpBmi->bmiHeader.biCompression = BI_RGB;
 
-	lpBmi->bmiHeader.biBitCount = 24;
+    lpBmi->bmiHeader.biBitCount = 24;
 
-	return lpBmi;
+    return lpBmi;
 }
 
 void PutPixel(int x, int y, BYTE r, BYTE g, BYTE b, LPBITMAPINFO lpBmi, void* pBits)
 {
-	int iOffset = lpBmi->bmiHeader.biWidth * y + x;
+    int iOffset = lpBmi->bmiHeader.biWidth * y + x;
 
-	BYTE* p = (BYTE*)pBits;
-	p[iOffset * 3 + 0] = r;
-	p[iOffset * 3 + 1] = g;
-	p[iOffset * 3 + 2] = b;
+    BYTE* p = (BYTE*)pBits;
+    p[iOffset * 3 + 0] = r;
+    p[iOffset * 3 + 1] = g;
+    p[iOffset * 3 + 2] = b;
 }
 
 bool CaptureWindowScreenshot(HWND SourceHandle)
 {
-    std::cout << "Left: " << WindowRect.left << "\nRight: " << WindowRect.right << "\nTop: " << WindowRect.top << "\nBottom: " << WindowRect.bottom << std::endl;
+    std::cout << "Left: " << WindowRect.left << "\nRight: " << WindowRect.right << "\nTop: " << WindowRect.top
+              << "\nBottom: " << WindowRect.bottom << std::endl;
 
     Width = WindowRect.right - WindowRect.left;
     Height = WindowRect.bottom - WindowRect.top;
     ChannelsNum = 3;
 
-    HDC ScreenDc = GetDC(NULL);
+    HDC ScreenDc = GetDC(nullptr);
 
     HDC hdcMemDC = CreateCompatibleDC(ScreenDc);
     if (!hdcMemDC)
@@ -197,7 +218,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 
     ScreenshotData.reserve(Width * Height * ChannelsNum);
     Screenshot = ScreenshotData.data();
-    HBITMAP hBitmap = CreateDIBSection(ScreenDc, ScreenshotBmi, DIB_RGB_COLORS, (void**) Screenshot, NULL, 0);
+    HBITMAP hBitmap = CreateDIBSection(ScreenDc, ScreenshotBmi, DIB_RGB_COLORS, (void**)Screenshot, nullptr, 0);
     if (!hBitmap)
     {
         std::cout << "Failed to create DIB section." << std::endl;
@@ -237,7 +258,8 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        // std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." << std::endl;
+        // std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
+        // std::endl;
     }
 
     SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
@@ -249,7 +271,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
         SelectObject(hdcMemDC, hOld);
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
-        ReleaseDC(NULL, ScreenDc);
+        ReleaseDC(nullptr, ScreenDc);
         return false;
     }
     else
@@ -299,46 +321,64 @@ void Render(HWND hWnd, HWND SourceHandle)
         std::cout << "CapturedWindowScreenshot FAILED." << std::endl;
     }
 
-	InvalidateRect(hWnd, NULL, FALSE);
+    InvalidateRect(hWnd, nullptr, FALSE);
 }
 
 BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 {
     BlurLastTimestamp = BlurStartTime;
-    SetTimer(hWnd, BlurTimerId, MsPerFrame, NULL);
-	// Create a new DIB
-	if((ScreenshotBmi = CreateDIB(Width, Height, Depth, Screenshot)) == NULL)
+    SetTimer(hWnd, BlurTimerId, MsPerFrame, nullptr);
+    if ((ScreenshotBmi = CreateDIB(Width, Height, Depth, Screenshot)) == nullptr)
     {
         std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
-		return FALSE;
-	}
+        return FALSE;
+    }
     else
     {
         std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
     }
-	if((BlurredBmi = CreateDIB(Width, Height, Depth, BlurredScreenshot)) == NULL)
+    if ((BlurredBmi = CreateDIB(Width, Height, Depth, BlurredScreenshot)) == nullptr)
     {
         std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
-		return FALSE;
-	}
+        return FALSE;
+    }
     else
     {
         std::cout << "BlurredBmi was created." << std::endl;
     }
 
-	return TRUE;
+    return TRUE;
+}
+
+void InitializeBlurBackground()
+{
+    GGlobals::WinEvent->Register([&](DWORD Event)
+    {
+        if (Event == EVENT_SYSTEM_FOREGROUND)
+        {
+            HWND ForegroundWindow = GetForegroundWindow();
+            RECT ForegroundRect;
+            GetWindowRect(ForegroundWindow, &ForegroundRect);
+            const int ForegroundSize = (ForegroundRect.right - ForegroundRect.left) * (ForegroundRect.bottom - ForegroundRect.top);
+
+            if (ForegroundSize >= MinDeferResolution)
+            {
+                // Set timer to update cached blur frames..
+            }
+        }
+    });
 }
 
 void OnDestroy(HWND hWnd)
 {
-	if(ScreenshotBmi)
+    if (ScreenshotBmi)
     {
-		free(ScreenshotBmi);
-	}
-	if(BlurredBmi)
+        free(ScreenshotBmi);
+    }
+    if (BlurredBmi)
     {
-		free(BlurredBmi);
-	}
+        free(BlurredBmi);
+    }
 
     WindowRect = RECT();
     BackgroundHandle = nullptr;
@@ -353,15 +393,7 @@ void OnDestroy(HWND hWnd)
     BlurLastTimestamp = 0;
     FadeLastTimestamp = 0;
     SetForegroundWindow(SourceHandle);
-    BOOL Here = SetWindowPos(
-        SorrellWmMainWindow,
-        HWND_TOP,
-        2000,
-        2000,
-        0,
-        0,
-    SWP_NOSIZE
-    );
+    BOOL Here = SetWindowPos(SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
     if (Here)
     {
         std::cout << "Here was true." << std::endl;
@@ -372,9 +404,10 @@ void OnDestroy(HWND hWnd)
     }
 }
 
-void GetBackgroundMode() {
-    double d_dark = std::abs(Luminance - 85.0);
-    double d_light = std::abs(170.0 - Luminance);
+void GetBackgroundMode()
+{
+    const double d_dark = std::abs(Luminance - 85.0);
+    const double d_light = std::abs(170.0 - Luminance);
 
     if (d_dark < d_light)
     {
@@ -402,7 +435,8 @@ void GetBackgroundMode() {
     }
 }
 
-void OnPaint(HWND hWnd) {
+void OnPaint(HWND hWnd)
+{
     static PAINTSTRUCT PaintStruct;
     static HDC hDC;
 
@@ -417,52 +451,28 @@ void OnPaint(HWND hWnd) {
     bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    std::cout << "Blur is being called with Sigma " << std::setprecision(4)
-              << Sigma << std::endl;
+    std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
     SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
     BlurredScreenshotData.reserve(bufferSize);
     BlurredScreenshot = BlurredScreenshotData.data();
     Screenshot = ScreenshotData.data();
     if (Sigma < MaxSigma)
     {
-        Blur(
-            Screenshot,
-            BlurredScreenshot,
-            Width,
-            Height,
-            ChannelsNum,
-            Sigma,
-            3,
-            kExtend
-        );
+        // Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
+        ProfileLogTime("Blur", std::function<void()>([]()
+        {
+            Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
+        }));
 
-        int result = SetDIBitsToDevice(
-            hDC,
-            0,
-            0,
-            Width,
-            Height,
-            0,
-            0,
-            0,
-            Height,
-            BlurredScreenshot,
-            BlurredBmi,
-            DIB_RGB_COLORS
-        );
+        const int Result = SetDIBitsToDevice(
+            hDC, 0, 0, Width, Height, 0, 0, 0, Height, BlurredScreenshot, BlurredBmi, DIB_RGB_COLORS);
 
         BlurredScreenshot = BlurredScreenshotData.data();
         if (ScalesBrightness)
         {
             const float Alpha = Sigma / MaxSigma;
             const float Brightness = BrightnessScalar * Alpha;
-            ApplyScalingFactor(
-                BlurredScreenshot,
-                Width,
-                Height,
-                ChannelsNum,
-                Brightness
-            );
+            ApplyScalingFactor(BlurredScreenshot, Width, Height, ChannelsNum, Brightness);
         }
     }
 
@@ -477,7 +487,7 @@ void OnPaint(HWND hWnd) {
     EndPaint(hWnd, &PaintStruct);
 }
 
-BOOL OnEraseBkgnd(HWND hWnd, HDC hdc)
+BOOL OnEraseBkgnd(HWND _Handle, HDC _Hdc)
 {
     return TRUE;
 }
@@ -495,129 +505,137 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         DWORD elapsedTime = 0;
         switch (wParam)
         {
-            case BlurTimerId:
-            if (BlurStartTime == 0) {
-              BlurStartTime = GetTickCount();
-              InvalidateRect(SorrellWmMainWindow, NULL, FALSE);
+        case BlurTimerId:
+            if (BlurStartTime == 0)
+            {
+                BlurStartTime = GetTickCount();
+                InvalidateRect(SorrellWmMainWindow, nullptr, FALSE);
             }
             elapsedTime = currentTime - BlurStartTime;
-            if (elapsedTime == 0) {
-              InvalidateRect(hWnd, NULL, FALSE);
+            if (elapsedTime == 0)
+            {
+                InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (elapsedTime >= Duration) {
-              std::cout << std::setprecision(10)
-                        << "For the blur timer, elapsedTime >= Duration: "
-                        << +(elapsedTime) << " >= " << Duration
-                        << " and a final Sigma of " << Sigma << std::endl;
-              Sigma = MaxSigma;
-              BOOL PostTimerRes = SetLayeredWindowAttributes(
-                  SorrellWmMainWindow, 0, 255, LWA_ALPHA);
-              if (PostTimerRes) {
-                std::cout << "PostTimerRes was true." << std::endl;
-              } else {
-                std::cout << "PostTimerRes was false." << std::endl;
-              }
-              InvalidateRect(hWnd, NULL, FALSE);
-              KillTimer(hWnd, BlurTimerId);
-            } else if (currentTime - BlurLastTimestamp >= MsPerFrame) {
-              const float Alpha =
-                  static_cast<float>((float)elapsedTime / (float)Duration);
-              const float Factor = 1 - std::pow(2, -10.f * Alpha);
-              Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
-              InvalidateRect(hWnd, NULL, FALSE);
+            if (elapsedTime >= Duration)
+            {
+                std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime)
+                          << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
+                Sigma = MaxSigma;
+                BOOL PostTimerRes = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                if (PostTimerRes)
+                {
+                    std::cout << "PostTimerRes was true." << std::endl;
+                }
+                else
+                {
+                    std::cout << "PostTimerRes was false." << std::endl;
+                }
+                InvalidateRect(hWnd, nullptr, FALSE);
+                KillTimer(hWnd, BlurTimerId);
+            }
+            else if (currentTime - BlurLastTimestamp >= MsPerFrame)
+            {
+                const float Alpha = static_cast<float>((float)elapsedTime / (float)Duration);
+                const float Factor = 1 - std::pow(2, -10.f * Alpha);
+                Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
+                InvalidateRect(hWnd, nullptr, FALSE);
 
-              unsigned char Transparency = static_cast<unsigned char>(
-                  std::clamp(std::round(255.f * Alpha), 0.f, 255.f));
-              BOOL Res = SetLayeredWindowAttributes(SorrellWmMainWindow, 0,
-                                                    Transparency, LWA_ALPHA);
-              if (!Res) {
-                std::cout << "SetLayeredWindowAttributes failed when "
-                             "increasing opacity."
-                          << std::endl;
-                LogLastWindowsError();
-              }
+                unsigned char Transparency = static_cast<unsigned char>(
+                    std::clamp(std::round(255.f * Alpha), 0.f, 255.f));
+                BOOL Res = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
+                if (!Res)
+                {
+                    std::cout << "SetLayeredWindowAttributes failed when "
+                                 "increasing opacity."
+                              << std::endl;
+                    LogLastWindowsError();
+                }
 
-              BlurLastTimestamp = currentTime;
-            } else {
-              std::cout << std::setprecision(4) << "WM_TIMER came too soon, "
-                        << currentTime << " " << BlurLastTimestamp << std::endl;
+                BlurLastTimestamp = currentTime;
+            }
+            else
+            {
+                std::cout << std::setprecision(4) << "WM_TIMER came too soon, " << currentTime << " "
+                          << BlurLastTimestamp << std::endl;
             }
             return 0;
-                case FadeTimerId:
+        case FadeTimerId:
             Sigma = MinSigma;
             elapsedTime = currentTime - FadeStartTime;
-            if (elapsedTime >= Duration) {
-              std::cout << "Destroying window..." << std::endl;
-              ShowWindow(hWnd, SW_HIDE);
-              DestroyWindow(hWnd);
+            if (elapsedTime >= Duration)
+            {
+                std::cout << "Destroying window..." << std::endl;
+                ShowWindow(hWnd, SW_HIDE);
+                DestroyWindow(hWnd);
             }
-            // InvalidateRect(hWnd, NULL, FALSE);
-            if (elapsedTime == 0) {
-              InvalidateRect(hWnd, NULL, FALSE);
+            // InvalidateRect(hWnd, nullptr, FALSE);
+            if (elapsedTime == 0)
+            {
+                InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (elapsedTime >= Duration) {
-              std::cout << std::setprecision(2)
-                        << "For the Fade timer, elapsedTime >= Duration: "
-                        << std::to_string(
-                               static_cast<unsigned int>(elapsedTime))
-                        << " >= " << Duration << std::endl;
-              KillTimer(hWnd, FadeTimerId);
-              SetLayeredWindowAttributes(BackgroundHandle, 0, 0, LWA_ALPHA);
-              SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255,
-                                         LWA_ALPHA);
-              // Might not need this, and it is expensive...
-              InvalidateRect(SorrellWmMainWindow, NULL, FALSE);
-            } else if (currentTime - FadeLastTimestamp >= MsPerFrame) {
-              // const float EasedAlpha = std::exp(-2.f * (1.f - (elapsedTime /
-              // Duration)));
-              const float EasedAlpha =
-                  1.f -
-                  std::pow(2, -10.f * ((float)elapsedTime / (float)Duration));
-              const float Alpha = elapsedTime / (float)Duration;
-              unsigned char Transparency =
-                  static_cast<unsigned char>(std::clamp(
-                      std::round(255.f - 255.f * EasedAlpha), 0.f, 255.f));
-              unsigned char MainWindowTransparency = static_cast<unsigned char>(
-                  std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
-              InvalidateRect(hWnd, NULL, FALSE);
-              std::cout << std::setprecision(4) << "Transparency is "
-                        << +(Transparency) << " at time " << currentTime
-                        << " with EasedAlpha " << EasedAlpha << std::endl;
+            if (elapsedTime >= Duration)
+            {
+                std::cout << std::setprecision(2) << "For the Fade timer, elapsedTime >= Duration: "
+                          << std::to_string(static_cast<unsigned int>(elapsedTime)) << " >= " << Duration << std::endl;
+                KillTimer(hWnd, FadeTimerId);
+                SetLayeredWindowAttributes(BackgroundHandle, 0, 0, LWA_ALPHA);
+                SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                // Might not need this, and it is expensive...
+                InvalidateRect(SorrellWmMainWindow, nullptr, FALSE);
+            }
+            else if (currentTime - FadeLastTimestamp >= MsPerFrame)
+            {
+                // const float EasedAlpha = std::exp(-2.f * (1.f - (elapsedTime
+                // / Duration)));
+                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float)elapsedTime / (float)Duration));
+                const float Alpha = elapsedTime / (float)Duration;
+                unsigned char Transparency = static_cast<unsigned char>(
+                    std::clamp(std::round(255.f - 255.f * EasedAlpha), 0.f, 255.f));
+                unsigned char MainWindowTransparency = static_cast<unsigned char>(
+                    std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
+                InvalidateRect(hWnd, nullptr, FALSE);
+                std::cout << std::setprecision(4) << "Transparency is " << +(Transparency) << " at time " << currentTime
+                          << " with EasedAlpha " << EasedAlpha << std::endl;
 
-              SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
-              SetLayeredWindowAttributes(SorrellWmMainWindow, 0,
-                                         MainWindowTransparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
 
-              FadeLastTimestamp = currentTime;
-            } else {
-              std::cout << "WM_TIMER came too soon, " << currentTime << " "
-                        << FadeLastTimestamp << std::endl;
+                FadeLastTimestamp = currentTime;
+            }
+            else
+            {
+                std::cout << "WM_TIMER came too soon, " << currentTime << " " << FadeLastTimestamp << std::endl;
             }
             return 0;
-                }
-    }
+        }
     }
 
     return DefWindowProc(hWnd, iMsg, wParam, lParam);
 }
 
-Napi::Value TearDown(const Napi::CallbackInfo &CallbackInfo) {
+Napi::Value TearDown(const Napi::CallbackInfo& CallbackInfo)
+{
     Napi::Env Environment = CallbackInfo.Env();
 
     std::cout << "Tearing down window!" << std::endl;
 
     BOOL Shadow = false;
-    BOOL SystemSuccess =
-        SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
-    if (Shadow) {
-                std::cout << "Shadow is TRUE" << std::endl;
-    } else {
-                std::cout << "Shadow is FALSE" << std::endl;
+    BOOL SystemSuccess = SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
+    if (Shadow)
+    {
+        std::cout << "Shadow is TRUE" << std::endl;
     }
-    if (SystemSuccess) {
-                std::cout << "SystemSuccess is TRUE" << std::endl;
-    } else {
-                std::cout << "SystemSuccess is FALSE" << std::endl;
+    else
+    {
+        std::cout << "Shadow is FALSE" << std::endl;
+    }
+    if (SystemSuccess)
+    {
+        std::cout << "SystemSuccess is TRUE" << std::endl;
+    }
+    else
+    {
+        std::cout << "SystemSuccess is FALSE" << std::endl;
     }
 
     /* @TODO If this is called while the blur is still animating, then the fade
@@ -625,15 +643,15 @@ Napi::Value TearDown(const Napi::CallbackInfo &CallbackInfo) {
      * played. */
 
     BOOL KillResult = KillTimer(BackgroundHandle, BlurTimerId);
-    if (!KillResult) {
-                std::cout << "KillTimer for BlurTimerId returned " << KillResult
-                          << std::endl;
-                LogLastWindowsError();
+    if (!KillResult)
+    {
+        std::cout << "KillTimer for BlurTimerId returned " << KillResult << std::endl;
+        LogLastWindowsError();
     }
 
     FadeStartTime = GetTickCount();
     FadeLastTimestamp = FadeStartTime;
-    int SetTimerResult = SetTimer(BackgroundHandle, FadeTimerId, MsPerFrame, NULL);
+    int SetTimerResult = SetTimer(BackgroundHandle, FadeTimerId, MsPerFrame, nullptr);
 
     return Environment.Undefined();
 }
@@ -654,9 +672,10 @@ std::string GetDerivedThemeMode(double Luminance)
     }
 }
 
-Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
+Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
+{
     Napi::Env Environment = CallbackInfo.Env();
-    HINSTANCE hInstance = GetModuleHandle(NULL);
+    HINSTANCE hInstance = GetModuleHandle(nullptr);
 
     MSG msg;
     WNDCLASSEXA WindowClass;
@@ -667,15 +686,14 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
     WindowClass.cbClsExtra = 0;
     WindowClass.cbWndExtra = 0;
     WindowClass.hInstance = hInstance;
-    WindowClass.lpszMenuName = NULL;
+    WindowClass.lpszMenuName = nullptr;
     WindowClass.lpszClassName = WindowClassName;
 
     SourceHandle = GetForegroundWindow();
-    if (SourceHandle == nullptr || SourceHandle == SorrellWmMainWindow) {
-                std::cout << "MyBlur was called, but GetForegroundWindow gave "
-                             "the nullptr."
-                          << std::endl;
-                return Environment.Undefined();
+    if (SourceHandle == nullptr || SourceHandle == SorrellWmMainWindow)
+    {
+        std::cout << "MyBlur was called, but GetForegroundWindow gave the nullptr." << std::endl;
+        return Environment.Undefined();
     }
 
     GetDwmWindowRect(SourceHandle, &WindowRect);
@@ -685,19 +703,23 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
     RegisterClassExA(&WindowClass);
     // std::cout << "Registered window class!" << std::endl;
 
-    BackgroundHandle = CreateWindowExA(
-        NULL, WindowClassName, NULL,
-        // WS_OVERLAPPEDWINDOW,
-        WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE, WindowRect.left,
-        WindowRect.top, WindowRect.right - WindowRect.left,
-        WindowRect.bottom - WindowRect.top, NULL, NULL, hInstance, NULL);
+    BackgroundHandle = CreateWindowExA(NULL,
+        WindowClassName,
+        nullptr,
+        WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE,
+        WindowRect.left,
+        WindowRect.top,
+        WindowRect.right - WindowRect.left,
+        WindowRect.bottom - WindowRect.top,
+        nullptr,
+        nullptr,
+        hInstance,
+        nullptr);
 
-    SetWindowLong(BackgroundHandle, GWL_EXSTYLE,
-                  GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED);
+    SetWindowLong(BackgroundHandle, GWL_EXSTYLE, GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED);
 
     BOOL attrib = TRUE;
-    DwmSetWindowAttribute(BackgroundHandle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib,
-                          sizeof(attrib));
+    DwmSetWindowAttribute(BackgroundHandle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib, sizeof(attrib));
 
     // SetWindowLong(BackgroundHandle, GWL_STYLE, 0);
 
@@ -705,49 +727,45 @@ Napi::Value MyBlur(const Napi::CallbackInfo &CallbackInfo) {
 
     ShowWindow(BackgroundHandle, SW_SHOWNOACTIVATE);
     UpdateWindow(BackgroundHandle);
-    SetWindowPos(
-        BackgroundHandle,
+    SetWindowPos(BackgroundHandle,
         GetNextWindow(SourceHandle, GW_HWNDPREV),
         0,
         0,
         0,
         0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
-    );
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
     BOOL LayeredSuccess = SetLayeredWindowAttributes(BackgroundHandle, 0, 255, LWA_ALPHA);
     if (LayeredSuccess)
     {
-                std::cout << "SetLayeredWindowAttributes was SUCCESSFUL."
-                          << std::endl;
+        std::cout << "SetLayeredWindowAttributes was SUCCESSFUL." << std::endl;
     }
     else
     {
-                std::cout << "SetLayeredWindowAttributes FAILED." << std::endl;
-                LogLastWindowsError();
+        std::cout << "SetLayeredWindowAttributes FAILED." << std::endl;
+        LogLastWindowsError();
     }
 
     LPCSTR WindowName = "SorrellWm Main Window";
-    SorrellWmMainWindow = FindWindow(NULL, WindowName);
-    SetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE,
-                  GetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE) |
-                      WS_EX_LAYERED);
+    SorrellWmMainWindow = FindWindow(nullptr, WindowName);
+    SetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE, GetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED);
     SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 0, LWA_ALPHA);
-    BOOL MyRes = SetWindowPos(
-        SorrellWmMainWindow,
+    BOOL MyRes = SetWindowPos(SorrellWmMainWindow,
         HWND_TOP,
         WindowRect.left,
         WindowRect.top,
         WindowRect.right - WindowRect.left,
         WindowRect.bottom - WindowRect.top,
-        SWP_SHOWWINDOW
-    );
+        SWP_SHOWWINDOW);
     BOOL SetFore = SetForegroundWindow(SorrellWmMainWindow);
     std::cout << "SetFore " << SetFore << std::endl;
-    if (MyRes) {
-                std::cout << "MyRes was true" << std::endl;
-    } else {
-                std::cout << "MyRes was false" << std::endl;
+    if (MyRes)
+    {
+        std::cout << "MyRes was true" << std::endl;
+    }
+    else
+    {
+        std::cout << "MyRes was false" << std::endl;
     }
 
     GetBackgroundMode();
