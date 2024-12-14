@@ -363,7 +363,7 @@ void InitializeBlurBackground()
 
             if (ForegroundSize >= MinDeferResolution)
             {
-                // Set timer to update cached blur frames..
+                // @TODO Set timer to update cached blur frames...
             }
         }
     });
