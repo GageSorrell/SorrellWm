@@ -15,10 +15,17 @@
 #include "Core/WinEvent.h"
 #include "Core/WindowUtilities.h"
 #include <algorithm>
+#include "Core/Math.h"
 #include <cstdint>
 
-/* Just for profiling; temporary. */
-#include "Development/Profiling.h"
+/**
+ * 1. Get screenshot of SourceHandle window
+ * 2. Draw empty window that will show blur
+ * 3. Animate blur
+ * 4. Superimpose Main window
+ * 5. (Closing down) play fade animation (fading both windows)
+ * 6. (When fade animation is done) Move Main window away and destroy blur window
+ */
 
 static const char* WindowTitle = "SorrellWm Blurred Background";
 static const char* WindowClassName = WindowTitle;
@@ -49,7 +56,7 @@ static DWORD FadeLastTimestamp = 0;
 static const UINT_PTR BlurTimerId = 1;
 static const UINT_PTR FadeTimerId = 2;
 static const int Duration = 200;
-static const int MsPerFrame = static_cast<int>(1000 / 90);
+static const int MsPerFrame = 1000 / 90;
 static HWND SourceHandle = nullptr;
 static bool PaintedOnce = false;
 static const int MinDeferResolution = 1920 * 1080 + 1;
@@ -126,9 +133,9 @@ double CalculateAverageLuminance(const BYTE* PixelData, int width, int height, i
     double TotalLuminance = 0.l;
     const size_t TotalPixels = static_cast<size_t>(width) * height;
 
-    for (size_t PixelIndex = 0; PixelIndex < TotalPixels; ++PixelIndex)
+    for (std::size_t PixelIndex = 0; PixelIndex < TotalPixels; ++PixelIndex)
     {
-        const size_t ColorIndex = PixelIndex * channelsNum;
+        const std::size_t ColorIndex = PixelIndex * channelsNum;
 
         const BYTE Blue = PixelData[ColorIndex];
         const BYTE Green = PixelData[ColorIndex + 1];
@@ -359,7 +366,7 @@ void InitializeBlurBackground()
             HWND ForegroundWindow = GetForegroundWindow();
             RECT ForegroundRect;
             GetWindowRect(ForegroundWindow, &ForegroundRect);
-            const int ForegroundSize = (ForegroundRect.right - ForegroundRect.left) * (ForegroundRect.bottom - ForegroundRect.top);
+            const int ForegroundSize = GetRectArea(ForegroundRect);
 
             if (ForegroundSize >= MinDeferResolution)
             {
@@ -701,7 +708,6 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
     Width = WindowRect.right - WindowRect.left;
 
     RegisterClassExA(&WindowClass);
-    // std::cout << "Registered window class!" << std::endl;
 
     BackgroundHandle = CreateWindowExA(NULL,
         WindowClassName,
@@ -720,8 +726,6 @@ Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
 
     BOOL attrib = TRUE;
     DwmSetWindowAttribute(BackgroundHandle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib, sizeof(attrib));
-
-    // SetWindowLong(BackgroundHandle, GWL_STYLE, 0);
 
     Render(BackgroundHandle, SourceHandle);
 
