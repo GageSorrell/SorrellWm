@@ -7,7 +7,7 @@
     "eslint.nodePath": "node_modules",
 	"eslint.options":
 	{
-		"overrideConfigFile": "./Configuration/.eslintrc.js"
+		"overrideConfigFile": "./Configuration/.eslintrc.cjs"
 	},
     "C_Cpp.codeAnalysis.clangTidy.enabled": true,
     "eslint.useFlatConfig": false,

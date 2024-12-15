@@ -4,9 +4,9 @@
  * License:   MIT
  */
 
-import { useMemo, type ReactElement } from "react";
-import type { PAction } from "./Action.Types";
 import { KeyCombinationDisplay } from "../Key/Key";
+import type { PAction } from "./Action.Types";
+import { type ReactElement } from "react";
 
 export const Action = ({ OnSelect, Name, KeyCombination }: PAction): ReactElement =>
 {
@@ -34,8 +34,8 @@ export const MoveAction = (): ReactElement =>
 
     return (
         <Action
-            Name="Move"
             KeyCombination={ 0x48 }
+            Name="Move"
             { ...{ OnSelect } }
         />
     );
@@ -50,8 +50,8 @@ export const ResizeAction = (): ReactElement =>
 
     return (
         <Action
-            Name="Resize"
             KeyCombination={ 0x4A }
+            Name="Resize"
             { ...{ OnSelect } }
         />
     );
@@ -66,8 +66,8 @@ export const InsertAction = (): ReactElement =>
 
     return (
         <Action
-            Name="Insert"
             KeyCombination={ 0x4B }
+            Name="Insert"
             { ...{ OnSelect } }
         />
     );

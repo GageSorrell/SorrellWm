@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { useMemo, type FC, type ReactElement } from "react";
+import { type FC, type ReactElement, useMemo } from "react";
 import type { FKey, FKeyId, FVirtualKey, PKey } from "./Key.Types";
 
 /** @TODO */
@@ -1012,6 +1012,8 @@ const VkCodes: Readonly<Record<FVirtualKey, FKey>> =
     }
 };
 
+/* eslint-disable sort-keys */
+
 /** Developer-friendly names of key codes. */
 export const KeyIds: Record<FVirtualKey, FKeyId> =
 {
@@ -1143,6 +1145,8 @@ export const KeyIds: Record<FVirtualKey, FKeyId> =
     0xDE: "'"
 };
 
+/* eslint-enable sort-keys */
+
 export type PModifierKeyContainer =
 {
     Child: FC;
@@ -1187,7 +1191,15 @@ export const Key = ({ IsSmall, Value }: PKey): ReactElement =>
     }, [ Display ]);
 
     return (
-        <div style={{ backgroundColor: "#0078D7", borderRadius: 4, width: "4rem", height: "4rem", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <div style={{
+            alignItems: "center",
+            backgroundColor: "#0078D7",
+            borderRadius: 4,
+            display: "flex",
+            height: "4rem",
+            justifyContent: "center",
+            width: "4rem"
+        }}>
             <span style={{ color: "white", fontSize: "2rem" }}>
                 <DisplayComponent/>
             </span>
