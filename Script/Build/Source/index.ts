@@ -56,14 +56,14 @@ const MacroFlagKeys: Readonly<Array<FFlagKey>> =
 ] as const;
 
 /** Get the argument vector as it would appear in a TypeScript function definition. */
-const GetArgumentVector = (RegisteredFunction: FRegisteredFunction): string =>
+const GetArgumentVector = (Arguments: Array<FFunctionArgument>): string =>
 {
     let OutString: string = "";
-    RegisteredFunction.Arguments.forEach((Argument: FFunctionArgument, Index: number): void =>
+    Arguments.forEach((Argument: FFunctionArgument, Index: number): void =>
     {
         const ArgumentFormatted: string = `${ Argument.Name }: ${ Argument.Type }`;
         OutString += ArgumentFormatted;
-        if (Index !== RegisteredFunction.Arguments.length - 1)
+        if (Index !== Arguments.length - 1)
         {
             OutString += ", ";
         }
@@ -175,6 +175,7 @@ const FindAllIndices = (String: string, Substring: string): Array<number> =>
     return OutArray;
 };
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const FindFirstCapitalAfterIndex = (Input: string, StartIndex: number): number =>
 {
     for (let Index: number = StartIndex; Index < Input.length - 1; Index++)
@@ -258,7 +259,10 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
                     const Indices: Array<number> = Flags.map((Flag: FFlag): number =>
                     {
                         // console.log("MacroArgVec", MacroArgumentVector, Flag.Name);
-                        return MacroArgumentVector.indexOf(Flag.Name);
+                        return MacroArgumentVector.findIndex((MacroArgument: string): boolean =>
+                        {
+                            return MacroArgument.startsWith(Flag.Name);
+                        });
                     });
 
                     return Math.max(...Indices);
@@ -271,25 +275,37 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
             const HasFunctionArguments: boolean = MacroArgumentVector.length - Flags.length > 2;
             if (HasFunctionArguments)
             {
+                console.log(`Function ${ Name } has function arguments.`);
                 if (Flags.length > 0)
                 {
-                    /* eslint-disable @stylistic/max-len */
-                    // console.log(
-                    //     `Function ${ Name } of return type ${ ReturnType } has the following MacroArgumentVector,\n    `,
-                    //     MacroArgumentVector,
-                    //     "\n    while the sliced array is\n    ",
-                    //     [ ...MacroArgumentVector ].slice(LastFlagIndex - 1)
-                    // );
-                    /* eslint-enable @stylistic/max-len */
-                    FunctionArgumentVector.push(...MacroArgumentVector.slice(LastFlagIndex - 1));
+                    console.log(`Function ${ Name } has flags.`);
+                    console.log("\n", MacroArgumentVector, "\n\n", LastFlagIndex);
+                    FunctionArgumentVector.push(...MacroArgumentVector.slice(LastFlagIndex + 1));
                 }
                 else
                 {
-                    /* eslint-disable-next-line @stylistic/max-len */
-                    /* The macro argument vector does not specify any flags, but specifies function arguments. */
                     FunctionArgumentVector.push(...MacroArgumentVector.slice(2));
                 }
+                // if (Flags.length > 0)
+                // {
+                //     /* eslint-disable @stylistic/max-len */
+                //     // console.log(
+                //     //     `Function ${ Name } of return type ${ ReturnType } has the following MacroArgumentVector,\n    `,
+                //     //     MacroArgumentVector,
+                //     //     "\n    while the sliced array is\n    ",
+                //     //     [ ...MacroArgumentVector ].slice(LastFlagIndex - 1)
+                //     // );
+                //     /* eslint-enable @stylistic/max-len */
+                //     FunctionArgumentVector.push(...MacroArgumentVector.slice(LastFlagIndex - 1));
+                // }
+                // else
+                // {
+                //     /* eslint-disable-next-line @stylistic/max-len */
+                //     /* The macro argument vector does not specify any flags, but specifies function arguments. */
+                //     FunctionArgumentVector.push(...MacroArgumentVector.slice(2 + Flags.length));
+                // }
 
+                console.log(`FunctionArgumentVector is ${ FunctionArgumentVector.join(", ") }.`);
                 FunctionArgumentVector.forEach((FunctionArgumentPart: string, Index: number): void =>
                 {
                     if (Index % 2 === 1)
@@ -299,6 +315,8 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
 
                     const Name: string = FunctionArgumentPart;
                     const Type: string = FunctionArgumentVector[Index + 1];
+
+                    console.log(`ARG: ${ Name } ${ Type } of ${ Name }.`);
 
                     Arguments.push({
                         Name,
@@ -371,7 +389,7 @@ const GenerateTypesDeclarationsFile = async (
         RegisteredFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
         {
             const ExportName: string = GetExportName(RegisteredFunction);
-            const ArgumentVector: string = GetArgumentVector(RegisteredFunction);
+            const ArgumentVector: string = GetArgumentVector(RegisteredFunction.Arguments);
             /* eslint-disable-next-line @stylistic/max-len */
             return `export function ${ ExportName }(${ ArgumentVector }): ${ RegisteredFunction.ReturnType };`;
         });
@@ -447,7 +465,7 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
         {
             const FunctionName: string = GetExportName(RegisteredFunction);
             /* eslint-disable-next-line @stylistic/max-len */
-            return `ipcMain.handle("${ FunctionName }", (${ GetArgumentVector(RegisteredFunction) }): Promise<${ RegisteredFunction.ReturnType }> =>\n{\n    return Promise.resolve(${ FunctionName }(${ GetArguments(RegisteredFunction) }));\n});`;
+            return `ipcMain.handle("${ FunctionName }", (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ RegisteredFunction.ReturnType }> =>\n{\n    return Promise.resolve(${ FunctionName }(${ GetArguments(RegisteredFunction) }));\n});`;
         }).join("\n\n");
 
     const CoreTypeImports: Array<string> =
@@ -466,6 +484,8 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
                         return Argument.Type;
                     });
 
+                /* eslint-disable-next-line @stylistic/max-len */
+                console.log(`ATTEMPTING ExposedFunction ${ ExposedFunction.Name }.\nReturnType: ${ ExposedFunction.ReturnType }, ${ FunctionArgumentTypes.join(", ") }`);
                 const TypesToConsider: Array<string> =
                 [
                     ExposedFunction.ReturnType,
@@ -502,7 +522,7 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
         const HasArguments: boolean = Arguments !== "";
         /* eslint-disable @stylistic/max-len */
         return HasArguments
-            ? `${ FunctionName }: async (${ GetArgumentVector(RegisteredFunction) }): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }", ${ Arguments })`
+            ? `${ FunctionName }: async (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }", ${ Arguments })`
             : `${ FunctionName }: async (): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }")`;
         /* eslint-enable @stylistic/max-len */
     }).join(",\n");
@@ -579,6 +599,7 @@ export type FElectronHandler = typeof ElectronHandler;
     await Fs.promises.writeFile(IpcFilePath, IpcFileContents);
 };
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 type FRegisteredFunctionHook =
     <TReturnType, TArgumentTypeVector extends Array<unknown>>(
         InitialValue: TReturnType,
@@ -587,27 +608,73 @@ type FRegisteredFunctionHook =
 
 const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
 {
-    // The hook should be in an auto-generated module, with this pattern:
+    /* eslint-disable @stylistic/max-len */
+    type FHookDefinition =
+    {
+        Hook: string;
+        ImportedTypes: Array<string>;
+    };
 
-    //     const MakeHookFunctionDefinition: string = `
-    // const MakeHook = (FunctionName: string): FRegisteredFunctionHook =>
-    // {
-    //     return <TReturnType, TArgumentTypeVector extends Array<unknown>>(
-    //         InitialValue: TReturnType,
-    //         ...Arguments: TArgumentTypeVector
-    //     ): Readonly<[ ReturnValue: TReturnType ]> =>
-    //     {
-    //         const [ ReturnValue, SetReturnValue ] = useState<TReturnType>(InitialValue);
+    const HookDefinitions: Array<FHookDefinition> =
+        RegisteredFunctions.filter((RegisteredFunction: FRegisteredFunction): boolean =>
+        {
+            return RegisteredFunction.Flags.map(Flag => Flag.Name).includes("Hook");
+        }).map((RegisteredFunction: FRegisteredFunction): FHookDefinition =>
+        {
+            const { Arguments, Name, ReturnType } = RegisteredFunction;
+            const ImportedTypes: Array<string> = Arguments.filter((Argument: FFunctionArgument): boolean =>
+            {
+                return Argument.Type[0] === Argument.Type[0].toUpperCase();
+            }).map((Argument: FFunctionArgument): string =>
+            {
+                return Argument.Type;
+            });
 
-    //         window.electron[FunctionName](...Arguments);
+            if (ReturnType[0] === ReturnType[0].toUpperCase())
+            {
+                ImportedTypes.push(ReturnType);
+            }
 
-    //         return [ ReturnValue ] as const;
-    //     };
-    // };\n`;
+            const ArgumentVector: string = GetArgumentVector(Arguments);
+            const ArgumentNames: string = Arguments.map(Arg => Arg.Name).join(", ");
+            const Hook: string = `export const Use${ Name } = (InitialValue: ${ ReturnType }${ Arguments.length > 0 ? ", " : "" }${ ArgumentVector }): Readonly<[ ${ ReturnType } ]> =>
+{
+    const [ ReturnValue, SetReturnValue ] = useState<${ ReturnType }>(InitialValue);
 
+    useEffect((): void =>
+    {
+        (async (): Promise<void> =>
+        {
+            const Result: ${ ReturnType } = await window.electron.${ GetExportName(RegisteredFunction) }(${ ArgumentNames });
+            SetReturnValue((_Old: ${ ReturnType }): ${ ReturnType } =>
+            {
+                return Result;
+            });
+        })();
+    }, [ SetReturnValue, window.electron.${ GetExportName(RegisteredFunction) }, ${ Arguments.map(Arg => Arg.Name).join(", ") } ]);
+
+    return [ ReturnValue ] as const;
+};`;
+
+            return {
+                Hook,
+                ImportedTypes
+            };
+
+        });
+
+    const ImportedTypes: Array<string> = Array.from(new Set<string>(HookDefinitions.map(Def => Def.ImportedTypes).flat()));
+    const SorrellWmImportStatement: string = ImportedTypes.length > 0
+        ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrellwm/windows"`
+        : "";
+    const ImportStatements: string = `import { useEffect, useState } from "react";\n${ SorrellWmImportStatement }\n\n`;
+    const HookDefinitionsString: string = HookDefinitions.map(Def => Def.Hook).join("\n\n");
+
+    const HookModuleContents: string = FileHeader + ImportStatements + HookDefinitionsString;
+
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     const GeneratedModulePath: string = Path.resolve(GetPath("Renderer"), "Hooks.Generated.ts");
-
-    // @TODO
+    await Fs.promises.writeFile(GeneratedModulePath, HookModuleContents, { encoding: "utf-8" });
 };
 
 const Main = async (): Promise<void> =>
@@ -616,25 +683,33 @@ const Main = async (): Promise<void> =>
     const RegisteredFunctions: Array<FRegisteredFunction> =
         await DoTask(() => GetFunctionDeclarations(CppFiles), "Parsing function declarations");
 
-    await DoTasks(
-        [
-            () => PatchInitializationFile(RegisteredFunctions),
-            /* eslint-disable-next-line @stylistic/max-len */
-            `${ FormatCode("#include") }'ing relevant headers in ${ FormatCode("Initialization.cpp") } file and listing in export map`
-        ],
-        [
-            () => GenerateTypesDeclarationsFile(RegisteredFunctions),
-            "Generating the types declaration file"
-        ],
-        [
-            () => GenerateIpcCode(RegisteredFunctions),
-            `Generating IPC calls for functions marked ${ FormatCode("Renderer") }`
-        ],
-        [
-            () => GenerateHooks(RegisteredFunctions),
-            `Generating hooks for functions marked ${ FormatCode("Hook") }`
-        ]
-    );
+    try
+    {
+        await DoTasks(
+            [
+                () => PatchInitializationFile(RegisteredFunctions),
+                /* eslint-disable-next-line @stylistic/max-len */
+                `${ FormatCode("#include") }'ing relevant headers in ${ FormatCode("Initialization.cpp") } file and listing in export map`
+            ],
+            [
+                () => GenerateTypesDeclarationsFile(RegisteredFunctions),
+                "Generating the types declaration file"
+            ],
+            [
+                () => GenerateIpcCode(RegisteredFunctions),
+                `Generating IPC calls for functions marked ${ FormatCode("Renderer") }`
+            ],
+            [
+                () => GenerateHooks(RegisteredFunctions),
+                `Generating hooks for functions marked ${ FormatCode("Hook") }`
+            ]
+        );
+    }
+    catch (Error: unknown)
+    {
+        console.log("Build Error");
+        console.log(Error);
+    }
 };
 
 Run(Main, "Build", "Builds SorrellWm.");

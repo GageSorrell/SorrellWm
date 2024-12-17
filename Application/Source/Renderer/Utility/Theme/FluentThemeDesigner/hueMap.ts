@@ -1,4 +1,6 @@
 /* eslint-disable */
+/* cSpell:disable */
+
 /**
  * This file was lifted from
  * https://github.com/microsoft/fluentui/blob/0eca6fb68963b15b664b8560984f0f742bae280b/packages/react-components/theme-designer/src/colors/hueMap.ts

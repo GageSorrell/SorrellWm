@@ -169,21 +169,22 @@ module.exports =
     {
         "import/resolver":
         {
-        // See https://github.com/benmosher/eslint-plugin-import/issues/1396#issuecomment-575727774 for line below
-        node:
-        {
-            extensions: [".js", ".jsx", ".ts", ".tsx"],
-            moduleDirectory: ["Application/node_modules", "Application/src/"],
-        },
-        // webpack:
+            /* eslint-disable-next-line @stylistic/max-len */
+            /* See https://github.com/benmosher/eslint-plugin-import/issues/1396#issuecomment-575727774 for line below */
+            node:
+            {
+                extensions: [ ".js", ".jsx", ".ts", ".tsx" ],
+                moduleDirectory: [ "Application/node_modules", "Application/src/" ]
+            },
+            // webpack:
+            // {
+            //     config: require.resolve("Application/.erb/configs/webpack.config.eslint.ts"),
+            // },
+            typescript: { }
+        }
+        // "import/parsers":
         // {
-        //     config: require.resolve("Application/.erb/configs/webpack.config.eslint.ts"),
+        //     "@typescript-eslint/parser": [ ".ts", ".tsx" ],
         // },
-        typescript: { },
-    },
-    // "import/parsers":
-    // {
-    //     "@typescript-eslint/parser": [ ".ts", ".tsx" ],
-    // },
-  },
+    }
 };

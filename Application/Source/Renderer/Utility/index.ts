@@ -6,4 +6,5 @@
 
 export * from "./Color";
 export * from "./Color.Types";
+export * from "./Utility";
 export * from "./Utility.Types";

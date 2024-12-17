@@ -4,5 +4,6 @@
 #include "Core/Globals.h"
 #include "MessageLoop/MessageLoop.h"
 #include "Core/InterProcessCommunication.h"
+#include "Core/WindowUtilities.h"
 
 void RegisterActivationKey();

@@ -9,5 +9,6 @@
 /* eslint-disable */
 
 export const GetFocusedWindow = window.electron.GetFocusedWindow;
+export const SetForegroundWindow = window.electron.SetForegroundWindow;
 export const GetIsLightMode = window.electron.GetIsLightMode;
 export const GetThemeColor = window.electron.GetThemeColor;

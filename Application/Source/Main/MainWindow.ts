@@ -6,7 +6,10 @@
 import * as Path from "path";
 import { BlurBackground, UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
+import type { FKeyboardEvent } from "./Keyboard.Types";
+import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
+import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
 import { resolveHtmlPath } from "./util";
 
 let MainWindow: BrowserWindow | undefined = undefined;
@@ -109,38 +112,53 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     MainWindow.loadURL(resolveHtmlPath("index.html"));
-    console.log("Launched MainWindow with Component argument.");
 };
 
-function OnActivation(State: string): void
+function OnKey(Event: FKeyboardEvent): void
 {
-    if (State === "Down")
+    const { State, VkCode } = Event;
+    if (MainWindow === undefined)
     {
-        // const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
-        BlurBackground();
+        return;
+    }
+
+    /** @TODO Make this a modifiable setting. */
+    const ActivationKey: FVirtualKey = Vk["+"];
+
+    if (VkCode === ActivationKey)
+    {
+        if (State === "Down")
+        {
+            // const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
+            BlurBackground();
+        }
+        else
+        {
+            // MainWindow?.webContents.send("TearDown");
+            UnblurBackground();
+            // ipcMain.on("TearDown", (): void =>
+            // {
+            //     TearDown();
+            //     setTimeout((): void =>
+            //     {
+            //         const { x, y } = GetLeastInvisiblePosition();
+            //         MainWindow?.setPosition(x, y, false);
+            //     }, 100);
+            // });
+            // MainWindow?.webContents.send("TearDown");
+
+            // MainWindow?.on("closed", (_: Electron.Event): void =>
+            // {
+            //     LaunchMainWindow();
+            // });
+            // MainWindow?.close();
+
+            // TestFun();
+        }
     }
     else
     {
-        // MainWindow?.webContents.send("TearDown");
-        UnblurBackground();
-        // ipcMain.on("TearDown", (): void =>
-        // {
-        //     TearDown();
-        //     setTimeout((): void =>
-        //     {
-        //         const { x, y } = GetLeastInvisiblePosition();
-        //         MainWindow?.setPosition(x, y, false);
-        //     }, 100);
-        // });
-        // MainWindow?.webContents.send("TearDown");
-
-        // MainWindow?.on("closed", (_: Electron.Event): void =>
-        // {
-        //     LaunchMainWindow();
-        // });
-        // MainWindow?.close();
-
-        // TestFun();
+        MainWindow.webContents.send("Keyboard", Event);
     }
 }
 
@@ -148,4 +166,4 @@ app.whenReady()
     .then(LaunchMainWindow)
     .catch(console.log);
 
-Keyboard.Subscribe(OnActivation);
+Keyboard.Subscribe(OnKey);

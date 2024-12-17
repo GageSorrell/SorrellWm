@@ -142,7 +142,7 @@ const createWindow = async () =>
     // MenuBuilder.buildMenu();
 
     // Open urls in the user's browser
-    MainWindow.webContents.setWindowOpenHandler((Edata) =>
+    MainWindow.webContents.setWindowOpenHandler((Edata: Electron.HandlerDetails) =>
     {
         shell.openExternal(Edata.url);
         return { action: "deny" };

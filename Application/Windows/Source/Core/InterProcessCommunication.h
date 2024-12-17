@@ -1,3 +1,9 @@
+/* File:      InterProcessCommunication.h
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2024 Sorrell Intellectual Properties
+ * License:   MIT
+ */
+
 #pragma once
 
 #include "Core.h"
@@ -11,12 +17,12 @@ public:
         Callback = Napi::Persistent(InCallback);
     }
 
-    void Send(std::string Channel, Napi::Object Message)
+    void Send(std::string Channel, Napi::Value Message)
     {
         Napi::HandleScope Scope(Environment);
 
-        std::cout << "Sending IPC " + Channel + " with message." << std::endl;
-        Callback.Call({Napi::String::New(Environment, Channel), Message});
+        // std::cout << "Sending IPC " + Channel + " with message." << std::endl;
+        Callback.Call({ Napi::String::New(Environment, Channel), Message });
     }
 
     void Send(std::string Channel)
@@ -25,6 +31,11 @@ public:
 
         // std::cout << "Sending IPC with no message on channel " + Channel + "." << std::endl;
         Callback.Call({ Napi::String::New(Environment, Channel) });
+    }
+
+    Napi::Env Env() const
+    {
+        return Environment;
     }
 
   private:

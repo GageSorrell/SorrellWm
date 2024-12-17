@@ -5,13 +5,26 @@
  */
 
 import type { StoreApi, UseBoundStore } from "zustand";
-import type { FHexColor } from "Windows";
+import type { FHexColor } from "@sorrellwm/windows";
+import type { FKeyCombination } from "./Action/Action.Types";
 
-export type GGlobal =
+type TUnget<T extends string> = T extends `Set${ infer R }`
+    ? R
+    : never;
+
+type TMakeBasicStore<T extends Record<string, unknown>> =
+    T &
+    {
+        [ Key in `Set${ Extract<keyof T, string> }` ]: (Input: T[TUnget<Key>]) => void;
+    };
+
+export type GGlobalData =
 {
-    SetThemeColor: (Color: FHexColor) => void;
+    KeyCombinations: Array<FKeyCombination>;
     ThemeColor: FHexColor;
 };
+
+export type GGlobal = TMakeBasicStore<GGlobalData>;
 
 export type GGlobalDefault = Omit<GGlobal, `Set${ string }`>;
 

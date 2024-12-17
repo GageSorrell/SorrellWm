@@ -12,36 +12,35 @@ HHOOK ActivationKeyHook = NULL;
 
 LRESULT CALLBACK ActivationKeyProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
+    Napi::Env Environment = GGlobals::Ipc->Env();
+    Napi::HandleScope Scope(Environment);
+
     if (nCode == HC_ACTION)
     {
-        KBDLLHOOKSTRUCT *pKey = (KBDLLHOOKSTRUCT *)lParam;
-        // @TODO Go back to using F22 once Moonlander is flashed
-        if (pKey->vkCode == VK_OEM_PLUS)
-        {
-            if (wParam == WM_KEYDOWN)
-            {
-                GGlobals::Ipc->Send("ActivationKeyDown");
-            }
-            else if (wParam == WM_KEYUP)
-            {
-                GGlobals::Ipc->Send("ActivationKeyUp");
-            }
-        }
+        KBDLLHOOKSTRUCT* Key = (KBDLLHOOKSTRUCT*) lParam;
+
+        const double VkCode = static_cast<double>(Key->vkCode);
+        Napi::Number VirtualKeyCode = Napi::Number::New(Environment, VkCode);
+        Napi::Object KeyboardEventPayload = Napi::Object::New(Environment);
+
+        const std::string State = wParam == WM_KEYDOWN
+            ? "Down"
+            : "Up";
+
+        KeyboardEventPayload.Set("State", State);
+        KeyboardEventPayload.Set("VkCode", VirtualKeyCode);
+
+        GGlobals::Ipc->Send("Keyboard", KeyboardEventPayload);
     }
-    return CallNextHookEx(ActivationKeyHook, nCode, wParam, lParam); // Pass the key event along
+
+    return CallNextHookEx(ActivationKeyHook, nCode, wParam, lParam);
 }
 
 void RegisterActivationKey()
 {
-    // if (RegisterHotKey(nullptr, 1, 0, VK_F22))
-    // if (RegisterHotKey(nullptr, 1, 0, VK_TAB))
-    // {
-    //     std::cout << "Registered activation key OEM_PLUS!" << std::endl;
-    // }
-    // ActivationKeyHook = SetWindowsHookEx(WH_KEYBOARD_LL, ActivationKeyProc, NULL, 0);
-
     ActivationKeyHook = GGlobals::Hook->Register(WH_KEYBOARD_LL, ActivationKeyProc, NULL, 0);
-    if (!ActivationKeyHook)
+
+    if (ActivationKeyHook == nullptr)
     {
         std::cerr << "Failed to install activation key hook." << std::endl;
     }

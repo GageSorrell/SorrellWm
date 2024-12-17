@@ -2442,3 +2442,21 @@ Napi::Value GetThemeColor(const Napi::CallbackInfo& CallbackInfo)
 
     return Napi::String::New(Environment, HexStream.str());
 }
+
+bool IsWmForeground()
+{
+    const char* MainWindowName = "SorrellWm Main Window";
+    LPSTR ForegroundWindowName = new char[32];
+    HWND ForegroundWindow = GetForegroundWindow();
+    if (ForegroundWindow == nullptr)
+    {
+        return false;
+    }
+    else
+    {
+        GetWindowTextA(ForegroundWindow, ForegroundWindowName, 32);
+        bool NamesMatch = strcmp(MainWindowName, ForegroundWindowName);
+        return NamesMatch;
+    }
+
+}

@@ -659,30 +659,9 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "UnblurBackground", UnblurBackground },
         { "CaptureImage", CaptureImage }
         /* END AUTO-GENERATED REGION. */
-        // { "GetMonitorFromRect", MonitorFromRectNode },
-        // { "GetMonitorFromWindow", MonitorFromWindowNode },
-        // { "GetMonitorHandles", GetMonitorHandles },
-        // { "GetMonitorInfo", GetMonitorInfoNode },
-        // { "GetStyles", GetStyles },
-        // { "GetForegroundWindow", GetForegroundWindowNode },
-        // { "GetWindowBounds", GetWindowBoundsNode },
-        // { "GetWindowHandles", GetWindowHandles },
-        // { "GetWindowText", GetWindowTextNode },
-        // { "IsIconic", IsIconicNode },
-        // { "InitializeWindowProcedure", InitializeWindowProcedure },
-        // { "IsWindowVisible", IsWindowVisibleNode },
-        // // { "MoveWindow", MoveWindowNode },
-        // { "RemoveFocusHook", RemoveFocusHook },
-        // { "RestoreWindow", RestoreWindowNode },
-        // { "SetupFocusHook", SetupFocusHook },
-        // { "SetWindowPos", SetWindowPosNode },
-        // { "GetWindowClassInfo", GetWindowClassInfo },
-        // { "DisableStyling", DisableStyling },
-        // { "GetDwmMargins", GetDwmMargins },
-        // { "GetMonitorRefreshRate", GetMonitorRefreshRate }
     };
 
-    for(const std::pair<std::string, FFunctionPointer> FunctionDefinition : FunctionDefinitions)
+    for (const std::pair<std::string, FFunctionPointer> FunctionDefinition : FunctionDefinitions)
     {
         Exports.Set(
             FunctionDefinition.first,

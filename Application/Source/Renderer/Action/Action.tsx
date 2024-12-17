@@ -4,21 +4,65 @@
  * License:   MIT
  */
 
-import { KeyCombinationDisplay } from "../Domain/Common/Component/Keyboard/Key/Key";
-import type { PAction } from "./Action.Types";
-import { type ReactElement } from "react";
+import { Button, tokens } from "@fluentui/react-components";
+import { type CSSProperties, type ReactElement } from "react";
+import type { FKeyCombination, PAction } from "./Action.Types";
+import { KeyCombination } from "@/Domain/Common/Component/Keyboard/KeyCombination";
+import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
 
-export const Action = ({ OnSelect, Name, KeyCombination }: PAction): ReactElement =>
+export const DefaultKeyCombinations: Array<FKeyCombination> =
+[
+    {
+        Callback: () => console.log("Action \"Move\" called by keyboard combination!"),
+        Keys: [ Vk["H"] ],
+        Name: "Move"
+    }
+];
+
+const ActionButton = ({ Name, OnSelect }: Omit<PAction, "Keys">): ReactElement =>
+{
+    const ButtonStyle: CSSProperties =
+    {
+        // backgroundColor: tokens.colorNeutralBackground3,
+        // borderRadius: tokens.borderRadiusMedium,
+        // height: "3rem"
+    };
+
+    return (
+        // <div
+        //     onMouseDown={ OnSelect }
+        //     style={ ButtonStyle }>
+        //     { Name }
+        // </div>
+        <Button
+            onMouseDown={ OnSelect }
+            size="large"
+            style={ ButtonStyle }>
+            { Name }
+        </Button>
+    );
+};
+
+export const Action = ({ OnSelect, Name, Keys }: PAction): ReactElement =>
 {
     // @TODO Register keyboard combinations by `react-hotkeys-hook`.
+
+    const RootStyle: CSSProperties =
+    {
+        alignItems: "center",
+        display: "flex",
+        gap: tokens.spacingHorizontalL,
+        justifyContent: "space-between"
+    };
+
     return (
-        <div>
-            <KeyCombinationDisplay
-                Keys={ KeyCombination }
+        <div style={ RootStyle }>
+            <KeyCombination
+                { ...{ Keys } }
             />
-            <div onMouseDown={ OnSelect }>
-                { Name }
-            </div>
+            <ActionButton
+                { ...{ Name, OnSelect } }
+            />
         </div>
     );
 };
@@ -34,7 +78,7 @@ export const MoveAction = (): ReactElement =>
 
     return (
         <Action
-            KeyCombination={ 0x48 }
+            Keys={ [ 0x48 ] }
             Name="Move"
             { ...{ OnSelect } }
         />
@@ -50,7 +94,7 @@ export const ResizeAction = (): ReactElement =>
 
     return (
         <Action
-            KeyCombination={ 0x4A }
+            Keys={ [ 0x4A ] }
             Name="Resize"
             { ...{ OnSelect } }
         />
@@ -66,7 +110,7 @@ export const InsertAction = (): ReactElement =>
 
     return (
         <Action
-            KeyCombination={ 0x4B }
+            Keys={ [ 0x4B ] }
             Name="Insert"
             { ...{ OnSelect } }
         />

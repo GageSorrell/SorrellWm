@@ -6,7 +6,7 @@
 /* eslint-disable */
 
 import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
-import { GetFocusedWindow, GetIsLightMode, GetThemeColor, HWindow,FHexColor } from "@sorrellwm/windows";
+import { GetFocusedWindow, SetForegroundWindow, GetIsLightMode, GetThemeColor, HWindow,FBox,FHexColor } from "@sorrellwm/windows";
 
 
 const ElectronHandler =
@@ -40,6 +40,7 @@ const ElectronHandler =
         }
     },
     GetFocusedWindow: async (): Promise<HWindow> => ipcRenderer.invoke("GetFocusedWindow"),
+SetForegroundWindow: async (Handle: HWindow): Promise<FBox> => ipcRenderer.invoke("SetForegroundWindow", Handle),
 GetIsLightMode: async (): Promise<boolean> => ipcRenderer.invoke("GetIsLightMode"),
 GetThemeColor: async (): Promise<FHexColor> => ipcRenderer.invoke("GetThemeColor")
 };

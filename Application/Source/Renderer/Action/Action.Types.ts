@@ -4,11 +4,22 @@
  * License:   MIT
  */
 
-import type { FVirtualKey } from "../Domain/Common/Component/Keyboard/Key/Key.Types";
+import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
+
+/** This is more functionality than frontend, so this should probably be moved somewhere else. */
+export type FAction =
+    | "Move";
+
+export type FKeyCombination =
+{
+    Callback: () => void;
+    Name: string;
+    Keys: Array<FVirtualKey>;
+};
 
 export type PAction =
 {
     Name: string;
-    KeyCombination: FVirtualKey | Array<FVirtualKey>;
+    Keys: Array<FVirtualKey>;
     OnSelect: () => void;
 };

@@ -15,8 +15,9 @@ import {
 import { type NavigateFunction, Route, MemoryRouter as Router, Routes, useNavigate } from "react-router-dom";
 import { FluentThemeProvider } from "./Utility/Theme";
 import { Key } from "./Domain/Common/Component/Keyboard/Key";
+import { KeyboardProvider } from "./Keyboard";
 import { Log } from "./Api";
-import { UseInitializeStore } from "./Store";
+import { StoreProvider } from "./Store";
 import { Vk } from "./Domain/Common/Component/Keyboard/Keyboard";
 
 export const TestWindow = (): ReactElement =>
@@ -62,11 +63,11 @@ export const TestWindow = (): ReactElement =>
 
     const style: CSSProperties =
     {
-        position: "absolute",
-        top: 0,
-        left: `${ Math.floor(left * 100) / 100 }rem`,
         backgroundColor: Colors[Index],
         height: "10rem",
+        left: `${ Math.floor(left * 100) / 100 }rem`,
+        position: "absolute",
+        top: 0,
         width: "10rem"
     };
 
@@ -133,7 +134,12 @@ export const Main = (): ReactElement =>
     }, [ ]);
 
     return (
-        <div style={ { width: "100%", height: "100%" } } ref={ DivRef }>
+        <div
+            ref={ DivRef }
+            style={ {
+                height: "100%",
+                width: "100%"
+            } }>
             <span style={ { color: "black" } }>
                 SorrellWm
             </span>
@@ -162,28 +168,25 @@ const IpcNavigator = (): undefined =>
 
 export const App = (): ReactNode =>
 {
-    const [ CanPaint ] = UseInitializeStore();
-
-    if (!CanPaint)
-    {
-        return undefined;
-    }
-
     return (
-        <FluentThemeProvider>
-            <Router>
-                <IpcNavigator/>
-                <Routes>
-                    <Route
-                        element={ <Main /> }
-                        path="/"
-                    />
-                    <Route
-                        element={ <TestWindow /> }
-                        path="/TestWindow"
-                    />
-                </Routes>
-            </Router>
-        </FluentThemeProvider>
+        <StoreProvider>
+            <KeyboardProvider>
+                <FluentThemeProvider>
+                    <Router>
+                        <IpcNavigator/>
+                        <Routes>
+                            <Route
+                                element={ <Main /> }
+                                path="/"
+                            />
+                            <Route
+                                element={ <TestWindow /> }
+                                path="/TestWindow"
+                            />
+                        </Routes>
+                    </Router>
+                </FluentThemeProvider>
+            </KeyboardProvider>
+        </StoreProvider>
     );
 };

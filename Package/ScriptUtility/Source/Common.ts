@@ -17,7 +17,7 @@ export const FormatCode = (Code: string): string =>
 
 export const DoTasks = async <T>(...Tasks: Array<TTaskTuple<T>>): Promise<void> =>
 {
-    await Promise.all(Tasks.map(([ Task, Description ]: TTaskTuple<T>): Promise<T> =>
+    await Promise.allSettled(Tasks.map(([ Task, Description ]: TTaskTuple<T>): Promise<T> =>
     {
         return DoTask(Task, Description);
     }));

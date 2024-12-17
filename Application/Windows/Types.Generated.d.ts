@@ -17,6 +17,7 @@ export function GetFocusedWindow(): HWindow;
 export function CaptureWindowScreenshot(Handle: HWindow): string;
 export function GetWindowLocationAndSize(Handle: HWindow): FBox;
 export function GetTitlebarHeight(): number;
+export function SetForegroundWindow(Handle: HWindow): FBox;
 export function SetForegroundWindow(Handle: HWindow): void;
 export function GetWindowByName(Name: string): HWindow;
 export function TestFun(): void;

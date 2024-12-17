@@ -24,7 +24,8 @@ DECLARE_NAPI_FUNCTION(GetFocusedWindow, HWindow, Renderer, Hook)
 DECLARE_NAPI_FUNCTION(CaptureWindowScreenshot, string, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetWindowLocationAndSize, FBox, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetTitlebarHeight, number)
-DECLARE_NAPI_FUNCTION(SetForegroundWindowNode, void, ExportName="SetForegroundWindow", Handle, HWindow)
+DECLARE_NAPI_FUNCTION(SetForegroundWindowNode, FBox, ExportName="SetForegroundWindow", Renderer, Hook, Handle, HWindow)
+// DECLARE_NAPI_FUNCTION(SetForegroundWindowNode, void, ExportName="SetForegroundWindow", Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetWindowByName, HWindow, Name, string)
 DECLARE_NAPI_FUNCTION(TestFun, void)
 DECLARE_NAPI_FUNCTION(GetIsLightMode, boolean, Renderer, Hook)
@@ -35,3 +36,6 @@ HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& C
 Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle);
 HWND DecodeHandle(const Napi::Object& Object);
 std::string CaptureWindowScreenshot_Internal(HWND hwnd);
+
+/** Is the main window the foreground window? */
+bool IsWmForeground();

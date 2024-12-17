@@ -11,6 +11,7 @@ import {
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
 import { type PropsWithChildren, type ReactNode, useEffect, useMemo, useState } from "react";
+import { GetIsLightMode } from "@/Ipc";
 import { UseStore } from "@/Store";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
 
@@ -21,7 +22,7 @@ const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
     const [ IsLightMode, SetIsLightMode ] = useState<boolean>(false);
     useEffect((): void =>
     {
-        window.electron.GetIsLightMode().then((InIsLightTheme: boolean): void =>
+        GetIsLightMode().then((InIsLightTheme: boolean): void =>
         {
             SetIsLightMode(InIsLightTheme);
         });
