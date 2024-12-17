@@ -1,4 +1,3 @@
-
 /* File:    Preload.ts
  * Author:  Gage Sorrell <gage@sorrell.sh>
  * License: MIT
@@ -7,7 +6,7 @@
 /* eslint-disable */
 
 import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
-import { GetFocusedWindow, HWindow } from "@sorrellwm/windows";
+import { GetFocusedWindow, GetIsLightMode, GetThemeColor, HWindow,FHexColor } from "@sorrellwm/windows";
 
 
 const ElectronHandler =
@@ -40,7 +39,9 @@ const ElectronHandler =
             ipcRenderer.send(Channel, ...Arguments);
         }
     },
-    GetFocusedWindow: (): HWindow => ipcRenderer.invoke("GetFocusedWindow")
+    GetFocusedWindow: async (): Promise<HWindow> => ipcRenderer.invoke("GetFocusedWindow"),
+GetIsLightMode: async (): Promise<boolean> => ipcRenderer.invoke("GetIsLightMode"),
+GetThemeColor: async (): Promise<FHexColor> => ipcRenderer.invoke("GetThemeColor")
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);

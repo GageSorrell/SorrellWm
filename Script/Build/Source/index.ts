@@ -442,13 +442,13 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
         "RendererFunctions.Generated.ts"
     );
 
-    const HandleStatements: Array<string> =
+    const HandleStatements: string =
         ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
         {
             const FunctionName: string = GetExportName(RegisteredFunction);
             /* eslint-disable-next-line @stylistic/max-len */
             return `ipcMain.handle("${ FunctionName }", (${ GetArgumentVector(RegisteredFunction) }): Promise<${ RegisteredFunction.ReturnType }> =>\n{\n    return Promise.resolve(${ FunctionName }(${ GetArguments(RegisteredFunction) }));\n});`;
-        });
+        }).join("\n\n");
 
     const CoreTypeImports: Array<string> =
     [

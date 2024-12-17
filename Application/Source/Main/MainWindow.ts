@@ -3,21 +3,11 @@
  * License: MIT
  */
 
-import * as Fs from "fs";
 import * as Path from "path";
+import { BlurBackground, UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
-// import {
-//     BlurBackground,
-//     CaptureWindowScreenshot,
-//     CoverWindow,
-//     GetFocusedWindow,
-//     GetIsLightMode,
-//     GetThemeColor,
-//     StartBlurOverlay,
-//     StartBlurOverlayNew } from "@sorrellwm/windows";
 import { Keyboard } from "./Keyboard";
 import { resolveHtmlPath } from "./util";
-import { MyBlur, TearDown, type FBlurReturnType, type FThemeMode } from "@sorrellwm/windows";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -126,40 +116,13 @@ function OnActivation(State: string): void
 {
     if (State === "Down")
     {
-        console.log("Going to call MyBlur...");
         // const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
-        MyBlur();
-        MainWindow?.webContents.send("Summoned");
-
-        // StartBlurOverlay(GetFocusedWindow());
-
-        // CaptureImage(GetFocusedWindow());
-
-        // StartBlurOverlayNew(GetFocusedWindow(), () => { });
-        // // const ScreenshotPath: string = CaptureWindowScreenshot(GetFocusedWindow());
-        // // const Screenshot: Buffer = Fs.readFileSync(ScreenshotPath);
-        // // const ScreenshotEncoded: string = `data:image/png;base64,${ Screenshot.toString("base64") }`;
-        // const ScreenshotEncoded: string = "";
-
-        // // @TODO These calls only need to be made once.  Move to an init function.
-
-        // ipcMain.on("GetThemeColor", async (_Event: Electron.Event, _Argument: unknown) =>
-        // {
-        //     MainWindow?.webContents.send("GetThemeColor", GetThemeColor());
-        // });
-
-        // ipcMain.on("GetIsLightMode", async (_Event: Electron.Event, _Argument:  unknown) =>
-        // {
-        //     const IsLightMode: boolean = GetIsLightMode();
-        //     MainWindow?.webContents.send("GetIsLightMode", IsLightMode);
-        // });
-
-        // MainWindow?.webContents.send("BackgroundImage", ScreenshotEncoded);
+        BlurBackground();
     }
     else
     {
         // MainWindow?.webContents.send("TearDown");
-        TearDown();
+        UnblurBackground();
         // ipcMain.on("TearDown", (): void =>
         // {
         //     TearDown();

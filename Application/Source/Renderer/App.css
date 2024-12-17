@@ -1,7 +1,3 @@
-/*
- * @NOTE: Prepend a `~` to css file paths that are in your node_modules
- *        See https://github.com/webpack-contrib/sass-loader#imports
- */
 body
 {
     background-color: #00000000;
@@ -16,6 +12,11 @@ body
     justify-content: center;
     align-items: center;
     user-select: none;
+}
+
+@font-face {
+    font-family: "Segoe Fluent Icons";
+    src: url("../../Resource/SegoeFluentIcons.ttf");
 }
 
 .DEBUG_Draggable

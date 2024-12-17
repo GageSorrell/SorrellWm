@@ -6,16 +6,18 @@
 import "./App.css";
 import {
     type CSSProperties,
-    type MutableRefObject,
     type ReactElement,
+    type ReactNode,
     type RefObject,
     useEffect,
-    useMemo,
     useRef,
     useState } from "react";
 import { type NavigateFunction, Route, MemoryRouter as Router, Routes, useNavigate } from "react-router-dom";
+import { FluentThemeProvider } from "./Utility/Theme";
+import { Key } from "./Domain/Common/Component/Keyboard/Key";
 import { Log } from "./Api";
-import type { HWindow } from "@sorrellwm/windows";
+import { UseInitializeStore } from "./Store";
+import { Vk } from "./Domain/Common/Component/Keyboard/Keyboard";
 
 export const TestWindow = (): ReactElement =>
 {
@@ -69,8 +71,49 @@ export const TestWindow = (): ReactElement =>
     };
 
     return (
-        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "#00CC00", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <div { ...{ style } }><span>pink</span></div>
+        <div style={ {
+            alignItems: "flex-center",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            justifyContent: "flex-start",
+            width: "100%"
+        } }>
+            <div style={ {
+                alignItems: "center",
+                display: "flex",
+                flexDirection: "row",
+                gap: 16,
+                height: 256,
+                justifyContent: "center",
+                left: 0,
+                maxHeight: 256,
+                minWidth: "100%",
+                position: "absolute",
+                top: 0
+            } }>
+                <Key Value={ Vk["Shift"] }/>
+                <Key Value={ Vk["LWin"] }/>
+                <Key Value={ Vk["RWin"] }/>
+                <Key Value={ Vk["LShift"] }/>
+                <Key Value={ Vk["Num0"] }/>
+                <Key Value={ Vk["Num1"] }/>
+                <Key Value={ Vk["+"] }/>
+                <Key Value={ Vk["Num9"] }/>
+            </div>
+            <div style={ {
+                alignItems: "center",
+                backgroundColor: "#00CC00",
+                display: "flex",
+                height: "100%",
+                justifyContent: "center",
+                left: 0,
+                position: "absolute",
+                top: 256,
+                width: "100%"
+            } }>
+                <div { ...{ style } }><span>pink</span></div>
+            </div>
         </div>
     );
 };
@@ -90,8 +133,10 @@ export const Main = (): ReactElement =>
     }, [ ]);
 
     return (
-        <div style={{ width: "100%", height: "100%" }} ref={ DivRef }>
-            <span style={{ color: "black" }}>SorrellWm</span>
+        <div style={ { width: "100%", height: "100%" } } ref={ DivRef }>
+            <span style={ { color: "black" } }>
+                SorrellWm
+            </span>
         </div>
     );
 };
@@ -115,15 +160,30 @@ const IpcNavigator = (): undefined =>
     return undefined;
 };
 
-export const App = (): ReactElement =>
+export const App = (): ReactNode =>
 {
+    const [ CanPaint ] = UseInitializeStore();
+
+    if (!CanPaint)
+    {
+        return undefined;
+    }
+
     return (
-        <Router>
-            <IpcNavigator/>
-            <Routes>
-                <Route path="/" element={<Main />} />
-                <Route path="/TestWindow" element={<TestWindow />} />
-            </Routes>
-        </Router>
+        <FluentThemeProvider>
+            <Router>
+                <IpcNavigator/>
+                <Routes>
+                    <Route
+                        element={ <Main /> }
+                        path="/"
+                    />
+                    <Route
+                        element={ <TestWindow /> }
+                        path="/TestWindow"
+                    />
+                </Routes>
+            </Router>
+        </FluentThemeProvider>
     );
 };

@@ -10,7 +10,7 @@ export type FMessageLoopCallback = (Argument: unknown) => void;
 /** @TODO The signatures of the arguments are probably wrong. */
 export function InitializeMessageLoop(EmptyCallback: (() => void)): void;
 
-export function CaptureImage(Handle: HWindow): void;
+// export function CaptureImage(Handle: HWindow): void;
 
 export type HWindow =
 {
@@ -30,7 +30,18 @@ export type FBox =
         Height: number;
     };
 
-export type FColor = `#${ string }`;
+export type FHexColor = `#${ string }`;
+
+export type FHslColor =
+{
+    Hue: number;
+    Saturation: number;
+    Lightness: number;
+};
+
+export type FColor =
+    | FHexColor
+    | FHslColor;
 
 /** @TODO Export these via macro, and remove this type declaration. */
 export function CoverWindow(Handle: HWindow): void;
@@ -99,11 +110,3 @@ export type FThemeMode =
     | "Dark"
     | "Light"
     | "Indeterminate";
-
-export type FBlurReturnType =
-{
-    BackgroundWindow: HWindow;
-    ThemeMode: FThemeMode;
-};
-
-export function StartBlurOverlayNew(Handle: HWindow): void;

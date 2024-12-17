@@ -96,8 +96,9 @@ const createWindow = async () =>
         show: false,
         webPreferences:
         {
-            // Temporary
-            devTools: false,
+            // // Temporary
+            // devTools: false,
+            devTools: true,
             preload: app.isPackaged
                 ? path.join(__dirname, "preload.js")
                 : path.join(__dirname, "../../.erb/dll/preload.js")
@@ -109,7 +110,10 @@ const createWindow = async () =>
 
     MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
     {
-        MainWindow?.webContents.send("Navigate", "TestWindow");
+        setTimeout((): void =>
+        {
+            MainWindow?.webContents.send("Navigate", "TestWindow");
+        }, 2000);
     });
 
     MainWindow.on("ready-to-show", () =>

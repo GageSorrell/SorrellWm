@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FVirtualKey } from "../Key/Key.Types";
+import type { FVirtualKey } from "../Domain/Common/Component/Keyboard/Key/Key.Types";
 
 export type PAction =
 {

@@ -465,11 +465,11 @@ void OnPaint(HWND hWnd)
     Screenshot = ScreenshotData.data();
     if (Sigma < MaxSigma)
     {
-        // Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
-        ProfileLogTime("Blur", std::function<void()>([]()
-        {
-            Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
-        }));
+        Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
+        // ProfileLogTime("Blur", std::function<void()>([]()
+        // {
+        //     Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
+        // }));
 
         const int Result = SetDIBitsToDevice(
             hDC, 0, 0, Width, Height, 0, 0, 0, Height, BlurredScreenshot, BlurredBmi, DIB_RGB_COLORS);
@@ -620,7 +620,7 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, iMsg, wParam, lParam);
 }
 
-Napi::Value TearDown(const Napi::CallbackInfo& CallbackInfo)
+Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -679,7 +679,7 @@ std::string GetDerivedThemeMode(double Luminance)
     }
 }
 
-Napi::Value MyBlur(const Napi::CallbackInfo& CallbackInfo)
+Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
     HINSTANCE hInstance = GetModuleHandle(nullptr);

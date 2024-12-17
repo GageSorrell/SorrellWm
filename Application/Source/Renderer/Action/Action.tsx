@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { KeyCombinationDisplay } from "../Key/Key";
+import { KeyCombinationDisplay } from "../Domain/Common/Component/Keyboard/Key/Key";
 import type { PAction } from "./Action.Types";
 import { type ReactElement } from "react";
 

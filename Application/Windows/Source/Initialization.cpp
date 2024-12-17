@@ -655,8 +655,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "StartBlurOverlay", StartBlurOverlay },
         { "Test", FWinEvent::Test },
         { "TestTwo", FWinEvent::TestTwo },
-        { "MyBlur", MyBlur },
-        { "TearDown", TearDown },
+        { "BlurBackground", BlurBackground },
+        { "UnblurBackground", UnblurBackground },
         { "CaptureImage", CaptureImage }
         /* END AUTO-GENERATED REGION. */
         // { "GetMonitorFromRect", MonitorFromRectNode },

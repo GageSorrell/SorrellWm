@@ -4,295 +4,78 @@
  * License:   MIT
  */
 
-import { type FC, type ReactElement, useMemo } from "react";
-import type { FKey, FKeyId, FVirtualKey, PKey } from "./Key.Types";
+import { type CSSProperties, type ReactElement, useMemo } from "react";
+import type { FKey, PKey } from "./Key.Types";
+import type { FVirtualKey } from "../Keyboard.Types";
+import { UseThemeColors } from "@/Utility";
+import { tokens } from "@fluentui/react-components";
 
-/** @TODO */
-const BackspaceKey = (): ReactElement =>
+const WindowsLogo: string = "\uE782";
+const GlobeSymbol: string = "\uE774";
+const NumModifier: string = "NUM";
+const ShiftSymbol: string = "\uE752";
+
+/* eslint-disable sort-keys */
+
+export const Keys: Readonly<Record<FVirtualKey, FKey>> =
 {
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserModifier = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserBackKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserRefreshKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserForwardKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserSearchKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserStopKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserFavoritesKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const BrowserStartKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const SpaceKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const TabKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const WindowsKeyBase = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const LeftWindowsKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const RightWindowsKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const EnterKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const ShiftKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const NextTrackKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const PreviousTrackKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const StopMediaKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const PlayPauseMediaKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const StartMailKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const SelectMediaKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const StartApplicationOneKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-/** @TODO */
-const StartApplicationTwoKey = (): ReactElement =>
-{
-    return (
-        <div>
-
-        </div>
-    );
-};
-
-const NumModifier = (): string => "NUM";
-
-const LeftSide = (): string => "L";
-const RightSide = (): string => "R";
-
-const VkCodes: Readonly<Record<FVirtualKey, FKey>> =
-{
+    0x05:
+    {
+        Display: "\uE962",
+        Modifier: "1",
+        Side: undefined
+    },
+    0x06:
+    {
+        Display: "\uE962",
+        Modifier: "2",
+        Side: undefined
+    },
     0x08:
     {
-        Display: BackspaceKey,
+        Display: "\uE750",
         Modifier: undefined,
         Side: undefined
     },
     0x09:
     {
-        Display: TabKey,
+        Display: "\uE7FD",
         Modifier: undefined,
         Side: undefined
     },
     0x0D:
     {
-        Display: EnterKey,
+        Display: "\uE751",
         Modifier: undefined,
         Side: undefined
     },
     0x10:
     {
-        Display: ShiftKey,
+        Display: "\uE752",
         Modifier: undefined,
         Side: "Either"
     },
     0x11:
     {
-        Display: "Ctrl",
+        Display: "CTRL",
         Modifier: undefined,
         Side: "Either"
     },
     0x12:
     {
-        Display: "Alt",
+        Display: "ALT",
         Modifier: undefined,
         Side: "Either"
     },
     0x13:
     {
-        Display: SpaceKey,
+        Display: "\uE81A",
+        Modifier: undefined,
+        Side: undefined
+    },
+    0x20:
+    {
+        Display: "\uE75D",
         Modifier: undefined,
         Side: undefined
     },
@@ -574,13 +357,19 @@ const VkCodes: Readonly<Record<FVirtualKey, FKey>> =
     },
     0x5B:
     {
-        Display: LeftWindowsKey,
+        Display: WindowsLogo,
         Modifier: undefined,
-        Side: undefined
+        Side: "L"
     },
     0x5C:
     {
-        Display: RightWindowsKey,
+        Display: WindowsLogo,
+        Modifier: undefined,
+        Side: "R"
+    },
+    0x5D:
+    {
+        Display: "\uE700",
         Modifier: undefined,
         Side: undefined
     },
@@ -820,127 +609,128 @@ const VkCodes: Readonly<Record<FVirtualKey, FKey>> =
     },
     0xA0:
     {
-        Display: ShiftKey,
+        Display: ShiftSymbol,
         Modifier: undefined,
-        Side: "Left"
+        Side: "L"
     },
     0xA1:
     {
-        Display: ShiftKey,
+        Display: ShiftSymbol,
         Modifier: undefined,
-        Side: "Right"
+        Side: "R"
     },
     0xA2:
     {
-        Display: "Ctrl",
+        Display: "CTRL",
         Modifier: undefined,
-        Side: "Left"
+        Side: "L"
     },
     0xA3:
     {
-        Display: "Ctrl",
+        Display: "CTRL",
         Modifier: undefined,
-        Side: "Right"
+        Side: "R"
     },
     0xA4:
     {
-        Display: "Alt",
+        Display: "ALT",
         Modifier: undefined,
-        Side: "Left"
+        Side: "L"
     },
     0xA5:
     {
-        Display: "Alt",
+        Display: "ALT",
         Modifier: undefined,
-        Side: "Right"
+        Side: "R"
     },
     0xA6:
     {
-        Display: BrowserBackKey,
-        Modifier: BrowserModifier,
+        Display: "&#E72B",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xA7:
     {
-        Display: BrowserForwardKey,
-        Modifier: BrowserModifier,
+        Display: "\uE72A",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xA8:
     {
-        Display: BrowserRefreshKey,
-        Modifier: BrowserModifier,
+        Display: "\uE72C",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xA9:
     {
-        Display: BrowserStopKey,
-        Modifier: BrowserModifier,
+        Display: "\uE733",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xAA:
     {
-        Display: BrowserSearchKey,
-        Modifier: BrowserModifier,
+        Display: "\uE721",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xAB:
     {
-        Display: BrowserFavoritesKey,
-        Modifier: BrowserModifier,
+        Display: "\uE728",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xAC:
     {
-        Display: BrowserStartKey,
-        Modifier: BrowserModifier,
+        /* @TODO Consider using a different icon. */
+        Display: "\uF71C",
+        Modifier: GlobeSymbol,
         Side: undefined
     },
     0xB0:
     {
-        Display: NextTrackKey,
+        Display: "\uEB9D",
         Modifier: undefined,
         Side: undefined
     },
     0xB1:
     {
-        Display: PreviousTrackKey,
+        Display: "\uEB9E",
         Modifier: undefined,
         Side: undefined
     },
     0xB2:
     {
-        Display: StopMediaKey,
+        Display: "\uE71A",
         Modifier: undefined,
         Side: undefined
     },
     0xB3:
     {
-        Display: PlayPauseMediaKey,
+        Display: "\uE768",
         Modifier: undefined,
         Side: undefined
     },
     0xB4:
     {
-        Display: StartMailKey,
+        Display: "\uE715",
         Modifier: undefined,
         Side: undefined
     },
     0xB5:
     {
-        Display: SelectMediaKey,
+        Display: "\uEA69",
         Modifier: undefined,
         Side: undefined
     },
     0xB6:
     {
-        Display: StartApplicationOneKey,
+        Display: "\uEB3B",
         Modifier: undefined,
         Side: undefined
     },
     0xB7:
     {
-        Display: StartApplicationTwoKey,
+        Display: "\uED35",
         Modifier: undefined,
         Side: undefined
     },
@@ -1012,160 +802,23 @@ const VkCodes: Readonly<Record<FVirtualKey, FKey>> =
     }
 };
 
-/* eslint-disable sort-keys */
-
-/** Developer-friendly names of key codes. */
-export const KeyIds: Record<FVirtualKey, FKeyId> =
+const IsUnicodeCharacter = (Input: string): boolean =>
 {
-    0x08: "Backspace",
-    0x09: "Tab",
-    0x0D: "Enter",
-    0x10: "Shift",
-    0x11: "Ctrl",
-    0x12: "Alt",
-    0x13: "Pause",
-    0x21: "PgUp",
-    0x22: "PgDown",
-    0x23: "End",
-    0x24: "Home",
-    0x25: "LeftArrow",
-    0x26: "UpArrow",
-    0x27: "RightArrow",
-    0x28: "DownArrow",
-    0x2D: "Ins",
-    0x2E: "Del",
-    0x30: "0",
-    0x31: "1",
-    0x32: "2",
-    0x33: "3",
-    0x34: "4",
-    0x35: "5",
-    0x36: "6",
-    0x37: "7",
-    0x38: "8",
-    0x39: "9",
-    0x41: "A",
-    0x42: "B",
-    0x43: "C",
-    0x44: "D",
-    0x45: "E",
-    0x46: "F",
-    0x47: "G",
-    0x48: "H",
-    0x49: "I",
-    0x4A: "J",
-    0x4B: "K",
-    0x4C: "L",
-    0x4D: "M",
-    0x4E: "N",
-    0x4F: "O",
-    0x50: "P",
-    0x51: "Q",
-    0x52: "R",
-    0x53: "S",
-    0x54: "T",
-    0x55: "U",
-    0x56: "V",
-    0x57: "W",
-    0x58: "X",
-    0x59: "Y",
-    0x5A: "Z",
-    0x5B: "LWin",
-    0x5C: "RWin",
-    0x60: "Num0",
-    0x61: "Num1",
-    0x62: "Num2",
-    0x63: "Num3",
-    0x64: "Num4",
-    0x65: "Num5",
-    0x66: "Num6",
-    0x67: "Num7",
-    0x68: "Num8",
-    0x69: "Num9",
-    0x6A: "Multiply",
-    0x6B: "Add",
-    0x6D: "Subtract",
-    0x6E: "NumDecimal",
-    0x6F: "NumDivide",
-    0x70: "F1",
-    0x71: "F2",
-    0x72: "F3",
-    0x73: "F4",
-    0x74: "F5",
-    0x75: "F6",
-    0x76: "F7",
-    0x77: "F8",
-    0x78: "F9",
-    0x79: "F10",
-    0x7A: "F11",
-    0x7B: "F12",
-    0x7C: "F13",
-    0x7D: "F14",
-    0x7E: "F15",
-    0x7F: "F16",
-    0x80: "F17",
-    0x81: "F18",
-    0x82: "F19",
-    0x83: "F20",
-    0x84: "F21",
-    0x85: "F22",
-    0x86: "F23",
-    0x87: "F24",
-    0xA0: "LShift",
-    0xA1: "RShift",
-    0xA2: "LCtrl",
-    0xA3: "RCtrl",
-    0xA4: "LAlt",
-    0xA5: "RAlt",
-    0xA6: "BrowserBack",
-    0xA7: "BrowserForward",
-    0xA8: "BrowserRefresh",
-    0xA9: "BrowserStop",
-    0xAA: "BrowserSearch",
-    0xAB: "BrowserFavorites",
-    0xAC: "BrowserStart",
-    0xB0: "NextTrack",
-    0xB1: "PreviousTrack",
-    0xB2: "StopMedia",
-    0xB3: "PlayPauseMedia",
-    0xB4: "StartMail",
-    0xB5: "SelectMedia",
-    0xB6: "StartApplicationOne",
-    0xB7: "StartApplicationTwo",
-    0xBA: ";",
-    0xBB: "+",
-    0xBC: ",",
-    0xBD: "-",
-    0xBE: ".",
-    0xBF: "/",
-    0xC0: "`",
-    0xDB: "[",
-    0xDC: "\\",
-    0xDD: "]",
-    0xDE: "'"
+    if (Input.length > 1)
+    {
+        return false;
+    }
+    else
+    {
+        const CodePoint: number = Input.codePointAt(0) as number;
+        return CodePoint >= 0xE700 && CodePoint <= 0xF800;
+    }
 };
 
-/* eslint-enable sort-keys */
-
-export type PModifierKeyContainer =
+export const Key = ({ Recording, Value }: PKey): ReactElement =>
 {
-    Child: FC;
-};
-
-const CornerContainer = ({ Child }: PModifierKeyContainer): ReactElement =>
-{
-    return (
-        <div style={{ position: "absolute", bottom: "0.5rem", left: "0.5rem" }}>
-            <Child/>
-        </div>
-    );
-};
-
-
-export const Key = ({ IsSmall, Value }: PKey): ReactElement =>
-{
-    const { Display, Modifier, Side } = Value;
-    const Child: FC | undefined = useMemo((): FC | undefined =>
+    const { Display, Modifier, Side } = Keys[Value];
+    const CornerDisplay: string | undefined = useMemo((): string | undefined =>
     {
         if (Modifier !== undefined)
         {
@@ -1173,9 +826,7 @@ export const Key = ({ IsSmall, Value }: PKey): ReactElement =>
         }
         else if (Side !== undefined && Side !== "Either")
         {
-            return Side === "Left"
-                ? LeftSide
-                : RightSide;
+            return Side;
         }
         else
         {
@@ -1183,62 +834,83 @@ export const Key = ({ IsSmall, Value }: PKey): ReactElement =>
         }
     }, [ Modifier, Side ]);
 
-    const DisplayComponent: FC = useMemo((): FC =>
-    {
-        return typeof Display === "string"
-            ? () => Display
-            : Display;
-    }, [ Display ]);
+    const [ backgroundColor, color ] = UseThemeColors();
 
-    return (
-        <div style={{
+    const DisplayStyle: CSSProperties = useMemo((): CSSProperties =>
+    {
+        const IsFluentIcon: boolean = IsUnicodeCharacter(Display);
+        const fontSize: string = Display.length > 1
+            ? "2rem"
+            : "1rem";
+
+        const marginBottom: number = IsFluentIcon
+            ? 0
+            : 4;
+
+        return {
+            color,
+            fontFamily: "Segoe Fluent Icons, Segoe UI",
+            fontSize,
+            marginBottom,
+            textWrap: "nowrap"
+        };
+    }, [ Display, color ]);
+
+    const CornerStyle: CSSProperties = useMemo((): CSSProperties =>
+    {
+        return {
+            bottom: "0.5rem",
+            color,
+            display: CornerDisplay !== undefined
+                ? "flex"
+                : "none",
+            left: "0.5rem",
+            position: "absolute"
+        };
+    }, [ CornerDisplay, color ]);
+
+    const RootStyle: CSSProperties = useMemo((): CSSProperties =>
+    {
+        return {
             alignItems: "center",
-            backgroundColor: "#0078D7",
-            borderRadius: 4,
+            backgroundColor,
+            borderRadius: tokens.borderRadiusMedium,
+            paddingLeft: tokens.spacingHorizontalXS,
+            paddingRight: tokens.spacingHorizontalXS,
             display: "flex",
-            height: "4rem",
+            height: "2rem",
             justifyContent: "center",
-            width: "4rem"
-        }}>
-            <span style={{ color: "white", fontSize: "2rem" }}>
-                <DisplayComponent/>
-            </span>
-            {
-                (Child !== undefined) && <CornerContainer { ...{ Child } }/>
-            }
-        </div>
-    );
-};
+            maxHeight: "2rem",
+            minWidth: "2rem"
+        };
+    }, [ backgroundColor ]);
 
-export type PKeyCombination =
-{
-    Keys: FVirtualKey | Array<FVirtualKey>;
-};
+    // const Label: string = Recording || Modifier === undefined
+    //     ? Display
+    //     : `${ Modifier } ${ Display }`;
+    const ShowModifierInline: boolean = !Recording && Modifier !== undefined;
 
-export const KeyCombinationDisplay = ({ Keys }: PKeyCombination): ReactElement =>
-{
-    const KeyElements: Array<ReactElement> = useMemo((): Array<ReactElement> =>
+    const ModifierStyle: CSSProperties =
     {
-        const KeyArray: Array<FVirtualKey> = Array.isArray(Keys)
-            ? Keys
-            : [ Keys ];
-
-        return KeyArray.map((VirtualKey: FVirtualKey): ReactElement =>
-        {
-            return (
-                <Key
-                    IsSmall
-                    Value={ VkCodes[VirtualKey] }
-                />
-            );
-        });
-    }, [ Keys ]);
+        fontSize: "0.667rem",
+        fontWeight: tokens.fontWeightSemibold,
+        paddingRight: 4
+    };
 
     return (
-        <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
-            {
-                KeyElements
-            }
+        <div style={ RootStyle }>
+            <span style={ DisplayStyle }>
+                {
+                    ShowModifierInline &&
+                    <span style={ ModifierStyle }>
+                        { Modifier }
+                    </span>
+                }
+                { Display }
+            </span>
+            <div style={ CornerStyle }>
+                { CornerDisplay }
+            </div>
         </div>
     );
 };

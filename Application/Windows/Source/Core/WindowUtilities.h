@@ -27,8 +27,8 @@ DECLARE_NAPI_FUNCTION(GetTitlebarHeight, number)
 DECLARE_NAPI_FUNCTION(SetForegroundWindowNode, void, ExportName="SetForegroundWindow", Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetWindowByName, HWindow, Name, string)
 DECLARE_NAPI_FUNCTION(TestFun, void)
-DECLARE_NAPI_FUNCTION(GetIsLightMode, boolean)
-DECLARE_NAPI_FUNCTION(GetThemeColor, FColor)
+DECLARE_NAPI_FUNCTION(GetIsLightMode, boolean, Renderer, Hook)
+DECLARE_NAPI_FUNCTION(GetThemeColor, FHexColor, Renderer, Hook)
 DECLARE_NAPI_FUNCTION(StartBlurOverlay, void, Handle, HWindow)
 
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);

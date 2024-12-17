@@ -8,6 +8,6 @@
 
 #include "Core/Core.h"
 
-DECLARE_NAPI_FUNCTION(MyBlur, FBlurReturnType);
-DECLARE_NAPI_FUNCTION(TearDown, void);
+DECLARE_NAPI_FUNCTION(BlurBackground, void);
+DECLARE_NAPI_FUNCTION(UnblurBackground, void);
 void InitializeBlurBackground();

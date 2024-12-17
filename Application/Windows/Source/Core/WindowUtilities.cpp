@@ -2413,26 +2413,32 @@ Napi::Value GetThemeColor(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    DWORD color;       // Variable to store the color (ARGB format)
-    BOOL isOpaque;     // Variable to store whether the color is opaque
+    DWORD color;
+    BOOL isOpaque;
 
     HRESULT result = DwmGetColorizationColor(&color, &isOpaque);
     if (FAILED(result))
     {
-        std::cerr << "Failed to retrieve taskbar color." << std::endl;
-        return Napi::String::New(Environment, "");
+        std::cout << "Failed to retrieve taskbar color." << std::endl;
+        std::string DefaultThemeColor = "#0078D7";
+        return Napi::String::New(Environment, DefaultThemeColor);
     }
 
-    // Extract the RGB components from the ARGB value
-    BYTE r = (color >> 16) & 0xFF; // Red component
-    BYTE g = (color >> 8) & 0xFF;  // Green component
-    BYTE b = color & 0xFF;         // Blue component
+    BYTE Red = (color >> 16) & 0xFF;
+    BYTE Green = (color >> 8) & 0xFF;
+    BYTE Blue = color & 0xFF;
 
-    // Convert to a hex string
-    std::ostringstream hexStream;
-    hexStream << "#" << std::setfill('0') << std::setw(2) << std::hex << (int)r
-              << std::setw(2) << (int)g
-              << std::setw(2) << (int)b;
+    std::ostringstream HexStream;
+    HexStream
+        << "#"
+        << std::setfill('0')
+        << std::setw(2)
+        << std::hex
+        << (int) Red
+        << std::setw(2)
+        << (int) Green
+        << std::setw(2)
+        << (int) Blue;
 
-    return Napi::String::New(Environment, hexStream.str());
+    return Napi::String::New(Environment, HexStream.str());
 }

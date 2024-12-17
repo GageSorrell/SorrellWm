@@ -12,9 +12,9 @@
     "hot",
     "reload"
   ],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "homepage": "https://github.com/GageSorrell/SorrellWm",
   "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
     "type": "git",
@@ -81,6 +81,7 @@
   },
   "dependencies": {
     "@electron/notarize": "^2.3.2",
+    "@fluentui/react-components": "^9.56.6",
     "@react-spring/web": "^9.7.5",
     "@sorrellwm/windows": "file:Windows",
     "electron-debug": "^3.2.0",
@@ -89,7 +90,8 @@
     "openai": "^4.76.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0"
+    "react-router-dom": "^6.16.0",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.0",
