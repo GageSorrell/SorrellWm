@@ -1,7 +1,5 @@
 #include "WinEvent.h"
 
-std::atomic<HWND> WindowToCover(nullptr);
-
 void FWinEvent::DispatchFromEventProc(DWORD Event)
 {
     GGlobals::WinEvent->Dispatch(Event);
@@ -16,7 +14,6 @@ Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    // Set up the event hook
     eventHook = SetWinEventHook(
         EVENT_OBJECT_CREATE,
         EVENT_OBJECT_CREATE,
@@ -87,139 +84,4 @@ void FWinEvent::OnExit(void* _)
         // Release the ThreadSafeFunction
         // threadSafeCallback.Release();
     }
-}
-
-Napi::Value FWinEvent::CoverWindow(const Napi::CallbackInfo& Information)
-{
-    const Napi::Env Environment = Information.Env();
-
-    HWND WindowToCoverHandle = DecodeHandle(Information[0].As<Napi::Object>());
-
-    LPCSTR WindowName = "SorrellWm Main Window";
-    HWND SorrellWmMainWindow = FindWindow(NULL, WindowName);
-
-    if (SorrellWmMainWindow == nullptr)
-    {
-        std::cout << "SorrellWmMainWindow was the nullptr." << std::endl;
-    }
-
-    RECT clientRect;
-    DwmGetWindowAttribute(WindowToCoverHandle, DWMWA_EXTENDED_FRAME_BOUNDS, &clientRect, sizeof(clientRect));
-    // if (!GetClientRect(WindowToCoverHandle, &clientRect)) {
-    // // if (!GetWindowRect(WindowToCoverHandle, &clientRect)) {
-    //     std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
-    // }
-
-    RECT MainClientRect;
-    if (!GetClientRect(SorrellWmMainWindow, &MainClientRect)) {
-        std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
-    }
-
-    POINT topLeft = { clientRect.left, clientRect.top };
-
-    // BOOL TransitionsDisabled = TRUE;
-    // HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &TransitionsDisabled, sizeof(TransitionsDisabled));
-
-    // SetForegroundWindow(SorrellWmMainWindow);
-    // Shift everything by one since the screenshot clips the window by 1 pixel
-
-    std::cout << "Wee Woo " << clientRect.left << " " << clientRect.top << std::endl;
-    SetWindowPos(
-        SorrellWmMainWindow,
-        nullptr,
-        clientRect.left,
-        clientRect.top,
-        clientRect.right - clientRect.left,
-        clientRect.bottom - clientRect.top,
-        // clientRect.left + topLeft.x - FrameWidth,
-        // clientRect.top + topLeft.y - TitleBarHeight - FrameHeight,
-        // clientRect.right - clientRect.left + 2 * FrameWidth,
-        // clientRect.bottom - clientRect.top + TitleBarHeight + 2 * FrameHeight,
-        SWP_SHOWWINDOW
-    );
-}
-
-Napi::Value FWinEvent::Test(const Napi::CallbackInfo& Information)
-{
-    const Napi::Env Environment = Information.Env();
-
-    std::cout << "Test!" << std::endl;
-
-    LPCSTR WindowName = "SorrellWm Main Window";
-    HWND SorrellWmMainWindow = FindWindow(NULL, WindowName);
-
-    if (SorrellWmMainWindow == nullptr)
-    {
-        std::cout << "SorrellWmMainWindow was the nullptr." << std::endl;
-    }
-
-    RECT MainClientRect;
-    if (!GetClientRect(SorrellWmMainWindow, &MainClientRect)) {
-        std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
-    }
-
-    // BOOL enabled = TRUE; // TRUE to disable transitions
-    // HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &enabled, sizeof(enabled));
-    // std::cout << "Result: " << SUCCEEDED(hr) << std::endl;
-    std::cout << "Test will SetWindowPos..." << std::endl;
-
-    SetForegroundWindow(SorrellWmMainWindow);
-    // SetWindowPos(
-    //     SorrellWmMainWindow,
-    //     nullptr,
-    //     50,
-    //     50,
-    //     600,
-    //     600,
-    //     SWP_SHOWWINDOW | SWP_NOMOVE
-    // );
-    SetWindowPos(
-        SorrellWmMainWindow,
-        nullptr,
-        50,
-        50,
-        600,
-        600,
-        SWP_SHOWWINDOW
-    );
-
-
-    return Environment.Undefined();
-}
-
-Napi::Value FWinEvent::TestTwo(const Napi::CallbackInfo& Information)
-{
-    const Napi::Env Environment = Information.Env();
-
-    std::cout << "Test!" << std::endl;
-
-    LPCSTR WindowName = "SorrellWm Main Window";
-    HWND SorrellWmMainWindow = FindWindow(NULL, WindowName);
-
-    if (SorrellWmMainWindow == nullptr)
-    {
-        std::cout << "SorrellWmMainWindow was the nullptr." << std::endl;
-    }
-
-    RECT MainClientRect;
-    if (!GetClientRect(SorrellWmMainWindow, &MainClientRect)) {
-        std::cerr << "GetClientRect failed. Error: " << GetLastError() << std::endl;
-    }
-
-    // BOOL enabled = TRUE; // TRUE to disable transitions
-    // HRESULT hr = DwmSetWindowAttribute(SorrellWmMainWindow, DWMWA_TRANSITIONS_FORCEDISABLED, &enabled, sizeof(enabled));
-    // std::cout << "Result: " << SUCCEEDED(hr) << std::endl;
-    std::cout << "Test will SetWindowPos..." << std::endl;
-
-    SetWindowPos(
-        SorrellWmMainWindow,
-        nullptr,
-        50,
-        50,
-        600,
-        600,
-        SWP_SHOWWINDOW | SWP_NOMOVE
-    );
-
-    return Environment.Undefined();
 }

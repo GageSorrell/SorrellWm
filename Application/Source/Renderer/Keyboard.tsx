@@ -13,7 +13,6 @@ import {
     useContext,
     useEffect,
     useState } from "react";
-import type { FKeyCombination } from "./Action/Action.Types";
 import type { FKeyboardEvent } from "#/Keyboard.Types";
 import type { FVirtualKey } from "./Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Identity } from "./Utility";
@@ -31,7 +30,7 @@ export const UseKeyCombination = (KeyCombination: FKeyCombination): void =>
         RegisterKeyCombination(KeyCombination);
         return (): void =>
         {
-            UnregisterKeyCombination(KeyCombination.Name);
+            UnregisterKeyCombination(KeyCombination.Action);
         };
     }, [ KeyCombination, RegisterKeyCombination, UnregisterKeyCombination ]);
 };
@@ -50,7 +49,7 @@ export const UsePersistentKeyCombination = (KeyCombination: FKeyCombination): ((
 
     return (): void =>
     {
-        UnregisterKeyCombination(KeyCombination.Name);
+        UnregisterKeyCombination(KeyCombination.Action);
     };
 };
 
@@ -98,7 +97,7 @@ export const KeyboardProvider = ({ children }: PropsWithChildren): ReactNode =>
 
             const Index: number = New.findIndex((Item: FKeyCombination): boolean =>
             {
-                return Item.Name === Name;
+                return Item.Action === Name;
             });
 
             if (Index !== -1)
@@ -112,7 +111,7 @@ export const KeyboardProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     useEffect((): void =>
     {
-        KeyCombinations.forEach(({ Callback, Keys, Name }: FKeyCombination): void =>
+        KeyCombinations.forEach(({ Callback, Keys, Action: Name }: FKeyCombination): void =>
         {
             let HasDistinctEntry: boolean = Keys.length === KeysDown.length;
             const NumEntries: number = Math.min(KeyCombinations.length, KeysDown.length);

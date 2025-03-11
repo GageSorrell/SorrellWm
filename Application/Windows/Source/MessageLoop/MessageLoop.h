@@ -8,6 +8,8 @@
 #include <codecvt>
 #include <map>
 
+typedef std::function<void(HWND, UINT, WPARAM, LPARAM)> FWindowProc;
+
 /**
  * Allows any function to step into the Win32 message loop.
  *
@@ -23,8 +25,13 @@ public:
 
     void RegisterHook(HHOOK Hook);
 
+    void RegisterWindowProc(FWindowProc Callback);
+
     virtual void Execute(const Napi::AsyncProgressQueueWorker<int>::ExecutionProgress& Progress) override;
 
     /** This must be overridden so that `AsyncProgressQueueWorker` can be extended, but we don't use it. */
     virtual void OnProgress(const int* _Data, size_t Count) override;
+
+    static std::vector<FWindowProc> WindowProcs;
 };
+

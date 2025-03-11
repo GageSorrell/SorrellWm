@@ -8,16 +8,17 @@
 
 /* eslint-disable */
 
-import type { HWindow, FBox, FHexColor } from "./Core";
+import type { Array, HWindow, FBox, FHexColor } from "./Core";
 
 export function BlurBackground(): void;
 export function UnblurBackground(): void;
 export function CaptureImage(): void;
+export function GetMonitors(): Array<FMonitorInfo>;
+export function InitializeMonitors(): Array<FMonitorInfo>;
 export function GetFocusedWindow(): HWindow;
 export function CaptureWindowScreenshot(Handle: HWindow): string;
 export function GetWindowLocationAndSize(Handle: HWindow): FBox;
 export function GetTitlebarHeight(): number;
-export function SetForegroundWindow(Handle: HWindow): FBox;
 export function SetForegroundWindow(Handle: HWindow): void;
 export function GetWindowByName(Name: string): HWindow;
 export function TestFun(): void;

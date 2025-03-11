@@ -17,6 +17,7 @@
 #include <algorithm>
 #include "Core/Math.h"
 #include <cstdint>
+#include "Core/MonitorUtilities.h"
 
 /**
  * 1. Get screenshot of SourceHandle window
@@ -56,7 +57,25 @@ static DWORD FadeLastTimestamp = 0;
 static const UINT_PTR BlurTimerId = 1;
 static const UINT_PTR FadeTimerId = 2;
 static const int Duration = 150;
-static const int MsPerFrame = 1000 / 120;
+static int MsPerFrame = 1000 / 120;
+
+/**
+ * Return the ms per frame (inverse of frame rate).
+ * Depends upon the refresh rate of the monitor and the
+ * size of the window.
+ */
+static void SetMsPerFrame(HWND SourceHandle)
+{
+    const bool IsLargerThan2k = Width * Height > 2560 * 1440;
+    const int32_t BaseMsPerFrame = IsLargerThan2k
+        ? 60
+        : 120;
+
+    const int32_t RefreshRate = GetRefreshRateFromWindow(SourceHandle);
+
+    MsPerFrame = 1000 / min(RefreshRate, BaseMsPerFrame);
+}
+
 static HWND SourceHandle = nullptr;
 static bool PaintedOnce = false;
 static const int MinDeferResolution = 1920 * 1080 + 1;
@@ -702,6 +721,8 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
         std::cout << "MyBlur was called, but GetForegroundWindow gave the nullptr." << std::endl;
         return Environment.Undefined();
     }
+
+    SetMsPerFrame(SourceHandle);
 
     GetDwmWindowRect(SourceHandle, &WindowRect);
     Height = WindowRect.bottom - WindowRect.top;

@@ -28,3 +28,10 @@ std::wstring GetFileNameTimestamp();
 std::wstring GetTempPath();
 
 BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
+
+Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle);
+HWND DecodeHandle(const Napi::Object& Object);
+Napi::Object EncodeRect(const Napi::Env& Environment, RECT InRect);
+
+template <typename THandle>
+std::string HandleToString(THandle Handle);

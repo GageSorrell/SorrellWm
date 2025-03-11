@@ -6,37 +6,6 @@
 
 #include "WindowUtilities.h"
 
-std::string HandleToString(HWND Handle)
-{
-    std::stringstream StringStream;
-    StringStream << std::hex << reinterpret_cast<uintptr_t>(Handle);
-    return StringStream.str();
-}
-
-Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle)
-{
-    std::string HandleString = HandleToString(Handle);
-    Napi::Object OutObject = Napi::Object::New(Environment);
-    OutObject.Set("Handle", Napi::String::New(Environment, HandleString));
-    return OutObject;
-}
-
-HWND DecodeHandle(const Napi::Object& Object)
-{
-    Napi::Env Environment = Object.Env();
-    Napi::Value HandleValue = Object.Get("Handle");
-
-    if (!HandleValue.IsString())
-    {
-        Napi::TypeError::New(Environment, "Expected \"Handle\" property to be a string").ThrowAsJavaScriptException();
-        return nullptr;
-    }
-
-    std::string HandleString = HandleValue.As<Napi::String>().Utf8Value();
-    uintptr_t HandleInt = std::stoull(HandleString, nullptr, 16);
-    return reinterpret_cast<HWND>(HandleInt);
-}
-
 Napi::Value GetFocusedWindow(const Napi::CallbackInfo& CallbackInfo)
 {
     return EncodeHandle(CallbackInfo.Env(), GetForegroundWindow());

@@ -19,6 +19,7 @@ import { KeyboardProvider } from "./Keyboard";
 import { Log } from "./Api";
 import { StoreProvider } from "./Store";
 import { Vk } from "./Domain/Common/Component/Keyboard/Keyboard";
+import { KeyCombination } from "./Domain/Common/Component/Keyboard/KeyCombination";
 
 export const TestWindow = (): ReactElement =>
 {
@@ -133,16 +134,81 @@ export const Main = (): ReactElement =>
         });
     }, [ ]);
 
+    const Command = ({ KeyValue, Title, Route }) =>
+    {
+        return (
+            <div style={{
+                alignItems: "center",
+                display: "flex",
+                flexDirection: "row",
+                gap: 16,
+                justifyContent: "flex-start"
+            }}>
+                <Key Value={ KeyValue }/>
+                <span style={ { fontSize: 18 } }>
+                    { Title }
+                </span>
+            </div>
+        );
+    };
+
     return (
         <div
             ref={ DivRef }
             style={ {
+                background: "none",
+                display: "flex",
+                flexDirection: "column",
                 height: "100%",
                 width: "100%"
             } }>
-            <span style={ { color: "black" } }>
+            <span style={ { color: "black", fontSize: 64 } }>
                 SorrellWm
             </span>
+            <div style={{ width: "100%", height: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>
+                    <div style={{
+                        alignItems: "flex-start",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 24,
+                        justifyContent: "flex-start"
+                    }}>
+                        <Command
+                            KeyValue="H"
+                            Route=""
+                            Title="Focus"
+                        />
+                        <Command
+                            KeyValue="J"
+                            Route=""
+                            Title="New"
+                        />
+                        <Command
+                            KeyValue="K"
+                            Route=""
+                            Title="Move"
+                        />
+                        <Command
+                            KeyValue="L"
+                            Route=""
+                            Title="Resize"
+                        />
+                    </div>
+                </div>
+                <div style={{
+                    alignItems: "center",
+                    display: "flex",
+                    flexDirection: "column-reverse",
+                    justifyContent: "flex-start"
+                }}>
+                    <Command
+                        KeyValue={ "\uE734" }
+                        Route=""
+                        Title="Tools"
+                    />
+                </div>
+            </div>
         </div>
     );
 };

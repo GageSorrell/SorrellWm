@@ -8,6 +8,8 @@ import "./MessageLoop";
 import "./Hook";
 import "./NodeIpc";
 import "./Keyboard";
+import "./Monitor";
+import "./Tree";
 
 setTimeout((): void =>
 {
@@ -20,9 +22,6 @@ import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import path from "path";
 import { resolveHtmlPath } from "./util";
-
-// const CurrentWindow: HWindow = GetFocusedWindow();
-// console.log(CaptureWindowScreenshot(CurrentWindow));
 
 class FAppUpdater
 {
@@ -94,6 +93,8 @@ const createWindow = async () =>
         height: 728,
         icon: getAssetPath("icon.png"),
         show: false,
+        frame: false,
+        transparent: true,
         webPreferences:
         {
             // // Temporary
@@ -148,9 +149,7 @@ const createWindow = async () =>
         return { action: "deny" };
     });
 
-    // Remove this if your app does not use auto updates
-    // eslint-disable-next-line
-  new FAppUpdater();
+    new FAppUpdater();
 };
 
 /**

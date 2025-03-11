@@ -1,7 +1,7 @@
 {
     "[cpp]":
     {
-    "editor.defaultFormatter": "xaver.clang-format",
+        "editor.defaultFormatter": "xaver.clang-format",
     },
   	"eslint.enable": true,
     "eslint.nodePath": "node_modules",
@@ -9,7 +9,7 @@
 	{
 		"overrideConfigFile": "./Configuration/.eslintrc.cjs"
 	},
-    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    // "C_Cpp.codeAnalysis.clangTidy.enabled": true,
     "cSpell.enabledFileTypes": {
         "*": true,
         "json": false

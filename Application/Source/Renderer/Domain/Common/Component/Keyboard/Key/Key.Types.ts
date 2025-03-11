@@ -4,7 +4,16 @@
  * License:   MIT
  */
 
-import type { FVirtualKey } from "../Keyboard.Types";
+export type FCommandKey =
+    | "H"
+    | "J"
+    | "K"
+    | "L"
+    | "Circle"
+    | "Square"
+    | "Hex"
+    | "Triangle"
+    | "Cross";
 
 export type FKeySide =
     | "L"
@@ -35,7 +44,5 @@ export type FKey =
 
 export type PKey =
 {
-    /** Is the key being used to record a combination? */
-    Recording?: boolean;
-    Value: FVirtualKey;
+    Value: FCommandKey;
 };

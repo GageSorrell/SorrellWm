@@ -91,3 +91,47 @@ BOOL GetDwmWindowRect(HWND Handle, RECT* Rect)
     }
     return TRUE;
 }
+
+template <typename THandle>
+std::string HandleToString(THandle Handle)
+{
+    std::stringstream StringStream;
+    StringStream << std::hex << reinterpret_cast<uintptr_t>(Handle);
+    return StringStream.str();
+}
+
+Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle)
+{
+    std::string HandleString = HandleToString(Handle);
+    Napi::Object OutObject = Napi::Object::New(Environment);
+    OutObject.Set("Handle", Napi::String::New(Environment, HandleString));
+    return OutObject;
+}
+
+HWND DecodeHandle(const Napi::Object& Object)
+{
+    Napi::Env Environment = Object.Env();
+    Napi::Value HandleValue = Object.Get("Handle");
+
+    if (!HandleValue.IsString())
+    {
+        Napi::TypeError::New(Environment, "Expected \"Handle\" property to be a string").ThrowAsJavaScriptException();
+        return nullptr;
+    }
+
+    std::string HandleString = HandleValue.As<Napi::String>().Utf8Value();
+    uintptr_t HandleInt = std::stoull(HandleString, nullptr, 16);
+    return reinterpret_cast<HWND>(HandleInt);
+}
+
+Napi::Object EncodeRect(const Napi::Env& Environment, RECT InRect)
+{
+    Napi::Object OutObject = Napi::Object::New(Environment);
+
+    OutObject.Set("X", InRect.left);
+    OutObject.Set("Y", InRect.top);
+    OutObject.Set("Width", InRect.right - InRect.left);
+    OutObject.Set("Height", InRect.bottom - InRect.top);
+
+    return OutObject;
+}

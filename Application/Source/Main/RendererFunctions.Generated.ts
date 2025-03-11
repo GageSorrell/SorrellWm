@@ -9,16 +9,11 @@
 /* eslint-disable */
 
 import { ipcMain } from "electron"
-import { GetFocusedWindow, SetForegroundWindow, GetIsLightMode, GetThemeColor, type HWindow, type FBox, type FHexColor } from "@sorrellwm/windows";
+import { GetFocusedWindow, GetIsLightMode, GetThemeColor, type HWindow, type FHexColor } from "@sorrellwm/windows";
 
 ipcMain.handle("GetFocusedWindow", (): Promise<HWindow> =>
 {
     return Promise.resolve(GetFocusedWindow());
-});
-
-ipcMain.handle("SetForegroundWindow", (Handle: HWindow): Promise<FBox> =>
-{
-    return Promise.resolve(SetForegroundWindow(Handle));
 });
 
 ipcMain.handle("GetIsLightMode", (): Promise<boolean> =>

@@ -216,6 +216,37 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
         const MacroCallIndices: Array<number> = FindAllIndices(Contents, MacroName);
         for await (const MacroCallIndex of MacroCallIndices)
         {
+            const IsCommentedOut: boolean = ((): boolean =>
+            {
+                // 1. Get line
+                    // 1. Get preceding line break
+                    // 2. Get following line break
+                // 2. Trim line
+                // 3. See if starts with `//` or `/*`
+                let FoundPrecedingLineBreak: boolean = false;
+                let Index: number = MacroCallIndex;
+                while (!FoundPrecedingLineBreak)
+                {
+                    if (Contents[Index] === "\n")
+                    {
+                        FoundPrecedingLineBreak = true;
+                    }
+                    else
+                    {
+                        Index -= 1;
+                    }
+                }
+                const EndIndex: number = Contents.indexOf("\n", Index + 1);
+
+                const TrimmedLine: string = Contents.substring(Index, EndIndex);
+                return TrimmedLine.startsWith("//") || TrimmedLine.startsWith("/*");
+            })();
+
+            if (IsCommentedOut)
+            {
+                continue;
+            }
+
             const MacroArgumentVectorStartIndex: number = Contents.indexOf("(", MacroCallIndex) + 1;
             const MacroArgumentVectorEndIndex: number = Contents.indexOf(")", MacroArgumentVectorStartIndex);
             const MacroArgumentVectorString: string =
@@ -665,7 +696,7 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
 
     const ImportedTypes: Array<string> = Array.from(new Set<string>(HookDefinitions.map(Def => Def.ImportedTypes).flat()));
     const SorrellWmImportStatement: string = ImportedTypes.length > 0
-        ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrellwm/windows"`
+        ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrellwm/windows";`
         : "";
     const ImportStatements: string = `import { useEffect, useState } from "react";\n${ SorrellWmImportStatement }\n\n`;
     const HookDefinitionsString: string = HookDefinitions.map(Def => Def.Hook).join("\n\n");

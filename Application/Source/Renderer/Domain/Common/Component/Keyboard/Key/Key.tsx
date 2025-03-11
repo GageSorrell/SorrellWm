@@ -804,7 +804,7 @@ export const Keys: Readonly<Record<FVirtualKey, FKey>> =
 
 const IsUnicodeCharacter = (Input: string): boolean =>
 {
-    if (Input.length > 1)
+    if (typeof Input !== "string" || Input.length > 1)
     {
         return false;
     }
@@ -815,31 +815,31 @@ const IsUnicodeCharacter = (Input: string): boolean =>
     }
 };
 
-export const Key = ({ Recording, Value }: PKey): ReactElement =>
+export const Key = ({ Value }: PKey): ReactElement =>
 {
-    const { Display, Modifier, Side } = Keys[Value];
-    const CornerDisplay: string | undefined = useMemo((): string | undefined =>
-    {
-        if (Modifier !== undefined)
-        {
-            return Modifier;
-        }
-        else if (Side !== undefined && Side !== "Either")
-        {
-            return Side;
-        }
-        else
-        {
-            return undefined;
-        }
-    }, [ Modifier, Side ]);
+    // const { Display, Modifier, Side } = Keys[Value];
+    // const CornerDisplay: string | undefined = useMemo((): string | undefined =>
+    // {
+    //     if (Modifier !== undefined)
+    //     {
+    //         return Modifier;
+    //     }
+    //     else if (Side !== undefined && Side !== "Either")
+    //     {
+    //         return Side;
+    //     }
+    //     else
+    //     {
+    //         return undefined;
+    //     }
+    // }, [ Modifier, Side ]);
 
     const [ backgroundColor, color ] = UseThemeColors();
 
     const DisplayStyle: CSSProperties = useMemo((): CSSProperties =>
     {
-        const IsFluentIcon: boolean = IsUnicodeCharacter(Display);
-        const fontSize: string = Display.length > 1
+        const IsFluentIcon: boolean = IsUnicodeCharacter(Value);
+        const fontSize: string = Value.length > 1
             ? "2rem"
             : "1rem";
 
@@ -854,20 +854,7 @@ export const Key = ({ Recording, Value }: PKey): ReactElement =>
             marginBottom,
             textWrap: "nowrap"
         };
-    }, [ Display, color ]);
-
-    const CornerStyle: CSSProperties = useMemo((): CSSProperties =>
-    {
-        return {
-            bottom: "0.5rem",
-            color,
-            display: CornerDisplay !== undefined
-                ? "flex"
-                : "none",
-            left: "0.5rem",
-            position: "absolute"
-        };
-    }, [ CornerDisplay, color ]);
+    }, [ color, Value ]);
 
     const RootStyle: CSSProperties = useMemo((): CSSProperties =>
     {
@@ -885,32 +872,11 @@ export const Key = ({ Recording, Value }: PKey): ReactElement =>
         };
     }, [ backgroundColor ]);
 
-    // const Label: string = Recording || Modifier === undefined
-    //     ? Display
-    //     : `${ Modifier } ${ Display }`;
-    const ShowModifierInline: boolean = !Recording && Modifier !== undefined;
-
-    const ModifierStyle: CSSProperties =
-    {
-        fontSize: "0.667rem",
-        fontWeight: tokens.fontWeightSemibold,
-        paddingRight: 4
-    };
-
     return (
         <div style={ RootStyle }>
             <span style={ DisplayStyle }>
-                {
-                    ShowModifierInline &&
-                    <span style={ ModifierStyle }>
-                        { Modifier }
-                    </span>
-                }
-                { Display }
+                { Value }
             </span>
-            <div style={ CornerStyle }>
-                { CornerDisplay }
-            </div>
         </div>
     );
 };

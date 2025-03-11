@@ -5,23 +5,28 @@ FMessageLoop::FMessageLoop(Napi::Function OkCallback)
     , TDispatcher<MSG>()
 { }
 
+std::vector<FWindowProc> FMessageLoop::WindowProcs;
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    // switch (uMsg)
-    // {
-    //     // Handle different messages here
-    //     case WM_DESTROY:
-    //         return 0;
-    //     // More cases as needed...
-    // }
+    for(FWindowProc& WindowProcFunction : FMessageLoop::WindowProcs)
+    {
+        WindowProcFunction(hwnd, uMsg, wParam, lParam);
+    }
+
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+void FMessageLoop::RegisterWindowProc(FWindowProc Callback)
+{
+    FMessageLoop::WindowProcs.push_back(Callback);
 }
 
 void FMessageLoop::Execute(const Napi::AsyncProgressQueueWorker<int>::ExecutionProgress& Progress)
 {
     std::cout << "EXECUTED ASYNC WORKER" << std::endl;
 
-    WNDCLASSA wc = {};
+    WNDCLASSA wc = { };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = "SorrellWm";

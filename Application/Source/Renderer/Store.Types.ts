@@ -6,7 +6,6 @@
 
 import type { StoreApi, UseBoundStore } from "zustand";
 import type { FHexColor } from "@sorrellwm/windows";
-import type { FKeyCombination } from "./Action/Action.Types";
 
 type TUnget<T extends string> = T extends `Set${ infer R }`
     ? R
@@ -20,7 +19,6 @@ type TMakeBasicStore<T extends Record<string, unknown>> =
 
 export type GGlobalData =
 {
-    KeyCombinations: Array<FKeyCombination>;
     ThemeColor: FHexColor;
 };
 

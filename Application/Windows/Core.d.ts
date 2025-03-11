@@ -106,6 +106,16 @@ export function InitializeHooks(): void;
 //     Height: number
 // ): boolean;
 
+export type HMonitor = number;
+
+export type FMonitorInfo =
+{
+    Handle: HMonitor;
+    Size: FBox;
+    WorkSize: FBox;
+    IsPrimary: boolean;
+};
+
 export type FThemeMode =
     | "Dark"
     | "Light"

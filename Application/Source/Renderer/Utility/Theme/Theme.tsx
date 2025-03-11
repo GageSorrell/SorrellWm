@@ -35,7 +35,13 @@ const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
             : createDarkTheme;
 
         const Brand: BrandVariants = getBrandTokensFromPalette(ThemeColor);
-        return CreateTheme(Brand);
+
+        const OutTheme: Theme = CreateTheme(Brand);
+
+        /* Patch background color to have transparent background. */
+        OutTheme.colorNeutralBackground1 = "#00000000";
+
+        return OutTheme;
     }, [ IsLightMode, ThemeColor ]);
 
     return [ SystemTheme ] as const;
