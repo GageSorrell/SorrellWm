@@ -6,14 +6,14 @@
 
 #pragma once
 
-// @TODO `#include` everything that *every* file should `#include`.
 #include <napi.h>
 #include <string>
 #include <Windows.h>
 #include "js_native_api_types.h"
 #include <iostream>
-#include "Typedefs.h"
 #include "Log.h"
+#include "Typedefs.h"
+#include "Globals.h"
 
 #pragma comment(lib, "Gdiplus.lib")
 #pragma comment(lib, "dwmapi.lib")

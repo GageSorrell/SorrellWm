@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts":
-  {
-    "build": "cd ../../Script/Build && yarn run start && cd ../../Application/Windows && cmake-js compile --out ../build",
+  "scripts": {
+    "build": "cd ../../Script/Build && yarn run start",
+    "cmake-step": "cmake-js compile --out ../build",
     "start": "npm run build"
   },
   "author": "Gage Sorrell",

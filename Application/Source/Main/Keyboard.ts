@@ -7,9 +7,9 @@
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import { Subscribe as IpcSubscribe } from "./NodeIpc";
 import { IsVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard";
-import { TDispatcher } from "./Dispatcher";
+import { TDispatcher_DEPRECATED } from "./Dispatcher";
 
-class FKeyboard extends TDispatcher<FKeyboardEvent>
+class FKeyboard extends TDispatcher_DEPRECATED<FKeyboardEvent>
 {
     public constructor()
     {
@@ -46,7 +46,6 @@ class FKeyboard extends TDispatcher<FKeyboardEvent>
         const IsDebounced: boolean = this.Debounce(Event.State);
         if (IsDebounced && IsVirtualKey(Event.VkCode))
         {
-            console.log(Event);
             this.Dispatch(Event);
         }
     };

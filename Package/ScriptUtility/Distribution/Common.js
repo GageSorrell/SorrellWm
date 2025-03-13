@@ -7,9 +7,6 @@ import * as Path from "path";
 import Ora from "ora";
 import Chalk from "chalk";
 import { LogError } from "./Log.js";
-export const FormatCode = (Code) => {
-    return Chalk.bgGray.white(Code);
-};
 export const DoTasks = async (...Tasks) => {
     await Promise.all(Tasks.map(([Task, Description]) => {
         return DoTask(Task, Description);

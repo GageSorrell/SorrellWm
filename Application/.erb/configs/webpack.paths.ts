@@ -12,16 +12,16 @@ const srcMainPath = path.join(srcPath, 'Main');
 const srcRendererPath = path.join(srcPath, 'Renderer');
 
 const ReleasePath = path.join(rootPath, 'Release');
-const appPath = path.join(ReleasePath, 'app');
+const appPath = path.join(ReleasePath, 'Application');
 const appPackagePath = path.join(appPath, 'package.json');
 const appNodeModulesPath = path.join(appPath, 'node_modules');
 const srcNodeModulesPath = path.join(srcPath, 'node_modules');
 
-const distPath = path.join(appPath, 'dist');
+const distPath = path.join(appPath, 'Distribution');
 const distMainPath = path.join(distPath, 'Main');
 const distRendererPath = path.join(distPath, 'Renderer');
 
-const buildPath = path.join(ReleasePath, 'build');
+const buildPath = path.join(ReleasePath, 'Build');
 
 export default {
   rootPath,

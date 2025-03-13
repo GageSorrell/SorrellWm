@@ -12,14 +12,19 @@ import {
     useEffect,
     useRef,
     useState } from "react";
-import { type NavigateFunction, Route, MemoryRouter as Router, Routes, useNavigate } from "react-router-dom";
+import {
+    type NavigateFunction,
+    Route,
+    MemoryRouter as Router,
+    Routes,
+    useLocation,
+    useNavigate } from "react-router-dom";
 import { FluentThemeProvider } from "./Utility/Theme";
 import { Key } from "./Domain/Common/Component/Keyboard/Key";
 import { KeyboardProvider } from "./Keyboard";
 import { Log } from "./Api";
 import { StoreProvider } from "./Store";
 import { Vk } from "./Domain/Common/Component/Keyboard/Keyboard";
-import { KeyCombination } from "./Domain/Common/Component/Keyboard/KeyCombination";
 
 export const TestWindow = (): ReactElement =>
 {
@@ -122,6 +127,14 @@ export const TestWindow = (): ReactElement =>
 
 export const Main = (): ReactElement =>
 {
+    const [ State ] = UseIpcNavigatorState();
+    let IsTiled: boolean = false;
+
+    if (State !== null && State !== undefined && typeof State === "object" && "IsTiled" in State)
+    {
+        IsTiled = State.IsTiled as boolean;
+    }
+
     const DivRef: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
     useEffect((): void =>
     {
@@ -165,7 +178,7 @@ export const Main = (): ReactElement =>
             <span style={ { color: "black", fontSize: 64 } }>
                 SorrellWm
             </span>
-            <div style={{ width: "100%", height: "100%" }}>
+            <div style={{ height: "100%", width: "100%" }}>
                 <div style={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>
                     <div style={{
                         alignItems: "flex-start",
@@ -213,6 +226,12 @@ export const Main = (): ReactElement =>
     );
 };
 
+const UseIpcNavigatorState = (): Readonly<[ State: object ]> =>
+{
+    const { state } = useLocation();
+    return [ state ] as const;
+};
+
 const IpcNavigator = (): undefined =>
 {
     const Navigator: NavigateFunction = useNavigate();
@@ -220,11 +239,26 @@ const IpcNavigator = (): undefined =>
     {
         window.electron.ipcRenderer.on("Navigate", (...Arguments: Array<unknown>): void =>
         {
+            Log("Frontend received Navigate with Arguments", Arguments.length,  ...Arguments);
             const HasRoute: boolean = Arguments.length > 0 && typeof Arguments[0] === "string";
             if (HasRoute)
             {
                 const Route: string = Arguments[0] as string;
-                Navigator(Route);
+
+                const HasState: boolean =
+                    Arguments.length >= 2 &&
+                    typeof Arguments[1] === "object" &&
+                    Arguments[1] !== null;
+                if (HasState)
+                {
+                    Log("HERE, ROUTE, WITH STATE");
+                    Navigator(Route, { state: Arguments[1] });
+                }
+                else
+                {
+                    Log("HERE, ROUTE, NO STATE");
+                    Navigator(Route);
+                }
             }
         });
     }, [ Navigator ]);

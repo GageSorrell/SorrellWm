@@ -29,6 +29,7 @@
 
 #include "BlurBackground.h"
 #include "CaptureImage.h"
+#include "Core/WindowUtilities.h"
 
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
 /* END AUTO-GENERATED REGION. */
@@ -67,9 +68,8 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
     GGlobals::WinEvent = new FWinEvent();
     InitializeBlurBackground();
 
-    // @TODO Find better place to register listeners
+    /* @TODO Find better place to register listeners */
     RegisterActivationKey();
-
 
     return Environment.Undefined();
 }
@@ -103,6 +103,10 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     const std::map<std::string, FFunctionPointer> FunctionDefinitions =
     {
         { "InitializeMonitors", InitializeMonitors },
+        { "GetTileableWindows", GetTileableWindows },
+        { "SetWindowPosition", SetWindowPosition },
+        { "GetMonitorFromWindow", GetMonitorFromWindow },
+        { "GetWindowTitle", GetWindowTitle },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },
@@ -114,10 +118,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetTitlebarHeight", GetTitlebarHeight },
         { "GetWindowByName", GetWindowByName },
         { "SetForegroundWindow", SetForegroundWindowNode },
-        { "TestFun", TestFun },
         { "GetIsLightMode", GetIsLightMode },
         { "GetThemeColor", GetThemeColor },
-        { "StartBlurOverlay", StartBlurOverlay },
         { "BlurBackground", BlurBackground },
         { "UnblurBackground", UnblurBackground },
         { "CaptureImage", CaptureImage }

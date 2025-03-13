@@ -106,7 +106,10 @@ export function InitializeHooks(): void;
 //     Height: number
 // ): boolean;
 
-export type HMonitor = number;
+export type HMonitor =
+{
+    Handle: number;
+};
 
 export type FMonitorInfo =
 {

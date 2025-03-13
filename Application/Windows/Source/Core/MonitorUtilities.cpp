@@ -6,8 +6,8 @@
 
 #include "MonitorUtilities.h"
 #include "InterProcessCommunication.h"
-#include "Globals.h"
 #include "../MessageLoop/MessageLoop.h"
+#include "Globals.h"
 #include <Dbt.h>
 #include "Utility.h"
 
@@ -108,7 +108,12 @@ Napi::Value GetMonitors(const Napi::CallbackInfo& CallbackInfo)
     Napi::Env Environment = CallbackInfo.Env();
 
     std::vector<FMonitorInfo> Monitors;
-    EnumDisplayMonitors(NULL, NULL, reinterpret_cast<MONITORENUMPROC>(MonitorEnumProc), reinterpret_cast<LPARAM>(&Monitors));
+    EnumDisplayMonitors(
+        NULL,
+        NULL,
+        reinterpret_cast<MONITORENUMPROC>(MonitorEnumProc),
+        reinterpret_cast<LPARAM>(&Monitors)
+    );
 
     Napi::Array OutArray = Napi::Array::New(Environment, Monitors.size());
     for (int32_t Index = 0; Index < Monitors.size(); Index++)
@@ -116,7 +121,7 @@ Napi::Value GetMonitors(const Napi::CallbackInfo& CallbackInfo)
         FMonitorInfo& Monitor = Monitors[Index];
         Napi::Object MonitorInfo = Napi::Object::New(Environment);
 
-        MonitorInfo.Set("Handle", EncodeHandle(Environment, (HWND) Monitor.HMonitor));
+        MonitorInfo.Set("Handle", EncodeHandle(Environment, (void*) Monitor.HMonitor));
 
         Napi::Object Size = EncodeRect(Environment, Monitor.MonitorInfoEx.rcMonitor);
         Napi::Object WorkSize = EncodeRect(Environment, Monitor.MonitorInfoEx.rcWork);

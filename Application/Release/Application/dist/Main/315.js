@@ -1,0 +1,2 @@
+"use strict";exports.id=315,exports.ids=[315],exports.modules={5315:(e,o,s)=>{s.r(o);var i=s(4157),r=s(796);i.ipcMain.handle("GetFocusedWindow",(()=>Promise.resolve((0,r.GetFocusedWindow)()))),i.ipcMain.handle("GetIsLightMode",(()=>Promise.resolve((0,r.GetIsLightMode)()))),i.ipcMain.handle("GetThemeColor",(()=>Promise.resolve((0,r.GetThemeColor)())))}};
+//# sourceMappingURL=315.js.map

@@ -11,3 +11,5 @@
 DECLARE_NAPI_FUNCTION(BlurBackground, void);
 DECLARE_NAPI_FUNCTION(UnblurBackground, void);
 void InitializeBlurBackground();
+
+DEFINE_LOG_CATEGORY(Blur)

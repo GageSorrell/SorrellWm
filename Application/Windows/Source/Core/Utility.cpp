@@ -100,15 +100,15 @@ std::string HandleToString(THandle Handle)
     return StringStream.str();
 }
 
-Napi::Object EncodeHandle(const Napi::Env& Environment, HWND Handle)
+Napi::Object EncodeHandle(const Napi::Env& Environment, void* Handle)
 {
-    std::string HandleString = HandleToString(Handle);
+    std::string HandleString = HandleToString((HWND) Handle);
     Napi::Object OutObject = Napi::Object::New(Environment);
     OutObject.Set("Handle", Napi::String::New(Environment, HandleString));
     return OutObject;
 }
 
-HWND DecodeHandle(const Napi::Object& Object)
+void* DecodeHandle(const Napi::Object& Object)
 {
     Napi::Env Environment = Object.Env();
     Napi::Value HandleValue = Object.Get("Handle");
@@ -121,7 +121,7 @@ HWND DecodeHandle(const Napi::Object& Object)
 
     std::string HandleString = HandleValue.As<Napi::String>().Utf8Value();
     uintptr_t HandleInt = std::stoull(HandleString, nullptr, 16);
-    return reinterpret_cast<HWND>(HandleInt);
+    return (void*) HandleInt;
 }
 
 Napi::Object EncodeRect(const Napi::Env& Environment, RECT InRect)
@@ -134,4 +134,34 @@ Napi::Object EncodeRect(const Napi::Env& Environment, RECT InRect)
     OutObject.Set("Height", InRect.bottom - InRect.top);
 
     return OutObject;
+}
+
+RECT GetRectArgument(const Napi::CallbackInfo& CallbackInfo, int32_t Index)
+{
+    Napi::Object RectObject = CallbackInfo[Index].As<Napi::Object>();
+    RECT OutRect;
+
+    LONG X = RectObject.Get("X").As<Napi::Number>().Uint32Value();
+    LONG Y = RectObject.Get("Y").As<Napi::Number>().Uint32Value();
+    LONG Width = RectObject.Get("Width").As<Napi::Number>().Uint32Value();
+    LONG Height = RectObject.Get("Height").As<Napi::Number>().Uint32Value();
+
+    OutRect.left = X;
+    OutRect.right = X + Width;
+    OutRect.top = Y;
+    OutRect.bottom = Y + Height;
+
+    return OutRect;
+}
+
+FBox GetBoxArgument(const Napi::CallbackInfo& CallbackInfo, int32_t Index)
+{
+    Napi::Object RectObject = CallbackInfo[Index].As<Napi::Object>();
+
+    int32_t X = RectObject.Get("X").As<Napi::Number>().Uint32Value();
+    int32_t Y = RectObject.Get("Y").As<Napi::Number>().Uint32Value();
+    int32_t Width = RectObject.Get("Width").As<Napi::Number>().Uint32Value();
+    int32_t Height = RectObject.Get("Height").As<Napi::Number>().Uint32Value();
+
+    return FBox(X, Y, Width, Height);
 }

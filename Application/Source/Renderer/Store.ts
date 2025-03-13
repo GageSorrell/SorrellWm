@@ -6,7 +6,7 @@
 
 import type { FStoreFunction, GGlobal, GGlobalDefault } from "./Store.Types";
 import { type PropsWithChildren, type ReactNode, useEffect, useState } from "react";
-import type { FHexColor } from "Windows";
+import type { FHexColor } from "@sorrellwm/windows";
 import { GetThemeColor } from "./Ipc";
 import { create } from "zustand";
 

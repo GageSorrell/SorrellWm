@@ -7,6 +7,7 @@
 #pragma once
 
 #include <functional>
+#include <napi.h>
 
 #define DECLARE_NAPI_FUNCTION(FunctionName, ...) Napi::Value FunctionName(const Napi::CallbackInfo& Information);
 

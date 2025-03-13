@@ -6,7 +6,6 @@
 
 #include "BlurBackground.h"
 
-#include "Core/Globals.h"
 #include "Core/Utility.h"
 #include <Windowsx.h>
 #include "ThirdParty/Blur.h"
@@ -18,6 +17,9 @@
 #include "Core/Math.h"
 #include <cstdint>
 #include "Core/MonitorUtilities.h"
+#include "Core/Globals.h"
+
+DECLARE_LOG_CATEGORY(Blur)
 
 /**
  * 1. Get screenshot of SourceHandle window
@@ -28,8 +30,8 @@
  * 6. (When fade animation is done) Move Main window away and destroy blur window
  */
 
-static const char* WindowTitle = "SorrellWm Blurred Background";
-static const char* WindowClassName = WindowTitle;
+static char* WindowTitle = "SorrellWm Blurred Background";
+static char* WindowClassName = WindowTitle;
 static int Depth = 24;
 static int Width;
 static int Height;
@@ -179,16 +181,15 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
     // Allocate memory for the bitmap info header.
     if ((lpBmi = (LPBITMAPINFO)malloc(iBmiSize)) == nullptr)
     {
-        // std::cout << "Error allocating BitmapInfo!\n";
+        // LOG << "Error allocating BitmapInfo!\n";
         return nullptr;
     }
 
     ZeroMemory(lpBmi, iBmiSize);
 
-    // Allocate memory for the DIB surface.
+    /* Allocate memory for the DIB surface. */
     if ((pBits = (BYTE*)malloc(iSurfaceSize)) == nullptr)
     {
-        // std::cout << "Error allocating memory for bitmap bits\n";
         return nullptr;
     }
 
@@ -197,8 +198,6 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
     // Initialize bitmap info header
     lpBmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     lpBmi->bmiHeader.biWidth = cx;
-    // lpBmi->bmiHeader.biHeight = -(signed)cy;		// <-- NEGATIVE MEANS
-    // TOP DOWN!!!
     lpBmi->bmiHeader.biHeight = (signed)cy;
     lpBmi->bmiHeader.biPlanes = 1;
     lpBmi->bmiHeader.biSizeImage = 0;
@@ -225,8 +224,7 @@ void PutPixel(int x, int y, BYTE r, BYTE g, BYTE b, LPBITMAPINFO lpBmi, void* pB
 
 bool CaptureWindowScreenshot(HWND SourceHandle)
 {
-    std::cout << "Left: " << WindowRect.left << "\nRight: " << WindowRect.right << "\nTop: " << WindowRect.top
-              << "\nBottom: " << WindowRect.bottom << std::endl;
+    LOG << WindowRect << std::endl;
 
     Width = WindowRect.right - WindowRect.left;
     Height = WindowRect.bottom - WindowRect.top;
@@ -244,24 +242,42 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 
     ScreenshotData.reserve(Width * Height * ChannelsNum);
     Screenshot = ScreenshotData.data();
-    HBITMAP hBitmap = CreateDIBSection(ScreenDc, ScreenshotBmi, DIB_RGB_COLORS, (void**)Screenshot, nullptr, 0);
+
+    HBITMAP hBitmap = CreateDIBSection(
+        ScreenDc,
+        ScreenshotBmi,
+        DIB_RGB_COLORS,
+        (void**) Screenshot,
+        nullptr,
+        0
+    );
+
     if (!hBitmap)
     {
-        std::cout << "Failed to create DIB section." << std::endl;
-        LogLastWindowsError();
+        LOG
+            << ELogLevel::Error
+            << "Failed to create DIB section, handle was "
+            << SourceHandle
+            << ", ScreenshotData reserved "
+            << Width * Height * ChannelsNum
+            << std::endl;
+
         DeleteDC(hdcMemDC);
         ReleaseDC(SourceHandle, ScreenDc);
         return false;
     }
     else
     {
-        // std::cout << "Made DIB Section." << std::endl;
+        // LOG << "Made DIB Section." << std::endl;
     }
 
     HGDIOBJ hOld = SelectObject(hdcMemDC, hBitmap);
     if (!hOld)
     {
-        std::cout << "Failed to select bitmap into DC." << std::endl;
+        LOG
+            << ELogLevel::Error
+            << "Failed to select bitmap into DC."
+            << std::endl;
         LogLastWindowsError();
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
@@ -270,12 +286,12 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        // std::cout << "hOld has been selected." << std::endl;
+        // LOG << "hOld has been selected." << std::endl;
     }
 
     if (!BitBlt(hdcMemDC, 0, 0, Width, Height, ScreenDc, WindowRect.left, WindowRect.top, SRCCOPY))
     {
-        std::cout << "BitBlt failed." << std::endl;
+        LOG << ELogLevel::Error << "BitBlt failed." << std::endl;
         SelectObject(hdcMemDC, hOld);
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
@@ -284,7 +300,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        // std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
+        // LOG << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
         // std::endl;
     }
 
@@ -305,7 +321,16 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
         // std::cout << "Screenshot is GOOD!" << std::endl;
     }
 
-    int scanLines = GetDIBits(ScreenDc, hBitmap, 0, Height, Screenshot, ScreenshotBmi, DIB_RGB_COLORS);
+    int scanLines = GetDIBits(
+        ScreenDc,
+        hBitmap,
+        0,
+        Height,
+        Screenshot,
+        ScreenshotBmi,
+        DIB_RGB_COLORS
+    );
+
     if (scanLines == 0)
     {
         std::cout << "GetDIBits failed." << std::endl;
@@ -337,6 +362,13 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 
 void Render(HWND hWnd, HWND SourceHandle)
 {
+    LOG
+        << "Render Function: hWnd "
+        << hWnd
+        << " SourceHandle "
+        << SourceHandle
+        << std::endl;
+
     BOOL Captured = CaptureWindowScreenshot(SourceHandle);
     if (Captured)
     {
@@ -378,10 +410,12 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 
 void InitializeBlurBackground()
 {
+    /* @TODO The event is never EVENT_SYSTEM_FOREGROUND. */
     GGlobals::WinEvent->Register([&](DWORD Event)
     {
         if (Event == EVENT_SYSTEM_FOREGROUND)
         {
+            LOG << "EVENT SYSTEM FOREGROUND" << std::endl;
             HWND ForegroundWindow = GetForegroundWindow();
             RECT ForegroundRect;
             GetWindowRect(ForegroundWindow, &ForegroundRect);
@@ -571,9 +605,10 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 BOOL Res = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
                 if (!Res)
                 {
-                    std::cout << "SetLayeredWindowAttributes failed when "
-                                 "increasing opacity."
-                              << std::endl;
+                    std::cout
+                        << "SetLayeredWindowAttributes failed when increasing opacity."
+                        << std::endl;
+
                     LogLastWindowsError();
                 }
 
@@ -671,8 +706,14 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
     BOOL KillResult = KillTimer(BackgroundHandle, BlurTimerId);
     if (!KillResult)
     {
-        std::cout << "KillTimer for BlurTimerId returned " << KillResult << std::endl;
-        LogLastWindowsError();
+        LOG
+            << "KillTimer for BlurTimerId returned "
+            << KillResult
+            << std::endl;
+        LOG
+            << "After kill timer, last Windows error is "
+            << GetLastWindowsError()
+            << std::endl;
     }
 
     FadeStartTime = GetTickCount();
@@ -703,17 +744,31 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
     Napi::Env Environment = CallbackInfo.Env();
     HINSTANCE hInstance = GetModuleHandle(nullptr);
 
-    MSG msg;
+    MSG Message;
     WNDCLASSEXA WindowClass;
 
-    WindowClass.cbSize = sizeof(WindowClass);
-    WindowClass.style = CS_VREDRAW | CS_HREDRAW;
-    WindowClass.lpfnWndProc = BlurWndProc;
-    WindowClass.cbClsExtra = 0;
-    WindowClass.cbWndExtra = 0;
-    WindowClass.hInstance = hInstance;
-    WindowClass.lpszMenuName = nullptr;
-    WindowClass.lpszClassName = WindowClassName;
+    // WindowClass.cbSize = sizeof(WindowClass);
+    // WindowClass.style = CS_VREDRAW | CS_HREDRAW;
+    // WindowClass.lpfnWndProc = BlurWndProc;
+    // WindowClass.cbClsExtra = 0;
+    // WindowClass.cbWndExtra = 0;
+    // WindowClass.hInstance = hInstance;
+    // WindowClass.lpszMenuName = NULL;
+    // WindowClass.lpszClassName = WindowClassName;
+    WindowClass.cbSize        = sizeof(WindowClass);
+    WindowClass.style         = CS_VREDRAW | CS_HREDRAW;
+    WindowClass.lpfnWndProc   = BlurWndProc;
+    WindowClass.cbClsExtra    = 0;
+    WindowClass.cbWndExtra    = 0;
+    WindowClass.hInstance     = hInstance;
+    WindowClass.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+    WindowClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    WindowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    WindowClass.lpszMenuName  = NULL;
+    WindowClass.lpszClassName = "SorrellWm Blurred Background";
+    WindowClass.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+
+    RegisterClassExA(&WindowClass);
 
     SourceHandle = GetForegroundWindow();
     if (SourceHandle == nullptr || SourceHandle == SorrellWmMainWindow)
@@ -728,7 +783,7 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
     Height = WindowRect.bottom - WindowRect.top;
     Width = WindowRect.right - WindowRect.left;
 
-    RegisterClassExA(&WindowClass);
+    LOG << "After RegisterClassExA: " << GetLastWindowsError() << std::endl;
 
     BackgroundHandle = CreateWindowExA(NULL,
         WindowClassName,
@@ -743,10 +798,25 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
         hInstance,
         nullptr);
 
-    SetWindowLong(BackgroundHandle, GWL_EXSTYLE, GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED);
+    LOG << "After CreateWindowExA: " << GetLastWindowsError() << std::endl;
 
-    BOOL attrib = TRUE;
-    DwmSetWindowAttribute(BackgroundHandle, DWMWA_TRANSITIONS_FORCEDISABLED, &attrib, sizeof(attrib));
+    SetWindowLong(
+        BackgroundHandle,
+        GWL_EXSTYLE,
+        GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED
+    );
+
+    LOG << "After SetWindowLong: " << GetLastWindowsError() << std::endl;
+
+    BOOL Attribute = TRUE;
+    DwmSetWindowAttribute(
+        BackgroundHandle,
+        DWMWA_TRANSITIONS_FORCEDISABLED,
+        &Attribute,
+        sizeof(Attribute)
+    );
+
+    LOG << "After DwmSetWindowAttribute: " << GetLastWindowsError() << std::endl;
 
     Render(BackgroundHandle, SourceHandle);
 
@@ -773,25 +843,32 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     LPCSTR WindowName = "SorrellWm Main Window";
     SorrellWmMainWindow = FindWindow(nullptr, WindowName);
-    SetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE, GetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED);
+    LOG
+        << "SorrellWmMainWindow is "
+        << SorrellWmMainWindow
+        << std::endl;
+    SetWindowLong(
+        SorrellWmMainWindow,
+        GWL_EXSTYLE,
+        GetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
+    );
     SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 0, LWA_ALPHA);
-    BOOL MyRes = SetWindowPos(SorrellWmMainWindow,
+    BOOL MyRes = SetWindowPos(
+        SorrellWmMainWindow,
         HWND_TOP,
         WindowRect.left,
         WindowRect.top,
         WindowRect.right - WindowRect.left,
         WindowRect.bottom - WindowRect.top,
-        SWP_SHOWWINDOW);
+        SWP_SHOWWINDOW
+    );
     BOOL SetFore = SetForegroundWindow(SorrellWmMainWindow);
-    std::cout << "SetFore " << SetFore << std::endl;
-    if (MyRes)
-    {
-        std::cout << "MyRes was true" << std::endl;
-    }
-    else
-    {
-        std::cout << "MyRes was false" << std::endl;
-    }
+
+    LOG
+        << "LAST ERROR, "
+        << GetLastWindowsError()
+        << WindowRect
+        << std::endl;
 
     GetBackgroundMode();
     Napi::Object OutObject = Napi::Object::New(Environment);

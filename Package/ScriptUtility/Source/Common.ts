@@ -5,19 +5,14 @@
  */
 
 import * as Path from "path";
-import Ora, { type Ora as FOra } from "ora";
 import type { FCommonPath, TRef, TTaskTuple } from "./Common.Types.js";
+import Ora, { type Ora as FOra } from "ora";
 import Chalk from "chalk";
 import { LogError } from "./Log.js";
 
-export const FormatCode = (Code: string): string =>
-{
-    return Chalk.bgGray.white(Code);
-};
-
 export const DoTasks = async <T>(...Tasks: Array<TTaskTuple<T>>): Promise<void> =>
 {
-    await Promise.allSettled(Tasks.map(([ Task, Description ]: TTaskTuple<T>): Promise<T> =>
+    await Promise.all(Tasks.map(([ Task, Description ]: TTaskTuple<T>): Promise<T> =>
     {
         return DoTask(Task, Description);
     }));

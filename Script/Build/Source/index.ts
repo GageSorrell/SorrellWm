@@ -7,16 +7,18 @@
 import * as Fs from "fs";
 import * as Path from "path";
 import {
+    BeginProfiling,
+    C,
     DoTask,
     DoTasks,
-    FormatCode,
+    EndProfiling,
     GetPath,
     GetRef,
     LogError,
     MapSome,
     Run,
-    type TRef,
-    c } from "ScriptUtility";
+    type TRef } from "ScriptUtility";
+import { type ChildProcess, spawn } from "child_process";
 import type {
     FComplexFlag,
     FComplexFlagKey,
@@ -25,6 +27,7 @@ import type {
     FFunctionArgument,
     FRegisteredFunction,
     FSimpleFlagKey } from "./index.Types.js";
+import chalk from "chalk";
 
 /* Comment: This file uses the following naming convention for C++ files:
  *    * `Source` files end in `.cpp`
@@ -455,7 +458,7 @@ const GenerateTypesDeclarationsFile = async (
         if (!TypeIsDefinedInCore)
         {
             /* eslint-disable-next-line @stylistic/max-len */
-            LogError(`Type ${ c(NontrivialType) } is referenced by a function, but it is not defined in ${ c("Core.d.ts") }`);
+            LogError(`Type ${ C(NontrivialType) } is referenced by a function, but it is not defined in ${ C("Core.d.ts") }`);
         }
     });
 
@@ -708,19 +711,106 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
     await Fs.promises.writeFile(GeneratedModulePath, HookModuleContents, { encoding: "utf-8" });
 };
 
+const Lint = async (CppFiles: Array<string>): Promise<void> =>
+{
+    /* Enforce `Log` macro instead of `std::cout`. */
+    const CppFilesContents: Array<string> = await Promise.all(CppFiles.map((CppFile: string): Promise<string> =>
+    {
+        return Fs.promises.readFile(CppFile, { encoding: "utf-8" });
+    }));
+
+    type FStdCOutInstance =
+    {
+        FileName: string;
+        Line: number;
+        Position: number;
+    };
+
+    const FindStdCOutCalls = (CppFile: string, CppFileIndex: number): Array<FStdCOutInstance> =>
+    {
+        /* @TODO Ignore if the call is commented out. */
+        const Lines: Array<string> = CppFile.split("\n");
+
+        return Lines.map((Line: string, LineIndex: number): Array<FStdCOutInstance> =>
+        {
+            return FindAllIndices(Line, "std::cout").map((StdCOutIndex: number): FStdCOutInstance =>
+            {
+                return {
+                    FileName: CppFiles[CppFileIndex],
+                    Line: LineIndex + 1,
+                    Position: StdCOutIndex
+                };
+            });
+        }).flat();
+    };
+
+    const StdCOutCalls: Array<FStdCOutInstance> = CppFilesContents.map(FindStdCOutCalls).flat();
+
+    StdCOutCalls.forEach((StdCOutCall: FStdCOutInstance): void =>
+    {
+        const LineContents: string = CppFilesContents[CppFiles.indexOf(StdCOutCall.FileName)].split("\n")[StdCOutCall.Line - 1].replace("std::cout", chalk.bold("std::cout"));
+        console.log(`Found ${ C("std::cout") } call in file "${ Path.basename(StdCOutCall.FileName) }" at line ${ StdCOutCall.Line } position ${ StdCOutCall.Position }:\n${ chalk.inverse(StdCOutCall.Line) } ${ LineContents } ${ StdCOutCall.Position }\n`);
+    });
+
+    console.log(process.argv);
+
+    if (StdCOutCalls.length > 0 && !process.argv.includes("--disable-linting"))
+    {
+        LogError("Refusing to build since there is a linting error.");
+        process.exit(0);
+    }
+};
+
+const Build = async (): Promise<void> =>
+{
+    return new Promise<void>((Resolve, Reject): void =>
+    {
+        const Process: ChildProcess = spawn(
+            "npm",
+            [ "run", "cmake-step" ],
+            {
+                cwd: GetPath("Windows"),
+                shell: true,
+                stdio: "inherit"
+            }
+        );
+
+        Process.on("close", (ExitCode: number | null) =>
+        {
+            if (ExitCode === 0)
+            {
+                Resolve();
+            }
+            else
+            {
+                Reject(new Error(`Process exited with code ${ ExitCode }`));
+            }
+        });
+
+        Process.on("error", (Error: Error) =>
+        {
+            Reject(Error);
+        });
+    });
+};
+
 const Main = async (): Promise<void> =>
 {
+    BeginProfiling("Build");
+
     const CppFiles: Array<string> = await DoTask(GetCppFiles, "Finding project C++ files");
     const RegisteredFunctions: Array<FRegisteredFunction> =
         await DoTask(() => GetFunctionDeclarations(CppFiles), "Parsing function declarations");
 
     try
     {
+        await DoTask(() => Lint(CppFiles), "Linting C++ files");
+
         await DoTasks(
             [
                 () => PatchInitializationFile(RegisteredFunctions),
                 /* eslint-disable-next-line @stylistic/max-len */
-                `${ FormatCode("#include") }'ing relevant headers in ${ FormatCode("Initialization.cpp") } file and listing in export map`
+                `${ C("#include") }'ing relevant headers in ${ C("Initialization.cpp") } file and listing in export map`
             ],
             [
                 () => GenerateTypesDeclarationsFile(RegisteredFunctions),
@@ -728,19 +818,26 @@ const Main = async (): Promise<void> =>
             ],
             [
                 () => GenerateIpcCode(RegisteredFunctions),
-                `Generating IPC calls for functions marked ${ FormatCode("Renderer") }`
+                `Generating IPC calls for functions marked ${ C("Renderer") }`
             ],
             [
                 () => GenerateHooks(RegisteredFunctions),
-                `Generating hooks for functions marked ${ FormatCode("Hook") }`
+                `Generating hooks for functions marked ${ C("Hook") }`
             ]
         );
+
+        console.log(`Building by running ${ C("npm run start") } in the ${ C("Windows") } directory`);
+        await Build();
     }
     catch (Error: unknown)
     {
         console.log("Build Error");
         console.log(Error);
+        process.exit(0);
     }
+
+    const BuildTime: string = EndProfiling("Build");
+    console.log(`🥳 Build successful!  Took ${ BuildTime }`);
 };
 
 Run(Main, "Build", "Builds SorrellWm.");

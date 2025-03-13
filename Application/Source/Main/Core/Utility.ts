@@ -5,17 +5,18 @@
 
 import { URL } from "url";
 import path from "path";
+import type { HHandle } from "./Utility.Types";
 
-export function resolveHtmlPath(htmlFileName: string, Component?: string)
+export function ResolveHtmlPath(HtmlFileName: string, Component?: string)
 {
     if (process.env.NODE_ENV === "development")
     {
         const Port: string | number = process.env.PORT || 1212;
         const Url: URL = new URL(`http://localhost:${ Port }`);
-        Url.pathname = htmlFileName;
+        Url.pathname = HtmlFileName;
         return Url.href;
     }
-    const BasePath: string = `file://${path.resolve(__dirname, "../Renderer/", htmlFileName)}`;
+    const BasePath: string = `file://${path.resolve(__dirname, "../Renderer/", HtmlFileName)}`;
     if (Component !== undefined)
     {
         const ComponentArgument: string = `?Component=${ Component }`;
@@ -26,3 +27,8 @@ export function resolveHtmlPath(htmlFileName: string, Component?: string)
         return BasePath;
     }
 }
+
+export const AreHandlesEqual = (A: HHandle, B: HHandle): boolean =>
+{
+    return A.Handle === B.Handle;
+};

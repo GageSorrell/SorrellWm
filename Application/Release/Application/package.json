@@ -8,7 +8,7 @@
     "email": "gage@sorrell.sh",
     "url": "https://github.com/GageSorrell"
   },
-  "main": "./Distribution/Main/Main.js",
+  "main": "./Distribution/Main/main.js",
   "scripts": {
     "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
     "postinstall": "npm run rebuild && npm run link-modules",

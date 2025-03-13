@@ -9,7 +9,7 @@
 /* eslint-disable */
 
 import { useEffect, useState } from "react";
-import { type HWindow,type FHexColor } from "@sorrellwm/windows"
+import { type HWindow,type FHexColor } from "@sorrellwm/windows";
 
 export const UseGetFocusedWindow = (InitialValue: HWindow): Readonly<[ HWindow ]> =>
 {

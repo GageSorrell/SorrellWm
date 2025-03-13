@@ -4,18 +4,30 @@
  * License:   MIT
  */
 
-import type { FBox } from "Windows";
+import type { FBox, HMonitor, HWindow } from "@sorrellwm/windows";
 
-export type FVertex =
+export type FVertexBase =
 {
     Size: FBox;
     ZOrder: number;
 };
 
-export type FPanelBase =
-    FVertex &
+export type FCell =
+    FVertexBase &
     {
-        Children: Array<FPanelBase>;
+        Handle: HWindow;
+    };
+
+export type FVertex =
+    | FCell
+    | FPanel;
+
+export type FPanelBase =
+    FVertexBase &
+    {
+        Children: Array<FVertex>;
+        /** Should only be set when this is the root panel of a monitor. */
+        MonitorId?: HMonitor;
     };
 
 export type FPanelHorizontal =
@@ -41,4 +53,4 @@ export type FPanel =
     | FPanelVertical
     | FPanelStack;
 
-export type FForest = Array<FPanelBase>;
+export type FForest = Array<FPanel>;

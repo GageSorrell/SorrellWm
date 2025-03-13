@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Log.h"
-#include <string>
+#include <Windows.h>
 
 class FMessageLoop;
 class FWinEvent;

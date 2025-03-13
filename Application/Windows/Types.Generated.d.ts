@@ -8,7 +8,7 @@
 
 /* eslint-disable */
 
-import type { Array, HWindow, FBox, FHexColor } from "./Core";
+import type { Array, HWindow, FBox, FHexColor, HMonitor } from "./Core";
 
 export function BlurBackground(): void;
 export function UnblurBackground(): void;
@@ -21,7 +21,10 @@ export function GetWindowLocationAndSize(Handle: HWindow): FBox;
 export function GetTitlebarHeight(): number;
 export function SetForegroundWindow(Handle: HWindow): void;
 export function GetWindowByName(Name: string): HWindow;
-export function TestFun(): void;
 export function GetIsLightMode(): boolean;
 export function GetThemeColor(): FHexColor;
-export function StartBlurOverlay(Handle: HWindow): void;
+export function CanTile(): boolean;
+export function GetTileableWindows(): Array<HWindow>;
+export function GetMonitorFromWindow(Handle: HWindow): HMonitor;
+export function SetWindowPosition(Handle: HWindow, Box: FBox): void;
+export function GetWindowTitle(Handle: HWindow): string;

@@ -2,17 +2,21 @@
 
 #include "Core.h"
 #include "Dispatcher.h"
-#include "Globals.h"
 #include "WindowUtilities.h"
 #include <atomic>
 
 class FWinEvent : public TDispatcher<DWORD>
 {
 public:
-    static Napi::Value Initialize(const Napi::CallbackInfo& info);
+    FWinEvent();
 
-    static void DispatchFromEventProc(DWORD Event);
+    static Napi::Value Initialize(const Napi::CallbackInfo& CallbackInfo);
+
+    static void DispatchFromEventProc_INTERNAL(DWORD Event);
 
     static void OnExit(void* _);
-    inline static HWINEVENTHOOK eventHook = nullptr;
+
+    inline static HWINEVENTHOOK EventHook = nullptr;
+
+    Napi::Env Environment;
 };

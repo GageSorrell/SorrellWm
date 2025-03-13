@@ -1,5 +1,4 @@
 import type { FCommonPath, TRef, TTaskTuple } from "./Common.Types.js";
-export declare const FormatCode: (Code: string) => string;
 export declare const DoTasks: <T>(...Tasks: Array<TTaskTuple<T>>) => Promise<void>;
 export declare const DoTask: <T>(Task: (() => Promise<T>), Description: string) => Promise<T>;
 export declare const Run: (MainFunction: (() => Promise<void>), ScriptTitle: string, ScriptDescription: string) => void;

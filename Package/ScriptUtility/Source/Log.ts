@@ -7,9 +7,9 @@
 import Chalk from "chalk";
 
 /** Format text to represent code when logged in the terminal. */
-export const c = (Code: TemplateStringsArray | string): string =>
+export const C = (Code: string): string =>
 {
-    return Chalk.bgGray.white(typeof Code === "string" ? Code : Code.join());
+    return Chalk.bgGray.white(Code);
 };
 
 export const Log = (...Arguments: Array<unknown>): void =>

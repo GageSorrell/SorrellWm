@@ -1,30 +1,165 @@
-#include "Log.h"
+/* File:      Log.cpp
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * License:   MIT
+ */
 
-std::string GetLastErrorAsString()
+#include "Log.h"
+#include <map>
+
+std::string GetLastWindowsError()
 {
-    //Get the error message ID, if any.
-    DWORD errorMessageID = ::GetLastError();
-    if(errorMessageID == 0) {
-        return std::string(); //No error message has been recorded
+    DWORD ErrorMessageID = ::GetLastError();
+
+    if(ErrorMessageID == 0)
+    {
+        return std::string();
     }
 
-    LPSTR messageBuffer = nullptr;
+    LPSTR MessageBuffer = nullptr;
 
-    //Ask Win32 to give us the string version of that message ID.
-    //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
-    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+    size_t Size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        ErrorMessageID,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR) &MessageBuffer,
+        0,
+        NULL
+    );
 
-    //Copy the error message into a std::string.
-    std::string message(messageBuffer, size);
+    std::string Message(MessageBuffer, Size);
 
-    //Free the Win32's string's buffer.
-    LocalFree(messageBuffer);
+    LocalFree(MessageBuffer);
 
-    return message;
+    return Message;
 }
 
-void LogLastWindowsError()
+#include "Log.h"
+
+static unsigned int SimpleHash(const std::string &S)
 {
-    std::cout << GetLastErrorAsString() << std::endl;
+    unsigned int H = 5381;
+    for (unsigned char C : S)
+    {
+        H = ((H << 5) + H) + C; // H * 33 + C
+    }
+    return H;
+}
+
+// We define a small palette of background+foreground pairs (for 8 standard ANSI colors).
+// The index 0..7 corresponds to the 8 typical ANSI colors: black, red, green, yellow, blue, magenta, cyan, white.
+struct ColorCodes
+{
+    const char* Foreground;
+    const char* Background;
+};
+
+static const ColorCodes COLOR_PALETTE[] =
+{
+    // black background => white text
+    { "\033[37m", "\033[40m" },
+    // red background => black text
+    { "\033[30m", "\033[41m" },
+    // green background => black text
+    { "\033[30m", "\033[42m" },
+    // yellow background => black text
+    { "\033[30m", "\033[43m" },
+    // blue background => white text
+    { "\033[97m", "\033[44m" },
+    // magenta background => white text
+    { "\033[97m", "\033[45m" },
+    // cyan background => white text
+    { "\033[30m", "\033[44m" },
+    // white background => black text
+    { "\033[30m", "\033[47m" },
+};
+
+std::string FLogMessage::ColorizeTextBackground(const std::string& Text)
+{
+    unsigned int HashValue = SimpleHash(Text);
+    unsigned int Index = HashValue % 8; // pick from 0..7
+
+    const ColorCodes &Codes = COLOR_PALETTE[Index];
+
+    // Build the colored text: (Foreground)(Background)Text(Reset)
+    std::ostringstream Oss;
+    Oss << Codes.Foreground << Codes.Background
+        << Text
+        << "\033[0m"; // reset
+    return Oss.str();
+}
+
+std::string FLogMessage::ColorizeLogLevelBackground(ELogLevel L)
+{
+    const char* LevelStr = ToString(L);
+    unsigned int HashValue = SimpleHash(LevelStr);
+
+    std::map<ELogLevel, unsigned int> ColorMap{
+        { ELogLevel::Error,   1 },
+        { ELogLevel::Warn,    3 },
+        { ELogLevel::Normal,  6 },
+        { ELogLevel::Verbose, 7 }
+    };
+
+    unsigned int LevelColorIndex = ColorMap[L];
+
+    const ColorCodes& Codes = COLOR_PALETTE[LevelColorIndex];
+    std::ostringstream Oss;
+    Oss << Codes.Foreground << Codes.Background
+        << LevelStr
+        << "\033[0m";
+    return Oss.str();
+}
+
+FLogMessage::FLogMessage(const std::string& InCategory)
+    : Category(InCategory)
+    , Level(ELogLevel::Normal)
+{ }
+
+FLogMessage& FLogMessage::operator<<(ELogLevel InLevel)
+{
+    Level = InLevel;
+    return *this;
+}
+
+FLogMessage& FLogMessage::operator<<(RECT Rect)
+{
+    Stream
+        << "Top: "
+        << Rect.top
+        << ", Bottom: "
+        << Rect.bottom
+        << ", Left: "
+        << Rect.left
+        << ", Right: "
+        << Rect.right;
+    return *this;
+}
+
+FLogMessage& FLogMessage::operator<<(std::ostream &(*Manipulator)(std::ostream&))
+{
+    Stream << Manipulator;
+    return *this;
+}
+
+FLogMessage::~FLogMessage()
+{
+    std::lock_guard<std::mutex> Lock(GetMutex());
+
+    std::string CategoryColored = ColorizeTextBackground(" " + Category + " ");
+    std::string LevelColored = ColorizeLogLevelBackground(Level);
+
+    std::cout
+        << LevelColored
+        << CategoryColored
+        << " "
+        << Stream.str()
+        << std::endl;
+}
+
+std::mutex& FLogMessage::GetMutex()
+{
+    static std::mutex Mutex;
+    return Mutex;
 }

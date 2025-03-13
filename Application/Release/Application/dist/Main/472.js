@@ -1,0 +1,2 @@
+"use strict";exports.id=472,exports.ids=[472],exports.modules={6472:(e,o,t)=>{t.r(o);var n=t(4157);const r={Ref:null};n.app.whenReady().then((()=>{r.Ref=new r("../../../Resource/Tray.png");const e=n.Menu.buildFromTemplate([{label:"foo",type:"normal"}]);r.setToolTip("SorrellWm v0.0.1\nUp to date"),r.Ref.setContextMenu(e)}))}};
+//# sourceMappingURL=472.js.map

@@ -4,13 +4,14 @@
  */
 
 import * as Path from "path";
-import { BlurBackground, UnblurBackground } from "@sorrellwm/windows";
+import { BlurBackground, GetFocusedWindow, UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
+import { ResolveHtmlPath } from "./Core/Utility";
 import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
-import { resolveHtmlPath } from "./util";
+import { IsWindowTiled } from "./Tree";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -111,7 +112,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         console.log(OutString);
     });
 
-    MainWindow.loadURL(resolveHtmlPath("index.html"));
+    MainWindow.loadURL(ResolveHtmlPath("index.html"));
 };
 
 function OnKey(Event: FKeyboardEvent): void
@@ -129,31 +130,13 @@ function OnKey(Event: FKeyboardEvent): void
     {
         if (State === "Down")
         {
-            // const { CoveringWindow, ThemeMode }: FBlurReturnType = MyBlur();
+            const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
+            MainWindow.webContents.send("Navigate", "", { IsTiled });
             BlurBackground();
         }
         else
         {
-            // MainWindow?.webContents.send("TearDown");
             UnblurBackground();
-            // ipcMain.on("TearDown", (): void =>
-            // {
-            //     TearDown();
-            //     setTimeout((): void =>
-            //     {
-            //         const { x, y } = GetLeastInvisiblePosition();
-            //         MainWindow?.setPosition(x, y, false);
-            //     }, 100);
-            // });
-            // MainWindow?.webContents.send("TearDown");
-
-            // MainWindow?.on("closed", (_: Electron.Event): void =>
-            // {
-            //     LaunchMainWindow();
-            // });
-            // MainWindow?.close();
-
-            // TestFun();
         }
     }
     else

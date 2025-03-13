@@ -5,6 +5,7 @@
  */
 
 #include "CaptureImage.h"
+#include "Core/WindowUtilities.h"
 
 #define MAX_LOADSTRING 100
 
@@ -39,7 +40,7 @@ Napi::Value CaptureImage(const Napi::CallbackInfo& CallbackInfo)
     std::cout << "Got hInstance!" << std::endl;
     if (MyRegisterClass(hInstance) == 0)
     {
-        std::cout << GetLastErrorAsString() << std::endl;
+        std::cout << GetLastWindowsError() << std::endl;
     };
 
     std::cout << "Registered Class!" << std::endl;
@@ -93,7 +94,7 @@ BOOL InitInstance(HINSTANCE hInstance)
     if (!hWnd)
     {
         std::cout << "InitInstance failed up here." << std::endl;
-        std::cout << GetLastErrorAsString() << std::endl;
+        std::cout << GetLastWindowsError() << std::endl;
         return FALSE;
     }
     else
@@ -290,7 +291,7 @@ int CaptureImageInternal(HWND hWnd)
     if (!BitBlt(hdcWindow, 0, 0, (rcClient.right - rcClient.left) / 2, (rcClient.bottom - rcClient.top) / 2, hdcScreen, 0, 0, SRCCOPY))
     {
         std::cout << "BitBlt Failed" << std::endl;
-        std::cout << GetLastErrorAsString() << std::endl;
+        std::cout << GetLastWindowsError() << std::endl;
     }
     // // This is the best stretch mode.
     // SetStretchBltMode(hdcWindow, HALFTONE);
@@ -393,7 +394,7 @@ int CaptureImageInternal(HWND hWnd)
     {
         ReleaseDC(nullptr, hdcWindow);
         std::cout << "GetDIBits Failed" << std::endl;
-        std::cout << GetLastErrorAsString() << std::endl;
+        std::cout << GetLastWindowsError() << std::endl;
         std::cout << hdcWindow << "\n" << hbmScreen << "\n" << height << "\n" << pixelData[0] << "\n" << bmpInfo.bmiHeader.biWidth << "\n" << DIB_RGB_COLORS << std::endl;
     }
     std::cout << "After First GetDIBits call" << std::endl;
@@ -432,7 +433,7 @@ int CaptureImageInternal(HWND hWnd)
     {
         delete[] BlurredImage;
         std::cout << "SetDIBitsToDevice failed." << std::endl;
-        std::cout << GetLastErrorAsString() << std::endl;
+        std::cout << GetLastWindowsError() << std::endl;
     }
 
     HasDrawn = true;
