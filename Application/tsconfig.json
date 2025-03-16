@@ -10,6 +10,10 @@
         "@/*":
         [
             "./Source/Renderer/*"
+        ],
+        "$/*":
+        [
+            "./Source/Renderer/Domain/*"
         ]
     },
     "incremental": true,

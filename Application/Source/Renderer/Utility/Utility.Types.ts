@@ -4,4 +4,11 @@
  * License:   MIT
  */
 
+import type { CSSProperties } from "react";
+
 export type TMaybeArray<T> = T | Array<T>;
+
+export type PStyledComponent =
+{
+    style?: CSSProperties;
+};

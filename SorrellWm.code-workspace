@@ -115,6 +115,8 @@
 			"IDOK",
 			"INITDIALOG",
 			"KBDLLHOOKSTRUCT",
+			"Keybind",
+			"Keybinds",
 			"libc",
 			"llvmlibc",
 			"LOWORD",

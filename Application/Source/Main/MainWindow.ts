@@ -4,14 +4,15 @@
  */
 
 import * as Path from "path";
-import { BlurBackground, GetFocusedWindow, UnblurBackground } from "@sorrellwm/windows";
+import { BlurBackground, GetFocusedWindow, GetWindowTitle, UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
 import { ResolveHtmlPath } from "./Core/Utility";
 import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
-import { IsWindowTiled } from "./Tree";
+import { GetForest, IsWindowTiled } from "./Tree";
+import chalk from "chalk";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -94,7 +95,7 @@ const LaunchMainWindow = async (): Promise<void> =>
             })
             .join();
 
-        const Birdie: string = "🐥 ";
+        const Birdie: string = chalk.bgGreen.white(" Frontend ") + " ";
         let OutString: string = Birdie;
         for (let Index: number = 0; Index < StringifiedArguments.length; Index++)
         {
@@ -131,6 +132,8 @@ function OnKey(Event: FKeyboardEvent): void
         if (State === "Down")
         {
             const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
+            console.log("Focused Window is ", GetWindowTitle(GetFocusedWindow()));
+            console.log("Forest is:", GetForest());
             MainWindow.webContents.send("Navigate", "", { IsTiled });
             BlurBackground();
         }

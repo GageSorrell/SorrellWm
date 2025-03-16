@@ -736,6 +736,17 @@ Napi::Value SetWindowPosition(const Napi::CallbackInfo& CallbackInfo)
 
     HWND Handle = GetHandleArgument(Environment, CallbackInfo, 0);
 
+    const int BufferSize = 256;
+    wchar_t WindowTextW[BufferSize] = { 0 };
+
+    GetWindowTextW(Handle, WindowTextW, BufferSize);
+
+    LOG
+        << "💊💡🐥🥳💀💖🫥😂☝️🙃📄🤤♪σ◱◲△ε→×↦—é✓™‶π§²λ "
+        << "Inside SetWindowPosition, Title is "
+        << WStringToString(WindowTextW)
+        << std::endl;
+
     FBox Box = GetBoxArgument(CallbackInfo, 1);
 
     int32_t Margin = GetWindowMargin(Handle);
@@ -796,20 +807,20 @@ Napi::Value GetThemeColor(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    DWORD color;
-    BOOL isOpaque;
+    DWORD Color;
+    BOOL IsOpaque;
 
-    HRESULT result = DwmGetColorizationColor(&color, &isOpaque);
-    if (FAILED(result))
+    HRESULT ColorizationResult = DwmGetColorizationColor(&Color, &IsOpaque);
+    if (FAILED(ColorizationResult))
     {
         std::cout << "Failed to retrieve taskbar color." << std::endl;
         std::string DefaultThemeColor = "#0078D7";
         return Napi::String::New(Environment, DefaultThemeColor);
     }
 
-    BYTE Red = (color >> 16) & 0xFF;
-    BYTE Green = (color >> 8) & 0xFF;
-    BYTE Blue = color & 0xFF;
+    BYTE Red = (Color >> 16) & 0xFF;
+    BYTE Green = (Color >> 8) & 0xFF;
+    BYTE Blue = Color & 0xFF;
 
     std::ostringstream HexStream;
     HexStream
@@ -841,7 +852,6 @@ bool IsWmForeground()
         bool NamesMatch = strcmp(MainWindowName, ForegroundWindowName);
         return NamesMatch;
     }
-
 }
 
 bool IsTileableWindow(HWND WindowHandle)

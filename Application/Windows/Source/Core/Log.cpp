@@ -49,18 +49,18 @@ static unsigned int SimpleHash(const std::string &S)
 
 // We define a small palette of background+foreground pairs (for 8 standard ANSI colors).
 // The index 0..7 corresponds to the 8 typical ANSI colors: black, red, green, yellow, blue, magenta, cyan, white.
-struct ColorCodes
+struct FColorCodes
 {
     const char* Foreground;
     const char* Background;
 };
 
-static const ColorCodes COLOR_PALETTE[] =
+static const FColorCodes COLOR_PALETTE[] =
 {
     // black background => white text
     { "\033[37m", "\033[40m" },
     // red background => black text
-    { "\033[30m", "\033[41m" },
+    { "\033[30m", "\033[45m" },
     // green background => black text
     { "\033[30m", "\033[42m" },
     // yellow background => black text
@@ -72,7 +72,7 @@ static const ColorCodes COLOR_PALETTE[] =
     // cyan background => white text
     { "\033[30m", "\033[44m" },
     // white background => black text
-    { "\033[30m", "\033[47m" },
+    { "\033[30m", "\033[47m" }
 };
 
 std::string FLogMessage::ColorizeTextBackground(const std::string& Text)
@@ -80,9 +80,8 @@ std::string FLogMessage::ColorizeTextBackground(const std::string& Text)
     unsigned int HashValue = SimpleHash(Text);
     unsigned int Index = HashValue % 8; // pick from 0..7
 
-    const ColorCodes &Codes = COLOR_PALETTE[Index];
+    const FColorCodes &Codes = COLOR_PALETTE[Index];
 
-    // Build the colored text: (Foreground)(Background)Text(Reset)
     std::ostringstream Oss;
     Oss << Codes.Foreground << Codes.Background
         << Text
@@ -104,7 +103,7 @@ std::string FLogMessage::ColorizeLogLevelBackground(ELogLevel L)
 
     unsigned int LevelColorIndex = ColorMap[L];
 
-    const ColorCodes& Codes = COLOR_PALETTE[LevelColorIndex];
+    const FColorCodes& Codes = COLOR_PALETTE[LevelColorIndex];
     std::ostringstream Oss;
     Oss << Codes.Foreground << Codes.Background
         << LevelStr
@@ -143,14 +142,26 @@ FLogMessage& FLogMessage::operator<<(std::ostream &(*Manipulator)(std::ostream&)
     return *this;
 }
 
+std::string GetNativeLabel()
+{
+    FColorCodes Codes = COLOR_PALETTE[3];
+    std::ostringstream Oss;
+    Oss << Codes.Foreground << Codes.Background
+        << " Native "
+        << "\033[0m"; // reset
+    return Oss.str();
+}
+
 FLogMessage::~FLogMessage()
 {
     std::lock_guard<std::mutex> Lock(GetMutex());
 
     std::string CategoryColored = ColorizeTextBackground(" " + Category + " ");
     std::string LevelColored = ColorizeLogLevelBackground(Level);
+    std::string NativeLabel = GetNativeLabel();
 
     std::cout
+        << NativeLabel
         << LevelColored
         << CategoryColored
         << " "

@@ -30,6 +30,11 @@ export const GetForest = (): FForest =>
     return [ ...Forest ];
 };
 
+/** @TODO */
+export const LogForest = (): void =>
+{
+};
+
 const Cell = (Handle: HWindow): FCell =>
 {
     return {
@@ -90,7 +95,6 @@ const InitializeTree = (): void =>
                 return Panel.MonitorId?.Handle === Monitor.Handle;
             });
 
-
         if (RootPanel === undefined)
         {
             // @TODO
@@ -135,6 +139,11 @@ const InitializeTree = (): void =>
     {
         console.log(`Setting position of ${ GetWindowTitle(Cell.Handle) } to ${ JSON.stringify(Cell.Size) }.`);
         SetWindowPosition(Cell.Handle, Cell.Size);
+        /* At least for now, ignore SorrellWm windows. */
+        // if (GetWindowTitle(Cell.Handle) !== "SorrellWm")
+        // {
+        //     SetWindowPosition(Cell.Handle, Cell.Size);
+        // }
     });
 
     console.log(`Called SetWindowPosition for ${ Cells.length } windows.`);
@@ -208,7 +217,18 @@ const GetAllCells = (Panels: Array<FPanel>): Array<FCell> =>
 
 export const Exists = (Predicate: (Vertex: FVertex) => boolean): boolean =>
 {
-    return false;
+    let DoesExist: boolean = false;
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        if (!DoesExist)
+        {
+            DoesExist = Predicate(Vertex);
+        }
+
+        return !DoesExist;
+    });
+
+    return DoesExist;
 };
 
 /** @TODO */
@@ -224,25 +244,9 @@ export const ForAll = (Predicate: (Vertex: FVertex) => boolean): boolean =>
 
 export const IsWindowTiled = (Handle: HWindow): boolean =>
 {
-    let FoundWindow: boolean = false;
     return Exists((Vertex: FVertex): boolean =>
     {
-        if (!FoundWindow)
-        {
-            if (IsCell(Vertex))
-            {
-                if (AreHandlesEqual(Vertex.Handle, Handle))
-                {
-                    FoundWindow = true;
-                }
-            }
-        }
-        else
-        {
-            return false;
-        }
-
-        return true;
+        return IsCell(Vertex) && AreHandlesEqual(Vertex.Handle, Handle);
     });
 };
 

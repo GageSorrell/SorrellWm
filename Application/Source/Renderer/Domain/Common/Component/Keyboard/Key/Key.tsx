@@ -856,6 +856,10 @@ export const Key = ({ Value }: PKey): ReactElement =>
         };
     }, [ color, Value ]);
 
+    const maxWidth: string | undefined = Value.length === 1
+        ? "2rem"
+        : undefined;
+
     const RootStyle: CSSProperties = useMemo((): CSSProperties =>
     {
         return {
@@ -868,9 +872,10 @@ export const Key = ({ Value }: PKey): ReactElement =>
             height: "2rem",
             justifyContent: "center",
             maxHeight: "2rem",
+            maxWidth,
             minWidth: "2rem"
         };
-    }, [ backgroundColor ]);
+    }, [ backgroundColor, maxWidth ]);
 
     return (
         <div style={ RootStyle }>

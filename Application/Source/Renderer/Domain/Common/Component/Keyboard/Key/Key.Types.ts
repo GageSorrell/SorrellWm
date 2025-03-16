@@ -44,5 +44,6 @@ export type FKey =
 
 export type PKey =
 {
-    Value: FCommandKey;
+    Value: string | FCommandKey;
+    // Value: FCommandKey;
 };
