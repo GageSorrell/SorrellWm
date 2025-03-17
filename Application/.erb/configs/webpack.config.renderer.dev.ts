@@ -5,7 +5,7 @@ import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import chalk from 'chalk';
 import { merge } from 'webpack-merge';
-import { execSync, spawn } from 'child_process';
+import { execSync, spawn, type ChildProcess } from 'child_process';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import baseConfig from './webpack.config.base';
 import webpackPaths from './webpack.paths';
@@ -196,15 +196,25 @@ const configuration: webpack.Configuration = {
           ['--', ...process.env.MAIN_ARGS.matchAll(/"[^"]+"|[^\s"]+/g)].flat(),
         );
       }
-      spawn('npm', args, {
+      const MyProcess: ChildProcess = spawn('npm', args, {
         shell: true,
-        stdio: 'inherit',
+        stdio: 'pipe',
       })
         .on('close', (code: number) => {
           preloadProcess.kill();
           process.exit(code!);
         })
         .on('error', (spawnError) => console.error(spawnError));
+    if (MyProcess !== null && MyProcess.stdout !== null && MyProcess.stderr !== null)
+    {
+        const ToUtf8 = (Data: Buffer): void =>
+        {
+            process.stdout.write(Data.toString("utf8"));
+        };
+
+        MyProcess.stdout.on("data", ToUtf8);
+        MyProcess.stderr.on("data", ToUtf8);
+    }
       return middlewares;
     },
   },

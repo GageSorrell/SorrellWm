@@ -19,9 +19,13 @@ import {
     type HWindow,
     SetWindowPosition,
     GetWindowByName,
-    GetWindowTitle} from "@sorrellwm/windows";
+    GetWindowTitle,
+    GetScreenshot,
+    type FBox} from "@sorrellwm/windows";
 import { GetMonitors } from "./Monitor";
 import { AreHandlesEqual } from "./Core/Utility";
+import { ipcMain } from "electron";
+import { Log } from "./Development";
 
 const Forest: FForest = [ ];
 
@@ -154,6 +158,21 @@ const IsCell = (Vertex: FVertex): Vertex is FCell =>
     return "Handle" in Vertex;
 };
 
+export const Flatten = (): Array<FVertex> =>
+{
+    const OutArray: Array<FVertex> = [ ];
+
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        OutArray.push(Vertex);
+        return true;
+    });
+
+    OutArray.push(...Forest);
+
+    return OutArray;
+};
+
 /**
  * Run a function for each vertex until the function returns `false` for
  * an iteration.
@@ -248,6 +267,13 @@ export const IsWindowTiled = (Handle: HWindow): boolean =>
     {
         return IsCell(Vertex) && AreHandlesEqual(Vertex.Handle, Handle);
     });
+};
+
+export const GetPanels = (): Array<FPanel> =>
+{
+    const Vertices: Array<FVertex> = Flatten();
+    Log("In Flatten, vertices are ", Vertices);
+    return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as Array<FPanel>;
 };
 
 InitializeTree();

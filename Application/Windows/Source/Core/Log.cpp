@@ -147,8 +147,8 @@ std::string GetNativeLabel()
     FColorCodes Codes = COLOR_PALETTE[3];
     std::ostringstream Oss;
     Oss << Codes.Foreground << Codes.Background
-        << " Native "
-        << "\033[0m"; // reset
+        << " 💪 "
+        << "\033[0m";
     return Oss.str();
 }
 

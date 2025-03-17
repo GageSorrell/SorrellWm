@@ -28,7 +28,7 @@
 #include <map>
 
 #include "BlurBackground.h"
-#include "CaptureImage.h"
+#include "Screenshot.h"
 #include "Core/WindowUtilities.h"
 
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
@@ -107,6 +107,10 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "SetWindowPosition", SetWindowPosition },
         { "GetMonitorFromWindow", GetMonitorFromWindow },
         { "GetWindowTitle", GetWindowTitle },
+        { "GetScreenshot", GetScreenshot },
+        { "CaptureScreenSectionToTempFile", CaptureScreenSectionToTempFile },
+        { "CaptureScreenSectionToTempPngFile", CaptureScreenSectionToTempPngFile },
+        { "CaptureScreenSectionAsPngBase64", CaptureScreenSectionAsPngBase64 },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },
@@ -122,7 +126,6 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetThemeColor", GetThemeColor },
         { "BlurBackground", BlurBackground },
         { "UnblurBackground", UnblurBackground },
-        { "CaptureImage", CaptureImage }
         /* END AUTO-GENERATED REGION. */
     };
 

@@ -3,16 +3,25 @@
  * License: MIT
  */
 
+import * as Fs from "fs";
 import * as Path from "path";
-import { BlurBackground, GetFocusedWindow, GetWindowTitle, UnblurBackground } from "@sorrellwm/windows";
+import {
+    BlurBackground,
+    CaptureScreenSectionToTempPngFile,
+    type FBox,
+    GetFocusedWindow,
+    GetWindowTitle,
+    UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
 import { ResolveHtmlPath } from "./Core/Utility";
 import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
-import { GetForest, IsWindowTiled } from "./Tree";
+import { GetForest, GetPanels, IsWindowTiled } from "./Tree";
 import chalk from "chalk";
+import { Log } from "./Development";
+import type { FPanel } from "./Tree.Types";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -84,6 +93,21 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
+    /** @TODO Find better place for this. */
+    ipcMain.on("GetScreenshot", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    {
+        const Panels: Array<FPanel> = GetPanels();
+        Log("Panels are ", Panels);
+        const TestBounds: FBox = (Panels[0] as FPanel).Size;
+        const ScreenshotFile: string = CaptureScreenSectionToTempPngFile(TestBounds);
+        Fs.promises.readFile(ScreenshotFile).then((Data: Buffer): void =>
+        {
+            const Screenshot: string = "data:image/png;base64," + Data.toString("base64");
+            /** @TODO Send dimensions of screenshot (Size). */
+            MainWindow?.webContents.send("GetScreenshot", Screenshot);
+        });
+    });
+
     ipcMain.on("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
         const StringifiedArguments: string = Arguments
@@ -95,7 +119,7 @@ const LaunchMainWindow = async (): Promise<void> =>
             })
             .join();
 
-        const Birdie: string = chalk.bgGreen.white(" Frontend ") + " ";
+        const Birdie: string = chalk.bgMagenta(" ⚛️ ") + " ";
         let OutString: string = Birdie;
         for (let Index: number = 0; Index < StringifiedArguments.length; Index++)
         {

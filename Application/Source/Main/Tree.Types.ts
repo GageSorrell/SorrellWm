@@ -54,3 +54,11 @@ export type FPanel =
     | FPanelStack;
 
 export type FForest = Array<FPanel>;
+
+export type FAnnotatedPanel =
+{
+    ApplicationNames: Array<string>;
+    Monitor: string;
+    IsRoot: boolean;
+    Screenshot: string;
+};

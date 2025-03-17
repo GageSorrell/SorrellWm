@@ -32,6 +32,7 @@ BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
 Napi::Object EncodeHandle(const Napi::Env& Environment, void* Handle);
 void* DecodeHandle(const Napi::Object& Object);
 Napi::Object EncodeRect(const Napi::Env& Environment, RECT InRect);
+RECT DecodeRect(const Napi::Object& Object);
 
 template <typename THandle>
 std::string HandleToString(THandle Handle);

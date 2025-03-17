@@ -10,8 +10,9 @@ import { Focus } from "$/Focus";
 import { IpcNavigator } from "./IpcNavigator";
 import { Move } from "$/Move";
 import { New } from "$/New";
-import { Resize } from "@/Domain/Resize/Screen/Resize";
+import { Resize } from "$/Resize";
 import { TestWindow } from "$/Development/TestWindow";
+import { Tile } from "@/Domain/Tile";
 
 export const Routes = () =>
 {
@@ -42,6 +43,10 @@ export const Routes = () =>
                 <Route
                     element={ <TestWindow /> }
                     path="/TestWindow"
+                />
+                <Route
+                    element={ <Tile /> }
+                    path="/Tile"
                 />
             </RouterRoutes>
         </MemoryRouter>

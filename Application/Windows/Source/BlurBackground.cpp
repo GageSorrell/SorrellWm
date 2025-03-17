@@ -224,8 +224,6 @@ void PutPixel(int x, int y, BYTE r, BYTE g, BYTE b, LPBITMAPINFO lpBmi, void* pB
 
 bool CaptureWindowScreenshot(HWND SourceHandle)
 {
-    LOG << WindowRect << std::endl;
-
     Width = WindowRect.right - WindowRect.left;
     Height = WindowRect.bottom - WindowRect.top;
     ChannelsNum = 3;
@@ -511,7 +509,7 @@ void OnPaint(HWND hWnd)
     bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
+    // std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
     SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
     BlurredScreenshotData.reserve(bufferSize);
     BlurredScreenshot = BlurredScreenshotData.data();
@@ -578,18 +576,18 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
             if (elapsedTime >= Duration)
             {
-                std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime)
-                          << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
+                // std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime)
+                //           << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
                 Sigma = MaxSigma;
                 BOOL PostTimerRes = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
-                if (PostTimerRes)
-                {
-                    std::cout << "PostTimerRes was true." << std::endl;
-                }
-                else
-                {
-                    std::cout << "PostTimerRes was false." << std::endl;
-                }
+                // if (PostTimerRes)
+                // {
+                //     std::cout << "PostTimerRes was true." << std::endl;
+                // }
+                // else
+                // {
+                //     std::cout << "PostTimerRes was false." << std::endl;
+                // }
                 InvalidateRect(hWnd, nullptr, FALSE);
                 KillTimer(hWnd, BlurTimerId);
             }
@@ -655,8 +653,8 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 unsigned char MainWindowTransparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
                 InvalidateRect(hWnd, nullptr, FALSE);
-                std::cout << std::setprecision(4) << "Transparency is " << +(Transparency) << " at time " << currentTime
-                          << " with EasedAlpha " << EasedAlpha << std::endl;
+                // std::cout << std::setprecision(4) << "Transparency is " << +(Transparency) << " at time " << currentTime
+                //           << " with EasedAlpha " << EasedAlpha << std::endl;
 
                 SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
                 SetLayeredWindowAttributes(SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);

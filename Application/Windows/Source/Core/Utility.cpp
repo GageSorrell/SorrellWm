@@ -124,6 +124,22 @@ void* DecodeHandle(const Napi::Object& Object)
     return (void*) HandleInt;
 }
 
+RECT DecodeRect(const Napi::Object& Object)
+{
+    LONG Left = Object.Get("X").As<Napi::Number>().Uint32Value();
+    LONG Top = Object.Get("Y").As<Napi::Number>().Uint32Value();
+    LONG Bottom = Object.Get("Height").As<Napi::Number>().Uint32Value() + Top;
+    LONG Right = Object.Get("Width").As<Napi::Number>().Uint32Value() + Left;
+
+    RECT OutRect;
+    OutRect.top = Top;
+    OutRect.bottom = Bottom;
+    OutRect.left = Left;
+    OutRect.right = Right;
+
+    return OutRect;
+}
+
 Napi::Object EncodeRect(const Napi::Env& Environment, RECT InRect)
 {
     Napi::Object OutObject = Napi::Object::New(Environment);

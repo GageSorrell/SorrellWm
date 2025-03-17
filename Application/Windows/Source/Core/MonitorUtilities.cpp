@@ -8,8 +8,47 @@
 #include "InterProcessCommunication.h"
 #include "../MessageLoop/MessageLoop.h"
 #include "Globals.h"
+#include "String.h"
 #include <Dbt.h>
 #include "Utility.h"
+
+Napi::Value GetMonitorFriendlyName(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    HMONITOR Handle = (HMONITOR) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    MONITORINFOEXW MonitorInfo;
+    ZeroMemory(&MonitorInfo, sizeof(MonitorInfo));
+    MonitorInfo.cbSize = sizeof(MONITORINFOEXW);
+
+    if (!GetMonitorInfoW(Handle, &MonitorInfo))
+    {
+        return Environment.Undefined();
+    }
+
+    DISPLAY_DEVICEW DisplayDevice;
+    ZeroMemory(&DisplayDevice, sizeof(DisplayDevice));
+    DisplayDevice.cb = sizeof(DisplayDevice);
+
+    BOOL EnumSuccess = EnumDisplayDevicesW(
+        MonitorInfo.szDevice,
+        0,
+        &DisplayDevice,
+        0
+    );
+
+    if (!EnumSuccess)
+    {
+        return Environment.Undefined();
+    }
+    else
+    {
+        std::wstring FriendlyNameWideString(DisplayDevice.DeviceString);
+        std::string FriendlyNameString = WStringToString(FriendlyNameWideString);
+
+        return Napi::String::New(Environment, FriendlyNameString);
+    }
+}
 
 int32_t GetRefreshRateFromWindow(HWND HWnd)
 {

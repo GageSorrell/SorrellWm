@@ -6,18 +6,19 @@
 
 import type { CSSProperties, ReactElement } from "react";
 import type { PCommandBottomShelf } from "./CommandBottomShelf.Types";
+import { tokens } from "@fluentui/react-components";
 
 export const CommandBottomShelf = ({ children }: PCommandBottomShelf): ReactElement =>
 {
     const style: CSSProperties =
     {
         alignItems: "center",
-        backgroundColor: "purple",
         bottom: 0,
         display: "flex",
         flexDirection: "row",
         justifyContent: "center",
         position: "absolute",
+        marginBottom: tokens.spacingVerticalL,
         width: "100vw"
     };
 

@@ -8,13 +8,17 @@
 
 /* eslint-disable */
 
-import type { Array, HWindow, FBox, FHexColor, HMonitor } from "./Core";
+import type { FBox, Array, HMonitor, HWindow, FHexColor } from "./Core";
 
 export function BlurBackground(): void;
 export function UnblurBackground(): void;
-export function CaptureImage(): void;
+export function GetScreenshot(Bounds: FBox): string;
+export function CaptureScreenSectionToTempFile(Bounds: FBox): string;
+export function CaptureScreenSectionToTempPngFile(Bounds: FBox): string;
+export function CaptureScreenSectionAsPngBase64(Bounds: FBox): string;
 export function GetMonitors(): Array<FMonitorInfo>;
 export function InitializeMonitors(): Array<FMonitorInfo>;
+export function GetMonitorFriendlyName(Handle: HMonitor): string | undefined;
 export function GetFocusedWindow(): HWindow;
 export function CaptureWindowScreenshot(Handle: HWindow): string;
 export function GetWindowLocationAndSize(Handle: HWindow): FBox;
