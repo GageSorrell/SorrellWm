@@ -28,6 +28,7 @@ export type FPanelBase =
         Children: Array<FVertex>;
         /** Should only be set when this is the root panel of a monitor. */
         MonitorId?: HMonitor;
+        Type: string;
     };
 
 export type FPanelHorizontal =
@@ -56,9 +57,10 @@ export type FPanel =
 export type FForest = Array<FPanel>;
 
 export type FAnnotatedPanel =
-{
-    ApplicationNames: Array<string>;
-    Monitor: string;
-    IsRoot: boolean;
-    Screenshot: string;
-};
+    FPanel &
+    {
+        ApplicationNames: Array<string>;
+        Monitor: string;
+        IsRoot: boolean;
+        Screenshot: string;
+    };

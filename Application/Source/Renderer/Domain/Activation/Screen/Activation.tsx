@@ -60,21 +60,32 @@ const ActivationNotTiled = (): ReactElement =>
 
     return (
         <Action>
-            <Command
-                Action={ () => Navigator("/Tile") }
-                Key="H"
-                Title="Tile (Bring into Panel)"
-            />
-            <Command
-                Action={ () => Navigator("/Move") }
-                Key="T"
-                Title="Move"
-            />
-            <Command
-                Action={ () => Navigator("/Resize") }
-                Key="N"
-                Title="Resize"
-            />
+            <CommandContainer>
+                <MainCommands>
+                    <Command
+                        Action={ () => Navigator("/Tile") }
+                        Key="H"
+                        Title="Tile (Bring into Panel)"
+                    />
+                    <Command
+                        Action={ () => Navigator("/Move") }
+                        Key="T"
+                        Title="Move"
+                    />
+                    <Command
+                        Action={ () => Navigator("/Resize") }
+                        Key="N"
+                        Title="Resize"
+                    />
+                </MainCommands>
+                <CommandBottomShelf>
+                    <Command
+                        Action={ () => Log("Peek was selected.") }
+                        Key="Z"
+                        Title="Peek"
+                    />
+                </CommandBottomShelf>
+            </CommandContainer>
         </Action>
     );
 };

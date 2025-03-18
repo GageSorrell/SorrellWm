@@ -967,3 +967,81 @@ Napi::Value GetWindowTitle(const Napi::CallbackInfo& CallbackInfo)
     std::string WindowText = WStringToString(WindowTextW);
     return Napi::String::New(Environment, WindowText);
 }
+
+Napi::Value GetApplicationFriendlyName(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    HWND WindowHandle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    DWORD ProcessIdentifier = 0;
+    GetWindowThreadProcessId(WindowHandle, &ProcessIdentifier);
+    if (ProcessIdentifier == 0)
+    {
+        return Environment.Undefined();
+    }
+
+    HANDLE ProcessHandle = OpenProcess(
+        PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ,
+        FALSE,
+        ProcessIdentifier
+    );
+
+    if (!ProcessHandle)
+    {
+        return Environment.Undefined();
+    }
+
+    char ModuleFilePath[MAX_PATH];
+    if (!GetModuleFileNameExA(ProcessHandle, nullptr, ModuleFilePath, MAX_PATH))
+    {
+        CloseHandle(ProcessHandle);
+        return Environment.Undefined();
+    }
+
+    DWORD UnusedHandleForVersion = 0;
+    DWORD VersionInformationSize = GetFileVersionInfoSizeA(
+        ModuleFilePath,
+        &UnusedHandleForVersion
+    );
+
+    if (VersionInformationSize > 0)
+    {
+        std::vector<char> VersionInformationData(VersionInformationSize);
+        if (GetFileVersionInfoA(ModuleFilePath, 0, VersionInformationSize, VersionInformationData.data()))
+        {
+            /* The block for "FileDescription" in a typical US-English resource is under: *
+             * \StringFileInfo\040904B0\FileDescription                                 */
+            char *FileDescriptionData = nullptr;
+            UINT FileDescriptionSize = 0;
+            if (VerQueryValueA(
+                    VersionInformationData.data(),
+                    "\\StringFileInfo\\040904B0\\FileDescription",
+                    reinterpret_cast<void**>(&FileDescriptionData),
+                    &FileDescriptionSize)
+            )
+            {
+                if (FileDescriptionSize > 0 && FileDescriptionData)
+                {
+                    CloseHandle(ProcessHandle);
+                    return Napi::String::New(Environment, std::string(FileDescriptionData));
+                }
+            }
+        }
+    }
+
+    std::string FullPathString = ModuleFilePath;
+    size_t DirectorySeparatorPosition = FullPathString.find_last_of("\\/");
+    std::string BaseName = (DirectorySeparatorPosition == std::string::npos)
+        ? FullPathString
+        : FullPathString.substr(DirectorySeparatorPosition + 1);
+
+    size_t DotPosition = BaseName.rfind('.');
+    if (DotPosition != std::string::npos)
+    {
+        BaseName = BaseName.substr(0, DotPosition);
+    }
+
+    CloseHandle(ProcessHandle);
+    return Napi::String::New(Environment, BaseName);
+}

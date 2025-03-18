@@ -40,10 +40,8 @@ export const TestWindow = (): ReactElement =>
     {
         const Animate = (): void =>
         {
-            // Log("Animated!");
             SetLeft((Old: number) =>
             {
-                // Log(`Old is ${ Old }.`);
                 return (Old + 2) % 24;
             });
             setTimeout(Animate, 100);
@@ -62,45 +60,39 @@ export const TestWindow = (): ReactElement =>
         width: "10rem"
     };
 
-    const [ Foo, SetFoo ] = useState<string>("");
-    useEffect((): void =>
+    const RootStyle: CSSProperties =
     {
-        window.electron.ipcRenderer.sendMessage("GetScreenshot");
-        window.electron.ipcRenderer.on("GetScreenshot", (...Arguments: Array<unknown>): void =>
-        {
-            // Log("GetScreenshot was received on the frontend: ", ...Arguments);
-            // navigator.clipboard.writeText(Arguments[0] as string);
-            SetFoo((_Old: string): string =>
-            {
-                return (Arguments[0] as string);
-                // return "file:///" + (Arguments[0] as string).replaceAll("\\", "/");
-                // return "file:///" + (Arguments[0] as string);
-            });
-        });
-    }, [ SetFoo ]);
+        alignItems: "flex-center",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        justifyContent: "flex-start",
+        width: "100%"
+    };
+
+    const InnerStyle: CSSProperties =
+    {
+        alignItems: "center",
+        backgroundColor: "#00CC00",
+        display: "flex",
+        height: "100%",
+        justifyContent: "center",
+        left: 0,
+        position: "absolute",
+        top: 256,
+        width: "100%"
+    };
 
     return (
-        <div style={ {
-            alignItems: "flex-center",
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-            justifyContent: "flex-start",
-            width: "100%"
-        } }>
-            <div style={ {
-                alignItems: "center",
-                backgroundColor: "#00CC00",
-                display: "flex",
-                height: "100%",
-                justifyContent: "center",
-                left: 0,
-                position: "absolute",
-                top: 256,
-                width: "100%"
-            } }>
-                <img src={ Foo } width={200} height={200} style={{ maxWidth: 200 }}/>
-                <div { ...{ style } }><span>{ Colors[Index] }</span></div>
+        <div style={ RootStyle }>
+            <div style={ InnerStyle }>
+                <div { ...{ style } }>
+                    <span>
+                        {
+                            Colors[Index]
+                        }
+                    </span>
+                </div>
             </div>
         </div>
     );

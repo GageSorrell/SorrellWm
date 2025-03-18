@@ -4,14 +4,24 @@
  * License:   MIT
  */
 
+import type { CSSProperties, ReactElement } from "react";
 import type { PAction } from "./Action.Types";
-import type { ReactElement } from "react";
+import { tokens } from "@fluentui/react-components";
 
 /** The base for most action pages. */
 export const Action = ({ children }: PAction): ReactElement =>
 {
+    const RootStyle: CSSProperties =
+    {
+        alignItems: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingHorizontalXL,
+        justifyContent: "flex-start"
+    };
+
     return (
-        <div>
+        <div style={ RootStyle }>
             { children }
         </div>
     );

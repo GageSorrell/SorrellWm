@@ -4,42 +4,61 @@
  * License:   MIT
  */
 
+import { Caption1, makeStyles, Title1 } from "@fluentui/react-components";
+import { GetPanelKey, Panel } from "$/Common";
+import { type ReactElement, useEffect, useState } from "react";
 import { Action } from "@/Action";
-import { Log } from "@/Api";
-import { Title1 } from "@fluentui/react-components";
-import { useEffect, useState, type ReactElement } from "react";
+import { CompoundCommand } from "$/Common";
+import type { FAnnotatedPanel } from "#/Tree.Types";
+import { UseIndex } from "@/Utility/Hook";
 
 export const Tile = (): ReactElement =>
 {
-    const [ Foo, SetFoo ] = useState<string>("");
+    const [ AnnotatedPanels, SetAnnotatedPanels ] = useState<Array<FAnnotatedPanel>>([ ]);
     useEffect((): void =>
     {
-        window.electron.ipcRenderer.sendMessage("GetScreenshot");
-        window.electron.ipcRenderer.on("GetScreenshot", (...Arguments: Array<unknown>): void =>
+        window.electron.ipcRenderer.sendMessage("GetAnnotatedPanels");
+        window.electron.ipcRenderer.on("GetAnnotatedPanels", (...Arguments: Array<unknown>): void =>
         {
-            // Log("GetScreenshot was received on the frontend: ", ...Arguments);
-            SetFoo((_Old: string): string =>
+            SetAnnotatedPanels((_Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
             {
-                return (Arguments[0] as string);
-                // return "file:///" + (Arguments[0] as string).replaceAll("\\", "/");
-                // return "file:///" + (Arguments[0] as string);
+                return Arguments[0] as Array<FAnnotatedPanel>;
             });
         });
-    }, [ SetFoo ]);
+    }, [ SetAnnotatedPanels ]);
 
-    // useEffect((): void =>
-    // {
-    //     Log(`Foo: ${ Foo }.`);
-    // }, [ Foo ]);
+    const [ SelectionIndex, IncrementSelectionIndex, DecrementSelectionIndex ] = UseIndex();
 
     return (
         <Action>
-            <div>
-                <img src={ Foo } width={200} height={200} style={{ maxWidth: 200 }}/>
-                <Title1>
-                    Foo length is { Foo.length }
-                </Title1>
-            </div>
+            <Title1>
+                Bring into Panel
+            </Title1>
+            <Caption1>
+                Select the panel that you wish to insert this window into.
+            </Caption1>
+            <CompoundCommand
+                SubCommands={[
+                    {
+                        Action: IncrementSelectionIndex,
+                        Key: "H"
+                    },
+                    {
+                        Action: () => DecrementSelectionIndex,
+                        Key: "T"
+                    }
+                ]}
+                Title="Change Selection (Up / Down)"
+            />
+            {
+                AnnotatedPanels.map((AnnotatedPanel: FAnnotatedPanel): ReactElement =>
+                {
+                    return <Panel
+                        key={ GetPanelKey(AnnotatedPanel) }
+                        { ...AnnotatedPanel }
+                    />;
+                })
+            }
         </Action>
     );
 };

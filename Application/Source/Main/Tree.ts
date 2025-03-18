@@ -5,11 +5,13 @@
  */
 
 import type {
+    FAnnotatedPanel,
     FCell,
     FForest,
     FPanel,
     FPanelBase,
     FPanelHorizontal,
+    FRootPanel,
     FVertex } from "./Tree.Types";
 import {
     type FMonitorInfo,
@@ -21,10 +23,13 @@ import {
     GetWindowByName,
     GetWindowTitle,
     GetScreenshot,
-    type FBox} from "@sorrellwm/windows";
-import { GetMonitors } from "./Monitor";
+    type FBox,
+    CaptureScreenSectionToTempPngFile,
+    GetMonitorFriendlyName,
+    GetApplicationFriendlyName} from "@sorrellwm/windows";
 import { AreHandlesEqual } from "./Core/Utility";
-import { ipcMain } from "electron";
+import { promises as Fs } from "fs";
+import { GetMonitors } from "./Monitor";
 import { Log } from "./Development";
 
 const Forest: FForest = [ ];
@@ -177,7 +182,7 @@ export const Flatten = (): Array<FVertex> =>
  * Run a function for each vertex until the function returns `false` for
  * an iteration.
  */
-export const Traverse = (InFunction: (Vertex: FVertex) => boolean): void =>
+export const Traverse = (InFunction: (Vertex: FVertex) => boolean, Entry?: FVertex): void =>
 {
     let Continues: boolean = true;
     const Recurrence = (Vertex: FVertex): void =>
@@ -195,13 +200,21 @@ export const Traverse = (InFunction: (Vertex: FVertex) => boolean): void =>
         }
     };
 
-    for (const Panel of Forest)
+    if (Entry)
     {
-        for (const Child of Panel.Children)
+        Recurrence(Entry);
+    }
+    else
+    {
+        for (const Panel of Forest)
         {
-            Recurrence(Child);
+            for (const Child of Panel.Children)
+            {
+                Recurrence(Child);
+            }
         }
     }
+
 };
 
 const GetAllCells = (Panels: Array<FPanel>): Array<FCell> =>
@@ -272,8 +285,94 @@ export const IsWindowTiled = (Handle: HWindow): boolean =>
 export const GetPanels = (): Array<FPanel> =>
 {
     const Vertices: Array<FVertex> = Flatten();
-    Log("In Flatten, vertices are ", Vertices);
     return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as Array<FPanel>;
+};
+
+function PanelContainsVertex(currentVertex: FVertex, targetVertex: FVertex): boolean
+{
+    if (currentVertex === targetVertex)
+    {
+        return true;
+    }
+
+    // If this is a panel, check its children recursively
+    if ("Children" in currentVertex)
+    {
+        for (const child of currentVertex.Children)
+        {
+            if (PanelContainsVertex(child, targetVertex))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+export const GetRootPanel = (Vertex: FVertex): FPanel | undefined =>
+{
+    for (const Panel of Forest)
+    {
+        if (PanelContainsVertex(Panel, Vertex))
+        {
+            return Panel;
+        }
+    }
+
+    return undefined;
+};
+
+const GetPanelApplicationNames = (Panel: FPanel): Array<string> =>
+{
+    const ResultNames: Array<string> = [ ];
+
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        if ("Handle" in Vertex)
+        {
+            const FriendlyName: string | undefined = GetApplicationFriendlyName(Vertex.Handle);
+            if (FriendlyName !== undefined)
+            {
+                ResultNames.push(FriendlyName);
+            }
+
+            if (ResultNames.length >= 3)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }, Panel);
+
+    return ResultNames;
+};
+
+export const AnnotatePanel = async (Panel: FPanel): Promise<FAnnotatedPanel | undefined> =>
+{
+    const ScreenshotBuffer: Buffer =
+        await Fs.readFile(CaptureScreenSectionToTempPngFile(Panel.Size));
+
+    const RootPanel: FPanel | undefined = GetRootPanel(Panel);
+    if (RootPanel !== undefined && RootPanel.MonitorId !== undefined)
+    {
+        const ApplicationNames: Array<string> = GetPanelApplicationNames(Panel);
+        const IsRoot: boolean = RootPanel === Panel;
+        const Monitor: string = GetMonitorFriendlyName(RootPanel.MonitorId) || "";
+        const Screenshot: string = "data:image/png;base64," + ScreenshotBuffer.toString("base64");
+
+        return {
+            ...Panel,
+
+            ApplicationNames,
+            IsRoot,
+            Monitor,
+            Screenshot
+        };
+    }
+
+    return undefined;
 };
 
 InitializeTree();

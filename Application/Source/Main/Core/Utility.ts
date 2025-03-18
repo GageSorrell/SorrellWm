@@ -3,9 +3,9 @@
  * License: MIT
  */
 
+import type { HHandle } from "./Utility.Types";
 import { URL } from "url";
 import path from "path";
-import type { HHandle } from "./Utility.Types";
 
 export function ResolveHtmlPath(HtmlFileName: string, Component?: string)
 {

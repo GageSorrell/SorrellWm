@@ -12,6 +12,71 @@
 #include <Dbt.h>
 #include "Utility.h"
 
+static std::wstring GetFriendlyNameFromDisplayConfig(const std::wstring &deviceName)
+{
+    // 1. Get buffer sizes for the active display paths.
+    UINT32 numPathArrayElements = 0;
+    UINT32 numModeInfoArrayElements = 0;
+    LONG status = GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS,
+                                              &numPathArrayElements,
+                                              &numModeInfoArrayElements);
+    if (status != ERROR_SUCCESS)
+    {
+        return L"";
+    }
+
+    // 2. Allocate arrays to hold path and mode info.
+    std::vector<DISPLAYCONFIG_PATH_INFO> pathInfoArray(numPathArrayElements);
+    std::vector<DISPLAYCONFIG_MODE_INFO> modeInfoArray(numModeInfoArrayElements);
+
+    // 3. Query active paths.
+    status = QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS,
+                                &numPathArrayElements,
+                                pathInfoArray.data(),
+                                &numModeInfoArrayElements,
+                                modeInfoArray.data(),
+                                nullptr);
+    if (status != ERROR_SUCCESS)
+    {
+        return L"";
+    }
+
+    // 4. Scan each path to find one whose GDI device name (wide) matches deviceName.
+    for (UINT32 i = 0; i < numPathArrayElements; i++)
+    {
+        DISPLAYCONFIG_SOURCE_DEVICE_NAME sourceName;
+        ZeroMemory(&sourceName, sizeof(sourceName));
+        sourceName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+        sourceName.header.size = sizeof(sourceName);
+        sourceName.header.adapterId = pathInfoArray[i].sourceInfo.adapterId;
+        sourceName.header.id = pathInfoArray[i].sourceInfo.id;
+
+        if (DisplayConfigGetDeviceInfo(&sourceName.header) == ERROR_SUCCESS)
+        {
+            // Compare (case-insensitive) the device names: sourceName.viewGdiDeviceName vs deviceName
+            if (_wcsicmp(sourceName.viewGdiDeviceName, deviceName.c_str()) == 0)
+            {
+                // 5. Retrieve the target's friendly name.
+                DISPLAYCONFIG_TARGET_DEVICE_NAME targetName;
+                ZeroMemory(&targetName, sizeof(targetName));
+                targetName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
+                targetName.header.size = sizeof(targetName);
+                targetName.header.adapterId = pathInfoArray[i].targetInfo.adapterId;
+                targetName.header.id = pathInfoArray[i].targetInfo.id;
+
+                if (DisplayConfigGetDeviceInfo(&targetName.header) == ERROR_SUCCESS)
+                {
+                    // The monitor's human-readable name is in monitorFriendlyDeviceName (wide chars).
+                    return targetName.monitorFriendlyDeviceName;
+                }
+            }
+        }
+    }
+
+    // Nothing found, or no match
+    return L"";
+}
+
 Napi::Value GetMonitorFriendlyName(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
@@ -26,28 +91,30 @@ Napi::Value GetMonitorFriendlyName(const Napi::CallbackInfo& CallbackInfo)
         return Environment.Undefined();
     }
 
-    DISPLAY_DEVICEW DisplayDevice;
-    ZeroMemory(&DisplayDevice, sizeof(DisplayDevice));
-    DisplayDevice.cb = sizeof(DisplayDevice);
+    return Napi::String::New(Environment, WStringToString(GetFriendlyNameFromDisplayConfig(MonitorInfo.szDevice)));
 
-    BOOL EnumSuccess = EnumDisplayDevicesW(
-        MonitorInfo.szDevice,
-        0,
-        &DisplayDevice,
-        0
-    );
+    // DISPLAY_DEVICEW DisplayDevice;
+    // ZeroMemory(&DisplayDevice, sizeof(DisplayDevice));
+    // DisplayDevice.cb = sizeof(DisplayDevice);
 
-    if (!EnumSuccess)
-    {
-        return Environment.Undefined();
-    }
-    else
-    {
-        std::wstring FriendlyNameWideString(DisplayDevice.DeviceString);
-        std::string FriendlyNameString = WStringToString(FriendlyNameWideString);
+    // BOOL EnumSuccess = EnumDisplayDevicesW(
+    //     MonitorInfo.szDevice,
+    //     0,
+    //     &DisplayDevice,
+    //     0
+    // );
 
-        return Napi::String::New(Environment, FriendlyNameString);
-    }
+    // if (!EnumSuccess)
+    // {
+    //     return Environment.Undefined();
+    // }
+    // else
+    // {
+    //     std::wstring FriendlyNameWideString(DisplayDevice.DeviceString);
+    //     std::string FriendlyNameString = WStringToString(FriendlyNameWideString);
+
+    //     return Napi::String::New(Environment, FriendlyNameString);
+    // }
 }
 
 int32_t GetRefreshRateFromWindow(HWND HWnd)
