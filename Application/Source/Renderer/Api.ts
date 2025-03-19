@@ -3,9 +3,18 @@
  * License: MIT
  */
 
-type FOn = (Channel: string, InFunction: ((...Arguments: Array<unknown>) => void)) => (() => void);
-type FOnce = (Channel: string, InFunction: (...Arguments: Array<unknown>) => void) => void;
+type FOn = (Channel: string, Listener: ((...Arguments: Array<unknown>) => void)) => (() => void);
+type FOnce = (Channel: string, Listener: (...Arguments: Array<unknown>) => void) => void;
 type FSend = (Channel: string, ...Arguments: Array<unknown>) => void;
+type FRemoveListener = FOnce;
+type FIpcRenderer =
+{
+    On: FOn;
+    Once: FOnce;
+    Send: FSend;
+    RemoveListener: FRemoveListener;
+};
+
 type FLogFunction = (...Arguments: Array<unknown>) => void;
 type FLog =
     FLogFunction &
@@ -16,28 +25,32 @@ type FLog =
         Normal: FLogFunction;
     };
 
-export const On: FOn = window.electron.ipcRenderer.on;
-export const Once: FOnce = window.electron.ipcRenderer.once;
-export const Send: FSend = window.electron.ipcRenderer.sendMessage;
+export const IpcRenderer: FIpcRenderer =
+{
+    On: window.electron.ipcRenderer.On,
+    Once: window.electron.ipcRenderer.Once,
+    RemoveListener: window.electron.ipcRenderer.SendMessage,
+    Send: window.electron.ipcRenderer.SendMessage
+};
 
 const Warn: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    window.electron.ipcRenderer.sendMessage("Log", "Warn", ...Arguments);
+    IpcRenderer.Send("Log", "Warn", ...Arguments);
 };
 
 const Normal: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    window.electron.ipcRenderer.sendMessage("Log", "Normal", ...Arguments);
+    IpcRenderer.Send("Log", "Normal", ...Arguments);
 };
 
 const Error: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    window.electron.ipcRenderer.sendMessage("Log", "Error", ...Arguments);
+    IpcRenderer.Send("Log", "Error", ...Arguments);
 };
 
 const Verbose: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    window.electron.ipcRenderer.sendMessage("Log", "Verbose", ...Arguments);
+    IpcRenderer.Send("Log", "Verbose", ...Arguments);
 };
 
 const OutLog: FLog = Normal.bind({ }) as FLog;

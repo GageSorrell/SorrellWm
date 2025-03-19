@@ -4,8 +4,9 @@
  * License:   MIT
  */
 
-import { Caption1, makeStyles, Title1 } from "@fluentui/react-components";
-import { GetPanelKey, Panel } from "$/Common";
+import { Caption1, Title1 } from "@fluentui/react-components";
+import { Command, GetPanelKey, Panel } from "$/Common";
+import { IpcRenderer, Log } from "@/Api";
 import { type ReactElement, useEffect, useState } from "react";
 import { Action } from "@/Action";
 import { CompoundCommand } from "$/Common";
@@ -17,17 +18,48 @@ export const Tile = (): ReactElement =>
     const [ AnnotatedPanels, SetAnnotatedPanels ] = useState<Array<FAnnotatedPanel>>([ ]);
     useEffect((): void =>
     {
-        window.electron.ipcRenderer.sendMessage("GetAnnotatedPanels");
-        window.electron.ipcRenderer.on("GetAnnotatedPanels", (...Arguments: Array<unknown>): void =>
+        IpcRenderer.Send("GetAnnotatedPanels");
+        IpcRenderer.On("GetAnnotatedPanels", (...Arguments: Array<unknown>): void =>
         {
             SetAnnotatedPanels((_Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
             {
                 return Arguments[0] as Array<FAnnotatedPanel>;
             });
         });
+
+        IpcRenderer.Send("GetPanelScreenshots");
+        IpcRenderer.On("GetPanelScreenshots", (...Arguments: Array<unknown>): void =>
+        {
+            const Screenshots: Array<string> = Arguments[0] as Array<string>;
+            SetAnnotatedPanels((Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
+            {
+                const Out: Array<FAnnotatedPanel> =
+                    Old.map((AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanel =>
+                    {
+                        return {
+                            ...AnnotatedPanel,
+                            Screenshot: Screenshots[Index]
+                        };
+                    });
+
+                return Out;
+            });
+        });
     }, [ SetAnnotatedPanels ]);
 
-    const [ SelectionIndex, IncrementSelectionIndex, DecrementSelectionIndex ] = UseIndex();
+    const [ SelectionIndex, IncrementSelectionIndex, DecrementSelectionIndex ] =
+        UseIndex(0, 0, AnnotatedPanels.length - 1);
+
+    useEffect((): void =>
+    {
+        Log(`Index is now ${ SelectionIndex }.`);
+    }, [ SelectionIndex ]);
+
+    const ConfirmSelection = (): void =>
+    {
+        IpcRenderer.Send("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
+        IpcRenderer.Send("TearDown");
+    };
 
     return (
         <Action>
@@ -38,25 +70,33 @@ export const Tile = (): ReactElement =>
                 Select the panel that you wish to insert this window into.
             </Caption1>
             <CompoundCommand
-                SubCommands={[
+                SubCommands={ [
                     {
-                        Action: IncrementSelectionIndex,
+                        Action: DecrementSelectionIndex,
                         Key: "H"
                     },
                     {
-                        Action: () => DecrementSelectionIndex,
+                        Action: IncrementSelectionIndex,
                         Key: "T"
                     }
-                ]}
+                ] }
                 Title="Change Selection (Up / Down)"
             />
+            <Command
+                Action={ ConfirmSelection }
+                Key="G"
+                Title="Confirm"
+            />
             {
-                AnnotatedPanels.map((AnnotatedPanel: FAnnotatedPanel): ReactElement =>
+                AnnotatedPanels.map((AnnotatedPanel: FAnnotatedPanel, Index: number): ReactElement =>
                 {
-                    return <Panel
-                        key={ GetPanelKey(AnnotatedPanel) }
-                        { ...AnnotatedPanel }
-                    />;
+                    return (
+                        <Panel
+                            IsSelected={ Index === SelectionIndex }
+                            key={ GetPanelKey(AnnotatedPanel) }
+                            { ...AnnotatedPanel }
+                        />
+                    );
                 })
             }
         </Action>

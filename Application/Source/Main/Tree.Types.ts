@@ -62,5 +62,5 @@ export type FAnnotatedPanel =
         ApplicationNames: Array<string>;
         Monitor: string;
         IsRoot: boolean;
-        Screenshot: string;
+        Screenshot: string | undefined;
     };

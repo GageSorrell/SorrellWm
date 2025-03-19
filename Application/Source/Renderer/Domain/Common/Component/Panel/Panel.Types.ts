@@ -6,4 +6,8 @@
 
 import type { FAnnotatedPanel } from "#/Tree.Types";
 
-export type PPanel = FAnnotatedPanel;
+export type PPanel =
+    FAnnotatedPanel &
+    {
+        IsSelected: boolean;
+    };

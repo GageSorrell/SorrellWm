@@ -4,6 +4,15 @@
  * License:   MIT
  */
 
+import chalk from "chalk";
+
 /** @TODO */
-/* eslint-disable-next-line @typescript-eslint/typedef */
-export const Log = console.log;
+export const Log = (...Arguments: Array<unknown>): void =>
+{
+    console.log(...Arguments);
+    // process.stdout.write(
+    //     chalk.bgMagenta.white(" Backend ") +
+    //     " " +
+    //     JSON.stringify(Arguments, null, 4)
+    // );
+};

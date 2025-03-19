@@ -123,3 +123,5 @@ export type FThemeMode =
     | "Dark"
     | "Light"
     | "Indeterminate";
+
+export function InitializeWinEvents(): void;

@@ -409,11 +409,11 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 void InitializeBlurBackground()
 {
     /* @TODO The event is never EVENT_SYSTEM_FOREGROUND. */
-    GGlobals::WinEvent->Register([&](DWORD Event)
+    GGlobals::WinEvent->Register([&](FWinEventPayload Payload)
     {
-        if (Event == EVENT_SYSTEM_FOREGROUND)
+        if (Payload.Event == EVENT_SYSTEM_FOREGROUND)
         {
-            LOG << "EVENT SYSTEM FOREGROUND" << std::endl;
+            // LOG << "EVENT SYSTEM FOREGROUND" << std::endl;
             HWND ForegroundWindow = GetForegroundWindow();
             RECT ForegroundRect;
             GetWindowRect(ForegroundWindow, &ForegroundRect);
@@ -860,13 +860,12 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
         WindowRect.bottom - WindowRect.top,
         SWP_SHOWWINDOW
     );
-    BOOL SetFore = SetForegroundWindow(SorrellWmMainWindow);
+    // BOOL SetFore = SetForegroundWindow(SorrellWmMainWindow);
 
-    LOG
-        << "LAST ERROR, "
-        << GetLastWindowsError()
-        << WindowRect
-        << std::endl;
+    INPUT pInputs[] = {{ INPUT_KEYBOARD, VK_MENU, 0},
+                   { INPUT_KEYBOARD, VK_MENU, KEYEVENTF_KEYUP}};
+    SendInput(2, pInputs, sizeof(INPUT));
+    SetForegroundWindow(SorrellWmMainWindow);
 
     GetBackgroundMode();
     Napi::Object OutObject = Napi::Object::New(Environment);

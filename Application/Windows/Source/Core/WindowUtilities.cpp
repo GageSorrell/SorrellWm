@@ -741,11 +741,10 @@ Napi::Value SetWindowPosition(const Napi::CallbackInfo& CallbackInfo)
 
     GetWindowTextW(Handle, WindowTextW, BufferSize);
 
-    LOG
-        << "💊💡🐥🥳💀💖🫥😂☝️🙃📄🤤♪σ◱◲△ε→×↦—é✓™‶π§²λ "
-        << "Inside SetWindowPosition, Title is "
-        << WStringToString(WindowTextW)
-        << std::endl;
+    // LOG
+    //     << "Inside SetWindowPosition, Title is "
+    //     << WStringToString(WindowTextW)
+    //     << std::endl;
 
     FBox Box = GetBoxArgument(CallbackInfo, 1);
 

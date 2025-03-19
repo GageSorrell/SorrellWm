@@ -5,14 +5,24 @@
 #include "WindowUtilities.h"
 #include <atomic>
 
-class FWinEvent : public TDispatcher<DWORD>
+struct FWinEventPayload
+{
+    DWORD Event;
+    HWND Handle;
+    LONG IdObject;
+    LONG IdChild;
+    DWORD EventThread;
+    DWORD EventTime;
+};
+
+class FWinEvent : public TDispatcher<FWinEventPayload>
 {
 public:
     FWinEvent();
 
     static Napi::Value Initialize(const Napi::CallbackInfo& CallbackInfo);
 
-    static void DispatchFromEventProc_INTERNAL(DWORD Event);
+    static void DispatchFromEventProc_INTERNAL(FWinEventPayload Payload);
 
     static void OnExit(void* _);
 

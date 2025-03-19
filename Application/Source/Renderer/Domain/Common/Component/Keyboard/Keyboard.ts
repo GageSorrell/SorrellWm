@@ -9,7 +9,7 @@ import type { FKeyId, FVirtualKey } from "./Keyboard.Types";
 /* eslint-disable sort-keys */
 
 /** Developer-friendly names of key codes. */
-const KeyIdsById: Readonly<Record<FVirtualKey, FKeyId>> =
+export const KeyIdsById: Readonly<Record<FVirtualKey, FKeyId>> =
 {
     0x05: "MouseX1",
     0x06: "MouseX2",

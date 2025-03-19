@@ -11,8 +11,10 @@ import {
     useEffect } from "react";
 import { type IShortcutProviderRenderProps, useShortcut } from "react-keybind";
 import { Title3, tokens } from "@fluentui/react-components";
-import { Key } from "../Keyboard";
+import { Key, KeyIdsById, type FVirtualKey } from "../Keyboard";
 import type { PCommand } from "./Command.Types";
+import { IpcRenderer, Log } from "@/Api";
+import type { FKeyboardEvent } from "#/Keyboard.Types";
 
 export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =>
 {
@@ -38,6 +40,22 @@ export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =
             unregisterShortcut([ `=+${ KeyString }` ]);
         };
     }, [ Action, KeyString, registerShortcut, unregisterShortcut ]);
+    // useEffect((): ReturnType<EffectCallback> =>
+    // {
+    //     const Listener = (...Arguments: Array<unknown>): void =>
+    //     {
+    //         if (KeyIdsById[(Arguments[0] as FKeyboardEvent).VkCode] === KeyString)
+    //         {
+    //             Log(`Key ${ KeyString } was pressed for command ${ Title }.`);
+    //         }
+    //     };
+
+    //     IpcRenderer.On("Keyboard", Listener);
+    //     return (): void =>
+    //     {
+    //         IpcRenderer.RemoveListener("Keyboard", Listener);
+    //     };
+    // }, [ KeyString, Title ]);
 
     return (
         <div

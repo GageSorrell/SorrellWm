@@ -10,7 +10,7 @@
 
 HHOOK ActivationKeyHook = NULL;
 
-LRESULT CALLBACK ActivationKeyProc(int nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK KeyProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     Napi::Env Environment = GGlobals::Ipc->Env();
     Napi::HandleScope Scope(Environment);
@@ -38,7 +38,7 @@ LRESULT CALLBACK ActivationKeyProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 void RegisterActivationKey()
 {
-    ActivationKeyHook = GGlobals::Hook->Register(WH_KEYBOARD_LL, ActivationKeyProc, NULL, 0);
+    ActivationKeyHook = GGlobals::Hook->Register(WH_KEYBOARD_LL, KeyProc, NULL, 0);
 
     if (ActivationKeyHook == nullptr)
     {

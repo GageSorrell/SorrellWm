@@ -12,7 +12,7 @@ import {
 import { type NavigateFunction, useNavigate } from "react-router-dom";
 import { type ReactElement, useEffect } from "react";
 import { Action } from "@/Action";
-import { Log } from "@/Api";
+import { IpcRenderer, Log } from "@/Api";
 import { UseIpcNavigatorState } from "@/Router";
 
 const ActivationTiled = (): ReactElement =>
@@ -102,11 +102,11 @@ export const Activation = (): ReactElement =>
 
     useEffect((): void =>
     {
-        window.electron.ipcRenderer.on("TearDown", (): void =>
+        IpcRenderer.On("TearDown", (): void =>
         {
             setTimeout((): void =>
             {
-                window.electron.ipcRenderer.sendMessage("TearDown");
+                IpcRenderer.Send("TearDown");
             }, 100);
         });
     }, [ ]);

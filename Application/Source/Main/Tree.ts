@@ -4,6 +4,17 @@
  * License:   MIT
  */
 
+import {
+    CaptureScreenSectionToTempPngFile,
+    type FMonitorInfo,
+    GetApplicationFriendlyName,
+    GetMonitorFriendlyName,
+    GetMonitorFromWindow,
+    GetTileableWindows,
+    GetWindowTitle,
+    type HMonitor,
+    type HWindow,
+    SetWindowPosition } from "@sorrellwm/windows";
 import type {
     FAnnotatedPanel,
     FCell,
@@ -11,26 +22,13 @@ import type {
     FPanel,
     FPanelBase,
     FPanelHorizontal,
-    FRootPanel,
     FVertex } from "./Tree.Types";
-import {
-    type FMonitorInfo,
-    GetTileableWindows,
-    GetMonitorFromWindow,
-    type HMonitor,
-    type HWindow,
-    SetWindowPosition,
-    GetWindowByName,
-    GetWindowTitle,
-    GetScreenshot,
-    type FBox,
-    CaptureScreenSectionToTempPngFile,
-    GetMonitorFriendlyName,
-    GetApplicationFriendlyName} from "@sorrellwm/windows";
-import { AreHandlesEqual } from "./Core/Utility";
+import { AreBoxesEqual, AreHandlesEqual } from "./Core/Utility";
 import { promises as Fs } from "fs";
+import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
 import { Log } from "./Development";
+import type { TPredicate } from "@/Utility";
 
 const Forest: FForest = [ ];
 
@@ -173,8 +171,6 @@ export const Flatten = (): Array<FVertex> =>
         return true;
     });
 
-    OutArray.push(...Forest);
-
     return OutArray;
 };
 
@@ -182,14 +178,14 @@ export const Flatten = (): Array<FVertex> =>
  * Run a function for each vertex until the function returns `false` for
  * an iteration.
  */
-export const Traverse = (InFunction: (Vertex: FVertex) => boolean, Entry?: FVertex): void =>
+export const Traverse = (Predicate: TPredicate<FVertex>, Entry?: FVertex): void =>
 {
     let Continues: boolean = true;
     const Recurrence = (Vertex: FVertex): void =>
     {
         if (Continues)
         {
-            Continues = InFunction(Vertex);
+            Continues = Predicate(Vertex);
             if (Continues && "Children" in Vertex)
             {
                 for (const Child of Vertex.Children)
@@ -208,13 +204,9 @@ export const Traverse = (InFunction: (Vertex: FVertex) => boolean, Entry?: FVert
     {
         for (const Panel of Forest)
         {
-            for (const Child of Panel.Children)
-            {
-                Recurrence(Child);
-            }
+            Recurrence(Panel);
         }
     }
-
 };
 
 const GetAllCells = (Panels: Array<FPanel>): Array<FCell> =>
@@ -278,6 +270,10 @@ export const IsWindowTiled = (Handle: HWindow): boolean =>
 {
     return Exists((Vertex: FVertex): boolean =>
     {
+        if (IsCell(Vertex))
+        {
+            Log("Handles are: ", Vertex.Handle, Handle);
+        }
         return IsCell(Vertex) && AreHandlesEqual(Vertex.Handle, Handle);
     });
 };
@@ -286,6 +282,22 @@ export const GetPanels = (): Array<FPanel> =>
 {
     const Vertices: Array<FVertex> = Flatten();
     return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as Array<FPanel>;
+};
+
+export const Publish = (): void =>
+{
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        if (IsCell(Vertex))
+        {
+            SetWindowPosition(
+                Vertex.Handle,
+                Vertex.Size
+            );
+        }
+
+        return true;
+    });
 };
 
 function PanelContainsVertex(currentVertex: FVertex, targetVertex: FVertex): boolean
@@ -349,18 +361,14 @@ const GetPanelApplicationNames = (Panel: FPanel): Array<string> =>
     return ResultNames;
 };
 
-export const AnnotatePanel = async (Panel: FPanel): Promise<FAnnotatedPanel | undefined> =>
+export const AnnotatePanel = (Panel: FPanel): FAnnotatedPanel | undefined =>
 {
-    const ScreenshotBuffer: Buffer =
-        await Fs.readFile(CaptureScreenSectionToTempPngFile(Panel.Size));
-
     const RootPanel: FPanel | undefined = GetRootPanel(Panel);
     if (RootPanel !== undefined && RootPanel.MonitorId !== undefined)
     {
         const ApplicationNames: Array<string> = GetPanelApplicationNames(Panel);
         const IsRoot: boolean = RootPanel === Panel;
         const Monitor: string = GetMonitorFriendlyName(RootPanel.MonitorId) || "";
-        const Screenshot: string = "data:image/png;base64," + ScreenshotBuffer.toString("base64");
 
         return {
             ...Panel,
@@ -368,11 +376,146 @@ export const AnnotatePanel = async (Panel: FPanel): Promise<FAnnotatedPanel | un
             ApplicationNames,
             IsRoot,
             Monitor,
-            Screenshot
+            Screenshot: undefined
         };
     }
 
     return undefined;
+};
+
+export const GetPanelScreenshot = async (Panel: FPanel): Promise<string | undefined> =>
+{
+    const ScreenshotBuffer: Buffer =
+        await Fs.readFile(CaptureScreenSectionToTempPngFile(Panel.Size));
+
+    return "data:image/png;base64," + ScreenshotBuffer.toString("base64");
+};
+
+export const MakeSizesUniform = (Panel: FPanel): void =>
+{
+    Panel.Children.forEach((Child: FVertex, Index: number): void =>
+    {
+        if (Panel.Type === "Horizontal")
+        {
+            Child.Size.Width = Panel.Size.Width / Panel.Children.length;
+            Child.Size.X = Panel.Size.X + Index * Child.Size.Width;
+            Child.Size.Height = Panel.Size.Height;
+            Child.Size.Y = Panel.Size.Y;
+        }
+        else if (Panel.Type === "Vertical")
+        {
+            Child.Size.Height = Panel.Size.Height / Panel.Children.length;
+            Child.Size.Y = Panel.Size.Y + Index * Child.Size.Height;
+            Child.Size.Width = Panel.Size.Width;
+            Child.Size.X = Panel.Size.X;
+        }
+    });
+};
+
+export const BringIntoPanel = (InPanel: FAnnotatedPanel): void =>
+{
+    const Handle: HWindow | undefined = GetActiveWindow();
+    if (Handle !== undefined)
+    {
+        console.log(`BringingIntoPanel: ${ GetWindowTitle(Handle) }.`);
+        const Panel: FPanel | undefined = GetPanelFromAnnotated(InPanel);
+        if (Panel !== undefined)
+        {
+            console.log("BringIntoPanel: PanelFromAnnotated was defined!");
+            const OutCell: FCell = Cell(Handle);
+            Panel.Children.push(OutCell);
+            MakeSizesUniform(Panel);
+            Publish();
+        }
+        else
+        {
+            console.log("BringIntoPanel: PanelFromAnnotated was UNDEFINED.");
+        }
+    }
+};
+
+export const ArePanelsEqual = (A: FPanel | FAnnotatedPanel, B: FPanel | FAnnotatedPanel): boolean =>
+{
+    return AreBoxesEqual(A.Size, B.Size);
+};
+
+export const Find = (Predicate: TPredicate<FVertex>): FVertex | undefined =>
+{
+    let Out: FVertex | undefined = undefined;
+
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        if (Out === undefined)
+        {
+            const Satisfies: boolean = Predicate(Vertex);
+            if (Satisfies)
+            {
+                Out = Vertex;
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
+            return true;
+        }
+    });
+
+    return Out;
+};
+
+export const IsPanel = (Vertex: FVertex): Vertex is FPanel =>
+{
+    return "Children" in Vertex;
+};
+
+export const GetPanelFromAnnotated = (Panel: FAnnotatedPanel): FPanel | undefined =>
+{
+    const LoggedPanel: Partial<FPanel> =
+    {
+        Size: Panel.Size,
+        Type: Panel.Type
+    };
+
+    console.log("Begins GetPanelFromAnnotated, Panel is", LoggedPanel);
+    return Find((Vertex: FVertex): boolean =>
+    {
+        if (IsPanel(Vertex))
+        {
+            console.log("Vertex is a panel.", Vertex);
+            const AreEqual: boolean = ArePanelsEqual(Panel, Vertex);
+
+            if (AreEqual)
+            {
+                console.log("Panels are equal", Panel, Vertex);
+            }
+            else
+            {
+                console.log("Panels are NOT equal", Panel, Vertex);
+            }
+
+            return AreEqual;
+        }
+        else
+        {
+            console.log("Vertex was NOT a panel", Vertex);
+            return false;
+        }
+    }) as FPanel | undefined;
+};
+
+export const RemoveAnnotations = ({ Children, MonitorId, Size, Type, ZOrder }: FAnnotatedPanel): FPanel =>
+{
+    return {
+        Children,
+        MonitorId,
+        Size,
+        Type,
+        ZOrder
+    };
 };
 
 InitializeTree();

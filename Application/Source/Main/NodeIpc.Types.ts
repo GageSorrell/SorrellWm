@@ -1,3 +1,9 @@
+/* File:      NodeIpc.Types.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * License:   MIT
+ */
+
 export type FIpcCallback = (...Data: Array<unknown>) => void;
 
 export type FIpcCallbackSerialized =

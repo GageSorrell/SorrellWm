@@ -6,6 +6,7 @@
 import type { HHandle } from "./Utility.Types";
 import { URL } from "url";
 import path from "path";
+import type { FBox } from "@sorrellwm/windows";
 
 export function ResolveHtmlPath(HtmlFileName: string, Component?: string)
 {
@@ -27,6 +28,17 @@ export function ResolveHtmlPath(HtmlFileName: string, Component?: string)
         return BasePath;
     }
 }
+
+export const AreBoxesEqual = (A: FBox, B: FBox): boolean =>
+{
+    return (
+        A.X === B.X &&
+        A.Y === B.Y &&
+        A.Width === B.Width &&
+        A.Height === B.Height
+    );
+
+};
 
 export const AreHandlesEqual = (A: HHandle, B: HHandle): boolean =>
 {

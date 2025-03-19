@@ -576,13 +576,14 @@ ${ PreloadImportStatement }
 
 const ElectronHandler =
 {
+
     ipcRenderer:
     {
-        on(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
+        On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
         {
             const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
             {
-                return InFunction(...args);
+                return Listener(...args);
             };
 
             ipcRenderer.on(Channel, subscription);
@@ -592,19 +593,23 @@ const ElectronHandler =
                 ipcRenderer.removeListener(Channel, subscription);
             };
         },
-        once(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
+        Once(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
         {
             ipcRenderer.once(
                 Channel,
-                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => InFunction(..._Arguments)
+                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => Listener(..._Arguments)
             );
         },
-        sendMessage(Channel: string, ...Arguments: Array<unknown>)
+        RemoveListener(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        {
+            ipcRenderer.removeListener(Channel, Listener);
+        },
+        SendMessage(Channel: string, ...Arguments: Array<unknown>)
         {
             ipcRenderer.send(Channel, ...Arguments);
         }
     },
-    ${ ExposedCalls }
+    ${ ExposedCalls.split("\n").map((Call: string): string => "    " + Call).join("\n") }
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);

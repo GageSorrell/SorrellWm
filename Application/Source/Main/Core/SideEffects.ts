@@ -17,5 +17,6 @@ setTimeout((): void =>
     import("../RendererFunctions.Generated");
     import("./Initialization");
     import("./Tray");
+    import("../WinEvent");
 });
 
