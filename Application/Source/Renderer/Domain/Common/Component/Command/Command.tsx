@@ -33,11 +33,15 @@ export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =
     const { registerShortcut, unregisterShortcut } = useShortcut() as IShortcutProviderRenderProps;
     useEffect((): ReturnType<EffectCallback> =>
     {
-        /* @TODO The `=` will need to be changed when the activation hotkey is changed. */
-        registerShortcut(Action, [ `=+${ KeyString }` ], "Foo", "Foo");
+        window.addEventListener("keydown", (Event: KeyboardEvent): void =>
+        {
+            Log(`KeyEvent is ${ Event.code }.`);
+        });
+        /* @TODO Investigate: the key F24 is registered as "Alt" by Electron and by online test tools. */
+        registerShortcut(Action, [ KeyString ], "Foo", "Foo");
         return (): void =>
         {
-            unregisterShortcut([ `=+${ KeyString }` ]);
+            unregisterShortcut([ KeyString ]);
         };
     }, [ Action, KeyString, registerShortcut, unregisterShortcut ]);
     // useEffect((): ReturnType<EffectCallback> =>

@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+import { AreBoxesEqual, AreHandlesEqual } from "./Core/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FMonitorInfo,
@@ -23,7 +24,6 @@ import type {
     FPanelBase,
     FPanelHorizontal,
     FVertex } from "./Tree.Types";
-import { AreBoxesEqual, AreHandlesEqual } from "./Core/Utility";
 import { promises as Fs } from "fs";
 import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";

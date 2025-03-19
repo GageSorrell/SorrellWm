@@ -69,24 +69,26 @@ export const Tile = (): ReactElement =>
             <Caption1>
                 Select the panel that you wish to insert this window into.
             </Caption1>
-            <CompoundCommand
-                SubCommands={ [
-                    {
-                        Action: DecrementSelectionIndex,
-                        Key: "H"
-                    },
-                    {
-                        Action: IncrementSelectionIndex,
-                        Key: "T"
-                    }
-                ] }
-                Title="Change Selection (Up / Down)"
-            />
-            <Command
-                Action={ ConfirmSelection }
-                Key="G"
-                Title="Confirm"
-            />
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                <CompoundCommand
+                    SubCommands={ [
+                        {
+                            Action: DecrementSelectionIndex,
+                            Key: "H"
+                        },
+                        {
+                            Action: IncrementSelectionIndex,
+                            Key: "T"
+                        }
+                    ] }
+                    Title="Change Selection (Up / Down)"
+                />
+                <Command
+                    Action={ ConfirmSelection }
+                    Key="G"
+                    Title="Confirm"
+                />
+            </div>
             {
                 AnnotatedPanels.map((AnnotatedPanel: FAnnotatedPanel, Index: number): ReactElement =>
                 {

@@ -27,14 +27,13 @@ export const CompoundCommand = ({ SubCommands, Title }: PCompoundCommand): React
     {
         SubCommands.forEach(({ Action, Key }: FSubCommand): void =>
         {
-            /* @TODO The `=` will need to be changed when the activation hotkey is changed. */
-            registerShortcut(Action, [ `=+${ Key.toLowerCase() }` ], "Foo", "Foo");
+            registerShortcut(Action, [ Key.toLowerCase() ], "Foo", "Foo");
         });
         return (): void =>
         {
             SubCommands.forEach(({ Key }: FSubCommand): void =>
             {
-                unregisterShortcut([ `=+${ Key.toLowerCase() }` ]);
+                unregisterShortcut([ Key.toLowerCase() ]);
             });
         };
     }, [ SubCommands, registerShortcut, unregisterShortcut ]);

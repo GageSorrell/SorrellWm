@@ -9,35 +9,33 @@
 std::tm convertToUTC(std::time_t time)
 {
     std::tm tm_utc;
-#ifdef _WIN32
-    gmtime_s(&tm_utc, &time); // Windows-specific
-#else
-    gmtime_r(&time, &tm_utc); // POSIX-specific
-#endif
+    #ifdef _WIN32
+        gmtime_s(&tm_utc, &time);
+    #else
+        gmtime_r(&time, &tm_utc);
+    #endif
     return tm_utc;
 }
 
 std::wstring GetFileNameTimestamp()
 {
-    auto now = std::chrono::system_clock::now();
-        std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-        std::tm tm_now;
+    auto Now = std::chrono::system_clock::now();
+    std::time_t NowTimeT = std::chrono::system_clock::to_time_t(now);
+    std::tm TmNow;
 
-        // Use localtime_s for thread safety on Windows, or localtime_r on POSIX
     #ifdef _WIN32
-        localtime_s(&tm_now, &now_time_t);
+        localtime_s(&TmNow, &NowTimeT);
     #else
-        localtime_r(&now_time_t, &tm_now);
+        localtime_r(&NowTimeT, &TmNow);
     #endif
 
-        std::wstringstream wss;
-        wss << std::put_time(&tm_now, L"%Y%m%d%H%M%S");
-        return wss.str();
+    std::wstringstream WideStringStream;
+    WideStringStream << std::put_time(&TmNow, L"%Y%m%d%H%M%S");
+    return WideStringStream.str();
 }
 
 std::wstring GetTimestamp()
 {
-    // Get current time
     auto now = std::chrono::system_clock::now();
     std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
     auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(

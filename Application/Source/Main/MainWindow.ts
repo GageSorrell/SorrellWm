@@ -178,7 +178,7 @@ function OnKey(Event: FKeyboardEvent): void
     }
 
     /** @TODO Make this a modifiable setting. */
-    const ActivationKey: FVirtualKey = Vk["+"];
+    const ActivationKey: FVirtualKey = Vk["F24"];
 
     if (VkCode === ActivationKey)
     {
