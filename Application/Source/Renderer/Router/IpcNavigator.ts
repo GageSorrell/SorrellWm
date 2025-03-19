@@ -20,7 +20,7 @@ export const IpcNavigator = (): undefined =>
     const Navigator: NavigateFunction = useNavigate();
     useEffect((): void =>
     {
-        IpcRenderer.On("Navigate", (...Arguments: Array<unknown>): void =>
+        window.electron.ipcRenderer.On("Navigate", (...Arguments: Array<unknown>): void =>
         {
             Log("Frontend received Navigate with Arguments", Arguments.length,  ...Arguments);
             const HasRoute: boolean = Arguments.length > 0 && typeof Arguments[0] === "string";
@@ -42,6 +42,8 @@ export const IpcNavigator = (): undefined =>
                 }
             }
         });
+
+        window.electron.ipcRenderer.SendMessage("ReadyForRoute");
     }, [ Navigator ]);
 
     return undefined;

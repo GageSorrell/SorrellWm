@@ -82,10 +82,12 @@
   "dependencies": {
     "@electron/notarize": "^2.3.2",
     "@fluentui/react-components": "^9.56.6",
+    "@fluentui/react-icons": "^2.0.292",
     "@react-spring/web": "^9.7.5",
     "@sorrellwm/windows": "file:Windows",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.8",
+    "electron-settings": "^4.0.4",
     "electron-updater": "^6.1.4",
     "openai": "^4.76.0",
     "react": "^18.2.0",

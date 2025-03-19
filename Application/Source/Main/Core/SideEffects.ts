@@ -10,6 +10,8 @@ import "../NodeIpc";
 import "../Keyboard";
 import "../Monitor";
 import "../Tree";
+import "../Settings/InitializeSettings";
+import "../Notification";
 
 setTimeout((): void =>
 {

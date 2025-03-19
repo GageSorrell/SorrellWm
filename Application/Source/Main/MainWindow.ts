@@ -87,7 +87,6 @@ const LaunchMainWindow = async (): Promise<void> =>
         (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
         {
             Event.preventDefault();
-            // MainWindow?.webContents.openDevTools();
         }
     );
 

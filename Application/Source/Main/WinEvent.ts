@@ -19,8 +19,8 @@ Subscribe("WinEvent", (...Arguments: Array<unknown>): void =>
     const { Event }: FWinEventPayload = Arguments[0] as FWinEventPayload;
     const ResizeEvent: number = 32772;
     const MouseMoveEvent: number = 32779;
-    if (Event !== MouseMoveEvent)
-    {
-        Log(`WinEvent Event value is ${ Event }.`);
-    }
+    // if (Event !== MouseMoveEvent)
+    // {
+    //     Log(`WinEvent Event value is ${ Event }.`);
+    // }
 });

@@ -8,7 +8,6 @@
 import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
 import { HWindow, FHexColor } from "@sorrellwm/windows";
 
-
 const ElectronHandler =
 {
     ipcRenderer:

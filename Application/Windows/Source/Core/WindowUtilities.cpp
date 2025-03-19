@@ -956,7 +956,7 @@ Napi::Value GetWindowTitle(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    HWND Handle = GetHandleArgument(Environment, CallbackInfo, 0);
+    HWND Handle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
 
     const int BufferSize = 256;
     wchar_t WindowTextW[BufferSize] = { 0 };

@@ -6,8 +6,9 @@
 
 import { Tray as ElectronTray, Menu, app } from "electron";
 import type { FTray } from "./Tray.Types";
+import { OpenSettings } from "#/Settings/Settings";
 
-const Tray: FTray = { Ref: null };
+const Tray: FTray = { Ref: undefined };
 
 app.whenReady().then(() =>
 {
@@ -15,13 +16,17 @@ app.whenReady().then(() =>
 
     const ContextMenu: Menu = Menu.buildFromTemplate([
         {
-            label: "foo",
+            click: OpenSettings,
+            label: "Settings",
+            type: "normal"
+        },
+        {
+            click: () => app.exit(),
+            label: "Exit",
             type: "normal"
         }
     ]);
 
     Tray.Ref.setToolTip("SorrellWm v0.0.1\nUp to date");
     Tray.Ref.setContextMenu(ContextMenu);
-
-    console.log("Registered tray");
 });

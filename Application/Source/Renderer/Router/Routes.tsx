@@ -11,6 +11,7 @@ import { IpcNavigator } from "./IpcNavigator";
 import { Move } from "$/Move";
 import { New } from "$/New";
 import { Resize } from "$/Resize";
+import { Settings } from "$/Settings";
 import { TestWindow } from "$/Development/TestWindow";
 import { Tile } from "@/Domain/Tile";
 
@@ -47,6 +48,10 @@ export const Routes = () =>
                 <Route
                     element={ <Tile /> }
                     path="/Tile"
+                />
+                <Route
+                    element={ <Settings /> }
+                    path="/Settings"
                 />
             </RouterRoutes>
         </MemoryRouter>
