@@ -25,7 +25,6 @@ export const Settings = (): ReactElement =>
     {
         alignItems: "center",
         display: "flex",
-        backgroundColor: "white",
         flexDirection: "row",
         flexWrap: "nowrap",
         height: "100%",
@@ -37,8 +36,9 @@ export const Settings = (): ReactElement =>
     const KeyboardIcon: FluentIcon = bundleIcon(KeyboardFilled, KeyboardRegular);
     const AboutIcon: FluentIcon = bundleIcon(InfoFilled, InfoRegular);
 
-    const TabStyle: CSSProperties =
+    const TabListStyle: CSSProperties =
     {
+        background: "none",
         marginBottom: tokens.spacingVerticalM,
         marginTop: tokens.spacingVerticalM,
         minHeight: "100vh",
@@ -60,7 +60,7 @@ export const Settings = (): ReactElement =>
                 onTabSelect={ OnTabSelect }
                 selectedValue={ SelectedValue }
                 size="large"
-                style={ TabStyle }
+                style={ TabListStyle }
                 vertical>
                 <Tab
                     icon={ <BasicSettingsIcon /> }
@@ -69,13 +69,13 @@ export const Settings = (): ReactElement =>
                 </Tab>
                 <Tab
                     icon={ <KeyboardIcon /> }
-                    value="tab2">
+                    value="Keyboard">
                     Keyboard
                 </Tab>
                 <Tab
                     icon={ <AboutIcon /> }
                     style={{ position: "absolute", bottom: 0 }}
-                    value="tab3">
+                    value="About">
                     About
                 </Tab>
             </TabList>

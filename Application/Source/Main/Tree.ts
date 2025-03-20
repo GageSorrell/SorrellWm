@@ -15,6 +15,7 @@ import {
     GetWindowTitle,
     type HMonitor,
     type HWindow,
+    RestoreAllWindows,
     SetWindowPosition } from "@sorrellwm/windows";
 import type {
     FAnnotatedPanel,
@@ -66,23 +67,28 @@ const InitializeTree = (): void =>
 
     console.log(Monitors);
 
-    Forest.push(...Monitors.map((Monitor: FMonitorInfo): FPanelHorizontal =>
+    Forest.push(...Monitors.map((Monitor: FMonitorInfo): FPanel =>
     {
-        console.log(`Here, MonitorHandle is ${ Monitor.Handle }.`);
+        // console.log(`Here, MonitorHandle is ${ Monitor.Handle }.`);
         return {
             Children: [ ],
             MonitorId: Monitor.Handle,
             Size: Monitor.Size,
-            Type: "Horizontal",
+            Type: Monitor.Size.Width < Monitor.Size.Height
+                ? "Vertical"
+                : "Horizontal",
             ZOrder: 0
         };
     }));
 
     console.log(Forest);
 
+    /** @TODO Consider changing this. */
+    RestoreAllWindows();
+
     const TileableWindows: Array<HWindow> = GetTileableWindows();
 
-    console.log(`Found ${ TileableWindows.length } tileable windows.`);
+    // console.log(`Found ${ TileableWindows.length } tileable windows.`);
 
     TileableWindows.forEach((Handle: HWindow): void =>
     {
@@ -90,14 +96,14 @@ const InitializeTree = (): void =>
         const RootPanel: FPanelBase | undefined =
             Forest.find((Panel: FPanelBase): boolean =>
             {
-                console.log(`Monitor is ${ JSON.stringify(Monitor) } and Panel.MonitorId is ${ JSON.stringify(Panel.MonitorId) }.`);
+                // console.log(`Monitor is ${ JSON.stringify(Monitor) } and Panel.MonitorId is ${ JSON.stringify(Panel.MonitorId) }.`);
                 const Info: FMonitorInfo | undefined =
                     Monitors.find((Foo: FMonitorInfo): boolean =>
                     {
                         return Foo.Handle.Handle === Panel.MonitorId?.Handle;
                     });
 
-                console.log(`Size ${ JSON.stringify(Info?.Size) } WorkSize ${ JSON.stringify(Info?.WorkSize) }.`);
+                // console.log(`Size ${ JSON.stringify(Info?.Size) } WorkSize ${ JSON.stringify(Info?.WorkSize) }.`);
 
                 return Panel.MonitorId?.Handle === Monitor.Handle;
             });
@@ -270,10 +276,6 @@ export const IsWindowTiled = (Handle: HWindow): boolean =>
 {
     return Exists((Vertex: FVertex): boolean =>
     {
-        if (IsCell(Vertex))
-        {
-            Log("Handles are: ", Vertex.Handle, Handle);
-        }
         return IsCell(Vertex) && AreHandlesEqual(Vertex.Handle, Handle);
     });
 };
@@ -397,14 +399,14 @@ export const MakeSizesUniform = (Panel: FPanel): void =>
     {
         if (Panel.Type === "Horizontal")
         {
-            Child.Size.Width = Panel.Size.Width / Panel.Children.length;
+            Child.Size.Width = Math.floor(Panel.Size.Width / Panel.Children.length);
             Child.Size.X = Panel.Size.X + Index * Child.Size.Width;
             Child.Size.Height = Panel.Size.Height;
             Child.Size.Y = Panel.Size.Y;
         }
         else if (Panel.Type === "Vertical")
         {
-            Child.Size.Height = Panel.Size.Height / Panel.Children.length;
+            Child.Size.Height = Math.floor(Panel.Size.Height / Panel.Children.length);
             Child.Size.Y = Panel.Size.Y + Index * Child.Size.Height;
             Child.Size.Width = Panel.Size.Width;
             Child.Size.X = Panel.Size.X;
@@ -412,13 +414,46 @@ export const MakeSizesUniform = (Panel: FPanel): void =>
     });
 };
 
-export const BringIntoPanel = (InPanel: FAnnotatedPanel): void =>
+export const IsPanelAnnotated = (Panel: FPanel | FAnnotatedPanel): Panel is FAnnotatedPanel =>
+{
+    return "Screenshot" in Panel;
+};
+
+export const GetCurrentPanel = (): FPanel | undefined =>
 {
     const Handle: HWindow | undefined = GetActiveWindow();
     if (Handle !== undefined)
     {
+        return Find((Vertex: FVertex): boolean =>
+        {
+            if (IsPanel(Vertex))
+            {
+                return Vertex.Children.some((Child: FVertex): boolean =>
+                {
+                    return IsCell(Child) && AreHandlesEqual(Child.Handle, Handle);
+                });
+            }
+            else
+            {
+                return false;
+            }
+        }) as FPanel | undefined;
+    }
+    else
+    {
+        return undefined;
+    }
+};
+
+export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindow): void =>
+{
+    if (Handle !== undefined)
+    {
         console.log(`BringingIntoPanel: ${ GetWindowTitle(Handle) }.`);
-        const Panel: FPanel | undefined = GetPanelFromAnnotated(InPanel);
+        const Panel: FPanel | undefined = IsPanelAnnotated(InPanel)
+            ? GetPanelFromAnnotated(InPanel)
+            : InPanel;
+
         if (Panel !== undefined)
         {
             console.log("BringIntoPanel: PanelFromAnnotated was defined!");

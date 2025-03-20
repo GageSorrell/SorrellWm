@@ -4,7 +4,7 @@
  */
 
 import * as Path from "path";
-import { AnnotatePanel, BringIntoPanel, GetPanelScreenshot, GetPanels, IsWindowTiled } from "./Tree";
+import { AnnotatePanel, BringIntoPanel, GetCurrentPanel, GetPanelScreenshot, GetPanels, IsWindowTiled } from "./Tree";
 import {
     BlurBackground,
     GetFocusedWindow,
@@ -20,6 +20,7 @@ import { Log } from "./Development";
 import { ResolveHtmlPath } from "./Core/Utility";
 import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
 import chalk from "chalk";
+import { CreateTestWindows } from "./Development/TestWindows";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -90,6 +91,12 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
+    ipcMain.on("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    {
+        const Panel: FPanel | undefined = GetCurrentPanel();
+        MainWindow?.webContents.send("GetCurrentPanel", Panel);
+    });
+
     /** @TODO Find better place for this. */
     ipcMain.on("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
@@ -120,7 +127,7 @@ const LaunchMainWindow = async (): Promise<void> =>
     {
         // Log("BringIntoPanel", Arguments[0]);
         console.log("BringIntoPanel !! !!", ...Arguments);
-        BringIntoPanel(Arguments[0] as FAnnotatedPanel);
+        BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindow() as HWindow);
     });
 
     ipcMain.on("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
@@ -159,6 +166,9 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     MainWindow.loadURL(ResolveHtmlPath("index.html"));
+
+    /** @TODO Run this by flag with `npm start`. */
+    CreateTestWindows();
 };
 
 /** The window that SorrellWm is being drawn over. */

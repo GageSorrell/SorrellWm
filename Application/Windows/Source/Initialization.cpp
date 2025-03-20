@@ -111,6 +111,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "CaptureScreenSectionToTempPngFile", CaptureScreenSectionToTempPngFile },
         { "GetMonitorFriendlyName", GetMonitorFriendlyName },
         { "GetApplicationFriendlyName", GetApplicationFriendlyName },
+        { "RestoreAllWindows", RestoreAllWindows },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },

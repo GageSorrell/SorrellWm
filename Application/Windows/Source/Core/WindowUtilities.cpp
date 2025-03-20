@@ -678,10 +678,10 @@ Napi::Value GetWindowLocationAndSize(const Napi::CallbackInfo& info)
     int absoluteX = rect.left - monitorInfo.rcMonitor.left;
     int absoluteY = rect.top - monitorInfo.rcMonitor.top;
 
-    std::cout << "Left: " << rect.left << std::endl;
-    std::cout << "Top: " << rect.top << std::endl;
-    std::cout << "Monitor Left: " << monitorInfo.rcMonitor.left << std::endl;
-    std::cout << "Monitor Top: " << monitorInfo.rcMonitor.top << std::endl;
+    // std::cout << "Left: " << rect.left << std::endl;
+    // std::cout << "Top: " << rect.top << std::endl;
+    // std::cout << "Monitor Left: " << monitorInfo.rcMonitor.left << std::endl;
+    // std::cout << "Monitor Top: " << monitorInfo.rcMonitor.top << std::endl;
 
     Napi::Object result = Napi::Object::New(env);
 
@@ -1043,4 +1043,22 @@ Napi::Value GetApplicationFriendlyName(const Napi::CallbackInfo& CallbackInfo)
 
     CloseHandle(ProcessHandle);
     return Napi::String::New(Environment, BaseName);
+}
+
+BOOL CALLBACK EnumWindowsRestore(HWND WindowHandle, LPARAM LParam)
+{
+    if (IsWindowVisible(WindowHandle))
+    {
+        if (IsZoomed(WindowHandle))
+        {
+            ShowWindow(WindowHandle, SW_RESTORE);
+        }
+    }
+    return TRUE;
+}
+
+Napi::Value RestoreAllWindows(const Napi::CallbackInfo& CallbackInfo)
+{
+    EnumWindows(EnumWindowsRestore, 0);
+    return CallbackInfo.Env().Undefined();
 }

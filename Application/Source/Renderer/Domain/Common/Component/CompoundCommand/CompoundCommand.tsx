@@ -6,7 +6,7 @@
 
 import { type CSSProperties, type EffectCallback, type ReactElement, useEffect } from "react";
 import type { FSubCommand, PCompoundCommand } from "./CompoundCommand.Types";
-import { type IShortcutProviderRenderProps, useShortcut } from "react-keybind";
+import { type IShortcutProviderRenderProps, useShortcut } from "@/Keybinds";
 import { Title3, tokens } from "@fluentui/react-components";
 import { Key } from "../Keyboard";
 

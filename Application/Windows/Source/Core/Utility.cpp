@@ -20,7 +20,7 @@ std::tm convertToUTC(std::time_t time)
 std::wstring GetFileNameTimestamp()
 {
     auto Now = std::chrono::system_clock::now();
-    std::time_t NowTimeT = std::chrono::system_clock::to_time_t(now);
+    std::time_t NowTimeT = std::chrono::system_clock::to_time_t(Now);
     std::tm TmNow;
 
     #ifdef _WIN32
@@ -36,36 +36,39 @@ std::wstring GetFileNameTimestamp()
 
 std::wstring GetTimestamp()
 {
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-    auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                      now.time_since_epoch()) %
-                  1000;
+    auto Now = std::chrono::system_clock::now();
+    std::time_t NowTimeT = std::chrono::system_clock::to_time_t(Now);
+    auto NowMs = std::chrono::duration_cast<std::chrono::milliseconds>(Now.time_since_epoch()) % 1000;
 
-    // Convert to UTC time
-    std::tm tm_utc = convertToUTC(now_time_t);
+    std::tm TmUtc = convertToUTC(NowTimeT);
 
-    // Format as ISO 8601
-    std::wstringstream wss;
-    wss << std::put_time(&tm_utc, L"%Y-%m-%dT%H:%M:%S");
-    wss << L"." << std::setfill(L'0') << std::setw(3) << now_ms.count() << L"Z";
-    return wss.str();
+    std::wstringstream WideStringStream;
+    WideStringStream << std::put_time(&TmUtc, L"%Y-%m-%dT%H:%M:%S");
+    WideStringStream
+        << L"."
+        << std::setfill(L'0')
+        << std::setw(3)
+        << NowMs.count()
+        << L"Z";
+
+    return WideStringStream.str();
 }
 
 std::wstring GetTempPath()
 {
-    const DWORD bufferSize = MAX_PATH;
-    wchar_t tempPathBuffer[bufferSize];
-    DWORD tempPathLength = GetEnvironmentVariableW(L"TEMP", tempPathBuffer, bufferSize);
+    const DWORD BufferSize = MAX_PATH;
+    wchar_t TempPathBuffer[BufferSize];
+    DWORD TempPathLength = GetEnvironmentVariableW(L"TEMP", TempPathBuffer, BufferSize);
 
-    if (tempPathLength == 0 || tempPathLength > bufferSize) {
+    if (TempPathLength == 0 || TempPathLength > BufferSize)
+    {
         std::wcerr << L"Error: Unable to retrieve %TEMP% environment variable. Error code: " << GetLastError() << std::endl;
     }
 
-    std::wstring tempPath(tempPathBuffer, tempPathLength);
+    std::wstring TempPath(TempPathBuffer, TempPathLength);
 
-    std::wstring targetPath = tempPath + L"\\SorrellWm";
-    return targetPath;
+    std::wstring TargetPath = TempPath + L"\\SorrellWm";
+    return TargetPath;
 }
 
 BOOL GetDwmWindowRect(HWND Handle, RECT* Rect)

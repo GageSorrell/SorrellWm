@@ -16,8 +16,10 @@ export const OpenSettings = (): void =>
     {
         SettingsWindow = new BrowserWindow({
             autoHideMenuBar: true,
+            backgroundMaterial: "mica",
             frame: true,
             height: 900,
+            maximizable: true,
             resizable: true,
             show: true,
             skipTaskbar: false,

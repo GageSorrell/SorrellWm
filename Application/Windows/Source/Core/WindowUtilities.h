@@ -35,6 +35,7 @@ DECLARE_NAPI_FUNCTION(GetMonitorFromWindow, HMonitor, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(SetWindowPosition, void, Handle, HWindow, Box, FBox)
 DECLARE_NAPI_FUNCTION(GetWindowTitle, string, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetApplicationFriendlyName, string | undefined, Handle, HWindow)
+DECLARE_NAPI_FUNCTION(RestoreAllWindows, void)
 
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);
 std::string CaptureWindowScreenshot_Internal(HWND hwnd);

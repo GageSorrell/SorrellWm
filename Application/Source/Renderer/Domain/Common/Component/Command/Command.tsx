@@ -9,7 +9,7 @@ import {
     type EffectCallback,
     type ReactElement,
     useEffect } from "react";
-import { type IShortcutProviderRenderProps, useShortcut } from "react-keybind";
+import { type IShortcutProviderRenderProps, useShortcut } from "@/Keybinds";
 import { Title3, tokens } from "@fluentui/react-components";
 import { Key, KeyIdsById, type FVirtualKey } from "../Keyboard";
 import type { PCommand } from "./Command.Types";

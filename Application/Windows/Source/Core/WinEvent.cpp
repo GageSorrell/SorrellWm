@@ -24,6 +24,7 @@ void FWinEvent::DispatchFromEventProc_INTERNAL(FWinEventPayload Payload)
     Napi::Number EventThread = Napi::Number::New(GGlobals::WinEvent->Environment, Payload.EventThread);
     Napi::Number EventTime = Napi::Number::New(GGlobals::WinEvent->Environment, Payload.EventTime);
     OutObject.Set("Event", Event);
+    OutObject.Set("Handle", Handle);
     OutObject.Set("IdObject", IdObject);
     OutObject.Set("IdChild", IdChild);
     OutObject.Set("EventThread", EventThread);

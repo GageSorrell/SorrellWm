@@ -31,3 +31,4 @@ export function GetMonitorFromWindow(Handle: HWindow): HMonitor;
 export function SetWindowPosition(Handle: HWindow, Box: FBox): void;
 export function GetWindowTitle(Handle: HWindow): string;
 export function GetApplicationFriendlyName(Handle: HWindow): string | undefined;
+export function RestoreAllWindows(): void;
