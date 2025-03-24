@@ -7,6 +7,7 @@
 import { Tray as ElectronTray, Menu, app } from "electron";
 import type { FTray } from "./Tray.Types";
 import { OpenSettings } from "#/Settings/Settings";
+import { Activate } from "#/MainWindow";
 
 const Tray: FTray = { Ref: undefined };
 
@@ -29,4 +30,5 @@ app.whenReady().then(() =>
 
     Tray.Ref.setToolTip("SorrellWm v0.0.1\nUp to date");
     Tray.Ref.setContextMenu(ContextMenu);
+    Tray.Ref.addListener("click", Activate);
 });

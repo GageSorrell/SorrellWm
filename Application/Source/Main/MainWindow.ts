@@ -178,6 +178,18 @@ export const GetActiveWindow = (): HWindow | undefined =>
     return ActiveWindow;
 };
 
+export const Activate = (): void =>
+{
+    if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window")
+    {
+        ActiveWindow = GetFocusedWindow();
+        const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
+        Log(`Focused Window of IsTiled call is ${ GetWindowTitle(GetFocusedWindow()) }.`);
+        MainWindow?.webContents.send("Navigate", "", { IsTiled });
+        BlurBackground();
+    }
+};
+
 function OnKey(Event: FKeyboardEvent): void
 {
     const { State, VkCode } = Event;
@@ -193,14 +205,6 @@ function OnKey(Event: FKeyboardEvent): void
     {
         if (State === "Down")
         {
-            if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window")
-            {
-                ActiveWindow = GetFocusedWindow();
-                const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
-                Log(`Focused Window of IsTiled call is ${ GetWindowTitle(GetFocusedWindow()) }.`);
-                MainWindow.webContents.send("Navigate", "", { IsTiled });
-                BlurBackground();
-            }
         }
         else
         {

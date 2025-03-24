@@ -5,8 +5,7 @@
   "type": "module",
   "description": "Build SorrellWm.",
   "main": "./Distribution/index.js",
-  "scripts":
-  {
+  "scripts": {
     "build": "tsc",
     "dev": "concurrently \"yarn run watch-ts\" \"yarn run watch-build-complete\"",
     "watch-ts": "tsc -w",
