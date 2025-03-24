@@ -12,3 +12,5 @@ DECLARE_LOG_CATEGORY(Screenshot)
 
 DECLARE_NAPI_FUNCTION(GetScreenshot, string, Bounds, FBox)
 DECLARE_NAPI_FUNCTION(CaptureScreenSectionToTempPngFile, string, Bounds, FBox)
+
+std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captureArea);

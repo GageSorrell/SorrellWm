@@ -4,7 +4,7 @@
  */
 
 import * as Path from "path";
-import { AnnotatePanel, BringIntoPanel, GetCurrentPanel, GetPanelScreenshot, GetPanels, IsWindowTiled } from "./Tree";
+import { AnnotatePanel, BringIntoPanel, ChangeFocus, GetCurrentPanel, GetPanelScreenshot, GetPanels, IsWindowTiled } from "./Tree";
 import {
     BlurBackground,
     GetFocusedWindow,
@@ -12,7 +12,7 @@ import {
     type HWindow,
     UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
-import type { FAnnotatedPanel, FPanel } from "./Tree.Types";
+import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
@@ -111,6 +111,18 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     /** @TODO Find better place for this. */
+    ipcMain.on("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    {
+        const InterimFocus: FVertex = Arguments[0] as FVertex;
+        const FocusChange: FFocusChange = Arguments[1] as FFocusChange;
+        const NewInterimFocus: FVertex | undefined = ChangeFocus(InterimFocus, FocusChange);
+
+        BlurBackground(NewInterimFocus?.Size);
+
+        MainWindow?.webContents.send("OnChangeFocus", NewInterimFocus);
+    });
+
+    /** @TODO Find better place for this. */
     ipcMain.on("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         const Panels: Array<FPanel> = GetPanels();
@@ -125,14 +137,12 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     ipcMain.on("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
-        // Log("BringIntoPanel", Arguments[0]);
-        console.log("BringIntoPanel !! !!", ...Arguments);
-        BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindow() as HWindow);
+        BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindows()[0] as HWindow);
     });
 
     ipcMain.on("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
-        ActiveWindow = undefined;
+        ActiveWindows.length = 0;
         UnblurBackground();
     });
 
@@ -172,17 +182,19 @@ const LaunchMainWindow = async (): Promise<void> =>
 };
 
 /** The window that SorrellWm is being drawn over. */
-let ActiveWindow: HWindow | undefined = undefined;
-export const GetActiveWindow = (): HWindow | undefined =>
+const ActiveWindows: Array<HWindow> = [ ];
+
+export const GetActiveWindows = (): Array<HWindow> =>
 {
-    return ActiveWindow;
+    return ActiveWindows;
 };
 
 export const Activate = (): void =>
 {
     if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window")
     {
-        ActiveWindow = GetFocusedWindow();
+        ActiveWindows.length = 0;
+        ActiveWindows.push(GetFocusedWindow());
         const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
         Log(`Focused Window of IsTiled call is ${ GetWindowTitle(GetFocusedWindow()) }.`);
         MainWindow?.webContents.send("Navigate", "", { IsTiled });

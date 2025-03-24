@@ -55,180 +55,6 @@ static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
     return EncodedString;
 }
 
-// Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
-// {
-//     Napi::Env Environment = CallbackInfo.Env();
-
-//     RECT Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
-
-//     int32_t Width = Bounds.right - Bounds.left;
-//     int32_t Height = Bounds.bottom - Bounds.top;
-//     int32_t ChannelsNum = 3;
-
-//     const int32_t FairlyHighResolution = 3840 * 2160 * ChannelsNum;
-
-//     std::vector<BYTE> ScreenshotData(FairlyHighResolution);
-//     BYTE* Screenshot = nullptr;
-//     LPBITMAPINFO ScreenshotBmi = nullptr;
-
-//     HDC ScreenDc = GetDC(nullptr);
-
-//     HDC HdcMemDC = CreateCompatibleDC(ScreenDc);
-//     if (!HdcMemDC)
-//     {
-//         LOG
-//             << ELogLevel::Error
-//             << "Failed to create compatible DC."
-//             << std::endl;
-
-//         ReleaseDC(nullptr, ScreenDc);
-//         return Environment.Undefined();
-//     }
-
-//     ScreenshotData.reserve(Width * Height * ChannelsNum);
-//     Screenshot = ScreenshotData.data();
-
-//     HBITMAP BitmapHandle = CreateDIBSection(
-//         ScreenDc,
-//         ScreenshotBmi,
-//         DIB_RGB_COLORS,
-//         (void**) Screenshot,
-//         nullptr,
-//         0
-//     );
-
-//     if (!BitmapHandle)
-//     {
-//         LOG
-//             << ELogLevel::Error
-//             << "Failed to create DIB section."
-//             << GetLastWindowsError()
-//             << std::endl;
-
-//         DeleteDC(HdcMemDC);
-//         ReleaseDC(nullptr, ScreenDc);
-//         return Environment.Undefined();
-//     }
-//     else
-//     {
-//         // LOG << "Made DIB Section." << std::endl;
-//     }
-
-//     HGDIOBJ OldHandle = SelectObject(HdcMemDC, BitmapHandle);
-//     if (!OldHandle)
-//     {
-//         LOG
-//             << ELogLevel::Error
-//             << "Failed to select bitmap into DC."
-//             << std::endl;
-//         LogLastWindowsError();
-//         DeleteObject(BitmapHandle);
-//         DeleteDC(HdcMemDC);
-//         ReleaseDC(nullptr, ScreenDc);
-
-//         return Environment.Undefined();
-//     }
-//     else
-//     {
-//         // LOG << "hOld has been selected." << std::endl;
-//         return Environment.Undefined();
-//     }
-
-//     BOOL BltSuccess = BitBlt(
-//         HdcMemDC,
-//         0,
-//         0,
-//         Width,
-//         Height,
-//         ScreenDc,
-//         Bounds.left,
-//         Bounds.top,
-//         SRCCOPY
-//     );
-
-//     if (!BltSuccess)
-//     {
-//         LOG
-//             << ELogLevel::Error
-//             << "BitBlt failed."
-//             << std::endl;
-//         SelectObject(HdcMemDC, OldHandle);
-//         DeleteObject(BitmapHandle);
-//         DeleteDC(HdcMemDC);
-//         ReleaseDC(nullptr, ScreenDc);
-
-//         return Environment.Undefined();
-//     }
-//     else
-//     {
-//         // LOG << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
-//         // std::endl;
-//         return Environment.Undefined();
-//     }
-
-//     SIZE_T BufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
-//     ScreenshotData.reserve(BufferSize);
-
-//     if (!Screenshot)
-//     {
-//         LOG
-//             << ELogLevel::Error
-//             << "Failed to allocate memory for screenshot."
-//             << std::endl;
-
-//         LogLastWindowsError();
-//         SelectObject(HdcMemDC, OldHandle);
-//         DeleteObject(BitmapHandle);
-//         DeleteDC(HdcMemDC);
-//         ReleaseDC(nullptr, ScreenDc);
-
-//         return Environment.Undefined();
-//     }
-//     else
-//     {
-//         // std::cout << "Screenshot is GOOD!" << std::endl;
-//     }
-
-//     const int32_t ScanLines = GetDIBits(
-//         ScreenDc,
-//         BitmapHandle,
-//         0,
-//         Height,
-//         Screenshot,
-//         ScreenshotBmi,
-//         DIB_RGB_COLORS
-//     );
-
-//     if (ScanLines == 0)
-//     {
-//         std::cout << "GetDIBits failed." << std::endl;
-//         LogLastWindowsError();
-//         Screenshot = nullptr;
-//     }
-//     else
-//     {
-//         // std::cout << "There are " << scanLines << " scanLines!" << std::endl;
-//     }
-
-//     Screenshot = ScreenshotData.data();
-
-//     SelectObject(HdcMemDC, OldHandle);
-//     DeleteObject(BitmapHandle);
-//     DeleteDC(HdcMemDC);
-//     ReleaseDC(nullptr, ScreenDc);
-
-//     if (ScanLines == 0)
-//     {
-//         return Environment.Undefined();
-//     }
-//     else
-//     {
-//         std::string EncodedData = Base64Encode(ScreenshotData.data(), ScreenshotData.size());
-//         std::string DataUrl = "data:image/bmp;base64," + EncodedData;
-//         return Napi::String::New(Environment, DataUrl);
-//     }
-// }
-
 Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
@@ -381,106 +207,231 @@ static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
     return -1;
 }
 
-Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo& CallbackInfo)
+
+
+// Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo& CallbackInfo)
+// {
+//     Napi::Env Environment = CallbackInfo.Env();
+
+//     RECT CaptureArea = DecodeRect(CallbackInfo[0].As<Napi::Object>());
+
+//     // Calculate capture dimensions.
+//     int Width = CaptureArea.right - CaptureArea.left;
+//     int Height = CaptureArea.bottom - CaptureArea.top;
+//     if (Width <= 0 || Height <= 0)
+//     {
+//         // throw std::runtime_error("Invalid capture dimensions.");
+//     }
+
+//     HDC DeviceContext = GetDC(nullptr);
+//     if (!DeviceContext)
+//     {
+//         // throw std::runtime_error("Failed to get desktop device context.");
+//     }
+
+//     HDC MemoryDeviceContext = CreateCompatibleDC(DeviceContext);
+//     if (!MemoryDeviceContext)
+//     {
+//         ReleaseDC(nullptr, DeviceContext);
+//         // throw std::runtime_error("Failed to create compatible device context.");
+//     }
+
+//     HBITMAP CompatibleBitmap = CreateCompatibleBitmap(DeviceContext, Width, Height);
+//     if (!CompatibleBitmap)
+//     {
+//         DeleteDC(MemoryDeviceContext);
+//         ReleaseDC(nullptr, DeviceContext);
+//         // throw std::runtime_error("Failed to create compatible bitmap.");
+//     }
+
+//     // Select the bitmap into the memory device context.
+//     HGDIOBJ OldObject = SelectObject(MemoryDeviceContext, CompatibleBitmap);
+
+//     // Copy the specified rectangle from the desktop.
+//     if (!BitBlt(MemoryDeviceContext, 0, 0, Width, Height,
+//                 DeviceContext, CaptureArea.left, CaptureArea.top, SRCCOPY))
+//     {
+//         SelectObject(MemoryDeviceContext, OldObject);
+//         DeleteObject(CompatibleBitmap);
+//         DeleteDC(MemoryDeviceContext);
+//         ReleaseDC(nullptr, DeviceContext);
+//     }
+
+//     SelectObject(MemoryDeviceContext, OldObject);
+//     DeleteDC(MemoryDeviceContext);
+//     ReleaseDC(nullptr, DeviceContext);
+
+//     Gdiplus::Bitmap* PngBitmap = Gdiplus::Bitmap::FromHBITMAP(CompatibleBitmap, nullptr);
+//     DeleteObject(CompatibleBitmap);
+
+//     if (PngBitmap == nullptr)
+//     {
+//         // throw std::runtime_error("Failed to create GDI+ Bitmap from HBITMAP.");
+//     }
+
+//     wchar_t TempPathBuffer[MAX_PATH] = { 0 };
+//     DWORD TempPathLength = GetTempPathW(MAX_PATH, TempPathBuffer);
+//     if (TempPathLength == 0 || TempPathLength > MAX_PATH)
+//     {
+//         delete PngBitmap;
+//         // throw std::runtime_error("Failed to get temporary path.");
+//     }
+
+//     wchar_t TempFileName[MAX_PATH] = { 0 };
+//     if (!GetTempFileNameW(TempPathBuffer, L"PNG", 0, TempFileName))
+//     {
+//         delete PngBitmap;
+//         // throw std::runtime_error("Failed to generate temporary file name.");
+//     }
+
+//     std::wstring TempFilePath(TempFileName);
+//     size_t DotPosition = TempFilePath.rfind(L'.');
+//     if (DotPosition != std::wstring::npos)
+//     {
+//         TempFilePath = TempFilePath.substr(0, DotPosition) + L".png";
+//     }
+//     else
+//     {
+//         TempFilePath += L".png";
+//     }
+
+//     CLSID PngClsid;
+//     if (GetEncoderClsid(L"image/png", &PngClsid) == -1)
+//     {
+//         delete PngBitmap;
+//         // throw std::runtime_error("Failed to get PNG encoder CLSID.");
+//     }
+
+//     Gdiplus::Status SaveStatus = PngBitmap->Save(TempFilePath.c_str(), &PngClsid, nullptr);
+//     delete PngBitmap;
+
+//     if (SaveStatus != Gdiplus::Ok)
+//     {
+//         // throw std::runtime_error("Failed to save PNG file.");
+//     }
+
+//     return Napi::String::New(Environment, WStringToString(TempFilePath));
+// }
+
+std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captureArea)
 {
-    Napi::Env Environment = CallbackInfo.Env();
-
-    RECT CaptureArea = DecodeRect(CallbackInfo[0].As<Napi::Object>());
-
     // Calculate capture dimensions.
-    int Width = CaptureArea.right - CaptureArea.left;
-    int Height = CaptureArea.bottom - CaptureArea.top;
-    if (Width <= 0 || Height <= 0)
+    int width = captureArea.right - captureArea.left;
+    int height = captureArea.bottom - captureArea.top;
+    if (width <= 0 || height <= 0)
     {
         // throw std::runtime_error("Invalid capture dimensions.");
     }
 
-    HDC DeviceContext = GetDC(nullptr);
-    if (!DeviceContext)
+    HDC deviceContext = GetDC(nullptr);
+    if (!deviceContext)
     {
         // throw std::runtime_error("Failed to get desktop device context.");
     }
 
-    HDC MemoryDeviceContext = CreateCompatibleDC(DeviceContext);
-    if (!MemoryDeviceContext)
+    HDC memoryDeviceContext = CreateCompatibleDC(deviceContext);
+    if (!memoryDeviceContext)
     {
-        ReleaseDC(nullptr, DeviceContext);
+        ReleaseDC(nullptr, deviceContext);
         // throw std::runtime_error("Failed to create compatible device context.");
     }
 
-    HBITMAP CompatibleBitmap = CreateCompatibleBitmap(DeviceContext, Width, Height);
-    if (!CompatibleBitmap)
+    HBITMAP compatibleBitmap = CreateCompatibleBitmap(deviceContext, width, height);
+    if (!compatibleBitmap)
     {
-        DeleteDC(MemoryDeviceContext);
-        ReleaseDC(nullptr, DeviceContext);
+        DeleteDC(memoryDeviceContext);
+        ReleaseDC(nullptr, deviceContext);
         // throw std::runtime_error("Failed to create compatible bitmap.");
     }
 
     // Select the bitmap into the memory device context.
-    HGDIOBJ OldObject = SelectObject(MemoryDeviceContext, CompatibleBitmap);
+    HGDIOBJ oldObject = SelectObject(memoryDeviceContext, compatibleBitmap);
 
     // Copy the specified rectangle from the desktop.
-    if (!BitBlt(MemoryDeviceContext, 0, 0, Width, Height,
-                DeviceContext, CaptureArea.left, CaptureArea.top, SRCCOPY))
+    if (!BitBlt(memoryDeviceContext, 0, 0, width, height,
+                deviceContext, captureArea.left, captureArea.top, SRCCOPY))
     {
-        SelectObject(MemoryDeviceContext, OldObject);
-        DeleteObject(CompatibleBitmap);
-        DeleteDC(MemoryDeviceContext);
-        ReleaseDC(nullptr, DeviceContext);
+        // Clean up if BitBlt fails.
+        SelectObject(memoryDeviceContext, oldObject);
+        DeleteObject(compatibleBitmap);
+        DeleteDC(memoryDeviceContext);
+        ReleaseDC(nullptr, deviceContext);
+        // throw std::runtime_error("BitBlt failed.");
     }
 
-    SelectObject(MemoryDeviceContext, OldObject);
-    DeleteDC(MemoryDeviceContext);
-    ReleaseDC(nullptr, DeviceContext);
+    // Restore and free resources.
+    SelectObject(memoryDeviceContext, oldObject);
+    DeleteDC(memoryDeviceContext);
+    ReleaseDC(nullptr, deviceContext);
 
-    Gdiplus::Bitmap* PngBitmap = Gdiplus::Bitmap::FromHBITMAP(CompatibleBitmap, nullptr);
-    DeleteObject(CompatibleBitmap);
+    // Create a GDI+ bitmap from the HBITMAP.
+    Gdiplus::Bitmap* rawBitmap = Gdiplus::Bitmap::FromHBITMAP(compatibleBitmap, nullptr);
+    DeleteObject(compatibleBitmap);
 
-    if (PngBitmap == nullptr)
+    if (rawBitmap == nullptr)
     {
         // throw std::runtime_error("Failed to create GDI+ Bitmap from HBITMAP.");
     }
 
-    wchar_t TempPathBuffer[MAX_PATH] = { 0 };
-    DWORD TempPathLength = GetTempPathW(MAX_PATH, TempPathBuffer);
-    if (TempPathLength == 0 || TempPathLength > MAX_PATH)
+    // Wrap the raw pointer in a smart pointer for exception safety.
+    return std::unique_ptr<Gdiplus::Bitmap>(rawBitmap);
+}
+
+// This function uses the above capture function and writes the image to a temporary PNG,
+// returning the path of that PNG.
+Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callbackInfo)
+{
+    Napi::Env environment = callbackInfo.Env();
+
+    // Decode the capture-area rectangle from the JS argument.
+    RECT captureArea = DecodeRect(callbackInfo[0].As<Napi::Object>());
+
+    // Capture as a GDI+ Bitmap.
+    std::unique_ptr<Gdiplus::Bitmap> pngBitmap = CaptureScreenSectionAsBitmap(captureArea);
+    if (!pngBitmap)
     {
-        delete PngBitmap;
+        // throw std::runtime_error("CaptureScreenSectionAsBitmap returned null.");
+    }
+
+    // Create a temporary file path for writing.
+    wchar_t tempPathBuffer[MAX_PATH] = {0};
+    DWORD tempPathLength = GetTempPathW(MAX_PATH, tempPathBuffer);
+    if (tempPathLength == 0 || tempPathLength > MAX_PATH)
+    {
         // throw std::runtime_error("Failed to get temporary path.");
     }
 
-    wchar_t TempFileName[MAX_PATH] = { 0 };
-    if (!GetTempFileNameW(TempPathBuffer, L"PNG", 0, TempFileName))
+    wchar_t tempFileName[MAX_PATH] = {0};
+    if (!GetTempFileNameW(tempPathBuffer, L"PNG", 0, tempFileName))
     {
-        delete PngBitmap;
         // throw std::runtime_error("Failed to generate temporary file name.");
     }
 
-    std::wstring TempFilePath(TempFileName);
-    size_t DotPosition = TempFilePath.rfind(L'.');
-    if (DotPosition != std::wstring::npos)
+    // By default, GetTempFileNameW() might assign a .tmp extension; change it to .png
+    std::wstring tempFilePath(tempFileName);
+    size_t dotPosition = tempFilePath.rfind(L'.');
+    if (dotPosition != std::wstring::npos)
     {
-        TempFilePath = TempFilePath.substr(0, DotPosition) + L".png";
+        tempFilePath = tempFilePath.substr(0, dotPosition) + L".png";
     }
     else
     {
-        TempFilePath += L".png";
+        tempFilePath += L".png";
     }
 
-    CLSID PngClsid;
-    if (GetEncoderClsid(L"image/png", &PngClsid) == -1)
+    // Obtain the CLSID for the PNG encoder.
+    CLSID pngClsid;
+    if (GetEncoderClsid(L"image/png", &pngClsid) == -1)
     {
-        delete PngBitmap;
         // throw std::runtime_error("Failed to get PNG encoder CLSID.");
     }
 
-    Gdiplus::Status SaveStatus = PngBitmap->Save(TempFilePath.c_str(), &PngClsid, nullptr);
-    delete PngBitmap;
-
-    if (SaveStatus != Gdiplus::Ok)
+    // Save the Bitmap as a PNG to the temporary path.
+    Gdiplus::Status saveStatus = pngBitmap->Save(tempFilePath.c_str(), &pngClsid, nullptr);
+    if (saveStatus != Gdiplus::Ok)
     {
         // throw std::runtime_error("Failed to save PNG file.");
     }
 
-    return Napi::String::New(Environment, WStringToString(TempFilePath));
+    return Napi::String::New(environment, WStringToString(tempFilePath));
 }

@@ -4,24 +4,14 @@
  * License:   MIT
  */
 
-import { Action } from "@/Action";
 import { Command, CompoundCommand } from "$/Common";
-import { useEffect, useState, type ReactElement, type ReactNode } from "react";
-import type { FPanel } from "#/Tree.Types";
-
-type FPanelDirection =
-    | "Vertical"
-    | "Horizontal";
-
-type FDirection =
-    | "Left"
-    | "Down"
-    | "Up"
-    | "Right";
+import { type MutableRefObject, type ReactNode, useEffect, useRef, useState } from "react";
+import { Action } from "@/Action";
+import type { FFocusChange, FPanel } from "#/Tree.Types";
 
 export const Focus = (): ReactNode =>
 {
-    const [ PanelDirection, SetPanelDirection ] = useState<FPanelDirection | undefined>(undefined);
+    const [ InterimPanel, SetInterimPanel ] = useState<FPanel | undefined>(undefined);
     useEffect((): void =>
     {
         window.electron.ipcRenderer.On("GetCurrentPanel", (...Arguments: Array<unknown>): void =>
@@ -29,10 +19,9 @@ export const Focus = (): ReactNode =>
             const Panel: FPanel | undefined = Arguments[0] as FPanel | undefined;
             if (Panel !== undefined)
             {
-                SetPanelDirection((_Old: FPanelDirection | undefined): FPanelDirection =>
+                SetInterimPanel((_Old: FPanel | undefined): FPanel | undefined =>
                 {
-                    /* @TODO Support stack panels. */
-                    return Panel.Type as FPanelDirection;
+                    return Panel;
                 });
             }
             else
@@ -44,18 +33,30 @@ export const Focus = (): ReactNode =>
         window.electron.ipcRenderer.SendMessage("GetCurrentPanel");
     });
 
+    const IsSelectionPristine: MutableRefObject<boolean> = useRef<boolean>(true);
+
+    useEffect((): void =>
+    {
+        if (IsSelectionPristine.current)
+        {
+            IsSelectionPristine.current = false;
+        }
+
+        window.electron.ipcRenderer.SendMessage("ChangeFocus", );
+    }, [ InterimPanel ]);
+
     /** @TODO Get whether the current vertex is a panel, and whether the current panel has a parent panel (to allow the "Step" commands to work). */
 
     const IsHorizontal: boolean = PanelDirection === "Horizontal";
 
     const MoveFocusPrevious = (): void =>
     {
-        return;
+        ChangeFocus("Previous");
     };
 
     const MoveFocusNext = (): void =>
     {
-        return;
+        ChangeFocus("Next");
     };
 
     const GetPreviousDirection = (): string =>
@@ -74,14 +75,20 @@ export const Focus = (): ReactNode =>
 
     const StepDownIntoPanel = (): void =>
     {
+        ChangeFocus("Down");
     };
 
     const StepUpIntoPanel = (): void =>
     {
-
+        ChangeFocus("Up");
     };
 
-    return PanelDirection !== undefined && (
+    const ChangeFocus = (FocusChange: FFocusChange): void =>
+    {
+        window.electron.ipcRenderer.SendMessage("OnChangeFocus", FocusChange);
+    };
+
+    return Panel !== undefined && (
         <Action>
             <CompoundCommand
                 SubCommands={ [

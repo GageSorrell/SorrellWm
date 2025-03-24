@@ -20,16 +20,16 @@ import {
 import type {
     FAnnotatedPanel,
     FCell,
+    FFocusChange,
     FForest,
     FPanel,
     FPanelBase,
-    FPanelHorizontal,
     FVertex } from "./Tree.Types";
 import { promises as Fs } from "fs";
-import { GetActiveWindow } from "./MainWindow";
+import { GetActiveWindows } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
-import { Log } from "./Development";
 import type { TPredicate } from "@/Utility";
+import type { FluentProviderContextValues } from "@fluentui/react-components";
 
 const Forest: FForest = [ ];
 
@@ -421,7 +421,7 @@ export const IsPanelAnnotated = (Panel: FPanel | FAnnotatedPanel): Panel is FAnn
 
 export const GetCurrentPanel = (): FPanel | undefined =>
 {
-    const Handle: HWindow | undefined = GetActiveWindow();
+    const Handle: HWindow | undefined = GetActiveWindows()[0];
     if (Handle !== undefined)
     {
         return Find((Vertex: FVertex): boolean =>
@@ -469,10 +469,10 @@ export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindo
     }
 };
 
-export const ArePanelsEqual = (A: FPanel | FAnnotatedPanel, B: FPanel | FAnnotatedPanel): boolean =>
-{
-    return AreBoxesEqual(A.Size, B.Size);
-};
+// export const ArePanelsEqual = (A: FPanel | FAnnotatedPanel, B: FPanel | FAnnotatedPanel): boolean =>
+// {
+//     return AreBoxesEqual(A.Size, B.Size);
+// };
 
 export const Find = (Predicate: TPredicate<FVertex>): FVertex | undefined =>
 {
@@ -551,6 +551,149 @@ export const RemoveAnnotations = ({ Children, MonitorId, Size, Type, ZOrder }: F
         Type,
         ZOrder
     };
+};
+
+const ArePanelsEqual = (A: FPanel, B: FPanel): boolean =>
+{
+    /** @TODO To support stack boxes, check if children are also equal as well. */
+    return A.Children.length === B.Children.length && AreBoxesEqual(A.Size, B.Size);
+    // if (A.Children.length === B.Children.length)
+    // {
+    //     /* We impose that the order of the children must be the same. */
+    //     return A.Children.every((AChild: FVertex, Index: number): boolean =>
+    //     {
+    //         const BChild: FVertex = B.Children[Index];
+    //         return AreVerticesEqual(AChild, BChild);
+    //     });
+    // }
+    // else
+    // {
+    //     return false;
+    // }
+};
+
+export const AreVerticesEqual = (A: FVertex, B: FVertex): boolean =>
+{
+    if (IsCell(A) && IsCell(B))
+    {
+        return AreHandlesEqual(A.Handle, B.Handle);
+    }
+    else if (IsPanel(A) && IsPanel(B))
+    {
+        return ArePanelsEqual(A, B);
+    }
+    else
+    {
+        return false;
+    }
+};
+
+/** Get the parent vertex of `Vertex`.  Returns undefined iff it is a root panel. */
+export const GetParent = (Vertex: FVertex): FPanel | undefined =>
+{
+    return Find((InVertex: FVertex): boolean =>
+    {
+        if (IsPanel(InVertex))
+        {
+            return InVertex.Children.some((InChild: FVertex): boolean =>
+            {
+                return AreVerticesEqual(Vertex, InChild);
+            });
+        }
+        else
+        {
+            return false;
+        }
+    }) as FPanel | undefined;
+};
+
+/** Get the index of the given `Vertex` in its parent panel.  Returns `undefined` if the `Vertex` is a root panel. */
+export const GetIndexInPanel = (Vertex: FVertex): number | undefined =>
+{
+    const ParentPanel: FPanel | undefined = GetParent(Vertex);
+    if (ParentPanel !== undefined)
+    {
+        let Index: number | undefined = ParentPanel.Children.indexOf((Child: FVertex): boolean =>
+        {
+            return AreVerticesEqual(Vertex, Child);
+        });
+
+        if (Index === -1)
+        {
+            return undefined;
+        }
+        else
+        {
+            return Index;
+        }
+    }
+    else
+    {
+        return undefined;
+    }
+}
+
+export const ChangeFocus = (InterimVertex: FVertex, FocusChange: FFocusChange): FVertex | undefined =>
+{
+    const ParentPanel: FVertex | undefined = GetParent(InterimVertex);
+    const InterimPanel: FPanel | undefined = IsPanel(InterimVertex)
+        ? InterimVertex
+        : undefined;
+    switch (FocusChange)
+    {
+        case "Down":
+            if (InterimPanel !== undefined && InterimPanel.Children[0])
+            {
+                return InterimPanel.Children[0];
+            }
+
+            break;
+        case "Up":
+            if (InterimPanel !== undefined && InterimPanel.Children[0])
+            {
+                return GetParent(InterimPanel);
+            }
+
+            break;
+        case "Next":
+            if (ParentPanel !== undefined)
+            {
+                const Index: number | undefined = GetIndexInPanel(InterimVertex);
+                if (Index !== undefined)
+                {
+                    if (Index !== ParentPanel.Children.length - 1)
+                    {
+                        return ParentPanel.Children[Index + 1];
+                    }
+                    else
+                    {
+                        return ParentPanel.Children[0];
+                    }
+                }
+            }
+
+            break;
+        case "Previous":
+            if (ParentPanel !== undefined)
+            {
+                const Index: number | undefined = GetIndexInPanel(InterimVertex);
+                if (Index !== undefined)
+                {
+                    if (Index !== 0)
+                    {
+                        return ParentPanel.Children[Index - 1];
+                    }
+                    else
+                    {
+                        return ParentPanel.Children[ParentPanel.Children.length - 1];
+                    }
+                }
+            }
+
+            break;
+    }
+
+    return undefined;
 };
 
 InitializeTree();

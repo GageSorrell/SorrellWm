@@ -64,3 +64,9 @@ export type FAnnotatedPanel =
         IsRoot: boolean;
         Screenshot: string | undefined;
     };
+
+export type FFocusChange =
+    | "Next"
+    | "Previous"
+    | "Up"
+    | "Down";
