@@ -9,10 +9,9 @@ import chalk from "chalk";
 /** @TODO */
 export const Log = (...Arguments: Array<unknown>): void =>
 {
-    console.log(...Arguments);
-    // process.stdout.write(
-    //     chalk.bgMagenta.white(" Backend ") +
-    //     " " +
-    //     JSON.stringify(Arguments, null, 4)
-    // );
+    console.log(
+        chalk.bgMagenta.white(" Backend ") +
+        " " +
+        JSON.stringify(Arguments, null, 4)
+    );
 };

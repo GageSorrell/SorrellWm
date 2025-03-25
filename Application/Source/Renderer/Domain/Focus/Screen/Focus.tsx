@@ -5,23 +5,30 @@
  */
 
 import { Command, CompoundCommand } from "$/Common";
+import type { FFocusChange, FPanel, FVertex } from "#/Tree.Types";
 import { type MutableRefObject, type ReactNode, useEffect, useRef, useState } from "react";
 import { Action } from "@/Action";
-import type { FFocusChange, FPanel } from "#/Tree.Types";
+
+export type FFocusData =
+{
+    Direction: "Horizontal" | "Vertical";
+    CanStepUp: boolean;
+    CanStepDown: boolean;
+};
 
 export const Focus = (): ReactNode =>
 {
-    const [ InterimPanel, SetInterimPanel ] = useState<FPanel | undefined>(undefined);
+    const [ FocusData, SetFocusData ] = useState<FFocusData | undefined>(undefined);
     useEffect((): void =>
     {
-        window.electron.ipcRenderer.On("GetCurrentPanel", (...Arguments: Array<unknown>): void =>
+        window.electron.ipcRenderer.On("GetFocusData", (...Arguments: Array<unknown>): void =>
         {
-            const Panel: FPanel | undefined = Arguments[0] as FPanel | undefined;
-            if (Panel !== undefined)
+            const NewFocusData: FFocusData | undefined = Arguments[0] as FFocusData | undefined;
+            if (FocusData !== undefined)
             {
-                SetInterimPanel((_Old: FPanel | undefined): FPanel | undefined =>
+                SetFocusData((_Old: FFocusData | undefined): FFocusData | undefined =>
                 {
-                    return Panel;
+                    return NewFocusData;
                 });
             }
             else
@@ -30,24 +37,22 @@ export const Focus = (): ReactNode =>
             }
         });
 
-        window.electron.ipcRenderer.SendMessage("GetCurrentPanel");
+        window.electron.ipcRenderer.SendMessage("GetFocusData");
     });
 
-    const IsSelectionPristine: MutableRefObject<boolean> = useRef<boolean>(true);
+    // const IsSelectionPristine: MutableRefObject<boolean> = useRef<boolean>(true);
 
-    useEffect((): void =>
-    {
-        if (IsSelectionPristine.current)
-        {
-            IsSelectionPristine.current = false;
-        }
+    // useEffect((): void =>
+    // {
+    //     if (IsSelectionPristine.current)
+    //     {
+    //         IsSelectionPristine.current = false;
+    //     }
 
-        window.electron.ipcRenderer.SendMessage("ChangeFocus", );
-    }, [ InterimPanel ]);
+    //     window.electron.ipcRenderer.SendMessage("ChangeFocus", );
+    // }, [ InterimPanel ]);
 
-    /** @TODO Get whether the current vertex is a panel, and whether the current panel has a parent panel (to allow the "Step" commands to work). */
-
-    const IsHorizontal: boolean = PanelDirection === "Horizontal";
+    const IsHorizontal: boolean = FocusData?.Direction === "Horizontal";
 
     const MoveFocusPrevious = (): void =>
     {

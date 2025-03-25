@@ -28,7 +28,6 @@
 #include <map>
 
 #include "BlurBackground.h"
-#include "BlurBackground_DEPRECATED.h"
 #include "Screenshot.h"
 #include "Core/WindowUtilities.h"
 
@@ -116,8 +115,6 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "RestoreAllWindows", RestoreAllWindows },
         { "BlurBackground", BlurBackground },
         { "UnblurBackground", UnblurBackground },
-        { "BlurBackground_DEPRECATED", BlurBackground_DEPRECATED },
-        { "UnblurBackground_DEPRECATED", UnblurBackground_DEPRECATED },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },

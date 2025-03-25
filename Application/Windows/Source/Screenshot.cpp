@@ -16,8 +16,7 @@
 
 static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
 {
-    static const char Base64Table[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    static const char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string EncodedString;
     size_t BinaryDataSize = BinaryData.size();
@@ -26,7 +25,6 @@ static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
     size_t DataIndex = 0;
     while (DataIndex < BinaryDataSize)
     {
-        // Read up to 3 bytes at a time.
         unsigned long Value = 0;
         int ByteCount = 0;
         for (; ByteCount < 3 && DataIndex < BinaryDataSize; ++ByteCount, ++DataIndex)
@@ -34,7 +32,6 @@ static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
             Value = (Value << 8) | BinaryData[DataIndex];
         }
 
-        // Encode into four Base64 characters.
         int BitsToShift = (ByteCount - 1) * 8;
         for (int OutputIndex = 0; OutputIndex < 4; ++OutputIndex)
         {
@@ -45,7 +42,6 @@ static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
             }
             else
             {
-                // If fewer than 3 bytes were read, pad with '='.
                 EncodedString.push_back('=');
             }
         }
@@ -76,7 +72,6 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
     if (!memoryDeviceContext)
     {
         std::cout
-            // << ELogLevel::Error
             << "Failed to create compatible DC."
             << std::endl;
 
@@ -92,31 +87,26 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
     {
         DeleteDC(memoryDeviceContext);
         ReleaseDC(nullptr, deviceContext);
-        // throw std::runtime_error("Failed to create compatible bitmap.");
     }
 
-    // Select the new bitmap into the memory device context
     HGDIOBJ oldObject = SelectObject(memoryDeviceContext, compatibleBitmap);
 
-    // Copy the specified rectangle from the desktop into our bitmap
     if (!BitBlt(memoryDeviceContext, 0, 0, Width, Height, deviceContext,
                 CaptureArea.left, CaptureArea.top, SRCCOPY))
     {
-        // Clean up
         SelectObject(memoryDeviceContext, oldObject);
         DeleteObject(compatibleBitmap);
         DeleteDC(memoryDeviceContext);
         ReleaseDC(nullptr, deviceContext);
-        // throw std::runtime_error("BitBlt failed; could not copy desktop image.");
     }
 
     BITMAPINFO bitmapInfo;
     ZeroMemory(&bitmapInfo, sizeof(bitmapInfo));
     bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bitmapInfo.bmiHeader.biWidth = Width;
-    bitmapInfo.bmiHeader.biHeight = Height; // positive => bottom-up DIB
+    bitmapInfo.bmiHeader.biHeight = Height;
     bitmapInfo.bmiHeader.biPlanes = 1;
-    bitmapInfo.bmiHeader.biBitCount = 24; // 24 bits per pixel (RGB)
+    bitmapInfo.bmiHeader.biBitCount = 24;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
     if (!GetDIBits(memoryDeviceContext, compatibleBitmap, 0, Height,
@@ -126,7 +116,6 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
         DeleteObject(compatibleBitmap);
         DeleteDC(memoryDeviceContext);
         ReleaseDC(nullptr, deviceContext);
-        // throw std::runtime_error("GetDIBits failed (size query).");
     }
 
     DWORD pixelDataSize = bitmapInfo.bmiHeader.biSizeImage;
@@ -145,7 +134,7 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
     BITMAPINFOHEADER *infoHeader =
         reinterpret_cast<BITMAPINFOHEADER*>(bmpBuffer.data() + fileHeaderSize);
 
-    fileHeader->bfType = 0x4D42; // 'BM'
+    fileHeader->bfType = 0x4D42;
     fileHeader->bfSize = totalSize;
     fileHeader->bfOffBits = fileHeaderSize + infoHeaderSize;
     fileHeader->bfReserved1 = 0;
@@ -153,7 +142,7 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
 
     *infoHeader = bitmapInfo.bmiHeader;
 
-    BYTE *pixelData = bmpBuffer.data() + fileHeader->bfOffBits;
+    BYTE* pixelData = bmpBuffer.data() + fileHeader->bfOffBits;
     if (!GetDIBits(memoryDeviceContext, compatibleBitmap, 0, Height,
                    pixelData, &bitmapInfo, DIB_RGB_COLORS))
     {
@@ -646,108 +635,4 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
     }
 
     return Napi::String::New(environment, WStringToString(tempFilePath));
-}
-
-#include <Windows.h>
-#include <vector>
-
-BOOL TakeScreenshotRect(const RECT& CaptureRect, std::vector<BYTE>* PixelData)
-{
-    if (PixelData == nullptr)
-    {
-        return FALSE;
-    }
-
-    // Compute width and height from the RECT.
-    LONG Width = CaptureRect.right - CaptureRect.left;
-    LONG Height = CaptureRect.bottom - CaptureRect.top;
-
-    if (Width <= 0 || Height <= 0)
-    {
-        return FALSE;
-    }
-
-    HDC ScreenDeviceContext = GetDC(nullptr);
-    if (ScreenDeviceContext == nullptr)
-    {
-        return FALSE;
-    }
-
-    HDC MemoryDeviceContext = CreateCompatibleDC(ScreenDeviceContext);
-    if (MemoryDeviceContext == nullptr)
-    {
-        ReleaseDC(nullptr, ScreenDeviceContext);
-        return FALSE;
-    }
-
-    HBITMAP ScreenshotBitmap = CreateCompatibleBitmap(ScreenDeviceContext, Width, Height);
-    if (ScreenshotBitmap == nullptr)
-    {
-        DeleteDC(MemoryDeviceContext);
-        ReleaseDC(nullptr, ScreenDeviceContext);
-        return FALSE;
-    }
-
-    HGDIOBJ PreviousBitmap = SelectObject(MemoryDeviceContext, ScreenshotBitmap);
-
-    // Copy from the screen device context into our bitmap.
-    if (!BitBlt(MemoryDeviceContext,
-                0,
-                0,
-                Width,
-                Height,
-                ScreenDeviceContext,
-                CaptureRect.left,
-                CaptureRect.top,
-                SRCCOPY))
-    {
-        SelectObject(MemoryDeviceContext, PreviousBitmap);
-        DeleteObject(ScreenshotBitmap);
-        DeleteDC(MemoryDeviceContext);
-        ReleaseDC(nullptr, ScreenDeviceContext);
-        return FALSE;
-    }
-
-    BITMAPINFO BitmapInformation;
-    ZeroMemory(&BitmapInformation, sizeof(BitmapInformation));
-    BitmapInformation.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    // Negative height for top-down orientation.
-    BitmapInformation.bmiHeader.biWidth = Width;
-    BitmapInformation.bmiHeader.biHeight = -Height;
-    BitmapInformation.bmiHeader.biPlanes = 1;
-    // 24 bits per pixel (3 bytes).
-    BitmapInformation.bmiHeader.biBitCount = 24;
-    BitmapInformation.bmiHeader.biCompression = BI_RGB;
-
-    // Calculate the aligned bytes per row (each scan line is 4-byte aligned).
-    // Formula: ((Width * 24 + 31) & ~31) / 8
-    size_t BytesPerRow = ((static_cast<size_t>(Width) * 24 + 31) & ~31) >> 3;
-    size_t BitmapDataSize = BytesPerRow * static_cast<size_t>(Height);
-
-    PixelData->resize(BitmapDataSize);
-
-    // Retrieve the pixels into the provided vector.
-    if (!GetDIBits(MemoryDeviceContext,
-                   ScreenshotBitmap,
-                   0,
-                   static_cast<UINT>(Height),
-                   PixelData->data(),
-                   &BitmapInformation,
-                   DIB_RGB_COLORS))
-    {
-        PixelData->clear();
-        SelectObject(MemoryDeviceContext, PreviousBitmap);
-        DeleteObject(ScreenshotBitmap);
-        DeleteDC(MemoryDeviceContext);
-        ReleaseDC(nullptr, ScreenDeviceContext);
-        return FALSE;
-    }
-
-    // Clean up GDI objects.
-    SelectObject(MemoryDeviceContext, PreviousBitmap);
-    DeleteObject(ScreenshotBitmap);
-    DeleteDC(MemoryDeviceContext);
-    ReleaseDC(nullptr, ScreenDeviceContext);
-
-    return TRUE;
 }

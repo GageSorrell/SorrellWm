@@ -4,19 +4,25 @@
  */
 
 import * as Path from "path";
-import { AnnotatePanel, BringIntoPanel, ChangeFocus, GetCurrentPanel, GetPanelScreenshot, GetPanels, IsWindowTiled } from "./Tree";
+import {
+    AnnotatePanel,
+    BringIntoPanel,
+    ChangeFocus,
+    GetCurrentPanel,
+    GetPanelScreenshot,
+    GetPanels,
+    IsWindowTiled
+} from "./Tree";
 import {
     BlurBackground,
-    BlurBackground_DEPRECATED,
     GetDwmWindowRect,
     GetFocusedWindow,
-    GetWindowLocationAndSize,
     GetWindowTitle,
     type HWindow,
-    UnblurBackground,
-    UnblurBackground_DEPRECATED} from "@sorrellwm/windows";
+    UnblurBackground } from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
+import { CreateTestWindows } from "./Development/TestWindows";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
@@ -24,7 +30,6 @@ import { Log } from "./Development";
 import { ResolveHtmlPath } from "./Core/Utility";
 import { Vk } from "@/Domain/Common/Component/Keyboard/Keyboard";
 import chalk from "chalk";
-import { CreateTestWindows } from "./Development/TestWindows";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 
@@ -203,10 +208,8 @@ export const Activate = (): void =>
         ActiveWindows.length = 0;
         ActiveWindows.push(GetFocusedWindow());
         const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
-        Log(`Focused Window of IsTiled call is ${ GetWindowTitle(GetFocusedWindow()) }.`);
         MainWindow?.webContents.send("Navigate", "", { IsTiled });
-        // BlurBackground(GetWindowLocationAndSize(ActiveWindows[0]));
-        BlurBackground_DEPRECATED(GetDwmWindowRect(ActiveWindows[0]));
+        BlurBackground(GetDwmWindowRect(ActiveWindows[0]));
     }
 };
 
@@ -230,7 +233,7 @@ function OnKey(Event: FKeyboardEvent): void
         else
         {
             // UnblurBackground();
-            UnblurBackground_DEPRECATED();
+            UnblurBackground();
         }
     }
     else
@@ -241,6 +244,6 @@ function OnKey(Event: FKeyboardEvent): void
 
 app.whenReady()
     .then(LaunchMainWindow)
-    .catch(console.log);
+    .catch(Log);
 
 Keyboard.Subscribe(OnKey);

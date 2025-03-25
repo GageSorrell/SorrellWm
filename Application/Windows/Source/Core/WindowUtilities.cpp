@@ -20,14 +20,13 @@ BOOL GetDwmWindowRect(HWND Handle, RECT* Rect)
 
     if (FAILED(Result))
     {
-        std::cout << "Got WindowRect via GetWindowRect: " << std::hex << Result << std::endl;
         return GetWindowRect(Handle, Rect);
     }
     else
     {
-        std::cout << "Got WindowRect via DwmGetWindowAttribute." << std::endl;
         return TRUE;
     }
+
     return TRUE;
 }
 
