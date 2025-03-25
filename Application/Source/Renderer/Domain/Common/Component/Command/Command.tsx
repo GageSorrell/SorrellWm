@@ -33,10 +33,6 @@ export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =
     const { registerShortcut, unregisterShortcut } = useShortcut() as IShortcutProviderRenderProps;
     useEffect((): ReturnType<EffectCallback> =>
     {
-        window.addEventListener("keydown", (Event: KeyboardEvent): void =>
-        {
-            Log(`KeyEvent is ${ Event.code }.`);
-        });
         /* @TODO Investigate: the key F24 is registered as "Alt" by Electron and by online test tools. */
         registerShortcut(Action, [ KeyString ], "Foo", "Foo");
         return (): void =>

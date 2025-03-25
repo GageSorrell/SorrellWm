@@ -7,7 +7,40 @@
 #include "WindowUtilities.h"
 #include "Globals.h"
 
-DECLARE_LOG_CATEGORY(Window)
+// DECLARE_LOG_CATEGORY(Window)
+
+BOOL GetDwmWindowRect(HWND Handle, RECT* Rect)
+{
+    HRESULT Result = DwmGetWindowAttribute(
+        Handle,
+        DWMWA_EXTENDED_FRAME_BOUNDS,
+        Rect,
+        sizeof(RECT)
+    );
+
+    if (FAILED(Result))
+    {
+        std::cout << "Got WindowRect via GetWindowRect: " << std::hex << Result << std::endl;
+        return GetWindowRect(Handle, Rect);
+    }
+    else
+    {
+        std::cout << "Got WindowRect via DwmGetWindowAttribute." << std::endl;
+        return TRUE;
+    }
+    return TRUE;
+}
+
+Napi::Value GetDwmWindowRectNode(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    HWND Handle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+    RECT Bounds;
+    GetDwmWindowRect(Handle, &Bounds);
+
+    return EncodeRect(Environment, Bounds);
+}
+
 
 Napi::Value GetFocusedWindow(const Napi::CallbackInfo& CallbackInfo)
 {
@@ -300,7 +333,7 @@ Napi::Value SetWindowPosition(const Napi::CallbackInfo& CallbackInfo)
 
     GetWindowTextW(Handle, WindowTextW, BufferSize);
 
-    // LOG
+    // std::cout
     //     << "Inside SetWindowPosition, Title is "
     //     << WStringToString(WindowTextW)
     //     << std::endl;

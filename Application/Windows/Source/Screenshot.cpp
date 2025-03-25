@@ -6,14 +6,13 @@
 
 #include "Screenshot.h"
 
-#include <gdiplus.h>
 #include <objidl.h>
 #include <cstdlib>
 #include "Core/Log.h"
 #include "Core/String.h"
 #include "Core/Utility.h"
 
-DEFINE_LOG_CATEGORY(Screenshot)
+// DEFINE_LOG_CATEGORY(Screenshot)
 
 static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
 {
@@ -76,8 +75,8 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
     HDC memoryDeviceContext = CreateCompatibleDC(deviceContext);
     if (!memoryDeviceContext)
     {
-        LOG
-            << ELogLevel::Error
+        std::cout
+            // << ELogLevel::Error
             << "Failed to create compatible DC."
             << std::endl;
 
@@ -207,6 +206,145 @@ static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
     return -1;
 }
 
+void GetScreenshotNew(RECT CaptureArea, std::vector<BYTE>* ScreenshotData)
+{
+    int32_t Width = CaptureArea.right - CaptureArea.left;
+    int32_t Height = CaptureArea.bottom - CaptureArea.top;
+    int32_t ChannelsNum = 3;
+
+    BYTE* Screenshot = nullptr;
+    LPBITMAPINFO ScreenshotBmi = nullptr;
+
+    HDC deviceContext = GetDC(nullptr);
+
+    HDC memoryDeviceContext = CreateCompatibleDC(deviceContext);
+    if (!memoryDeviceContext)
+    {
+        std::cout
+            // << ELogLevel::Error
+            << "Failed to create compatible DC."
+            << std::endl;
+
+        ReleaseDC(nullptr, deviceContext);
+        return;
+    }
+
+    ScreenshotData->reserve(Width * Height * ChannelsNum);
+    Screenshot = ScreenshotData->data();
+
+    HBITMAP compatibleBitmap = CreateCompatibleBitmap(deviceContext, Width, Height);
+    if (!compatibleBitmap)
+    {
+        DeleteDC(memoryDeviceContext);
+        ReleaseDC(nullptr, deviceContext);
+        // throw std::runtime_error("Failed to create compatible bitmap.");
+    }
+
+    // Select the new bitmap into the memory device context
+    HGDIOBJ oldObject = SelectObject(memoryDeviceContext, compatibleBitmap);
+
+    // Copy the specified rectangle from the desktop into our bitmap
+    if (!BitBlt(memoryDeviceContext, 0, 0, Width, Height, deviceContext,
+                CaptureArea.left, CaptureArea.top, SRCCOPY))
+    {
+        // Clean up
+        SelectObject(memoryDeviceContext, oldObject);
+        DeleteObject(compatibleBitmap);
+        DeleteDC(memoryDeviceContext);
+        ReleaseDC(nullptr, deviceContext);
+        // throw std::runtime_error("BitBlt failed; could not copy desktop image.");
+    }
+
+    BITMAPINFO bitmapInfo;
+    ZeroMemory(&bitmapInfo, sizeof(bitmapInfo));
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = Width;
+    bitmapInfo.bmiHeader.biHeight = -1 * Height;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biBitCount = 24; // 24 bits per pixel (RGB)
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+    if (!GetDIBits(memoryDeviceContext, compatibleBitmap, 0, Height,
+                   nullptr, &bitmapInfo, DIB_RGB_COLORS))
+    {
+        SelectObject(memoryDeviceContext, oldObject);
+        DeleteObject(compatibleBitmap);
+        DeleteDC(memoryDeviceContext);
+        ReleaseDC(nullptr, deviceContext);
+        // throw std::runtime_error("GetDIBits failed (size query).");
+    }
+
+    DWORD pixelDataSize = bitmapInfo.bmiHeader.biSizeImage;
+    if (pixelDataSize == 0)
+    {
+        DWORD bytesPerRow = ((Width * bitmapInfo.bmiHeader.biBitCount + 31) / 32) * 4;
+        pixelDataSize = bytesPerRow * Height;
+    }
+
+    DWORD fileHeaderSize = sizeof(BITMAPFILEHEADER);
+    DWORD infoHeaderSize = sizeof(BITMAPINFOHEADER);
+    DWORD totalSize = fileHeaderSize + infoHeaderSize + pixelDataSize;
+
+    std::vector<BYTE> bmpBuffer(totalSize);
+    BITMAPFILEHEADER *fileHeader = reinterpret_cast<BITMAPFILEHEADER*>(bmpBuffer.data());
+    BITMAPINFOHEADER *infoHeader =
+        reinterpret_cast<BITMAPINFOHEADER*>(bmpBuffer.data() + fileHeaderSize);
+
+    fileHeader->bfType = 0x4D42; // 'BM'
+    fileHeader->bfSize = totalSize;
+    fileHeader->bfOffBits = fileHeaderSize + infoHeaderSize;
+    fileHeader->bfReserved1 = 0;
+    fileHeader->bfReserved2 = 0;
+
+    *infoHeader = bitmapInfo.bmiHeader;
+
+    BYTE *pixelData = bmpBuffer.data() + fileHeader->bfOffBits;
+    if (!GetDIBits(memoryDeviceContext, compatibleBitmap, 0, Height,
+                   pixelData, &bitmapInfo, DIB_RGB_COLORS))
+    {
+        SelectObject(memoryDeviceContext, oldObject);
+        DeleteObject(compatibleBitmap);
+        DeleteDC(memoryDeviceContext);
+        ReleaseDC(nullptr, deviceContext);
+        // throw std::runtime_error("GetDIBits failed (pixel extraction).");
+    }
+
+    SelectObject(memoryDeviceContext, oldObject);
+    DeleteObject(compatibleBitmap);
+    DeleteDC(memoryDeviceContext);
+    ReleaseDC(nullptr, deviceContext);
+}
+
+// static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
+// {
+//     UINT Number = 0;
+//     UINT Size = 0;
+
+//     Gdiplus::GetImageEncodersSize(&Number, &Size);
+//     if (Size == 0)
+//     {
+//         return -1; // Failure
+//     }
+
+//     Gdiplus::ImageCodecInfo* ImageCodecInfoArray = (Gdiplus::ImageCodecInfo*)(malloc(Size));
+//     if (ImageCodecInfoArray == nullptr)
+//     {
+//         return -1; // Failure
+//     }
+
+//     Gdiplus::GetImageEncoders(Number, Size, ImageCodecInfoArray);
+//     for (UINT j = 0; j < Number; ++j)
+//     {
+//         if (wcscmp(ImageCodecInfoArray[j].MimeType, Format) == 0)
+//         {
+//             *pClsid = ImageCodecInfoArray[j].Clsid;
+//             free(ImageCodecInfoArray);
+//             return j;
+//         }
+//     }
+//     free(ImageCodecInfoArray);
+//     return -1;
+// }
 
 
 // Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo& CallbackInfo)
@@ -313,6 +451,61 @@ static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
 //     return Napi::String::New(Environment, WStringToString(TempFilePath));
 // }
 
+// std::vector<BYTE> GetBitmapPixelDataAsVector(Gdiplus::Bitmap* Bitmap)
+// {
+//     if (Bitmap == nullptr)
+//     {
+//         std::cout << "Bitmap pointer is null." << std::endl;
+//         return std::vector<BYTE>();
+//     }
+
+//     UINT BitmapWidth = Bitmap->GetWidth();
+//     UINT BitmapHeight = Bitmap->GetHeight();
+//     Gdiplus::Rect Rectangle(0, 0, BitmapWidth, BitmapHeight);
+
+//     Gdiplus::BitmapData BitmapData;
+//     Gdiplus::Status LockStatus = Bitmap->LockBits(
+//         &Rectangle,
+//         Gdiplus::ImageLockModeRead,
+//         Bitmap->GetPixelFormat(),
+//         &BitmapData
+//     );
+
+//     if (LockStatus != Gdiplus::Ok)
+//     {
+//         std::cout << "Failed to lock bitmap bits." << std::endl;
+//         return std::vector<BYTE>();
+//     }
+
+//     int AbsoluteStride = std::abs(BitmapData.Stride);
+//     size_t TotalBytes = AbsoluteStride * BitmapHeight;
+//     std::vector<BYTE> PixelData(TotalBytes);
+
+//     BYTE* SourceData = reinterpret_cast<BYTE*>(BitmapData.Scan0);
+//     // If the stride is negative, adjust SourceData to point to the first (top) row.
+//     if (BitmapData.Stride < 0)
+//     {
+//         SourceData += (BitmapHeight - 1) * AbsoluteStride;
+//     }
+
+//     for (UINT RowIndex = 0; RowIndex < BitmapHeight; RowIndex++)
+//     {
+//         BYTE* SourceRow = (BitmapData.Stride < 0)
+//             ? SourceData - RowIndex * AbsoluteStride
+//             : SourceData + RowIndex * BitmapData.Stride;
+
+//         std::memcpy(
+//             PixelData.data() + RowIndex * AbsoluteStride,
+//             SourceRow,
+//             AbsoluteStride
+//         );
+//     }
+
+//     Bitmap->UnlockBits(&BitmapData);
+//     return PixelData;
+// }
+
+
 std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captureArea)
 {
     // Calculate capture dimensions.
@@ -326,6 +519,9 @@ std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captur
     HDC deviceContext = GetDC(nullptr);
     if (!deviceContext)
     {
+        std::cout
+            << "Failed to get desktop device context."
+            << std::endl;
         // throw std::runtime_error("Failed to get desktop device context.");
     }
 
@@ -334,6 +530,9 @@ std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captur
     {
         ReleaseDC(nullptr, deviceContext);
         // throw std::runtime_error("Failed to create compatible device context.");
+        std::cout
+            << "Failed to create compatible device context."
+            << std::endl;
     }
 
     HBITMAP compatibleBitmap = CreateCompatibleBitmap(deviceContext, width, height);
@@ -342,6 +541,9 @@ std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captur
         DeleteDC(memoryDeviceContext);
         ReleaseDC(nullptr, deviceContext);
         // throw std::runtime_error("Failed to create compatible bitmap.");
+        std::cout
+            << "Failed to create compatible bitmap."
+            << std::endl;
     }
 
     // Select the bitmap into the memory device context.
@@ -357,6 +559,9 @@ std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captur
         DeleteDC(memoryDeviceContext);
         ReleaseDC(nullptr, deviceContext);
         // throw std::runtime_error("BitBlt failed.");
+        std::cout
+            << "BitBlt Failed."
+            << std::endl;
     }
 
     // Restore and free resources.
@@ -371,9 +576,16 @@ std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captur
     if (rawBitmap == nullptr)
     {
         // throw std::runtime_error("Failed to create GDI+ Bitmap from HBITMAP.");
+        std::cout
+            << "Failed to create GDI+ Bitmap from HBITMAP."
+            << std::endl;
     }
 
     // Wrap the raw pointer in a smart pointer for exception safety.
+    std::cout
+        << "CaptureScreenSectionAsBitmap succeeded."
+        << std::endl;
+
     return std::unique_ptr<Gdiplus::Bitmap>(rawBitmap);
 }
 
@@ -434,4 +646,108 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
     }
 
     return Napi::String::New(environment, WStringToString(tempFilePath));
+}
+
+#include <Windows.h>
+#include <vector>
+
+BOOL TakeScreenshotRect(const RECT& CaptureRect, std::vector<BYTE>* PixelData)
+{
+    if (PixelData == nullptr)
+    {
+        return FALSE;
+    }
+
+    // Compute width and height from the RECT.
+    LONG Width = CaptureRect.right - CaptureRect.left;
+    LONG Height = CaptureRect.bottom - CaptureRect.top;
+
+    if (Width <= 0 || Height <= 0)
+    {
+        return FALSE;
+    }
+
+    HDC ScreenDeviceContext = GetDC(nullptr);
+    if (ScreenDeviceContext == nullptr)
+    {
+        return FALSE;
+    }
+
+    HDC MemoryDeviceContext = CreateCompatibleDC(ScreenDeviceContext);
+    if (MemoryDeviceContext == nullptr)
+    {
+        ReleaseDC(nullptr, ScreenDeviceContext);
+        return FALSE;
+    }
+
+    HBITMAP ScreenshotBitmap = CreateCompatibleBitmap(ScreenDeviceContext, Width, Height);
+    if (ScreenshotBitmap == nullptr)
+    {
+        DeleteDC(MemoryDeviceContext);
+        ReleaseDC(nullptr, ScreenDeviceContext);
+        return FALSE;
+    }
+
+    HGDIOBJ PreviousBitmap = SelectObject(MemoryDeviceContext, ScreenshotBitmap);
+
+    // Copy from the screen device context into our bitmap.
+    if (!BitBlt(MemoryDeviceContext,
+                0,
+                0,
+                Width,
+                Height,
+                ScreenDeviceContext,
+                CaptureRect.left,
+                CaptureRect.top,
+                SRCCOPY))
+    {
+        SelectObject(MemoryDeviceContext, PreviousBitmap);
+        DeleteObject(ScreenshotBitmap);
+        DeleteDC(MemoryDeviceContext);
+        ReleaseDC(nullptr, ScreenDeviceContext);
+        return FALSE;
+    }
+
+    BITMAPINFO BitmapInformation;
+    ZeroMemory(&BitmapInformation, sizeof(BitmapInformation));
+    BitmapInformation.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    // Negative height for top-down orientation.
+    BitmapInformation.bmiHeader.biWidth = Width;
+    BitmapInformation.bmiHeader.biHeight = -Height;
+    BitmapInformation.bmiHeader.biPlanes = 1;
+    // 24 bits per pixel (3 bytes).
+    BitmapInformation.bmiHeader.biBitCount = 24;
+    BitmapInformation.bmiHeader.biCompression = BI_RGB;
+
+    // Calculate the aligned bytes per row (each scan line is 4-byte aligned).
+    // Formula: ((Width * 24 + 31) & ~31) / 8
+    size_t BytesPerRow = ((static_cast<size_t>(Width) * 24 + 31) & ~31) >> 3;
+    size_t BitmapDataSize = BytesPerRow * static_cast<size_t>(Height);
+
+    PixelData->resize(BitmapDataSize);
+
+    // Retrieve the pixels into the provided vector.
+    if (!GetDIBits(MemoryDeviceContext,
+                   ScreenshotBitmap,
+                   0,
+                   static_cast<UINT>(Height),
+                   PixelData->data(),
+                   &BitmapInformation,
+                   DIB_RGB_COLORS))
+    {
+        PixelData->clear();
+        SelectObject(MemoryDeviceContext, PreviousBitmap);
+        DeleteObject(ScreenshotBitmap);
+        DeleteDC(MemoryDeviceContext);
+        ReleaseDC(nullptr, ScreenDeviceContext);
+        return FALSE;
+    }
+
+    // Clean up GDI objects.
+    SelectObject(MemoryDeviceContext, PreviousBitmap);
+    DeleteObject(ScreenshotBitmap);
+    DeleteDC(MemoryDeviceContext);
+    ReleaseDC(nullptr, ScreenDeviceContext);
+
+    return TRUE;
 }

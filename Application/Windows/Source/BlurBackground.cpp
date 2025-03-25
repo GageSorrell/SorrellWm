@@ -20,7 +20,82 @@
 #include "Core/Globals.h"
 #include "Screenshot.h"
 
-DECLARE_LOG_CATEGORY(Blur)
+// DECLARE_LOG_CATEGORY(Blur)
+
+struct FOnPaintData
+{
+    HWND BackdropHandle = nullptr;
+    LONG Width = 0;
+    LONG Height = 0;
+    LONG ChannelsNum = 3;
+    float MinSigma = 1.f;
+    float MaxSigma = 10.f;
+    float Sigma = 1.f;
+    std::vector<BYTE> BlurredScreenshotData;
+    std::vector<BYTE> RawScreenshotData;
+    BYTE* BlurredScreenshot = nullptr;
+    BYTE* RawScreenshot = nullptr;
+    LPBITMAPINFO RawBmi = nullptr;
+    LPBITMAPINFO BlurredBmi = nullptr;
+    bool PaintedOnce = false;
+    DWORD BlurStartTime = 0;
+    DWORD BlurLastTimestamp = 0;
+    DWORD FadeLastTimestamp = 0;
+    DWORD FadeStartTime = 0;
+    int Duration = 150;
+    int Depth = 24;
+};
+
+const UINT_PTR BlurTimerId = 1;
+const UINT_PTR FadeTimerId = 2;
+
+static FOnPaintData PaintData;
+
+void LogPaintData()
+{
+    std::cout
+        << "PaintData.BackdropHandle\n    "
+        << PaintData.BackdropHandle
+        << "\nPaintData.Width\n    "
+        << PaintData.Width
+        << "\nPaintData.Height\n    "
+        << PaintData.Height
+        << "\nPaintData.ChannelsNum\n    "
+        << PaintData.ChannelsNum
+        << "\nPaintData.MinSigma\n    "
+        << PaintData.MinSigma
+        << "\nPaintData.MaxSigma\n    "
+        << PaintData.MaxSigma
+        << "\nPaintData.Sigma\n    "
+        << PaintData.Sigma
+        << "\nPaintData.BlurredScreenshotData.size()\n    "
+        << PaintData.BlurredScreenshotData.size()
+        << "\nPaintData.RawScreenshotData.size()\n    "
+        << PaintData.RawScreenshotData.size()
+        // << "\nPaintData.BlurredScreenshot\n    "
+        // << PaintData.BlurredScreenshot
+        // << "\nPaintData.RawScreenshot\n    "
+        // << PaintData.RawScreenshot
+        // << "\nPaintData.RawBmi\n    "
+        // << PaintData.RawBmi
+        // << "\nPaintData.BlurredBmi\n    "
+        // << PaintData.BlurredBmi
+        // << "\nPaintData.PaintedOnce\n    "
+        // << PaintData.PaintedOnce
+        // << "\nPaintData.BlurStartTime\n    "
+        // << PaintData.BlurStartTime
+        // << "\nPaintData.BlurLastTimestamp\n    "
+        // << PaintData.BlurLastTimestamp
+        // << "\nPaintData.FadeLastTimestamp\n    "
+        // << PaintData.FadeLastTimestamp
+        // << "\nPaintData.FadeStartTime\n    "
+        // << PaintData.FadeStartTime
+        // << "\nPaintData.Duration\n    "
+        // << PaintData.Duration
+        // << "\nPaintData.Depth\n    "
+        // << PaintData.Depth
+        << std::endl;
+}
 
 /**
  * 1. Get screenshot of SourceHandle window
@@ -62,24 +137,17 @@ DECLARE_LOG_CATEGORY(Blur)
 // static const int Duration = 150;
 // static int MsPerFrame = 1000 / 120;
 
-int32_t GetMsPerFrame(HWND SourceHandle)
+int32_t GetMsPerFrame(HWND Handle, LONG Width, LONG Height)
 {
     const bool IsLargerThan2k = Width * Height > 2560 * 1440;
     const int32_t BaseMsPerFrame = IsLargerThan2k
         ? 60
         : 120;
 
-    const int32_t RefreshRate = GetRefreshRateFromWindow(SourceHandle);
+    const int32_t RefreshRate = GetRefreshRateFromWindow(Handle);
 
     return 1000 / min(RefreshRate, BaseMsPerFrame);
 }
-
-// static HWND SourceHandle = nullptr;
-// static bool PaintedOnce = false;
-// static const int MinDeferResolution = 1920 * 1080 + 1;
-
-// LPBITMAPINFO ScreenshotBmi = nullptr;
-// LPBITMAPINFO BlurredBmi = nullptr;
 
 LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
 {
@@ -90,7 +158,7 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
     // Allocate memory for the bitmap info header.
     if ((lpBmi = (LPBITMAPINFO)malloc(iBmiSize)) == nullptr)
     {
-        // LOG << "Error allocating BitmapInfo!\n";
+        // std::cout << "Error allocating BitmapInfo!\n";
         return nullptr;
     }
 
@@ -107,7 +175,7 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
     // Initialize bitmap info header
     lpBmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     lpBmi->bmiHeader.biWidth = cx;
-    lpBmi->bmiHeader.biHeight = (signed)cy;
+    lpBmi->bmiHeader.biHeight = (signed) cy;
     lpBmi->bmiHeader.biPlanes = 1;
     lpBmi->bmiHeader.biSizeImage = 0;
     lpBmi->bmiHeader.biXPelsPerMeter = 0;
@@ -121,173 +189,369 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
     return lpBmi;
 }
 
-void PutPixel(int x, int y, BYTE r, BYTE g, BYTE b, LPBITMAPINFO lpBmi, void* pBits)
+// bool CaptureWindowScreenshot(HWND SourceHandle)
+// {
+//     Width = WindowRect.right - WindowRect.left;
+//     Height = WindowRect.bottom - WindowRect.top;
+//     ChannelsNum = 3;
+
+//     HDC ScreenDc = GetDC(nullptr);
+
+//     HDC hdcMemDC = CreateCompatibleDC(ScreenDc);
+//     if (!hdcMemDC)
+//     {
+//         std::cout << "Failed to create compatible DC." << std::endl;
+//         ReleaseDC(SourceHandle, ScreenDc);
+//         return false;
+//     }
+
+//     ScreenshotData.reserve(Width * Height * ChannelsNum);
+//     Screenshot = ScreenshotData.data();
+
+//     HBITMAP hBitmap = CreateDIBSection(
+//         ScreenDc,
+//         ScreenshotBmi,
+//         DIB_RGB_COLORS,
+//         (void**) Screenshot,
+//         nullptr,
+//         0
+//     );
+
+//     if (!hBitmap)
+//     {
+//         std::cout
+//             << ELogLevel::Error
+//             << "Failed to create DIB section, handle was "
+//             << SourceHandle
+//             << ", ScreenshotData reserved "
+//             << Width * Height * ChannelsNum
+//             << std::endl;
+
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(SourceHandle, ScreenDc);
+//         return false;
+//     }
+//     else
+//     {
+//         // std::cout << "Made DIB Section." << std::endl;
+//     }
+
+//     HGDIOBJ hOld = SelectObject(hdcMemDC, hBitmap);
+//     if (!hOld)
+//     {
+//         std::cout
+//             << ELogLevel::Error
+//             << "Failed to select bitmap into DC."
+//             << std::endl;
+//         LogLastWindowsError();
+//         DeleteObject(hBitmap);
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(SourceHandle, ScreenDc);
+//         return false;
+//     }
+//     else
+//     {
+//         // std::cout << "hOld has been selected." << std::endl;
+//     }
+
+//     if (!BitBlt(hdcMemDC, 0, 0, Width, Height, ScreenDc, WindowRect.left, WindowRect.top, SRCCOPY))
+//     {
+//         std::cout << ELogLevel::Error << "BitBlt failed." << std::endl;
+//         SelectObject(hdcMemDC, hOld);
+//         DeleteObject(hBitmap);
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(SourceHandle, ScreenDc);
+//         return false;
+//     }
+//     else
+//     {
+//         // std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
+//         // std::endl;
+//     }
+
+//     SIZE_T BufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
+//     ScreenshotData.reserve(BufferSize);
+//     if (!Screenshot)
+//     {
+//         std::cout << "Failed to allocate memory for screenshot." << std::endl;
+//         LogLastWindowsError();
+//         SelectObject(hdcMemDC, hOld);
+//         DeleteObject(hBitmap);
+//         DeleteDC(hdcMemDC);
+//         ReleaseDC(nullptr, ScreenDc);
+//         return false;
+//     }
+//     else
+//     {
+//         // std::cout << "Screenshot is GOOD!" << std::endl;
+//     }
+
+//     int ScanLines = GetDIBits(
+//         ScreenDc,
+//         hBitmap,
+//         0,
+//         Height,
+//         Screenshot,
+//         ScreenshotBmi,
+//         DIB_RGB_COLORS
+//     );
+
+//     if (ScanLines == 0)
+//     {
+//         std::cout << "GetDIBits failed." << std::endl;
+//         Screenshot = nullptr;
+//     }
+//     else
+//     {
+//         // std::cout << "There are " << scanLines << " scanLines!" << std::endl;
+//     }
+
+//     Screenshot = ScreenshotData.data();
+//     // Luminance = CalculateAverageLuminance(Screenshot, Width, Height, ChannelsNum);
+//     // BrightnessScalar = CalculateScalingFactor(Luminance);
+//     // ScalesBrightness = BrightnessScalar != 1.f;
+
+//     SelectObject(hdcMemDC, hOld);
+//     DeleteObject(hBitmap);
+//     DeleteDC(hdcMemDC);
+//     ReleaseDC(nullptr, ScreenDc);
+
+//     return true;
+// }
+
+// std::vector<BYTE> GetBitmapPixelDataAsVector(Gdiplus::Bitmap* Bitmap)
+// {
+//     if (Bitmap == nullptr)
+//     {
+//         std::cout
+//             << "Bitmap pointer is null."
+//             << std::endl;
+//     }
+
+//     std::cout << "Smoke A" << std::endl;
+
+//     UINT bitmapWidth = Bitmap->GetWidth();
+//     UINT bitmapHeight = Bitmap->GetHeight();
+//     Gdiplus::Rect rectangle(0, 0, bitmapWidth, bitmapHeight);
+
+//     std::cout << "Smoke B" << std::endl;
+
+//     Gdiplus::BitmapData bitmapData;
+//     Gdiplus::Status lockStatus = Bitmap->LockBits(
+//         &rectangle,
+//         Gdiplus::ImageLockModeRead,
+//         Bitmap->GetPixelFormat(),
+//         &bitmapData
+//     );
+
+//     std::cout << "Smoke C" << std::endl;
+
+//     if (lockStatus != Gdiplus::Ok)
+//     {
+//         std::cout
+//             << "Failed to lock bitmap bits."
+//             << std::endl;
+//     }
+
+//     size_t TotalBytes = bitmapData.Stride * bitmapHeight;
+//     std::vector<BYTE> PixelData(TotalBytes);
+
+//     std::cout << "Smoke D" << std::endl;
+
+//     std::memcpy(PixelData.data(), bitmapData.Scan0, TotalBytes);
+
+//     std::cout << "Smoke E" << std::endl;
+
+//     Bitmap->UnlockBits(&bitmapData);
+
+//     std::cout << "Smoke F" << std::endl;
+
+//     return PixelData;
+// }
+
+// std::vector<BYTE> GetBitmapPixelDataAsVector_SECOND_ATTEMPT(Gdiplus::Bitmap* Bitmap)
+// {
+//     if (Bitmap == nullptr)
+//     {
+//         std::cout << "Bitmap pointer is null." << std::endl;
+//         return std::vector<BYTE>();
+//     }
+
+//     std::cout << "Smoke A" << std::endl;
+
+//     UINT BitmapWidth = Bitmap->GetWidth();
+//     UINT BitmapHeight = Bitmap->GetHeight();
+//     Gdiplus::Rect Rectangle(0, 0, BitmapWidth, BitmapHeight);
+
+//     std::cout << "Smoke B" << std::endl;
+
+//     Gdiplus::BitmapData BitmapData;
+//     Gdiplus::Status LockStatus = Bitmap->LockBits(
+//         &Rectangle,
+//         Gdiplus::ImageLockModeRead,
+//         Bitmap->GetPixelFormat(),
+//         &BitmapData
+//     );
+
+//     std::cout << "Smoke C" << std::endl;
+
+//     if (LockStatus != Gdiplus::Ok)
+//     {
+//         std::cout << "Failed to lock bitmap bits." << std::endl;
+//         return std::vector<BYTE>();
+//     }
+
+//     // Compute the absolute stride and total bytes per row.
+//     int RowStride = std::abs(BitmapData.Stride);
+//     size_t TotalBytes = RowStride * BitmapHeight;
+//     std::vector<BYTE> PixelData(TotalBytes);
+//     std::cout << "Smoke D" << std::endl;
+
+//     BYTE* SourceData = reinterpret_cast<BYTE*>(BitmapData.Scan0);
+//     std::cout << "Smoke E" << std::endl;
+//     std::cout << "Bitmap Height is " << BitmapHeight << std::endl;
+//     for (UINT RowIndex = 0; RowIndex < BitmapHeight; RowIndex++)
+//     {
+//         std::cout << "Smoke F " << RowIndex << std::endl;
+//         std::memcpy(
+//             PixelData.data() + RowIndex * RowStride,
+//             SourceData + RowIndex * BitmapData.Stride,
+//             RowStride
+//         );
+//     }
+
+//     std::cout << "Smoke G" << std::endl;
+
+//     Bitmap->UnlockBits(&BitmapData);
+//     std::cout << "Smoke H" << std::endl;
+
+//     return PixelData;
+// }
+
+std::vector<BYTE> GetBitmapPixelDataAsVector(Gdiplus::Bitmap* Bitmap)
 {
-    int iOffset = lpBmi->bmiHeader.biWidth * y + x;
-
-    BYTE* p = (BYTE*)pBits;
-    p[iOffset * 3 + 0] = r;
-    p[iOffset * 3 + 1] = g;
-    p[iOffset * 3 + 2] = b;
-}
-
-bool CaptureWindowScreenshot(HWND SourceHandle)
-{
-    Width = WindowRect.right - WindowRect.left;
-    Height = WindowRect.bottom - WindowRect.top;
-    ChannelsNum = 3;
-
-    HDC ScreenDc = GetDC(nullptr);
-
-    HDC hdcMemDC = CreateCompatibleDC(ScreenDc);
-    if (!hdcMemDC)
+    if (Bitmap == nullptr)
     {
-        std::cout << "Failed to create compatible DC." << std::endl;
-        ReleaseDC(SourceHandle, ScreenDc);
-        return false;
+        std::cout << "Bitmap pointer is null." << std::endl;
+        return std::vector<BYTE>();
     }
 
-    ScreenshotData.reserve(Width * Height * ChannelsNum);
-    Screenshot = ScreenshotData.data();
+    std::cout << "Smoke A" << std::endl;
 
-    HBITMAP hBitmap = CreateDIBSection(
-        ScreenDc,
-        ScreenshotBmi,
-        DIB_RGB_COLORS,
-        (void**) Screenshot,
-        nullptr,
-        0
+    UINT BitmapWidth = Bitmap->GetWidth();
+    UINT BitmapHeight = Bitmap->GetHeight();
+    Gdiplus::Rect Rectangle(0, 0, BitmapWidth, BitmapHeight);
+
+    std::cout << "Smoke B" << std::endl;
+
+    Gdiplus::BitmapData BitmapData;
+    Gdiplus::Status LockStatus = Bitmap->LockBits(
+        &Rectangle,
+        Gdiplus::ImageLockModeRead,
+        Bitmap->GetPixelFormat(),
+        &BitmapData
     );
 
-    if (!hBitmap)
-    {
-        LOG
-            << ELogLevel::Error
-            << "Failed to create DIB section, handle was "
-            << SourceHandle
-            << ", ScreenshotData reserved "
-            << Width * Height * ChannelsNum
-            << std::endl;
+    std::cout << "Smoke C" << std::endl;
 
-        DeleteDC(hdcMemDC);
-        ReleaseDC(SourceHandle, ScreenDc);
-        return false;
-    }
-    else
+    if (LockStatus != Gdiplus::Ok)
     {
-        // LOG << "Made DIB Section." << std::endl;
+        std::cout << "Failed to lock bitmap bits." << std::endl;
+        return std::vector<BYTE>();
     }
 
-    HGDIOBJ hOld = SelectObject(hdcMemDC, hBitmap);
-    if (!hOld)
+    std::cout << "Smoke D" << std::endl;
+
+    int AbsoluteStride = std::abs(BitmapData.Stride);
+    size_t TotalBytes = AbsoluteStride * BitmapHeight;
+    std::vector<BYTE> PixelData(TotalBytes);
+
+    std::cout << "Smoke E" << std::endl;
+
+    BYTE* SourceData = reinterpret_cast<BYTE*>(BitmapData.Scan0);
+    // If the stride is negative, adjust SourceData to point to the first (top) row.
+    if (BitmapData.Stride < 0)
     {
-        LOG
-            << ELogLevel::Error
-            << "Failed to select bitmap into DC."
-            << std::endl;
-        LogLastWindowsError();
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMemDC);
-        ReleaseDC(SourceHandle, ScreenDc);
-        return false;
-    }
-    else
-    {
-        // LOG << "hOld has been selected." << std::endl;
+        SourceData += (BitmapHeight - 1) * AbsoluteStride;
     }
 
-    if (!BitBlt(hdcMemDC, 0, 0, Width, Height, ScreenDc, WindowRect.left, WindowRect.top, SRCCOPY))
-    {
-        LOG << ELogLevel::Error << "BitBlt failed." << std::endl;
-        SelectObject(hdcMemDC, hOld);
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMemDC);
-        ReleaseDC(SourceHandle, ScreenDc);
-        return false;
-    }
-    else
-    {
-        // LOG << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
-        // std::endl;
-    }
+    std::cout << "Smoke F" << std::endl;
 
-    SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
-    ScreenshotData.reserve(bufferSize);
-    if (!Screenshot)
+    std::cout << "BitmapHeight is " << BitmapHeight << std::endl;
+
+    for (UINT RowIndex = 0; RowIndex < BitmapHeight; RowIndex++)
     {
-        std::cout << "Failed to allocate memory for screenshot." << std::endl;
-        LogLastWindowsError();
-        SelectObject(hdcMemDC, hOld);
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMemDC);
-        ReleaseDC(nullptr, ScreenDc);
-        return false;
-    }
-    else
-    {
-        // std::cout << "Screenshot is GOOD!" << std::endl;
+        BYTE* SourceRow = (BitmapData.Stride < 0)
+            ? SourceData - RowIndex * AbsoluteStride
+            : SourceData + RowIndex * BitmapData.Stride;
+
+        if (RowIndex > 1350)
+        {
+            std::cout << RowIndex << " " << SourceRow << std::endl;
+        }
+
+        std::memcpy(
+            PixelData.data() + RowIndex * AbsoluteStride,
+            SourceRow,
+            AbsoluteStride
+        );
     }
 
-    int scanLines = GetDIBits(
-        ScreenDc,
-        hBitmap,
-        0,
-        Height,
-        Screenshot,
-        ScreenshotBmi,
-        DIB_RGB_COLORS
-    );
+    std::cout << "Smoke G" << std::endl;
 
-    if (scanLines == 0)
-    {
-        std::cout << "GetDIBits failed." << std::endl;
-        LogLastWindowsError();
-        Screenshot = nullptr;
-    }
-    else
-    {
-        // std::cout << "There are " << scanLines << " scanLines!" << std::endl;
-    }
-
-    Screenshot = ScreenshotData.data();
-    Luminance = CalculateAverageLuminance(Screenshot, Width, Height, ChannelsNum);
-    BrightnessScalar = CalculateScalingFactor(Luminance);
-    ScalesBrightness = BrightnessScalar != 1.f;
-
-    SelectObject(hdcMemDC, hOld);
-    DeleteObject(hBitmap);
-    DeleteDC(hdcMemDC);
-    ReleaseDC(nullptr, ScreenDc);
-
-    if (scanLines == 0)
-    {
-        return false;
-    }
-
-    return true;
+    Bitmap->UnlockBits(&BitmapData);
+    return PixelData;
 }
 
 BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 {
-    BlurLastTimestamp = BlurStartTime;
-    SetTimer(hWnd, BlurTimerId, MsPerFrame, nullptr);
-    if ((ScreenshotBmi = CreateDIB(Width, Height, Depth, Screenshot)) == nullptr)
+    PaintData.BlurLastTimestamp = PaintData.BlurStartTime;
+
+    SetTimer(
+        hWnd,
+        BlurTimerId,
+        GetMsPerFrame(hWnd, PaintData.Width, PaintData.Height),
+        nullptr
+    );
+
+    PaintData.RawBmi = CreateDIB(
+        PaintData.Width,
+        PaintData.Height,
+        PaintData.Depth,
+        PaintData.RawScreenshot
+    );
+
+    if (PaintData.RawBmi != nullptr)
     {
-        std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
-        return FALSE;
+        std::cout
+            << "g_lpBmi was created."
+            << std::endl;
     }
     else
     {
-        std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
+        std::cout
+            // << ELogLevel::Error
+            << "g_lpBmi COULD NOT BE CREATED"
+            << std::endl;
+
+        return FALSE;
     }
-    if ((BlurredBmi = CreateDIB(Width, Height, Depth, BlurredScreenshot)) == nullptr)
+
+    PaintData.BlurredBmi = CreateDIB(
+        PaintData.Width,
+        PaintData.Height,
+        PaintData.Depth,
+        PaintData.BlurredScreenshot
+    );
+
+    if (PaintData.BlurredBmi != nullptr)
+    {
+        std::cout << "BlurredBmi was created." << std::endl;
+    }
+    else
     {
         std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
-    }
-    else
-    {
-        std::cout << "BlurredBmi was created." << std::endl;
     }
 
     return TRUE;
@@ -295,37 +559,39 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 
 void OnDestroy(HWND hWnd)
 {
-    if (ScreenshotBmi)
+    if (PaintData.RawBmi)
     {
-        free(ScreenshotBmi);
+        free(PaintData.RawBmi);
     }
-    if (BlurredBmi)
+    if (PaintData.BlurredBmi)
     {
-        free(BlurredBmi);
+        free(PaintData.BlurredBmi);
     }
 
-    WindowRect = RECT();
-    BackgroundHandle = nullptr;
-    Sigma = MinSigma;
-    CalledOnce = false;
-    Luminance = 0.f;
-    BrightnessScalar = 1.f;
-    ThemeMode = "Indeterminate";
-    ScalesBrightness = false;
-    BlurStartTime = 0;
-    FadeStartTime = 0;
-    BlurLastTimestamp = 0;
-    FadeLastTimestamp = 0;
-    SetForegroundWindow(SourceHandle);
-    BOOL Here = SetWindowPos(SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
-    if (Here)
-    {
-        std::cout << "Here was true." << std::endl;
-    }
-    else
-    {
-        std::cout << "Here was false." << std::endl;
-    }
+    PaintData = FOnPaintData();
+
+    // WindowRect = RECT();
+    // BackgroundHandle = nullptr;
+    // Sigma = MinSigma;
+    // CalledOnce = false;
+    // Luminance = 0.f;
+    // BrightnessScalar = 1.f;
+    // ThemeMode = "Indeterminate";
+    // ScalesBrightness = false;
+    // BlurStartTime = 0;
+    // FadeStartTime = 0;
+    // BlurLastTimestamp = 0;
+    // FadeLastTimestamp = 0;
+    // SetForegroundWindow(SourceHandle);
+    SetWindowPos(
+        GetMainWindow(),
+        HWND_TOP,
+        2000,
+        2000,
+        0,
+        0,
+        SWP_NOSIZE
+    );
 }
 
 void OnPaint(HWND hWnd)
@@ -335,102 +601,124 @@ void OnPaint(HWND hWnd)
 
     hDC = BeginPaint(hWnd, &PaintStruct);
 
-    BITMAPINFO bmi;
-    ZeroMemory(&bmi, sizeof(BITMAPINFO));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = Width;
-    bmi.bmiHeader.biHeight = -1 * Height;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
-    bmi.bmiHeader.biCompression = BI_RGB;
+    BITMAPINFO Bmi;
+    ZeroMemory(&Bmi, sizeof(BITMAPINFO));
+    Bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    Bmi.bmiHeader.biWidth = PaintData.Width;
+    Bmi.bmiHeader.biHeight = -1 * PaintData.Height;
+    Bmi.bmiHeader.biPlanes = 1;
+    Bmi.bmiHeader.biBitCount = PaintData.Depth;
+    Bmi.bmiHeader.biCompression = BI_RGB;
 
-    SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
-    BlurredScreenshotData.reserve(bufferSize);
-    BlurredScreenshot = BlurredScreenshotData.data();
-    Screenshot = ScreenshotData.data();
-    if (Sigma < MaxSigma)
+    SIZE_T BufferSize = static_cast<SIZE_T>(PaintData.Width) * PaintData.Height * PaintData.ChannelsNum;
+    PaintData.BlurredScreenshotData.reserve(BufferSize);
+    PaintData.BlurredScreenshot = PaintData.BlurredScreenshotData.data();
+    PaintData.RawScreenshot = PaintData.RawScreenshotData.data();
+    if (PaintData.Sigma < PaintData.MaxSigma)
     {
-        Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
+        std::cout
+            << "Blurring..."
+            << std::endl;
+
+        Blur(
+            PaintData.RawScreenshot,
+            PaintData.BlurredScreenshot,
+            PaintData.Width,
+            PaintData.Height,
+            PaintData.ChannelsNum,
+            PaintData.Sigma,
+            3,
+            kExtend
+        );
+
+        LogPaintData();
 
         const int Result = SetDIBitsToDevice(
-            hDC, 0, 0, Width, Height, 0, 0, 0, Height, BlurredScreenshot, BlurredBmi, DIB_RGB_COLORS);
+            hDC,
+            0,
+            0,
+            PaintData.Width,
+            PaintData.Height,
+            0,
+            0,
+            0,
+            PaintData.Height,
+            PaintData.BlurredScreenshot,
+            PaintData.BlurredBmi,
+            DIB_RGB_COLORS
+        );
 
-        BlurredScreenshot = BlurredScreenshotData.data();
-        if (ScalesBrightness)
-        {
-            const float Alpha = Sigma / MaxSigma;
-            const float Brightness = BrightnessScalar * Alpha;
-            ApplyScalingFactor(BlurredScreenshot, Width, Height, ChannelsNum, Brightness);
-        }
+        std::cout
+            << "SetDIBitsToDevice has code "
+            << Result
+            << std::endl;
+
+        PaintData.BlurredScreenshot = PaintData.BlurredScreenshotData.data();
+        // if (ScalesBrightness)
+        // {
+        //     const float Alpha = Sigma / MaxSigma;
+        //     const float Brightness = BrightnessScalar * Alpha;
+        //     ApplyScalingFactor(BlurredScreenshot, Width, Height, ChannelsNum, Brightness);
+        // }
     }
 
-    if (!PaintedOnce)
+    if (!PaintData.PaintedOnce)
     {
-        PaintedOnce = true;
+        PaintData.PaintedOnce = true;
         ShowWindow(hWnd, SW_SHOW);
-        ShowWindow(SorrellWmMainWindow, SW_SHOW);
-        SetForegroundWindow(SorrellWmMainWindow);
+        ShowWindow(GetMainWindow(), SW_SHOW);
+        SetForegroundWindow(GetMainWindow());
     }
 
     EndPaint(hWnd, &PaintStruct);
 }
 
-BOOL OnEraseBkgnd(HWND _Handle, HDC _Hdc)
+BOOL OnEraseBackground(HWND _Handle, HDC _Hdc)
 {
     return TRUE;
 }
 
-LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK BlurWindowProcedure(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (iMsg)
     {
     HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
     HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
     HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
-    HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBkgnd);
+    HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBackground);
     case WM_TIMER:
         DWORD currentTime = GetTickCount();
         DWORD elapsedTime = 0;
         switch (wParam)
         {
         case BlurTimerId:
-            if (BlurStartTime == 0)
+            if (PaintData.BlurStartTime == 0)
             {
-                BlurStartTime = GetTickCount();
-                InvalidateRect(SorrellWmMainWindow, nullptr, FALSE);
+                PaintData.BlurStartTime = GetTickCount();
+                InvalidateRect(GetMainWindow(), nullptr, FALSE);
             }
-            elapsedTime = currentTime - BlurStartTime;
+            elapsedTime = currentTime - PaintData.BlurStartTime;
             if (elapsedTime == 0)
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (elapsedTime >= Duration)
+            if (elapsedTime >= PaintData.Duration)
             {
-                // std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime)
-                //           << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
-                Sigma = MaxSigma;
-                BOOL PostTimerRes = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
-                // if (PostTimerRes)
-                // {
-                //     std::cout << "PostTimerRes was true." << std::endl;
-                // }
-                // else
-                // {
-                //     std::cout << "PostTimerRes was false." << std::endl;
-                // }
+                PaintData.Sigma = PaintData.MaxSigma;
+                SetLayeredWindowAttributes(GetMainWindow(), 0, 255, LWA_ALPHA);
                 InvalidateRect(hWnd, nullptr, FALSE);
                 KillTimer(hWnd, BlurTimerId);
             }
-            else if (currentTime - BlurLastTimestamp >= MsPerFrame)
+            else if (currentTime - PaintData.BlurLastTimestamp >= GetMsPerFrame(hWnd, PaintData.Width, PaintData.Height))
             {
-                const float Alpha = static_cast<float>((float)elapsedTime / (float)Duration);
+                const float Alpha = static_cast<float>((float) elapsedTime / (float) PaintData.Duration);
                 const float Factor = 1 - std::pow(2, -10.f * Alpha);
-                Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
+                PaintData.Sigma = PaintData.MinSigma + (PaintData.MaxSigma - PaintData.MinSigma) * Factor;
                 InvalidateRect(hWnd, nullptr, FALSE);
 
                 unsigned char Transparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f * Alpha), 0.f, 255.f));
-                BOOL Res = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
+                BOOL Res = SetLayeredWindowAttributes(GetMainWindow(), 0, Transparency, LWA_ALPHA);
                 if (!Res)
                 {
                     std::cout
@@ -440,60 +728,70 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                     LogLastWindowsError();
                 }
 
-                BlurLastTimestamp = currentTime;
+                PaintData.BlurLastTimestamp = currentTime;
             }
             else
             {
-                std::cout << std::setprecision(4) << "WM_TIMER came too soon, " << currentTime << " "
-                          << BlurLastTimestamp << std::endl;
+                std::cout
+                    << std::setprecision(4)
+                    << "WM_TIMER came too soon, "
+                    << currentTime
+                    << " "
+                    << PaintData.BlurLastTimestamp
+                    << std::endl;
             }
             return 0;
         case FadeTimerId:
-            Sigma = MinSigma;
-            elapsedTime = currentTime - FadeStartTime;
-            if (elapsedTime >= Duration)
+            PaintData.Sigma = PaintData.MinSigma;
+            elapsedTime = currentTime - PaintData.FadeStartTime;
+            if (elapsedTime >= PaintData.Duration)
             {
                 std::cout << "Destroying window..." << std::endl;
                 ShowWindow(hWnd, SW_HIDE);
                 DestroyWindow(hWnd);
             }
-            // InvalidateRect(hWnd, nullptr, FALSE);
             if (elapsedTime == 0)
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (elapsedTime >= Duration)
+            if (elapsedTime >= PaintData.Duration)
             {
-                std::cout << std::setprecision(2) << "For the Fade timer, elapsedTime >= Duration: "
-                          << std::to_string(static_cast<unsigned int>(elapsedTime)) << " >= " << Duration << std::endl;
+                std::cout
+                    << std::setprecision(2)
+                    << "For the Fade timer, elapsedTime >= Duration: "
+                    << std::to_string(static_cast<unsigned int>(elapsedTime))
+                    << " >= "
+                    << PaintData.Duration
+                    << std::endl;
                 KillTimer(hWnd, FadeTimerId);
-                SetLayeredWindowAttributes(BackgroundHandle, 0, 0, LWA_ALPHA);
-                SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                SetLayeredWindowAttributes(PaintData.BackdropHandle, 0, 0, LWA_ALPHA);
+                SetLayeredWindowAttributes(GetMainWindow(), 0, 255, LWA_ALPHA);
                 // Might not need this, and it is expensive...
-                InvalidateRect(SorrellWmMainWindow, nullptr, FALSE);
+                InvalidateRect(GetMainWindow(), nullptr, FALSE);
             }
-            else if (currentTime - FadeLastTimestamp >= MsPerFrame)
+            else if (currentTime - PaintData.FadeLastTimestamp >= GetMsPerFrame(GetMainWindow(), PaintData.Width, PaintData.Height))
             {
-                // const float EasedAlpha = std::exp(-2.f * (1.f - (elapsedTime
-                // / Duration)));
-                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float)elapsedTime / (float)Duration));
-                const float Alpha = elapsedTime / (float)Duration;
+                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float)elapsedTime / (float) PaintData.Duration));
+                const float Alpha = elapsedTime / (float) PaintData.Duration;
                 unsigned char Transparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f - 255.f * EasedAlpha), 0.f, 255.f));
                 unsigned char MainWindowTransparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
                 InvalidateRect(hWnd, nullptr, FALSE);
-                // std::cout << std::setprecision(4) << "Transparency is " << +(Transparency) << " at time " << currentTime
-                //           << " with EasedAlpha " << EasedAlpha << std::endl;
 
-                SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
-                SetLayeredWindowAttributes(SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(PaintData.BackdropHandle, 0, Transparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(GetMainWindow(), 0, MainWindowTransparency, LWA_ALPHA);
 
-                FadeLastTimestamp = currentTime;
+                PaintData.FadeLastTimestamp = currentTime;
             }
             else
             {
-                std::cout << "WM_TIMER came too soon, " << currentTime << " " << FadeLastTimestamp << std::endl;
+                std::cout
+                    << "WM_TIMER came too soon, "
+                    << currentTime
+                    << " "
+                    << PaintData.FadeLastTimestamp
+                    << std::endl;
             }
             return 0;
         }
@@ -510,85 +808,82 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     BOOL Shadow = false;
     BOOL SystemSuccess = SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
-    if (Shadow)
-    {
-        std::cout << "Shadow is TRUE" << std::endl;
-    }
-    else
-    {
-        std::cout << "Shadow is FALSE" << std::endl;
-    }
-    if (SystemSuccess)
-    {
-        std::cout << "SystemSuccess is TRUE" << std::endl;
-    }
-    else
-    {
-        std::cout << "SystemSuccess is FALSE" << std::endl;
-    }
 
     /* @TODO If this is called while the blur is still animating, then the fade
      * animation should only take the length of time that the blur animation
      * played. */
 
-    BOOL KillResult = KillTimer(BackgroundHandle, BlurTimerId);
+    BOOL KillResult = KillTimer(PaintData.BackdropHandle, BlurTimerId);
     if (!KillResult)
     {
-        LOG
+        std::cout
             << "KillTimer for BlurTimerId returned "
             << KillResult
-            << std::endl;
-        LOG
+            << "\n"
             << "After kill timer, last Windows error is "
-            << GetLastWindowsError()
+            // << GetLastWindowsError()
             << std::endl;
     }
 
-    FadeStartTime = GetTickCount();
-    FadeLastTimestamp = FadeStartTime;
-    int SetTimerResult = SetTimer(BackgroundHandle, FadeTimerId, MsPerFrame, nullptr);
+    std::cout << "HERE is" << std::endl;
+
+    PaintData.FadeStartTime = GetTickCount();
+    std::cout << "Fade Data: " << PaintData.FadeStartTime << std::endl;
+    PaintData.FadeLastTimestamp = PaintData.FadeStartTime;
+    std::cout << "Fade Timestamp: " << PaintData.FadeLastTimestamp << std::endl;
+
+    std::cout
+        << "Before SetTimer\n    "
+        << PaintData.BackdropHandle
+        << "\nFadeTimerId\n    "
+        << FadeTimerId
+        << "\nPaintData.Width\n    "
+        << PaintData.Width
+        << "\nPaintData.Height\n    "
+        << PaintData.Height
+        << "\nGetMsPerFrame    "
+        << GetMsPerFrame(PaintData.BackdropHandle, PaintData.Width, PaintData.Height)
+        << std::endl;
+
+    int SetTimerResult = SetTimer(
+        PaintData.BackdropHandle,
+        FadeTimerId,
+        GetMsPerFrame(
+            PaintData.BackdropHandle,
+            PaintData.Width,
+            PaintData.Height
+        ),
+        nullptr
+    );
+    std::cout << "After SetTimer" << std::endl;
 
     return Environment.Undefined();
 }
 
-std::string GetDerivedThemeMode(double Luminance)
-{
-    if (Luminance <= 85.0)
-    {
-        return "Dark";
-    }
-    else if (Luminance >= 170.0)
-    {
-        return "Light";
-    }
-    else
-    {
-        return "Indeterminate";
-    }
-}
-
-void CreateBackdropWindow(HWND BackdropHandle, RECT Bounds)
+void CreateBackdropWindow(RECT Bounds)
 {
     HINSTANCE ModuleHandle = GetModuleHandle(nullptr);
 
     WNDCLASSEXA WindowClass;
 
+    char* WindowClassName = "SorrellWm Blurred Background";
+
     WindowClass.cbSize        = sizeof(WindowClass);
     WindowClass.style         = CS_VREDRAW | CS_HREDRAW;
-    WindowClass.lpfnWndProc   = BlurWndProc;
+    WindowClass.lpfnWndProc   = BlurWindowProcedure;
     WindowClass.cbClsExtra    = 0;
     WindowClass.cbWndExtra    = 0;
-    WindowClass.hInstance     = hInstance;
+    WindowClass.hInstance     = ModuleHandle;
     WindowClass.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
     WindowClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
     WindowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     WindowClass.lpszMenuName  = NULL;
-    WindowClass.lpszClassName = "SorrellWm Blurred Background";
+    WindowClass.lpszClassName = WindowClassName;
     WindowClass.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
 
     RegisterClassExA(&WindowClass);
 
-    BackdropHandle = CreateWindowExA(NULL,
+    PaintData.BackdropHandle = CreateWindowExA(NULL,
         WindowClassName,
         nullptr,
         WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE,
@@ -603,14 +898,14 @@ void CreateBackdropWindow(HWND BackdropHandle, RECT Bounds)
     );
 
     SetWindowLong(
-        BackdropHandle,
+        PaintData.BackdropHandle,
         GWL_EXSTYLE,
-        GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED
+        GetWindowLong(PaintData.BackdropHandle, GWL_EXSTYLE) | WS_EX_LAYERED
     );
 
     BOOL Attribute = TRUE;
     DwmSetWindowAttribute(
-        BackdropHandle,
+        PaintData.BackdropHandle,
         DWMWA_TRANSITIONS_FORCEDISABLED,
         &Attribute,
         sizeof(Attribute)
@@ -618,10 +913,10 @@ void CreateBackdropWindow(HWND BackdropHandle, RECT Bounds)
 
     HWND ForegroundWindow = GetForegroundWindow();
 
-    ShowWindow(BackdropHandle, SW_SHOWNOACTIVATE);
-    UpdateWindow(BackdropHandle);
+    ShowWindow(PaintData.BackdropHandle, SW_SHOWNOACTIVATE);
+    UpdateWindow(PaintData.BackdropHandle);
     SetWindowPos(
-        BackgroundHandle,
+        PaintData.BackdropHandle,
         GetNextWindow(ForegroundWindow, GW_HWNDPREV),
         0,
         0,
@@ -630,20 +925,24 @@ void CreateBackdropWindow(HWND BackdropHandle, RECT Bounds)
         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
     );
 
-    SetLayeredWindowAttributes(BackdropHandle, 0, 255, LWA_ALPHA);
+    SetLayeredWindowAttributes(PaintData.BackdropHandle, 0, 255, LWA_ALPHA);
 }
 
-Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
+void SetRawScreenshot(RECT Bounds)
 {
-    Napi::Env Environment = CallbackInfo.Env();
-    RECT Bounds = DecodeRect(CallbackInfo[0]);
-    HWND BackdropHandle = nullptr;
+    std::cout
+        << "SetRawScreenshot: "
+        << Bounds.left
+        << ", "
+        << Bounds.top
+        << ", "
+        << Bounds.right
+        << ", "
+        << Bounds.bottom
+        << std::endl;
 
-    CreateBackdropWindow(BackdropHandle, Bounds);
-
-    std::unique_ptr<Gdiplus::Bitmap> Screenshot = CaptureScreenSectionAsBitmap(Bounds);
-
-    PrepareMainWindow();
+    std::unique_ptr<Gdiplus::Bitmap> ScreenshotBitmap = CaptureScreenSectionAsBitmap(Bounds);
+    PaintData.RawScreenshotData = GetBitmapPixelDataAsVector(ScreenshotBitmap.get());
 }
 
 void PrepareMainWindow(RECT Bounds)
@@ -655,16 +954,54 @@ void PrepareMainWindow(RECT Bounds)
         GWL_EXSTYLE,
         GetWindowLong(MainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
     );
+
     SetLayeredWindowAttributes(MainWindow, 0, 0, LWA_ALPHA);
+
     SetWindowPos(
         MainWindow,
         HWND_TOP,
-        WindowRect.left,
-        WindowRect.top,
-        WindowRect.right - WindowRect.left,
-        WindowRect.bottom - WindowRect.top,
+        Bounds.left,
+        Bounds.top,
+        Bounds.right - Bounds.left,
+        Bounds.bottom - Bounds.top,
         SWP_SHOWWINDOW
     );
+}
+
+void PreparePaintData(RECT Bounds)
+{
+    PaintData.Width = Bounds.right - Bounds.left;
+    PaintData.Height = Bounds.bottom - Bounds.top;
+}
+
+Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    RECT Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
+
+    std::cout << "Smoke 1" << std::endl;
+
+    // SetRawScreenshot(Bounds);
+    bool ScreenshotSuccess = TakeScreenshotRect(Bounds, &PaintData.RawScreenshotData);
+    std::cout
+        << "Screenshot was "
+        << (ScreenshotSuccess ? "successful" : "NOT successful")
+        << std::endl;
+
+    CreateBackdropWindow(Bounds);
+    PreparePaintData(Bounds);
+
+    std::cout << "Smoke 2" << std::endl;
+
+    PrepareMainWindow(Bounds);
+
+    std::cout << "Smoke 3" << std::endl;
+
+    StealFocus(GetMainWindow());
+
+    std::cout << "Smoke 4" << std::endl;
+
+    return Environment.Undefined();
 }
 
 Napi::Value BlurBackground_OLD(const Napi::CallbackInfo& CallbackInfo)

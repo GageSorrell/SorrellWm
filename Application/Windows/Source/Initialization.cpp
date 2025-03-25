@@ -67,7 +67,7 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
     napi_add_env_cleanup_hook(Environment, ShutdownGdiPlus, nullptr);
 
     GGlobals::WinEvent = new FWinEvent();
-    InitializeBlurBackground();
+    // InitializeBlurBackground();
 
     /* @TODO Find better place to register listeners */
     RegisterActivationKey();
@@ -109,6 +109,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetMonitorFromWindow", GetMonitorFromWindow },
         { "GetWindowTitle", GetWindowTitle },
         { "GetScreenshot", GetScreenshot },
+        { "GetDwmWindowRect", GetDwmWindowRectNode },
         { "CaptureScreenSectionToTempPngFile", CaptureScreenSectionToTempPngFile },
         { "GetMonitorFriendlyName", GetMonitorFriendlyName },
         { "GetApplicationFriendlyName", GetApplicationFriendlyName },

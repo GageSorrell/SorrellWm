@@ -7,10 +7,14 @@ import * as Path from "path";
 import { AnnotatePanel, BringIntoPanel, ChangeFocus, GetCurrentPanel, GetPanelScreenshot, GetPanels, IsWindowTiled } from "./Tree";
 import {
     BlurBackground,
+    BlurBackground_DEPRECATED,
+    GetDwmWindowRect,
     GetFocusedWindow,
+    GetWindowLocationAndSize,
     GetWindowTitle,
     type HWindow,
-    UnblurBackground } from "@sorrellwm/windows";
+    UnblurBackground,
+    UnblurBackground_DEPRECATED} from "@sorrellwm/windows";
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
@@ -117,7 +121,10 @@ const LaunchMainWindow = async (): Promise<void> =>
         const FocusChange: FFocusChange = Arguments[1] as FFocusChange;
         const NewInterimFocus: FVertex | undefined = ChangeFocus(InterimFocus, FocusChange);
 
-        BlurBackground(NewInterimFocus?.Size);
+        if (NewInterimFocus?.Size !== undefined)
+        {
+            BlurBackground(NewInterimFocus?.Size);
+        }
 
         MainWindow?.webContents.send("OnChangeFocus", NewInterimFocus);
     });
@@ -198,7 +205,8 @@ export const Activate = (): void =>
         const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
         Log(`Focused Window of IsTiled call is ${ GetWindowTitle(GetFocusedWindow()) }.`);
         MainWindow?.webContents.send("Navigate", "", { IsTiled });
-        BlurBackground();
+        // BlurBackground(GetWindowLocationAndSize(ActiveWindows[0]));
+        BlurBackground_DEPRECATED(GetDwmWindowRect(ActiveWindows[0]));
     }
 };
 
@@ -217,10 +225,12 @@ function OnKey(Event: FKeyboardEvent): void
     {
         if (State === "Down")
         {
+            Activate();
         }
         else
         {
-            UnblurBackground();
+            // UnblurBackground();
+            UnblurBackground_DEPRECATED();
         }
     }
     else

@@ -16,6 +16,8 @@
 #include <ctime>
 #include <dwmapi.h>
 
+// DECLARE_LOG_CATEGORY(Utility)
+
 /**
  * Get the current time as a wstring, ISO timestamp.
  * Intended for writing file names.
@@ -26,8 +28,6 @@ std::wstring GetTimestamp();
 std::wstring GetFileNameTimestamp();
 
 std::wstring GetTempPath();
-
-BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
 
 Napi::Object EncodeHandle(const Napi::Env& Environment, void* Handle);
 void* DecodeHandle(const Napi::Object& Object);

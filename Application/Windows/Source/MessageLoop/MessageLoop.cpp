@@ -1,5 +1,7 @@
 #include "MessageLoop.h"
 
+// DECLARE_LOG_CATEGORY(MessageLoop)
+
 FMessageLoop::FMessageLoop(Napi::Function OkCallback)
     : Napi::AsyncProgressQueueWorker<int>(OkCallback)
     , TDispatcher<MSG>()

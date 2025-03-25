@@ -19,7 +19,7 @@
 #include <thread>
 #include "../ThirdParty/Blur.h"
 
-DEFINE_LOG_CATEGORY(Window)
+// DEFINE_LOG_CATEGORY(Window)
 
 DECLARE_NAPI_FUNCTION(GetFocusedWindow, HWindow, Renderer, Hook)
 DECLARE_NAPI_FUNCTION(CaptureWindowScreenshot, string, Handle, HWindow)
@@ -37,9 +37,11 @@ DECLARE_NAPI_FUNCTION(GetWindowTitle, string, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetApplicationFriendlyName, string | undefined, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(RestoreAllWindows, void)
 DECLARE_NAPI_FUNCTION(StealFocusNode, ExportName="StealFocus", Handle, HWindow, void)
+DECLARE_NAPI_FUNCTION(GetDwmWindowRectNode, ExportName="GetDwmWindowRect", Handle, HWindow, void)
 
-void StealFocus();
+void StealFocus(HWND Window);
 HWND GetMainWindow();
+BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
 
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);
 std::string CaptureWindowScreenshot_Internal(HWND hwnd);

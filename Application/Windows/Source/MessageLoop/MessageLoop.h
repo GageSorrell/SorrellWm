@@ -8,6 +8,8 @@
 #include <codecvt>
 #include <map>
 
+// DEFINE_LOG_CATEGORY(MessageLoop)
+
 typedef std::function<void(HWND, UINT, WPARAM, LPARAM)> FWindowProc;
 
 /**

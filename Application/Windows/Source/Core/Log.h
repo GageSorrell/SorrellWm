@@ -77,4 +77,4 @@ private:
 #define LOG LogHelper()
 
 #define LogLastWindowsError() \
-    ([]() -> void { std::string ErrorMessage = GetLastWindowsError(); LOG << ErrorMessage << std::endl; })();
+    ([]() -> void { std::string ErrorMessage = GetLastWindowsError(); std::cout << ErrorMessage << std::endl; })();

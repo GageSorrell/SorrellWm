@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-#include "BlurBackground.h"
+#include "BlurBackground_DEPRECATED.h"
 
 #include "Core/Utility.h"
 #include <Windowsx.h>
@@ -19,7 +19,7 @@
 #include "Core/MonitorUtilities.h"
 #include "Core/Globals.h"
 
-DECLARE_LOG_CATEGORY(Blur)
+// DECLARE_LOG_CATEGORY(Blur_DEPRECATED)
 
 /**
  * 1. Get screenshot of SourceHandle window
@@ -172,7 +172,7 @@ double CalculateAverageLuminance(const BYTE* PixelData, int width, int height, i
     return averageLuminance;
 }
 
-LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
+LPBITMAPINFO CreateDIB_DEPRECATED(int cx, int cy, int iBpp, BYTE*& pBits)
 {
     LPBITMAPINFO lpBmi;
     const int iBmiSize = sizeof(BITMAPINFO);
@@ -181,7 +181,7 @@ LPBITMAPINFO CreateDIB(int cx, int cy, int iBpp, BYTE*& pBits)
     // Allocate memory for the bitmap info header.
     if ((lpBmi = (LPBITMAPINFO)malloc(iBmiSize)) == nullptr)
     {
-        // LOG << "Error allocating BitmapInfo!\n";
+        // std::cout << "Error allocating BitmapInfo!\n";
         return nullptr;
     }
 
@@ -252,8 +252,8 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 
     if (!hBitmap)
     {
-        LOG
-            << ELogLevel::Error
+        std::cout
+            // << ELogLevel::Error
             << "Failed to create DIB section, handle was "
             << SourceHandle
             << ", ScreenshotData reserved "
@@ -266,14 +266,14 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        // LOG << "Made DIB Section." << std::endl;
+        // std::cout << "Made DIB Section." << std::endl;
     }
 
     HGDIOBJ hOld = SelectObject(hdcMemDC, hBitmap);
     if (!hOld)
     {
-        LOG
-            << ELogLevel::Error
+        std::cout
+            // << ELogLevel::Error
             << "Failed to select bitmap into DC."
             << std::endl;
         LogLastWindowsError();
@@ -284,12 +284,15 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        // LOG << "hOld has been selected." << std::endl;
+        // std::cout << "hOld has been selected." << std::endl;
     }
 
     if (!BitBlt(hdcMemDC, 0, 0, Width, Height, ScreenDc, WindowRect.left, WindowRect.top, SRCCOPY))
     {
-        LOG << ELogLevel::Error << "BitBlt failed." << std::endl;
+        std::cout
+            // << ELogLevel::Error
+            << "BitBlt failed."
+            << std::endl;
         SelectObject(hdcMemDC, hOld);
         DeleteObject(hBitmap);
         DeleteDC(hdcMemDC);
@@ -298,7 +301,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     }
     else
     {
-        // LOG << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
+        // std::cout << "CaptureWindowScreenshot: BitBlt call is GOOD." <<
         // std::endl;
     }
 
@@ -360,7 +363,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 
 void Render(HWND hWnd, HWND SourceHandle)
 {
-    LOG
+    std::cout
         << "Render Function: hWnd "
         << hWnd
         << " SourceHandle "
@@ -380,11 +383,11 @@ void Render(HWND hWnd, HWND SourceHandle)
     InvalidateRect(hWnd, nullptr, FALSE);
 }
 
-BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
+BOOL OnCreate_DEPRECATED(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 {
     BlurLastTimestamp = BlurStartTime;
     SetTimer(hWnd, BlurTimerId, MsPerFrame, nullptr);
-    if ((ScreenshotBmi = CreateDIB(Width, Height, Depth, Screenshot)) == nullptr)
+    if ((ScreenshotBmi = CreateDIB_DEPRECATED(Width, Height, Depth, Screenshot)) == nullptr)
     {
         std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
@@ -393,7 +396,7 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
     {
         std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
     }
-    if ((BlurredBmi = CreateDIB(Width, Height, Depth, BlurredScreenshot)) == nullptr)
+    if ((BlurredBmi = CreateDIB_DEPRECATED(Width, Height, Depth, BlurredScreenshot)) == nullptr)
     {
         std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
@@ -413,7 +416,7 @@ void InitializeBlurBackground_DEPRECATED()
     {
         if (Payload.Event == EVENT_SYSTEM_FOREGROUND)
         {
-            // LOG << "EVENT SYSTEM FOREGROUND" << std::endl;
+            // std::cout << "EVENT SYSTEM FOREGROUND" << std::endl;
             HWND ForegroundWindow = GetForegroundWindow();
             RECT ForegroundRect;
             GetWindowRect(ForegroundWindow, &ForegroundRect);
@@ -427,7 +430,7 @@ void InitializeBlurBackground_DEPRECATED()
     });
 }
 
-void OnDestroy(HWND hWnd)
+void OnDestroy_DEPRECATED(HWND hWnd)
 {
     if (ScreenshotBmi)
     {
@@ -493,7 +496,7 @@ void GetBackgroundMode()
     }
 }
 
-void OnPaint(HWND hWnd)
+void OnPaint_DEPRECATED(HWND hWnd)
 {
     static PAINTSTRUCT PaintStruct;
     static HDC hDC;
@@ -545,7 +548,7 @@ void OnPaint(HWND hWnd)
     EndPaint(hWnd, &PaintStruct);
 }
 
-BOOL OnEraseBkgnd(HWND _Handle, HDC _Hdc)
+BOOL OnEraseBackground_DEPRECATED(HWND _Handle, HDC _Hdc)
 {
     return TRUE;
 }
@@ -554,10 +557,10 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (iMsg)
     {
-        HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
-        HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
-        HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
-        HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBkgnd);
+        HANDLE_MSG(hWnd, WM_CREATE, OnCreate_DEPRECATED);
+        HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy_DEPRECATED);
+        HANDLE_MSG(hWnd, WM_PAINT, OnPaint_DEPRECATED);
+        HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBackground_DEPRECATED);
     case WM_TIMER:
         DWORD currentTime = GetTickCount();
         DWORD elapsedTime = 0;
@@ -653,8 +656,6 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 unsigned char MainWindowTransparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
                 InvalidateRect(hWnd, nullptr, FALSE);
-                // std::cout << std::setprecision(4) << "Transparency is " << +(Transparency) << " at time " << currentTime
-                //           << " with EasedAlpha " << EasedAlpha << std::endl;
 
                 SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
                 SetLayeredWindowAttributes(SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
@@ -704,11 +705,12 @@ Napi::Value UnblurBackground_DEPRECATED(const Napi::CallbackInfo& CallbackInfo)
     BOOL KillResult = KillTimer(BackgroundHandle, BlurTimerId);
     if (!KillResult)
     {
-        LOG
+        std::cout
             << "KillTimer for BlurTimerId returned "
             << KillResult
             << std::endl;
-        LOG
+
+        std::cout
             << "After kill timer, last Windows error is "
             << GetLastWindowsError()
             << std::endl;
@@ -763,7 +765,7 @@ Napi::Value BlurBackground_DEPRECATED(const Napi::CallbackInfo& CallbackInfo)
     SourceHandle = GetForegroundWindow();
     if (SourceHandle == nullptr || SourceHandle == SorrellWmMainWindow)
     {
-        LOG
+        std::cout
             << "MyBlur was called, but GetForegroundWindow gave the nullptr."
             << std::endl;
         return Environment.Undefined();
@@ -771,7 +773,8 @@ Napi::Value BlurBackground_DEPRECATED(const Napi::CallbackInfo& CallbackInfo)
 
     SetMsPerFrame(SourceHandle);
 
-    GetDwmWindowRect(SourceHandle, &WindowRect);
+    // GetDwmWindowRect(SourceHandle, &WindowRect);
+    WindowRect = DecodeRect(CallbackInfo[0].As<Napi::Object>());
     Height = WindowRect.bottom - WindowRect.top;
     Width = WindowRect.right - WindowRect.left;
 
@@ -827,7 +830,7 @@ Napi::Value BlurBackground_DEPRECATED(const Napi::CallbackInfo& CallbackInfo)
 
     LPCSTR WindowName = "SorrellWm Main Window";
     SorrellWmMainWindow = FindWindow(nullptr, WindowName);
-    LOG
+    std::cout
         << "SorrellWmMainWindow is "
         << SorrellWmMainWindow
         << std::endl;
