@@ -871,6 +871,23 @@ void SuperimposeMainWindow()
         SWP_SHOWWINDOW
     );
 
+    std::cout
+        << "SetWindowPos of MainWindow is "
+        << MyRes
+        << std::endl;
+
+    std::cout
+        << "Bounds are "
+        << Shared::Bounds.left
+        << ", "
+        << Shared::Bounds.top
+        << ", "
+        << Shared::Bounds.right
+        << ", "
+        << Shared::Bounds.bottom
+        << "."
+        << std::endl;
+
     StealFocus(Shared::SorrellWmMainWindow);
 }
 

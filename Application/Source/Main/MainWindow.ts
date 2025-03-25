@@ -15,8 +15,11 @@ import {
 } from "./Tree";
 import {
     BlurBackground,
+    type FBox,
+    type FMonitorInfo,
     GetDwmWindowRect,
     GetFocusedWindow,
+    GetMonitors,
     GetWindowTitle,
     type HWindow,
     UnblurBackground } from "@sorrellwm/windows";
