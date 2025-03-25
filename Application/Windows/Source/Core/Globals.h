@@ -1,3 +1,9 @@
+/* File:      Globals.h
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2025 Gage Sorrell
+ * License:   MIT
+ */
+
 #pragma once
 
 #include <Windows.h>
