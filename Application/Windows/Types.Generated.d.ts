@@ -8,7 +8,7 @@
 
 /* eslint-disable */
 
-import type { FBox, Array, HMonitor, HWindow, FHexColor, ExportName } from "./Core";
+import type { FBox, Array, HMonitor, HWindow, FHexColor } from "./Core";
 
 export function BlurBackground(Bounds: FBox): void;
 export function UnblurBackground(): void;
@@ -32,5 +32,5 @@ export function SetWindowPosition(Handle: HWindow, Box: FBox): void;
 export function GetWindowTitle(Handle: HWindow): string;
 export function GetApplicationFriendlyName(Handle: HWindow): string | undefined;
 export function RestoreAllWindows(): void;
-export function StealFocus(Handle: HWindow, void: undefined): ExportName="StealFocus";
-export function GetDwmWindowRect(Handle: HWindow, void: undefined): ExportName="GetDwmWindowRect";
+export function StealFocus(Handle: HWindow): void;
+export function GetDwmWindowRect(Handle: HWindow): void;

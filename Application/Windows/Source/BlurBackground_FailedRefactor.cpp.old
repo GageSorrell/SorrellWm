@@ -732,13 +732,13 @@ LRESULT CALLBACK BlurWindowProcedure(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM
             }
             else
             {
-                std::cout
-                    << std::setprecision(4)
-                    << "WM_TIMER came too soon, "
-                    << currentTime
-                    << " "
-                    << PaintData.BlurLastTimestamp
-                    << std::endl;
+                // std::cout
+                //     << std::setprecision(4)
+                //     << "WM_TIMER came too soon, "
+                //     << currentTime
+                //     << " "
+                //     << PaintData.BlurLastTimestamp
+                //     << std::endl;
             }
             return 0;
         case FadeTimerId:
@@ -756,17 +756,17 @@ LRESULT CALLBACK BlurWindowProcedure(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM
             }
             if (elapsedTime >= PaintData.Duration)
             {
-                std::cout
-                    << std::setprecision(2)
-                    << "For the Fade timer, elapsedTime >= Duration: "
-                    << std::to_string(static_cast<unsigned int>(elapsedTime))
-                    << " >= "
-                    << PaintData.Duration
-                    << std::endl;
+                // std::cout
+                //     << std::setprecision(2)
+                //     << "For the Fade timer, elapsedTime >= Duration: "
+                //     << std::to_string(static_cast<unsigned int>(elapsedTime))
+                //     << " >= "
+                //     << PaintData.Duration
+                //     << std::endl;
                 KillTimer(hWnd, FadeTimerId);
                 SetLayeredWindowAttributes(PaintData.BackdropHandle, 0, 0, LWA_ALPHA);
                 SetLayeredWindowAttributes(GetMainWindow(), 0, 255, LWA_ALPHA);
-                // Might not need this, and it is expensive...
+                /* Might not need this, and it is expensive... */
                 InvalidateRect(GetMainWindow(), nullptr, FALSE);
             }
             else if (currentTime - PaintData.FadeLastTimestamp >= GetMsPerFrame(GetMainWindow(), PaintData.Width, PaintData.Height))

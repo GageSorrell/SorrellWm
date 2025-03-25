@@ -30,60 +30,72 @@
  * 6. (When fade animation is done) Move Main window away and destroy blur window
  */
 
-static char* WindowTitle = "SorrellWm Blurred Background";
-static char* WindowClassName = WindowTitle;
-static int Depth = 24;
-static int Width;
-static int Height;
-static int ChannelsNum = 3;
-static RECT Bounds;
-static HWND BackgroundHandle = nullptr;
-static const float MinSigma = 1.f;
-static const float MaxSigma = 10.f;
-static float Sigma = MinSigma;
-static const std::size_t FairlyHighResolution = 3840 * 2160 * 3;
-static std::vector<BYTE> BlurredScreenshotData(FairlyHighResolution);
-static std::vector<BYTE> ScreenshotData(FairlyHighResolution);
-static BYTE* Screenshot = nullptr;
-static BYTE* BlurredScreenshot = nullptr;
-static bool CalledOnce = false;
-static double Luminance = 0.f;
-static double BrightnessScalar = 1.f;
-static std::string ThemeMode = "Indeterminate";
-static bool ScalesBrightness = false;
-static HWND SorrellWmMainWindow = nullptr;
-static DWORD BlurStartTime = 0;
-static DWORD FadeStartTime = 0;
-static DWORD BlurLastTimestamp = 0;
-static DWORD FadeLastTimestamp = 0;
-static const UINT_PTR BlurTimerId = 1;
-static const UINT_PTR FadeTimerId = 2;
-static const int Duration = 150;
-static int MsPerFrame = 1000 / 120;
 
-/**
- * Return the ms per frame (inverse of frame rate).
- * Depends upon the refresh rate of the monitor and the
- * size of the window.
- */
-static void SetMsPerFrame(HWND SourceHandle)
+namespace Shared
 {
-    const bool IsLargerThan2k = Width * Height > 2560 * 1440;
+    static int ChannelsNum = 3;
+    static int Depth = 24;
+    static int Width;
+    static int Height;
+    static RECT Bounds;
+    static HWND BackdropHandle = nullptr;
+    static const float MinSigma = 1.f;
+    static const float MaxSigma = 10.f;
+    static float Sigma = MinSigma;
+    static const std::size_t FairlyHighResolution = 3840 * 2160 * 3;
+    static std::vector<BYTE> BlurredScreenshotData(FairlyHighResolution);
+    static std::vector<BYTE> ScreenshotData(FairlyHighResolution);
+    static BYTE* Screenshot = nullptr;
+    static BYTE* BlurredScreenshot = nullptr;
+    static bool CalledOnce = false;
+    static double Luminance = 0.f;
+    static double BrightnessScalar = 1.f;
+    static std::string ThemeMode = "Indeterminate";
+    static bool ScalesBrightness = false;
+    static HWND SorrellWmMainWindow = nullptr;
+    static DWORD BlurStartTime = 0;
+    static DWORD FadeStartTime = 0;
+    static DWORD BlurLastTimestamp = 0;
+    static DWORD FadeLastTimestamp = 0;
+    static const int Duration = 150;
+    static int MsPerFrame = 1000 / 120;
+    static HWND SourceHandle = nullptr;
+    static bool PaintedOnce = false;
+    LPBITMAPINFO ScreenshotBmi = nullptr;
+    LPBITMAPINFO BlurredBmi = nullptr;
+    static const UINT_PTR BlurTimerId = 1;
+    static const UINT_PTR FadeTimerId = 2;
+    static const int MinDeferResolution = 1920 * 1080 + 1;
+};
+
+// /**
+//  * Return the ms per frame (inverse of frame rate).
+//  * Depends upon the refresh rate of the monitor and the
+//  * size of the window.
+//  */
+// static void SetMsPerFrame(HWND SourceHandle)
+// {
+//     const bool IsLargerThan2k = Width * Height > 2560 * 1440;
+//     const int32_t BaseMsPerFrame = IsLargerThan2k
+//         ? 60
+//         : 120;
+
+//     const int32_t RefreshRate = GetRefreshRateFromWindow(SourceHandle);
+
+//     MsPerFrame = 1000 / min(RefreshRate, BaseMsPerFrame);
+// }
+
+int32_t GetMsPerFrame()
+{
+    const bool IsLargerThan2k = Shared::Width * Shared::Height > 2560 * 1440;
     const int32_t BaseMsPerFrame = IsLargerThan2k
         ? 60
         : 120;
 
-    const int32_t RefreshRate = GetRefreshRateFromWindow(SourceHandle);
+    const int32_t RefreshRate = GetLeastRefreshRateOverRect(Shared::Bounds);
 
-    MsPerFrame = 1000 / min(RefreshRate, BaseMsPerFrame);
+    return 1000 / min(RefreshRate, BaseMsPerFrame);
 }
-
-static HWND SourceHandle = nullptr;
-static bool PaintedOnce = false;
-static const int MinDeferResolution = 1920 * 1080 + 1;
-
-LPBITMAPINFO ScreenshotBmi = nullptr;
-LPBITMAPINFO BlurredBmi = nullptr;
 
 double CalculateScalingFactor(double AverageLuminance)
 {
@@ -117,7 +129,13 @@ double CalculateScalingFactor(double AverageLuminance)
     return ScalingFactor;
 }
 
-void ApplyScalingFactor(BYTE* PixelData, int width, int height, int channelsNum, double scalingFactor)
+void ApplyScalingFactor(
+    BYTE* PixelData,
+    int width,
+    int height,
+    int channelsNum,
+    double scalingFactor
+)
 {
     if (!PixelData || width <= 0 || height <= 0 || (channelsNum != 3 && channelsNum != 4))
     {
@@ -144,7 +162,12 @@ void ApplyScalingFactor(BYTE* PixelData, int width, int height, int channelsNum,
     }
 }
 
-double CalculateAverageLuminance(const BYTE* PixelData, int width, int height, int channelsNum)
+double CalculateAverageLuminance(
+    const BYTE* PixelData,
+    int width,
+    int height,
+    int channelsNum
+)
 {
     if (!PixelData || width <= 0 || height <= 0 || (channelsNum != 3 && channelsNum != 4))
     {
@@ -219,46 +242,42 @@ LPBITMAPINFO CreateDib(int Width, int Height, int Depth, BYTE*& Bits)
     return BitmapInfo;
 }
 
-bool CaptureWindowScreenshot(HWND SourceHandle)
+bool CaptureWindowScreenshot()
 {
-    Width = Bounds.right - Bounds.left;
-    Height = Bounds.bottom - Bounds.top;
-    ChannelsNum = 3;
-
     HDC ScreenDc = GetDC(nullptr);
 
-    HDC hdcMemDC = CreateCompatibleDC(ScreenDc);
-    if (!hdcMemDC)
+    HDC HdcMemDc = CreateCompatibleDC(ScreenDc);
+    if (!HdcMemDc)
     {
         std::cout << "Failed to create compatible DC." << std::endl;
-        ReleaseDC(SourceHandle, ScreenDc);
+        ReleaseDC(Shared::SourceHandle, ScreenDc);
         return false;
     }
 
-    ScreenshotData.reserve(Width * Height * ChannelsNum);
-    Screenshot = ScreenshotData.data();
+    Shared::ScreenshotData.reserve(Shared::Width * Shared::Height * Shared::ChannelsNum);
+    Shared::Screenshot = Shared::ScreenshotData.data();
 
-    HBITMAP hBitmap = CreateDIBSection(
+    HBITMAP Bitmap = CreateDIBSection(
         ScreenDc,
-        ScreenshotBmi,
+        Shared::ScreenshotBmi,
         DIB_RGB_COLORS,
-        (void**) Screenshot,
+        (void**) Shared::Screenshot,
         nullptr,
         0
     );
 
-    if (!hBitmap)
+    if (!Bitmap)
     {
         std::cout
             // << ELogLevel::Error
             << "Failed to create DIB section, handle was "
-            << SourceHandle
+            << Shared::SourceHandle
             << ", ScreenshotData reserved "
-            << Width * Height * ChannelsNum
+            << Shared::Width * Shared::Height * Shared::ChannelsNum
             << std::endl;
 
-        DeleteDC(hdcMemDC);
-        ReleaseDC(SourceHandle, ScreenDc);
+        DeleteDC(HdcMemDc);
+        ReleaseDC(Shared::SourceHandle, ScreenDc);
         return false;
     }
     else
@@ -266,7 +285,7 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
         // std::cout << "Made DIB Section." << std::endl;
     }
 
-    HGDIOBJ hOld = SelectObject(hdcMemDC, hBitmap);
+    HGDIOBJ hOld = SelectObject(HdcMemDc, Bitmap);
     if (!hOld)
     {
         std::cout
@@ -274,9 +293,9 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
             << "Failed to select bitmap into DC."
             << std::endl;
         LogLastWindowsError();
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMemDC);
-        ReleaseDC(SourceHandle, ScreenDc);
+        DeleteObject(Bitmap);
+        DeleteDC(HdcMemDc);
+        ReleaseDC(Shared::SourceHandle, ScreenDc);
         return false;
     }
     else
@@ -284,16 +303,28 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
         // std::cout << "hOld has been selected." << std::endl;
     }
 
-    if (!BitBlt(hdcMemDC, 0, 0, Width, Height, ScreenDc, Bounds.left, Bounds.top, SRCCOPY))
+    BOOL BitBltResult = BitBlt(
+        HdcMemDc,
+        0,
+        0,
+        Shared::Width,
+        Shared::Height,
+        ScreenDc,
+        Shared::Bounds.left,
+        Shared::Bounds.top,
+        SRCCOPY
+    );
+
+    if (!BitBltResult)
     {
         std::cout
             // << ELogLevel::Error
             << "BitBlt failed."
             << std::endl;
-        SelectObject(hdcMemDC, hOld);
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMemDC);
-        ReleaseDC(SourceHandle, ScreenDc);
+        SelectObject(HdcMemDc, hOld);
+        DeleteObject(Bitmap);
+        DeleteDC(HdcMemDc);
+        ReleaseDC(Shared::SourceHandle, ScreenDc);
         return false;
     }
     else
@@ -302,15 +333,15 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
         // std::endl;
     }
 
-    SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
-    ScreenshotData.reserve(bufferSize);
-    if (!Screenshot)
+    SIZE_T BufferSize = static_cast<SIZE_T>(Shared::Width) * Shared::Height * Shared::ChannelsNum;
+    Shared::ScreenshotData.reserve(BufferSize);
+    if (!Shared::Screenshot)
     {
         std::cout << "Failed to allocate memory for screenshot." << std::endl;
         LogLastWindowsError();
-        SelectObject(hdcMemDC, hOld);
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMemDC);
+        SelectObject(HdcMemDc, hOld);
+        DeleteObject(Bitmap);
+        DeleteDC(HdcMemDc);
         ReleaseDC(nullptr, ScreenDc);
         return false;
     }
@@ -321,11 +352,11 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
 
     int scanLines = GetDIBits(
         ScreenDc,
-        hBitmap,
+        Bitmap,
         0,
-        Height,
-        Screenshot,
-        ScreenshotBmi,
+        Shared::Height,
+        Shared::Screenshot,
+        Shared::ScreenshotBmi,
         DIB_RGB_COLORS
     );
 
@@ -333,21 +364,21 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
     {
         std::cout << "GetDIBits failed." << std::endl;
         LogLastWindowsError();
-        Screenshot = nullptr;
+        Shared::Screenshot = nullptr;
     }
     else
     {
         // std::cout << "There are " << scanLines << " scanLines!" << std::endl;
     }
 
-    Screenshot = ScreenshotData.data();
-    Luminance = CalculateAverageLuminance(Screenshot, Width, Height, ChannelsNum);
-    BrightnessScalar = CalculateScalingFactor(Luminance);
-    ScalesBrightness = BrightnessScalar != 1.f;
+    Shared::Screenshot = Shared::ScreenshotData.data();
+    Shared::Luminance = CalculateAverageLuminance(Shared::Screenshot, Shared::Width, Shared::Height, Shared::ChannelsNum);
+    Shared::BrightnessScalar = CalculateScalingFactor(Shared::Luminance);
+    Shared::ScalesBrightness = Shared::BrightnessScalar != 1.f;
 
-    SelectObject(hdcMemDC, hOld);
-    DeleteObject(hBitmap);
-    DeleteDC(hdcMemDC);
+    SelectObject(HdcMemDc, hOld);
+    DeleteObject(Bitmap);
+    DeleteDC(HdcMemDc);
     ReleaseDC(nullptr, ScreenDc);
 
     if (scanLines == 0)
@@ -355,36 +386,16 @@ bool CaptureWindowScreenshot(HWND SourceHandle)
         return false;
     }
 
+    InvalidateRect(Shared::BackdropHandle, nullptr, FALSE);
+
     return true;
-}
-
-void Render(HWND hWnd, HWND SourceHandle)
-{
-    std::cout
-        << "Render Function: hWnd "
-        << hWnd
-        << " SourceHandle "
-        << SourceHandle
-        << std::endl;
-
-    BOOL Captured = CaptureWindowScreenshot(SourceHandle);
-    if (Captured)
-    {
-        std::cout << "CapturedWindowScreenshot Successfully." << std::endl;
-    }
-    else
-    {
-        std::cout << "CapturedWindowScreenshot FAILED." << std::endl;
-    }
-
-    InvalidateRect(hWnd, nullptr, FALSE);
 }
 
 BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 {
-    BlurLastTimestamp = BlurStartTime;
-    SetTimer(hWnd, BlurTimerId, MsPerFrame, nullptr);
-    if ((ScreenshotBmi = CreateDib(Width, Height, Depth, Screenshot)) == nullptr)
+    Shared::BlurLastTimestamp = Shared::BlurStartTime;
+    SetTimer(hWnd, Shared::BlurTimerId, GetMsPerFrame(), nullptr);
+    if ((Shared::ScreenshotBmi = CreateDib(Shared::Width, Shared::Height, Shared::Depth, Shared::Screenshot)) == nullptr)
     {
         std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
@@ -393,7 +404,7 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
     {
         std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
     }
-    if ((BlurredBmi = CreateDib(Width, Height, Depth, BlurredScreenshot)) == nullptr)
+    if ((Shared::BlurredBmi = CreateDib(Shared::Width, Shared::Height, Shared::Depth, Shared::BlurredScreenshot)) == nullptr)
     {
         std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
@@ -406,52 +417,32 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
     return TRUE;
 }
 
-void InitializeBlurBackground()
-{
-    /* @TODO The event is never EVENT_SYSTEM_FOREGROUND. */
-    GGlobals::WinEvent->Register([&](FWinEventPayload Payload)
-    {
-        if (Payload.Event == EVENT_SYSTEM_FOREGROUND)
-        {
-            // std::cout << "EVENT SYSTEM FOREGROUND" << std::endl;
-            HWND ForegroundWindow = GetForegroundWindow();
-            RECT ForegroundRect;
-            GetWindowRect(ForegroundWindow, &ForegroundRect);
-            const int ForegroundSize = GetRectArea(ForegroundRect);
-
-            if (ForegroundSize >= MinDeferResolution)
-            {
-                // @TODO Set timer to update cached blur frames...
-            }
-        }
-    });
-}
-
 void OnDestroy(HWND hWnd)
 {
-    if (ScreenshotBmi)
+    if (Shared::ScreenshotBmi)
     {
-        free(ScreenshotBmi);
-    }
-    if (BlurredBmi)
-    {
-        free(BlurredBmi);
+        free(Shared::ScreenshotBmi);
     }
 
-    Bounds = RECT();
-    BackgroundHandle = nullptr;
-    Sigma = MinSigma;
-    CalledOnce = false;
-    Luminance = 0.f;
-    BrightnessScalar = 1.f;
-    ThemeMode = "Indeterminate";
-    ScalesBrightness = false;
-    BlurStartTime = 0;
-    FadeStartTime = 0;
-    BlurLastTimestamp = 0;
-    FadeLastTimestamp = 0;
-    SetForegroundWindow(SourceHandle);
-    BOOL Here = SetWindowPos(SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
+    if (Shared::BlurredBmi)
+    {
+        free(Shared::BlurredBmi);
+    }
+
+    Shared::Bounds = RECT();
+    Shared::BackdropHandle = nullptr;
+    Shared::Sigma = Shared::MinSigma;
+    Shared::CalledOnce = false;
+    Shared::Luminance = 0.f;
+    Shared::BrightnessScalar = 1.f;
+    Shared::ThemeMode = "Indeterminate";
+    Shared::ScalesBrightness = false;
+    Shared::BlurStartTime = 0;
+    Shared::FadeStartTime = 0;
+    Shared::BlurLastTimestamp = 0;
+    Shared::FadeLastTimestamp = 0;
+    SetForegroundWindow(Shared::SourceHandle);
+    BOOL Here = SetWindowPos(Shared::SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
     if (Here)
     {
         std::cout << "Here was true." << std::endl;
@@ -464,12 +455,12 @@ void OnDestroy(HWND hWnd)
 
 void GetBackgroundMode()
 {
-    const double d_dark = std::abs(Luminance - 85.0);
-    const double d_light = std::abs(170.0 - Luminance);
+    const double d_dark = std::abs(Shared::Luminance - 85.0);
+    const double d_light = std::abs(170.0 - Shared::Luminance);
 
     if (d_dark < d_light)
     {
-        ThemeMode = "Dark";
+        Shared::ThemeMode = "Dark";
         // if (averageLuminance <= 85.0)
         // {
         //     ThemeMode = "Dark";
@@ -481,7 +472,7 @@ void GetBackgroundMode()
     }
     else
     {
-        ThemeMode = "Light";
+        Shared::ThemeMode = "Light";
         // if (averageLuminance >= 170.0)
         // {
         //     return "Light Mode Background";
@@ -500,46 +491,69 @@ void OnPaint(HWND hWnd)
 
     hDC = BeginPaint(hWnd, &PaintStruct);
 
-    BITMAPINFO bmi;
-    ZeroMemory(&bmi, sizeof(BITMAPINFO));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = Width;
-    bmi.bmiHeader.biHeight = -1 * Height;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
-    bmi.bmiHeader.biCompression = BI_RGB;
+    BITMAPINFO BitmapInfo;
+    ZeroMemory(&BitmapInfo, sizeof(BITMAPINFO));
+    BitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    BitmapInfo.bmiHeader.biWidth = Shared::Width;
+    BitmapInfo.bmiHeader.biHeight = -1 * Shared::Height;
+    BitmapInfo.bmiHeader.biPlanes = 1;
+    BitmapInfo.bmiHeader.biBitCount = Shared::Depth;
+    BitmapInfo.bmiHeader.biCompression = BI_RGB;
 
     // std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
-    SIZE_T bufferSize = static_cast<SIZE_T>(Width) * Height * ChannelsNum;
-    BlurredScreenshotData.reserve(bufferSize);
-    BlurredScreenshot = BlurredScreenshotData.data();
-    Screenshot = ScreenshotData.data();
-    if (Sigma < MaxSigma)
+    SIZE_T BufferSize = static_cast<SIZE_T>(Shared::Width) * Shared::Height * Shared::ChannelsNum;
+    Shared::BlurredScreenshotData.reserve(BufferSize);
+    Shared::BlurredScreenshot = Shared::BlurredScreenshotData.data();
+    Shared::Screenshot = Shared::ScreenshotData.data();
+    if (Shared::Sigma < Shared::MaxSigma)
     {
-        Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
-        // ProfileLogTime("Blur", std::function<void()>([]()
-        // {
-        //     Blur(Screenshot, BlurredScreenshot, Width, Height, ChannelsNum, Sigma, 3, kExtend);
-        // }));
+        Blur(
+            Shared::Screenshot,
+            Shared::BlurredScreenshot,
+            Shared::Width,
+            Shared::Height,
+            Shared::ChannelsNum,
+            Shared::Sigma,
+            3,
+            kExtend
+        );
 
         const int Result = SetDIBitsToDevice(
-            hDC, 0, 0, Width, Height, 0, 0, 0, Height, BlurredScreenshot, BlurredBmi, DIB_RGB_COLORS);
+            hDC,
+            0,
+            0,
+            Shared::Width,
+            Shared::Height,
+            0,
+            0,
+            0,
+            Shared::Height,
+            Shared::BlurredScreenshot,
+            Shared::BlurredBmi,
+            DIB_RGB_COLORS
+        );
 
-        BlurredScreenshot = BlurredScreenshotData.data();
-        if (ScalesBrightness)
+        Shared::BlurredScreenshot = Shared::BlurredScreenshotData.data();
+        if (Shared::ScalesBrightness)
         {
-            const float Alpha = Sigma / MaxSigma;
-            const float Brightness = BrightnessScalar * Alpha;
-            ApplyScalingFactor(BlurredScreenshot, Width, Height, ChannelsNum, Brightness);
+            const float Alpha = Shared::Sigma / Shared::MaxSigma;
+            const float Brightness = Shared::BrightnessScalar * Alpha;
+            ApplyScalingFactor(
+                Shared::BlurredScreenshot,
+                Shared::Width,
+                Shared::Height,
+                Shared::ChannelsNum,
+                Brightness
+            );
         }
     }
 
-    if (!PaintedOnce)
+    if (!Shared::PaintedOnce)
     {
-        PaintedOnce = true;
+        Shared::PaintedOnce = true;
         ShowWindow(hWnd, SW_SHOW);
-        ShowWindow(SorrellWmMainWindow, SW_SHOW);
-        SetForegroundWindow(SorrellWmMainWindow);
+        ShowWindow(Shared::SorrellWmMainWindow, SW_SHOW);
+        SetForegroundWindow(Shared::SorrellWmMainWindow);
     }
 
     EndPaint(hWnd, &PaintStruct);
@@ -559,27 +573,27 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
         HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBackground);
     case WM_TIMER:
-        DWORD currentTime = GetTickCount();
-        DWORD elapsedTime = 0;
+        DWORD CurrentTime = GetTickCount();
+        DWORD ElapsedTime = 0;
         switch (wParam)
         {
-        case BlurTimerId:
-            if (BlurStartTime == 0)
+        case Shared::BlurTimerId:
+            if (Shared::BlurStartTime == 0)
             {
-                BlurStartTime = GetTickCount();
-                InvalidateRect(SorrellWmMainWindow, nullptr, FALSE);
+                Shared::BlurStartTime = GetTickCount();
+                InvalidateRect(Shared::SorrellWmMainWindow, nullptr, FALSE);
             }
-            elapsedTime = currentTime - BlurStartTime;
-            if (elapsedTime == 0)
+            ElapsedTime = CurrentTime - Shared::BlurStartTime;
+            if (ElapsedTime == 0)
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (elapsedTime >= Duration)
+            if (ElapsedTime >= Shared::Duration)
             {
                 // std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime)
                 //           << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
-                Sigma = MaxSigma;
-                BOOL PostTimerRes = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                Shared::Sigma = Shared::MaxSigma;
+                BOOL PostTimerRes = SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
                 // if (PostTimerRes)
                 // {
                 //     std::cout << "PostTimerRes was true." << std::endl;
@@ -589,18 +603,18 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 //     std::cout << "PostTimerRes was false." << std::endl;
                 // }
                 InvalidateRect(hWnd, nullptr, FALSE);
-                KillTimer(hWnd, BlurTimerId);
+                KillTimer(hWnd, Shared::BlurTimerId);
             }
-            else if (currentTime - BlurLastTimestamp >= MsPerFrame)
+            else if (CurrentTime - Shared::BlurLastTimestamp >= Shared::MsPerFrame)
             {
-                const float Alpha = static_cast<float>((float)elapsedTime / (float)Duration);
+                const float Alpha = static_cast<float>((float) ElapsedTime / (float) Shared::Duration);
                 const float Factor = 1 - std::pow(2, -10.f * Alpha);
-                Sigma = MinSigma + (MaxSigma - MinSigma) * Factor;
+                Shared::Sigma = Shared::MinSigma + (Shared::MaxSigma - Shared::MinSigma) * Factor;
                 InvalidateRect(hWnd, nullptr, FALSE);
 
                 unsigned char Transparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f * Alpha), 0.f, 255.f));
-                BOOL Res = SetLayeredWindowAttributes(SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
+                BOOL Res = SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
                 if (!Res)
                 {
                     std::cout
@@ -610,58 +624,68 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                     LogLastWindowsError();
                 }
 
-                BlurLastTimestamp = currentTime;
+                Shared::BlurLastTimestamp = CurrentTime;
             }
             else
             {
-                std::cout << std::setprecision(4) << "WM_TIMER came too soon, " << currentTime << " "
-                          << BlurLastTimestamp << std::endl;
+                std::cout
+                    << std::setprecision(4)
+                    << "WM_TIMER came too soon, "
+                    << CurrentTime
+                    << " "
+                    << Shared::BlurLastTimestamp
+                    << std::endl;
             }
             return 0;
-        case FadeTimerId:
-            Sigma = MinSigma;
-            elapsedTime = currentTime - FadeStartTime;
-            if (elapsedTime >= Duration)
+        case Shared::FadeTimerId:
+            Shared::Sigma = Shared::MinSigma;
+            ElapsedTime = CurrentTime - Shared::FadeStartTime;
+            if (ElapsedTime >= Shared::Duration)
             {
                 std::cout << "Destroying window..." << std::endl;
                 ShowWindow(hWnd, SW_HIDE);
                 DestroyWindow(hWnd);
             }
             // InvalidateRect(hWnd, nullptr, FALSE);
-            if (elapsedTime == 0)
+            if (ElapsedTime == 0)
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (elapsedTime >= Duration)
+            if (ElapsedTime >= Shared::Duration)
             {
-                std::cout << std::setprecision(2) << "For the Fade timer, elapsedTime >= Duration: "
-                          << std::to_string(static_cast<unsigned int>(elapsedTime)) << " >= " << Duration << std::endl;
-                KillTimer(hWnd, FadeTimerId);
-                SetLayeredWindowAttributes(BackgroundHandle, 0, 0, LWA_ALPHA);
-                SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                std::cout
+                    << std::setprecision(2)
+                    << "For the Fade timer, elapsedTime >= Duration: "
+                    << std::to_string(static_cast<unsigned int>(ElapsedTime))
+                    << " >= "
+                    << Shared::Duration
+                    << std::endl;
+                KillTimer(hWnd, Shared::FadeTimerId);
+                SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 0, LWA_ALPHA);
+                SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
                 // Might not need this, and it is expensive...
-                InvalidateRect(SorrellWmMainWindow, nullptr, FALSE);
+                InvalidateRect(Shared::SorrellWmMainWindow, nullptr, FALSE);
             }
-            else if (currentTime - FadeLastTimestamp >= MsPerFrame)
+            else if (CurrentTime - Shared::FadeLastTimestamp >= Shared::MsPerFrame)
             {
                 // const float EasedAlpha = std::exp(-2.f * (1.f - (elapsedTime
                 // / Duration)));
-                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float)elapsedTime / (float)Duration));
-                const float Alpha = elapsedTime / (float)Duration;
+                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float) ElapsedTime / (float) Shared::Duration));
+                const float Alpha = ElapsedTime / (float) Shared::Duration;
                 unsigned char Transparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f - 255.f * EasedAlpha), 0.f, 255.f));
                 unsigned char MainWindowTransparency = static_cast<unsigned char>(
                     std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
                 InvalidateRect(hWnd, nullptr, FALSE);
 
-                SetLayeredWindowAttributes(BackgroundHandle, 0, Transparency, LWA_ALPHA);
-                SetLayeredWindowAttributes(SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(Shared::BackdropHandle, 0, Transparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
 
-                FadeLastTimestamp = currentTime;
+                Shared::FadeLastTimestamp = CurrentTime;
             }
             else
             {
-                std::cout << "WM_TIMER came too soon, " << currentTime << " " << FadeLastTimestamp << std::endl;
+                std::cout << "WM_TIMER came too soon, " << CurrentTime << " " << Shared::FadeLastTimestamp << std::endl;
             }
             return 0;
         }
@@ -699,7 +723,7 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
      * animation should only take the length of time that the blur animation
      * played. */
 
-    BOOL KillResult = KillTimer(BackgroundHandle, BlurTimerId);
+    BOOL KillResult = KillTimer(Shared::BackdropHandle, Shared::BlurTimerId);
     if (!KillResult)
     {
         std::cout
@@ -713,20 +737,20 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
             << std::endl;
     }
 
-    FadeStartTime = GetTickCount();
-    FadeLastTimestamp = FadeStartTime;
-    int SetTimerResult = SetTimer(BackgroundHandle, FadeTimerId, MsPerFrame, nullptr);
+    Shared::FadeStartTime = GetTickCount();
+    Shared::FadeLastTimestamp = Shared::FadeStartTime;
+    int SetTimerResult = SetTimer(Shared::BackdropHandle, Shared::FadeTimerId, Shared::MsPerFrame, nullptr);
 
     return Environment.Undefined();
 }
 
 std::string GetDerivedThemeMode(double Luminance)
 {
-    if (Luminance <= 85.0)
+    if (Luminance <= 85.f)
     {
         return "Dark";
     }
-    else if (Luminance >= 170.0)
+    else if (Luminance >= 170.f)
     {
         return "Light";
     }
@@ -736,10 +760,12 @@ std::string GetDerivedThemeMode(double Luminance)
     }
 }
 
-bool CreateMainWindow()
+bool CreateBackdrop()
 {
     HINSTANCE ModuleHandle = GetModuleHandle(nullptr);
     WNDCLASSEXA WindowClass;
+    char* WindowTitle = "SorrellWm Blurred Background";
+    char* WindowClassName = WindowTitle;
 
     WindowClass.cbSize        = sizeof(WindowClass);
     WindowClass.style         = CS_VREDRAW | CS_HREDRAW;
@@ -751,14 +777,14 @@ bool CreateMainWindow()
     WindowClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
     WindowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     WindowClass.lpszMenuName  = NULL;
-    WindowClass.lpszClassName = "SorrellWm Blurred Background";
+    WindowClass.lpszClassName = WindowTitle;
     WindowClass.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
 
     RegisterClassExA(&WindowClass);
 
     /* @TODO See if SourceHandle can be removed. */
-    SourceHandle = GetForegroundWindow();
-    if (SourceHandle == nullptr || SourceHandle == SorrellWmMainWindow)
+    Shared::SourceHandle = GetForegroundWindow();
+    if (Shared::SourceHandle == nullptr || Shared::SourceHandle == Shared::SorrellWmMainWindow)
     {
         std::cout
             << "BlurBackground was called, but there was no window focused."
@@ -767,68 +793,49 @@ bool CreateMainWindow()
         return false;
     }
 
-    return true;
-}
-
-Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
-{
-    Napi::Env Environment = CallbackInfo.Env();
-
-    Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
-
-    const bool CreatedMainWindow = CreateMainWindow();
-    if (!CreatedMainWindow)
-    {
-        return Environment.Undefined();
-    }
-
-    /** @TODO Rewrite SetMsPerFrame to get refresh rate from Bounds, not from a handle. */
-    /** @TODO Write this as a function that returns a value, instead of setting a global value. */
-    SetMsPerFrame(SourceHandle);
-
-    Height = Bounds.bottom - Bounds.top;
-    Width = Bounds.right - Bounds.left;
-
-    BackgroundHandle = CreateWindowExA(NULL,
+    Shared::BackdropHandle = CreateWindowExA(NULL,
         WindowClassName,
         nullptr,
         WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE,
-        Bounds.left,
-        Bounds.top,
-        Bounds.right - Bounds.left,
-        Bounds.bottom - Bounds.top,
+        Shared::Bounds.left,
+        Shared::Bounds.top,
+        Shared::Bounds.right - Shared::Bounds.left,
+        Shared::Bounds.bottom - Shared::Bounds.top,
         nullptr,
         nullptr,
         ModuleHandle,
         nullptr);
 
     SetWindowLong(
-        BackgroundHandle,
+        Shared::BackdropHandle,
         GWL_EXSTYLE,
-        GetWindowLong(BackgroundHandle, GWL_EXSTYLE) | WS_EX_LAYERED
+        GetWindowLong(Shared::BackdropHandle, GWL_EXSTYLE) | WS_EX_LAYERED
     );
 
     BOOL Attribute = TRUE;
     DwmSetWindowAttribute(
-        BackgroundHandle,
+        Shared::BackdropHandle,
         DWMWA_TRANSITIONS_FORCEDISABLED,
         &Attribute,
         sizeof(Attribute)
     );
 
-    Render(BackgroundHandle, SourceHandle);
+    return true;
+}
 
-    ShowWindow(BackgroundHandle, SW_SHOWNOACTIVATE);
-    UpdateWindow(BackgroundHandle);
-    SetWindowPos(BackgroundHandle,
-        GetNextWindow(SourceHandle, GW_HWNDPREV),
+void SuperimposeBackdrop()
+{
+    ShowWindow(Shared::BackdropHandle, SW_SHOWNOACTIVATE);
+    UpdateWindow(Shared::BackdropHandle);
+    SetWindowPos(Shared::BackdropHandle,
+        GetNextWindow(Shared::SourceHandle, GW_HWNDPREV),
         0,
         0,
         0,
         0,
         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-    BOOL LayeredSuccess = SetLayeredWindowAttributes(BackgroundHandle, 0, 255, LWA_ALPHA);
+    BOOL LayeredSuccess = SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 255, LWA_ALPHA);
     if (LayeredSuccess)
     {
         std::cout << "SetLayeredWindowAttributes was SUCCESSFUL." << std::endl;
@@ -838,37 +845,55 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
         std::cout << "SetLayeredWindowAttributes FAILED." << std::endl;
         LogLastWindowsError();
     }
+}
 
+void SuperimposeMainWindow()
+{
     LPCSTR WindowName = "SorrellWm Main Window";
-    SorrellWmMainWindow = FindWindow(nullptr, WindowName);
+    Shared::SorrellWmMainWindow = GetMainWindow();
     std::cout
         << "SorrellWmMainWindow is "
-        << SorrellWmMainWindow
+        << Shared::SorrellWmMainWindow
         << std::endl;
     SetWindowLong(
-        SorrellWmMainWindow,
+        Shared::SorrellWmMainWindow,
         GWL_EXSTYLE,
-        GetWindowLong(SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
+        GetWindowLong(Shared::SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
     );
-    SetLayeredWindowAttributes(SorrellWmMainWindow, 0, 0, LWA_ALPHA);
+    SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 0, LWA_ALPHA);
     BOOL MyRes = SetWindowPos(
-        SorrellWmMainWindow,
+        Shared::SorrellWmMainWindow,
         HWND_TOP,
-        Bounds.left,
-        Bounds.top,
-        Bounds.right - Bounds.left,
-        Bounds.bottom - Bounds.top,
+        Shared::Bounds.left,
+        Shared::Bounds.top,
+        Shared::Bounds.right - Shared::Bounds.left,
+        Shared::Bounds.bottom - Shared::Bounds.top,
         SWP_SHOWWINDOW
     );
 
-    INPUT pInputs[] = {{ INPUT_KEYBOARD, VK_MENU, 0},
-                   { INPUT_KEYBOARD, VK_MENU, KEYEVENTF_KEYUP}};
-    SendInput(2, pInputs, sizeof(INPUT));
-    SetForegroundWindow(SorrellWmMainWindow);
+    StealFocus(Shared::SorrellWmMainWindow);
+}
 
-    GetBackgroundMode();
-    Napi::Object OutObject = Napi::Object::New(Environment);
-    OutObject.Set("BackgroundWindow", EncodeHandle(Environment, SourceHandle));
-    OutObject.Set("ThemeMode", ThemeMode);
-    return OutObject;
+Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    Shared::Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
+    Shared::Height = Shared::Bounds.bottom - Shared::Bounds.top;
+    Shared::Width = Shared::Bounds.right - Shared::Bounds.left;
+
+    Shared::SourceHandle = GetForegroundWindow();
+
+    const bool CreatedBackdrop = CreateBackdrop();
+    if (!CreatedBackdrop)
+    {
+        return Environment.Undefined();
+    }
+
+    CaptureWindowScreenshot();
+
+    SuperimposeBackdrop();
+    SuperimposeMainWindow();
+
+    return Environment.Undefined();
 }

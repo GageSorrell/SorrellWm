@@ -242,3 +242,72 @@ Napi::Value GetMonitors(const Napi::CallbackInfo& CallbackInfo)
 
     return OutArray;
 }
+
+struct FOverlapMonitorData
+{
+    RECT TargetRectangle;
+    int MinimumRefreshRate;
+};
+
+BOOL CALLBACK OverlapMonitorEnumerationProcedure(
+    HMONITOR MonitorHandle,
+    HDC DeviceContext,
+    LPRECT MonitorRectangle,
+    LPARAM UserData
+)
+{
+    FOverlapMonitorData* OverlapData = reinterpret_cast<FOverlapMonitorData*>(UserData);
+
+    RECT IntersectionRectangle;
+    if (IntersectRect(&IntersectionRectangle, MonitorRectangle, &OverlapData->TargetRectangle))
+    {
+        MONITORINFOEX MonitorInformation;
+        ZeroMemory(&MonitorInformation, sizeof(MonitorInformation));
+        MonitorInformation.cbSize = sizeof(MonitorInformation);
+
+        if (GetMonitorInfo(MonitorHandle, &MonitorInformation))
+        {
+            DEVMODE DeviceModeInformation;
+            ZeroMemory(&DeviceModeInformation, sizeof(DeviceModeInformation));
+            DeviceModeInformation.dmSize = sizeof(DeviceModeInformation);
+
+            if (EnumDisplaySettings(MonitorInformation.szDevice, ENUM_CURRENT_SETTINGS, &DeviceModeInformation))
+            {
+                int CurrentRefreshRate = static_cast<int>(DeviceModeInformation.dmDisplayFrequency);
+
+                if (CurrentRefreshRate > 0)
+                {
+                    if (OverlapData->MinimumRefreshRate == 0 || CurrentRefreshRate < OverlapData->MinimumRefreshRate)
+                    {
+                        OverlapData->MinimumRefreshRate = CurrentRefreshRate;
+                    }
+                }
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+int GetLeastRefreshRateOverRect(const RECT& InputRectangle)
+{
+    FOverlapMonitorData OverlapData;
+    OverlapData.TargetRectangle = InputRectangle;
+    OverlapData.MinimumRefreshRate = 0;
+
+    BOOL EnumerationResult = EnumDisplayMonitors(
+        nullptr,
+        nullptr,
+        OverlapMonitorEnumerationProcedure,
+        reinterpret_cast<LPARAM>(&OverlapData)
+    );
+
+    if (!EnumerationResult)
+    {
+        std::cout
+            << "OverlapMonitorEnumerationProceduce failed."
+            << std::endl;
+    }
+
+    return OverlapData.MinimumRefreshRate;
+}

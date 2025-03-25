@@ -66,7 +66,6 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
     napi_add_env_cleanup_hook(Environment, ShutdownGdiPlus, nullptr);
 
     GGlobals::WinEvent = new FWinEvent();
-    // InitializeBlurBackground();
 
     /* @TODO Find better place to register listeners */
     RegisterActivationKey();
