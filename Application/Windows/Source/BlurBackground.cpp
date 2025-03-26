@@ -158,7 +158,7 @@ void ApplyScalingFactor(
 
         PixelData[ColorIndex + 2] = static_cast<BYTE>(std::clamp(ScaledRed, 0, 255));
         PixelData[ColorIndex + 1] = static_cast<BYTE>(std::clamp(ScaledGreen, 0, 255));
-        PixelData[ColorIndex] = static_cast<BYTE>(std::clamp(ScaledBlue, 0, 255));
+        PixelData[ColorIndex + 0] = static_cast<BYTE>(std::clamp(ScaledBlue, 0, 255));
     }
 }
 
@@ -181,9 +181,9 @@ double CalculateAverageLuminance(
     {
         const std::size_t ColorIndex = PixelIndex * channelsNum;
 
-        const BYTE Blue = PixelData[ColorIndex];
+        const BYTE Blue  = PixelData[ColorIndex + 0];
         const BYTE Green = PixelData[ColorIndex + 1];
-        const BYTE Red = PixelData[ColorIndex + 2];
+        const BYTE Red   = PixelData[ColorIndex + 2];
 
         // Calculate luminance using Rec. 709
         const double AdjustedLuminance = 0.2126l * Red + 0.7152l * Green + 0.0722l * Blue;
