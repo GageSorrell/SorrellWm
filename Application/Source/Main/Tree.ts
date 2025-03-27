@@ -9,6 +9,7 @@ import {
     CaptureScreenSectionToTempPngFile,
     type FMonitorInfo,
     GetApplicationFriendlyName,
+    GetFocusedWindow,
     GetMonitorFriendlyName,
     GetMonitorFromWindow,
     GetTileableWindows,
@@ -26,10 +27,10 @@ import type {
     FPanelBase,
     FVertex } from "./Tree.Types";
 import { promises as Fs } from "fs";
-import { GetActiveWindows } from "./MainWindow";
+import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
+import { Log } from "./Development";
 import type { TPredicate } from "@/Utility";
-import type { FluentProviderContextValues } from "@fluentui/react-components";
 
 const Forest: FForest = [ ];
 
@@ -69,7 +70,6 @@ const InitializeTree = (): void =>
 
     Forest.push(...Monitors.map((Monitor: FMonitorInfo): FPanel =>
     {
-        // console.log(`Here, MonitorHandle is ${ Monitor.Handle }.`);
         return {
             Children: [ ],
             MonitorId: Monitor.Handle,
@@ -96,14 +96,16 @@ const InitializeTree = (): void =>
         const RootPanel: FPanelBase | undefined =
             Forest.find((Panel: FPanelBase): boolean =>
             {
+                /* eslint-disable @stylistic/max-len */
                 // console.log(`Monitor is ${ JSON.stringify(Monitor) } and Panel.MonitorId is ${ JSON.stringify(Panel.MonitorId) }.`);
-                const Info: FMonitorInfo | undefined =
-                    Monitors.find((Foo: FMonitorInfo): boolean =>
-                    {
-                        return Foo.Handle.Handle === Panel.MonitorId?.Handle;
-                    });
+                // const Info: FMonitorInfo | undefined =
+                //     Monitors.find((Foo: FMonitorInfo): boolean =>
+                //     {
+                //         return Foo.Handle.Handle === Panel.MonitorId?.Handle;
+                //     });
 
                 // console.log(`Size ${ JSON.stringify(Info?.Size) } WorkSize ${ JSON.stringify(Info?.WorkSize) }.`);
+                /* eslint-enable @stylistic/max-len */
 
                 return Panel.MonitorId?.Handle === Monitor.Handle;
             });
@@ -150,6 +152,7 @@ const InitializeTree = (): void =>
 
     Cells.forEach((Cell: FCell): void =>
     {
+        /* eslint-disable-next-line @stylistic/max-len */
         console.log(`Setting position of ${ GetWindowTitle(Cell.Handle) } to ${ JSON.stringify(Cell.Size) }.`);
         SetWindowPosition(Cell.Handle, Cell.Size);
         /* At least for now, ignore SorrellWm windows. */
@@ -159,7 +162,11 @@ const InitializeTree = (): void =>
         // }
     });
 
-    console.log(`Called SetWindowPosition for ${ Cells.length } windows.`);
+    const FocusedWindow: HWindow = GetFocusedWindow();
+    if (FocusedWindow !== undefined)
+    {
+        InterimFocusedVertex = GetCellFromHandle(FocusedWindow);
+    }
 };
 
 const IsCell = (Vertex: FVertex): Vertex is FCell =>
@@ -262,12 +269,12 @@ export const Exists = (Predicate: (Vertex: FVertex) => boolean): boolean =>
 };
 
 /** @TODO */
-export const ExistsExactlyOne = (Predicate: (Vertex: FVertex) => boolean): boolean =>
+export const ExistsExactlyOne = (_Predicate: (Vertex: FVertex) => boolean): boolean =>
 {
     return false;
 };
 
-export const ForAll = (Predicate: (Vertex: FVertex) => boolean): boolean =>
+export const ForAll = (_Predicate: (Vertex: FVertex) => boolean): boolean =>
 {
     return false;
 };
@@ -278,6 +285,14 @@ export const IsWindowTiled = (Handle: HWindow): boolean =>
     {
         return IsCell(Vertex) && AreHandlesEqual(Vertex.Handle, Handle);
     });
+};
+
+export const GetCellFromHandle = (Handle: HWindow): FCell | undefined =>
+{
+    return Find((Vertex: FVertex): boolean =>
+    {
+        return IsCell(Vertex) && AreHandlesEqual(Vertex.Handle, Handle);
+    }) as FCell | undefined;
 };
 
 export const GetPanels = (): Array<FPanel> =>
@@ -421,7 +436,7 @@ export const IsPanelAnnotated = (Panel: FPanel | FAnnotatedPanel): Panel is FAnn
 
 export const GetCurrentPanel = (): FPanel | undefined =>
 {
-    const Handle: HWindow | undefined = GetActiveWindows()[0];
+    const Handle: HWindow | undefined = GetActiveWindow();
     if (Handle !== undefined)
     {
         return Find((Vertex: FVertex): boolean =>
@@ -607,67 +622,112 @@ export const GetParent = (Vertex: FVertex): FPanel | undefined =>
     }) as FPanel | undefined;
 };
 
-/** Get the index of the given `Vertex` in its parent panel.  Returns `undefined` if the `Vertex` is a root panel. */
+/**
+ * Get the index of the given `Vertex` in its parent panel.
+ * @returns `undefined` if the `Vertex` is a root panel.
+ */
 export const GetIndexInPanel = (Vertex: FVertex): number | undefined =>
 {
     const ParentPanel: FPanel | undefined = GetParent(Vertex);
     if (ParentPanel !== undefined)
     {
-        let Index: number | undefined = ParentPanel.Children.indexOf((Child: FVertex): boolean =>
+        const Self: FVertex | undefined = ParentPanel.Children.find((Child: FVertex): boolean =>
         {
             return AreVerticesEqual(Vertex, Child);
         });
 
-        if (Index === -1)
+        if (Self !== undefined)
         {
-            return undefined;
+            const Index: number | undefined = ParentPanel.Children.indexOf(Self);
+
+            if (Index === -1)
+            {
+                return undefined;
+            }
+            else
+            {
+                return Index;
+            }
         }
         else
         {
-            return Index;
+            return undefined;
         }
     }
     else
     {
         return undefined;
     }
-}
+};
 
-export const ChangeFocus = (InterimVertex: FVertex, FocusChange: FFocusChange): FVertex | undefined =>
+let InterimFocusedVertex: FVertex | undefined = undefined;
+
+export const SetInterimFocusedVertexToForeground = (): void =>
 {
-    const ParentPanel: FVertex | undefined = GetParent(InterimVertex);
-    const InterimPanel: FPanel | undefined = IsPanel(InterimVertex)
-        ? InterimVertex
-        : undefined;
+    const ActiveWindow: HWindow | undefined = GetActiveWindow();
+    if (ActiveWindow !== undefined)
+    {
+        InterimFocusedVertex = GetCellFromHandle(ActiveWindow);
+    }
+};
+
+export const GetInterimFocusedVertex = (): FVertex | undefined =>
+{
+    return InterimFocusedVertex;
+};
+
+export const ClearInterimFocusedVertex = (): void =>
+{
+    InterimFocusedVertex = undefined;
+};
+
+export const ChangeFocus = (FocusChange: FFocusChange): void =>
+{
+    if (InterimFocusedVertex === undefined)
+    {
+        const ActiveWindow: HWindow | undefined = GetActiveWindow();
+        if (ActiveWindow !== undefined)
+        {
+            InterimFocusedVertex = GetCellFromHandle(ActiveWindow);
+        }
+        else
+        {
+            Log("Whoops...");
+        }
+        return;
+    }
+
+    const ParentPanel: FVertex | undefined = GetParent(InterimFocusedVertex);
+
     switch (FocusChange)
     {
         case "Down":
-            if (InterimPanel !== undefined && InterimPanel.Children[0])
+            if (IsPanel(InterimFocusedVertex))
             {
-                return InterimPanel.Children[0];
+                InterimFocusedVertex = InterimFocusedVertex.Children[0];
             }
 
             break;
         case "Up":
-            if (InterimPanel !== undefined && InterimPanel.Children[0])
+            if (ParentPanel !== undefined)
             {
-                return GetParent(InterimPanel);
+                InterimFocusedVertex = ParentPanel;
             }
 
             break;
         case "Next":
             if (ParentPanel !== undefined)
             {
-                const Index: number | undefined = GetIndexInPanel(InterimVertex);
+                const Index: number | undefined = GetIndexInPanel(InterimFocusedVertex);
                 if (Index !== undefined)
                 {
                     if (Index !== ParentPanel.Children.length - 1)
                     {
-                        return ParentPanel.Children[Index + 1];
+                        InterimFocusedVertex = ParentPanel.Children[Index + 1];
                     }
                     else
                     {
-                        return ParentPanel.Children[0];
+                        InterimFocusedVertex = ParentPanel.Children[0];
                     }
                 }
             }
@@ -676,24 +736,28 @@ export const ChangeFocus = (InterimVertex: FVertex, FocusChange: FFocusChange): 
         case "Previous":
             if (ParentPanel !== undefined)
             {
-                const Index: number | undefined = GetIndexInPanel(InterimVertex);
+                const Index: number | undefined = GetIndexInPanel(InterimFocusedVertex);
                 if (Index !== undefined)
                 {
                     if (Index !== 0)
                     {
-                        return ParentPanel.Children[Index - 1];
+                        InterimFocusedVertex = ParentPanel.Children[Index - 1];
                     }
                     else
                     {
-                        return ParentPanel.Children[ParentPanel.Children.length - 1];
+                        InterimFocusedVertex = ParentPanel.Children[ParentPanel.Children.length - 1];
                     }
+                }
+                else
+                {
+                    Log("Whoops.");
                 }
             }
 
             break;
     }
 
-    return undefined;
+    Publish();
 };
 
 InitializeTree();

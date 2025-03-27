@@ -3,10 +3,18 @@
  * License: MIT
  */
 
+import type { FBox } from "@sorrellwm/windows";
 import type { HHandle } from "./Utility.Types";
+import type { TRef } from "./Core.Types";
 import { URL } from "url";
 import path from "path";
-import type { FBox } from "@sorrellwm/windows";
+
+export const MakeRef = <T>(): TRef<T> =>
+{
+    return {
+        Ref: undefined
+    } as TRef<T>;
+};
 
 export function ResolveHtmlPath(HtmlFileName: string, Component?: string)
 {

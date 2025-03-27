@@ -5,9 +5,11 @@
  */
 
 import { Command, CompoundCommand } from "$/Common";
-import type { FFocusChange, FPanel, FVertex } from "#/Tree.Types";
 import { type MutableRefObject, type ReactNode, useEffect, useRef, useState } from "react";
 import { Action } from "@/Action";
+import type { FFocusChange } from "#/Tree.Types";
+import { Log } from "@/Api";
+import { GroupReturnRegular } from "@fluentui/react-icons";
 
 export type FFocusData =
 {
@@ -19,13 +21,26 @@ export type FFocusData =
 export const Focus = (): ReactNode =>
 {
     const [ FocusData, SetFocusData ] = useState<FFocusData | undefined>(undefined);
+    const HasRun: MutableRefObject<boolean> = useRef<boolean>(false);
     useEffect((): void =>
     {
+        if (!HasRun.current)
+        {
+            HasRun.current = true;
+        }
+        else
+        {
+            return;
+        }
+
+        Log("Logging ogging");
         window.electron.ipcRenderer.On("GetFocusData", (...Arguments: Array<unknown>): void =>
         {
+            Log("Received FOCUS DATA");
             const NewFocusData: FFocusData | undefined = Arguments[0] as FFocusData | undefined;
-            if (FocusData !== undefined)
+            if (FocusData === undefined)
             {
+                Log("SETTING FOCUS DATA");
                 SetFocusData((_Old: FFocusData | undefined): FFocusData | undefined =>
                 {
                     return NewFocusData;
@@ -38,7 +53,7 @@ export const Focus = (): ReactNode =>
         });
 
         window.electron.ipcRenderer.SendMessage("GetFocusData");
-    });
+    }, [ FocusData, SetFocusData ]);
 
     // const IsSelectionPristine: MutableRefObject<boolean> = useRef<boolean>(true);
 
@@ -93,7 +108,7 @@ export const Focus = (): ReactNode =>
         window.electron.ipcRenderer.SendMessage("OnChangeFocus", FocusChange);
     };
 
-    return Panel !== undefined && (
+    return FocusData !== undefined && (
         <Action>
             <CompoundCommand
                 SubCommands={ [

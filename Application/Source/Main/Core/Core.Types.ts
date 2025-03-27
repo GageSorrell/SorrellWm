@@ -5,4 +5,4 @@
  */
 
 export type FColor = `#${ string }`;
-export type TRef<T> = { Ref: T };
+export type TRef<T> = { Ref: T | undefined };

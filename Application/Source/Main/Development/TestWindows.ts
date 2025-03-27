@@ -50,7 +50,7 @@ const CreateTestWindow = (Index: number): BrowserWindow =>
 export const CreateTestWindows = async (): Promise<void> =>
 {
     const TestWindows: Array<BrowserWindow> = [ ];
-    for (let Index: number = 0; Index < 10; Index++)
+    for (let Index: number = 0; Index < 5; Index++)
     {
         TestWindows.push(CreateTestWindow(Index));
     }

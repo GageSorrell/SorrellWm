@@ -9,9 +9,13 @@ import {
     AnnotatePanel,
     BringIntoPanel,
     ChangeFocus,
+    ClearInterimFocusedVertex,
     GetCurrentPanel,
+    GetInterimFocusedVertex,
     GetPanelScreenshot,
     GetPanels,
+    GetParent,
+    IsPanel,
     IsWindowTiled
 } from "./Tree";
 import {
@@ -24,6 +28,8 @@ import {
 import { BrowserWindow, app, ipcMain, screen } from "electron";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import { CreateTestWindows } from "./Development/TestWindows";
+import type { FFocusData } from "@/Domain/Focus";
+import type { FIpcChannel } from "./Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
@@ -63,9 +69,15 @@ const GetLeastInvisiblePosition = (): { x: number; y: number } =>
     };
 };
 
+const On = (
+    Event: FIpcChannel,
+    Callback: ((Event: Electron.Event, ...Arguments: Array<unknown>) => void)) =>
+{
+    ipcMain.on(Event, Callback);
+};
+
 const LaunchMainWindow = async (): Promise<void> =>
 {
-    console.log("Launching main window.");
     MainWindow = new BrowserWindow({
         alwaysOnTop: true,
         frame: false,
@@ -78,7 +90,6 @@ const LaunchMainWindow = async (): Promise<void> =>
         webPreferences:
         {
             devTools: false,
-            // devTools: true,
             nodeIntegration: true,
             preload: app.isPackaged
                 ? Path.join(__dirname, "Preload.js")
@@ -101,14 +112,14 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
-    ipcMain.on("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         const Panel: FPanel | undefined = GetCurrentPanel();
         MainWindow?.webContents.send("GetCurrentPanel", Panel);
     });
 
     /** @TODO Find better place for this. */
-    ipcMain.on("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         const Panels: Array<FPanel> = GetPanels();
         const AnnotatedPanels: Array<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
@@ -121,22 +132,53 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     /** @TODO Find better place for this. */
-    ipcMain.on("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    const GetFocusData = async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
-        const InterimFocus: FVertex = Arguments[0] as FVertex;
-        const FocusChange: FFocusChange = Arguments[1] as FFocusChange;
-        const NewInterimFocus: FVertex | undefined = ChangeFocus(InterimFocus, FocusChange);
-
-        if (NewInterimFocus?.Size !== undefined)
+        const CurrentPanel: FPanel | undefined = GetCurrentPanel();
+        const FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+        if (CurrentPanel === undefined || FocusedVertex === undefined)
         {
-            BlurBackground(NewInterimFocus?.Size);
+            console.log("Returning ... ...");
+            return;
         }
 
-        MainWindow?.webContents.send("OnChangeFocus", NewInterimFocus);
+        const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
+        const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
+        const CanStepUp: boolean = ParentPanel !== undefined;
+        const CanStepDown: boolean = IsPanel(FocusedVertex);
+
+        const Out: FFocusData =
+        {
+            CanStepDown,
+            CanStepUp,
+            Direction
+        };
+
+        MainWindow?.webContents.send("GetFocusData", Out);
+    };
+
+    On("GetFocusData", GetFocusData);
+
+    On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    {
+        const FocusChange: FFocusChange = Arguments[0] as FFocusChange;
+        ChangeFocus(FocusChange);
+        UnblurBackground();
+        setTimeout((): void =>
+        {
+            const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
+            if (InterimFocus !== undefined)
+            {
+                BlurBackground(InterimFocus.Size);
+            }
+        }, 150);
+
+        GetFocusData(_Event, ...Arguments);
+        Log("FocusChange", FocusChange);
     });
 
     /** @TODO Find better place for this. */
-    ipcMain.on("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         const Panels: Array<FPanel> = GetPanels();
         const Screenshots: Array<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
@@ -148,18 +190,18 @@ const LaunchMainWindow = async (): Promise<void> =>
         MainWindow?.webContents.send("GetPanelScreenshots", Screenshots);
     });
 
-    ipcMain.on("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    On("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
-        BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindows()[0] as HWindow);
+        BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindow() as HWindow);
     });
 
-    ipcMain.on("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
-        ActiveWindows.length = 0;
+        ActiveWindow = undefined;
         UnblurBackground();
     });
 
-    ipcMain.on("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    On("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
         const StringifiedArguments: string = Arguments
             .map((Argument: unknown): string =>
@@ -194,23 +236,22 @@ const LaunchMainWindow = async (): Promise<void> =>
     CreateTestWindows();
 };
 
-/** The window that SorrellWm is being drawn over. */
-const ActiveWindows: Array<HWindow> = [ ];
+/** The window(s) that SorrellWm is being drawn over. */
+let ActiveWindow: HWindow | undefined = undefined;
 
-export const GetActiveWindows = (): Array<HWindow> =>
+export const GetActiveWindow = (): HWindow | undefined =>
 {
-    return ActiveWindows;
+    return ActiveWindow;
 };
 
 export const Activate = (): void =>
 {
     if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window")
     {
-        ActiveWindows.length = 0;
-        ActiveWindows.push(GetFocusedWindow());
+        ActiveWindow = GetFocusedWindow();
         const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
         MainWindow?.webContents.send("Navigate", "", { IsTiled });
-        BlurBackground(GetDwmWindowRect(ActiveWindows[0]));
+        BlurBackground(GetDwmWindowRect(ActiveWindow));
     }
 };
 
@@ -233,6 +274,7 @@ function OnKey(Event: FKeyboardEvent): void
         }
         else
         {
+            ClearInterimFocusedVertex();
             UnblurBackground();
         }
     }

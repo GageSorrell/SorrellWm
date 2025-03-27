@@ -7,12 +7,13 @@
 
 import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
 import { HWindow, FHexColor } from "@sorrellwm/windows";
+import type { FIpcChannel } from "#/Event.Types";
 
 const ElectronHandler =
 {
     ipcRenderer:
     {
-        On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
+        On(Channel: FIpcChannel, Listener: ((...Arguments: Array<unknown>) => void))
         {
             const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
             {
@@ -26,18 +27,18 @@ const ElectronHandler =
                 ipcRenderer.removeListener(Channel, subscription);
             };
         },
-        Once(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        Once(Channel: FIpcChannel, Listener: ((...Arguments: Array<unknown>) => void)): void
         {
             ipcRenderer.once(
                 Channel,
                 (_Event: Electron.Event, ..._Arguments: Array<unknown>) => Listener(..._Arguments)
             );
         },
-        RemoveListener(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        RemoveListener(Channel: FIpcChannel, Listener: ((...Arguments: Array<unknown>) => void)): void
         {
             ipcRenderer.removeListener(Channel, Listener);
         },
-        SendMessage(Channel: string, ...Arguments: Array<unknown>)
+        SendMessage(Channel: FIpcChannel, ...Arguments: Array<unknown>)
         {
             ipcRenderer.send(Channel, ...Arguments);
         }

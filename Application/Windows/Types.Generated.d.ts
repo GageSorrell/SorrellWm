@@ -33,4 +33,4 @@ export function GetWindowTitle(Handle: HWindow): string;
 export function GetApplicationFriendlyName(Handle: HWindow): string | undefined;
 export function RestoreAllWindows(): void;
 export function StealFocus(Handle: HWindow): void;
-export function GetDwmWindowRect(Handle: HWindow): void;
+export function GetDwmWindowRect(Handle: HWindow): FBox;

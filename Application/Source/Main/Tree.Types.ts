@@ -51,8 +51,8 @@ export type FPanelStack =
 
 export type FPanel =
     | FPanelHorizontal
-    | FPanelVertical
-    | FPanelStack;
+    | FPanelVertical;
+    // | FPanelStack;
 
 export type FForest = Array<FPanel>;
 

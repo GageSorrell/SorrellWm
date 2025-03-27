@@ -33,6 +33,11 @@
 
 namespace Shared
 {
+    /**
+     * The length such that if the width or height of the window exceeds this value,
+     * then only blur the center, and fade the surroundings.
+     */
+    static const int Breakpoint = 600;
     static int ChannelsNum = 3;
     static int Depth = 24;
     static int Width;
@@ -67,23 +72,6 @@ namespace Shared
     static const UINT_PTR FadeTimerId = 2;
     static const int MinDeferResolution = 1920 * 1080 + 1;
 };
-
-// /**
-//  * Return the ms per frame (inverse of frame rate).
-//  * Depends upon the refresh rate of the monitor and the
-//  * size of the window.
-//  */
-// static void SetMsPerFrame(HWND SourceHandle)
-// {
-//     const bool IsLargerThan2k = Width * Height > 2560 * 1440;
-//     const int32_t BaseMsPerFrame = IsLargerThan2k
-//         ? 60
-//         : 120;
-
-//     const int32_t RefreshRate = GetRefreshRateFromWindow(SourceHandle);
-
-//     MsPerFrame = 1000 / min(RefreshRate, BaseMsPerFrame);
-// }
 
 int32_t GetMsPerFrame()
 {
@@ -500,13 +488,17 @@ void OnPaint(HWND hWnd)
     BitmapInfo.bmiHeader.biBitCount = Shared::Depth;
     BitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-    // std::cout << "Blur is being called with Sigma " << std::setprecision(4) << Sigma << std::endl;
     SIZE_T BufferSize = static_cast<SIZE_T>(Shared::Width) * Shared::Height * Shared::ChannelsNum;
     Shared::BlurredScreenshotData.reserve(BufferSize);
     Shared::BlurredScreenshot = Shared::BlurredScreenshotData.data();
     Shared::Screenshot = Shared::ScreenshotData.data();
+
     if (Shared::Sigma < Shared::MaxSigma)
     {
+        const int NumPasses = Shared::Width > 600 || Shared::Height > 600
+            ? 2
+            : 3;
+
         Blur(
             Shared::Screenshot,
             Shared::BlurredScreenshot,
@@ -514,7 +506,7 @@ void OnPaint(HWND hWnd)
             Shared::Height,
             Shared::ChannelsNum,
             Shared::Sigma,
-            3,
+            NumPasses,
             kExtend
         );
 
@@ -590,18 +582,8 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
             if (ElapsedTime >= Shared::Duration)
             {
-                // std::cout << std::setprecision(10) << "For the blur timer, elapsedTime >= Duration: " << +(elapsedTime)
-                //           << " >= " << Duration << " and a final Sigma of " << Sigma << std::endl;
                 Shared::Sigma = Shared::MaxSigma;
-                BOOL PostTimerRes = SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
-                // if (PostTimerRes)
-                // {
-                //     std::cout << "PostTimerRes was true." << std::endl;
-                // }
-                // else
-                // {
-                //     std::cout << "PostTimerRes was false." << std::endl;
-                // }
+                SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
                 InvalidateRect(hWnd, nullptr, FALSE);
                 KillTimer(hWnd, Shared::BlurTimerId);
             }
@@ -642,11 +624,9 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             ElapsedTime = CurrentTime - Shared::FadeStartTime;
             if (ElapsedTime >= Shared::Duration)
             {
-                std::cout << "Destroying window..." << std::endl;
                 ShowWindow(hWnd, SW_HIDE);
                 DestroyWindow(hWnd);
             }
-            // InvalidateRect(hWnd, nullptr, FALSE);
             if (ElapsedTime == 0)
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
@@ -668,8 +648,6 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
             else if (CurrentTime - Shared::FadeLastTimestamp >= Shared::MsPerFrame)
             {
-                // const float EasedAlpha = std::exp(-2.f * (1.f - (elapsedTime
-                // / Duration)));
                 const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float) ElapsedTime / (float) Shared::Duration));
                 const float Alpha = ElapsedTime / (float) Shared::Duration;
                 unsigned char Transparency = static_cast<unsigned char>(
@@ -683,10 +661,7 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
                 Shared::FadeLastTimestamp = CurrentTime;
             }
-            else
-            {
-                std::cout << "WM_TIMER came too soon, " << CurrentTime << " " << Shared::FadeLastTimestamp << std::endl;
-            }
+
             return 0;
         }
     }
