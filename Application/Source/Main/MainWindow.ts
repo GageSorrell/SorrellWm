@@ -138,7 +138,8 @@ const LaunchMainWindow = async (): Promise<void> =>
         const FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
         if (CurrentPanel === undefined || FocusedVertex === undefined)
         {
-            console.log("Returning ... ...");
+            /* eslint-disable-next-line @stylistic/max-len */
+            console.log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
             return;
         }
 
@@ -153,6 +154,8 @@ const LaunchMainWindow = async (): Promise<void> =>
             CanStepUp,
             Direction
         };
+
+        Log("GetFocusData is sending to the frontend:", Out);
 
         MainWindow?.webContents.send("GetFocusData", Out);
     };

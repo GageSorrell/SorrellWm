@@ -385,21 +385,21 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
     SetTimer(hWnd, Shared::BlurTimerId, GetMsPerFrame(), nullptr);
     if ((Shared::ScreenshotBmi = CreateDib(Shared::Width, Shared::Height, Shared::Depth, Shared::Screenshot)) == nullptr)
     {
-        std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
+        // std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
     }
     else
     {
-        std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
+        // std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
     }
     if ((Shared::BlurredBmi = CreateDib(Shared::Width, Shared::Height, Shared::Depth, Shared::BlurredScreenshot)) == nullptr)
     {
-        std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
+        // std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
         return FALSE;
     }
     else
     {
-        std::cout << "BlurredBmi was created." << std::endl;
+        // std::cout << "BlurredBmi was created." << std::endl;
     }
 
     return TRUE;
