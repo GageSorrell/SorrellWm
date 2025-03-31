@@ -30,7 +30,8 @@ import { promises as Fs } from "fs";
 import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
 import { Log } from "./Development";
-import type { TPredicate } from "@/Utility";
+import { Identity, type TPredicate } from "@/Utility";
+import { DefaultDeserializer } from "v8";
 
 const Forest: FForest = [ ];
 
@@ -39,9 +40,61 @@ export const GetForest = (): FForest =>
     return [ ...Forest ];
 };
 
-/** @TODO */
-export const LogForest = (): void =>
+const GetDepth = (Vertex: FVertex): number =>
 {
+    let Depth: number = 0;
+    let Parent: FPanel | undefined = GetParent(Vertex);
+
+    while (Parent !== undefined)
+    {
+        Depth++;
+        Parent = GetParent(Parent);
+    }
+
+    return Depth;
+};
+
+export const LogForest = (Transformer?: ((Vertex: FVertex, Depth: number, DefaultString: string) => string)): void =>
+{
+    let OutString: string = "";
+
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        const Depth: number = GetDepth(Vertex);
+        const LeftPadding: string = "  ".repeat(Depth);
+        OutString += LeftPadding;
+
+        if (IsPanel(Vertex))
+        {
+            const PanelLog: string = `${ Vertex.Type } Panel`;
+            if (Transformer !== undefined)
+            {
+                OutString += Transformer(Vertex, Depth, PanelLog);
+            }
+            else
+            {
+                OutString += PanelLog;
+            }
+        }
+        else
+        {
+            const CellLog: string = `${ GetWindowTitle(Vertex.Handle) } `;
+            if (Transformer !== undefined)
+            {
+                OutString += Transformer(Vertex, Depth, CellLog);
+            }
+            else
+            {
+                OutString += CellLog;
+            }
+        }
+
+        OutString += "\n";
+
+        return true;
+    });
+
+    Log(OutString);
 };
 
 const Cell = (Handle: HWindow): FCell =>
@@ -758,6 +811,12 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
     }
 
     Publish();
+    LogForest((Vertex: FVertex, _Depth: number, DefaultString: string): string =>
+    {
+        return Vertex === InterimFocusedVertex
+            ? DefaultString + " ** INTERIM **"
+            : DefaultString;
+    });
 };
 
 InitializeTree();

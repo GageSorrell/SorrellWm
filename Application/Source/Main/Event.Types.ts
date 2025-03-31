@@ -11,5 +11,6 @@ export type FIpcChannel =
     | "GetFocusData"
     | "GetPanelScreenshots"
     | "Log"
+    | "Navigate"
     | "OnChangeFocus"
     | "TearDown";

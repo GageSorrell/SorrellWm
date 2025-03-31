@@ -430,15 +430,7 @@ void OnDestroy(HWND hWnd)
     Shared::BlurLastTimestamp = 0;
     Shared::FadeLastTimestamp = 0;
     SetForegroundWindow(Shared::SourceHandle);
-    BOOL Here = SetWindowPos(Shared::SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
-    if (Here)
-    {
-        std::cout << "Here was true." << std::endl;
-    }
-    else
-    {
-        std::cout << "Here was false." << std::endl;
-    }
+    SetWindowPos(Shared::SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
 }
 
 void GetBackgroundMode()
@@ -633,13 +625,13 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
             if (ElapsedTime >= Shared::Duration)
             {
-                std::cout
-                    << std::setprecision(2)
-                    << "For the Fade timer, elapsedTime >= Duration: "
-                    << std::to_string(static_cast<unsigned int>(ElapsedTime))
-                    << " >= "
-                    << Shared::Duration
-                    << std::endl;
+                // std::cout
+                //     << std::setprecision(2)
+                //     << "For the Fade timer, elapsedTime >= Duration: "
+                //     << std::to_string(static_cast<unsigned int>(ElapsedTime))
+                //     << " >= "
+                //     << Shared::Duration
+                //     << std::endl;
                 KillTimer(hWnd, Shared::FadeTimerId);
                 SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 0, LWA_ALPHA);
                 SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
@@ -676,41 +668,13 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
     std::cout << "Tearing down window!" << std::endl;
 
     BOOL Shadow = false;
-    BOOL SystemSuccess = SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
-    if (Shadow)
-    {
-        std::cout << "Shadow is TRUE" << std::endl;
-    }
-    else
-    {
-        std::cout << "Shadow is FALSE" << std::endl;
-    }
-    if (SystemSuccess)
-    {
-        std::cout << "SystemSuccess is TRUE" << std::endl;
-    }
-    else
-    {
-        std::cout << "SystemSuccess is FALSE" << std::endl;
-    }
+    SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
 
     /* @TODO If this is called while the blur is still animating, then the fade
      * animation should only take the length of time that the blur animation
      * played. */
 
-    BOOL KillResult = KillTimer(Shared::BackdropHandle, Shared::BlurTimerId);
-    if (!KillResult)
-    {
-        std::cout
-            << "KillTimer for BlurTimerId returned "
-            << KillResult
-            << std::endl;
-
-        std::cout
-            << "After kill timer, last Windows error is "
-            << GetLastWindowsError()
-            << std::endl;
-    }
+    KillTimer(Shared::BackdropHandle, Shared::BlurTimerId);
 
     Shared::FadeStartTime = GetTickCount();
     Shared::FadeLastTimestamp = Shared::FadeStartTime;
