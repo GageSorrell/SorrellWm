@@ -30,8 +30,7 @@ import { promises as Fs } from "fs";
 import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
 import { Log } from "./Development";
-import { Identity, type TPredicate } from "@/Utility";
-import { DefaultDeserializer } from "v8";
+import { type TPredicate } from "@/Utility";
 
 const Forest: FForest = [ ];
 
@@ -54,7 +53,9 @@ const GetDepth = (Vertex: FVertex): number =>
     return Depth;
 };
 
-export const LogForest = (Transformer?: ((Vertex: FVertex, Depth: number, DefaultString: string) => string)): void =>
+export const LogForest = (
+    Transformer?: ((Vertex: FVertex, Depth: number, DefaultString: string) => string)
+): void =>
 {
     let OutString: string = "";
 
