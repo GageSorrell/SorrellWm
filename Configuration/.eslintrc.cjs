@@ -1,5 +1,6 @@
 /* File:    .eslintrc.js
  * Author:  Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2025 Gage Sorrell
  * License: MIT
  */
 
@@ -176,15 +177,7 @@ module.exports =
                 extensions: [ ".js", ".jsx", ".ts", ".tsx" ],
                 moduleDirectory: [ "Application/node_modules", "Application/src/" ]
             },
-            // webpack:
-            // {
-            //     config: require.resolve("Application/.erb/configs/webpack.config.eslint.ts"),
-            // },
             typescript: { }
         }
-        // "import/parsers":
-        // {
-        //     "@typescript-eslint/parser": [ ".ts", ".tsx" ],
-        // },
     }
 };

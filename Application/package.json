@@ -26,22 +26,22 @@
     "email": "gage@sorrell.sh",
     "url": "https://github.com/GageSorrell"
   },
-  "main": "./.erb/dll/main.bundle.dev.js",
+  "main": "./Distribution/main.bundle.dev.js",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
-    "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
-    "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
-    "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
-    "postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && npm run build:dll",
+    "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/webpack.config.renderer.dev.dll.ts",
+    "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/webpack.config.main.prod.ts",
+    "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/webpack.config.renderer.prod.ts",
+    "postinstall": "ts-node Script/CheckNativeDependencies.js && electron-builder install-app-deps && npm run build:dll",
     "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "package": "ts-node ./.erb/scripts/clean.js Distribution && npm run build && electron-builder build --publish never && npm run build:dll",
+    "package": "ts-node ./Script/Clean.js Distribution && npm run build && electron-builder build --publish never && npm run build:dll",
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir Release/Application",
-    "prestart": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.dev.ts",
-    "start": "ts-node ./.erb/scripts/check-port-in-use.js && npm run prestart && npm run start:renderer",
-    "start:main": "concurrently --raw -k \"cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./.erb/configs/webpack.config.main.dev.ts\" \"electronmon .\"",
-    "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
-    "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
+    "prestart": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/webpack.config.main.dev.ts",
+    "start": "ts-node ./Script/CheckPortInUse.js && npm run prestart && npm run start:renderer",
+    "start:main": "concurrently --raw -k \"cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./Configuration/webpack.config.main.dev.ts\" \"electronmon .\"",
+    "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/webpack.config.preload.dev.ts",
+    "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./Configuration/webpack.config.renderer.dev.ts",
     "test": "jest"
   },
   "browserslist": [
@@ -61,11 +61,11 @@
       "json"
     ],
     "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/.erb/mocks/fileMock.js",
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/Script/Mock/Mock.js",
       "\\.(css|less|sass|scss)$": "identity-obj-proxy"
     },
     "setupFiles": [
-      "./.erb/scripts/check-build-exists.ts"
+      "./Script/CheckBuildExists.ts"
     ],
     "testEnvironment": "jsdom",
     "testEnvironmentOptions": {
@@ -73,7 +73,7 @@
     },
     "testPathIgnorePatterns": [
       "Release/Application/Distribution",
-      ".erb/dll"
+      "Distribution"
     ],
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
@@ -171,7 +171,7 @@
       "package.json"
     ],
     "mac": {
-      "sign": ".erb/scripts/notarize.js",
+      "sign": "Script/Notarize.js",
       "notarize": false,
       "target": {
         "target": "default",
@@ -233,7 +233,7 @@
     "patterns": [
       "!**/**",
       "Source/Main/**",
-      ".erb/dll/**"
+      "Distribution/**"
     ],
     "logLevel": "info"
   }

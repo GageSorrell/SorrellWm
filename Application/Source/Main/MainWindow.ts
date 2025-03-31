@@ -93,7 +93,7 @@ const LaunchMainWindow = async (): Promise<void> =>
             nodeIntegration: true,
             preload: app.isPackaged
                 ? Path.join(__dirname, "Preload.js")
-                : Path.join(__dirname, "../../.erb/dll/preload.js")
+                : Path.join(__dirname, "../../Distribution/preload.js")
         },
         width: 900,
         ...GetLeastInvisiblePosition()

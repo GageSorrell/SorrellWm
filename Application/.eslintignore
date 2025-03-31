@@ -1,3 +1,8 @@
+# File:      Tree.ts
+# Author:    Gage Sorrell <gage@sorrell.sh>
+# Copyright: (c) 2025 Gage Sorrell
+# License:   MIT
+
 # Logs
 logs
 *.log
@@ -20,14 +25,10 @@ node_modules
 
 Release/Application/Distribution
 Release/Build
-.erb/dll
+Distribution
 
 .idea
 npm-debug.log.*
 *.css.d.ts
 *.sass.d.ts
 *.scss.d.ts
-
-# eslint ignores hidden directories by default:
-# https://github.com/eslint/eslint/issues/8429
-!.erb

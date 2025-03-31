@@ -31,7 +31,6 @@
     {
         ".git": true,
         ".eslintcache": true,
-        // ".erb/dll": true,
         "Release/{build,app/Distribution}": true,
         "node_modules": true,
         "npm-debug.log.*": true,
