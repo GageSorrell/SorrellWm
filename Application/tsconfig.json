@@ -1,34 +1,51 @@
 {
-  "compilerOptions": {
-    "baseUrl": "./",
-    "paths":
+    "compilerOptions":
     {
-        "#/*":
-        [
-            "./Source/Main/*"
-        ],
-        "@/*":
-        [
-            "./Source/Renderer/*"
-        ],
-        "$/*":
-        [
-            "./Source/Renderer/Domain/*"
-        ]
+        "baseUrl": "./",
+        "paths":
+        {
+            "#/*":
+            [
+                "./Source/Main/*"
+            ],
+            "@/*":
+            [
+                "./Source/Renderer/*"
+            ],
+            "$/*":
+            [
+                "./Source/Renderer/Domain/*"
+            ]
+        },
+        "incremental": true,
+        "target": "es2022",
+        "module": "commonjs",
+        "lib": [ "dom", "es2022" ],
+        "jsx": "react-jsx",
+        "strict": true,
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "outDir": "Distribution"
     },
-    "incremental": true,
-    "target": "es2022",
-    "module": "commonjs",
-    "lib": ["dom", "es2022"],
-    "jsx": "react-jsx",
-    "strict": true,
-    "sourceMap": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "outDir": "Distribution"
-  },
-  "exclude": ["test", "Release/Build", "Release/Application/Distribution", "Distribution"]
+    "include":
+    [
+        "Configuration",
+        "Script",
+        "Source"
+    ],
+    "exclude":
+    [
+        "Windows",
+        "Intermediate",
+        "test",
+        "node_modules",
+        "Release/Build",
+        "Release/Application/Distribution",
+        "Distribution"
+    ]
 }

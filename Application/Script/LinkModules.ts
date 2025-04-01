@@ -1,14 +1,23 @@
-import fs from 'fs';
-import webpackPaths from '../configs/webpack.paths';
+/* File:      LinkModules.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * License:   MIT
+ */
 
-const { srcNodeModulesPath, appNodeModulesPath, erbNodeModulesPath } =
-  webpackPaths;
+import * as Fs from "fs";
+import { Paths } from "../Configuration/Paths";
 
-if (fs.existsSync(appNodeModulesPath)) {
-  if (!fs.existsSync(srcNodeModulesPath)) {
-    fs.symlinkSync(appNodeModulesPath, srcNodeModulesPath, 'junction');
-  }
-  if (!fs.existsSync(erbNodeModulesPath)) {
-    fs.symlinkSync(appNodeModulesPath, erbNodeModulesPath, 'junction');
-  }
+const { AppNodeModules, ConfigurationNodeModules, SourceNodeModules } = Paths;
+
+if (Fs.existsSync(AppNodeModules))
+{
+    if (!Fs.existsSync(SourceNodeModules))
+    {
+        Fs.symlinkSync(AppNodeModules, SourceNodeModules, "junction");
+    }
+    // if (!Fs.existsSync(erbNodeModulesPath))
+    if (!Fs.existsSync(ConfigurationNodeModules))
+    {
+        Fs.symlinkSync(AppNodeModules, ConfigurationNodeModules, "junction");
+    }
 }

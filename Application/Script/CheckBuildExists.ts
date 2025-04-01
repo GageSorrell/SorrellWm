@@ -1,4 +1,4 @@
-/* File:      check-build-exists.ts
+/* File:      CheckBuildExists.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
@@ -22,7 +22,7 @@ if (!Fs.existsSync(MainPath))
     );
 }
 
-if (!fs.existsSync(RendererPath))
+if (!Fs.existsSync(RendererPath))
 {
     throw new Error(
         chalk.whiteBright.bgRed.bold(

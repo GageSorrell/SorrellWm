@@ -106,6 +106,7 @@ export const Focus = (): ReactNode =>
     const ChangeFocus = (FocusChange: FFocusChange): void =>
     {
         window.electron.ipcRenderer.SendMessage("OnChangeFocus", FocusChange);
+        window.electron.ipcRenderer.SendMessage("OnChangeFocus", FocusChange);
     };
 
     return FocusData !== undefined && (

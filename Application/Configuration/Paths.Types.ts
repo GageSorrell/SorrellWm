@@ -8,6 +8,7 @@ export type FWebpackPaths =
     | "Root"
     | "ConfigurationNodeModules"
     | "Distribution"
+    | "Intermediate"
     | "Source"
     | "SourceMain"
     | "SourceRenderer"

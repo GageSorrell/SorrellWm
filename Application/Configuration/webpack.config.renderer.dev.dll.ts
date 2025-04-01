@@ -1,77 +1,76 @@
-/**
- * Builds the DLL for development electron renderer process
+/* File:      webpack.config.renderer.dev.dll.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * License:   MIT
+ * Comment:   Builds the DLL for development electron renderer process.
  */
 
-import webpack from 'webpack';
-import path from 'path';
-import { merge } from 'webpack-merge';
-import baseConfig from './webpack.config.base';
-import webpackPaths from './Paths';
-import { dependencies } from '../package.json';
-import CheckNodeEnvironment from '../Script/CheckNodeEnvironment';
+import * as Path from "path";
+import { type Configuration, DllPlugin, EnvironmentPlugin, LoaderOptionsPlugin } from "webpack";
+import { BaseConfiguration } from "./webpack.config.base";
+import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
+import { Paths } from "./Paths";
+import { dependencies } from "../package.json";
+import { merge } from "webpack-merge";
 
-CheckNodeEnvironment('development');
+CheckNodeEnvironment("development");
 
-const dist = webpackPaths.dllPath;
-
-const configuration: webpack.Configuration = {
-  context: webpackPaths.rootPath,
-
-  devtool: 'eval',
-
-  mode: 'development',
-
-  target: 'electron-renderer',
-
-  externals: ['fsevents', 'crypto-browserify'],
-
-  /**
-   * Use `module` from `webpack.config.renderer.dev.js`
-   */
-  module: require('./webpack.config.renderer.dev').default.module,
-
-  entry: {
-    renderer: Object.keys(dependencies || {}),
-  },
-
-  output: {
-    path: dist,
-    filename: '[name].dev.dll.js',
-    library: {
-      name: 'renderer',
-      type: 'var',
+const configuration: Configuration =
+{
+    context: Paths.Root,
+    devtool: "eval",
+    entry:
+    {
+        renderer: Object.keys(dependencies || {})
     },
-  },
-
-  plugins: [
-    new webpack.DllPlugin({
-      path: path.join(dist, '[name].json'),
-      name: '[name]',
-    }),
-
+    externals: [ "fsevents", "crypto-browserify" ],
+    mode: "development",
     /**
-     * Create global constants which can be configured at compile time.
-     *
-     * Useful for allowing different behaviour between development builds and
-     * release builds
-     *
-     * NODE_ENV should be production so that modules do not perform certain
-     * development checks
+     * Use `module` from `webpack.config.renderer.dev.js`
      */
-    new webpack.EnvironmentPlugin({
-      NODE_ENV: 'development',
-    }),
-
-    new webpack.LoaderOptionsPlugin({
-      debug: true,
-      options: {
-        context: webpackPaths.srcPath,
-        output: {
-          path: webpackPaths.dllPath,
+    /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+    module: require("./webpack.config.renderer.dev").default.module,
+    output:
+    {
+        filename: "[name].dev.dll.js",
+        library:
+        {
+            name: "renderer",
+            type: "var"
         },
-      },
-    }),
-  ],
+        path: Paths.Distribution
+    },
+    plugins:
+    [
+        new DllPlugin({
+            name: "[name]",
+            path: Path.join(Paths.Intermediate, "[name].json")
+        }),
+        /**
+         * Create global constants which can be configured at compile time.
+         *
+         * Useful for allowing different behavior between development builds and
+         * release builds
+         *
+         * NODE_ENV should be production so that modules do not perform certain
+         * development checks
+         */
+        new EnvironmentPlugin({
+            NODE_ENV: "development"
+        }),
+        new LoaderOptionsPlugin({
+            debug: true,
+            options:
+            {
+                context: Paths.Source,
+                output:
+                {
+                    path: Paths.Intermediate
+                }
+            }
+        })
+    ],
+    target: "electron-renderer"
 };
 
-export default merge(baseConfig, configuration);
+export default merge(BaseConfiguration, configuration);

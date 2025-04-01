@@ -13,4 +13,5 @@ export type FIpcChannel =
     | "Log"
     | "Navigate"
     | "OnChangeFocus"
+    | "ReadyForRoute"
     | "TearDown";

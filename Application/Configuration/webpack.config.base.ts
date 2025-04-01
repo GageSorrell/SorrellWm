@@ -5,12 +5,12 @@
  * Comment:   Base webpack config used across other specific configs.
  */
 
+import { type Configuration, EnvironmentPlugin } from "webpack";
 import { dependencies as Externals } from "../Release/Application/package.json";
 import { Paths } from "./Paths";
 import TsconfigPathsPlugins from "tsconfig-paths-webpack-plugin";
-import webpack from "webpack";
 
-export const BaseConfiguration: webpack.Configuration =
+export const BaseConfiguration: Configuration =
 {
     externals: [ ...Object.keys(Externals || { }) ],
     module:
@@ -47,7 +47,7 @@ export const BaseConfiguration: webpack.Configuration =
     },
     plugins:
     [
-        new webpack.EnvironmentPlugin({
+        new EnvironmentPlugin({
             NODE_ENV: "production"
         })
     ],

@@ -7,11 +7,12 @@
 import { type ReactElement, useMemo } from "react";
 import type { FVirtualKey } from "../Keyboard.Types";
 import { Key } from "../Key";
+import { KeyIdsById } from "../Keyboard";
 import type { PKeyCombination } from "./KeyCombination.Types";
 
 /**
  * A key combination is any set of buttons that can trigger
- * an action within SorrellWm (**i.e.**, *one* or more keys).
+ * an action within SorrellWm (*i.e.*, *one* or more keys).
  */
 export const KeyCombination = ({ Keys }: PKeyCombination): ReactElement =>
 {
@@ -25,7 +26,7 @@ export const KeyCombination = ({ Keys }: PKeyCombination): ReactElement =>
         {
             return (
                 <Key
-                    Value={ VirtualKey }
+                    Value={ KeyIdsById[VirtualKey] }
                     key={ VirtualKey }
                 />
             );

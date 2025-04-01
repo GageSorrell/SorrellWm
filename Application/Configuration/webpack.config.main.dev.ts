@@ -2,17 +2,14 @@
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
- */
-
-/**
- * Webpack config for development electron main process
+ * Comment:   Webpack config for development electron main process.
  */
 
 import * as Path from "path";
 import * as Webpack from "webpack";
 import { BaseConfiguration } from "./webpack.config.base";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
-import CheckNodeEnvironment from "../Script/CheckNodeEnvironment";
+import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
 import { Paths } from "./Paths";
 import { merge } from "webpack-merge";
 
@@ -49,7 +46,7 @@ const Configuration: Webpack.Configuration =
         {
             type: "umd"
         },
-        path: Paths.Distribution
+        path: Paths.Intermediate
     },
     plugins: [
     /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */

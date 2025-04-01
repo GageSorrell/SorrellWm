@@ -125,6 +125,7 @@
 			"lpsz",
 			"LPWSTR",
 			"Napi",
+			"notarytool",
 			"OVERLAPPEDWINDOW",
 			"PAINTSTRUCT",
 			"RENDERFULLCONTENT",

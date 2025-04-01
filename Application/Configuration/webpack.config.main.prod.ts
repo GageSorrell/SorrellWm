@@ -6,27 +6,27 @@
  */
 
 import * as Path from "path";
-import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
-import CheckNodeEnvironment from "../Script/CheckNodeEnvironment";
-import webpack from "webpack";
-import TerserPlugin from "terser-webpack-plugin";
+import { type Configuration, DefinePlugin, EnvironmentPlugin } from "webpack";
 import { BaseConfiguration } from "./webpack.config.base";
+import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
+import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
+import { DeleteSourceMaps } from "../Script/DeleteSourceMaps";
+import { Paths } from "./Paths";
+import TerserPlugin from "terser-webpack-plugin";
 import { merge } from "webpack-merge";
-import webpackPaths from "./Paths";
-import deleteSourceMaps from "../Script/delete-source-maps";
 
 CheckNodeEnvironment("production");
-deleteSourceMaps();
+DeleteSourceMaps();
 
-const configuration: webpack.Configuration = {
+const configuration: Configuration =
+{
     devtool: "source-map",
-    mode: "production",
-    target: "electron-main",
     entry:
     {
-        main: Path.join(webpackPaths.srcMainPath, "Main.ts"),
-        preload: Path.join(webpackPaths.srcMainPath, "Core", "Preload.ts")
+        main: Path.join(Paths.SourceMain, "Main.ts"),
+        preload: Path.join(Paths.SourceMain, "Core", "Preload.ts")
     },
+    mode: "production",
     /**
      * Disables webpack processing of __dirname and __filename.
      * If you run the bundle in node.js it falls back to these values of node.js.
@@ -37,15 +37,6 @@ const configuration: webpack.Configuration = {
         __dirname: false,
         __filename: false
     },
-    output:
-    {
-        path: webpackPaths.distMainPath,
-        filename: "[name].js",
-        library:
-        {
-            type: "umd"
-        }
-    },
     optimization:
     {
         minimizer:
@@ -54,6 +45,15 @@ const configuration: webpack.Configuration = {
                 parallel: true
             })
         ]
+    },
+    output:
+    {
+        filename: "[name].js",
+        library:
+        {
+            type: "umd"
+        },
+        path: Paths.DistributionMain
     },
     plugins:
     [
@@ -70,15 +70,17 @@ const configuration: webpack.Configuration = {
          * NODE_ENV should be production so that modules do not perform certain
          * development checks
          */
-        new webpack.EnvironmentPlugin({
-            NODE_ENV: "production",
+        /* @ts-expect-error DEBUG_PROD type. */
+        new EnvironmentPlugin({
             DEBUG_PROD: false,
+            NODE_ENV: "production",
             START_MINIMIZED: false
         }),
-        new webpack.DefinePlugin({
+        new DefinePlugin({
             "process.type": "\"browser\""
         })
     ],
+    target: "electron-main"
 };
 
 export default merge(BaseConfiguration, configuration);

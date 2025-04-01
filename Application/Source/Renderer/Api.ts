@@ -3,9 +3,12 @@
  * License: MIT
  */
 
-type FOn = (Channel: string, Listener: ((...Arguments: Array<unknown>) => void)) => (() => void);
-type FOnce = (Channel: string, Listener: (...Arguments: Array<unknown>) => void) => void;
-type FSend = (Channel: string, ...Arguments: Array<unknown>) => void;
+import type { FIpcChannel } from "#/Event.Types";
+
+type FOn = (Channel: FIpcChannel, Listener: ((...Arguments: Array<unknown>) => void)) => (() => void);
+type FOnce = (Channel: FIpcChannel, Listener: (...Arguments: Array<unknown>) => void) => void;
+type FSend = (Channel: FIpcChannel, ...Arguments: Array<unknown>) => void;
+
 type FRemoveListener = FOnce;
 type FIpcRenderer =
 {
@@ -25,32 +28,34 @@ type FLog =
         Normal: FLogFunction;
     };
 
-export const IpcRenderer: FIpcRenderer =
+export const GetIpcRenderer = (): FIpcRenderer =>
 {
-    On: window.electron.ipcRenderer.On,
-    Once: window.electron.ipcRenderer.Once,
-    RemoveListener: window.electron.ipcRenderer.SendMessage,
-    Send: window.electron.ipcRenderer.SendMessage
+    return {
+        On: window.electron.ipcRenderer.On,
+        Once: window.electron.ipcRenderer.Once,
+        RemoveListener: window.electron.ipcRenderer.SendMessage,
+        Send: window.electron.ipcRenderer.SendMessage
+    };
 };
 
 const Warn: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    IpcRenderer.Send("Log", "Warn", ...Arguments);
+    GetIpcRenderer().Send("Log", "Warn", ...Arguments);
 };
 
 const Normal: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    IpcRenderer.Send("Log", "Normal", ...Arguments);
+    GetIpcRenderer().Send("Log", "Normal", ...Arguments);
 };
 
 const Error: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    IpcRenderer.Send("Log", "Error", ...Arguments);
+    GetIpcRenderer().Send("Log", "Error", ...Arguments);
 };
 
 const Verbose: FLogFunction = (...Arguments: Array<unknown>): void =>
 {
-    IpcRenderer.Send("Log", "Verbose", ...Arguments);
+    GetIpcRenderer().Send("Log", "Verbose", ...Arguments);
 };
 
 const OutLog: FLog = Normal.bind({ }) as FLog;

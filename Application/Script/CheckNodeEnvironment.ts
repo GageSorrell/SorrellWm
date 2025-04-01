@@ -8,7 +8,7 @@ import chalk from "chalk";
 
 /* eslint-disable no-undef */
 
-export default function CheckNodeEnvironment(ExpectedEnvironment: string)
+export function CheckNodeEnvironment(ExpectedEnvironment: string)
 {
     if (!ExpectedEnvironment)
     {
