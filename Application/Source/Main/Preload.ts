@@ -11,14 +11,13 @@ import { GetFocusedWindow, GetIsLightMode, GetThemeColor, HWindow,FHexColor } fr
 
 const ElectronHandler =
 {
-
     ipcRenderer:
     {
-        On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
+        on(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
         {
             const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
             {
-                return Listener(...args);
+                return InFunction(...args);
             };
 
             ipcRenderer.on(Channel, subscription);
@@ -28,25 +27,21 @@ const ElectronHandler =
                 ipcRenderer.removeListener(Channel, subscription);
             };
         },
-        Once(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        once(Channel: string, InFunction: ((...Arguments: Array<unknown>) => void))
         {
             ipcRenderer.once(
                 Channel,
-                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => Listener(..._Arguments)
+                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => InFunction(..._Arguments)
             );
         },
-        RemoveListener(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
-        {
-            ipcRenderer.removeListener(Channel, Listener);
-        },
-        Send(Channel: string, ...Arguments: Array<unknown>)
+        sendMessage(Channel: string, ...Arguments: Array<unknown>)
         {
             ipcRenderer.send(Channel, ...Arguments);
         }
     },
-        GetFocusedWindow: async (): Promise<HWindow> => ipcRenderer.invoke("GetFocusedWindow"),
-    GetIsLightMode: async (): Promise<boolean> => ipcRenderer.invoke("GetIsLightMode"),
-    GetThemeColor: async (): Promise<FHexColor> => ipcRenderer.invoke("GetThemeColor")
+    GetFocusedWindow: async (): Promise<HWindow> => ipcRenderer.invoke("GetFocusedWindow"),
+GetIsLightMode: async (): Promise<boolean> => ipcRenderer.invoke("GetIsLightMode"),
+GetThemeColor: async (): Promise<FHexColor> => ipcRenderer.invoke("GetThemeColor")
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);

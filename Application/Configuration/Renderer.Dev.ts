@@ -5,6 +5,7 @@
  */
 
 import "webpack-dev-server";
+import * as FilteredLogStatements from "./FilteredLogStatements.json";
 import * as Fs from "fs";
 import * as Path from "path";
 import { type ChildProcess, execSync, spawn } from "child_process";
@@ -16,7 +17,7 @@ import { Paths } from "./Paths";
 import ReactRefreshWebpackPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import chalk from "chalk";
 import { merge } from "webpack-merge";
-import webpack from "webpack";
+import { type Configuration } from "webpack";
 
 /* When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's *
  * at the dev webpack config is not accidentally run in a production environment.     */
@@ -28,10 +29,10 @@ if (process.env.NODE_ENV === "production")
 const Port: number | string = process.env.PORT || 1212;
 const Manifest: string = Path.resolve(Paths.Intermediate, "renderer.json");
 const skipDLLs: boolean | undefined =
-  module.parent?.filename.includes("webpack.config.renderer.dev.dll") ||
-  module.parent?.filename.includes("webpack.config.eslint");
+  module.parent?.filename.includes("Renderer.Dev.Dll") ||
+  module.parent?.filename.includes("EsLint");
 
-/** Warn if the DLL is not built. */
+/* Warn if the DLL is not built. */
 if (
     !skipDLLs &&
     !(Fs.existsSync(Paths.Intermediate) && Fs.existsSync(Manifest))
@@ -223,13 +224,27 @@ const configuration: webpack.Configuration = {
 
             if (MyProcess !== null && MyProcess.stdout !== null && MyProcess.stderr !== null)
             {
-                const ToUtf8 = (Data: Buffer): void =>
+                const Filter = (Data: string): string =>
                 {
-                    process.stdout.write(Data.toString("utf8"));
+                    const { Statements } = FilteredLogStatements;
+                    const IsExcluded: boolean = Statements.some((Statement: string): boolean =>
+                    {
+                        return Statement.includes(Data);
+                    });
+
+                    return IsExcluded
+                        ? ""
+                        : Data;
                 };
 
-                MyProcess.stdout.on("data", ToUtf8);
-                MyProcess.stderr.on("data", ToUtf8);
+                /* Allow printing emoji and using terminal colors, and exclude filtered statements. */
+                const OnData = (Data: Buffer): string =>
+                {
+                    return Filter(Data.toString("utf8"));
+                };
+
+                MyProcess.stdout.on("data", OnData);
+                MyProcess.stderr.on("data", OnData);
             }
             return Middlewares;
         },

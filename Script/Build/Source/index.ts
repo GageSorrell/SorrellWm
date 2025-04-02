@@ -618,7 +618,7 @@ export type FElectronHandler = typeof ElectronHandler;
 
 \n`;
 
-    const PreloadPath: string = Path.resolve(GetPath("Main"), "Preload.ts");
+    const PreloadPath: string = Path.resolve(GetPath("Main"), "Core", "Preload.ts");
 
     await Fs.promises.writeFile(PreloadPath, PreloadContents);
 
@@ -768,6 +768,7 @@ const Lint = async (CppFiles: Array<string>): Promise<void> =>
 
 const Build = async (): Promise<void> =>
 {
+    /* eslint-disable-next-line @typescript-eslint/typedef */
     return new Promise<void>((Resolve, Reject): void =>
     {
         const Process: ChildProcess = spawn(

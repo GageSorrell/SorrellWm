@@ -25,21 +25,19 @@ import {
     GetWindowTitle,
     type HWindow,
     UnblurBackground } from "@sorrellwm/windows";
-import { BrowserWindow, app, ipcMain, nativeTheme, screen } from "electron";
+import { type BrowserWindow, app, ipcMain, screen } from "electron";
+import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import { CreateTestWindows } from "./Development/TestWindows";
+import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
 import type { FFocusData } from "@/Domain/Focus";
 import type { FIpcChannel } from "./Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
 import { Log } from "./Development";
-import { ResolveHtmlPath } from "./Utility/Utility";
 import { Vk } from "$/Common/Component/Keyboard/Keyboard";
 import chalk from "chalk";
-import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
-import { FBrowserWindowEvents } from "./BrowserWindow.Types";
-import { GetPaths } from "./Core/Paths";
 
 let MainWindow: BrowserWindow | undefined = undefined;
 export const GetMainWindow = (): BrowserWindow | undefined => MainWindow;
@@ -96,7 +94,7 @@ const MainBrowserEvents: FBrowserWindowEvents =
 
 const LaunchMainWindow = async (): Promise<void> =>
 {
-    MainWindow = CreateBrowserWindow({
+    const { Window, LoadFrontend } = CreateBrowserWindow({
         alwaysOnTop: true,
         frame: false,
         height: 900,
@@ -108,6 +106,8 @@ const LaunchMainWindow = async (): Promise<void> =>
         width: 900,
         ...GetLeastInvisiblePosition()
     });
+
+    MainWindow = Window;
 
     RegisterBrowserWindowEvents(MainWindow, MainBrowserEvents);
 
@@ -232,7 +232,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         console.log(OutString);
     });
 
-    MainWindow.loadURL(ResolveHtmlPath("index.html"));
+    LoadFrontend();
 
     /** @TODO Run this by flag with `npm start`. */
     CreateTestWindows();

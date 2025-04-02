@@ -124,6 +124,7 @@
 			"lpfn",
 			"lpsz",
 			"LPWSTR",
+			"maximizable",
 			"Napi",
 			"notarytool",
 			"OVERLAPPEDWINDOW",

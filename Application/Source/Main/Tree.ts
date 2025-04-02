@@ -184,8 +184,10 @@ const InitializeTree = (): void =>
         {
             // @TODO
         }
+        // else if (AreBoxesEqual(MonitorInfo.WorkSize, ))
         else
         {
+            console.log("🤷‍♂️🤷‍♂️🤷‍♂️🤷‍♂️🤷‍♂️", MonitorInfo.WorkSize);
             Panel.Children = Panel.Children.map((Child: FVertex, Index: number): FVertex =>
             {
                 const UniformWidth: number = MonitorInfo.WorkSize.Width / Panel.Children.length;
@@ -518,14 +520,14 @@ export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindo
 {
     if (Handle !== undefined)
     {
-        console.log(`BringingIntoPanel: ${ GetWindowTitle(Handle) }.`);
+        // console.log(`BringingIntoPanel: ${ GetWindowTitle(Handle) }.`);
         const Panel: FPanel | undefined = IsPanelAnnotated(InPanel)
             ? GetPanelFromAnnotated(InPanel)
             : InPanel;
 
         if (Panel !== undefined)
         {
-            console.log("BringIntoPanel: PanelFromAnnotated was defined!");
+            // console.log("BringIntoPanel: PanelFromAnnotated was defined!");
             const OutCell: FCell = Cell(Handle);
             Panel.Children.push(OutCell);
             MakeSizesUniform(Panel);
@@ -533,7 +535,7 @@ export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindo
         }
         else
         {
-            console.log("BringIntoPanel: PanelFromAnnotated was UNDEFINED.");
+            // console.log("BringIntoPanel: PanelFromAnnotated was UNDEFINED.");
         }
     }
 };

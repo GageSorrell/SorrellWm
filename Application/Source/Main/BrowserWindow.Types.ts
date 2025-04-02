@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { Event, Point, Rectangle } from "electron";
+import type { BrowserWindow, Event, Point, Rectangle } from "electron";
 
 export type FBrowserWindowEventType =
     | "always-on-top-changed"
@@ -79,3 +79,9 @@ export type FBrowserWindowEvents = Partial<{
     "will-move": (Event: Event, NewBounds: Rectangle) => Promise<void>;
     "will-resize": (Event: Event, NewBounds: Rectangle, Details: unknown) => Promise<void>;
 }>;
+
+export type FCreateBrowserWindowReturnType =
+{
+    LoadFrontend: () => Promise<void>;
+    Window: BrowserWindow;
+};

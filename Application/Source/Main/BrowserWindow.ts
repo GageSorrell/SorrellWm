@@ -8,13 +8,13 @@ import * as Path from "path";
 import {
     app as App,
     BrowserWindow,
-    nativeTheme,
     type BrowserWindowConstructorOptions,
-    type WebPreferences } from "electron";
+    type WebPreferences,
+    nativeTheme } from "electron";
 import type {
-    FBrowserWindowEventCallback,
     FBrowserWindowEventType,
-    FBrowserWindowEvents } from "./BrowserWindow.Types";
+    FBrowserWindowEvents,
+    FCreateBrowserWindowReturnType} from "./BrowserWindow.Types";
 import { GetPaths } from "./Core/Paths";
 
 export const RegisterBrowserWindowEvents = (Window: BrowserWindow, Events: FBrowserWindowEvents): void =>
@@ -22,15 +22,39 @@ export const RegisterBrowserWindowEvents = (Window: BrowserWindow, Events: FBrow
     Object.keys(Events).forEach((InEventName: string): void =>
     {
         const EventName: FBrowserWindowEventType = InEventName as FBrowserWindowEventType;
-        const Callback: FBrowserWindowEventCallback = Events[EventName] as FBrowserWindowEventCallback;
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
+        const Callback: Function = Events[EventName] as Function;
 
         /* @ts-expect-error This results from the namespace approach used to define overloads by Electron. */
         Window.on(EventName, Callback);
     });
 };
 
+const ResolveHtmlPath = (HtmlFileName: string, Component?: string): string =>
+{
+    if (process.env.NODE_ENV === "development")
+    {
+        const Port: string | number = process.env.PORT || 1212;
+        const Url: URL = new URL(`http://localhost:${ Port }`);
+        Url.pathname = HtmlFileName;
+        return Url.href;
+    }
+    const BasePath: string = `file://${ Path.resolve(__dirname, "../Renderer/", HtmlFileName) }`;
+    if (Component !== undefined)
+    {
+        const ComponentArgument: string = `?Component=${ Component }`;
+        return BasePath + ComponentArgument;
+    }
+    else
+    {
+        return BasePath;
+    };
+};
+
 /** Factory function for `BrowserWindow`.  Provides some defaults, particularly *wrt* `webPreferences`. */
-export const CreateBrowserWindow = (Options: BrowserWindowConstructorOptions): BrowserWindow =>
+export const CreateBrowserWindow = (
+    Options: BrowserWindowConstructorOptions
+): FCreateBrowserWindowReturnType =>
 {
     const BaseWebPreferences: WebPreferences =
     {
@@ -51,7 +75,7 @@ export const CreateBrowserWindow = (Options: BrowserWindowConstructorOptions): B
             : "BrandLight.svg"
     );
 
-    return new BrowserWindow({
+    const Window: BrowserWindow = new BrowserWindow({
         height: 900,
         icon,
         show: true,
@@ -63,4 +87,21 @@ export const CreateBrowserWindow = (Options: BrowserWindowConstructorOptions): B
         width: 900,
         ...Rest
     });
+
+    const LoadFrontend = async (): Promise<void> =>
+    {
+        try
+        {
+            await Window.loadURL(ResolveHtmlPath("index.html"));
+        }
+        catch (Error: unknown)
+        {
+            console.log("LoadFrontend threw the following error", Error);
+        }
+    };
+
+    return {
+        LoadFrontend,
+        Window
+    };
 };

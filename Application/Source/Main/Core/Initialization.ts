@@ -4,13 +4,10 @@
  * License:   MIT
  */
 
-import * as Path from "path";
-import { BrowserWindow, app, shell } from "electron";
-import { ResolveHtmlPath } from "../Utility/Utility";
+import { type BrowserWindow, app, shell } from "electron";
+import { CreateBrowserWindow } from "#/BrowserWindow";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import { CreateBrowserWindow } from "#/BrowserWindow";
-import { GetPaths } from "./Paths";
 
 let MainWindow: BrowserWindow | null = null;
 
@@ -52,14 +49,15 @@ const CreateWindow = async () =>
         await installExtensions();
     }
 
-    MainWindow = CreateBrowserWindow({
+    const { Window, LoadFrontend } = CreateBrowserWindow({
         height: 728,
         width: 1024,
 
         show: false
     });
 
-    MainWindow.loadURL(ResolveHtmlPath("index.html"));
+    MainWindow = Window;
+    await LoadFrontend();
 
     MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
     {

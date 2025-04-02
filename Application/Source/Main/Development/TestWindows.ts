@@ -4,27 +4,18 @@
  * License:   MIT
  */
 
-import * as Path from "path";
-import { BrowserWindow, app, ipcMain } from "electron";
-import { ResolveHtmlPath } from "#/Utility/Utility";
-import { BringIntoPanel, Find, GetForest, IsPanel } from "#/Tree";
+import { BringIntoPanel, Find, IsPanel } from "#/Tree";
+import { type BrowserWindow, ipcMain } from "electron";
 import type { FPanel, FVertex } from "#/Tree.Types";
 import { GetWindowByName, type HWindow } from "Windows";
+import { CreateBrowserWindow } from "#/BrowserWindow";
 
-const CreateTestWindow = (Index: number): BrowserWindow =>
+const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
 {
-    const TestWindow: BrowserWindow = new BrowserWindow({
+    const { Window: TestWindow, LoadFrontend } = CreateBrowserWindow({
         autoHideMenuBar: true,
         show: true,
-        title: `Test Window #${ Index }`,
-        webPreferences:
-        {
-            devTools: false,
-            nodeIntegration: true,
-            preload: app.isPackaged
-                ? Path.join(__dirname, "Preload.js")
-                : Path.join(__dirname, "../Intermediate/Preload.js")
-        }
+        title: `Test Window #${ Index + 1 }`
     });
 
     TestWindow.setMenu(null);
@@ -34,7 +25,7 @@ const CreateTestWindow = (Index: number): BrowserWindow =>
         TestWindow.webContents.send("Navigate", "TestWindow");
     });
 
-    TestWindow.loadURL(ResolveHtmlPath("index.html"));
+    await LoadFrontend();
 
     TestWindow.on(
         "page-title-updated",
@@ -52,7 +43,7 @@ export const CreateTestWindows = async (): Promise<void> =>
     const TestWindows: Array<BrowserWindow> = [ ];
     for (let Index: number = 0; Index < 5; Index++)
     {
-        TestWindows.push(CreateTestWindow(Index));
+        TestWindows.push(await CreateTestWindow(Index));
     }
 
     const RightMonitor: FPanel | undefined = Find((Vertex: FVertex): boolean =>

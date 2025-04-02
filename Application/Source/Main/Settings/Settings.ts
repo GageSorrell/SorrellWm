@@ -5,20 +5,27 @@
  */
 
 import * as Path from "path";
-import { BrowserWindow, app, ipcMain } from "electron";
-import { ResolveHtmlPath } from "#/Utility/Utility";
+import { type BrowserWindow, ipcMain } from "electron";
+import { CreateBrowserWindow } from "#/BrowserWindow";
+import { GetPaths } from "#/Core/Paths";
 
 let SettingsWindow: BrowserWindow | undefined = undefined;
 
 export const OpenSettings = (): void =>
 {
+    let LoadFrontend = async () =>
+    {
+
+    };
+
     if (SettingsWindow === undefined)
     {
-        SettingsWindow = new BrowserWindow({
+        const { Window, LoadFrontend: InLoadFrontend } = CreateBrowserWindow({
             autoHideMenuBar: true,
             backgroundMaterial: "mica",
             frame: true,
             height: 900,
+            icon: Path.join(GetPaths().Resource, "Settings", "SettingsDark.svg"),
             maximizable: true,
             resizable: true,
             show: true,
@@ -26,16 +33,11 @@ export const OpenSettings = (): void =>
             title: "SorrellWm Settings",
             titleBarStyle: "default",
             transparent: true,
-            webPreferences:
-            {
-                devTools: false,
-                nodeIntegration: true,
-                preload: app.isPackaged
-                    ? Path.join(__dirname, "Preload.js")
-                    : Path.join(__dirname, "../Intermediate/Preload.js")
-            },
             width: 1200
         });
+
+        SettingsWindow = Window;
+        LoadFrontend = InLoadFrontend;
     }
 
     SettingsWindow.setMenu(null);
@@ -45,7 +47,7 @@ export const OpenSettings = (): void =>
         SettingsWindow?.webContents.send("Navigate", "Settings");
     });
 
-    SettingsWindow.loadURL(ResolveHtmlPath("index.html"));
+    LoadFrontend();
 
     SettingsWindow.on(
         "page-title-updated",
