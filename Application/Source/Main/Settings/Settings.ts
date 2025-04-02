@@ -32,7 +32,7 @@ export const OpenSettings = (): void =>
                 nodeIntegration: true,
                 preload: app.isPackaged
                     ? Path.join(__dirname, "Preload.js")
-                    : Path.join(__dirname, "../../.erb/dll/preload.js")
+                    : Path.join(__dirname, "../Intermediate/Preload.js")
             },
             width: 1200
         });

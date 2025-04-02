@@ -38,7 +38,7 @@ const ElectronHandler =
         {
             ipcRenderer.removeListener(Channel, Listener);
         },
-        SendMessage(Channel: FIpcChannel, ...Arguments: Array<unknown>)
+        Send(Channel: FIpcChannel, ...Arguments: Array<unknown>)
         {
             ipcRenderer.send(Channel, ...Arguments);
         }

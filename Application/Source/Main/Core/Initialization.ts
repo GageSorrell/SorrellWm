@@ -4,11 +4,11 @@
  * License:   MIT
  */
 
+import * as Path from "path";
 import { BrowserWindow, app, shell } from "electron";
 import { ResolveHtmlPath } from "./Utility";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import path from "path";
 
 let MainWindow: BrowserWindow | null = null;
 
@@ -51,12 +51,12 @@ const CreateWindow = async () =>
     }
 
     const ResourcesPath: string = app.isPackaged
-        ? path.join(process.resourcesPath, "Resource")
-        : path.join(__dirname, "../../Resource");
+        ? Path.join(process.resourcesPath, "Resource")
+        : Path.join(__dirname, "../../Resource");
 
     const getAssetPath = (...paths: Array<string>): string =>
     {
-        return path.join(ResourcesPath, ...paths);
+        return Path.join(ResourcesPath, ...paths);
     };
 
     MainWindow = new BrowserWindow({
@@ -71,8 +71,8 @@ const CreateWindow = async () =>
         {
             devTools: true,
             preload: app.isPackaged
-                ? path.join(__dirname, "preload.js")
-                : path.join(__dirname, "../../.erb/dll/preload.js")
+                ? Path.join(__dirname, "Preload.js")
+                : Path.join(__dirname, "../Intermediate/Preload.js")
         }
     });
 

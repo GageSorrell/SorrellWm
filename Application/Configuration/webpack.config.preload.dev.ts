@@ -30,7 +30,7 @@ const Configuration: Configuration =
         __filename: false
     },
     output: {
-        filename: "preload.js",
+        filename: "Preload.js",
         library:
         {
             type: "umd"

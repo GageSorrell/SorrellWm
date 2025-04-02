@@ -4,13 +4,13 @@
  * License:   MIT
  */
 
+export * from "./Log.Types";
+
 /** @TODO Temporary; replace with separate type for each callback. */
 export type FMessageLoopCallback = (Argument: unknown) => void;
 
 /** @TODO The signatures of the arguments are probably wrong. */
 export function InitializeMessageLoop(EmptyCallback: (() => void)): void;
-
-// export function CaptureImage(Handle: HWindow): void;
 
 export type HWindow =
 {

@@ -5,7 +5,6 @@
  */
 
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";
-import { Log } from "@/Api";
 import { useEffect } from "react";
 
 export const UseIpcNavigatorState = (): Readonly<[ State: object ]> =>
@@ -21,7 +20,6 @@ export const IpcNavigator = (): undefined =>
     {
         window.electron.ipcRenderer.On("Navigate", (...Arguments: Array<unknown>): void =>
         {
-            // Log("Frontend received Navigate with Arguments", Arguments.length,  ...Arguments);
             const HasRoute: boolean = Arguments.length > 0 && typeof Arguments[0] === "string";
             if (HasRoute)
             {
@@ -42,7 +40,7 @@ export const IpcNavigator = (): undefined =>
             }
         });
 
-        window.electron.ipcRenderer.SendMessage("ReadyForRoute");
+        window.electron.ipcRenderer.Send("ReadyForRoute");
     }, [ Navigator ]);
 
     return undefined;

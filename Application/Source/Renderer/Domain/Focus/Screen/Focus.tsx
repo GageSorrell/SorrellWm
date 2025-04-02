@@ -52,7 +52,7 @@ export const Focus = (): ReactNode =>
             }
         });
 
-        window.electron.ipcRenderer.SendMessage("GetFocusData");
+        window.electron.ipcRenderer.Send("GetFocusData");
     }, [ FocusData, SetFocusData ]);
 
     // const IsSelectionPristine: MutableRefObject<boolean> = useRef<boolean>(true);
@@ -64,7 +64,7 @@ export const Focus = (): ReactNode =>
     //         IsSelectionPristine.current = false;
     //     }
 
-    //     window.electron.ipcRenderer.SendMessage("ChangeFocus", );
+    //     window.electron.ipcRenderer.Send("ChangeFocus", );
     // }, [ InterimPanel ]);
 
     const IsHorizontal: boolean = FocusData?.Direction === "Horizontal";
@@ -105,8 +105,8 @@ export const Focus = (): ReactNode =>
 
     const ChangeFocus = (FocusChange: FFocusChange): void =>
     {
-        window.electron.ipcRenderer.SendMessage("OnChangeFocus", FocusChange);
-        window.electron.ipcRenderer.SendMessage("OnChangeFocus", FocusChange);
+        window.electron.ipcRenderer.Send("OnChangeFocus", FocusChange);
+        window.electron.ipcRenderer.Send("OnChangeFocus", FocusChange);
     };
 
     return FocusData !== undefined && (

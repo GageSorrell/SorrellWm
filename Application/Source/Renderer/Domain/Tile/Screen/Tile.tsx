@@ -6,11 +6,11 @@
 
 import { Caption1, Title1 } from "@fluentui/react-components";
 import { Command, GetPanelKey, Panel } from "$/Common";
-import { IpcRenderer, Log } from "@/Api";
 import { type ReactElement, useEffect, useState } from "react";
 import { Action } from "@/Action";
 import { CompoundCommand } from "$/Common";
 import type { FAnnotatedPanel } from "#/Tree.Types";
+import { Log } from "@/Api";
 import { UseIndex } from "@/Utility/Hook";
 
 export const Tile = (): ReactElement =>
@@ -18,8 +18,8 @@ export const Tile = (): ReactElement =>
     const [ AnnotatedPanels, SetAnnotatedPanels ] = useState<Array<FAnnotatedPanel>>([ ]);
     useEffect((): void =>
     {
-        IpcRenderer.Send("GetAnnotatedPanels");
-        IpcRenderer.On("GetAnnotatedPanels", (...Arguments: Array<unknown>): void =>
+        window.electron.ipcRenderer.Send("GetAnnotatedPanels");
+        window.electron.ipcRenderer.On("GetAnnotatedPanels", (...Arguments: Array<unknown>): void =>
         {
             SetAnnotatedPanels((_Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
             {
@@ -27,8 +27,8 @@ export const Tile = (): ReactElement =>
             });
         });
 
-        IpcRenderer.Send("GetPanelScreenshots");
-        IpcRenderer.On("GetPanelScreenshots", (...Arguments: Array<unknown>): void =>
+        window.electron.ipcRenderer.Send("GetPanelScreenshots");
+        window.electron.ipcRenderer.On("GetPanelScreenshots", (...Arguments: Array<unknown>): void =>
         {
             const Screenshots: Array<string> = Arguments[0] as Array<string>;
             SetAnnotatedPanels((Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
@@ -57,8 +57,8 @@ export const Tile = (): ReactElement =>
 
     const ConfirmSelection = (): void =>
     {
-        IpcRenderer.Send("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
-        IpcRenderer.Send("TearDown");
+        window.electron.ipcRenderer.Send("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
+        window.electron.ipcRenderer.Send("TearDown");
     };
 
     return (
@@ -69,7 +69,12 @@ export const Tile = (): ReactElement =>
             <Caption1>
                 Select the panel that you wish to insert this window into.
             </Caption1>
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+            <div style={ {
+                alignItems: "center",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center"
+            } }>
                 <CompoundCommand
                     SubCommands={ [
                         {

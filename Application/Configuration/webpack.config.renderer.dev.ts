@@ -190,8 +190,8 @@ const configuration: webpack.Configuration = {
         port: Port,
         setupMiddlewares(Middlewares: Array<Middleware>)
         {
-            console.log("Starting preload.js builder...");
-            const preloadProcess: ChildProcess = spawn(
+            console.log("Starting Preload.js builder...");
+            const PreloadProcess: ChildProcess = spawn(
                 "npm",
                 [ "run", "start:preload" ],
                 {
@@ -216,7 +216,7 @@ const configuration: webpack.Configuration = {
             })
                 .on("close", (code: number) =>
                 {
-                    preloadProcess.kill();
+                    PreloadProcess.kill();
                     process.exit(code!);
                 })
                 .on("error", console.error);

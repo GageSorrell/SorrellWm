@@ -17,9 +17,7 @@ import {
     useState
 } from "react";
 
-/**
- * Shortcut
- */
+/** Shortcut. */
 export interface IShortcut
 {
     description: string;

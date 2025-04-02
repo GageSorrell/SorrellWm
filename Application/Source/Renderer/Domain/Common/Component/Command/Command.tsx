@@ -13,7 +13,7 @@ import { type IShortcutProviderRenderProps, useShortcut } from "@/Keybinds";
 import { Title3, tokens } from "@fluentui/react-components";
 import { Key, KeyIdsById, type FVirtualKey } from "../Keyboard";
 import type { PCommand } from "./Command.Types";
-import { IpcRenderer, Log } from "@/Api";
+import { Log } from "@/Api";
 import type { FKeyboardEvent } from "#/Keyboard.Types";
 
 export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =>
