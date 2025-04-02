@@ -1,6 +1,6 @@
-/* File:      webpack.config.renderer.dev.ts
+/* File:      Renderer.Dev.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
 
@@ -8,7 +8,7 @@ import "webpack-dev-server";
 import * as Fs from "fs";
 import * as Path from "path";
 import { type ChildProcess, execSync, spawn } from "child_process";
-import { BaseConfiguration } from "./webpack.config.base";
+import { BaseConfiguration } from "./Base";
 import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import type { Middleware } from "webpack-dev-server";

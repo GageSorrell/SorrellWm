@@ -1,13 +1,13 @@
-/* File:      webpack.config.renderer.dev.dll.ts
+/* File:      Renderer.Dev.Dll.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  * Comment:   Builds the DLL for development electron renderer process.
  */
 
 import * as Path from "path";
 import { type Configuration, DllPlugin, EnvironmentPlugin, LoaderOptionsPlugin } from "webpack";
-import { BaseConfiguration } from "./webpack.config.base";
+import { BaseConfiguration } from "./Base";
 import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
 import { Paths } from "./Paths";
 import { dependencies } from "../package.json";

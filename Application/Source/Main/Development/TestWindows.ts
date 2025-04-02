@@ -1,12 +1,12 @@
 /* File:      TestWindows.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
 
 import * as Path from "path";
 import { BrowserWindow, app, ipcMain } from "electron";
-import { ResolveHtmlPath } from "#/Core/Utility";
+import { ResolveHtmlPath } from "#/Utility/Utility";
 import { BringIntoPanel, Find, GetForest, IsPanel } from "#/Tree";
 import type { FPanel, FVertex } from "#/Tree.Types";
 import { GetWindowByName, type HWindow } from "Windows";

@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
-   sodipodi:docname="SystemTray.svg"
+   sodipodi:docname="BrandDark.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,7 +24,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="2.8822343"
-     inkscape:cx="14.572028"
+     inkscape:cx="14.745505"
      inkscape:cy="132.70954"
      inkscape:window-width="3440"
      inkscape:window-height="1411"
@@ -40,14 +40,14 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:88.6094px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.21524"
+       style="font-style:normal;font-weight:normal;font-size:88.6094px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2.21524"
        x="-8.0475435"
        y="56.938477"
        id="text1"
        transform="scale(1.0015982,0.99840435)"><tspan
          sodipodi:role="line"
          id="tspan1"
-         style="stroke-width:2.21524"
+         style="stroke-width:2.21524;fill:#ffffff;fill-opacity:1"
          x="-8.0475435"
          y="56.938477">◱</tspan></text>
   </g>

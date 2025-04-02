@@ -1,4 +1,4 @@
-/* File:      webpack.config.main.prod.ts
+/* File:      Main.Prod.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
@@ -7,7 +7,7 @@
 
 import * as Path from "path";
 import { type Configuration, DefinePlugin, EnvironmentPlugin } from "webpack";
-import { BaseConfiguration } from "./webpack.config.base";
+import { BaseConfiguration } from "./Base";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
 import { DeleteSourceMaps } from "../Script/DeleteSourceMaps";

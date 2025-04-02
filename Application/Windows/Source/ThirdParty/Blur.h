@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Sorrell Intellectual Properties
+// Copyright (C) 2024 Gage Sorrell
 // Copyright (C) 2017-2022 Basile Fraboni
 // Copyright (C) 2014 Ivan Kutskir (for the original fast blur implementation)
 // All Rights Reserved

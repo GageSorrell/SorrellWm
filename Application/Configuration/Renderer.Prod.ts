@@ -1,13 +1,13 @@
-/* File:      webpack.config.renderer.prod.ts
+/* File:      Renderer.Prod.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  * Comment:   Build config for electron renderer process.
  */
 
 import * as Path from "path";
 import { type Configuration, DefinePlugin, EnvironmentPlugin } from "webpack";
-import { BaseConfiguration } from "./webpack.config.base";
+import { BaseConfiguration } from "./Base";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";

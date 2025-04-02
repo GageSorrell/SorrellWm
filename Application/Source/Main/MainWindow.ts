@@ -25,7 +25,7 @@ import {
     GetWindowTitle,
     type HWindow,
     UnblurBackground } from "@sorrellwm/windows";
-import { BrowserWindow, app, ipcMain, screen } from "electron";
+import { BrowserWindow, app, ipcMain, nativeTheme, screen } from "electron";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import { CreateTestWindows } from "./Development/TestWindows";
 import type { FFocusData } from "@/Domain/Focus";
@@ -34,11 +34,15 @@ import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
 import { Log } from "./Development";
-import { ResolveHtmlPath } from "./Core/Utility";
+import { ResolveHtmlPath } from "./Utility/Utility";
 import { Vk } from "$/Common/Component/Keyboard/Keyboard";
 import chalk from "chalk";
+import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
+import { FBrowserWindowEvents } from "./BrowserWindow.Types";
+import { GetPaths } from "./Core/Paths";
 
 let MainWindow: BrowserWindow | undefined = undefined;
+export const GetMainWindow = (): BrowserWindow | undefined => MainWindow;
 
 const GetLeastInvisiblePosition = (): { x: number; y: number } =>
 {
@@ -69,6 +73,7 @@ const GetLeastInvisiblePosition = (): { x: number; y: number } =>
     };
 };
 
+/** A type-safe version of `ipcMain.on`. */
 const On = (
     Event: FIpcChannel,
     Callback: ((Event: Electron.Event, ...Arguments: Array<unknown>) => void)) =>
@@ -76,9 +81,22 @@ const On = (
     ipcMain.on(Event, Callback);
 };
 
+const MainBrowserEvents: FBrowserWindowEvents =
+{
+    "page-title-updated":
+        async (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): Promise<void> =>
+        {
+            Event.preventDefault();
+        },
+    show: async (_Event: Electron.Event, _IsAlwaysOnTop: boolean): Promise<void> =>
+    {
+        MainWindow?.webContents.send("Navigate", "Main");
+    }
+};
+
 const LaunchMainWindow = async (): Promise<void> =>
 {
-    MainWindow = new BrowserWindow({
+    MainWindow = CreateBrowserWindow({
         alwaysOnTop: true,
         frame: false,
         height: 900,
@@ -87,30 +105,11 @@ const LaunchMainWindow = async (): Promise<void> =>
         title: "SorrellWm Main Window",
         titleBarStyle: "hidden",
         transparent: true,
-        webPreferences:
-        {
-            devTools: false,
-            nodeIntegration: true,
-            preload: app.isPackaged
-                ? Path.join(__dirname, "Preload.js")
-                : Path.join(__dirname, "../../Distribution/Preload.js")
-        },
         width: 900,
         ...GetLeastInvisiblePosition()
     });
 
-    MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
-    {
-        MainWindow?.webContents.send("Navigate", "Main");
-    });
-
-    MainWindow.on(
-        "page-title-updated",
-        (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
-        {
-            Event.preventDefault();
-        }
-    );
+    RegisterBrowserWindowEvents(MainWindow, MainBrowserEvents);
 
     On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {

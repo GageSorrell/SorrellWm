@@ -8,7 +8,8 @@
 	        " * Author:    Gage Sorrell <gage@sorrell.sh>",
             " * Copyright: (c) 2025 Gage Sorrell",
 	        " * License:   MIT",
-            " */\n"
+            " */",
+            "\n"
         ],
         "description": "Inserts license information.",
         "scope": "javascript,typescript,javascriptreact,typescriptreact,cpp"

@@ -4,8 +4,8 @@
  */
 
 import type { FBox } from "@sorrellwm/windows";
-import type { HHandle } from "./Utility.Types";
-import type { TRef } from "./Core.Types";
+import type { FKeys, HHandle } from "./Utility.Types";
+import type { TRef } from "../Core/Core.Types";
 import { URL } from "url";
 import path from "path";
 
@@ -51,4 +51,19 @@ export const AreBoxesEqual = (A: FBox, B: FBox): boolean =>
 export const AreHandlesEqual = (A: HHandle, B: HHandle): boolean =>
 {
     return A.Handle === B.Handle;
+};
+
+export const MapKeys = <T extends object = object, U = unknown>(
+    InObject: object,
+    Callback: (Key: keyof T, Index?: number) => U
+): Array<U> =>
+{
+    const OutArray: Array<U> = [ ];
+
+    Object.keys(InObject).forEach((Key: string, Index: number): void =>
+    {
+        OutArray.push(Callback(Key as keyof T, Index));
+    });
+
+    return OutArray;
 };

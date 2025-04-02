@@ -1,10 +1,10 @@
 /* File:      Tree.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
 
-import { AreBoxesEqual, AreHandlesEqual } from "./Core/Utility";
+import { AreBoxesEqual, AreHandlesEqual } from "./Utility/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FMonitorInfo,

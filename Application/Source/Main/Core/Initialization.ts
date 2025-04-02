@@ -1,14 +1,16 @@
 /* File:      Initialization.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Sorrell Intellectual Properties
+ * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
 
 import * as Path from "path";
 import { BrowserWindow, app, shell } from "electron";
-import { ResolveHtmlPath } from "./Utility";
+import { ResolveHtmlPath } from "../Utility/Utility";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
+import { CreateBrowserWindow } from "#/BrowserWindow";
+import { GetPaths } from "./Paths";
 
 let MainWindow: BrowserWindow | null = null;
 
@@ -50,30 +52,11 @@ const CreateWindow = async () =>
         await installExtensions();
     }
 
-    const ResourcesPath: string = app.isPackaged
-        ? Path.join(process.resourcesPath, "Resource")
-        : Path.join(__dirname, "../../Resource");
-
-    const getAssetPath = (...paths: Array<string>): string =>
-    {
-        return Path.join(ResourcesPath, ...paths);
-    };
-
-    MainWindow = new BrowserWindow({
+    MainWindow = CreateBrowserWindow({
         height: 728,
         width: 1024,
 
-        // frame: false,
-        icon: getAssetPath("icon.png"),
-        show: false,
-        // transparent: true,
-        webPreferences:
-        {
-            devTools: true,
-            preload: app.isPackaged
-                ? Path.join(__dirname, "Preload.js")
-                : Path.join(__dirname, "../Intermediate/Preload.js")
-        }
+        show: false
     });
 
     MainWindow.loadURL(ResolveHtmlPath("index.html"));
