@@ -11,7 +11,7 @@ import { GetPaths } from "#/Core/Paths";
 
 let SettingsWindow: BrowserWindow | undefined = undefined;
 
-export const OpenSettings = (): void =>
+export const OpenSettings = async (): Promise<void> =>
 {
     let LoadFrontend = async () =>
     {
@@ -20,7 +20,7 @@ export const OpenSettings = (): void =>
 
     if (SettingsWindow === undefined)
     {
-        const { Window, LoadFrontend: InLoadFrontend } = CreateBrowserWindow({
+        const { Window, LoadFrontend: InLoadFrontend } = await CreateBrowserWindow({
             autoHideMenuBar: true,
             backgroundMaterial: "mica",
             frame: true,

@@ -5,4 +5,5 @@
  */
 
 export type FIcon =
-    | "Brand";
+    | "Brand"
+    | "Tray";

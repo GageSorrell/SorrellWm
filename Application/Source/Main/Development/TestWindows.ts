@@ -12,7 +12,7 @@ import { CreateBrowserWindow } from "#/BrowserWindow";
 
 const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
 {
-    const { Window: TestWindow, LoadFrontend } = CreateBrowserWindow({
+    const { Window: TestWindow, LoadFrontend } = await CreateBrowserWindow({
         autoHideMenuBar: true,
         show: true,
         title: `Test Window #${ Index + 1 }`

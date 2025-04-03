@@ -26,7 +26,7 @@ const Configuration: Webpack.Configuration =
     entry:
     {
         main: Path.join(Paths.SourceMain, "Main.ts"),
-        preload: Path.join(Paths.SourceMain, "Core", "Preload.ts")
+        preload: Path.join(Paths.SourceMain, "Preload.ts")
     },
     mode: "development",
     /**

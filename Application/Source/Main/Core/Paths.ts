@@ -10,6 +10,6 @@ import type { FPaths } from "./Paths.Types";
 export const GetPaths = (): Record<FPaths, string> =>
 {
     return {
-        Resource: Path.join(__dirname, "../../Resource")
+        Resource: Path.join(__dirname, "../Resource")
     };
 };

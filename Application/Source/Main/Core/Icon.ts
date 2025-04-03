@@ -9,13 +9,17 @@ import type { FIcon } from "./Icon.Types";
 import { GetPaths } from "./Paths";
 import { nativeTheme } from "electron";
 
-export const GetIconPath = (Icon: FIcon): string =>
+export const GetIconPath = async (Icon: FIcon): Promise<string> =>
 {
     const LightDarkMode: "Light" | "Dark" = nativeTheme.shouldUseDarkColors
         ? "Dark"
         : "Light";
 
-    const IconFileName: string = Icon + LightDarkMode + ".png";
+    const Extension: ".png" | ".ico" = Icon === "Brand"
+        ? ".ico"
+        : ".png";
 
-    return Path.join(GetPaths().Resource, IconFileName);
+    const IconFileName: string = Icon + LightDarkMode + Extension;
+
+    return Path.join(GetPaths().Resource, "Icon", Icon, IconFileName);
 };

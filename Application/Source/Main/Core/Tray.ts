@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { Tray as ElectronTray, Menu, app as App } from "electron";
+import { app as App, Tray as ElectronTray, Menu } from "electron";
 import { Activate } from "#/MainWindow";
 import type { FTray } from "./Tray.Types";
 import { GetIconPath } from "./Icon";
@@ -14,7 +14,7 @@ const Tray: FTray = { Ref: undefined };
 
 const MakeTray = async (): Promise<void> =>
 {
-    Tray.Ref = new ElectronTray(GetIconPath("Brand"));
+    Tray.Ref = new ElectronTray(await GetIconPath("Tray"));
 
     const ContextMenu: Menu = Menu.buildFromTemplate([
         {

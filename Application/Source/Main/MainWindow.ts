@@ -81,11 +81,6 @@ const On = (
 
 const MainBrowserEvents: FBrowserWindowEvents =
 {
-    "page-title-updated":
-        async (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): Promise<void> =>
-        {
-            Event.preventDefault();
-        },
     show: async (_Event: Electron.Event, _IsAlwaysOnTop: boolean): Promise<void> =>
     {
         MainWindow?.webContents.send("Navigate", "Main");
@@ -94,7 +89,7 @@ const MainBrowserEvents: FBrowserWindowEvents =
 
 const LaunchMainWindow = async (): Promise<void> =>
 {
-    const { Window, LoadFrontend } = CreateBrowserWindow({
+    const { Window, LoadFrontend } = await CreateBrowserWindow({
         alwaysOnTop: true,
         frame: false,
         height: 900,

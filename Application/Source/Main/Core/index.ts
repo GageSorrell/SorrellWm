@@ -11,7 +11,6 @@ export * from "./Icon.Types";
 export * from "./Initialization";
 export * from "./Paths";
 export * from "./Paths.Types";
-export * from "./Preload";
 export * from "./SideEffects";
 export * from "./Tray";
 export * from "./Tray.Types";

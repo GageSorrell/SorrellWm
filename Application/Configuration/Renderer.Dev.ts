@@ -5,10 +5,16 @@
  */
 
 import "webpack-dev-server";
-import * as FilteredLogStatements from "./FilteredLogStatements.json";
 import * as Fs from "fs";
 import * as Path from "path";
 import { type ChildProcess, execSync, spawn } from "child_process";
+import {
+    type Configuration,
+    DllReferencePlugin,
+    EnvironmentPlugin,
+    LoaderOptionsPlugin,
+    NoEmitOnErrorsPlugin } from "webpack";
+import { Log, LogError } from "./Common";
 import { BaseConfiguration } from "./Base";
 import { CheckNodeEnvironment } from "../Script/CheckNodeEnvironment";
 import HtmlWebpackPlugin from "html-webpack-plugin";
@@ -17,7 +23,6 @@ import { Paths } from "./Paths";
 import ReactRefreshWebpackPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import chalk from "chalk";
 import { merge } from "webpack-merge";
-import { type Configuration } from "webpack";
 
 /* When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's *
  * at the dev webpack config is not accidentally run in a production environment.     */
@@ -38,47 +43,110 @@ if (
     !(Fs.existsSync(Paths.Intermediate) && Fs.existsSync(Manifest))
 )
 {
-    console.log(
-        chalk.black.bgYellow.bold(
-            "The DLL files are missing. Sit back while we build them for you with \"npm run build-dll\""
-        )
-    );
+    /* eslint-disable-next-line @stylistic/max-len */
+    Log(chalk.black.bgYellow.bold(`The DLL files are missing.  Sit back while we build them for you with ${ chalk.bgGray.white("npm run build-dll") }`));
     execSync("npm run postinstall");
 }
 
-const configuration: webpack.Configuration = {
+const Configuration: Configuration =
+{
+    devServer:
+    {
+        compress: true,
+        headers:
+        {
+            "Access-Control-Allow-Origin": "*"
+        },
+        historyApiFallback:
+        {
+            verbose: true
+        },
+        hot: true,
+        port: Port,
+        setupMiddlewares(Middlewares: Array<Middleware>)
+        {
+            Log("Starting Preload.js builder...");
+            const PreloadProcess: ChildProcess = spawn(
+                "npm",
+                [ "run", "start:preload" ],
+                {
+                    shell: true,
+                    stdio: "inherit"
+                }
+            )
+                .on("close", (Code: number) => process.exit(Code!))
+                .on("error", LogError);
+
+            Log("Starting Main Process...");
+            let Arguments: Array<string> = [ "run", "start:main" ];
+            if (process.env.MAIN_ARGS)
+            {
+                Arguments = Arguments.concat(
+                    [ "--", ...process.env.MAIN_ARGS.matchAll(/"[^"]+"|[^\s"]+/g) ].flat()
+                );
+            }
+
+            const MainProcess: ChildProcess = spawn(
+                "npm",
+                Arguments,
+                {
+                    shell: true,
+                    stdio: "pipe"
+                }
+            )
+                .on("close", (code: number) =>
+                {
+                    PreloadProcess.kill();
+                    process.exit(code!);
+                })
+                .on("error", LogError);
+
+            if (MainProcess !== null && MainProcess.stdout !== null && MainProcess.stderr !== null)
+            {
+                /* Allow printing emoji and using terminal colors, and exclude filtered statements. */
+
+                const OnStdOut = (Data: Buffer): void =>
+                {
+                    process.stdout.write(Data.toString("utf8"));
+                };
+
+                const OnStdErr = (Data: Buffer): void =>
+                {
+                    process.stderr.write(Data.toString("utf8"));
+                };
+
+                MainProcess.stdout.on("data", OnStdOut);
+                MainProcess.stderr.on("data", OnStdErr);
+            }
+            return Middlewares;
+        },
+        static:
+        {
+            publicPath: "/"
+        }
+    },
     devtool: "inline-source-map",
-
-    mode: "development",
-
-    target: [ "web", "electron-renderer" ],
-
-    entry: [
+    entry:
+    [
         `webpack-dev-server/client?http://localhost:${ Port }/Distribution`,
         "webpack/hot/only-dev-server",
         Path.join(Paths.SourceRenderer, "index.tsx")
     ],
-
-    output: {
-        filename: "renderer.dev.js",
-        library:
-        {
-            type: "umd"
-        },
-        path: Paths.DistributionRenderer,
-        publicPath: "/"
-    },
-
-    module: {
-        rules: [
+    mode: "development",
+    module:
+    {
+        rules:
+        [
             {
                 include: /\.module\.s?(c|a)ss$/,
                 test: /\.s?(c|a)ss$/,
-                use: [
+                use:
+                [
                     "style-loader",
                     {
                         loader: "css-loader",
-                        options: {
+                        options:
+                        {
                             importLoaders: 1,
                             modules: true,
                             sourceMap: true
@@ -92,27 +160,27 @@ const configuration: webpack.Configuration = {
                 test: /\.s?css$/,
                 use: [ "style-loader", "css-loader", "sass-loader" ]
             },
-            // Fonts
             {
                 test: /\.(woff|woff2|eot|ttf|otf)$/i,
                 type: "asset/resource"
             },
-            // Images
             {
                 test: /\.(png|jpg|jpeg|gif)$/i,
                 type: "asset/resource"
             },
-            // SVG
             {
                 test: /\.svg$/,
-                use: [
+                use:
+                [
                     {
                         loader: "@svgr/webpack",
-                        options: {
+                        options:
+                        {
                             prettier: false,
                             ref: true,
                             svgo: false,
-                            svgoConfig: {
+                            svgoConfig:
+                            {
                                 plugins: [ { removeViewBox: false } ]
                             },
                             titleProp: true
@@ -123,20 +191,33 @@ const configuration: webpack.Configuration = {
             }
         ]
     },
+    node:
+    {
+        __dirname: false,
+        __filename: false
+    },
+    output:
+    {
+        filename: "renderer.dev.js",
+        library:
+        {
+            type: "umd"
+        },
+        path: Paths.DistributionRenderer,
+        publicPath: "/"
+    },
     plugins: [
         ...(skipDLLs
             ? [ ]
             : [
-                new webpack.DllReferencePlugin({
+                new DllReferencePlugin({
                     context: Paths.Intermediate,
                     /* eslint-disable-next-line @typescript-eslint/no-require-imports */
                     manifest: require(Manifest),
                     sourceType: "var"
                 })
             ]),
-
-        new webpack.NoEmitOnErrorsPlugin(),
-
+        new NoEmitOnErrorsPlugin(),
         /**
          * Create global constants which can be configured at compile time.
          *
@@ -149,10 +230,10 @@ const configuration: webpack.Configuration = {
          * By default, use `development` as `NODE_ENV`.  This can be overridden with
          * `staging`, for example, by changing the ENV variables in the npm scripts.
          */
-        new webpack.EnvironmentPlugin({
+        new EnvironmentPlugin({
             NODE_ENV: "development"
         }),
-        new webpack.LoaderOptionsPlugin({
+        new LoaderOptionsPlugin({
             debug: true
         }),
         new ReactRefreshWebpackPlugin(),
@@ -171,88 +252,7 @@ const configuration: webpack.Configuration = {
             template: Path.join(Paths.SourceRenderer, "index.ejs")
         })
     ],
-
-    node: {
-        __dirname: false,
-        __filename: false
-    },
-
-    devServer: {
-        compress: true,
-        headers:
-        {
-            "Access-Control-Allow-Origin": "*"
-        },
-        historyApiFallback:
-        {
-            verbose: true
-        },
-        hot: true,
-        port: Port,
-        setupMiddlewares(Middlewares: Array<Middleware>)
-        {
-            console.log("Starting Preload.js builder...");
-            const PreloadProcess: ChildProcess = spawn(
-                "npm",
-                [ "run", "start:preload" ],
-                {
-                    shell: true,
-                    stdio: "inherit"
-                }
-            )
-                .on("close", (Code: number) => process.exit(Code!))
-                .on("error", console.error);
-
-            console.log("Starting Main Process...");
-            let Arguments: Array<string> = [ "run", "start:main" ];
-            if (process.env.MAIN_ARGS)
-            {
-                Arguments = Arguments.concat(
-                    [ "--", ...process.env.MAIN_ARGS.matchAll(/"[^"]+"|[^\s"]+/g) ].flat()
-                );
-            }
-            const MyProcess: ChildProcess = spawn("npm", Arguments, {
-                shell: true,
-                stdio: "pipe"
-            })
-                .on("close", (code: number) =>
-                {
-                    PreloadProcess.kill();
-                    process.exit(code!);
-                })
-                .on("error", console.error);
-
-            if (MyProcess !== null && MyProcess.stdout !== null && MyProcess.stderr !== null)
-            {
-                const Filter = (Data: string): string =>
-                {
-                    const { Statements } = FilteredLogStatements;
-                    const IsExcluded: boolean = Statements.some((Statement: string): boolean =>
-                    {
-                        return Statement.includes(Data);
-                    });
-
-                    return IsExcluded
-                        ? ""
-                        : Data;
-                };
-
-                /* Allow printing emoji and using terminal colors, and exclude filtered statements. */
-                const OnData = (Data: Buffer): string =>
-                {
-                    return Filter(Data.toString("utf8"));
-                };
-
-                MyProcess.stdout.on("data", OnData);
-                MyProcess.stderr.on("data", OnData);
-            }
-            return Middlewares;
-        },
-        static:
-        {
-            publicPath: "/"
-        }
-    }
+    target: [ "web", "electron-renderer" ]
 };
 
-export default merge(BaseConfiguration, configuration);
+export default merge(BaseConfiguration, Configuration);

@@ -9,13 +9,12 @@ import {
     app as App,
     BrowserWindow,
     type BrowserWindowConstructorOptions,
-    type WebPreferences,
-    nativeTheme } from "electron";
+    type WebPreferences } from "electron";
 import type {
     FBrowserWindowEventType,
     FBrowserWindowEvents,
     FCreateBrowserWindowReturnType} from "./BrowserWindow.Types";
-import { GetPaths } from "./Core/Paths";
+import { GetIconPath } from "./Core";
 
 export const RegisterBrowserWindowEvents = (Window: BrowserWindow, Events: FBrowserWindowEvents): void =>
 {
@@ -52,9 +51,9 @@ const ResolveHtmlPath = (HtmlFileName: string, Component?: string): string =>
 };
 
 /** Factory function for `BrowserWindow`.  Provides some defaults, particularly *wrt* `webPreferences`. */
-export const CreateBrowserWindow = (
+export const CreateBrowserWindow = async (
     Options: BrowserWindowConstructorOptions
-): FCreateBrowserWindowReturnType =>
+): Promise<FCreateBrowserWindowReturnType> =>
 {
     const BaseWebPreferences: WebPreferences =
     {
@@ -67,13 +66,7 @@ export const CreateBrowserWindow = (
 
     const { webPreferences, ...Rest } = Options;
 
-    const icon: string = Path.join(
-        GetPaths().Resource,
-        "Icon",
-        nativeTheme.shouldUseDarkColors
-            ? "BrandDark.svg"
-            : "BrandLight.svg"
-    );
+    const icon: string = await GetIconPath("Brand");
 
     const Window: BrowserWindow = new BrowserWindow({
         height: 900,
@@ -87,6 +80,14 @@ export const CreateBrowserWindow = (
         width: 900,
         ...Rest
     });
+
+    Window.on(
+        "page-title-updated",
+        async (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): Promise<void> =>
+        {
+            Event.preventDefault();
+        }
+    );
 
     const LoadFrontend = async (): Promise<void> =>
     {

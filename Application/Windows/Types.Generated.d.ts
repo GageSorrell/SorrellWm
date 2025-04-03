@@ -8,7 +8,7 @@
 
 /* eslint-disable */
 
-import type { FBox, Array, HMonitor, HWindow, FHexColor } from "./Core";
+import type { FBox, HMonitor, HWindow, FHexColor } from "./Core";
 
 export function BlurBackground(Bounds: FBox): void;
 export function UnblurBackground(): void;

@@ -1,0 +1,8 @@
+{
+    "Statements":
+    [
+        "Skip checkForUpdates because",
+        "checkForUpdatesAndNotify called",
+        "Source_Main_Core_Tray_ts.bundle.dev.js:63:16"
+    ]
+}

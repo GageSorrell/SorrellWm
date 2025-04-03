@@ -14,6 +14,7 @@ import {
     EndProfiling,
     GetPath,
     GetRef,
+    Log,
     LogError,
     MapSome,
     Run,
@@ -434,11 +435,16 @@ const GenerateTypesDeclarationsFile = async (
         const Matches: Set<string> = new Set<string>();
         const Pattern: RegExp = /: (\w+)/g;
         let Match: RegExpExecArray | null = null;
+        const BuiltInTypes: Array<string> =
+        [
+            "Array"
+        ];
+
         while ((Match = Pattern.exec(Declarations.join("\n"))) !== null)
         {
-            /* All trivial types start with lowercase letters,   *
+            /* Most trivial types start with lowercase letters,   *
              * all nontrivial types start with a capital letter. */
-            if (Match[1][0] === Match[1][0].toUpperCase())
+            if (Match[1][0] === Match[1][0].toUpperCase() && !BuiltInTypes.includes(Match[1]))
             {
                 Matches.add(Match[1]);
             }
@@ -562,7 +568,7 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
     }).join(",\n");
 
     /* eslint-disable-next-line @stylistic/max-len */
-    const PreloadImportStatement: string = `import { ${ ExposedFunctions.map(GetExportName).join(", ") }, ${ CoreTypeImports } } from "@sorrellwm/windows";\n`;
+    const PreloadImportStatement: string = `import { ${ CoreTypeImports } } from "@sorrellwm/windows";\n`;
 
     const PreloadContents: string = `/* File:    Preload.ts
  * Author:  Gage Sorrell <gage@sorrell.sh>
@@ -576,7 +582,6 @@ ${ PreloadImportStatement }
 
 const ElectronHandler =
 {
-
     ipcRenderer:
     {
         On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
@@ -609,16 +614,14 @@ const ElectronHandler =
             ipcRenderer.send(Channel, ...Arguments);
         }
     },
-    ${ ExposedCalls.split("\n").map((Call: string): string => "    " + Call).join("\n") }
+    ${ ExposedCalls.split("\n").map((Call: string): string => "        " + Call).join("\n") }
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);
 
-export type FElectronHandler = typeof ElectronHandler;
+export type FElectronHandler = typeof ElectronHandler;\n`;
 
-\n`;
-
-    const PreloadPath: string = Path.resolve(GetPath("Main"), "Core", "Preload.ts");
+    const PreloadPath: string = Path.resolve(GetPath("Main"), "Preload.ts");
 
     await Fs.promises.writeFile(PreloadPath, PreloadContents);
 
@@ -718,6 +721,13 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
 
 const Lint = async (CppFiles: Array<string>): Promise<void> =>
 {
+    const DisablesLinting: boolean = process.argv.includes("--disable-linting");
+
+    if (DisablesLinting)
+    {
+        return;
+    }
+
     /* Enforce `Log` macro instead of `std::cout`. */
     const CppFilesContents: Array<string> = await Promise.all(CppFiles.map((CppFile: string): Promise<string> =>
     {

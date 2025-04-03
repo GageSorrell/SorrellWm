@@ -42,14 +42,14 @@ const installExtensions = async () =>
         .catch(console.log);
 };
 
-const CreateWindow = async () =>
+const CreateWindow = async (): Promise<void> =>
 {
     if (IsDebug)
     {
         await installExtensions();
     }
 
-    const { Window, LoadFrontend } = CreateBrowserWindow({
+    const { Window, LoadFrontend } = await CreateBrowserWindow({
         height: 728,
         width: 1024,
 
