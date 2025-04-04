@@ -17,8 +17,7 @@ import {
     GetWindowTitle,
     type HMonitor,
     type HWindow,
-    SetWindowPosition,
-    UnblurBackground} from "@sorrellwm/windows";
+    SetWindowPosition } from "@sorrellwm/windows";
 import type {
     FAnnotatedPanel,
     FCell,
@@ -752,21 +751,21 @@ export const VertexToString = (Vertex: FVertex): string =>
         : `${ Vertex.Type } panel with ${ Vertex.Children.length } children.`;
 };
 
-let ChangeFocusDebounceTime: number = 0;
+// let ChangeFocusDebounceTime: number = 0;
 
 export const ChangeFocus = (FocusChange: FFocusChange): void =>
 {
-    const Now: number = new Date().getTime();
-    const DebounceDuration: number = 50;
-    if (Math.abs(Now - ChangeFocusDebounceTime) <= DebounceDuration && ChangeFocusDebounceTime !== 0)
-    {
-        Log(`ChangeFocus was called too soon, just ${ Now - ChangeFocusDebounceTime }ms ago.`);
-        return;
-    }
-    else
-    {
-        ChangeFocusDebounceTime = Now;
-    }
+    // const Now: number = new Date().getTime();
+    // const DebounceDuration: number = 50;
+    // if (Math.abs(Now - ChangeFocusDebounceTime) <= DebounceDuration && ChangeFocusDebounceTime !== 0)
+    // {
+    //     Log(`ChangeFocus was called too soon, just ${ Now - ChangeFocusDebounceTime }ms ago.`);
+    //     return;
+    // }
+    // else
+    // {
+    //     ChangeFocusDebounceTime = Now;
+    // }
 
     const LogChangeFocus = (): void =>
     {

@@ -9,7 +9,7 @@ import type chalk from "chalk";
 
 export type FChalkBackground = Extract<keyof typeof chalk, `bg${ string }`>;
 
-export type FChalkForeground = Extract<keyof typeof chalk, "black" | "white">;
+export type FChalkForeground = Extract<keyof typeof chalk, "black" | "whiteBright">;
 
 export type FLogFunction = (...Statements: Array<unknown>) => void;
 

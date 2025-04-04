@@ -117,6 +117,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "UnblurBackground", UnblurBackground },
         { "GetNotepadHandles", GetNotepadHandles },
         { "KillNotepadInstances", KillNotepadInstances },
+        { "KillOrphans", KillOrphans },
         // { "SpawnNotepadInstances", SpawnNotepadInstances },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },

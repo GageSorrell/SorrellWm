@@ -29,6 +29,7 @@ import {
     GetFocusedWindow,
     GetWindowTitle,
     type HWindow,
+    KillOrphans,
     UnblurBackground } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
@@ -207,7 +208,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         if (InterimFocusedVertex)
         {
             /* eslint-disable-next-line @stylistic/max-len */
-            Log(`In OnChangeFocus, InterimFocusedVertex is ${ VertexToString(InterimFocusedVertex) } at ${ PositionToString(InterimFocusedVertex.Size) }.`);
+            // Log(`In OnChangeFocus, InterimFocusedVertex is ${ VertexToString(InterimFocusedVertex) } at ${ PositionToString(InterimFocusedVertex.Size) }.`);
         }
         ChangeFocus(FocusChange);
         UnblurBackground();
@@ -327,6 +328,7 @@ function OnKey(Event: FKeyboardEvent): void
         {
             ClearInterimFocusedVertex();
             UnblurBackground();
+            setTimeout(KillOrphans, 750);
         }
     }
     else

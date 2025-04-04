@@ -50,7 +50,7 @@ const FormatCategory = (Category: FLogCategory): string =>
 
     const IsBright: boolean = BrightBackgrounds.includes(SelectedBackground);
 
-    const ForegroundColor: FChalkForeground = IsBright ? "black" : "white";
+    const ForegroundColor: FChalkForeground = IsBright ? "black" : "whiteBright";
 
     /* @ts-expect-error Type safety hell, using union types that mix functions with objects. */
     return Chalk[SelectedBackground][ForegroundColor](PaddedCategory);

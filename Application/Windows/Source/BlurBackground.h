@@ -10,4 +10,5 @@
 
 DECLARE_NAPI_FUNCTION(BlurBackground, HWindow, Bounds, FBox, SourceHandle, HWindow);
 DECLARE_NAPI_FUNCTION(UnblurBackground, void);
+DECLARE_NAPI_FUNCTION(KillOrphans, void);
 void InitializeBlurBackground();

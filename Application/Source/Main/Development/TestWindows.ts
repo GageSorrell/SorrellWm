@@ -42,8 +42,8 @@ const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
 
 export const CreateNotepadTestWindows = async (NumWindows: number): Promise<void> =>
 {
-    // KillNotepadInstances();
-    // await Sleep(2000);
+    KillNotepadInstances();
+    await Sleep(2000);
 
     ForAsync(0, NumWindows, async (_Index: number): Promise<void> =>
     {

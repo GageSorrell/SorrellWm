@@ -35,10 +35,11 @@ const UINT_PTR FadeTimerId = 2;
 struct FBackdrop
 {
     /**
-     * The length such that if the width or height of the window exceeds this value,
+     * @TODO The length such that if the width or height of the window exceeds this value,
      * then only blur the center, and fade the surroundings.
      */
-    const int Breakpoint = 600;
+    // const int Breakpoint = 600;
+    int Breakpoint = 600;
     int ChannelsNum = 3;
     int Depth = 24;
     int Width;
@@ -46,8 +47,10 @@ struct FBackdrop
     RECT Bounds;
     HWND BackdropHandle = nullptr;
     HWND SourceHandle = nullptr;
-    const float MinSigma = 1.f;
-    const float MaxSigma = 10.f;
+    // const float MinSigma = 1.f;
+    // const float MaxSigma = 10.f;
+    float MinSigma = 1.f;
+    float MaxSigma = 10.f;
     float Sigma = MinSigma;
     std::vector<BYTE> BlurredScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
     std::vector<BYTE> ScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
@@ -63,7 +66,8 @@ struct FBackdrop
     DWORD FadeStartTime = 0;
     DWORD BlurLastTimestamp = 0;
     DWORD FadeLastTimestamp = 0;
-    const int Duration = 150;
+    // const int Duration = 150;
+    int Duration = 150;
     int MsPerFrame = 1000 / 120;
     bool PaintedOnce = false;
     LPBITMAPINFO ScreenshotBmi = nullptr;
@@ -89,13 +93,12 @@ FBackdrop* GetBackdrop(HWND WindowHandle)
         }
         else
         {
-            std::cout
-                << "Checked Backdrop with handle "
-                << Backdrop.BackdropHandle
-                << " but this was not a match with "
-                << WindowHandle
-                << std::endl;
-
+            // std::cout
+            //     << "Checked Backdrop with handle "
+            //     << Backdrop.BackdropHandle
+            //     << " but this was not a match with "
+            //     << WindowHandle
+            //     << std::endl;
         }
     }
 
@@ -430,22 +433,19 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
             Backdrop.BackdropHandle = hWnd;
         }
     }
+
     FBackdrop* Backdrop = GetBackdrop(hWnd);
 
-    if (Backdrop == nullptr)
-    {
-        std::cout << "OnCreate could not find the Backdrop, hWnd was " << hWnd << std::endl;
-        return false;
-    }
-
-    std::cout << "OnCreate A." << std::endl;
+    std::cout
+        << "Backdrop has been created with handle "
+        << Backdrop->BackdropHandle
+        << "."
+        << std::endl;
 
     Backdrop->BlurLastTimestamp = Backdrop->BlurStartTime;
     SetTimer(hWnd, BlurTimerId, GetMsPerFrame(Backdrop), nullptr);
     if ((Backdrop->ScreenshotBmi = CreateDib(Backdrop->Width, Backdrop->Height, Backdrop->Depth, Backdrop->Screenshot)) == nullptr)
     {
-        // std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
-        std::cout << "OnCreate Finished." << std::endl;
         return FALSE;
     }
     else
@@ -455,7 +455,6 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
     if ((Backdrop->BlurredBmi = CreateDib(Backdrop->Width, Backdrop->Height, Backdrop->Depth, Backdrop->BlurredScreenshot)) == nullptr)
     {
         // std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
-        std::cout << "OnCreate Finished." << std::endl;
         return FALSE;
     }
     else
@@ -509,17 +508,53 @@ void OnDestroy(HWND hWnd)
         SWP_NOSIZE
     );
 
-    auto It = std::find_if(
-        Backdrops.begin(),
-        Backdrops.end(),
-        [=](const FBackdrop& InBackdrop)
-        {
-            return InBackdrop.BackdropHandle == Backdrop->BackdropHandle;
-        });
+    // auto It = std::find_if(
+    //     Backdrops.begin(),
+    //     Backdrops.end(),
+    //     [=](const FBackdrop& InBackdrop)
+    //     {
+    //         return InBackdrop.BackdropHandle == Backdrop->BackdropHandle;
+    //     });
 
-    if (It != Backdrops.end())
+    // if (It != Backdrops.end())
+    // {
+    //     Backdrops.erase(It);
+    // }
+    if (Backdrop == nullptr)
     {
-        Backdrops.erase(It);
+        return;
+    }
+
+    int32_t BackdropIndex = -1;
+    for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
+    {
+        FBackdrop& _Backdrop = Backdrops[Index];
+        if (_Backdrop.BackdropHandle == Backdrop->BackdropHandle)
+        {
+            BackdropIndex = Index;
+            break;
+        }
+    }
+
+    int32_t BackdropBeingUnblurredIndex = -1;
+    for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
+    {
+        FBackdrop* _BackdropBeingUnblurred = BackdropsBeingUnblurred[Index];
+        if (_BackdropBeingUnblurred->BackdropHandle == Backdrop->BackdropHandle)
+        {
+            BackdropBeingUnblurredIndex = Index;
+            break;
+        }
+    }
+
+    if (BackdropIndex != -1 && BackdropBeingUnblurredIndex != -1)
+    {
+        Backdrops.erase(Backdrops.begin() + BackdropIndex);
+        BackdropsBeingUnblurred.erase(BackdropsBeingUnblurred.begin() + BackdropIndex);
+    }
+    else
+    {
+        std::cout << "Could not find index of Backdrop to remove from Backdrops." << std::endl;
     }
 }
 
@@ -667,9 +702,10 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
         {
             return DefWindowProc(hWnd, iMsg, wParam, lParam);
         }
-        std::cout << "Made it to WM_TIMER." << std::endl;
+
         DWORD CurrentTime = GetTickCount();
         DWORD ElapsedTime = 0;
+
         switch (wParam)
         {
         case BlurTimerId:
@@ -724,9 +760,9 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
             }
             return 0;
         case FadeTimerId:
-            std::cout
-                << "WindowProc: FadeTimerId timer was called."
-                << std::endl;
+            // std::cout
+            //     << "WindowProc: FadeTimerId timer was called."
+            //     << std::endl;
 
             Backdrop->Sigma = Backdrop->MinSigma;
             ElapsedTime = CurrentTime - Backdrop->FadeStartTime;
@@ -795,28 +831,64 @@ FBackdrop* GetBackdropToUnblur()
 {
     FBackdrop* BackdropToUnblur = nullptr;
 
+    if (Backdrops.size() == 0)
+    {
+        return nullptr;
+    }
+
+    std::cout
+        << "Before getting the backdrop to unblur, the current BackdropsBeingUnblurred is:"
+        << std::endl;
+    for (FBackdrop* BackdropBeingUnblurred : BackdropsBeingUnblurred)
+    {
+        std::cout
+            << "    "
+            << BackdropBeingUnblurred->BackdropHandle
+            << std::endl;
+    }
+
     for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
     {
-        FBackdrop& Backdrop = Backdrops[Index];
-        bool IsBeingUnblurred = false;
+        FBackdrop* Backdrop = &Backdrops[Index];
+        bool IsNotAlreadyBeingUnblurred = true;
         for (FBackdrop* BackdropBeingUnblurred : BackdropsBeingUnblurred)
         {
-            if (BackdropBeingUnblurred->BackdropHandle == Backdrop.BackdropHandle)
+            if (BackdropBeingUnblurred->BackdropHandle == Backdrop->BackdropHandle)
             {
-                IsBeingUnblurred = true;
+                IsNotAlreadyBeingUnblurred = false;
+                std::cout << "Backdrop " << Backdrop->BackdropHandle << " is already being unblurred." << std::endl;
                 break;
             }
         }
 
-        if (!IsBeingUnblurred)
+        if (IsNotAlreadyBeingUnblurred)
         {
-            BackdropToUnblur = &Backdrop;
+            BackdropToUnblur = Backdrop;
+            break;
         }
     }
 
-    BackdropsBeingUnblurred.push_back(BackdropToUnblur);
+    if (BackdropToUnblur != nullptr)
+    {
+        BackdropsBeingUnblurred.push_back(BackdropToUnblur);
 
-    std::cout << "BackdropToUnblur is " << BackdropToUnblur << std::endl;
+        std::cout << "BackdropToUnblur is " << BackdropToUnblur << std::endl;
+    }
+    else
+    {
+        std::cout
+            << "BackdropToUnblur could not be determined!  Here are the Backdrops, ID'd by their BackdropHandles:"
+            << std::endl;
+
+        for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
+        {
+            FBackdrop* Backdrop = &Backdrops[Index];
+            std::cout
+                << "    "
+                << Backdrop->BackdropHandle
+                << std::endl;
+        }
+    }
 
     return BackdropToUnblur;
 }
@@ -828,6 +900,12 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
     std::cout << "Tearing down window!" << std::endl;
 
     FBackdrop* BackdropToUnblur = GetBackdropToUnblur();
+
+    if (BackdropToUnblur == nullptr)
+    {
+        std::cout << "UnblurBackground was called before BlurBackground could construct a new blurred background." << std::endl;
+        return Environment.Undefined();
+    }
 
     BOOL Shadow = false;
     SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
@@ -900,20 +978,6 @@ bool CreateBackdropWindow(FBackdrop* Backdrop)
             << std::endl;
     }
 
-    std::cout << "CreateBackdropWindow A" << std::endl;
-
-    std::cout
-        << "Backdrop.Bounds: "
-        << Backdrop->Bounds.left
-        << ", "
-        << Backdrop->Bounds.top
-        << ", "
-        << Backdrop->Bounds.right
-        << ", "
-        << Backdrop->Bounds.bottom
-        << "."
-        << std::endl;
-
     Backdrop->BackdropHandle = CreateWindowExA(
         NULL,
         WindowClassName,
@@ -935,8 +999,6 @@ bool CreateBackdropWindow(FBackdrop* Backdrop)
         GetWindowLong(Backdrop->BackdropHandle, GWL_EXSTYLE) | WS_EX_LAYERED
     );
 
-    std::cout << "CreateBackdropWindow D" << std::endl;
-
     BOOL Attribute = TRUE;
     DwmSetWindowAttribute(
         Backdrop->BackdropHandle,
@@ -944,8 +1006,6 @@ bool CreateBackdropWindow(FBackdrop* Backdrop)
         &Attribute,
         sizeof(Attribute)
     );
-
-    std::cout << "CreateBackdropWindow E" << std::endl;
 
     return true;
 }
@@ -988,16 +1048,20 @@ void SuperimposeMainWindow(FBackdrop* Backdrop)
     if (PositionSet)
     {
         std::cout
-            << "MainWindow's position was set successfully.  Its bounds are ("
-            << Backdrop->Bounds.left
-            << ", "
-            << Backdrop->Bounds.top
-            << ", "
-            << Backdrop->Bounds.right
-            << ", "
-            << Backdrop->Bounds.bottom
-            << ")."
+            << "MainWindow's position was set successfully."
             << std::endl;
+
+        // std::cout
+        //     << "MainWindow's position was set successfully.  Its bounds are ("
+        //     << Backdrop->Bounds.left
+        //     << ", "
+        //     << Backdrop->Bounds.top
+        //     << ", "
+        //     << Backdrop->Bounds.right
+        //     << ", "
+        //     << Backdrop->Bounds.bottom
+        //     << ")."
+        //     << std::endl;
     }
     else
     {
@@ -1015,17 +1079,11 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     FBackdrop* Backdrop = CreateNewBackdrop();
 
-    std::cout << "This far, A." << std::endl;
-
     Backdrop->Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
     Backdrop->Height = Backdrop->Bounds.bottom - Backdrop->Bounds.top;
     Backdrop->Width = Backdrop->Bounds.right - Backdrop->Bounds.left;
 
-    std::cout << "This far, B." << std::endl;
-
     Backdrop->SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
-
-    std::cout << "This far, G." << std::endl;
 
     const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
     if (!CreatedBackdrop)
@@ -1033,18 +1091,43 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
         return Environment.Undefined();
     }
 
-    std::cout << "This far, FFF." << std::endl;
-
     CaptureWindowScreenshot(Backdrop);
 
-    std::cout << "This far, C." << std::endl;
-
     SuperimposeBackdrop(Backdrop);
-    std::cout << "This far, D." << std::endl;
     SuperimposeMainWindow(Backdrop);
-    std::cout << "This far, E." << std::endl;
-
-    std::cout << "Returned Handle is " << Backdrop->BackdropHandle << std::endl;
 
     return EncodeHandle(Environment, Backdrop->BackdropHandle);
+}
+
+Napi::Value KillOrphans(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env& Environment = CallbackInfo.Env();
+
+    FBackdrop* BackdropToUnblur = GetBackdropToUnblur();
+
+    BackdropsBeingUnblurred.empty();
+    for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
+    {
+        FBackdrop* Orphan = &Backdrops[Index];
+        BackdropsBeingUnblurred.push_back(Orphan);
+    }
+
+    BOOL Shadow = false;
+    SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
+
+    for (FBackdrop* Orphan : BackdropsBeingUnblurred)
+    {
+        KillTimer(Orphan->BackdropHandle, BlurTimerId);
+
+        Orphan->FadeStartTime = GetTickCount();
+        Orphan->FadeLastTimestamp = BackdropToUnblur->FadeStartTime;
+        UINT_PTR SetTimerResult = SetTimer(
+            Orphan->BackdropHandle,
+            FadeTimerId,
+            Orphan->MsPerFrame,
+            nullptr
+        );
+    }
+
+    return Environment.Undefined();
 }
