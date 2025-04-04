@@ -29,7 +29,6 @@ import {
     GetFocusedWindow,
     GetWindowTitle,
     type HWindow,
-    SetForegroundWindow,
     UnblurBackground } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
@@ -42,8 +41,8 @@ import type { FIpcChannel } from "./Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
-import { Vk } from "$/Common/Component/Keyboard/Keyboard";
 import { PositionToString } from "./Utility";
+import { Vk } from "$/Common/Component/Keyboard/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
 

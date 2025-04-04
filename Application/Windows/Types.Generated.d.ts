@@ -10,7 +10,7 @@
 
 import type { FBox, HWindow, HMonitor, FHexColor } from "./Core";
 
-export function BlurBackground(Bounds: FBox, SourceHandle: HWindow): void;
+export function BlurBackground(Bounds: FBox, SourceHandle: HWindow): HWindow;
 export function UnblurBackground(): void;
 export function GetScreenshot(Bounds: FBox): string;
 export function CaptureScreenSectionToTempPngFile(Bounds: FBox): string;

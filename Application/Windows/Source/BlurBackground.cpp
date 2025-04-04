@@ -7,17 +7,16 @@
 #include "BlurBackground.h"
 
 #include "Core/Utility.h"
-#include <Windowsx.h>
 #include "ThirdParty/Blur.h"
-#include <algorithm>
-#include <cstdlib>
 #include "Core/WinEvent.h"
 #include "Core/WindowUtilities.h"
-#include <algorithm>
 #include "Core/Math.h"
-#include <cstdint>
 #include "Core/MonitorUtilities.h"
 #include "Core/Globals.h"
+#include <Windowsx.h>
+#include <cstdint>
+#include <algorithm>
+#include <cstdlib>
 
 // DECLARE_LOG_CATEGORY(Blur)
 
@@ -30,56 +29,93 @@
  * 6. (When fade animation is done) Move Main window away and destroy blur window
  */
 
-namespace Shared
+const UINT_PTR BlurTimerId = 1;
+const UINT_PTR FadeTimerId = 2;
+
+struct FBackdrop
 {
     /**
      * The length such that if the width or height of the window exceeds this value,
      * then only blur the center, and fade the surroundings.
      */
-    static const int Breakpoint = 600;
-    static int ChannelsNum = 3;
-    static int Depth = 24;
-    static int Width;
-    static int Height;
-    static RECT Bounds;
-    static HWND BackdropHandle = nullptr;
-    static const float MinSigma = 1.f;
-    static const float MaxSigma = 10.f;
-    static float Sigma = MinSigma;
-    static const std::size_t FairlyHighResolution = 3840 * 2160 * 3;
-    static std::vector<BYTE> BlurredScreenshotData(FairlyHighResolution);
-    static std::vector<BYTE> ScreenshotData(FairlyHighResolution);
-    static BYTE* Screenshot = nullptr;
-    static BYTE* BlurredScreenshot = nullptr;
-    static bool CalledOnce = false;
-    static double Luminance = 0.f;
-    static double BrightnessScalar = 1.f;
-    static std::string ThemeMode = "Indeterminate";
-    static bool ScalesBrightness = false;
-    static HWND SorrellWmMainWindow = nullptr;
-    static DWORD BlurStartTime = 0;
-    static DWORD FadeStartTime = 0;
-    static DWORD BlurLastTimestamp = 0;
-    static DWORD FadeLastTimestamp = 0;
-    static const int Duration = 150;
-    static int MsPerFrame = 1000 / 120;
-    static HWND SourceHandle = nullptr;
-    static bool PaintedOnce = false;
+    const int Breakpoint = 600;
+    int ChannelsNum = 3;
+    int Depth = 24;
+    int Width;
+    int Height;
+    RECT Bounds;
+    HWND BackdropHandle = nullptr;
+    HWND SourceHandle = nullptr;
+    const float MinSigma = 1.f;
+    const float MaxSigma = 10.f;
+    float Sigma = MinSigma;
+    std::vector<BYTE> BlurredScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
+    std::vector<BYTE> ScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
+    BYTE* Screenshot = nullptr;
+    BYTE* BlurredScreenshot = nullptr;
+    bool CalledOnce = false;
+    double Luminance = 0.f;
+    double BrightnessScalar = 1.f;
+    std::string ThemeMode = "Indeterminate";
+    bool ScalesBrightness = false;
+    HWND SorrellWmMainWindow = nullptr;
+    DWORD BlurStartTime = 0;
+    DWORD FadeStartTime = 0;
+    DWORD BlurLastTimestamp = 0;
+    DWORD FadeLastTimestamp = 0;
+    const int Duration = 150;
+    int MsPerFrame = 1000 / 120;
+    bool PaintedOnce = false;
     LPBITMAPINFO ScreenshotBmi = nullptr;
     LPBITMAPINFO BlurredBmi = nullptr;
-    static const UINT_PTR BlurTimerId = 1;
-    static const UINT_PTR FadeTimerId = 2;
-    static const int MinDeferResolution = 1920 * 1080 + 1;
 };
 
-int32_t GetMsPerFrame()
+/**
+ * Where to pick up in the morning:
+ *   Use `std::list` instead of `std::vector` for Backdrops, so that
+ *   Backdrops can be removed by pointer.
+ */
+
+std::vector<FBackdrop> Backdrops;
+std::vector<FBackdrop*> BackdropsBeingUnblurred;
+
+FBackdrop* GetBackdrop(HWND WindowHandle)
 {
-    const bool IsLargerThan2k = Shared::Width * Shared::Height > 2560 * 1440;
+    for (FBackdrop& Backdrop : Backdrops)
+    {
+        if (Backdrop.BackdropHandle == WindowHandle)
+        {
+            return &Backdrop;
+        }
+        else
+        {
+            std::cout
+                << "Checked Backdrop with handle "
+                << Backdrop.BackdropHandle
+                << " but this was not a match with "
+                << WindowHandle
+                << std::endl;
+
+        }
+    }
+
+    return nullptr;
+}
+
+FBackdrop* CreateNewBackdrop()
+{
+    Backdrops.push_back(FBackdrop());
+    return &Backdrops.back();
+}
+
+int32_t GetMsPerFrame(FBackdrop* Backdrop)
+{
+    const bool IsLargerThan2k = Backdrop->Width * Backdrop->Height > 2560 * 1440;
     const int32_t BaseMsPerFrame = IsLargerThan2k
         ? 60
         : 120;
 
-    const int32_t RefreshRate = GetLeastRefreshRateOverRect(Shared::Bounds);
+    const int32_t RefreshRate = GetLeastRefreshRateOverRect(Backdrop->Bounds);
 
     return 1000 / min(RefreshRate, BaseMsPerFrame);
 }
@@ -229,7 +265,7 @@ LPBITMAPINFO CreateDib(int Width, int Height, int Depth, BYTE*& Bits)
     return BitmapInfo;
 }
 
-bool CaptureWindowScreenshot()
+bool CaptureWindowScreenshot(FBackdrop* Backdrop)
 {
     HDC ScreenDc = GetDC(nullptr);
 
@@ -237,34 +273,40 @@ bool CaptureWindowScreenshot()
     if (!HdcMemDc)
     {
         std::cout << "Failed to create compatible DC." << std::endl;
-        ReleaseDC(Shared::SourceHandle, ScreenDc);
+        ReleaseDC(Backdrop->SourceHandle, ScreenDc);
         return false;
     }
 
-    Shared::ScreenshotData.reserve(Shared::Width * Shared::Height * Shared::ChannelsNum);
-    Shared::Screenshot = Shared::ScreenshotData.data();
+    Backdrop->ScreenshotData.reserve(Backdrop->Width * Backdrop->Height * Backdrop->ChannelsNum);
+    Backdrop->Screenshot = Backdrop->ScreenshotData.data();
 
     HBITMAP Bitmap = CreateDIBSection(
         ScreenDc,
-        Shared::ScreenshotBmi,
+        Backdrop->ScreenshotBmi,
         DIB_RGB_COLORS,
-        (void**) Shared::Screenshot,
+        (void**) Backdrop->Screenshot,
         nullptr,
         0
     );
 
     if (!Bitmap)
     {
+        const int BufferSize = 256;
+        wchar_t WindowTextW[BufferSize] = { 0 };
+        GetWindowTextW(Backdrop->SourceHandle, WindowTextW, BufferSize);
+        std::string WindowText = WStringToString(WindowTextW);
         std::cout
             // << ELogLevel::Error
             << "Failed to create DIB section, handle was "
-            << Shared::SourceHandle
+            << Backdrop->SourceHandle
+            << " and had title "
+            << WindowText
             << ", ScreenshotData reserved "
-            << Shared::Width * Shared::Height * Shared::ChannelsNum
+            << Backdrop->Width * Backdrop->Height * Backdrop->ChannelsNum
             << std::endl;
 
         DeleteDC(HdcMemDc);
-        ReleaseDC(Shared::SourceHandle, ScreenDc);
+        ReleaseDC(Backdrop->SourceHandle, ScreenDc);
         return false;
     }
     else
@@ -282,7 +324,7 @@ bool CaptureWindowScreenshot()
         LogLastWindowsError();
         DeleteObject(Bitmap);
         DeleteDC(HdcMemDc);
-        ReleaseDC(Shared::SourceHandle, ScreenDc);
+        ReleaseDC(Backdrop->SourceHandle, ScreenDc);
         return false;
     }
     else
@@ -294,11 +336,11 @@ bool CaptureWindowScreenshot()
         HdcMemDc,
         0,
         0,
-        Shared::Width,
-        Shared::Height,
+        Backdrop->Width,
+        Backdrop->Height,
         ScreenDc,
-        Shared::Bounds.left,
-        Shared::Bounds.top,
+        Backdrop->Bounds.left,
+        Backdrop->Bounds.top,
         SRCCOPY
     );
 
@@ -311,7 +353,7 @@ bool CaptureWindowScreenshot()
         SelectObject(HdcMemDc, hOld);
         DeleteObject(Bitmap);
         DeleteDC(HdcMemDc);
-        ReleaseDC(Shared::SourceHandle, ScreenDc);
+        ReleaseDC(Backdrop->SourceHandle, ScreenDc);
         return false;
     }
     else
@@ -320,9 +362,9 @@ bool CaptureWindowScreenshot()
         // std::endl;
     }
 
-    SIZE_T BufferSize = static_cast<SIZE_T>(Shared::Width) * Shared::Height * Shared::ChannelsNum;
-    Shared::ScreenshotData.reserve(BufferSize);
-    if (!Shared::Screenshot)
+    SIZE_T BufferSize = static_cast<SIZE_T>(Backdrop->Width) * Backdrop->Height * Backdrop->ChannelsNum;
+    Backdrop->ScreenshotData.reserve(BufferSize);
+    if (!Backdrop->Screenshot)
     {
         std::cout << "Failed to allocate memory for screenshot." << std::endl;
         LogLastWindowsError();
@@ -341,9 +383,9 @@ bool CaptureWindowScreenshot()
         ScreenDc,
         Bitmap,
         0,
-        Shared::Height,
-        Shared::Screenshot,
-        Shared::ScreenshotBmi,
+        Backdrop->Height,
+        Backdrop->Screenshot,
+        Backdrop->ScreenshotBmi,
         DIB_RGB_COLORS
     );
 
@@ -351,17 +393,17 @@ bool CaptureWindowScreenshot()
     {
         std::cout << "GetDIBits failed." << std::endl;
         LogLastWindowsError();
-        Shared::Screenshot = nullptr;
+        Backdrop->Screenshot = nullptr;
     }
     else
     {
         // std::cout << "There are " << scanLines << " scanLines!" << std::endl;
     }
 
-    Shared::Screenshot = Shared::ScreenshotData.data();
-    Shared::Luminance = CalculateAverageLuminance(Shared::Screenshot, Shared::Width, Shared::Height, Shared::ChannelsNum);
-    Shared::BrightnessScalar = CalculateScalingFactor(Shared::Luminance);
-    Shared::ScalesBrightness = Shared::BrightnessScalar != 1.f;
+    Backdrop->Screenshot = Backdrop->ScreenshotData.data();
+    Backdrop->Luminance = CalculateAverageLuminance(Backdrop->Screenshot, Backdrop->Width, Backdrop->Height, Backdrop->ChannelsNum);
+    Backdrop->BrightnessScalar = CalculateScalingFactor(Backdrop->Luminance);
+    Backdrop->ScalesBrightness = Backdrop->BrightnessScalar != 1.f;
 
     SelectObject(HdcMemDc, hOld);
     DeleteObject(Bitmap);
@@ -373,27 +415,47 @@ bool CaptureWindowScreenshot()
         return false;
     }
 
-    InvalidateRect(Shared::BackdropHandle, nullptr, FALSE);
+    InvalidateRect(Backdrop->BackdropHandle, nullptr, FALSE);
 
     return true;
 }
 
 BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
 {
-    Shared::BlurLastTimestamp = Shared::BlurStartTime;
-    SetTimer(hWnd, Shared::BlurTimerId, GetMsPerFrame(), nullptr);
-    if ((Shared::ScreenshotBmi = CreateDib(Shared::Width, Shared::Height, Shared::Depth, Shared::Screenshot)) == nullptr)
+    /* For some reason, `CreateWindowEx` returns the nullptr, but succeeds...so we set `BackdropHandle` here instead. */
+    for (FBackdrop& Backdrop : Backdrops)
+    {
+        if (Backdrop.BackdropHandle == nullptr)
+        {
+            Backdrop.BackdropHandle = hWnd;
+        }
+    }
+    FBackdrop* Backdrop = GetBackdrop(hWnd);
+
+    if (Backdrop == nullptr)
+    {
+        std::cout << "OnCreate could not find the Backdrop, hWnd was " << hWnd << std::endl;
+        return false;
+    }
+
+    std::cout << "OnCreate A." << std::endl;
+
+    Backdrop->BlurLastTimestamp = Backdrop->BlurStartTime;
+    SetTimer(hWnd, BlurTimerId, GetMsPerFrame(Backdrop), nullptr);
+    if ((Backdrop->ScreenshotBmi = CreateDib(Backdrop->Width, Backdrop->Height, Backdrop->Depth, Backdrop->Screenshot)) == nullptr)
     {
         // std::cout << "g_lpBmi COULD NOT BE CREATED" << std::endl;
+        std::cout << "OnCreate Finished." << std::endl;
         return FALSE;
     }
     else
     {
         // std::cout << "g_lpBmi WAS CREATED ! ! !" << std::endl;
     }
-    if ((Shared::BlurredBmi = CreateDib(Shared::Width, Shared::Height, Shared::Depth, Shared::BlurredScreenshot)) == nullptr)
+    if ((Backdrop->BlurredBmi = CreateDib(Backdrop->Width, Backdrop->Height, Backdrop->Depth, Backdrop->BlurredScreenshot)) == nullptr)
     {
         // std::cout << "BlurredBmi COULD NOT BE CREATED" << std::endl;
+        std::cout << "OnCreate Finished." << std::endl;
         return FALSE;
     }
     else
@@ -401,45 +463,74 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
         // std::cout << "BlurredBmi was created." << std::endl;
     }
 
+    std::cout << "OnCreate Finished." << std::endl;
+
     return TRUE;
 }
 
 void OnDestroy(HWND hWnd)
 {
-    if (Shared::ScreenshotBmi)
+    FBackdrop* Backdrop = GetBackdrop(hWnd);
+    if (Backdrop == nullptr)
     {
-        free(Shared::ScreenshotBmi);
+        return;
     }
 
-    if (Shared::BlurredBmi)
+    if (Backdrop->ScreenshotBmi)
     {
-        free(Shared::BlurredBmi);
+        free(Backdrop->ScreenshotBmi);
     }
 
-    Shared::Bounds = RECT();
-    Shared::BackdropHandle = nullptr;
-    Shared::Sigma = Shared::MinSigma;
-    Shared::CalledOnce = false;
-    Shared::Luminance = 0.f;
-    Shared::BrightnessScalar = 1.f;
-    Shared::ThemeMode = "Indeterminate";
-    Shared::ScalesBrightness = false;
-    Shared::BlurStartTime = 0;
-    Shared::FadeStartTime = 0;
-    Shared::BlurLastTimestamp = 0;
-    Shared::FadeLastTimestamp = 0;
-    // SetForegroundWindow(Shared::SourceHandle);
-    SetWindowPos(Shared::SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
+    if (Backdrop->BlurredBmi)
+    {
+        free(Backdrop->BlurredBmi);
+    }
+
+    Backdrop->Bounds = RECT();
+    Backdrop->BackdropHandle = nullptr;
+    Backdrop->Sigma = Backdrop->MinSigma;
+    Backdrop->CalledOnce = false;
+    Backdrop->Luminance = 0.f;
+    Backdrop->BrightnessScalar = 1.f;
+    Backdrop->ThemeMode = "Indeterminate";
+    Backdrop->ScalesBrightness = false;
+    Backdrop->BlurStartTime = 0;
+    Backdrop->FadeStartTime = 0;
+    Backdrop->BlurLastTimestamp = 0;
+    Backdrop->FadeLastTimestamp = 0;
+
+    SetWindowPos(
+        Backdrop->SorrellWmMainWindow,
+        HWND_TOP,
+        2000,
+        2000,
+        0,
+        0,
+        SWP_NOSIZE
+    );
+
+    auto It = std::find_if(
+        Backdrops.begin(),
+        Backdrops.end(),
+        [=](const FBackdrop& InBackdrop)
+        {
+            return InBackdrop.BackdropHandle == Backdrop->BackdropHandle;
+        });
+
+    if (It != Backdrops.end())
+    {
+        Backdrops.erase(It);
+    }
 }
 
-void GetBackgroundMode()
+void GetBackgroundMode(FBackdrop* Backdrop)
 {
-    const double d_dark = std::abs(Shared::Luminance - 85.0);
-    const double d_light = std::abs(170.0 - Shared::Luminance);
+    const double d_dark = std::abs(Backdrop->Luminance - 85.0);
+    const double d_light = std::abs(170.0 - Backdrop->Luminance);
 
     if (d_dark < d_light)
     {
-        Shared::ThemeMode = "Dark";
+        Backdrop->ThemeMode = "Dark";
         // if (averageLuminance <= 85.0)
         // {
         //     ThemeMode = "Dark";
@@ -451,7 +542,7 @@ void GetBackgroundMode()
     }
     else
     {
-        Shared::ThemeMode = "Light";
+        Backdrop->ThemeMode = "Light";
         // if (averageLuminance >= 170.0)
         // {
         //     return "Light Mode Background";
@@ -465,6 +556,12 @@ void GetBackgroundMode()
 
 void OnPaint(HWND hWnd)
 {
+    FBackdrop* Backdrop = GetBackdrop(hWnd);
+    if (Backdrop == nullptr)
+    {
+        return;
+    }
+
     static PAINTSTRUCT PaintStruct;
     static HDC hDC;
 
@@ -473,30 +570,30 @@ void OnPaint(HWND hWnd)
     BITMAPINFO BitmapInfo;
     ZeroMemory(&BitmapInfo, sizeof(BITMAPINFO));
     BitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    BitmapInfo.bmiHeader.biWidth = Shared::Width;
-    BitmapInfo.bmiHeader.biHeight = -1 * Shared::Height;
+    BitmapInfo.bmiHeader.biWidth = Backdrop->Width;
+    BitmapInfo.bmiHeader.biHeight = -1 * Backdrop->Height;
     BitmapInfo.bmiHeader.biPlanes = 1;
-    BitmapInfo.bmiHeader.biBitCount = Shared::Depth;
+    BitmapInfo.bmiHeader.biBitCount = Backdrop->Depth;
     BitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-    SIZE_T BufferSize = static_cast<SIZE_T>(Shared::Width) * Shared::Height * Shared::ChannelsNum;
-    Shared::BlurredScreenshotData.reserve(BufferSize);
-    Shared::BlurredScreenshot = Shared::BlurredScreenshotData.data();
-    Shared::Screenshot = Shared::ScreenshotData.data();
+    SIZE_T BufferSize = static_cast<SIZE_T>(Backdrop->Width) * Backdrop->Height * Backdrop->ChannelsNum;
+    Backdrop->BlurredScreenshotData.reserve(BufferSize);
+    Backdrop->BlurredScreenshot = Backdrop->BlurredScreenshotData.data();
+    Backdrop->Screenshot = Backdrop->ScreenshotData.data();
 
-    if (Shared::Sigma < Shared::MaxSigma)
+    if (Backdrop->Sigma < Backdrop->MaxSigma)
     {
-        const int NumPasses = Shared::Width > 600 || Shared::Height > 600
+        const int NumPasses = Backdrop->Width > 600 || Backdrop->Height > 600
             ? 2
             : 3;
 
         Blur(
-            Shared::Screenshot,
-            Shared::BlurredScreenshot,
-            Shared::Width,
-            Shared::Height,
-            Shared::ChannelsNum,
-            Shared::Sigma,
+            Backdrop->Screenshot,
+            Backdrop->BlurredScreenshot,
+            Backdrop->Width,
+            Backdrop->Height,
+            Backdrop->ChannelsNum,
+            Backdrop->Sigma,
             NumPasses,
             kExtend
         );
@@ -505,38 +602,38 @@ void OnPaint(HWND hWnd)
             hDC,
             0,
             0,
-            Shared::Width,
-            Shared::Height,
+            Backdrop->Width,
+            Backdrop->Height,
             0,
             0,
             0,
-            Shared::Height,
-            Shared::BlurredScreenshot,
-            Shared::BlurredBmi,
+            Backdrop->Height,
+            Backdrop->BlurredScreenshot,
+            Backdrop->BlurredBmi,
             DIB_RGB_COLORS
         );
 
-        Shared::BlurredScreenshot = Shared::BlurredScreenshotData.data();
-        if (Shared::ScalesBrightness)
+        Backdrop->BlurredScreenshot = Backdrop->BlurredScreenshotData.data();
+        if (Backdrop->ScalesBrightness)
         {
-            const float Alpha = Shared::Sigma / Shared::MaxSigma;
-            const float Brightness = Shared::BrightnessScalar * Alpha;
+            const float Alpha = Backdrop->Sigma / Backdrop->MaxSigma;
+            const float Brightness = Backdrop->BrightnessScalar * Alpha;
             ApplyScalingFactor(
-                Shared::BlurredScreenshot,
-                Shared::Width,
-                Shared::Height,
-                Shared::ChannelsNum,
+                Backdrop->BlurredScreenshot,
+                Backdrop->Width,
+                Backdrop->Height,
+                Backdrop->ChannelsNum,
                 Brightness
             );
         }
     }
 
-    if (!Shared::PaintedOnce)
+    if (!Backdrop->PaintedOnce)
     {
-        Shared::PaintedOnce = true;
+        Backdrop->PaintedOnce = true;
         ShowWindow(hWnd, SW_SHOW);
-        ShowWindow(Shared::SorrellWmMainWindow, SW_SHOW);
-        SetForegroundWindow(Shared::SorrellWmMainWindow);
+        ShowWindow(Backdrop->SorrellWmMainWindow, SW_SHOW);
+        SetForegroundWindow(Backdrop->SorrellWmMainWindow);
     }
 
     EndPaint(hWnd, &PaintStruct);
@@ -545,6 +642,15 @@ void OnPaint(HWND hWnd)
 BOOL OnEraseBackground(HWND _Handle, HDC _Hdc)
 {
     return TRUE;
+}
+
+unsigned char ClampTransparency(const float& Alpha)
+{
+    return static_cast<unsigned char>(std::clamp(
+        std::round(Alpha),
+        0.f,
+        255.f
+    ));
 }
 
 LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -556,39 +662,45 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
         HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
         HANDLE_MSG(hWnd, WM_ERASEBKGND, OnEraseBackground);
     case WM_TIMER:
+        FBackdrop* Backdrop = GetBackdrop(hWnd);
+        if (Backdrop == nullptr)
+        {
+            return DefWindowProc(hWnd, iMsg, wParam, lParam);
+        }
+        std::cout << "Made it to WM_TIMER." << std::endl;
         DWORD CurrentTime = GetTickCount();
         DWORD ElapsedTime = 0;
         switch (wParam)
         {
-        case Shared::BlurTimerId:
-            if (Shared::BlurStartTime == 0)
+        case BlurTimerId:
+            if (Backdrop->BlurStartTime == 0)
             {
-                Shared::BlurStartTime = GetTickCount();
-                InvalidateRect(Shared::SorrellWmMainWindow, nullptr, FALSE);
+                Backdrop->BlurStartTime = GetTickCount();
+                InvalidateRect(Backdrop->SorrellWmMainWindow, nullptr, FALSE);
             }
-            ElapsedTime = CurrentTime - Shared::BlurStartTime;
+            ElapsedTime = CurrentTime - Backdrop->BlurStartTime;
             if (ElapsedTime == 0)
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (ElapsedTime >= Shared::Duration)
+            if (ElapsedTime >= Backdrop->Duration)
             {
-                Shared::Sigma = Shared::MaxSigma;
-                SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                Backdrop->Sigma = Backdrop->MaxSigma;
+                SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, 255, LWA_ALPHA);
                 InvalidateRect(hWnd, nullptr, FALSE);
-                KillTimer(hWnd, Shared::BlurTimerId);
+                KillTimer(hWnd, BlurTimerId);
             }
-            // else if (CurrentTime - Shared::BlurLastTimestamp >= Shared::MsPerFrame)
-            else if (CurrentTime - Shared::BlurLastTimestamp >= Shared::MsPerFrame || CurrentTime == Shared::BlurLastTimestamp)
+            // else if (CurrentTime - Backdrop->BlurLastTimestamp >= Backdrop->MsPerFrame)
+            else if (CurrentTime - Backdrop->BlurLastTimestamp >= Backdrop->MsPerFrame || CurrentTime == Backdrop->BlurLastTimestamp)
             {
-                const float Alpha = static_cast<float>((float) ElapsedTime / (float) Shared::Duration);
+                const float Alpha = static_cast<float>((float) ElapsedTime / (float) Backdrop->Duration);
                 const float Factor = 1 - std::pow(2, -10.f * Alpha);
-                Shared::Sigma = Shared::MinSigma + (Shared::MaxSigma - Shared::MinSigma) * Factor;
+                Backdrop->Sigma = Backdrop->MinSigma + (Backdrop->MaxSigma - Backdrop->MinSigma) * Factor;
                 InvalidateRect(hWnd, nullptr, FALSE);
 
-                unsigned char Transparency = static_cast<unsigned char>(
-                    std::clamp(std::round(255.f * Alpha), 0.f, 255.f));
-                BOOL Res = SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
+                unsigned char Transparency = ClampTransparency(255.f * Alpha);
+
+                BOOL Res = SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, Transparency, LWA_ALPHA);
                 if (!Res)
                 {
                     std::cout
@@ -598,7 +710,7 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
                     LogLastWindowsError();
                 }
 
-                Shared::BlurLastTimestamp = CurrentTime;
+                Backdrop->BlurLastTimestamp = CurrentTime;
             }
             else
             {
@@ -607,27 +719,27 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
                     << "WM_TIMER came too soon, "
                     << CurrentTime
                     << " "
-                    << Shared::BlurLastTimestamp
+                    << Backdrop->BlurLastTimestamp
                     << std::endl;
             }
             return 0;
-        case Shared::FadeTimerId:
+        case FadeTimerId:
             std::cout
                 << "WindowProc: FadeTimerId timer was called."
                 << std::endl;
 
-            Shared::Sigma = Shared::MinSigma;
-            ElapsedTime = CurrentTime - Shared::FadeStartTime;
-            if (ElapsedTime >= Shared::Duration)
+            Backdrop->Sigma = Backdrop->MinSigma;
+            ElapsedTime = CurrentTime - Backdrop->FadeStartTime;
+            if (ElapsedTime >= Backdrop->Duration)
             {
-                std::cout
-                    << std::setprecision(2)
-                    << "WindowProc: FadeTimerId: ElapsedTime ("
-                    << ElapsedTime
-                    << ") was at least Shared::Duration ("
-                    << Shared::Duration
-                    << ")."
-                    << std::endl;
+                // std::cout
+                //     << std::setprecision(2)
+                //     << "WindowProc: FadeTimerId: ElapsedTime ("
+                //     << ElapsedTime
+                //     << ") was at least Backdrop->Duration ("
+                //     << Backdrop->Duration
+                //     << ")."
+                //     << std::endl;
 
                 ShowWindow(hWnd, SW_HIDE);
                 DestroyWindow(hWnd);
@@ -636,39 +748,40 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
             {
                 InvalidateRect(hWnd, nullptr, FALSE);
             }
-            if (ElapsedTime >= Shared::Duration)
+            if (ElapsedTime >= Backdrop->Duration)
             {
                 // std::cout
                 //     << std::setprecision(2)
                 //     << "For the Fade timer, elapsedTime >= Duration: "
                 //     << std::to_string(static_cast<unsigned int>(ElapsedTime))
                 //     << " >= "
-                //     << Shared::Duration
+                //     << Backdrop->Duration
                 //     << std::endl;
-                KillTimer(hWnd, Shared::FadeTimerId);
-                SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 0, LWA_ALPHA);
-                SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 255, LWA_ALPHA);
+                KillTimer(hWnd, FadeTimerId);
+                SetLayeredWindowAttributes(hWnd, 0, 0, LWA_ALPHA);
+                SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, 255, LWA_ALPHA);
                 // Might not need this, and it is expensive...
-                InvalidateRect(Shared::SorrellWmMainWindow, nullptr, FALSE);
+                InvalidateRect(Backdrop->SorrellWmMainWindow, nullptr, FALSE);
             }
-            else if (CurrentTime - Shared::FadeLastTimestamp >= Shared::MsPerFrame)
+            else if (CurrentTime - Backdrop->FadeLastTimestamp >= Backdrop->MsPerFrame)
             {
-                std::cout
-                    << std::setprecision(2)
-                    << "WindowProc: FadeTimerId: The following case was true: CurrentTime - Shared::FadeLastTimestamp >= Shared::MsPerFrame"
-                    << std::endl;
-                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float) ElapsedTime / (float) Shared::Duration));
-                const float Alpha = ElapsedTime / (float) Shared::Duration;
-                unsigned char Transparency = static_cast<unsigned char>(
-                    std::clamp(std::round(255.f - 255.f * EasedAlpha), 0.f, 255.f));
-                unsigned char MainWindowTransparency = static_cast<unsigned char>(
-                    std::clamp(std::round(255.f - 255.f * Alpha), 0.f, 255.f));
+                // std::cout
+                //     << std::setprecision(2)
+                //     << "WindowProc: FadeTimerId: The following case was true: CurrentTime - Backdrop->FadeLastTimestamp >= Backdrop->MsPerFrame"
+                //     << std::endl;
+
+                const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float) ElapsedTime / (float) Backdrop->Duration));
+                const float Alpha = ElapsedTime / (float) Backdrop->Duration;
+
+                unsigned char Transparency = ClampTransparency(255.f - 255.f * EasedAlpha);
+                unsigned char MainWindowTransparency = ClampTransparency(255.f - 255.f * Alpha);
+
                 InvalidateRect(hWnd, nullptr, FALSE);
 
-                SetLayeredWindowAttributes(Shared::BackdropHandle, 0, Transparency, LWA_ALPHA);
-                SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(hWnd, 0, Transparency, LWA_ALPHA);
+                SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, MainWindowTransparency, LWA_ALPHA);
 
-                Shared::FadeLastTimestamp = CurrentTime;
+                Backdrop->FadeLastTimestamp = CurrentTime;
             }
 
             return 0;
@@ -678,11 +791,43 @@ LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
     return DefWindowProc(hWnd, iMsg, wParam, lParam);
 }
 
+FBackdrop* GetBackdropToUnblur()
+{
+    FBackdrop* BackdropToUnblur = nullptr;
+
+    for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
+    {
+        FBackdrop& Backdrop = Backdrops[Index];
+        bool IsBeingUnblurred = false;
+        for (FBackdrop* BackdropBeingUnblurred : BackdropsBeingUnblurred)
+        {
+            if (BackdropBeingUnblurred->BackdropHandle == Backdrop.BackdropHandle)
+            {
+                IsBeingUnblurred = true;
+                break;
+            }
+        }
+
+        if (!IsBeingUnblurred)
+        {
+            BackdropToUnblur = &Backdrop;
+        }
+    }
+
+    BackdropsBeingUnblurred.push_back(BackdropToUnblur);
+
+    std::cout << "BackdropToUnblur is " << BackdropToUnblur << std::endl;
+
+    return BackdropToUnblur;
+}
+
 Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
     std::cout << "Tearing down window!" << std::endl;
+
+    FBackdrop* BackdropToUnblur = GetBackdropToUnblur();
 
     BOOL Shadow = false;
     SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
@@ -691,14 +836,14 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
      * animation should only take the length of time that the blur animation
      * played. */
 
-    KillTimer(Shared::BackdropHandle, Shared::BlurTimerId);
+    KillTimer(BackdropToUnblur->BackdropHandle, BlurTimerId);
 
-    Shared::FadeStartTime = GetTickCount();
-    Shared::FadeLastTimestamp = Shared::FadeStartTime;
+    BackdropToUnblur->FadeStartTime = GetTickCount();
+    BackdropToUnblur->FadeLastTimestamp = BackdropToUnblur->FadeStartTime;
     UINT_PTR SetTimerResult = SetTimer(
-        Shared::BackdropHandle,
-        Shared::FadeTimerId,
-        Shared::MsPerFrame,
+        BackdropToUnblur->BackdropHandle,
+        FadeTimerId,
+        BackdropToUnblur->MsPerFrame,
         nullptr
     );
 
@@ -707,7 +852,6 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
         << SetTimerResult
         << "."
         << std::endl;
-
 
     return Environment.Undefined();
 }
@@ -728,7 +872,7 @@ std::string GetDerivedThemeMode(double Luminance)
     }
 }
 
-bool CreateBackdrop()
+bool CreateBackdropWindow(FBackdrop* Backdrop)
 {
     HINSTANCE ModuleHandle = GetModuleHandle(nullptr);
     WNDCLASSEXA WindowClass;
@@ -748,81 +892,96 @@ bool CreateBackdrop()
     WindowClass.lpszClassName = WindowTitle;
     WindowClass.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
 
-    RegisterClassExA(&WindowClass);
+    ATOM RegisterClassResult = RegisterClassExA(&WindowClass);
+    if (RegisterClassResult == 0)
+    {
+        std::cout
+            << "RegisterClassExA failed."
+            << std::endl;
+    }
 
-    /* @TODO See if SourceHandle can be removed. */
-    // Shared::SourceHandle = GetForegroundWindow();
-    // if (Shared::SourceHandle == nullptr || Shared::SourceHandle == Shared::SorrellWmMainWindow)
-    // {
-    //     std::cout
-    //         << "BlurBackground was called, but there was no window focused."
-    //         << std::endl;
+    std::cout << "CreateBackdropWindow A" << std::endl;
 
-    //     return false;
-    // }
+    std::cout
+        << "Backdrop.Bounds: "
+        << Backdrop->Bounds.left
+        << ", "
+        << Backdrop->Bounds.top
+        << ", "
+        << Backdrop->Bounds.right
+        << ", "
+        << Backdrop->Bounds.bottom
+        << "."
+        << std::endl;
 
-    Shared::BackdropHandle = CreateWindowExA(NULL,
+    Backdrop->BackdropHandle = CreateWindowExA(
+        NULL,
         WindowClassName,
         nullptr,
         WS_EX_TOOLWINDOW | WS_POPUP | WS_EX_NOACTIVATE,
-        Shared::Bounds.left,
-        Shared::Bounds.top,
-        Shared::Bounds.right - Shared::Bounds.left,
-        Shared::Bounds.bottom - Shared::Bounds.top,
+        Backdrop->Bounds.left,
+        Backdrop->Bounds.top,
+        Backdrop->Bounds.right - Backdrop->Bounds.left,
+        Backdrop->Bounds.bottom - Backdrop->Bounds.top,
         nullptr,
         nullptr,
         ModuleHandle,
-        nullptr);
+        nullptr
+    );
 
     SetWindowLong(
-        Shared::BackdropHandle,
+        Backdrop->BackdropHandle,
         GWL_EXSTYLE,
-        GetWindowLong(Shared::BackdropHandle, GWL_EXSTYLE) | WS_EX_LAYERED
+        GetWindowLong(Backdrop->BackdropHandle, GWL_EXSTYLE) | WS_EX_LAYERED
     );
+
+    std::cout << "CreateBackdropWindow D" << std::endl;
 
     BOOL Attribute = TRUE;
     DwmSetWindowAttribute(
-        Shared::BackdropHandle,
+        Backdrop->BackdropHandle,
         DWMWA_TRANSITIONS_FORCEDISABLED,
         &Attribute,
         sizeof(Attribute)
     );
 
+    std::cout << "CreateBackdropWindow E" << std::endl;
+
     return true;
 }
 
-void SuperimposeBackdrop()
+void SuperimposeBackdrop(FBackdrop* Backdrop)
 {
-    ShowWindow(Shared::BackdropHandle, SW_SHOWNOACTIVATE);
-    UpdateWindow(Shared::BackdropHandle);
-    SetWindowPos(Shared::BackdropHandle,
-        GetNextWindow(Shared::SourceHandle, GW_HWNDPREV),
+    ShowWindow(Backdrop->BackdropHandle, SW_SHOWNOACTIVATE);
+    UpdateWindow(Backdrop->BackdropHandle);
+    SetWindowPos(Backdrop->BackdropHandle,
+        GetNextWindow(Backdrop->SourceHandle, GW_HWNDPREV),
         0,
         0,
         0,
         0,
         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-    SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 255, LWA_ALPHA);
+    SetLayeredWindowAttributes(Backdrop->BackdropHandle, 0, 255, LWA_ALPHA);
 }
 
-void SuperimposeMainWindow()
+void SuperimposeMainWindow(FBackdrop* Backdrop)
 {
     LPCSTR WindowName = "SorrellWm Main Window";
-    Shared::SorrellWmMainWindow = GetMainWindow();
+    Backdrop->SorrellWmMainWindow = GetMainWindow();
     SetWindowLong(
-        Shared::SorrellWmMainWindow,
+        Backdrop->SorrellWmMainWindow,
         GWL_EXSTYLE,
-        GetWindowLong(Shared::SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
+        GetWindowLong(Backdrop->SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
     );
-    SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 0, LWA_ALPHA);
+    SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, 0, LWA_ALPHA);
     BOOL PositionSet = SetWindowPos(
-        Shared::SorrellWmMainWindow,
+        Backdrop->SorrellWmMainWindow,
         HWND_TOP,
-        Shared::Bounds.left,
-        Shared::Bounds.top,
-        Shared::Bounds.right - Shared::Bounds.left,
-        Shared::Bounds.bottom - Shared::Bounds.top,
+        Backdrop->Bounds.left,
+        Backdrop->Bounds.top,
+        Backdrop->Bounds.right - Backdrop->Bounds.left,
+        Backdrop->Bounds.bottom - Backdrop->Bounds.top,
         SWP_SHOWWINDOW
     );
 
@@ -830,13 +989,13 @@ void SuperimposeMainWindow()
     {
         std::cout
             << "MainWindow's position was set successfully.  Its bounds are ("
-            << Shared::Bounds.left
+            << Backdrop->Bounds.left
             << ", "
-            << Shared::Bounds.top
+            << Backdrop->Bounds.top
             << ", "
-            << Shared::Bounds.right
+            << Backdrop->Bounds.right
             << ", "
-            << Shared::Bounds.bottom
+            << Backdrop->Bounds.bottom
             << ")."
             << std::endl;
     }
@@ -847,30 +1006,45 @@ void SuperimposeMainWindow()
             << std::endl;
     }
 
-    StealFocus(Shared::SorrellWmMainWindow);
+    StealFocus(Backdrop->SorrellWmMainWindow);
 }
 
 Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    Shared::Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
-    Shared::Height = Shared::Bounds.bottom - Shared::Bounds.top;
-    Shared::Width = Shared::Bounds.right - Shared::Bounds.left;
+    FBackdrop* Backdrop = CreateNewBackdrop();
 
-    // Shared::SourceHandle = GetForegroundWindow();
-    Shared::SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
+    std::cout << "This far, A." << std::endl;
 
-    const bool CreatedBackdrop = CreateBackdrop();
+    Backdrop->Bounds = DecodeRect(CallbackInfo[0].As<Napi::Object>());
+    Backdrop->Height = Backdrop->Bounds.bottom - Backdrop->Bounds.top;
+    Backdrop->Width = Backdrop->Bounds.right - Backdrop->Bounds.left;
+
+    std::cout << "This far, B." << std::endl;
+
+    Backdrop->SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
+
+    std::cout << "This far, G." << std::endl;
+
+    const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
     if (!CreatedBackdrop)
     {
         return Environment.Undefined();
     }
 
-    CaptureWindowScreenshot();
+    std::cout << "This far, FFF." << std::endl;
 
-    SuperimposeBackdrop();
-    SuperimposeMainWindow();
+    CaptureWindowScreenshot(Backdrop);
 
-    return Environment.Undefined();
+    std::cout << "This far, C." << std::endl;
+
+    SuperimposeBackdrop(Backdrop);
+    std::cout << "This far, D." << std::endl;
+    SuperimposeMainWindow(Backdrop);
+    std::cout << "This far, E." << std::endl;
+
+    std::cout << "Returned Handle is " << Backdrop->BackdropHandle << std::endl;
+
+    return EncodeHandle(Environment, Backdrop->BackdropHandle);
 }

@@ -6,7 +6,7 @@
 
 import chalk from "chalk";
 
-/* eslint-disable no-undef */
+/* eslint-disable no-undef, no-console */
 
 export function CheckNodeEnvironment(ExpectedEnvironment: string)
 {

@@ -9,7 +9,7 @@ import { type BrowserWindow, ipcMain } from "electron";
 import type { FPanel, FVertex } from "#/Tree.Types";
 import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "Windows";
 import { CreateBrowserWindow } from "#/BrowserWindow";
-import { Sleep } from "#/Utility";
+import { ForAsync, Sleep } from "#/Utility";
 import { spawn } from "child_process";
 
 const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
@@ -42,19 +42,18 @@ const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
 
 export const CreateNotepadTestWindows = async (NumWindows: number): Promise<void> =>
 {
-    KillNotepadInstances();
-    await Sleep(2000);
+    // KillNotepadInstances();
+    // await Sleep(2000);
 
-    for (let Index: number = 0; Index < NumWindows; Index++)
+    ForAsync(0, NumWindows, async (_Index: number): Promise<void> =>
     {
         spawn("C:\\Windows\\System32\\notepad.exe");
-    }
+        await Sleep(250);
+    });
 
-    await Sleep(5000);
+    await Sleep(2000);
 
     const NotepadHandles: Array<HWindow> = GetNotepadHandles();
-
-    // console.log("NotepadHandles", NotepadHandles);
 
     const RightMonitor: FPanel | undefined = Find((Vertex: FVertex): boolean =>
     {

@@ -8,6 +8,6 @@
 
 #include "Core/Core.h"
 
-DECLARE_NAPI_FUNCTION(BlurBackground, void, Bounds, FBox, SourceHandle, HWindow);
+DECLARE_NAPI_FUNCTION(BlurBackground, HWindow, Bounds, FBox, SourceHandle, HWindow);
 DECLARE_NAPI_FUNCTION(UnblurBackground, void);
 void InitializeBlurBackground();
