@@ -126,6 +126,7 @@ module.exports =
         //     ],
         //     2
         // ],
+        "no-console": [ "error" ],
         "no-multiple-empty-lines": [ "error", { max: 1, maxBOF: 0, maxEOF: 1 } ],
         "quote-props": [ "error", "as-needed" ],
         quotes: [ "error", "double" ],

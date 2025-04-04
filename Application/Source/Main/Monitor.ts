@@ -5,8 +5,8 @@
  */
 
 import { type FMonitorInfo, InitializeMonitors } from "@sorrellwm/windows";
-import { Subscribe } from "./NodeIpc";
 import { TDispatcher, type TSubscriptionHandle } from "./Dispatcher";
+import { Subscribe } from "./NodeIpc";
 
 const Monitors: Array<FMonitorInfo> = [ ];
 

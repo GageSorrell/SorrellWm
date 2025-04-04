@@ -44,3 +44,52 @@ export const MapKeys = <T extends object = object, U = unknown>(
 
     return OutArray;
 };
+
+export const ForAsync = async (
+    StartIndex: number,
+    EndIndex: number,
+    Callback: ((Index: number) => Promise<void>)
+) =>
+{
+    if (!Number.isInteger(StartIndex))
+    {
+        console.error("ForAsync was given a StartIndex that wasn't an integer.");
+        return;
+    }
+
+    if (!Number.isInteger(EndIndex))
+    {
+        console.error("ForAsync was given a EndIndex that wasn't an integer.");
+        return;
+    }
+
+    if (StartIndex > EndIndex)
+    {
+        console.error("ForAsync was given a StartIndex that is greater than the given EndIndex.");
+        return;
+    }
+
+    const Range: Array<number> = [ ...Array(EndIndex - StartIndex + 1).keys() ];
+
+    for await (const Index of Range)
+    {
+        await Callback(Index);
+    }
+};
+
+export const PositionToString = (Box: FBox): string =>
+{
+    return `(${ Box.X }, ${ Box.Y })`;
+};
+
+export const Sleep = (Duration: number): Promise<void> =>
+{
+    /* eslint-disable-next-line @typescript-eslint/typedef */
+    return new Promise<void>((Resolve, _Reject): void =>
+    {
+        setTimeout((): void =>
+        {
+            Resolve();
+        }, Duration);
+    });
+};

@@ -70,3 +70,5 @@ export type FFocusChange =
     | "Previous"
     | "Up"
     | "Down";
+
+export type FLogTransformer = (Vertex: FVertex, Depth: number, DefaultString: string) => string;

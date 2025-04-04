@@ -4,33 +4,37 @@
  * License:   MIT
  */
 
-import { AreBoxesEqual, AreHandlesEqual } from "./Utility/Utility";
+import { AreBoxesEqual, AreHandlesEqual, PositionToString } from "./Utility/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
+    type FBox,
     type FMonitorInfo,
     GetApplicationFriendlyName,
-    GetFocusedWindow,
     GetMonitorFriendlyName,
     GetMonitorFromWindow,
     GetTileableWindows,
+    GetWindowLocationAndSize,
     GetWindowTitle,
     type HMonitor,
     type HWindow,
-    RestoreAllWindows,
-    SetWindowPosition } from "@sorrellwm/windows";
+    SetWindowPosition,
+    UnblurBackground} from "@sorrellwm/windows";
 import type {
     FAnnotatedPanel,
     FCell,
     FFocusChange,
     FForest,
+    FLogTransformer,
     FPanel,
     FPanelBase,
     FVertex } from "./Tree.Types";
+import { type FLogger, GetLogger } from "./Development";
 import { promises as Fs } from "fs";
 import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
-import { Log } from "./Development";
 import { type TPredicate } from "@/Utility";
+
+const Log: FLogger = GetLogger("Tree");
 
 const Forest: FForest = [ ];
 
@@ -53,9 +57,12 @@ const GetDepth = (Vertex: FVertex): number =>
     return Depth;
 };
 
-export const LogForest = (
-    Transformer?: ((Vertex: FVertex, Depth: number, DefaultString: string) => string)
-): void =>
+/**
+ * Log the contents of the forest.
+ * @param Transformer - Optionally, pass a function to transform the log statement for each vertex,
+ *                      based upon the behavior that you wish to describe by logging.
+ */
+export const LogForest = (Transformer?: FLogTransformer): void =>
 {
     let OutString: string = "";
 
@@ -120,8 +127,6 @@ const InitializeTree = (): void =>
 {
     const Monitors: Array<FMonitorInfo> = GetMonitors();
 
-    console.log(Monitors);
-
     Forest.push(...Monitors.map((Monitor: FMonitorInfo): FPanel =>
     {
         return {
@@ -135,12 +140,16 @@ const InitializeTree = (): void =>
         };
     }));
 
-    console.log(Forest);
+    // console.log(Forest);
 
-    /** @TODO Consider changing this. */
-    RestoreAllWindows();
+    // /** @TODO Consider changing this. */
+    // RestoreAllWindows();
 
-    const TileableWindows: Array<HWindow> = GetTileableWindows();
+    const TileableWindows: Array<HWindow> = GetTileableWindows().filter((Handle: HWindow): boolean =>
+    {
+        /** @TODO For now, exclude VS Code, just to make development less annoying. */
+        return !GetWindowTitle(Handle).includes("SorrellWm (Workspace)");
+    });
 
     // console.log(`Found ${ TileableWindows.length } tileable windows.`);
 
@@ -167,7 +176,7 @@ const InitializeTree = (): void =>
         if (RootPanel === undefined)
         {
             // @TODO
-            console.log("💡💡💡💡 RootPanel was undefined.");
+            Log("RootPanel was undefined.");
         }
         else
         {
@@ -180,6 +189,12 @@ const InitializeTree = (): void =>
         const MonitorInfo: FMonitorInfo | undefined =
             Monitors.find((InMonitor: FMonitorInfo): boolean => InMonitor.Handle === Panel.MonitorId);
 
+        /* @TODO For now, skip the main monitor. */
+        if (MonitorInfo?.Size.Width === 3440)
+        {
+            return;
+        }
+
         if (MonitorInfo === undefined)
         {
             // @TODO
@@ -187,7 +202,6 @@ const InitializeTree = (): void =>
         // else if (AreBoxesEqual(MonitorInfo.WorkSize, ))
         else
         {
-            console.log("🤷‍♂️🤷‍♂️🤷‍♂️🤷‍♂️🤷‍♂️", MonitorInfo.WorkSize);
             Panel.Children = Panel.Children.map((Child: FVertex, Index: number): FVertex =>
             {
                 const UniformWidth: number = MonitorInfo.WorkSize.Width / Panel.Children.length;
@@ -209,7 +223,7 @@ const InitializeTree = (): void =>
     Cells.forEach((Cell: FCell): void =>
     {
         /* eslint-disable-next-line @stylistic/max-len */
-        console.log(`Setting position of ${ GetWindowTitle(Cell.Handle) } to ${ JSON.stringify(Cell.Size) }.`);
+        Log.Verbose(`Setting position of ${ GetWindowTitle(Cell.Handle) } to ${ JSON.stringify(Cell.Size) }.`);
         SetWindowPosition(Cell.Handle, Cell.Size);
         /* At least for now, ignore SorrellWm windows. */
         // if (GetWindowTitle(Cell.Handle) !== "SorrellWm")
@@ -217,15 +231,9 @@ const InitializeTree = (): void =>
         //     SetWindowPosition(Cell.Handle, Cell.Size);
         // }
     });
-
-    const FocusedWindow: HWindow = GetFocusedWindow();
-    if (FocusedWindow !== undefined)
-    {
-        InterimFocusedVertex = GetCellFromHandle(FocusedWindow);
-    }
 };
 
-const IsCell = (Vertex: FVertex): Vertex is FCell =>
+export const IsCell = (Vertex: FVertex): Vertex is FCell =>
 {
     return "Handle" in Vertex;
 };
@@ -586,28 +594,28 @@ export const GetPanelFromAnnotated = (Panel: FAnnotatedPanel): FPanel | undefine
         Type: Panel.Type
     };
 
-    console.log("Begins GetPanelFromAnnotated, Panel is", LoggedPanel);
+    Log("Begins GetPanelFromAnnotated, Panel is", LoggedPanel);
     return Find((Vertex: FVertex): boolean =>
     {
         if (IsPanel(Vertex))
         {
-            console.log("Vertex is a panel.", Vertex);
+            Log("Vertex is a panel.", Vertex);
             const AreEqual: boolean = ArePanelsEqual(Panel, Vertex);
 
             if (AreEqual)
             {
-                console.log("Panels are equal", Panel, Vertex);
+                Log("Panels are equal", Panel, Vertex);
             }
             else
             {
-                console.log("Panels are NOT equal", Panel, Vertex);
+                Log("Panels are NOT equal", Panel, Vertex);
             }
 
             return AreEqual;
         }
         else
         {
-            console.log("Vertex was NOT a panel", Vertex);
+            Log("Vertex was NOT a panel", Vertex);
             return false;
         }
     }) as FPanel | undefined;
@@ -718,7 +726,7 @@ export const GetIndexInPanel = (Vertex: FVertex): number | undefined =>
 
 let InterimFocusedVertex: FVertex | undefined = undefined;
 
-export const SetInterimFocusedVertexToForeground = (): void =>
+export const SetInterimFocusedVertexToActive = (): void =>
 {
     const ActiveWindow: HWindow | undefined = GetActiveWindow();
     if (ActiveWindow !== undefined)
@@ -737,13 +745,48 @@ export const ClearInterimFocusedVertex = (): void =>
     InterimFocusedVertex = undefined;
 };
 
+export const VertexToString = (Vertex: FVertex): string =>
+{
+    return IsCell(Vertex)
+        ? GetWindowTitle(Vertex.Handle)
+        : `${ Vertex.Type } panel with ${ Vertex.Children.length } children.`;
+};
+
+let ChangeFocusDebounceTime: number = 0;
+
 export const ChangeFocus = (FocusChange: FFocusChange): void =>
 {
+    const Now: number = new Date().getTime();
+    const DebounceDuration: number = 50;
+    if (Math.abs(Now - ChangeFocusDebounceTime) <= DebounceDuration && ChangeFocusDebounceTime !== 0)
+    {
+        Log(`ChangeFocus was called too soon, just ${ Now - ChangeFocusDebounceTime }ms ago.`);
+        return;
+    }
+    else
+    {
+        ChangeFocusDebounceTime = Now;
+    }
+
+    const LogChangeFocus = (): void =>
+    {
+        LogForest((Vertex: FVertex, _Depth: number, DefaultString: string): string =>
+        {
+            const PositionString: string = `(${ Vertex.Size.X }, ${ Vertex.Size.Y })`;
+            return Vertex === InterimFocusedVertex
+                ? `${ DefaultString } ${ PositionString } ** INTERIM **`
+                : `${ DefaultString } ${ PositionString }`;
+        });
+    };
+
     if (InterimFocusedVertex === undefined)
     {
         const ActiveWindow: HWindow | undefined = GetActiveWindow();
         if (ActiveWindow !== undefined)
         {
+            const ActiveWindowPosition: FBox = GetWindowLocationAndSize(ActiveWindow);
+            /* eslint-disable-next-line @stylistic/max-len */
+            Log(`In ChangeFocus, the ActiveWindow is ${ GetWindowTitle(ActiveWindow) } at ${ PositionToString(ActiveWindowPosition) }.`);
             InterimFocusedVertex = GetCellFromHandle(ActiveWindow);
         }
         else
@@ -752,8 +795,23 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
         }
         return;
     }
+    else
+    {
+        /* eslint-disable-next-line @stylistic/max-len */
+        Log(`In ChangeFocus, InterimFocusedVertex was already defined and is ${ VertexToString(InterimFocusedVertex) } at ${ PositionToString(InterimFocusedVertex.Size) }.`);
+    }
 
     const ParentPanel: FVertex | undefined = GetParent(InterimFocusedVertex);
+    // /* I have no idea why this is needed. */
+    // if (ParentPanel !== undefined)
+    // {
+    //     const NewIndex: number = ParentPanel.Children.indexOf(InterimFocusedVertex) + 1;
+    //     Log(`In ChangeFocus, NewIndex is ${ NewIndex }.`);
+    //     InterimFocusedVertex = ParentPanel.Children[NewIndex];
+    // }
+
+    Log("Before Changing Focus, this is the current Forest:");
+    LogChangeFocus();
 
     switch (FocusChange)
     {
@@ -793,15 +851,18 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
             if (ParentPanel !== undefined)
             {
                 const Index: number | undefined = GetIndexInPanel(InterimFocusedVertex);
+                Log.Verbose(`InChangeFocus, under case "Previous", Index is ${ Index }.`);
+                /* eslint-disable-next-line @stylistic/max-len */
+                Log(`After getting the Index under case "Previous", the InterimFocusedVertex has position (${ InterimFocusedVertex.Size.X }, ${ InterimFocusedVertex.Size.Y }).`);
                 if (Index !== undefined)
                 {
-                    if (Index !== 0)
+                    if (Index === 0)
                     {
-                        InterimFocusedVertex = ParentPanel.Children[Index - 1];
+                        InterimFocusedVertex = ParentPanel.Children[ParentPanel.Children.length - 1];
                     }
                     else
                     {
-                        InterimFocusedVertex = ParentPanel.Children[ParentPanel.Children.length - 1];
+                        InterimFocusedVertex = ParentPanel.Children[Index - 1];
                     }
                 }
                 else
@@ -813,13 +874,8 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
             break;
     }
 
-    Publish();
-    LogForest((Vertex: FVertex, _Depth: number, DefaultString: string): string =>
-    {
-        return Vertex === InterimFocusedVertex
-            ? DefaultString + " ** INTERIM **"
-            : DefaultString;
-    });
+    Log("After Changing Focus, this is the current Forest:");
+    LogChangeFocus();
 };
 
 InitializeTree();

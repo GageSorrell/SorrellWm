@@ -22,14 +22,13 @@
 // DECLARE_LOG_CATEGORY(Blur)
 
 /**
- * 1. Get screenshot of SourceHandle window
+ * 1. Get screenshot of the area that will be drawn over.
  * 2. Draw empty window that will show blur
  * 3. Animate blur
  * 4. Superimpose Main window
  * 5. (Closing down) play fade animation (fading both windows)
  * 6. (When fade animation is done) Move Main window away and destroy blur window
  */
-
 
 namespace Shared
 {
@@ -429,7 +428,7 @@ void OnDestroy(HWND hWnd)
     Shared::FadeStartTime = 0;
     Shared::BlurLastTimestamp = 0;
     Shared::FadeLastTimestamp = 0;
-    SetForegroundWindow(Shared::SourceHandle);
+    // SetForegroundWindow(Shared::SourceHandle);
     SetWindowPos(Shared::SorrellWmMainWindow, HWND_TOP, 2000, 2000, 0, 0, SWP_NOSIZE);
 }
 
@@ -548,7 +547,7 @@ BOOL OnEraseBackground(HWND _Handle, HDC _Hdc)
     return TRUE;
 }
 
-LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK BlurWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (iMsg)
     {
@@ -579,7 +578,8 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hWnd, nullptr, FALSE);
                 KillTimer(hWnd, Shared::BlurTimerId);
             }
-            else if (CurrentTime - Shared::BlurLastTimestamp >= Shared::MsPerFrame)
+            // else if (CurrentTime - Shared::BlurLastTimestamp >= Shared::MsPerFrame)
+            else if (CurrentTime - Shared::BlurLastTimestamp >= Shared::MsPerFrame || CurrentTime == Shared::BlurLastTimestamp)
             {
                 const float Alpha = static_cast<float>((float) ElapsedTime / (float) Shared::Duration);
                 const float Factor = 1 - std::pow(2, -10.f * Alpha);
@@ -612,10 +612,23 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
             return 0;
         case Shared::FadeTimerId:
+            std::cout
+                << "WindowProc: FadeTimerId timer was called."
+                << std::endl;
+
             Shared::Sigma = Shared::MinSigma;
             ElapsedTime = CurrentTime - Shared::FadeStartTime;
             if (ElapsedTime >= Shared::Duration)
             {
+                std::cout
+                    << std::setprecision(2)
+                    << "WindowProc: FadeTimerId: ElapsedTime ("
+                    << ElapsedTime
+                    << ") was at least Shared::Duration ("
+                    << Shared::Duration
+                    << ")."
+                    << std::endl;
+
                 ShowWindow(hWnd, SW_HIDE);
                 DestroyWindow(hWnd);
             }
@@ -640,6 +653,10 @@ LRESULT CALLBACK BlurWndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
             else if (CurrentTime - Shared::FadeLastTimestamp >= Shared::MsPerFrame)
             {
+                std::cout
+                    << std::setprecision(2)
+                    << "WindowProc: FadeTimerId: The following case was true: CurrentTime - Shared::FadeLastTimestamp >= Shared::MsPerFrame"
+                    << std::endl;
                 const float EasedAlpha = 1.f - std::pow(2, -10.f * ((float) ElapsedTime / (float) Shared::Duration));
                 const float Alpha = ElapsedTime / (float) Shared::Duration;
                 unsigned char Transparency = static_cast<unsigned char>(
@@ -678,7 +695,19 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     Shared::FadeStartTime = GetTickCount();
     Shared::FadeLastTimestamp = Shared::FadeStartTime;
-    int SetTimerResult = SetTimer(Shared::BackdropHandle, Shared::FadeTimerId, Shared::MsPerFrame, nullptr);
+    UINT_PTR SetTimerResult = SetTimer(
+        Shared::BackdropHandle,
+        Shared::FadeTimerId,
+        Shared::MsPerFrame,
+        nullptr
+    );
+
+    std::cout
+        << "UnblurBackground: SetTimerResult was "
+        << SetTimerResult
+        << "."
+        << std::endl;
+
 
     return Environment.Undefined();
 }
@@ -708,7 +737,7 @@ bool CreateBackdrop()
 
     WindowClass.cbSize        = sizeof(WindowClass);
     WindowClass.style         = CS_VREDRAW | CS_HREDRAW;
-    WindowClass.lpfnWndProc   = BlurWndProc;
+    WindowClass.lpfnWndProc   = BlurWindowProc;
     WindowClass.cbClsExtra    = 0;
     WindowClass.cbWndExtra    = 0;
     WindowClass.hInstance     = ModuleHandle;
@@ -722,15 +751,15 @@ bool CreateBackdrop()
     RegisterClassExA(&WindowClass);
 
     /* @TODO See if SourceHandle can be removed. */
-    Shared::SourceHandle = GetForegroundWindow();
-    if (Shared::SourceHandle == nullptr || Shared::SourceHandle == Shared::SorrellWmMainWindow)
-    {
-        std::cout
-            << "BlurBackground was called, but there was no window focused."
-            << std::endl;
+    // Shared::SourceHandle = GetForegroundWindow();
+    // if (Shared::SourceHandle == nullptr || Shared::SourceHandle == Shared::SorrellWmMainWindow)
+    // {
+    //     std::cout
+    //         << "BlurBackground was called, but there was no window focused."
+    //         << std::endl;
 
-        return false;
-    }
+    //     return false;
+    // }
 
     Shared::BackdropHandle = CreateWindowExA(NULL,
         WindowClassName,
@@ -774,33 +803,20 @@ void SuperimposeBackdrop()
         0,
         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-    BOOL LayeredSuccess = SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 255, LWA_ALPHA);
-    if (LayeredSuccess)
-    {
-        std::cout << "SetLayeredWindowAttributes was SUCCESSFUL." << std::endl;
-    }
-    else
-    {
-        std::cout << "SetLayeredWindowAttributes FAILED." << std::endl;
-        LogLastWindowsError();
-    }
+    SetLayeredWindowAttributes(Shared::BackdropHandle, 0, 255, LWA_ALPHA);
 }
 
 void SuperimposeMainWindow()
 {
     LPCSTR WindowName = "SorrellWm Main Window";
     Shared::SorrellWmMainWindow = GetMainWindow();
-    std::cout
-        << "SorrellWmMainWindow is "
-        << Shared::SorrellWmMainWindow
-        << std::endl;
     SetWindowLong(
         Shared::SorrellWmMainWindow,
         GWL_EXSTYLE,
         GetWindowLong(Shared::SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
     );
     SetLayeredWindowAttributes(Shared::SorrellWmMainWindow, 0, 0, LWA_ALPHA);
-    BOOL MyRes = SetWindowPos(
+    BOOL PositionSet = SetWindowPos(
         Shared::SorrellWmMainWindow,
         HWND_TOP,
         Shared::Bounds.left,
@@ -810,22 +826,26 @@ void SuperimposeMainWindow()
         SWP_SHOWWINDOW
     );
 
-    std::cout
-        << "SetWindowPos of MainWindow is "
-        << MyRes
-        << std::endl;
-
-    std::cout
-        << "Bounds are "
-        << Shared::Bounds.left
-        << ", "
-        << Shared::Bounds.top
-        << ", "
-        << Shared::Bounds.right
-        << ", "
-        << Shared::Bounds.bottom
-        << "."
-        << std::endl;
+    if (PositionSet)
+    {
+        std::cout
+            << "MainWindow's position was set successfully.  Its bounds are ("
+            << Shared::Bounds.left
+            << ", "
+            << Shared::Bounds.top
+            << ", "
+            << Shared::Bounds.right
+            << ", "
+            << Shared::Bounds.bottom
+            << ")."
+            << std::endl;
+    }
+    else
+    {
+        std::cout
+            << "Failed to set MainWindow's position on top of blurred background."
+            << std::endl;
+    }
 
     StealFocus(Shared::SorrellWmMainWindow);
 }
@@ -838,7 +858,8 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
     Shared::Height = Shared::Bounds.bottom - Shared::Bounds.top;
     Shared::Width = Shared::Bounds.right - Shared::Bounds.left;
 
-    Shared::SourceHandle = GetForegroundWindow();
+    // Shared::SourceHandle = GetForegroundWindow();
+    Shared::SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
 
     const bool CreatedBackdrop = CreateBackdrop();
     if (!CreatedBackdrop)

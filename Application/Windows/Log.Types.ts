@@ -10,9 +10,9 @@
  */
 export type FLogCategory =
     | "Blur"
-    | ""
-    | ""
-    | ""
+    | "Tree"
+    | "WinEvent"
+    | "MainWindow"
     | ""
     | ""
     | "";

@@ -310,11 +310,11 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
             const HasFunctionArguments: boolean = MacroArgumentVector.length - Flags.length > 2;
             if (HasFunctionArguments)
             {
-                console.log(`Function ${ Name } has function arguments.`);
+                // console.log(`Function ${ Name } has function arguments.`);
                 if (Flags.length > 0)
                 {
-                    console.log(`Function ${ Name } has flags.`);
-                    console.log("\n", MacroArgumentVector, "\n\n", LastFlagIndex);
+                    // console.log(`Function ${ Name } has flags.`);
+                    // console.log("\n", MacroArgumentVector, "\n\n", LastFlagIndex);
                     FunctionArgumentVector.push(...MacroArgumentVector.slice(LastFlagIndex + 1));
                 }
                 else
@@ -340,7 +340,7 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
                 //     FunctionArgumentVector.push(...MacroArgumentVector.slice(2 + Flags.length));
                 // }
 
-                console.log(`FunctionArgumentVector is ${ FunctionArgumentVector.join(", ") }.`);
+                // console.log(`FunctionArgumentVector is ${ FunctionArgumentVector.join(", ") }.`);
                 FunctionArgumentVector.forEach((FunctionArgumentPart: string, Index: number): void =>
                 {
                     if (Index % 2 === 1)
@@ -351,7 +351,7 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
                     const Name: string = FunctionArgumentPart;
                     const Type: string = FunctionArgumentVector[Index + 1];
 
-                    console.log(`ARG: ${ Name } ${ Type } of ${ Name }.`);
+                    // console.log(`ARG: ${ Name } ${ Type } of ${ Name }.`);
 
                     Arguments.push({
                         Name,
@@ -525,7 +525,7 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
                     });
 
                 /* eslint-disable-next-line @stylistic/max-len */
-                console.log(`ATTEMPTING ExposedFunction ${ ExposedFunction.Name }.\nReturnType: ${ ExposedFunction.ReturnType }, ${ FunctionArgumentTypes.join(", ") }`);
+                // console.log(`ATTEMPTING ExposedFunction ${ ExposedFunction.Name }.\nReturnType: ${ ExposedFunction.ReturnType }, ${ FunctionArgumentTypes.join(", ") }`);
                 const TypesToConsider: Array<string> =
                 [
                     ExposedFunction.ReturnType,
@@ -767,7 +767,7 @@ const Lint = async (CppFiles: Array<string>): Promise<void> =>
         console.log(`Found ${ C("std::cout") } call in file "${ Path.basename(StdCOutCall.FileName) }" at line ${ StdCOutCall.Line } position ${ StdCOutCall.Position }:\n${ chalk.inverse(StdCOutCall.Line) } ${ LineContents } ${ StdCOutCall.Position }\n`);
     });
 
-    console.log(process.argv);
+    // console.log(process.argv);
 
     if (StdCOutCalls.length > 0 && !process.argv.includes("--disable-linting"))
     {

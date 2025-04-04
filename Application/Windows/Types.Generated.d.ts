@@ -8,12 +8,15 @@
 
 /* eslint-disable */
 
-import type { FBox, HMonitor, HWindow, FHexColor } from "./Core";
+import type { FBox, HWindow, HMonitor, FHexColor } from "./Core";
 
-export function BlurBackground(Bounds: FBox): void;
+export function BlurBackground(Bounds: FBox, SourceHandle: HWindow): void;
 export function UnblurBackground(): void;
 export function GetScreenshot(Bounds: FBox): string;
 export function CaptureScreenSectionToTempPngFile(Bounds: FBox): string;
+export function SpawnNotepadInstances(NumWindows: number): Array<HWindow>;
+export function GetNotepadHandles(): Array<HWindow>;
+export function KillNotepadInstances(): void;
 export function GetMonitors(): Array<FMonitorInfo>;
 export function InitializeMonitors(): Array<FMonitorInfo>;
 export function GetMonitorFriendlyName(Handle: HMonitor): string | undefined;

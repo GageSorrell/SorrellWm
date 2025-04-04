@@ -26,7 +26,7 @@ void FMessageLoop::RegisterWindowProc(FWindowProc Callback)
 
 void FMessageLoop::Execute(const Napi::AsyncProgressQueueWorker<int>::ExecutionProgress& Progress)
 {
-    std::cout << "EXECUTED ASYNC WORKER" << std::endl;
+    // std::cout << "EXECUTED ASYNC WORKER" << std::endl;
 
     WNDCLASSA wc = { };
     wc.lpfnWndProc = WindowProc;

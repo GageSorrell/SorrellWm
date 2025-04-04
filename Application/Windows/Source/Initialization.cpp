@@ -30,6 +30,7 @@
 #include "BlurBackground.h"
 #include "Screenshot.h"
 #include "Core/WindowUtilities.h"
+#include "Development/Miscellaneous.h"
 
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
 /* END AUTO-GENERATED REGION. */
@@ -114,6 +115,9 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "RestoreAllWindows", RestoreAllWindows },
         { "BlurBackground", BlurBackground },
         { "UnblurBackground", UnblurBackground },
+        { "GetNotepadHandles", GetNotepadHandles },
+        { "KillNotepadInstances", KillNotepadInstances },
+        // { "SpawnNotepadInstances", SpawnNotepadInstances },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },
@@ -158,7 +162,7 @@ void InitializeTempDirectory()
     }
     else if (attributes & FILE_ATTRIBUTE_DIRECTORY)
     {
-        std::wcout << L"Directory already exists: " << TempPath << std::endl;
+        // std::wcout << L"Directory already exists: " << TempPath << std::endl;
     }
     else
     {

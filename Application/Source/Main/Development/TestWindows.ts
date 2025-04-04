@@ -7,8 +7,10 @@
 import { BringIntoPanel, Find, IsPanel } from "#/Tree";
 import { type BrowserWindow, ipcMain } from "electron";
 import type { FPanel, FVertex } from "#/Tree.Types";
-import { GetWindowByName, type HWindow } from "Windows";
+import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "Windows";
 import { CreateBrowserWindow } from "#/BrowserWindow";
+import { Sleep } from "#/Utility";
+import { spawn } from "child_process";
 
 const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
 {
@@ -38,10 +40,47 @@ const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
     return TestWindow;
 };
 
+export const CreateNotepadTestWindows = async (NumWindows: number): Promise<void> =>
+{
+    KillNotepadInstances();
+    await Sleep(2000);
+
+    for (let Index: number = 0; Index < NumWindows; Index++)
+    {
+        spawn("C:\\Windows\\System32\\notepad.exe");
+    }
+
+    await Sleep(5000);
+
+    const NotepadHandles: Array<HWindow> = GetNotepadHandles();
+
+    // console.log("NotepadHandles", NotepadHandles);
+
+    const RightMonitor: FPanel | undefined = Find((Vertex: FVertex): boolean =>
+    {
+        if (IsPanel(Vertex))
+        {
+            return Vertex.Size.X === 2738;
+        }
+        else
+        {
+            return false;
+        }
+    }) as FPanel | undefined;
+
+    if (RightMonitor !== undefined)
+    {
+        NotepadHandles.forEach((Handle: HWindow): void =>
+        {
+            BringIntoPanel(RightMonitor, Handle);
+        });
+    }
+};
+
 export const CreateTestWindows = async (): Promise<void> =>
 {
     const TestWindows: Array<BrowserWindow> = [ ];
-    for (let Index: number = 0; Index < 5; Index++)
+    for (let Index: number = 0; Index < 3; Index++)
     {
         TestWindows.push(await CreateTestWindow(Index));
     }
@@ -66,5 +105,4 @@ export const CreateTestWindows = async (): Promise<void> =>
             BringIntoPanel(RightMonitor, Handle);
         });
     }
-
 };

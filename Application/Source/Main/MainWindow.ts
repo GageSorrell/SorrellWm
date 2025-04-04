@@ -4,7 +4,6 @@
  * License:   MIT
  */
 
-import * as Path from "path";
 import {
     AnnotatePanel,
     BringIntoPanel,
@@ -15,29 +14,57 @@ import {
     GetPanelScreenshot,
     GetPanels,
     GetParent,
+    IsCell,
     IsPanel,
-    IsWindowTiled
+    IsWindowTiled,
+    SetInterimFocusedVertexToActive,
+    VertexToString
 } from "./Tree";
 import {
-    BlurBackground,
+    BlurBackground as BlurBackgroundNative,
+    type FBox,
+    type FLogCategory,
+    type FLogLevel,
     GetDwmWindowRect,
     GetFocusedWindow,
     GetWindowTitle,
     type HWindow,
+    SetForegroundWindow,
     UnblurBackground } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
-import { CreateTestWindows } from "./Development/TestWindows";
+import { type FLogger, GetLogger, LogFrontend } from "./Development";
+import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
 import type { FFocusData } from "@/Domain/Focus";
 import type { FIpcChannel } from "./Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { Keyboard } from "./Keyboard";
-import { Log } from "./Development";
 import { Vk } from "$/Common/Component/Keyboard/Keyboard";
-import chalk from "chalk";
+import { PositionToString } from "./Utility";
+
+const Log: FLogger = GetLogger("MainWindow");
+
+const BlurBackground = (Bounds: FBox): void =>
+{
+    const InterimFocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+    const SourceHandle: HWindow | undefined =
+        InterimFocusedVertex !== undefined && IsCell(InterimFocusedVertex)
+            ? InterimFocusedVertex.Handle
+            : GetActiveWindow();
+
+    if (SourceHandle !== undefined)
+    {
+        BlurBackgroundNative(Bounds, SourceHandle);
+    }
+    else
+    {
+        /* eslint-disable-next-line @stylistic/max-len */
+        Log.Error("BlurBackgroundNative cannot be called because there is no InterimFocusedVertex or ActiveWindow.");
+    }
+};
 
 let MainWindow: BrowserWindow | undefined = undefined;
 export const GetMainWindow = (): BrowserWindow | undefined => MainWindow;
@@ -129,13 +156,31 @@ const LaunchMainWindow = async (): Promise<void> =>
     const GetFocusData = async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         const CurrentPanel: FPanel | undefined = GetCurrentPanel();
-        const FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
-        if (CurrentPanel === undefined || FocusedVertex === undefined)
+        let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+        if (FocusedVertex === undefined)
+        {
+            SetInterimFocusedVertexToActive();
+            FocusedVertex = GetInterimFocusedVertex();
+        }
+
+        if (FocusedVertex === undefined)
         {
             /* eslint-disable-next-line @stylistic/max-len */
-            console.log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
+            Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
             return;
         }
+
+        if (CurrentPanel === undefined)
+        {
+            Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
+            return;
+        }
+        // if (CurrentPanel === undefined || FocusedVertex === undefined)
+        // {
+        /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
+        //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
+        //     return;
+        // }
 
         const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
         const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
@@ -159,6 +204,12 @@ const LaunchMainWindow = async (): Promise<void> =>
     On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
         const FocusChange: FFocusChange = Arguments[0] as FFocusChange;
+        const InterimFocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+        if (InterimFocusedVertex)
+        {
+            /* eslint-disable-next-line @stylistic/max-len */
+            Log(`In OnChangeFocus, InterimFocusedVertex is ${ VertexToString(InterimFocusedVertex) } at ${ PositionToString(InterimFocusedVertex.Size) }.`);
+        }
         ChangeFocus(FocusChange);
         UnblurBackground();
         setTimeout((): void =>
@@ -168,7 +219,7 @@ const LaunchMainWindow = async (): Promise<void> =>
             {
                 BlurBackground(InterimFocus.Size);
             }
-        }, 150);
+        }, 250);
 
         GetFocusData(_Event, ...Arguments);
         Log("FocusChange", FocusChange);
@@ -200,37 +251,41 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     On("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
-        const StringifiedArguments: string = Arguments
-            .map((Argument: unknown): string =>
-            {
-                return typeof Argument === "string"
-                    ? Argument
-                    : JSON.stringify(Argument);
-            })
-            .join();
+        /* eslint-disable-next-line @stylistic/max-len */
+        const [ Category, Level, ...Statements ] = Arguments as [ FLogCategory, FLogLevel, ...Array<unknown> ];
+        LogFrontend(Category, Level, ...Statements);
+        // const StringifiedArguments: string = Arguments
+        //     .map((Argument: unknown): string =>
+        //     {
+        //         return typeof Argument === "string"
+        //             ? Argument
+        //             : JSON.stringify(Argument);
+        //     })
+        //     .join();
 
-        const Birdie: string = chalk.bgMagenta(" ⚛️ ") + " ";
-        let OutString: string = Birdie;
-        for (let Index: number = 0; Index < StringifiedArguments.length; Index++)
-        {
-            const Character: string = StringifiedArguments[Index];
-            if (Character === "\n" && Index !== StringifiedArguments.length - 1)
-            {
-                OutString += Birdie + Character;
-            }
-            else
-            {
-                OutString += Character;
-            }
-        }
+        // const Birdie: string = chalk.bgMagenta(" ⚛️ ") + " ";
+        // let OutString: string = Birdie;
+        // for (let Index: number = 0; Index < StringifiedArguments.length; Index++)
+        // {
+        //     const Character: string = StringifiedArguments[Index];
+        //     if (Character === "\n" && Index !== StringifiedArguments.length - 1)
+        //     {
+        //         OutString += Birdie + Character;
+        //     }
+        //     else
+        //     {
+        //         OutString += Character;
+        //     }
+        // }
 
-        console.log(OutString);
+        // console.log(OutString);
     });
 
     LoadFrontend();
 
     /** @TODO Run this by flag with `npm start`. */
-    CreateTestWindows();
+    // CreateTestWindows();
+    CreateNotepadTestWindows(4);
 };
 
 /** The window(s) that SorrellWm is being drawn over. */

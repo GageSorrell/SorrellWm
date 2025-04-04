@@ -10,7 +10,6 @@ import {
     type ReactElement,
     useEffect,
     useState } from "react";
-import { Log } from "#/Development";
 
 // export const TestWindow = (): ReactElement =>
 // {

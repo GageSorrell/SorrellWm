@@ -6,10 +6,12 @@
 
 import type { FWinEventPayload } from "./WinEvent.Types";
 import { GetWindowLocationAndSize, InitializeWinEvents, type FBox, type HWindow } from "@sorrellwm/windows";
-import { Log } from "./Development";
 import { Subscribe } from "./NodeIpc";
 import { TDispatcher } from "./Dispatcher";
 import { IsWindowTiled, Publish } from "./Tree";
+import { GetLogger } from "./Development";
+
+const Log = GetLogger("WinEvent");
 
 export const WinEvent: TDispatcher<undefined> = new TDispatcher<undefined>();
 
