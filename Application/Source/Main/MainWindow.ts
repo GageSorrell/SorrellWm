@@ -9,6 +9,7 @@ import {
     BringIntoPanel,
     ChangeFocus,
     ClearInterimFocusedVertex,
+    FinishFocus,
     GetCurrentPanel,
     GetInterimFocusedVertex,
     GetPanelScreenshot,
@@ -326,7 +327,7 @@ function OnKey(Event: FKeyboardEvent): void
         }
         else
         {
-            ClearInterimFocusedVertex();
+            FinishFocus();
             UnblurBackground();
             setTimeout(KillOrphans, 750);
         }

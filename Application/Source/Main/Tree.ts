@@ -17,6 +17,7 @@ import {
     GetWindowTitle,
     type HMonitor,
     type HWindow,
+    SetForegroundWindow,
     SetWindowPosition } from "@sorrellwm/windows";
 import type {
     FAnnotatedPanel,
@@ -875,6 +876,57 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
 
     Log("After Changing Focus, this is the current Forest:");
     LogChangeFocus();
+};
+
+/**
+ * Given a panel, get its 0th cell.
+ * @TODO Consider modifying this such that if the 0th child of the panel is a panel with no children,
+ *       then try the 1st child, 2nd, etc.
+ */
+const GetZerothCell = (Panel: FPanel): FCell | undefined =>
+{
+    if (Panel.Children.length > 0)
+    {
+        return IsCell(Panel.Children[0])
+            ? Panel.Children[0]
+            : GetZerothCell(Panel.Children[0]);
+    }
+    else
+    {
+        return undefined;
+    }
+};
+
+export const FinishFocus = (): void =>
+{
+    if (InterimFocusedVertex !== undefined)
+    {
+        if (IsCell(InterimFocusedVertex))
+        {
+            SetForegroundWindow(InterimFocusedVertex.Handle);
+        }
+        else if (InterimFocusedVertex.Children.length > 0)
+        {
+            const ZerothCell: FCell | undefined = GetZerothCell(InterimFocusedVertex);
+            if (ZerothCell !== undefined)
+            {
+                SetForegroundWindow(ZerothCell.Handle);
+            }
+            else
+            {
+                /* eslint-disable-next-line @stylistic/max-len */
+                Log.Warn("FinishFocus could not set the foreground window, because InterimFocusedVertex was a panel that did not have a zeroth child.");
+            }
+        }
+    }
+    else
+    {
+        const ActiveWindow: HWindow | undefined = GetActiveWindow();
+        if (ActiveWindow !== undefined)
+        {
+            SetForegroundWindow(ActiveWindow);
+        }
+    }
 };
 
 InitializeTree();
