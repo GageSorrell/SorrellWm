@@ -445,3 +445,113 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
 
     return Napi::String::New(environment, WStringToString(tempFilePath));
 }
+
+// int GetEncoderClsid(const WCHAR* Format, CLSID* EncoderClsid)
+// {
+//     UINT EncoderCount = 0;
+//     UINT CodecInfoSize = 0;
+//     Gdiplus::GetImageEncodersSize(&EncoderCount, &CodecInfoSize);
+//     if (CodecInfoSize == 0)
+//     {
+//         return -1;
+//     }
+//     Gdiplus::ImageCodecInfo* ImageCodecInfoArray = (Gdiplus::ImageCodecInfo*) (malloc(CodecInfoSize));
+//     if (ImageCodecInfoArray == nullptr)
+//     {
+//         return -1;
+//     }
+//     GetImageEncoders(EncoderCount, CodecInfoSize, ImageCodecInfoArray);
+//     for (UINT Index = 0; Index < EncoderCount; Index++)
+//     {
+//         if (wcscmp(ImageCodecInfoArray[Index].MimeType, Format) == 0)
+//         {
+//             *EncoderClsid = ImageCodecInfoArray[Index].Clsid;
+//             free(ImageCodecInfoArray);
+//             return Index;
+//         }
+//     }
+//     free(ImageCodecInfoArray);
+//     return -1;
+// }
+
+Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env& Environment = CallbackInfo.Env();
+
+    HWND WindowHandle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    // Retrieve the icon used in the taskbar.
+    HICON WindowIcon = (HICON) SendMessage(WindowHandle, WM_GETICON, ICON_SMALL, 0);
+    if (WindowIcon == nullptr)
+    {
+        WindowIcon = (HICON)  GetClassLongPtr(WindowHandle, -34);
+    }
+    if (WindowIcon == nullptr)
+    {
+        WindowIcon = (HICON) GetClassLongPtr(WindowHandle, -14);
+    }
+    if (WindowIcon == nullptr)
+    {
+        return Environment.Undefined();
+    }
+
+    // Create a Bitmap from the icon.
+    Gdiplus::Bitmap* IconBitmap = Gdiplus::Bitmap::FromHICON(WindowIcon);
+    if (IconBitmap == nullptr)
+    {
+        return Environment.Undefined();
+    }
+
+    // Create a temporary file path for writing.
+    wchar_t tempPathBuffer[MAX_PATH] = {0};
+    DWORD tempPathLength = GetTempPathW(MAX_PATH, tempPathBuffer);
+    if (tempPathLength == 0 || tempPathLength > MAX_PATH)
+    {
+        // throw std::runtime_error("Failed to get temporary path.");
+    }
+
+    wchar_t tempFileName[MAX_PATH] = {0};
+    if (!GetTempFileNameW(tempPathBuffer, L"PNG", 0, tempFileName))
+    {
+        // throw std::runtime_error("Failed to generate temporary file name.");
+    }
+
+    // By default, GetTempFileNameW() might assign a .tmp extension; change it to .png
+    std::wstring FilePath(tempFileName);
+    size_t dotPosition = FilePath.rfind(L'.');
+    if (dotPosition != std::wstring::npos)
+    {
+        FilePath = FilePath.substr(0, dotPosition) + L".png";
+    }
+    else
+    {
+        FilePath += L".png";
+    }
+
+    if (!FilePath.empty() && FilePath.back() != L'\\')
+    {
+        FilePath.push_back(L'\\');
+    }
+    FilePath.append(L"taskbar_icon.png");
+
+    // Retrieve the CLSID of the PNG encoder.
+    CLSID PngEncoderClsid;
+    if (GetEncoderClsid(L"image/png", &PngEncoderClsid) < 0)
+    {
+        delete IconBitmap;
+        return Environment.Undefined();
+    }
+
+    // Save the bitmap as a PNG file.
+    Gdiplus::Status SaveStatus = IconBitmap->Save(FilePath.c_str(), &PngEncoderClsid, nullptr);
+    if (SaveStatus != Gdiplus::Ok)
+    {
+        // Handle error if necessary.
+    }
+
+    // Cleanup.
+    delete IconBitmap;
+
+    return Napi::String::New(Environment, WStringToString(FilePath));
+}
+

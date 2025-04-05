@@ -8,14 +8,7 @@ import { Command, CompoundCommand } from "$/Common";
 import { type MutableRefObject, type ReactNode, useEffect, useRef, useState } from "react";
 import { Action } from "@/Action";
 import type { FFocusChange } from "#/Tree.Types";
-import { Log } from "@/Api";
-
-export type FFocusData =
-{
-    Direction: "Horizontal" | "Vertical";
-    CanStepUp: boolean;
-    CanStepDown: boolean;
-};
+import type { FFocusData } from "?/Transaction";
 
 export const Focus = (): ReactNode =>
 {
@@ -32,14 +25,11 @@ export const Focus = (): ReactNode =>
             return;
         }
 
-        Log("Logging ogging");
         window.electron.ipcRenderer.On("GetFocusData", (...Arguments: Array<unknown>): void =>
         {
-            Log("Received FOCUS DATA");
             const NewFocusData: FFocusData | undefined = Arguments[0] as FFocusData | undefined;
             if (FocusData === undefined)
             {
-                Log("SETTING FOCUS DATA");
                 SetFocusData((_Old: FFocusData | undefined): FFocusData | undefined =>
                 {
                     return NewFocusData;
@@ -47,7 +37,7 @@ export const Focus = (): ReactNode =>
             }
             else
             {
-                // @TODO (This shouldn't happen!)
+                /* @TODO (This shouldn't happen!) */
             }
         });
 

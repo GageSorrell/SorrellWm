@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { AreBoxesEqual, AreHandlesEqual, PositionToString } from "./Utility/Utility";
+import { AreBoxesEqual, AreHandlesEqual, BoxToString, PositionToString } from "./Utility/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FBox,
@@ -24,6 +24,7 @@ import type {
     FCell,
     FFocusChange,
     FForest,
+    FGapData,
     FLogTransformer,
     FPanel,
     FPanelBase,
@@ -365,16 +366,431 @@ export const GetPanels = (): Array<FPanel> =>
     return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as Array<FPanel>;
 };
 
+const TraverseLevelOrder = (Root: FVertex, Callback: (Vertex: FVertex, Level: number) => void): void =>
+{
+    const Queue: Array<{ Vertex: FVertex; Level: number }> = [ { Level: 0, Vertex: Root } ];
+    while (Queue.length > 0)
+    {
+        const { Vertex, Level } = Queue.shift()!;
+        Callback(Vertex, Level);
+        if (IsPanel(Vertex))
+        {
+            for (const Child of Vertex.Children)
+            {
+                Queue.push({ Level: Level + 1, Vertex: Child });
+            }
+        }
+    }
+};
+
+const ComputeGapData = (): Map<FVertex, FBox> =>
+{
+    const GapData: Map<FVertex, FGapData> = new Map<FVertex, FGapData>();
+
+    /** @TODO Make this a setting. */
+    const Gap: number = 4;
+
+    Forest.forEach((Root: FVertex): void =>
+    {
+        /* Apply the outer margin. */
+        GapData.set(
+            Root,
+            {
+                AdjustedSize:
+                {
+                    Height: Root.Size.Height - 2 * Gap,
+                    Width: Root.Size.Width - 2 * Gap,
+                    X: Root.Size.X + Gap,
+                    Y: Root.Size.Y + Gap
+                },
+                PrincipalRatio: 1
+            }
+        );
+
+        // const GetPreviousVertex = (Vertex: FVertex, Parent: FPanel): FVertex | undefined =>
+        // {
+        //     const Index: number | undefined = GetIndexInPanel(Vertex);
+        //     if (Index !== undefined)
+        //     {
+        //         return Index > 0
+        //             ? Parent.Children[Index - 1]
+        //             : undefined;
+        //     }
+        //     else
+        //     {
+        /* eslint-disable-next-line @stylistic/max-len */
+        //         Log.Error("GetPreviousVertex called GetIndexInPanel, which returned undefined.  This should never happen!");
+        //         return undefined;
+        //     }
+        // };
+
+        const GetCumulativePreviousPrincipalRatios = (Vertex: FVertex, Parent: FPanel): number | undefined =>
+        {
+            const GivenIndex: number | undefined = GetIndexInPanel(Vertex);
+            if (GivenIndex === undefined)
+            {
+                Log.Error("Oops.");
+                return undefined;
+            }
+            else if (GivenIndex === 0)
+            {
+                return 0;
+            }
+            else
+            {
+                let CumulativePreviousPrincipalMeasures: number = 0;
+                const PrincipalMeasure: "Height" | "Width" = Parent.Type === "Horizontal"
+                    ? "Width"
+                    : "Height";
+
+                for (let Index: number = 0; Index < GivenIndex; Index++)
+                {
+                    CumulativePreviousPrincipalMeasures += Parent.Children[Index].Size[PrincipalMeasure];
+                }
+
+                return CumulativePreviousPrincipalMeasures / Parent.Size[PrincipalMeasure];
+            }
+        };
+
+        TraverseLevelOrder(Root, (Vertex: FVertex, _Level: number): void =>
+        {
+            if (IsPanel(Vertex))
+            {
+                return;
+            }
+
+            const Parent: FVertex | undefined = GetParent(Vertex);
+            if (Parent === undefined)
+            {
+                Log.Error("Beep boop.");
+                return;
+            }
+
+            const PrincipalAxis: "X" | "Y" = Parent.Type === "Horizontal"
+                ? "X"
+                : "Y";
+
+            const PrincipalMeasure: "Height" | "Width" = Parent.Type === "Horizontal"
+                ? "Width"
+                : "Height";
+
+            const PrincipalRatio: number = Vertex.Size[PrincipalMeasure] / Parent.Size[PrincipalMeasure];
+
+            const CumulativePreviousRatios: number | undefined =
+                GetCumulativePreviousPrincipalRatios(Vertex, Parent);
+
+            if (CumulativePreviousRatios === undefined)
+            {
+                Log.Error("Oops.");
+                return;
+            }
+
+            const ParentGapData: FGapData | undefined = GapData.get(Parent);
+            if (ParentGapData === undefined)
+            {
+                Log.Error("Oops.");
+                return;
+            }
+
+            const Index: number | undefined = GetIndexInPanel(Vertex);
+            if (Index === undefined)
+            {
+                Log.Error("Oops.");
+                return;
+            }
+
+            // const TotalGapSizeInPanel: number = (Parent.Children.length - 1) * Gap;
+
+            /* The amount of space that will be taken up by vertices in the parent panel. */
+            const ParentWorkPrincipalMeasure: number =
+                ParentGapData.AdjustedSize[PrincipalMeasure] - Gap * (Parent.Children.length - 1);
+
+            const CumulativePreviousGaps: number = Index * Gap;
+
+            /* The amount of space that will be taken up in the panel by all previous vertices *and* gaps. */
+            const CumulativePrincipalDistance: number =
+                CumulativePreviousRatios * ParentWorkPrincipalMeasure + CumulativePreviousGaps;
+
+            const X: number = Math.round(
+                Parent.Type === "Horizontal"
+                    ? ParentGapData.AdjustedSize.X + CumulativePrincipalDistance
+                    : ParentGapData.AdjustedSize.X
+            );
+
+            /* eslint-disable-next-line @stylistic/max-len */
+            // Log.Verbose(`Cell ${ GetWindowTitle(Vertex.Handle).slice(0, 12) } has ParentGapData.AdjustedSize.Y ${ ParentGapData.AdjustedSize.Y }.`);
+
+            const Y: number = Math.round(
+                Parent.Type === "Horizontal"
+                    ? ParentGapData.AdjustedSize.Y
+                    : ParentGapData.AdjustedSize.Y + CumulativePrincipalDistance
+            );
+
+            /* eslint-disable-next-line @stylistic/max-len */
+            Log.Verbose(`Cell ${ GetWindowTitle(Vertex.Handle).slice(0, 12) } has ParentGapData.AdjustedSize.Height ${ ParentGapData.AdjustedSize.Height }.`);
+            Log.Verbose(`     with CumulativePrincipalDistance ${ CumulativePrincipalDistance }`);
+            Log.Verbose(`     with CumulativePreviousRatios ${ CumulativePreviousRatios }`);
+            Log.Verbose(`     with CumulativePreviousGaps ${ CumulativePreviousGaps }`);
+            Log.Verbose(`     with ParentWorkPrincipalMeasure ${ ParentWorkPrincipalMeasure }`);
+
+            const Height: number = Math.round(
+                Parent.Type === "Horizontal"
+                    ? ParentGapData.AdjustedSize.Height
+                    : PrincipalRatio * ParentWorkPrincipalMeasure
+            );
+
+            const Width: number = Math.round(
+                Parent.Type === "Horizontal"
+                    ? PrincipalRatio * ParentWorkPrincipalMeasure
+                    : ParentGapData.AdjustedSize.Width
+            );
+
+            GapData.set(
+                Vertex,
+                {
+                    AdjustedSize:
+                    {
+                        Height,
+                        Width,
+                        X,
+                        Y
+                    },
+                    PrincipalRatio
+                }
+            );
+        });
+    });
+
+    const Out: Map<FVertex, FBox> = new Map<FVertex, FBox>();
+
+    GapData.forEach((GapData: FGapData, Vertex: FVertex): void =>
+    {
+        Out.set(Vertex, GapData.AdjustedSize);
+    });
+
+    return Out;
+};
+
+// const ComputeGap = (Cell: FCell): FBox | undefined =>
+// {
+//     /** @TODO Make this a setting. */
+//     const Gap: number = 4;
+
+//     const ParentPanel: FPanel | undefined = GetParent(Cell);
+//     if (ParentPanel === undefined)
+//     {
+//         return undefined;
+//     }
+
+//     const IndexInPanel: number | undefined = GetIndexInPanel(Cell);
+//     if (IndexInPanel === undefined)
+//     {
+//         return undefined;
+//     }
+
+//     const InnerBounds: FBox =
+//     {
+//         Height: ParentPanel.Size.Height - 2 * Gap,
+//         Width: ParentPanel.Size.Width - 2 * Gap,
+//         X: ParentPanel.Size.X + Gap,
+//         Y: ParentPanel.Size.Y + Gap
+//     };
+
+//     const PrincipalMeasure: "Height" | "Width" = ParentPanel.Type === "Horizontal"
+//         ? "Width"
+//         : "Height";
+
+//     const PrincipalAxis: "X" | "Y" = ParentPanel.Type === "Horizontal"
+//         ? "X"
+//         : "Y";
+
+//     /** What is the proportion of the width/height of the cell *wrt* its panel? */
+//     const PrincipalRatio: number = Cell.Size[PrincipalMeasure] / ParentPanel.Size[PrincipalMeasure];
+
+//     if (IndexInPanel === 0)
+//     {
+//         return ParentPanel.Type === "Horizontal"
+//             ? {
+//                 Height: ,
+//                 Width: ,
+//                 X: InnerBounds.X,
+//                 Y: InnerBounds.Y
+//             }
+//             : {
+//                 Height: ,
+//                 Width: ,
+//                 X: InnerBounds.X,
+//                 Y: InnerBounds.Y
+//             };
+//     }
+//     else if (IndexInPanel === ParentPanel.Children.length - 1)
+//     {
+//     }
+//     else
+//     {
+//         const PreviousVertexSize: FBox = ParentPanel.Children[IndexInPanel - 1].Size;
+//         const PreviousPrincipalRatio: number = PreviousVertexSize[PrincipalMeasure] / ParentPanel.Size[PrincipalMeasure];
+//     }
+// };
+
+// const ComputeGap = (Boxes: Array<FBox>, Gap: number, ParentPanelType: FPanel["Type"]): void =>
+// {
+//     const FirstY: number = Boxes[0].Y;
+//     for (const Box of Boxes)
+//     {
+//         if (Box.Y !== FirstY)
+//         {
+//             IsHorizontalLayout = false;
+//             break;
+//         }
+//     }
+
+//     if (IsHorizontalLayout)
+//     {
+//         // Horizontal layout.
+//         // Determine the container's overall bounds.
+//         const StartX: number = Math.min(...Boxes.map((Box) => Box.X));
+//         const EndX: number = Math.max(...Boxes.map((Box) => Box.X + Box.Width));
+//         const TotalContainerWidth: number = EndX - StartX;
+
+//         // Sum the original widths.
+//         const SumBoxWidths: number = Boxes.reduce((Total, Box) => Total + Box.Width, 0);
+
+//         // Reserve space for gaps between boxes and margins on each end.
+//         // There are (Boxes.length - 1) internal gaps and 2 margins.
+//         const NewTotalBoxWidth: number = TotalContainerWidth - Gap * (Boxes.length + 1);
+
+//         // Scale boxes proportionally.
+//         const ScaleFactor: number = NewTotalBoxWidth / SumBoxWidths;
+
+//         let CurrentX: number = StartX + Gap;
+//         for (const Box of Boxes)
+//         {
+//             Box.X = CurrentX;
+//             Box.Width = Box.Width * ScaleFactor;
+//             CurrentX += Box.Width + Gap;
+//         }
+//     }
+//     else
+//     {
+//         // Vertical layout.
+//         // Determine the container's overall bounds.
+//         const StartY: number = Math.min(...Boxes.map((Box) => Box.Y));
+//         const EndY: number = Math.max(...Boxes.map((Box) => Box.Y + Box.Height));
+//         const TotalContainerHeight: number = EndY - StartY;
+
+//         // Sum the original heights.
+//         const SumBoxHeights: number = Boxes.reduce((Total, Box) => Total + Box.Height, 0);
+
+//         // Reserve space for gaps between boxes and margins on each end.
+//         const NewTotalBoxHeight: number = TotalContainerHeight - Gap * (Boxes.length + 1);
+
+//         // Scale boxes proportionally.
+//         const ScaleFactor: number = NewTotalBoxHeight / SumBoxHeights;
+
+//         let CurrentY: number = StartY + Gap;
+//         for (const Box of Boxes)
+//         {
+//             Box.Y = CurrentY;
+//             Box.Height = Box.Height * ScaleFactor;
+//             CurrentY += Box.Height + Gap;
+//         }
+//     }
+// };
+
+// const ComputeGap = (Boxes: Array<FBox>, Gap: number): void =>
+// {
+//     let IsHorizontalLayout: boolean = true;
+//     const FirstY: number = Boxes[0].Y;
+//     for (const Box of Boxes)
+//     {
+//         if (Box.Y !== FirstY)
+//         {
+//             IsHorizontalLayout = false;
+//             break;
+//         }
+//     }
+
+//     if (IsHorizontalLayout)
+//     {
+//         const StartX: number = Math.min(...Boxes.map((Box) => Box.X));
+//         const EndX: number = Math.max(...Boxes.map((Box) => Box.X + Box.Width));
+
+//         const TotalContainerWidth: number = EndX - StartX;
+//         const SumBoxWidths: number = Boxes.reduce((Total, Box) => Total + Box.Width, 0);
+
+//         const NewTotalBoxWidth: number = TotalContainerWidth - Gap * (Boxes.length - 1);
+//         const ScaleFactor: number = NewTotalBoxWidth / SumBoxWidths;
+
+//         let CurrentX: number = StartX;
+//         for (const Box of Boxes)
+//         {
+//             Box.X = CurrentX;
+//             Box.Width = Box.Width * ScaleFactor;
+//             CurrentX += Box.Width + Gap;
+//             Box.Y += Gap;
+//             Box.Height -= 2 * Gap;
+//         }
+//     }
+//     else
+//     {
+//         const StartY: number = Math.min(...Boxes.map((Box: FBox) => Box.Y));
+//         const EndY: number = Math.max(...Boxes.map((Box: FBox) => Box.Y + Box.Height));
+
+//         const TotalContainerHeight: number = EndY - StartY;
+//         const SumBoxHeights: number = Boxes.reduce((Total: number, Box: FBox) => Total + Box.Height, 0);
+
+//         const NewTotalBoxHeight: number = TotalContainerHeight - Gap * (Boxes.length - 1);
+//         const ScaleFactor: number = NewTotalBoxHeight / SumBoxHeights;
+
+//         let CurrentY: number = StartY;
+//         for (const Box of Boxes)
+//         {
+//             Box.Y = CurrentY;
+//             Box.Height = Box.Height * ScaleFactor;
+//             CurrentY += Box.Height + Gap;
+//             Box.X += Gap;
+//             Box.Width -= 2 * Gap;
+//         }
+//     }
+// };
+
 export const Publish = (): void =>
 {
+    /** @TODO Dummy value, replace with actual setting. */
+    const GapSettingIsNonzero: boolean = true;
+    const GapAdjustedSizes: Map<FVertex, FBox> | undefined = GapSettingIsNonzero
+        ? ComputeGapData()
+        : undefined;
+
     Traverse((Vertex: FVertex): boolean =>
     {
         if (IsCell(Vertex))
         {
-            SetWindowPosition(
-                Vertex.Handle,
-                Vertex.Size
-            );
+            if (GapSettingIsNonzero)
+            {
+                if (GapAdjustedSizes !== undefined)
+                {
+                    const AdjustedSize: FBox | undefined = GapAdjustedSizes.get(Vertex);
+                    if (AdjustedSize !== undefined)
+                    {
+                        SetWindowPosition(
+                            Vertex.Handle,
+                            AdjustedSize
+                        );
+
+                        /* eslint-disable-next-line @stylistic/max-len */
+                        Log(`Cell ${ GetWindowTitle(Vertex.Handle).slice(0, 12) } has bounds ${ BoxToString(AdjustedSize) }.`);
+                    }
+                }
+            }
+            else
+            {
+                SetWindowPosition(
+                    Vertex.Handle,
+                    Vertex.Size
+                );
+            }
         }
 
         return true;

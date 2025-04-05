@@ -28,9 +28,9 @@ const ActivationTiled = (): ReactElement =>
                     Title="Focus"
                 />
                 <Command
-                    Action={ () => Navigator("/New") }
+                    Action={ () => Navigator("/Insert") }
                     Key="H"
-                    Title="New"
+                    Title="Insert"
                 />
                 <Command
                     Action={ () => Navigator("/Move") }
@@ -112,6 +112,8 @@ export const Activation = (): ReactElement =>
     }, [ ]);
 
     /** @TODO Use Action component. */
+    /** @TODO Hide "SorrellWm" if document.body.height is less than 500. */
+    /** @TODO Set color of "SorrellWm" just as other elements, based upon color of underlying window. */
     return (
         <div
             style={ {

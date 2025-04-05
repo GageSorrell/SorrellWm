@@ -7,7 +7,7 @@
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-export const UseIpcNavigatorState = (): Readonly<[ State: object ]> =>
+export const UseIpcNavigatorState = (): Readonly<[ State: unknown ]> =>
 {
     const { state } = useLocation();
     return [ state ] as const;

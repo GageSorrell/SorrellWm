@@ -82,6 +82,16 @@ export const PositionToString = (Box: FBox): string =>
     return `(${ Box.X }, ${ Box.Y })`;
 };
 
+export const SizeToString = (Box: FBox): string =>
+{
+    return `Width ${ Box.Width }, Height ${ Box.Height }`;
+};
+
+export const BoxToString = (Box: FBox): string =>
+{
+    return `${ PositionToString(Box) } with ${ SizeToString(Box) }`;
+};
+
 export const Sleep = (Duration: number): Promise<void> =>
 {
     /* eslint-disable-next-line @typescript-eslint/typedef */

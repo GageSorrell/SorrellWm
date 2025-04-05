@@ -72,3 +72,9 @@ export type FFocusChange =
     | "Down";
 
 export type FLogTransformer = (Vertex: FVertex, Depth: number, DefaultString: string) => string;
+
+export type FGapData =
+{
+    AdjustedSize: FBox;
+    PrincipalRatio: number;
+};

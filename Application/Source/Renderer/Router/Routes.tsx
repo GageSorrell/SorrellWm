@@ -7,13 +7,15 @@
 import { MemoryRouter, Route, Routes as RouterRoutes } from "react-router-dom";
 import { Activation } from "$/Activation";
 import { Focus } from "$/Focus";
+import { Insert } from "@/Domain/Insert";
 import { IpcNavigator } from "./IpcNavigator";
 import { Move } from "$/Move";
-import { New } from "$/New";
 import { Resize } from "$/Resize";
 import { Settings } from "$/Settings";
 import { TestWindow } from "$/Development/TestWindow";
 import { Tile } from "@/Domain/Tile";
+import { Direction } from "@/Domain/Insert/Screen/Direction";
+import { Select } from "@/Domain/Insert/Screen/Select";
 
 export const Routes = () =>
 {
@@ -30,8 +32,16 @@ export const Routes = () =>
                     path="/Focus"
                 />
                 <Route
-                    element={ <New /> }
-                    path="/New"
+                    element={ <Insert /> }
+                    path="/Insert"
+                />
+                <Route
+                    element={ <Direction /> }
+                    path="/Insert/Direction"
+                />
+                <Route
+                    element={ <Select /> }
+                    path="/Insert/Direction/Select"
                 />
                 <Route
                     element={ <Move /> }

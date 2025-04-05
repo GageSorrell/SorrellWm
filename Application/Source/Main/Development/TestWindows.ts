@@ -45,13 +45,12 @@ export const CreateNotepadTestWindows = async (NumWindows: number): Promise<void
     KillNotepadInstances();
     await Sleep(2000);
 
-    ForAsync(0, NumWindows, async (_Index: number): Promise<void> =>
+    for (let Index: number = 0; Index < 4; Index++)
     {
         spawn("C:\\Windows\\System32\\notepad.exe");
-        await Sleep(250);
-    });
+    }
 
-    await Sleep(2000);
+    await Sleep(3000);
 
     const NotepadHandles: Array<HWindow> = GetNotepadHandles();
 

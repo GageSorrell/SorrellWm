@@ -31,7 +31,8 @@ import {
     GetWindowTitle,
     type HWindow,
     KillOrphans,
-    UnblurBackground } from "@sorrellwm/windows";
+    UnblurBackground,
+    WriteTaskbarIconToPng} from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
@@ -249,6 +250,14 @@ const LaunchMainWindow = async (): Promise<void> =>
         ActiveWindow = undefined;
         UnblurBackground();
     });
+
+    // On("GetTaskbarIcons", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    // {
+    //     const ScreenshotBuffer: Buffer =
+    //         await Fs.readFile(WriteTaskbarIconToPng(Panel.Size));
+
+    //     return "data:image/png;base64," + ScreenshotBuffer.toString("base64");
+    // });
 
     On("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {

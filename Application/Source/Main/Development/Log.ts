@@ -61,7 +61,7 @@ const FormatLevel = (Level: FLogLevel): string =>
     const Colors: Record<FLogLevel, (Text: string) => string> =
     {
         Error: Chalk.bgRedBright.whiteBright,
-        Normal: (Text: string): string => Text,
+        Normal: Chalk.bgGray,
         Verbose: Chalk.bgCyan.whiteBright,
         Warn: Chalk.bgYellow.whiteBright
     };
@@ -95,6 +95,7 @@ const LogInternal = (
         OriginEmoji + " ",
         FormatCategory(Category),
         FormatLevel(Level),
+        " ",
         ...FormattedArguments
     ];
 
