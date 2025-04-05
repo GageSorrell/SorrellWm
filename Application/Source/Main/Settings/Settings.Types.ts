@@ -4,4 +4,8 @@
  * License:   MIT
  */
 
-export type FTemp = "";
+export type FSettings =
+{
+    Gap: number;
+    RunOnStartup: boolean;
+};

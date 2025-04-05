@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/** @deprecated DO NOT USE--use backend for settings. */
+
 import type { FStoreFunction, GGlobal, GGlobalDefault } from "./Store.Types";
 import { type PropsWithChildren, type ReactNode, useEffect, useState } from "react";
 import type { FHexColor } from "@sorrellwm/windows";
