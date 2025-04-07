@@ -446,34 +446,6 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
     return Napi::String::New(environment, WStringToString(tempFilePath));
 }
 
-// int GetEncoderClsid(const WCHAR* Format, CLSID* EncoderClsid)
-// {
-//     UINT EncoderCount = 0;
-//     UINT CodecInfoSize = 0;
-//     Gdiplus::GetImageEncodersSize(&EncoderCount, &CodecInfoSize);
-//     if (CodecInfoSize == 0)
-//     {
-//         return -1;
-//     }
-//     Gdiplus::ImageCodecInfo* ImageCodecInfoArray = (Gdiplus::ImageCodecInfo*) (malloc(CodecInfoSize));
-//     if (ImageCodecInfoArray == nullptr)
-//     {
-//         return -1;
-//     }
-//     GetImageEncoders(EncoderCount, CodecInfoSize, ImageCodecInfoArray);
-//     for (UINT Index = 0; Index < EncoderCount; Index++)
-//     {
-//         if (wcscmp(ImageCodecInfoArray[Index].MimeType, Format) == 0)
-//         {
-//             *EncoderClsid = ImageCodecInfoArray[Index].Clsid;
-//             free(ImageCodecInfoArray);
-//             return Index;
-//         }
-//     }
-//     free(ImageCodecInfoArray);
-//     return -1;
-// }
-
 Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env& Environment = CallbackInfo.Env();

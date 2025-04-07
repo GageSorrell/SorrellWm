@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+import type { HWindow } from "Windows";
+
 export type FFocusData =
 {
     Direction: "Horizontal" | "Vertical";
@@ -18,3 +20,10 @@ export type FFocusData =
 export type FInsertSizingMethod =
     | "Bisection"
     | "UniformResize";
+
+export type FInsertableWindowData =
+{
+    Handle: HWindow;
+    Icon: string;
+    Title: string;
+};

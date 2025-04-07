@@ -8,7 +8,6 @@ import {
     AnnotatePanel,
     BringIntoPanel,
     ChangeFocus,
-    ClearInterimFocusedVertex,
     FinishFocus,
     GetCurrentPanel,
     GetInterimFocusedVertex,
@@ -18,8 +17,7 @@ import {
     IsCell,
     IsPanel,
     IsWindowTiled,
-    SetInterimFocusedVertexToActive,
-    VertexToString
+    SetInterimFocusedVertexToActive
 } from "./Tree";
 import {
     BlurBackground as BlurBackgroundNative,
@@ -28,23 +26,24 @@ import {
     type FLogLevel,
     GetDwmWindowRect,
     GetFocusedWindow,
+    GetTileableWindows,
     GetWindowTitle,
     type HWindow,
     KillOrphans,
     UnblurBackground,
-    WriteTaskbarIconToPng} from "@sorrellwm/windows";
+    WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
-import type { FFocusData } from "@/Domain/Focus";
+import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
 import type { FIpcChannel } from "./Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
+import { promises as Fs } from "fs";
 import { Keyboard } from "./Keyboard";
-import { PositionToString } from "./Utility";
 import { Vk } from "$/Common/Component/Keyboard/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
@@ -251,13 +250,24 @@ const LaunchMainWindow = async (): Promise<void> =>
         UnblurBackground();
     });
 
-    // On("GetTaskbarIcons", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
-    // {
-    //     const ScreenshotBuffer: Buffer =
-    //         await Fs.readFile(WriteTaskbarIconToPng(Panel.Size));
+    On("GetInsertableWindowData", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    {
+        const GetInsertableWindowDatum = async (TileableWindow: HWindow): Promise<FInsertableWindowData> =>
+        {
+            const IconBuffer: Buffer = await Fs.readFile(WriteTaskbarIconToPng(TileableWindow));
+            const Icon: string = "data:image/png;base64," + IconBuffer.toString("base64");
+            return {
+                Handle: TileableWindow,
+                Icon,
+                Title: GetWindowTitle(TileableWindow)
+            };
+        };
 
-    //     return "data:image/png;base64," + ScreenshotBuffer.toString("base64");
-    // });
+        const InsertableWindowData: Array<FInsertableWindowData> =
+            await Promise.all(GetTileableWindows().map(GetInsertableWindowDatum));
+
+        MainWindow?.webContents.send("GetInsertableWindowData", InsertableWindowData);
+    });
 
     On("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {

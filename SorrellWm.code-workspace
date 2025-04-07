@@ -114,6 +114,7 @@
 			"HWNDPREV",
 			"IDOK",
 			"INITDIAstd::cout",
+			"Insertable",
 			"KBDLLHOOKSTRUCT",
 			"Keybind",
 			"Keybinds",

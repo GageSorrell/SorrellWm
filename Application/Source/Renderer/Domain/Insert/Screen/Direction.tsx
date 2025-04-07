@@ -9,7 +9,7 @@ import { type NavigateFunction, useNavigate } from "react-router-dom";
 import { type ReactElement, useState } from "react";
 import { Action } from "@/Action";
 import type { FCardinalDirection } from "?/Shared.Types";
-import type { FInsertSizingMethod } from "?/Transaction";
+import type { FInsertSizingMethod } from "?/Transaction.Types";
 import { HighlightedHalf } from "../Component";
 import { UseIpcNavigatorState } from "@/Router";
 

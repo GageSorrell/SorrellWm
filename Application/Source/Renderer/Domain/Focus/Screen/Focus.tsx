@@ -8,7 +8,7 @@ import { Command, CompoundCommand } from "$/Common";
 import { type MutableRefObject, type ReactNode, useEffect, useRef, useState } from "react";
 import { Action } from "@/Action";
 import type { FFocusChange } from "#/Tree.Types";
-import type { FFocusData } from "?/Transaction";
+import type { FFocusData } from "?/Transaction.Types";
 
 export const Focus = (): ReactNode =>
 {
@@ -43,18 +43,6 @@ export const Focus = (): ReactNode =>
 
         window.electron.ipcRenderer.Send("GetFocusData");
     }, [ FocusData, SetFocusData ]);
-
-    // const IsSelectionPristine: MutableRefObject<boolean> = useRef<boolean>(true);
-
-    // useEffect((): void =>
-    // {
-    //     if (IsSelectionPristine.current)
-    //     {
-    //         IsSelectionPristine.current = false;
-    //     }
-
-    //     window.electron.ipcRenderer.Send("ChangeFocus", );
-    // }, [ InterimPanel ]);
 
     const IsHorizontal: boolean = FocusData?.Direction === "Horizontal";
 

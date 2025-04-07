@@ -8,7 +8,7 @@ import { Action } from "@/Action";
 import { type ReactElement } from "react";
 import { Command } from "@/Domain/Common";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
-import type { FInsertSizingMethod } from "?/Transaction";
+import type { FInsertSizingMethod } from "?/Transaction.Types";
 
 export const Insert = (): ReactElement =>
 {

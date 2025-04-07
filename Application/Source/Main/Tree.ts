@@ -30,11 +30,11 @@ import type {
     FPanelBase,
     FVertex } from "./Tree.Types";
 import { type FLogger, GetLogger } from "./Development";
+import { type FSettings, GetSettings } from "./Settings";
 import { promises as Fs } from "fs";
 import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
 import { type TPredicate } from "@/Utility";
-import { GetSettings, type FSettings } from "./Settings";
 
 const Log: FLogger = GetLogger("Tree");
 

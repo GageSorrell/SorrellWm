@@ -9,3 +9,6 @@ export type FCardinalDirection =
     | "Down"
     | "Left"
     | "Right";
+
+export type TFunction<TParameterTypes extends Array<unknown>, TReturnType> =
+    (...Arguments: TParameterTypes) => TReturnType;

@@ -7,4 +7,4 @@
 export * from "./Settings";
 export * from "./Settings.Types";
 export * from "./Shared.Types";
-export * from "./Transaction";
+export * from "./Transaction.Types";
