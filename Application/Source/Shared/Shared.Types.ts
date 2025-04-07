@@ -12,3 +12,5 @@ export type FCardinalDirection =
 
 export type TFunction<TParameterTypes extends Array<unknown>, TReturnType> =
     (...Arguments: TParameterTypes) => TReturnType;
+
+export type FNotFunction = Exclude<unknown, (...Arguments: Array<unknown>) => unknown>;

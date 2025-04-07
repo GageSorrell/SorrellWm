@@ -2,6 +2,8 @@
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
+ * Comment:   Define types used in `Event.Types.ts` that
+ *            do not otherwise have a good place to go.
  */
 
 import type { HWindow } from "Windows";

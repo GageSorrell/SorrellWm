@@ -11,11 +11,7 @@ import {
     useEffect,
     useRef,
     useState } from "react";
-import type {
-    FIpcChannel,
-    TIpcBackendPayload,
-    TIpcFrontendFunction,
-    TIpcFrontendPayload } from "#/Event.Types";
+import type { FIpcFrontendChannel, TRequestData, TResponseData } from "?/Event.Types";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,
@@ -57,24 +53,16 @@ export const UseIndex = (
     return [ Index, Increment, Decrement, SetIndex ] as const;
 };
 
-/**
- * When the component mounts, send a message on `Channel` with `Data` and handle
- * a response from the backend via `Callback`.
- *
- * This function wraps `useEffect`, so you should provide a `Dependency` array.
- *
- * @param Channel      - The channel to send and receive the message over.
- * @param Data         - The data to send (typically `undefined`).
- * @param Callback     - The callback to run when the backend responds.
- * @param Dependencies - The `useEffect` dependency array.
- */
-export const UseIpcEffect = <T extends FIpcChannel>(
-    Channel: T,
-    Callback: TIpcFrontendFunction<T>,
-    Data: TIpcFrontendPayload<T>,
-    Dependencies?: Array<unknown>
-): void =>
+/** Send an event to the backend, and get a response. */
+export const UseIpc = <TChannel extends FIpcFrontendChannel>(
+    Channel: TChannel,
+    RequestData: TRequestData<TChannel>
+): Readonly<[
+    TResponseData<TChannel> | undefined,
+    Dispatch<SetStateAction<TResponseData<TChannel> | undefined>>
+]> =>
 {
+    const [ Response, SetResponse ] = useState<TResponseData<TChannel> | undefined>(undefined);
     const HasRunOnceRef: MutableRefObject<boolean> = useRef<boolean>(false);
     useEffect((): void =>
     {
@@ -84,43 +72,14 @@ export const UseIpcEffect = <T extends FIpcChannel>(
         }
 
         HasRunOnceRef.current = true;
-
-        window.electron.ipcRenderer.On(Channel, Callback);
-        window.electron.ipcRenderer.Send(Channel, Data);
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
-    }, Dependencies);
-};
-
-/**
- * `useState`, but initialize via calling an IPC channel.
- * @param Channel
- * @param Callback
- * @param Data
- * @param Dependencies
- * @returns
- */
-export const UseIpcState = <T extends FIpcChannel>(
-    Channel: T,
-    Data: TIpcFrontendPayload<T>
-): Readonly<[
-    TIpcBackendPayload<T> | undefined,
-    Dispatch<SetStateAction<TIpcBackendPayload<T>> | undefined>
-]> =>
-{
-    const [ Value, SetValue ] = useState<TIpcBackendPayload<T> | undefined>(undefined);
-
-    UseIpcEffect(
-        Channel,
-        async (...Arguments: Array<unknown>): Promise<void> =>
+        window.electron.ipcRenderer.On(Channel, (InResponseData: TResponseData<TChannel>): void =>
         {
-            SetValue((Old: TIpcBackendPayload<T> | undefined): TIpcBackendPayload<T> =>
+            SetResponse((_Old: TResponseData<TChannel> | undefined): TResponseData<TChannel> | undefined =>
             {
-                return Arguments;
+                return InResponseData;
             });
-        },
-        Data,
-        [ SetValue ]
-    );
-
-    return [ Value, SetValue ] as const;
+        });
+        window.electron.ipcRenderer.Send(Channel, RequestData);
+    }, [ Channel, RequestData ]);
+    return [ Response, SetResponse ] as const;
 };

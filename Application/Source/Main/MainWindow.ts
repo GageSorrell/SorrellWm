@@ -39,12 +39,13 @@ import { type FLogger, GetLogger, LogFrontend } from "./Development";
 import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
 import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
-import type { FIpcChannel } from "./Event.Types";
+import type { FIpcChannel } from "../Shared/Event.Base.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { promises as Fs } from "fs";
 import { Keyboard } from "./Keyboard";
 import { Vk } from "$/Common/Component/Keyboard/Keyboard";
+import type { FIpcBackendChannel, TIpcHandler, FIpcFrontendChannel, TRequestData, TResponseData, TIpcCallback } from "?/Event.Types";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -99,12 +100,42 @@ const GetLeastInvisiblePosition = (): { x: number; y: number } =>
     };
 };
 
-/** A type-safe version of `ipcMain.on`. */
+/** @deprecated A type-safe version of `ipcMain.on`. */
 const On = (
     Event: FIpcChannel,
     Callback: ((Event: Electron.Event, ...Arguments: Array<unknown>) => void)) =>
 {
     ipcMain.on(Event, Callback);
+};
+
+/** Send an event from the backend to the frontend. */
+export const SendIpcEvent = <T extends FIpcBackendChannel>(
+    BrowserWindow: BrowserWindow,
+    Channel: T,
+    RequestData: TRequestData<T>,
+    Callback: TIpcCallback<T>
+): void =>
+{
+    ipcMain.on(Channel, (_Event: Electron.Event, ...Arguments: Array<unknown>): void =>
+    {
+        const ResponseData: TResponseData<T> | undefined = Arguments[0] as TResponseData<T> | undefined;
+        Callback(ResponseData);
+    });
+    BrowserWindow.webContents.send(Channel, RequestData);
+};
+
+export const OnIpcEvent = <T extends FIpcFrontendChannel>(
+    BrowserWindow: BrowserWindow,
+    Channel: T,
+    Callback: TIpcHandler<T>
+): void =>
+{
+    ipcMain.on(Channel, async (_Event: Electron.Event, ...Arguments: Array<unknown>): Promise<void> =>
+    {
+        const RequestData: TRequestData<T> = Arguments[0] as TRequestData<T>;
+        const ResponseData: TResponseData<T> = await Callback(RequestData);
+        BrowserWindow.webContents.send(Channel, ResponseData);
+    });
 };
 
 const MainBrowserEvents: FBrowserWindowEvents =
