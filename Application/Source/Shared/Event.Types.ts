@@ -23,7 +23,6 @@ type TIpcEvent<
     ResponseData: TResponseData;
 };
 
-// export type TIpcRequestData<T extends >
 type FUnknownIpcEvent = TIpcEvent<FIpcEventInitiator, FNotFunction, FNotFunction>;
 
 export type TIpcEventsBase<T> = T extends Record<string, FUnknownIpcEvent>

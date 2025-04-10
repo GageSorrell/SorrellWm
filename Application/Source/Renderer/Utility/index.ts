@@ -6,6 +6,6 @@
 
 export * from "./Color";
 export * from "./Color.Types";
-export * from "../../Shared/Event.Base.Types";
+export * from "../../Shared/Event.Types";
 export * from "./Utility";
 export * from "./Utility.Types";

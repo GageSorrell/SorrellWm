@@ -39,7 +39,7 @@ import { type FLogger, GetLogger, LogFrontend } from "./Development";
 import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
 import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
-import type { FIpcChannel } from "../Shared/Event.Base.Types";
+import type { FIpcChannel } from "../Shared/Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { promises as Fs } from "fs";
