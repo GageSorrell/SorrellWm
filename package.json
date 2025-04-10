@@ -1,5 +1,14 @@
 {
-  "name": "SorrellWm",
+  "name": "sorrell-wm-monorepo",
+  "description": "The tiling window manager for everyone.",
+  "keywords": [
+    "electron",
+    "macos",
+    "windows-11",
+    "window-manager",
+    "wm",
+    "fluent-ui"
+  ],
   "packageManager": "yarn@4.5.3",
   "type": "module",
   "workspaces": [

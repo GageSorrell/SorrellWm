@@ -3,16 +3,13 @@
   "description": "The tiling window manager for everyone.",
   "keywords": [
     "electron",
-    "boilerplate",
-    "react",
-    "typescript",
-    "ts",
-    "sass",
-    "webpack",
-    "hot",
-    "reload"
+    "macos",
+    "windows-11",
+    "window-manager",
+    "wm",
+    "fluent-ui"
   ],
-  "homepage": "https://github.com/GageSorrell/SorrellWm",
+  "homepage": "https://wm.sorrell.sh",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
@@ -28,7 +25,7 @@
   },
   "main": "./Intermediate/main.bundle.dev.js",
   "scripts": {
-    "build-script": "tsc",
+    "build-script": "tsc -p tsconfig.Script.json",
     "build-scripts": "npm run build-script",
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Dev.Dll.ts",

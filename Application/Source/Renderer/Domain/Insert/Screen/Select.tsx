@@ -4,11 +4,11 @@
  * License:   MIT
  */
 
-import type { FInsertSizingMethod, FInsertableWindowData } from "?/Transaction.Types";
 import { Action } from "@/Action";
 import type { FCardinalDirection } from "?/Shared.Types";
+import type { FInsertSizingMethod } from "?/Transaction.Types";
 import { type ReactElement } from "react";
-import { UseIpcEffect } from "@/Utility/Hook";
+import { UseIpc } from "@/Utility";
 import { UseIpcNavigatorState } from "@/Router";
 
 type FSelectNavigatorState = Readonly<[ FInsertSizingMethod, FCardinalDirection ] | [ undefined, undefined ]>;
@@ -36,14 +36,7 @@ export const Select = (): ReactElement =>
 {
     const [ SizingMethod, Direction ] = UseSelectNavigatorState();
 
-    UseIpcEffect(
-        "GetInsertableWindowData",
-        async (InsertableWindowData: Array<FInsertableWindowData>): Promise<void> =>
-        {
-
-        },
-        undefined
-    );
+    const [ InsertableWindowData ] = UseIpc("GetInsertableWindowData", undefined);
 
     return (
         <Action>
