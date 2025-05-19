@@ -4,7 +4,12 @@
  * License:   MIT
  */
 
-import { AreBoxesEqual, AreHandlesEqual, BoxToString, GetPngBase64, PositionToString } from "./Utility/Utility";
+import {
+    AreBoxesEqual,
+    AreHandlesEqual,
+    BoxToString,
+    GetPngBase64,
+    PositionToString } from "./Utility/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FBox,
