@@ -46,6 +46,7 @@ import { promises as Fs } from "fs";
 import { Keyboard } from "./Keyboard";
 import { Vk } from "$/Common/Component/Keyboard/Keyboard";
 import type { FIpcBackendChannel, TIpcHandler, FIpcFrontendChannel, TRequestData, TResponseData, TIpcCallback } from "?/Event.Types";
+import { GetPngBase64 } from "./Utility";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -285,8 +286,8 @@ const LaunchMainWindow = async (): Promise<void> =>
     {
         const GetInsertableWindowDatum = async (TileableWindow: HWindow): Promise<FInsertableWindowData> =>
         {
-            const IconBuffer: Buffer = await Fs.readFile(WriteTaskbarIconToPng(TileableWindow));
-            const Icon: string = "data:image/png;base64," + IconBuffer.toString("base64");
+            const Icon: string = await GetPngBase64(WriteTaskbarIconToPng(TileableWindow));
+
             return {
                 Handle: TileableWindow,
                 Icon,

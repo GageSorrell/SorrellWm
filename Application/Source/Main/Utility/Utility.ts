@@ -1,9 +1,10 @@
-/* File:    util.ts
+/* File:    Utility.ts
  * Author:  Gage Sorrell <gage@sorrell.sh>
  * License: MIT
  */
 
 import type { FBox } from "@sorrellwm/windows";
+import { promises as Fs } from "fs";
 import type { HHandle } from "./Utility.Types";
 import type { TRef } from "#/Core";
 
@@ -102,4 +103,10 @@ export const Sleep = (Duration: number): Promise<void> =>
             Resolve();
         }, Duration);
     });
+};
+
+export const GetPngBase64 = async (Path: string): Promise<string> =>
+{
+    const IconBuffer: Buffer = await Fs.readFile(Path);
+    return "data:image/png;base64," + IconBuffer.toString("base64");
 };

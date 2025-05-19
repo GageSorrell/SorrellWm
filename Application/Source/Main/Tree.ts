@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { AreBoxesEqual, AreHandlesEqual, BoxToString, PositionToString } from "./Utility/Utility";
+import { AreBoxesEqual, AreHandlesEqual, BoxToString, GetPngBase64, PositionToString } from "./Utility/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FBox,
@@ -689,10 +689,9 @@ export const AnnotatePanel = (Panel: FPanel): FAnnotatedPanel | undefined =>
 
 export const GetPanelScreenshot = async (Panel: FPanel): Promise<string | undefined> =>
 {
-    const ScreenshotBuffer: Buffer =
-        await Fs.readFile(CaptureScreenSectionToTempPngFile(Panel.Size));
+    const ScreenshotPath: string = CaptureScreenSectionToTempPngFile(Panel.Size);
 
-    return "data:image/png;base64," + ScreenshotBuffer.toString("base64");
+    return await GetPngBase64(ScreenshotPath);
 };
 
 export const MakeSizesUniform = (Panel: FPanel): void =>
