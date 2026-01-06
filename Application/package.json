@@ -31,7 +31,7 @@
     "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Dev.Dll.ts",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Prod.ts",
     "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Prod.ts",
-    "postinstall": "node ./Distribution/Script/CheckNativeDependencies.js && electron-builder install-app-deps && npm run build:dll",
+    "postinstall": "npm run build-script && node ./Distribution/Script/CheckNativeDependencies.js && electron-builder install-app-deps && npm run build:dll",
     "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "package": "node ./Distribution/Script/Clean.js Distribution && npm run build && electron-builder build --publish never && npm run build:dll",
@@ -226,10 +226,6 @@
       "owner": "GageSorrell",
       "repo": "SorrellWm"
     }
-  },
-  "devEngines": {
-    "node": ">=14.x",
-    "npm": ">=7.x"
   },
   "electronmon": {
     "patterns": [
