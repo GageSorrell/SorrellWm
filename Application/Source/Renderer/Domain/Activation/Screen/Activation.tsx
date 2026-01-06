@@ -10,7 +10,7 @@ import {
     CommandContainer,
     MainCommands } from "$/Common/Component";
 import { type NavigateFunction, useNavigate } from "react-router-dom";
-import { type ReactElement, useEffect } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 import { Action } from "@/Action";
 import { Log } from "@/Api";
 import { UseIpcNavigatorState } from "@/Router";

@@ -1029,12 +1029,12 @@ void SuperimposeMainWindow(FBackdrop* Backdrop)
 {
     LPCSTR WindowName = "SorrellWm Main Window";
     Backdrop->SorrellWmMainWindow = GetMainWindow();
-    SetWindowLong(
-        Backdrop->SorrellWmMainWindow,
-        GWL_EXSTYLE,
-        GetWindowLong(Backdrop->SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
-    );
-    SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, 0, LWA_ALPHA);
+    // SetWindowLong(
+    //     Backdrop->SorrellWmMainWindow,
+    //     GWL_EXSTYLE,
+    //     GetWindowLong(Backdrop->SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
+    // );
+    // SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, 0, LWA_ALPHA);
     BOOL PositionSet = SetWindowPos(
         Backdrop->SorrellWmMainWindow,
         HWND_TOP,
@@ -1085,15 +1085,15 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     Backdrop->SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
 
-    const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
-    if (!CreatedBackdrop)
-    {
-        return Environment.Undefined();
-    }
+    // const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
+    // if (!CreatedBackdrop)
+    // {
+    //     return Environment.Undefined();
+    // }
 
-    CaptureWindowScreenshot(Backdrop);
+    // CaptureWindowScreenshot(Backdrop);
 
-    SuperimposeBackdrop(Backdrop);
+    // SuperimposeBackdrop(Backdrop);
     SuperimposeMainWindow(Backdrop);
 
     return EncodeHandle(Environment, Backdrop->BackdropHandle);
@@ -1114,6 +1114,10 @@ Napi::Value KillOrphans(const Napi::CallbackInfo& CallbackInfo)
 
     BOOL Shadow = false;
     SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
+
+    DWORD FadeStartTime = BackdropToUnblur == nullptr
+        ? 0
+        : BackdropToUnblur->FadeStartTime;
 
     for (FBackdrop* Orphan : BackdropsBeingUnblurred)
     {

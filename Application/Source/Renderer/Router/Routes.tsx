@@ -6,16 +6,16 @@
 
 import { MemoryRouter, Route, Routes as RouterRoutes } from "react-router-dom";
 import { Activation } from "$/Activation";
+import { Direction } from "@/Domain/Insert/Screen/Direction";
 import { Focus } from "$/Focus";
 import { Insert } from "@/Domain/Insert";
 import { IpcNavigator } from "./IpcNavigator";
 import { Move } from "$/Move";
 import { Resize } from "$/Resize";
+import { Select } from "@/Domain/Insert/Screen/Select";
 import { Settings } from "$/Settings";
 import { TestWindow } from "$/Development/TestWindow";
 import { Tile } from "@/Domain/Tile";
-import { Direction } from "@/Domain/Insert/Screen/Direction";
-import { Select } from "@/Domain/Insert/Screen/Select";
 
 export const Routes = () =>
 {

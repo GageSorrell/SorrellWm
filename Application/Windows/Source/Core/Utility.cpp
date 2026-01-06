@@ -76,9 +76,16 @@ std::wstring GetTempPath()
 template <typename THandle>
 std::string HandleToString(THandle Handle)
 {
-    std::stringstream StringStream;
-    StringStream << std::hex << reinterpret_cast<uintptr_t>(Handle);
-    return StringStream.str();
+    if (Handle == nullptr)
+    {
+        return "nullptr";
+    }
+    else
+    {
+        std::stringstream StringStream;
+        StringStream << std::hex << reinterpret_cast<uintptr_t>(Handle);
+        return StringStream.str();
+    }
 }
 
 Napi::Object EncodeHandle(const Napi::Env& Environment, void* Handle)

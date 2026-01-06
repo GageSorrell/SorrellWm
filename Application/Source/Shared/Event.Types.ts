@@ -7,65 +7,158 @@
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree.Types";
 import type { FFocusData, FInsertableWindowData } from "./Transaction.Types";
 import type { FNotFunction } from "./Shared.Types";
+import type { FBringIntoPanelErrorCode, FGetAnnotatedPanelsErrorCode, FGetCurrentPanelErrorCode, FGetFocusDataErrorCode, FGetInsertableWindowDataErrorCode, FGetPanelScreenshotsErrorCode, FLogErrorCode, FOnChangeFocusErrorCode, FReadyForRouteErrorCode } from "./EventErrorCodes.Types";
 
-type FIpcEventInitiator =
+export type FIpcEventInitiator =
     | "Backend"
     | "Frontend";
 
-type TIpcEvent<
+export type TResponseDataWrapper<TDataType, TErrorString extends string> =
+    | {
+        Data: TDataType;
+        Error: undefined;
+    }
+    | {
+        Data: undefined;
+        Error: TErrorString;
+    };
+
+export type TIpcEvent<
     TInitiator extends FIpcEventInitiator,
     TRequestData extends FNotFunction,
-    TResponseData extends FNotFunction
+    TResponseData extends FNotFunction,
+    TErrorString extends string
 > =
 {
     Initiator: TInitiator;
     RequestData: TRequestData;
-    ResponseData: TResponseData;
+    ResponseData: TResponseDataWrapper<TResponseData, TErrorString>;
 };
 
-type FUnknownIpcEvent = TIpcEvent<FIpcEventInitiator, FNotFunction, FNotFunction>;
+type FUnknownIpcEvent = TIpcEvent<FIpcEventInitiator, FNotFunction, FNotFunction, string>;
 
 export type TIpcEventsBase<T> = T extends Record<string, FUnknownIpcEvent>
     ? T
     : never;
 
-export type FIpcEvents = TIpcEventsBase<{
-    BringIntoPanel: TIpcEvent<"Frontend", FAnnotatedPanel, undefined>;
-    GetAnnotatedPanels: TIpcEvent<"Frontend", undefined, Array<FAnnotatedPanel>>;
-    GetCurrentPanel: TIpcEvent<"Frontend", undefined, FPanel>;
-    GetFocusData: TIpcEvent<"Frontend", undefined, FFocusData>;
-    GetPanelScreenshots: TIpcEvent<"Frontend", undefined, Array<string>>;
-    GetInsertableWindowData: TIpcEvent<"Frontend", undefined, Array<FInsertableWindowData>>;
-    Log: TIpcEvent<"Frontend", Array<unknown>, undefined>;
-    Activate: TIpcEvent<"Backend", boolean, undefined>;
-    OnChangeFocus: TIpcEvent<"Frontend", FFocusChange, undefined>;
-    ReadyForRoute: TIpcEvent<"Frontend", undefined, undefined>;
-    TearDown: TIpcEvent<"Backend", undefined, undefined>;
+export type TIpcFrontendEvent<
+    TRequestData extends FNotFunction,
+    TResponseData extends FNotFunction,
+    TErrorString extends string> =
+        TIpcEvent<
+            "Frontend",
+            TRequestData,
+            TResponseData,
+            TErrorString
+        >;
+
+// @TODO Create proper string unions for the error codes for each event.
+export type FIpcFrontendEvents = TIpcEventsBase<{
+    BringIntoPanel: TIpcFrontendEvent<
+        FAnnotatedPanel,
+        undefined,
+        FBringIntoPanelErrorCode
+    >;
+    GetAnnotatedPanels: TIpcFrontendEvent<
+        undefined,
+        Array<FAnnotatedPanel>,
+        FGetAnnotatedPanelsErrorCode
+    >;
+    GetCurrentPanel: TIpcFrontendEvent<
+        undefined,
+        FPanel,
+        FGetCurrentPanelErrorCode
+    >;
+    GetFocusData: TIpcFrontendEvent<
+        undefined,
+        FFocusData,
+        FGetFocusDataErrorCode
+    >;
+    GetPanelScreenshots: TIpcFrontendEvent<
+        undefined,
+        Array<string>,
+        FGetPanelScreenshotsErrorCode
+    >;
+    GetInsertableWindowData: TIpcFrontendEvent<
+        undefined,
+        Array<FInsertableWindowData>,
+        FGetInsertableWindowDataErrorCode
+    >;
+    Log: TIpcFrontendEvent<
+        Array<unknown>,
+        undefined,
+        FLogErrorCode
+    >;
+    OnChangeFocus: TIpcFrontendEvent<
+        FFocusChange,
+        undefined,
+        FOnChangeFocusErrorCode
+    >;
+    ReadyForRoute: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FReadyForRouteErrorCode
+    >;
 }>;
+
+export type TIpcBackendEvent<
+    TRequestData extends FNotFunction,
+    TResponseData extends FNotFunction,
+    TErrorString extends string> =
+        TIpcEvent<
+            "Backend",
+            TRequestData,
+            TResponseData,
+            TErrorString
+        >;
+
+export type FIpcBackendEvents = TIpcEventsBase<{
+    Activate: TIpcBackendEvent<
+        boolean,
+        undefined,
+        string
+    >;
+    TearDown: TIpcBackendEvent<
+        undefined,
+        undefined,
+        string
+    >;
+}>;
+
+export type FIpcEvents = FIpcFrontendEvents & FIpcBackendEvents;
 
 export type FIpcChannel = keyof FIpcEvents;
 
-export type FIpcFrontendChannel = keyof
-{
-    [ Channel in FIpcChannel as FIpcEvents[Channel]["Initiator"] extends "Frontend"
-        ? Channel
-        : never
-    ]: unknown;
-};
+export type FIpcFrontendChannel = keyof FIpcFrontendEvents;
+// export type FIpcFrontendChannel = keyof
+// {
+//     [ Channel in FIpcChannel as FIpcEvents[Channel]["Initiator"] extends "Frontend"
+//         ? Channel
+//         : never
+//     ]: unknown;
+// };
 
-export type FIpcBackendChannel = keyof
-{
-    [ Channel in FIpcChannel as FIpcEvents[Channel]["Initiator"] extends "Backend"
-        ? Channel
-        : never
-    ]: unknown;
-};
+export type FIpcBackendChannel = keyof FIpcBackendEvents;
+// export type FIpcBackendChannel = keyof
+// {
+//     [ Channel in FIpcChannel as FIpcEvents[Channel]["Initiator"] extends "Backend"
+//         ? Channel
+//         : never
+//     ]: unknown;
+// };
 
 export type TRequestData<T extends FIpcChannel> = FIpcEvents[T]["RequestData"];
-export type TResponseData<T extends FIpcChannel> = FIpcEvents[T]["ResponseData"];
+export type TResponseDataBase<T extends FIpcChannel> = FIpcEvents[T]["ResponseData"] | undefined;
+export type TResponseData<T extends FIpcChannel> =
+{
+    RemoveListener: () => void;
+    Response: TResponseDataBase<T>;
+};
 
 export type TIpcHandler<T extends FIpcChannel> =
-    (Data: TRequestData<T> | undefined) => Promise<TResponseData<T>>;
+    (RequestData: TRequestData<T> | undefined) => Promise<TResponseData<T>>;
+
+export type TIpcHandlerReturnType<T extends FIpcChannel> = ReturnType<TIpcHandler<T>>;
 
 export type TIpcCallback<T extends FIpcChannel> =
-    (Data: TResponseData<T> | undefined) => Promise<void>;
+    (ResponseData: TResponseData<T> | undefined) => Promise<void>;

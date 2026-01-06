@@ -29,24 +29,24 @@ import {
     GetTileableWindows,
     GetWindowTitle,
     type HWindow,
-    KillOrphans,
-    UnblurBackground,
+    // KillOrphans,
+    // UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
-import { type FLogger, GetLogger, LogFrontend } from "./Development";
-import { CreateNotepadTestWindows } from "./Development/TestWindows";
-import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
 import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
+import { type FLogger, GetLogger, LogFrontend } from "./Development";
+// import { CreateNotepadTestWindows } from "./Development/TestWindows";
+import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
 import type { FIpcChannel } from "../Shared/Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
-import { promises as Fs } from "fs";
-import { Keyboard } from "./Keyboard";
-import { Vk } from "$/Common/Component/Keyboard/Keyboard";
-import type { FIpcBackendChannel, TIpcHandler, FIpcFrontendChannel, TRequestData, TResponseData, TIpcCallback } from "?/Event.Types";
+// import { promises as Fs } from "fs";
 import { GetPngBase64 } from "./Utility";
+import { Keyboard } from "./Keyboard";
+// import type { TIpcHandlerReturnType } from "?/Event.Types";
+import { Vk } from "$/Common/Component/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -71,6 +71,15 @@ const BlurBackground = (Bounds: FBox): void =>
 
 let MainWindow: BrowserWindow | undefined = undefined;
 export const GetMainWindow = (): BrowserWindow | undefined => MainWindow;
+
+const UnblurBackground = (): void =>
+{
+    const { x: X, y: Y } = GetLeastInvisiblePosition();
+    if (MainWindow)
+    {
+        MainWindow.setPosition(X, Y, false);
+    }
+};
 
 const GetLeastInvisiblePosition = (): { x: number; y: number } =>
 {
@@ -109,35 +118,47 @@ const On = (
     ipcMain.on(Event, Callback);
 };
 
-/** Send an event from the backend to the frontend. */
-export const SendIpcEvent = <T extends FIpcBackendChannel>(
-    BrowserWindow: BrowserWindow,
-    Channel: T,
-    RequestData: TRequestData<T>,
-    Callback: TIpcCallback<T>
-): void =>
-{
-    ipcMain.on(Channel, (_Event: Electron.Event, ...Arguments: Array<unknown>): void =>
-    {
-        const ResponseData: TResponseData<T> | undefined = Arguments[0] as TResponseData<T> | undefined;
-        Callback(ResponseData);
-    });
-    BrowserWindow.webContents.send(Channel, RequestData);
-};
+// /** Send an event from the backend to the frontend. */
+// export const SendIpcEvent = async <T extends FIpcBackendChannel>(
+//     BrowserWindow: BrowserWindow,
+//     Channel: T,
+//     RequestData: TRequestData<T>
+// ): Promise<TResponseData<T>> =>
+// {
+//     return new Promise<TResponseData<T>>((
+//         Resolve: TResolveFunction<TResponseData<T>>,
+//         _Reject: FRejectFunction
+//     ): void =>
+//     {
+//         const Subscription = (_Event: Electron.Event, ...Arguments: Array<unknown>): void =>
+//         {
+//             const Response: TResponseDataBase<T> = Arguments[0] as TResponseDataBase<T>;
+//             const RemoveListener = (): void =>
+//             {
+//                 ipcMain.removeListener(Channel, Subscription);
+//             };
 
-export const OnIpcEvent = <T extends FIpcFrontendChannel>(
-    BrowserWindow: BrowserWindow,
-    Channel: T,
-    Callback: TIpcHandler<T>
-): void =>
-{
-    ipcMain.on(Channel, async (_Event: Electron.Event, ...Arguments: Array<unknown>): Promise<void> =>
-    {
-        const RequestData: TRequestData<T> = Arguments[0] as TRequestData<T>;
-        const ResponseData: TResponseData<T> = await Callback(RequestData);
-        BrowserWindow.webContents.send(Channel, ResponseData);
-    });
-};
+//             Resolve({ RemoveListener, Response });
+//         };
+
+//         BrowserWindow.webContents.send(Channel, Subscription);
+//     });
+// };
+
+// export const OnIpcEvent = <T extends FIpcFrontendChannel>(
+//     BrowserWindow: BrowserWindow,
+//     Channel: T,
+//     Callback: TIpcHandler<T>,
+//     bFireOnce: boolean = false
+// ): void =>
+// {
+//     ipcMain.on(Channel, async (_Event: Electron.Event, ...Arguments: Array<unknown>): Promise<void> =>
+//     {
+//         const RequestData: TRequestData<T> = Arguments[0] as TRequestData<T>;
+//         const ResponseData: TResponseData<T> = await Callback(RequestData);
+//         BrowserWindow.webContents.send(Channel, ResponseData);
+//     });
+// };
 
 const MainBrowserEvents: FBrowserWindowEvents =
 {
@@ -151,6 +172,7 @@ const LaunchMainWindow = async (): Promise<void> =>
 {
     const { Window, LoadFrontend } = await CreateBrowserWindow({
         alwaysOnTop: true,
+        backgroundMaterial: "acrylic",
         frame: false,
         height: 900,
         show: true,
@@ -186,6 +208,7 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     /** @TODO Find better place for this. */
+    // const GetFocusData = async (): TIpcHandlerReturnType<"GetFocusData"> =>
     const GetFocusData = async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         const CurrentPanel: FPanel | undefined = GetCurrentPanel();
@@ -200,13 +223,19 @@ const LaunchMainWindow = async (): Promise<void> =>
         {
             /* eslint-disable-next-line @stylistic/max-len */
             Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
-            return;
+            return {
+                Data: undefined,
+                Error: "FocusedVertexUndefined"
+            };
         }
 
         if (CurrentPanel === undefined)
         {
             Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
-            return;
+            return {
+                Data: undefined,
+                Error: "CurrentPanelUndefined"
+            };
         }
         // if (CurrentPanel === undefined || FocusedVertex === undefined)
         // {
@@ -220,19 +249,22 @@ const LaunchMainWindow = async (): Promise<void> =>
         const CanStepUp: boolean = ParentPanel !== undefined;
         const CanStepDown: boolean = IsPanel(FocusedVertex);
 
-        const Out: FFocusData =
+        const Data: FFocusData =
         {
             CanStepDown,
             CanStepUp,
             Direction
         };
 
-        Log("GetFocusData is sending to the frontend:", Out);
+        Log("GetFocusData is sending to the frontend:", Data);
 
-        MainWindow?.webContents.send("GetFocusData", Out);
+        // MainWindow?.webContents.send("GetFocusData", Out);
+        return { Data, Error: undefined };
     };
 
     On("GetFocusData", GetFocusData);
+
+    // OnIpcEvent(MainWindow, "GetFocusData", GetFocusData);
 
     On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
@@ -245,14 +277,19 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
         ChangeFocus(FocusChange);
         UnblurBackground();
-        setTimeout((): void =>
+        // setTimeout((): void =>
+        // {
+        //     const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
+        //     if (InterimFocus !== undefined)
+        //     {
+        //         BlurBackground(InterimFocus.Size);
+        //     }
+        // }, 250);
+        const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
+        if (InterimFocus !== undefined)
         {
-            const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
-            if (InterimFocus !== undefined)
-            {
-                BlurBackground(InterimFocus.Size);
-            }
-        }, 250);
+            BlurBackground(InterimFocus.Size);
+        }
 
         GetFocusData(_Event, ...Arguments);
         Log("FocusChange", FocusChange);
@@ -337,7 +374,7 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     /** @TODO Run this by flag with `npm start`. */
     // CreateTestWindows();
-    CreateNotepadTestWindows(4);
+    // CreateNotepadTestWindows(4);
 };
 
 /** The window(s) that SorrellWm is being drawn over. */
@@ -380,7 +417,7 @@ function OnKey(Event: FKeyboardEvent): void
         {
             FinishFocus();
             UnblurBackground();
-            setTimeout(KillOrphans, 750);
+            // setTimeout(KillOrphans, 750);
         }
     }
     else
