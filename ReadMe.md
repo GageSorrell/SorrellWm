@@ -2,7 +2,7 @@
 
 *The tiling window manager for everyone.*
 
-*@TODO*: Video demonstration.
+`@TODO*: Video demonstration.`
 
 ## Features
 
