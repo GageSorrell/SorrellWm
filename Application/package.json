@@ -234,5 +234,9 @@
       "Distribution/**"
     ],
     "logLevel": "info"
+  },
+  "overrides":
+  {
+    "form-data": "^4.0.5"
   }
 }
