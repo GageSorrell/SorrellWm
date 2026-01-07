@@ -70,7 +70,7 @@ const configuration: Configuration =
          * NODE_ENV should be production so that modules do not perform certain
          * development checks
          */
-        /* @ts-expect-error DEBUG_PROD type. */
+        /* @ ts-expect-error DEBUG_PROD type. */
         new EnvironmentPlugin({
             DEBUG_PROD: false,
             NODE_ENV: "production",

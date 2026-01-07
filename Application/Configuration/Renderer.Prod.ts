@@ -99,13 +99,13 @@ const Configuration: Configuration =
         /**
          * Create global constants which can be configured at compile time.
          *
-         * Useful for allowing different behaviour between development builds and
+         * Useful for allowing different behavior between development builds and
          * release builds
          *
          * NODE_ENV should be production so that modules do not perform certain
          * development checks
          */
-        /* @ts-expect-error Something with Webpack. */
+        /* @ ts-expect-error Something with Webpack. */
         new EnvironmentPlugin({
             DEBUG_PROD: false,
             NODE_ENV: "production"
