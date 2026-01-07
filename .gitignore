@@ -30,3 +30,4 @@ npm-debug.log.*
 
 Application/build
 Application/Windows/node_modules
+Application/Intermediate
