@@ -124,23 +124,12 @@ const SetUpPrimaryMonitor = async (): Promise<void> =>
     {
         const NumWindows: number = 3;
         Array.from(Array(NumWindows).keys()).forEach(LaunchPaint);
+
         setTimeout((): void =>
         {
-            GetTileableWindows().filter((Window: HWindow): boolean =>
+            const IsPaintWindow = (Window: HWindow): boolean => GetWindowTitle(Window).includes("Paint");
+            const BringPaintWindowIntoRootPanel = (PaintWindow: HWindow): void =>
             {
-                return GetWindowTitle(Window).includes("Paint");
-            }).forEach((PaintWindow: HWindow): void =>
-            {
-                // const WindowPosition: FBox =
-                // {
-                //     Height: 25/6,
-                //     Width: 256,
-                //     X: MainMonitorInfo.WorkSize.X + 256 * Index,
-                //     Y: MainMonitorInfo.WorkSize.Y
-                // };
-
-                // SetWindowPosition(PaintWindow, WindowPosition);
-
                 const MainMonitorRootPanel: FPanel | undefined =
                     GetForest().find((Panel: FPanel): boolean =>
                     {
@@ -159,7 +148,11 @@ const SetUpPrimaryMonitor = async (): Promise<void> =>
                 }
 
                 BringIntoPanel(MainMonitorRootPanel, PaintWindow);
-            });
+            };
+
+            GetTileableWindows()
+                .filter(IsPaintWindow)
+                .forEach(BringPaintWindowIntoRootPanel);
         }, 3000);
     };
 

@@ -16,7 +16,7 @@ const BrowserWindows: FBrowserWindowDictionary = { };
 
 const BrowserWindowManager: FBrowserWindowManager =
 {
-    Create: (Arguments: ): FBrowserWindow | undefined =>
+    Create: (Arguments): FBrowserWindow | undefined =>
     {
 
         return undefined;

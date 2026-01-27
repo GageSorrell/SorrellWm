@@ -13,7 +13,7 @@ import "../Tree";
 import "../Settings/InitializeSettings";
 import "../Notification";
 
-setTimeout((): void =>
+const DelayedImports = (): void =>
 {
     import("../MainWindow");
     import("../RendererFunctions.Generated");
@@ -22,5 +22,6 @@ setTimeout((): void =>
     import("../WinEvent");
 
     import("../Development/SetupPrimaryMonitor");
-});
+};
 
+setTimeout(DelayedImports);
