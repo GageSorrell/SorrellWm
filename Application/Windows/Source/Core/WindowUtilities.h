@@ -38,6 +38,9 @@ DECLARE_NAPI_FUNCTION(GetApplicationFriendlyName, string | undefined, Handle, HW
 DECLARE_NAPI_FUNCTION(RestoreAllWindows, void)
 DECLARE_NAPI_FUNCTION(StealFocusNode, void, ExportName="StealFocus", Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetDwmWindowRectNode, FBox, ExportName="GetDwmWindowRect", Handle, HWindow)
+DECLARE_NAPI_FUNCTION(CloseApplication, void, Pid, number)
+DECLARE_NAPI_FUNCTION(MinimizeWindow, void, Handle, HWindow)
+DECLARE_NAPI_FUNCTION(RestoreWindow, void, Handle, HWindow)
 
 void StealFocus(HWND Window);
 HWND GetMainWindow();

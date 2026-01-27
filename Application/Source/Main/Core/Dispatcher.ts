@@ -34,7 +34,7 @@ export class TDispatcher<T>
             Subscribe,
             Unsubscribe
         };
-    }
+    };
 
     public Dispatch = (Message: T): void =>
     {

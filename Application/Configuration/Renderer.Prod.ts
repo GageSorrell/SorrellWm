@@ -105,7 +105,7 @@ const Configuration: Configuration =
          * NODE_ENV should be production so that modules do not perform certain
          * development checks
          */
-        /* @ ts-expect-error Something with Webpack. */
+        /* @ts-expect-error Something with Webpack. */
         new EnvironmentPlugin({
             DEBUG_PROD: false,
             NODE_ENV: "production"

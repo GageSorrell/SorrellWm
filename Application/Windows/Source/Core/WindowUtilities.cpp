@@ -40,6 +40,58 @@ Napi::Value GetDwmWindowRectNode(const Napi::CallbackInfo& CallbackInfo)
     return EncodeRect(Environment, Bounds);
 }
 
+Napi::Value MinimizeWindow(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    HWND Handle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    ShowWindowAsync(Handle, SW_MINIMIZE);
+
+    return Environment.Undefined();
+}
+
+Napi::Value RestoreWindow(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    HWND Handle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    ShowWindowAsync(Handle, SW_RESTORE);
+
+    return Environment.Undefined();
+}
+
+/** Given a process identifier (from NodeJS's `spawn`), kill that process. */
+Napi::Value CloseApplication(const Napi::CallbackInfo& Info)
+{
+    Napi::Env Environment = Info.Env();
+
+    if (Info.Length() < 1 || !Info[0].IsNumber())
+    {
+        Napi::TypeError::New(Environment, "Expected a single, number argument.").ThrowAsJavaScriptException();
+        return Environment.Undefined();
+    }
+
+    Napi::Number ProcessIdentifierValue = Info[0].As<Napi::Number>();
+
+    double ProcessIdentifierNumber = ProcessIdentifierValue.As<Napi::Number>().DoubleValue();
+    if (ProcessIdentifierNumber <= 0.0 || ProcessIdentifierNumber > 4294967295.0)
+    {
+        return Environment.Undefined();
+    }
+
+    DWORD ProcessIdentifier = static_cast<DWORD>(ProcessIdentifierNumber);
+
+    HANDLE ProcessHandle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessIdentifier);
+    if (ProcessHandle == nullptr)
+    {
+        return Environment.Undefined();
+    }
+
+    TerminateProcess(ProcessHandle, 1);
+    CloseHandle(ProcessHandle);
+
+    return Environment.Undefined();
+}
 
 Napi::Value GetFocusedWindow(const Napi::CallbackInfo& CallbackInfo)
 {

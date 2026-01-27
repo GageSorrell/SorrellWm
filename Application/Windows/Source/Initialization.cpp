@@ -119,6 +119,10 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "KillNotepadInstances", KillNotepadInstances },
         { "KillOrphans", KillOrphans },
         { "WriteTaskbarIconToPng", WriteTaskbarIconToPng },
+        { "GetMonitors", GetMonitors },
+        { "RestoreWindow", RestoreWindow },
+        { "MinimizeWindow", MinimizeWindow },
+        { "CloseApplication", CloseApplication },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },

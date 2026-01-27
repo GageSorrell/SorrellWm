@@ -33,12 +33,12 @@ import {
     // UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
-import { CreateBrowserWindow, RegisterBrowserWindowEvents } from "./BrowserWindow";
+import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
 import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 // import { CreateNotepadTestWindows } from "./Development/TestWindows";
-import type { FBrowserWindowEvents } from "./BrowserWindow.Types";
+import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
 import type { FIpcChannel } from "../Shared/Event.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
@@ -72,7 +72,8 @@ const BlurBackground = (Bounds: FBox): void =>
 let MainWindow: BrowserWindow | undefined = undefined;
 export const GetMainWindow = (): BrowserWindow | undefined => MainWindow;
 
-const UnblurBackground = (): void =>
+/** Hide the main window. */
+const Deactivate = (): void =>
 {
     const { x: X, y: Y } = GetLeastInvisiblePosition();
     if (MainWindow)
@@ -160,7 +161,7 @@ const On = (
 //     });
 // };
 
-const MainBrowserEvents: FBrowserWindowEvents =
+const MainBrowserElectronEvents: FBrowserWindowElectronEvents =
 {
     show: async (_Event: Electron.Event, _IsAlwaysOnTop: boolean): Promise<void> =>
     {
@@ -186,7 +187,7 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     MainWindow = Window;
 
-    RegisterBrowserWindowEvents(MainWindow, MainBrowserEvents);
+    RegisterBrowserWindowElectronEvents(MainWindow, MainBrowserElectronEvents);
 
     On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
@@ -276,7 +277,7 @@ const LaunchMainWindow = async (): Promise<void> =>
             // Log(`In OnChangeFocus, InterimFocusedVertex is ${ VertexToString(InterimFocusedVertex) } at ${ PositionToString(InterimFocusedVertex.Size) }.`);
         }
         ChangeFocus(FocusChange);
-        UnblurBackground();
+        Deactivate();
         // setTimeout((): void =>
         // {
         //     const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
@@ -316,7 +317,7 @@ const LaunchMainWindow = async (): Promise<void> =>
     On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
         ActiveWindow = undefined;
-        UnblurBackground();
+        Deactivate();
     });
 
     On("GetInsertableWindowData", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
@@ -385,6 +386,7 @@ export const GetActiveWindow = (): HWindow | undefined =>
     return ActiveWindow;
 };
 
+/** Show the main window. */
 export const Activate = (): void =>
 {
     if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window")
@@ -416,7 +418,7 @@ function OnKey(Event: FKeyboardEvent): void
         else
         {
             FinishFocus();
-            UnblurBackground();
+            Deactivate();
             // setTimeout(KillOrphans, 750);
         }
     }

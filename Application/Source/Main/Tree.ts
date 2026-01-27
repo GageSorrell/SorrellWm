@@ -36,7 +36,6 @@ import type {
     FVertex } from "./Tree.Types";
 import { type FLogger, GetLogger } from "./Development";
 import { type FSettings, GetSettings } from "./Settings";
-import { promises as Fs } from "fs";
 import { GetActiveWindow } from "./MainWindow";
 import { GetMonitors } from "./Monitor";
 import { type TPredicate } from "@/Utility";
@@ -151,6 +150,16 @@ const InitializeTree = (): void =>
 
     // /** @TODO Consider changing this. */
     // RestoreAllWindows();
+};
+
+/**
+ * Intended to be (optionally) called upon launching SorrellWm,
+ * tile all restored windows, and place them in the root panel of the
+ * respective monitor to which they belong.
+ */
+export const TileAllWindows = (): void =>
+{
+    const Monitors: Array<FMonitorInfo> = GetMonitors();
 
     const TileableWindows: Array<HWindow> = GetTileableWindows().filter((Handle: HWindow): boolean =>
     {
@@ -609,7 +618,7 @@ export const Publish = async (): Promise<void> =>
     });
 };
 
-function PanelContainsVertex(currentVertex: FVertex, targetVertex: FVertex): boolean
+const PanelContainsVertex = (currentVertex: FVertex, targetVertex: FVertex): boolean =>
 {
     if (currentVertex === targetVertex)
     {
@@ -629,7 +638,7 @@ function PanelContainsVertex(currentVertex: FVertex, targetVertex: FVertex): boo
     }
 
     return false;
-}
+};
 
 export const GetRootPanel = (Vertex: FVertex): FPanel | undefined =>
 {

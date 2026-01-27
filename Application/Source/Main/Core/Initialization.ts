@@ -5,7 +5,7 @@
  */
 
 import { type BrowserWindow, app, shell } from "electron";
-import { CreateBrowserWindow } from "#/BrowserWindow";
+import { CreateBrowserWindow } from "#/BrowserWindow.Old";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 

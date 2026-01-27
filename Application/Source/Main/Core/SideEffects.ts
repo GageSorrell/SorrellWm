@@ -20,5 +20,7 @@ setTimeout((): void =>
     import("./Initialization");
     import("./Tray");
     import("../WinEvent");
+
+    import("../Development/SetupPrimaryMonitor");
 });
 

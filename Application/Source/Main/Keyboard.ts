@@ -7,7 +7,7 @@
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import { Subscribe as IpcSubscribe } from "./NodeIpc";
 import { IsVirtualKey } from "@/Domain/Common/Component/Keyboard/Keyboard";
-import { TDispatcher_DEPRECATED } from "./Dispatcher";
+import { TDispatcher_DEPRECATED } from "./Core/Dispatcher";
 
 class FKeyboard extends TDispatcher_DEPRECATED<FKeyboardEvent>
 {

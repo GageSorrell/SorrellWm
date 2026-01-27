@@ -6,7 +6,7 @@
 
 import * as Path from "path";
 import { type BrowserWindow, ipcMain } from "electron";
-import { CreateBrowserWindow } from "#/BrowserWindow";
+import { CreateBrowserWindow } from "#/BrowserWindow.Old";
 import { GetPaths } from "#/Core/Paths";
 import type { FSettings } from "./Settings.Types";
 import Settings from "electron-settings";

@@ -7,7 +7,7 @@
 import type { FWinEventPayload } from "./WinEvent.Types";
 import { GetWindowLocationAndSize, InitializeWinEvents, type FBox, type HWindow } from "@sorrellwm/windows";
 import { Subscribe } from "./NodeIpc";
-import { TDispatcher } from "./Dispatcher";
+import { TDispatcher } from "./Core/Dispatcher";
 import { IsWindowTiled, Publish } from "./Tree";
 import { GetLogger } from "./Development";
 

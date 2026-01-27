@@ -13,9 +13,7 @@ export type FLogCategory =
     | "Tree"
     | "WinEvent"
     | "MainWindow"
-    | ""
-    | ""
-    | "";
+    | "SetupPrimaryMonitor";
 
 export type FLogOrigin =
     | "Frontend"
