@@ -11,7 +11,8 @@ import type {
     TRequestData,
     TResponseData } from "?/Event.Types";
 
-export const SendIpcEvent = <T extends FIpcFrontendChannel>(
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
+export const SendIpcEvent_DEPRECATED = <T extends FIpcFrontendChannel>(
     Channel: T,
     RequestData: TRequestData<T>,
     Callback: TIpcCallback<T>
@@ -26,7 +27,8 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
     window.electron.ipcRenderer.Send(Channel, RequestData);
 };
 
-export const OnIpcEvent = <T extends FIpcFrontendChannel>(
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
+export const OnIpcEvent_DEPRECATED = <T extends FIpcFrontendChannel>(
     Channel: T,
     Callback: TIpcHandler<T>
 ): void =>
