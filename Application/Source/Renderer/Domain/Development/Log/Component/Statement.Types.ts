@@ -4,11 +4,11 @@
  * License:   MIT
  */
 
-import type { FLogCategory, FLogLevel } from "Windows";
+import type { FLogLevel } from "Windows";
 
 export type PStatement =
 {
-    CategoryName: FLogCategory;
+    CategoryName: string;
     LogLevel: FLogLevel;
     Content: unknown;
     Timestamp: number;

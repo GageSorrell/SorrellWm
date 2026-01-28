@@ -7,6 +7,6 @@
 export * from "./Color";
 export * from "./Color.Types";
 export * from "./Hook";
-export * from "../../Shared/Event.Types";
+export * from "../../Shared/Event/EventBase.Types";
 export * from "./Utility";
 export * from "./Utility.Types";

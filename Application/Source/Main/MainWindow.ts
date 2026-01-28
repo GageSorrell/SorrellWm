@@ -22,7 +22,6 @@ import {
 import {
     BlurBackground as BlurBackgroundNative,
     type FBox,
-    type FLogCategory,
     type FLogLevel,
     GetDwmWindowRect,
     GetFocusedWindow,
@@ -39,7 +38,7 @@ import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 // import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
-import type { FIpcChannel } from "../Shared/Event.Types";
+import type { FIpcChannel } from "../Shared/Event/EventBase.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 // import { promises as Fs } from "fs";
@@ -342,7 +341,7 @@ const LaunchMainWindow = async (): Promise<void> =>
     On("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
         /* eslint-disable-next-line @stylistic/max-len */
-        const [ Category, Level, ...Statements ] = Arguments as [ FLogCategory, FLogLevel, ...Array<unknown> ];
+        const [ Category, Level, ...Statements ] = Arguments as [ string, FLogLevel, ...Array<unknown> ];
         LogFrontend(Category, Level, ...Statements);
         // const StringifiedArguments: string = Arguments
         //     .map((Argument: unknown): string =>

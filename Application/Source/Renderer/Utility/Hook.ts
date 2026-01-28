@@ -11,7 +11,7 @@ import {
     useEffect,
     useRef,
     useState } from "react";
-import type { FIpcFrontendChannel, TRequestData, TResponseData } from "?/Event.Types";
+import type { FIpcFrontendChannel, TRequestData, TResponseData } from "?/Event/EventBase.Types";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,

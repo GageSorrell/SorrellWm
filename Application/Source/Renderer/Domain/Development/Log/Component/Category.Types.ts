@@ -4,9 +4,7 @@
  * License:   MIT
  */
 
-import type { FLogCategory } from "Windows";
-
 export type PCategory =
 {
-    CategoryName: FLogCategory;
+    CategoryName: string;
 };

@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+export * from "./Event";
 export * from "./Settings";
 export * from "./Settings.Types";
 export * from "./Shared.Types";

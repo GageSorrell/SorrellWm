@@ -4,17 +4,6 @@
  * License:   MIT
  */
 
-/**
- * This gives type safety to logging.
- * Any log category in the project should be listed here.
- */
-export type FLogCategory =
-    | "Blur"
-    | "Tree"
-    | "WinEvent"
-    | "MainWindow"
-    | "SetupPrimaryMonitor";
-
 export type FLogOrigin =
     | "Frontend"
     | "Backend"

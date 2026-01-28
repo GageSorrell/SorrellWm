@@ -5,13 +5,13 @@
  */
 
 import type { FChalkBackground, FChalkForeground, FLogFunction, FLogger, FLoggerInterim } from "./Log.Types";
-import type { FLogCategory, FLogLevel, FLogOrigin } from "Windows";
+import type { FLogLevel, FLogOrigin } from "Windows";
 import Chalk from "chalk";
 import Util from "util";
 
 Chalk.level = 1;
 
-const FormatCategory = (Category: FLogCategory): string =>
+const FormatCategory = (Category: string): string =>
 {
     const PaddedCategory: string = ` ${ Category } `;
     let HashValue: number = 0;
@@ -71,7 +71,7 @@ const FormatLevel = (Level: FLogLevel): string =>
 
 const LogInternal = (
     Origin: FLogOrigin,
-    Category: FLogCategory,
+    Category: string,
     Level: FLogLevel,
     ...Arguments: Array<unknown>
 ): void =>
@@ -112,7 +112,7 @@ const LogInternal = (
 
 /** This should only be used when registering the Log event. */
 export const LogFrontend = (
-    Category: FLogCategory,
+    Category: string,
     Level: FLogLevel,
     ...Statements: Array<unknown>
 ): void =>
@@ -121,7 +121,7 @@ export const LogFrontend = (
 };
 
 /** Use this to create a logger within a given module so that the log category is set for that module. */
-export const GetLogger = (Category: FLogCategory): FLogger =>
+export const GetLogger = (Category: string): FLogger =>
 {
     const MakeLoggerInternal = (Level: FLogLevel): FLogFunction =>
     {
