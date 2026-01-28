@@ -5,46 +5,51 @@
  */
 
 import { Command, CompoundCommand } from "$/Common";
-import { type MutableRefObject, type ReactNode, useEffect, useRef, useState } from "react";
 import { Action } from "@/Action";
 import type { FFocusChange } from "#/Tree.Types";
-import type { FFocusData } from "?/Transaction.Types";
+import { type ReactNode } from "react";
+import { UseSendIpcEvent } from "@/Event";
 
 export const Focus = (): ReactNode =>
 {
-    const [ FocusData, SetFocusData ] = useState<FFocusData | undefined>(undefined);
-    const HasRun: MutableRefObject<boolean> = useRef<boolean>(false);
-    useEffect((): void =>
+    const { Data: FocusData } = UseSendIpcEvent("GetFocusData", undefined);
+    // const HasRun: MutableRefObject<boolean> = useRef<boolean>(false);
+    // useEffect((): void =>
+    // {
+    //     if (!HasRun.current)
+    //     {
+    //         HasRun.current = true;
+    //     }
+    //     else
+    //     {
+    //         return;
+    //     }
+
+    //     window.electron.ipcRenderer.On("GetFocusData", (...Arguments: Array<unknown>): void =>
+    //     {
+    //         const NewFocusData: FFocusData | undefined = Arguments[0] as FFocusData | undefined;
+    //         if (FocusData === undefined)
+    //         {
+    //             SetFocusData((_Old: FFocusData | undefined): FFocusData | undefined =>
+    //             {
+    //                 return NewFocusData;
+    //             });
+    //         }
+    //         else
+    //         {
+    //             /* @TODO (This shouldn't happen!) */
+    //         }
+    //     });
+
+    //     window.electron.ipcRenderer.Send("GetFocusData");
+    // }, [ FocusData, SetFocusData ]);
+
+    if (FocusData === undefined)
     {
-        if (!HasRun.current)
-        {
-            HasRun.current = true;
-        }
-        else
-        {
-            return;
-        }
+        return <></>;
+    }
 
-        window.electron.ipcRenderer.On("GetFocusData", (...Arguments: Array<unknown>): void =>
-        {
-            const NewFocusData: FFocusData | undefined = Arguments[0] as FFocusData | undefined;
-            if (FocusData === undefined)
-            {
-                SetFocusData((_Old: FFocusData | undefined): FFocusData | undefined =>
-                {
-                    return NewFocusData;
-                });
-            }
-            else
-            {
-                /* @TODO (This shouldn't happen!) */
-            }
-        });
-
-        window.electron.ipcRenderer.Send("GetFocusData");
-    }, [ FocusData, SetFocusData ]);
-
-    const IsHorizontal: boolean = FocusData?.Direction === "Horizontal";
+    const IsHorizontal: boolean = FocusData.Direction === "Horizontal";
 
     const MoveFocusPrevious = (): void =>
     {

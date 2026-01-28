@@ -1,19 +1,10 @@
-/* File:      Transactions.ts
+/* File:      InsertEvent.Types.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
+ * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
- * Comment:   Define types used in `Event.Types.ts` that
- *            do not otherwise have a good place to go.
  */
 
 import type { HWindow } from "Windows";
-
-export type FFocusData =
-{
-    Direction: "Horizontal" | "Vertical";
-    CanStepUp: boolean;
-    CanStepDown: boolean;
-};
 
 /**
  * When a new vertex is created within a panel, how should its size

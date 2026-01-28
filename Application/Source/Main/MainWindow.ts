@@ -34,7 +34,7 @@ import {
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
-import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
+import type { FFocusData, FInsertableWindowData } from "?/Event/Focus.Types";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 // import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";

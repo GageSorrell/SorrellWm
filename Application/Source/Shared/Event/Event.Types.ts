@@ -15,8 +15,9 @@ import type {
     FLogErrorCode,
     FOnChangeFocusErrorCode,
     FReadyForRouteErrorCode } from "./ErrorCodes.Types";
-import type { FFocusData, FInsertableWindowData } from "?/Transaction.Types";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
+import type { FFocusData } from "?/Event/Focus.Types";
+import type { FInsertableWindowData } from "./Insert.Types";
 
 // @TODO Create proper string unions for the error codes for each event.
 export type FIpcFrontendEvents = TIpcEventsBase<{

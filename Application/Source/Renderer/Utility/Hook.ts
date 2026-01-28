@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/* eslint-disable react-hooks/exhaustive-deps */
+
 import {
     type Dispatch,
     type MutableRefObject,
@@ -11,7 +13,10 @@ import {
     useEffect,
     useRef,
     useState } from "react";
-import type { FIpcFrontendChannel, TRequestData, TResponseData } from "?/Event/EventBase.Types";
+import type { FIpcFrontendChannel, TRequest, TResponse } from "?/Event";
+import type { FUseEffectAsyncCallback, FUseEffectAsyncCleanupFunction } from "./Hook.Types";
+import type { FSimpleCallback } from "?/Utility.Types";
+import { Identity } from "./Utility";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,
@@ -54,15 +59,16 @@ export const UseIndex = (
 };
 
 /** Send an event to the backend, and get a response. */
-export const UseIpc = <TChannel extends FIpcFrontendChannel>(
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
+export const UseIpc_DEPRECATED = <TChannel extends FIpcFrontendChannel>(
     Channel: TChannel,
-    RequestData: TRequestData<TChannel>
+    RequestData: TRequest<TChannel>
 ): Readonly<[
-    TResponseData<TChannel> | undefined,
-    Dispatch<SetStateAction<TResponseData<TChannel> | undefined>>
+    TResponse<TChannel> | undefined,
+    Dispatch<SetStateAction<TResponse<TChannel> | undefined>>
 ]> =>
 {
-    const [ Response, SetResponse ] = useState<TResponseData<TChannel> | undefined>(undefined);
+    const [ Response, SetResponse ] = useState<TResponse<TChannel> | undefined>(undefined);
     const HasRunOnceRef: MutableRefObject<boolean> = useRef<boolean>(false);
     useEffect((): void =>
     {
@@ -72,9 +78,9 @@ export const UseIpc = <TChannel extends FIpcFrontendChannel>(
         }
 
         HasRunOnceRef.current = true;
-        window.electron.ipcRenderer.On(Channel, (InResponseData: TResponseData<TChannel>): void =>
+        window.electron.ipcRenderer.On(Channel, (InResponseData: TResponse<TChannel>): void =>
         {
-            SetResponse((_Old: TResponseData<TChannel> | undefined): TResponseData<TChannel> | undefined =>
+            SetResponse((_Old: TResponse<TChannel> | undefined): TResponse<TChannel> | undefined =>
             {
                 return InResponseData;
             });
@@ -82,4 +88,39 @@ export const UseIpc = <TChannel extends FIpcFrontendChannel>(
         window.electron.ipcRenderer.Send(Channel, RequestData);
     }, [ Channel, RequestData ]);
     return [ Response, SetResponse ] as const;
+};
+
+/**
+ * `useEffect` but for async callbacks.  The callback can be defined to accept
+ * an `AbortSignal`, which is called whenever the dependency array updates.
+ *
+ * If the callback returns a cleanup function, then
+ */
+export const UseEffectAsync = (
+    Function: FUseEffectAsyncCallback,
+    CleanupFunction: FUseEffectAsyncCleanupFunction  | undefined = undefined,
+    DependencyArray: Array<unknown> = [ ]
+): void =>
+{
+    const [ Controller ] = useState<AbortController>(new AbortController());
+
+    DependencyArray.push(Function, CleanupFunction, Controller);
+
+    useEffect((): void | FSimpleCallback =>
+    {
+        Function(Controller.signal);
+
+        if (CleanupFunction !== undefined)
+        {
+            const CleanupFunctionWithSignal = (): void =>
+            {
+                if (CleanupFunction !== undefined)
+                {
+                    CleanupFunction(Controller.signal);
+                }
+            };
+
+            return CleanupFunctionWithSignal;
+        }
+    }, DependencyArray);
 };

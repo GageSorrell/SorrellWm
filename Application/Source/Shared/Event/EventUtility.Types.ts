@@ -39,6 +39,11 @@ export type TRichEvent<T extends FUnknownIpcEvent> =
         ? T
         : never;
 
+export type TRichEventUndefined<T extends FUnknownIpcEvent> =
+    "Data" extends keyof T["Response"]
+        ? T["Response"]["Data"]
+        : undefined;
+
 export type TPoorEvent<T extends FUnknownIpcEvent> =
     "Data" extends keyof T["Response"]
         ? never
