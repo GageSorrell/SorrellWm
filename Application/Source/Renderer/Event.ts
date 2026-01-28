@@ -11,6 +11,7 @@ import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "?/Utili
 import { type MutableRefObject, useCallback, useEffect, useRef, useState} from "react";
 import type { TIpcState, TUseSendIpcEventReturnType } from "./Event.Types";
 import { UseEffectAsync } from "./Utility";
+import { Log } from "./Api";
 
 /** Receive an event received by Main. */
 export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(
@@ -25,18 +26,18 @@ export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(
     const Wrapper = useCallback((Request: TRequest<T>): void =>
     {
         const Response: ReturnType<TEventCallback<FIpcBackendEvents[T]>> = Callback(Request);
-        window.electron.ipcRenderer.sendMessage(Channel, Response);
+        window.electron.ipcRenderer.Send(Channel, Response);
     }, DependencyArray);
 
     DependencyArray.push(Wrapper);
 
     useEffect((): FSimpleCallback =>
     {
-        window.electron.ipcRenderer.on(Channel, Wrapper);
+        window.electron.ipcRenderer.On(Channel, Wrapper);
 
         return (): void =>
         {
-            window.electron.ipcRenderer.removeListener(Channel);
+            window.electron.ipcRenderer.RemoveListener(Channel);
         };
     }, DependencyArray);
 };
@@ -59,7 +60,7 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
     return new Promise<TResponse<T>>(
         (Resolve: TResolveFunction<TResponse<T>>, _Reject: FRejectFunction): void =>
         {
-            const Wrapper = (_Event: Electron.Event, ...ArgumentVector: Array<unknown>): void =>
+            const Wrapper = (...ArgumentVector: Array<unknown>): void =>
             {
                 const Response: TResponse<T> = ArgumentVector[0] as TResponse<T>;
 
@@ -68,6 +69,8 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
                     RemoveListenerRef.current = undefined;
                 }
 
+                Log(`Resolving promise in SendIpcEvent, Response is ${ JSON.stringify(Response) }.`);
+
                 Resolve(Response);
             };
 
@@ -75,12 +78,12 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
             {
                 RemoveListenerRef.current = (): void =>
                 {
-                    window.electron.ipcRenderer.removeListener(Channel, Wrapper);
+                    window.electron.ipcRenderer.RemoveListener(Channel, Wrapper);
                 };
             }
 
-            window.electron.ipcRenderer.once(Channel, Wrapper);
-            window.electron.ipcRenderer.sendMessage(Channel, Request);
+            window.electron.ipcRenderer.Once(Channel, Wrapper);
+            window.electron.ipcRenderer.Send(Channel, Request);
         });
 };
 
@@ -97,19 +100,21 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
         Error: undefined
     };
 
+    Log("UseSendIpcEvent was called.");
+
     const [ Response, SetResponse ] = useState<TIpcState<T>>(EmptyResponse);
     const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
         useRef<FSimpleCallback | undefined>(undefined);
 
-    DependencyArray.push(Request, Response, SetResponse);
+    DependencyArray.push(Request, SetResponse);
 
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const CleanupFunction = useCallback((): void =>
     {
-        if (RemoveListenerRef.current !== undefined)
-        {
-            RemoveListenerRef.current();
-        }
+        // if (RemoveListenerRef.current !== undefined)
+        // {
+        //     RemoveListenerRef.current();
+        // }
     }, DependencyArray);
 
     DependencyArray.push(CleanupFunction);
@@ -117,11 +122,14 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
     {
+        Log("Going to await SendIpcEvent");
         const NewResponse: TResponse<T> = await SendIpcEvent(Channel, Request);
+        Log(`Response is ${ JSON.stringify(NewResponse) }.`);
         if (!AbortSignal.aborted)
         {
             SetResponse((_Old: TIpcState<T>): TIpcState<T> =>
             {
+                Log("Going to set Response via SetResponse.");
                 /* @ts-expect-error TypeScript cannot infer whether `NewResponse` has the `Data` property. */
                 return NewResponse;
             });
@@ -131,7 +139,7 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     UseEffectAsync(SideEffect, CleanupFunction, DependencyArray);
 
     return {
-        Data: Response.Data,
-        Error: Response.Error
+        Data: (Response?.Data === undefined ? undefined : Response.Data),
+        Error: (Response?.Error === undefined ? undefined : Response.Error)
     } as const;
 };

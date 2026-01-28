@@ -35,13 +35,16 @@ export const RegisterIpcCallback = <T extends FIpcFrontendChannel>(
         return;
     }
 
-    const Wrapper = (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): void =>
+    const Wrapper = async (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): Promise<void> =>
     {
         type FRequest = FIpcFrontendEvents[T]["Request"];
         // type FResponse = FIpcFrontendEvents[T]["Response"];
-        type FResponse = ReturnType<TEventCallback<FIpcFrontendEvents[T]>>;
+        type FResponse = Awaited<ReturnType<TEventCallback<FIpcFrontendEvents[T]>>>;
         const Request: FRequest = ArgumentVector[0] as FRequest;
-        const Response: FResponse = Callback(Request);
+        const Response: FResponse = await Callback(Request) as FResponse;
+
+        /* eslint-disable-next-line @stylistic/max-len */
+        Log(`Response inside Wrapper is going to be sent to the BrowserWindow.  The Response is ${ Response }.`);
 
         BrowserWindow.webContents.send(Channel, Response);
     };

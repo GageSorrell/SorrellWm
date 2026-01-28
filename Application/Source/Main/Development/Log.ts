@@ -66,6 +66,11 @@ const FormatLevel = (Level: FLogLevel): string =>
         Warn: Chalk.bgYellow.whiteBright
     };
 
+    if (typeof Colors[Level] !== "function")
+    {
+        throw new Error(`Colors[Level] is ${ Level }.`);
+    }
+
     return Colors[Level](` ${ Level } `);
 };
 

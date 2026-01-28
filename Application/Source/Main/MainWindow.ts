@@ -46,6 +46,8 @@ import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
 // import type { TIpcHandlerReturnType } from "?/Event.Types";
 import { Vk } from "$/Common/Component/Keyboard";
+import { RegisterIpcCallback } from "./Event";
+import type { FIpcFrontendEvents, TEventCallback } from "?/Event";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -209,57 +211,68 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     /** @TODO Find better place for this. */
     // const GetFocusData = async (): TIpcHandlerReturnType<"GetFocusData"> =>
+    RegisterIpcCallback(
+        MainWindow,
+        "GetFocusData",
+        async (): ReturnType<TEventCallback<FIpcFrontendEvents["GetFocusData"]>> =>
+        {
+            const CurrentPanel: FPanel | undefined = GetCurrentPanel();
+            let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+            if (FocusedVertex === undefined)
+            {
+                SetInterimFocusedVertexToActive();
+                FocusedVertex = GetInterimFocusedVertex();
+            }
+
+            if (FocusedVertex === undefined)
+            {
+                /* eslint-disable-next-line @stylistic/max-len */
+                Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
+                return {
+                    Data: undefined,
+                    Error: "FocusedVertexUndefined"
+                };
+            }
+
+            if (CurrentPanel === undefined)
+            {
+                Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
+                return {
+                    Data: undefined,
+                    Error: "CurrentPanelUndefined"
+                };
+            }
+            // if (CurrentPanel === undefined || FocusedVertex === undefined)
+            // {
+            /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
+            //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
+            //     return;
+            // }
+
+            const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
+            const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
+            const CanStepUp: boolean = ParentPanel !== undefined;
+            const CanStepDown: boolean = IsPanel(FocusedVertex);
+
+            const Data: FFocusData =
+            {
+                CanStepDown,
+                CanStepUp,
+                Direction
+            };
+
+            Log("GetFocusData is sending to the frontend:", Data);
+
+            // MainWindow?.webContents.send("GetFocusData", );
+            // return { Data, Error: undefined };
+            return {
+                Data,
+                Error: undefined
+            };
+        }
+    );
     const GetFocusData = async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
-        const CurrentPanel: FPanel | undefined = GetCurrentPanel();
-        let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
-        if (FocusedVertex === undefined)
-        {
-            SetInterimFocusedVertexToActive();
-            FocusedVertex = GetInterimFocusedVertex();
-        }
-
-        if (FocusedVertex === undefined)
-        {
-            /* eslint-disable-next-line @stylistic/max-len */
-            Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
-            return {
-                Data: undefined,
-                Error: "FocusedVertexUndefined"
-            };
-        }
-
-        if (CurrentPanel === undefined)
-        {
-            Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
-            return {
-                Data: undefined,
-                Error: "CurrentPanelUndefined"
-            };
-        }
-        // if (CurrentPanel === undefined || FocusedVertex === undefined)
-        // {
-        /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
-        //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
-        //     return;
-        // }
-
-        const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
-        const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
-        const CanStepUp: boolean = ParentPanel !== undefined;
-        const CanStepDown: boolean = IsPanel(FocusedVertex);
-
-        const Data: FFocusData =
-        {
-            CanStepDown,
-            CanStepUp,
-            Direction
-        };
-
-        Log("GetFocusData is sending to the frontend:", Data);
-
-        // MainWindow?.webContents.send("GetFocusData", Out);
-        return { Data, Error: undefined };
     };
 
     On("GetFocusData", GetFocusData);

@@ -5,9 +5,10 @@
  */
 
 import { Command, CompoundCommand } from "$/Common";
+import { type ReactNode, useEffect } from "react";
 import { Action } from "@/Action";
 import type { FFocusChange } from "#/Tree.Types";
-import { type ReactNode } from "react";
+import { Log } from "@/Api";
 import { UseSendIpcEvent } from "@/Event";
 
 export const Focus = (): ReactNode =>
@@ -44,12 +45,9 @@ export const Focus = (): ReactNode =>
     //     window.electron.ipcRenderer.Send("GetFocusData");
     // }, [ FocusData, SetFocusData ]);
 
-    if (FocusData === undefined)
-    {
-        return <></>;
-    }
-
-    const IsHorizontal: boolean = FocusData.Direction === "Horizontal";
+    const IsHorizontal: boolean = FocusData !== undefined
+        ? FocusData.Direction === "Horizontal"
+        : true;
 
     const MoveFocusPrevious = (): void =>
     {
@@ -87,11 +85,20 @@ export const Focus = (): ReactNode =>
 
     const ChangeFocus = (FocusChange: FFocusChange): void =>
     {
+        // @TODO Replace with `SendIpcEvent` function.
         window.electron.ipcRenderer.Send("OnChangeFocus", FocusChange);
     };
 
-    return FocusData !== undefined && (
+    useEffect((): void =>
+    {
+        Log("FocusData is", FocusData);
+    }, [ FocusData ]);
+
+    return (
         <Action>
+            <p style={{ "fontSize": 16 }}>
+                FocusData is { JSON.stringify(FocusData) }
+            </p>
             <CompoundCommand
                 SubCommands={ [
                     {

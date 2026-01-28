@@ -6,11 +6,11 @@
 
 type FLog = (...Arguments: Array<unknown>) => void;
 
-export const Log: FLog = (..._Arguments: Array<unknown>): void =>
+export const Log: FLog = (...Arguments: Array<unknown>): void =>
 {
     /* eslint-disable-next-line @stylistic/max-len */
-    // if (window.electron && window.electron.ipcRenderer !== undefined && typeof window.electron.ipcRenderer === "object" && "Send" in window.electron.ipcRenderer)
-    // {
-    //     window.electron.ipcRenderer.Send("Log", ...Arguments);
-    // }
+    if (window.electron && window.electron.ipcRenderer !== undefined && typeof window.electron.ipcRenderer === "object" && "Send" in window.electron.ipcRenderer)
+    {
+        window.electron.ipcRenderer.Send("Log", "Frontend", "Normal", ...Arguments);
+    }
 };
