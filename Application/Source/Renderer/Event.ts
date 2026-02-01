@@ -10,8 +10,8 @@ import type { FIpcBackendEvents, FIpcFrontendChannel, TEventCallback, TRequest, 
 import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "?/Utility.Types";
 import { type MutableRefObject, useCallback, useEffect, useRef, useState} from "react";
 import type { TIpcState, TUseSendIpcEventReturnType } from "./Event.Types";
-import { UseEffectAsync } from "./Utility";
 import { Log } from "./Api";
+import { UseEffectAsync } from "./Utility";
 
 /** Receive an event received by Main. */
 export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(

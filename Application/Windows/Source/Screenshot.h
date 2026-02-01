@@ -9,8 +9,6 @@
 #include "Core/Core.h"
 #include <gdiplus.h>
 
-// DEFINE_LOG_CATEGORY(Screenshot)
-
 DECLARE_NAPI_FUNCTION(GetScreenshot, string, Bounds, FBox)
 DECLARE_NAPI_FUNCTION(CaptureScreenSectionToTempPngFile, string, Bounds, FBox)
 DECLARE_NAPI_FUNCTION(WriteTaskbarIconToPng, string, Window, HWindow)
