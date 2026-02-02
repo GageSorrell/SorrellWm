@@ -14,5 +14,5 @@ DECLARE_NAPI_FUNCTION(CaptureScreenSectionToTempPngFile, string, Bounds, FBox)
 DECLARE_NAPI_FUNCTION(WriteTaskbarIconToPng, string, Window, HWindow)
 
 BOOL TakeScreenshotRect(const RECT& CaptureRect, std::vector<BYTE>* PixelData);
-void GetScreenshotNew(RECT CaptureArea, std::vector<BYTE>* ScreenshotData);
-std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captureArea);
+void GetScreenshotNew(const RECT& CaptureArea, std::vector<BYTE>* ScreenshotData);
+std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT& CaptureArea);
