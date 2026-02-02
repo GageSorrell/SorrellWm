@@ -33,8 +33,8 @@ import {
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
-import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree.Types";
-import type { FFocusData, FInsertableWindowData } from "?/Event/Focus.Types";
+import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
+import type { FFocusData, FFocusDataBase, FPanelFocusData } from "?/Event/Focus.Types";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 // import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
@@ -48,6 +48,7 @@ import { Keyboard } from "./Keyboard";
 import { Vk } from "$/Common/Component/Keyboard";
 import { RegisterIpcCallback } from "./Event";
 import type { FIpcFrontendEvents, TEventCallback } from "?/Event";
+import type { FInsertableWindowData } from "?/Event/Insert.Types";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -254,19 +255,41 @@ const LaunchMainWindow = async (): Promise<void> =>
             const CanStepUp: boolean = ParentPanel !== undefined;
             const CanStepDown: boolean = IsPanel(FocusedVertex);
 
-            const Data: FFocusData =
+            const DataBase: FFocusDataBase =
             {
                 CanStepDown,
                 CanStepUp,
                 Direction
             };
 
-            Log("GetFocusData is sending to the frontend:", Data);
+            let Out: FFocusData | undefined = undefined;
 
-            // MainWindow?.webContents.send("GetFocusData", );
-            // return { Data, Error: undefined };
+            if (IsPanel(FocusedVertex))
+            {
+                const NumVertices: number = FocusedVertex.Children.length;
+
+                Out =
+                {
+                    ...DataBase,
+                    NumVertices
+                };
+            }
+            else
+            {
+                const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
+
+                Out =
+                {
+                    ...DataBase,
+                    FocusedWindowTitle
+                };
+            }
+
+
+            Log("GetFocusData is sending to the frontend:", Out);
+
             return {
-                Data,
+                Data: Out,
                 Error: undefined
             };
         }

@@ -24,17 +24,19 @@ Subscribe("WinEvent", (...Arguments: Array<unknown>): void =>
     const { Event, Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;
     const ResizeEvent: number = 32772;
     const MouseMoveEvent: number = 32779;
+    const MoveSizeStartEvent: number = 10;
+    const MoveSizeEndEvent: number = 11;
     /* eslint-disable-next-line @stylistic/max-len */
     /* (For now) prevent windows from being moved by dragging the cursor by moving tiled windows back to where they "should" be under SorrellWm. */
     const IsWindowEvent: boolean = IdObject === 0 && Handle !== undefined && IsWindowTiled(Handle);
     if (IsWindowEvent)
     {
         const InitialBounds: FBox = GetWindowLocationAndSize(Handle);
-        if (Event === 10) // MoveSizeStart
+        if (Event === MoveSizeStartEvent)
         {
             WindowInitialRect.set(Handle.Handle, InitialBounds);
         }
-        else if (Event === 11) // MoveSizeEnd
+        else if (Event === MoveSizeEndEvent)
         {
             const InitialBounds: FBox | undefined = WindowInitialRect.get(Handle.Handle);
             if (InitialBounds !== undefined)

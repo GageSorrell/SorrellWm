@@ -3,7 +3,7 @@ cmake_policy(SET CMP0091 NEW)
 cmake_policy(SET CMP0042 NEW)
 
 # Name of the project (will be the name of the plugin)
-project (hello)
+project (SorrellWm)
 set(CMAKE_CXX_STANDARD 17)
 
 # Don't add this line if you will try_compile with boost.

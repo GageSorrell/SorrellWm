@@ -31,7 +31,7 @@ const ElectronHandler =
         {
             ipcRenderer.once(
                 Channel,
-                (_Event: Electron.Event, ...InArguments: Array<unknown>) => Listener(...InArguments)
+                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => Listener(..._Arguments)
             );
         },
         RemoveListener(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void

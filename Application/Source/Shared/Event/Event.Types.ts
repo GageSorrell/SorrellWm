@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree.Types";
+import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree/Tree.Types";
 import type {
     FBringIntoPanelErrorCode,
     FGetAnnotatedPanelsErrorCode,

@@ -10,8 +10,11 @@ import type { FIpcBackendEvents, FIpcFrontendChannel, TEventCallback, TRequest, 
 import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "?/Utility.Types";
 import { type MutableRefObject, useCallback, useEffect, useRef, useState} from "react";
 import type { TIpcState, TUseSendIpcEventReturnType } from "./Event.Types";
-import { Log } from "./Api";
+import type { FLogger } from "?/Log.Types";
+import { GetLogger } from "./Log";
 import { UseEffectAsync } from "./Utility";
+
+const Log: FLogger = GetLogger("Event");
 
 /** Receive an event received by Main. */
 export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(
@@ -103,8 +106,8 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     Log("UseSendIpcEvent was called.");
 
     const [ Response, SetResponse ] = useState<TIpcState<T>>(EmptyResponse);
-    const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
-        useRef<FSimpleCallback | undefined>(undefined);
+    // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
+    //     useRef<FSimpleCallback | undefined>(undefined);
 
     DependencyArray.push(Request, SetResponse);
 

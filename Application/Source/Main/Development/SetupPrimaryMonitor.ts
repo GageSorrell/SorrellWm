@@ -8,7 +8,7 @@
  *            monitors).
  */
 
-import { BringIntoPanel, GetForest, Publish } from "#/Tree";
+import { BringIntoPanel, GetForest } from "#/Tree";
 import {
     CloseApplication,
     type FMonitorInfo,
@@ -24,12 +24,15 @@ import {
     type SpawnOptions,
     spawn as SpawnProcess } from "child_process";
 import { AreHandlesEqual } from "#/Utility";
-import type { FLogger } from "./Log.Types";
+import type { FLogger } from "../../Shared/Log.Types";
+import type { FPanel } from "#/Tree/Tree.Types";
 import { GetLogger } from "./Log";
-import type { FPanel } from "#/Tree.Types";
+import { app } from "electron";
 
 /** Enable/disable the behavior by setting the value of this variable. */
-const ShouldSetUpPrimaryMonitor: boolean = true;
+const ShouldSetUpPrimaryMonitor: boolean = false;
+
+const WillSetUpPrimaryMonitor: boolean = ShouldSetUpPrimaryMonitor && !app.isPackaged;
 
 const Log: FLogger = GetLogger("SetupPrimaryMonitor");
 
@@ -195,7 +198,7 @@ const SetUpPrimaryMonitor = async (): Promise<void> =>
     LaunchPaintInstances();
 };
 
-if (ShouldSetUpPrimaryMonitor)
+if (WillSetUpPrimaryMonitor)
 {
     SetUpPrimaryMonitor();
 }

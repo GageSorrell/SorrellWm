@@ -172,13 +172,13 @@ static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
     Gdiplus::GetImageEncodersSize(&Number, &Size);
     if (Size == 0)
     {
-        return -1; // Failure
+        return -1;
     }
 
     Gdiplus::ImageCodecInfo* ImageCodecInfoArray = (Gdiplus::ImageCodecInfo*)(malloc(Size));
     if (ImageCodecInfoArray == nullptr)
     {
-        return -1; // Failure
+        return -1;
     }
 
     Gdiplus::GetImageEncoders(Number, Size, ImageCodecInfoArray);
@@ -195,7 +195,7 @@ static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
     return -1;
 }
 
-void GetScreenshotNew(RECT CaptureArea, std::vector<BYTE>* ScreenshotData)
+void GetScreenshotNew(const RECT& CaptureArea, std::vector<BYTE>* ScreenshotData)
 {
     int32_t Width = CaptureArea.right - CaptureArea.left;
     int32_t Height = CaptureArea.bottom - CaptureArea.top;

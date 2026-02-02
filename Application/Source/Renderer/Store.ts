@@ -9,7 +9,7 @@
 import type { FStoreFunction, GGlobal, GGlobalDefault } from "./Store.Types";
 import { type PropsWithChildren, type ReactNode, useEffect, useState } from "react";
 import type { FHexColor } from "@sorrellwm/windows";
-import { Log } from "./Api";
+// import { Log } from "./Log";
 import { create } from "zustand";
 
 const DefaultStoreValues: GGlobalDefault =
@@ -40,8 +40,8 @@ const UseInitializeStore = (): Readonly<[ CanPaint: boolean ]> =>
     {
         (async (): Promise<void> =>
         {
-            Log("Trying to get Theme Color");
-            Log(Object.keys(window.electron), window.electron === undefined);
+            // Log("Trying to get Theme Color");
+            // Log(Object.keys(window.electron), window.electron === undefined);
             const ThemeColor: FHexColor = await window.electron.GetThemeColor();
             SetThemeColor(ThemeColor);
             /** @TODO When more things are added to this hook, this will likely need to be moved. */

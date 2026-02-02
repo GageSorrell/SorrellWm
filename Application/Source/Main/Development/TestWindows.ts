@@ -6,7 +6,7 @@
 
 import { BringIntoPanel, Find, IsPanel } from "#/Tree";
 import { type BrowserWindow, ipcMain } from "electron";
-import type { FPanel, FVertex } from "#/Tree.Types";
+import type { FPanel, FVertex } from "#/Tree/Tree.Types";
 import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "Windows";
 import { CreateBrowserWindow } from "#/BrowserWindow.Old";
 import { ForAsync, Sleep } from "#/Utility";

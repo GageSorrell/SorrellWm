@@ -9,7 +9,7 @@ import {
     AreHandlesEqual,
     BoxToString,
     GetPngBase64,
-    PositionToString } from "./Utility/Utility";
+    PositionToString } from "#/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FBox,
@@ -22,6 +22,7 @@ import {
     GetWindowTitle,
     type HMonitor,
     type HWindow,
+    RestoreWindow,
     SetForegroundWindow,
     SetWindowPosition } from "@sorrellwm/windows";
 import type {
@@ -34,13 +35,14 @@ import type {
     FPanel,
     FPanelBase,
     FVertex } from "./Tree.Types";
-import { type FLogger, GetLogger } from "./Development";
-import { type FSettings, GetSettings } from "./Settings";
-import { GetActiveWindow } from "./MainWindow";
-import { GetMonitors } from "./Monitor";
+import { type FSettings, GetSettings } from "../Settings";
+import type { FLogger } from "#/Development";
+import { GetActiveWindow } from "../MainWindow";
+import { GetMonitors } from "../Monitor";
+import { GetTreeLogger } from "./Log";
 import { type TPredicate } from "@/Utility";
 
-const Log: FLogger = GetLogger("Tree");
+const Log: FLogger = GetTreeLogger();
 
 const Forest: FForest = [ ];
 
@@ -247,6 +249,18 @@ export const TileAllWindows = (): void =>
         //     SetWindowPosition(Cell.Handle, Cell.Size);
         // }
     });
+};
+
+/** @note This is not a completely thorough type-check function. */
+export const IsVertex = (In: unknown): In is FVertex =>
+{
+    return (
+        typeof In === "object" &&
+        In !== null &&
+        "Size" in In &&
+        "Handle" in In &&
+        "ZOrder" in In
+    );
 };
 
 export const IsCell = (Vertex: FVertex): Vertex is FCell =>
@@ -481,9 +495,9 @@ const ComputeGapData = (): Map<FVertex, FBox> =>
                 return;
             }
 
-            const PrincipalAxis: "X" | "Y" = Parent.Type === "Horizontal"
-                ? "X"
-                : "Y";
+            // const PrincipalAxis: "X" | "Y" = Parent.Type === "Horizontal"
+            //     ? "X"
+            //     : "Y";
 
             const PrincipalMeasure: "Height" | "Width" = Parent.Type === "Horizontal"
                 ? "Width"
@@ -772,6 +786,8 @@ export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindo
         if (Panel !== undefined)
         {
             // console.log("BringIntoPanel: PanelFromAnnotated was defined!");
+            /* If the window is maximized, then setting its position can cause it to become white. */
+            RestoreWindow(Handle);
             const OutCell: FCell = Cell(Handle);
             Panel.Children.push(OutCell);
             MakeSizesUniform(Panel);

@@ -18,3 +18,5 @@ export type FLoggerRecord = Record<Exclude<FLogLevel, "Normal">, FLogFunction>;
 export type FLogger = FLoggerRecord & FLogFunction;
 
 export type FLoggerInterim = FLogFunction & Partial<FLoggerRecord>;
+
+export type FLog = (...Arguments: Array<unknown>) => void;

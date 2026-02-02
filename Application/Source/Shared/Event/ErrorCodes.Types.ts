@@ -17,7 +17,10 @@ export type FGetAnnotatedPanelsErrorCode = TEventErrorCode<"">;
 
 export type FGetCurrentPanelErrorCode = TEventErrorCode<"">;
 
-export type FGetFocusDataErrorCode = TEventErrorCode<"">;
+export type FGetFocusDataErrorCode = TEventErrorCode<
+    | "CurrentPanelUndefined"
+    | "FocusedVertexUndefined"
+>;
 
 export type FGetPanelScreenshotsErrorCode = TEventErrorCode<"">;
 

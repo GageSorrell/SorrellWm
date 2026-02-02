@@ -35,11 +35,87 @@ const ModifyOutput = (Output: string): string =>
     }).join("\n");
 };
 
+let Child: ChildProcess | null = null;
+let IsShuttingDown: boolean = false;
+
+const KillChildProcesses = async (): Promise<void> =>
+{
+    const ChildProcessIdentifier: number | undefined = Child?.pid;
+    if (ChildProcessIdentifier === undefined)
+    {
+        return;
+    }
+
+    await new Promise<void>((Resolve: ((Value: void | PromiseLike<void>) => void)) =>
+    {
+        const TaskKill: ChildProcess = spawn(
+            "taskkill",
+            [
+                "/PID",
+                String(ChildProcessIdentifier),
+                "/T",
+                "/F"
+            ],
+            {
+                shell: false,
+                stdio: "ignore",
+                windowsHide: true
+            }
+        );
+
+        TaskKill.on("close", () => Resolve());
+        TaskKill.on("error", () => Resolve());
+    });
+};
+
+const Shutdown = async (_SignalName: string): Promise<void> =>
+{
+    if (IsShuttingDown)
+    {
+        // Second Ctrl+C: hard exit.
+        process.exit(1);
+        return;
+    }
+
+    IsShuttingDown = true;
+
+    // try
+    // {
+    //     await DoCleanupWork(SignalName);
+    // }
+    // catch (Error: unknown)
+    // {
+    //     process.stderr.write(`Cleanup error: ${ String(Error) }\n`);
+    // }
+
+    if (Child !== null)
+    {
+        try
+        {
+            await KillChildProcesses();
+        }
+        catch (Error: unknown)
+        {
+            process.stderr.write(`Failed to stop child: ${ String(Error) }\n`);
+        }
+    }
+
+    process.exit(0);
+};
+
+const RegisterSignalHandlers = (): void =>
+{
+    process.once("SIGINT", (): Promise<void> => Shutdown("SIGNINT"));
+    process.once("SIGTERM", (): Promise<void> => Shutdown("SIGTERM"));
+};
+
 const Start = async (): Promise<void> =>
 {
     try
     {
-        const Child: ChildProcess = spawn(
+        RegisterSignalHandlers();
+
+        Child = spawn(
             "npm",
             [ "run", "start-proper" ],
             {
@@ -82,10 +158,10 @@ const Start = async (): Promise<void> =>
             process.stdout.write("stderr was UNDEFINED.");
         }
 
-        Child.on("close", (Code: number | null) =>
-        {
-            process.stdout.write(`👋 Goodbye!  Exit code is ${ Code }.`);
-        });
+        // Child.on("close", (Code: number | null) =>
+        // {
+        //     process.stdout.write(`👋 Goodbye!  Exit code is ${ Code }.`);
+        // });
     }
     catch (Error: unknown)
     {

@@ -4,7 +4,12 @@
  * License:   MIT
  */
 
-import type { FChalkBackground, FChalkForeground, FLogFunction, FLogger, FLoggerInterim } from "./Log.Types";
+import type {
+    FChalkBackground,
+    FChalkForeground,
+    FLogFunction,
+    FLogger,
+    FLoggerInterim } from "?/Log.Types";
 import type { FLogLevel, FLogOrigin } from "Windows";
 import Chalk from "chalk";
 import Util from "util";

@@ -5,4 +5,4 @@
  */
 
 export * from "./Log";
-export * from "./Log.Types";
+export * from "../../Shared/Log.Types";

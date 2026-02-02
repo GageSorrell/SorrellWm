@@ -12,8 +12,11 @@ import {
 import { type NavigateFunction, useNavigate } from "react-router-dom";
 import { type ReactElement, useEffect } from "react";
 import { Action } from "@/Action";
-import { Log } from "@/Api";
+import type { FLogger } from "?/Log.Types";
+import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
+
+const Log: FLogger = GetLogger("Activation");
 
 const ActivationTiled = (): ReactElement =>
 {

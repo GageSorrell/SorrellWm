@@ -7,9 +7,12 @@
 import { Command, CompoundCommand } from "$/Common";
 import { type ReactNode, useEffect } from "react";
 import { Action } from "@/Action";
-import type { FFocusChange } from "#/Tree.Types";
-import { Log } from "@/Api";
+import type { FFocusChange } from "#/Tree/Tree.Types";
+import type { FLogger } from "?/Log.Types";
+import { GetLogger } from "@/Log";
 import { UseSendIpcEvent } from "@/Event";
+
+const Log: FLogger = GetLogger("Focus");
 
 export const Focus = (): ReactNode =>
 {
@@ -96,9 +99,6 @@ export const Focus = (): ReactNode =>
 
     return (
         <Action>
-            <p style={{ "fontSize": 16 }}>
-                FocusData is { JSON.stringify(FocusData) }
-            </p>
             <CompoundCommand
                 SubCommands={ [
                     {

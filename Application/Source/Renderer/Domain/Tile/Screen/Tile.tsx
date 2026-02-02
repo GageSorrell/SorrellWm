@@ -9,9 +9,12 @@ import { Command, GetPanelKey, Panel } from "$/Common";
 import { type ReactElement, useEffect, useState } from "react";
 import { Action } from "@/Action";
 import { CompoundCommand } from "$/Common";
-import type { FAnnotatedPanel } from "#/Tree.Types";
-import { Log } from "@/Api";
+import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
+import type { FLogger } from "?/Log.Types";
+import { GetLogger } from "@/Log";
 import { UseIndex } from "@/Utility/Hook";
+
+const Log: FLogger = GetLogger("Tile");
 
 export const Tile = (): ReactElement =>
 {
