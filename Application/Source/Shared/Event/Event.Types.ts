@@ -19,7 +19,7 @@ import type {
     FOnChangeFocusErrorCode,
     FReadyForRouteErrorCode,
     FRequestTearDownErrorCode} from "./ErrorCodes.Types";
-import type { FHexColor, HMonitor, HWindow } from "Windows";
+import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
 import type { FFocusData } from "?/Event/Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
@@ -32,7 +32,7 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         FBringIntoPanelErrorCode
     >;
     GetMonitorFromFocusedWindow: TIpcFrontendEvent<
-        HWindow,
+        undefined,
         { Monitor: HMonitor; },
         FGetMonitorFromFocusedWindowErrorCode
     >;

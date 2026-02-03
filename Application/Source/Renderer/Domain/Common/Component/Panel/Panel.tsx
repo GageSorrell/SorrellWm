@@ -37,7 +37,7 @@ export const Panel = ({
     ApplicationNames,
     IsRoot: _IsRoot,
     IsSelected,
-    Monitor,
+    MonitorName: Monitor,
     Screenshot,
     Size
 }: PPanel): ReactElement =>

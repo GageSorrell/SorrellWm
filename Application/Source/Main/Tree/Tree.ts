@@ -707,7 +707,7 @@ export const AnnotatePanel = (Panel: FPanel): FAnnotatedPanel | undefined =>
 
             ApplicationNames,
             IsRoot,
-            Monitor,
+            MonitorName: Monitor,
             Screenshot: undefined
         };
     }

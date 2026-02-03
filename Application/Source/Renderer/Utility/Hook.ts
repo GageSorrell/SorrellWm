@@ -16,7 +16,6 @@ import {
 import type { FIpcFrontendChannel, TRequest, TResponse } from "?/Event";
 import type { FUseEffectAsyncCallback, FUseEffectAsyncCleanupFunction } from "./Hook.Types";
 import type { FSimpleCallback } from "?/Utility.Types";
-import { Identity } from "./Utility";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,

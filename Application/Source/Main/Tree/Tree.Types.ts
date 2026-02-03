@@ -60,7 +60,7 @@ export type FAnnotatedPanel =
     FPanel &
     {
         ApplicationNames: Array<string>;
-        Monitor: string;
+        MonitorName: string;
         IsRoot: boolean;
         Screenshot: string | undefined;
     };
