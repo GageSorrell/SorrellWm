@@ -191,7 +191,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...props }:
         (e: KeyboardEvent) =>
         {
             // Ignore events from F24 or its Windows 11 representation "⇒"
-            if (e.key === "⇒" || e.key?.toLowerCase() === "f24")
+            if (e.key === "⇒" || e.key?.toLowerCase() === "f20")
             {
                 return;
             }
@@ -337,7 +337,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...props }:
     const KeyUp: FKeyboardEventCallback = useCallback((Event: KeyboardEvent): void =>
     {
         /* Ignore events from F24 or its Windows 11 representation "⇒" */
-        if (Event.key === "⇒" || Event.key?.toLowerCase() === "f24")
+        if (Event.key === "⇒" || Event.key?.toLowerCase() === "f20")
         {
             return;
         }

@@ -42,8 +42,8 @@ const UseInitializeStore = (): Readonly<[ CanPaint: boolean ]> =>
         {
             // Log("Trying to get Theme Color");
             // Log(Object.keys(window.electron), window.electron === undefined);
-            const ThemeColor: FHexColor = await window.electron.GetThemeColor();
-            SetThemeColor(ThemeColor);
+            // const ThemeColor: FHexColor = await window.electron.GetThemeColor();
+            // SetThemeColor(ThemeColor);
             /** @TODO When more things are added to this hook, this will likely need to be moved. */
             SetCanPaint(true);
         })();

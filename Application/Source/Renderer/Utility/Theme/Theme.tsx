@@ -10,22 +10,29 @@ import {
     type Theme,
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
-import { type PropsWithChildren, type ReactNode, useEffect, useMemo, useState } from "react";
-import { UseStore } from "@/Store";
+import { type PropsWithChildren, type ReactNode, useMemo } from "react";
+import type { FHexColor } from "Windows";
+import { UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
+
+const UseThemeColor = (): Readonly<[ FHexColor ]> =>
+{
+    const DefaultThemeColor: FHexColor = "#FF00FF";
+    const { Data: ThemeColorData } = UseSendIpcEventStrict(
+        "GetThemeColor",
+        undefined,
+        { ThemeColor: DefaultThemeColor }
+    );
+
+    return [ ThemeColorData.ThemeColor ] as const;
+};
 
 const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
 {
-    const { ThemeColor } = UseStore();
-    /* @TODO Replace this with the auto-generated hook once that feature has been written. */
-    const [ IsLightMode, SetIsLightMode ] = useState<boolean>(false);
-    useEffect((): void =>
-    {
-        window.electron.GetIsLightMode().then((InIsLightTheme: boolean): void =>
-        {
-            SetIsLightMode(InIsLightTheme);
-        });
-    }, [ ]);
+    const { Data: IsLightModeData } = UseSendIpcEvent("GetIsLightMode", undefined);
+    const IsLightMode: boolean = IsLightModeData !== undefined
+        ? IsLightModeData.IsLightMode
+        : true;
 
     const SystemTheme: Theme = useMemo((): Theme =>
     {

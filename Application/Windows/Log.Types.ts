@@ -9,6 +9,10 @@ export type FLogOrigin =
     | "Backend"
     | "Native";
 
+export type FLogOriginInternal =
+    | FLogOrigin
+    | "Meta";
+
 export type FLogLevel =
     | "Verbose"
     | "Normal"

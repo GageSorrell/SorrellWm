@@ -4,12 +4,28 @@
  * License:   MIT
  */
 
-import type { FIpcFrontendEvents, TRichEventUndefined } from "?/Event";
+import type {
+    FIpcFrontendEvents,
+    FRichEvents,
+    FRichFrontendEvents,
+    TGetResponseFromKey,
+    TGetRichResponseAsFailure,
+    TGetRichResponseAsSuccess } from "?/Event";
 
 export type TIpcState<T extends keyof FIpcFrontendEvents> =
 {
-    Data: TRichEventUndefined<FIpcFrontendEvents[T]> | undefined,
-    Error: FIpcFrontendEvents[T]["Response"]["Error"] | undefined
+    Data: TGetResponseFromKey<T>["Data"] | undefined;
+    Error: TGetResponseFromKey<T>["Error"] | undefined;
+};
+
+export type TIpcStateStrict<T extends keyof FRichEvents> =
+{
+    Data: TGetRichResponseAsSuccess<T>["Data"];
+    Error: TGetRichResponseAsFailure<T>["Error"] | undefined;
 };
 
 export type TUseSendIpcEventReturnType<T extends keyof FIpcFrontendEvents> = Readonly<TIpcState<T>>;
+export type TUseSendIpcEventStrictReturnType<T extends keyof FRichFrontendEvents> = Readonly<{
+    Data: Exclude<TIpcStateStrict<T>["Data"], undefined>,
+    Error: TIpcStateStrict<T>["Error"]
+}>;

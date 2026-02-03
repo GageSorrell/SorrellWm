@@ -6,10 +6,23 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import type { FIpcBackendEvents, FIpcFrontendChannel, TEventCallback, TRequest, TResponse } from "?/Event";
+import type {
+    FIpcBackendEvents,
+    FIpcFrontendChannel,
+    FRichFrontendEvents,
+    TEventCallback,
+    TGetResponseFromKey,
+    TGetRichResponseAsFailure,
+    TGetRichResponseAsSuccess,
+    TGetRichResponseFromKey,
+    TRequest } from "?/Event";
 import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "?/Utility.Types";
-import { type MutableRefObject, useCallback, useEffect, useRef, useState} from "react";
-import type { TIpcState, TUseSendIpcEventReturnType } from "./Event.Types";
+import { type MutableRefObject, useCallback, useEffect, useState} from "react";
+import type {
+    TIpcState,
+    TIpcStateStrict,
+    TUseSendIpcEventReturnType,
+    TUseSendIpcEventStrictReturnType } from "./Event.Types";
 import type { FLogger } from "?/Log.Types";
 import { GetLogger } from "./Log";
 import { UseEffectAsync } from "./Utility";
@@ -58,14 +71,15 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
     Channel: T,
     Request: TRequest<T>,
     RemoveListenerRef?: MutableRefObject<FSimpleCallback | undefined>
-): Promise<TResponse<T>> =>
+): Promise<TGetResponseFromKey<T>> =>
 {
-    return new Promise<TResponse<T>>(
-        (Resolve: TResolveFunction<TResponse<T>>, _Reject: FRejectFunction): void =>
+    type FResponse = TGetResponseFromKey<T>;
+    return new Promise<TGetResponseFromKey<T>>(
+        (Resolve: TResolveFunction<FResponse>, _Reject: FRejectFunction): void =>
         {
             const Wrapper = (...ArgumentVector: Array<unknown>): void =>
             {
-                const Response: TResponse<T> = ArgumentVector[0] as TResponse<T>;
+                const Response: FResponse = ArgumentVector[0] as FResponse;
 
                 if (RemoveListenerRef?.current !== undefined)
                 {
@@ -126,14 +140,13 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
     {
         Log("Going to await SendIpcEvent");
-        const NewResponse: TResponse<T> = await SendIpcEvent(Channel, Request);
+        const NewResponse: TGetResponseFromKey<T> = await SendIpcEvent(Channel, Request);
         Log(`Response is ${ JSON.stringify(NewResponse) }.`);
         if (!AbortSignal.aborted)
         {
             SetResponse((_Old: TIpcState<T>): TIpcState<T> =>
             {
                 Log("Going to set Response via SetResponse.");
-                /* @ts-expect-error TypeScript cannot infer whether `NewResponse` has the `Data` property. */
                 return NewResponse;
             });
         }
@@ -144,5 +157,69 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     return {
         Data: (Response?.Data === undefined ? undefined : Response.Data),
         Error: (Response?.Error === undefined ? undefined : Response.Error)
+    } as const;
+};
+
+/** `SendIpcEvent` wrapped into a hook, with a required argument for a default value for `Data`. */
+export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
+    Channel: T,
+    Request: TRequest<T>,
+    DefaultData: TGetRichResponseAsSuccess<T>["Data"],
+    DependencyArray: Array<unknown> = [ ]
+): TUseSendIpcEventStrictReturnType<T> =>
+{
+    const EmptyResponse: TIpcStateStrict<T> =
+    {
+        Data: DefaultData,
+        Error: undefined
+    };
+
+    const [ Response, SetResponse ] = useState<TIpcStateStrict<T>>(EmptyResponse);
+    // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
+    //     useRef<FSimpleCallback | undefined>(undefined);
+
+    DependencyArray.push(Request, SetResponse);
+
+    const IsResponseSuccess = (In: TGetRichResponseFromKey<T>): In is TGetRichResponseAsSuccess<T> =>
+    {
+        return "Data" in In && In.Data !== undefined;
+    };
+
+    /* eslint-disable-next-line @typescript-eslint/typedef */
+    const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
+    {
+        Log("Going to await SendIpcEvent");
+        const NewResponse: TGetRichResponseFromKey<T> =
+            (await SendIpcEvent(Channel, Request)) as TGetRichResponseFromKey<T>;
+        Log(`Response is ${ JSON.stringify(NewResponse) }.`);
+        if (!AbortSignal.aborted)
+        {
+            if (IsResponseSuccess(NewResponse))
+            {
+                SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
+                {
+                    return NewResponse;
+                });
+            }
+            else
+            {
+                const NewResponseFailure: TGetRichResponseAsFailure<T> = NewResponse;
+
+                SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
+                {
+                    return {
+                        Data: EmptyResponse.Data,
+                        Error: NewResponseFailure.Error
+                    };
+                });
+            }
+        }
+    }, [ Channel, Request, SendIpcEvent, SetResponse ]);
+
+    UseEffectAsync(SideEffect, undefined, DependencyArray);
+
+    return {
+        Data: Response.Data,
+        Error: Response.Error
     } as const;
 };

@@ -34,21 +34,20 @@ import {
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
-import type { FFocusData, FFocusDataBase, FPanelFocusData } from "?/Event/Focus.Types";
+import type { FFocusData, FFocusDataBase } from "?/Event/Focus.Types";
+import type { FIpcChannel, FIpcFrontendEvents, TEventCallback } from "?/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 // import { CreateNotepadTestWindows } from "./Development/TestWindows";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
-import type { FIpcChannel } from "../Shared/Event/EventBase.Types";
+import type { FInsertableWindowData } from "?/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 // import { promises as Fs } from "fs";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
 // import type { TIpcHandlerReturnType } from "?/Event.Types";
-import { Vk } from "$/Common/Component/Keyboard";
 import { RegisterIpcCallback } from "./Event";
-import type { FIpcFrontendEvents, TEventCallback } from "?/Event";
-import type { FInsertableWindowData } from "?/Event/Insert.Types";
+import { Vk } from "$/Common/Component/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -210,8 +209,12 @@ const LaunchMainWindow = async (): Promise<void> =>
         MainWindow?.webContents.send("GetAnnotatedPanels", AnnotatedPanels);
     });
 
+    /**
+     * @TODO On the Focus screen, the Move buttons should be disabled
+     * (greyed out) if there is only one vertex in the current panel.
+     */
+
     /** @TODO Find better place for this. */
-    // const GetFocusData = async (): TIpcHandlerReturnType<"GetFocusData"> =>
     RegisterIpcCallback(
         MainWindow,
         "GetFocusData",
@@ -285,7 +288,6 @@ const LaunchMainWindow = async (): Promise<void> =>
                 };
             }
 
-
             Log("GetFocusData is sending to the frontend:", Out);
 
             return {
@@ -294,13 +296,6 @@ const LaunchMainWindow = async (): Promise<void> =>
             };
         }
     );
-    const GetFocusData = async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
-    {
-    };
-
-    On("GetFocusData", GetFocusData);
-
-    // OnIpcEvent(MainWindow, "GetFocusData", GetFocusData);
 
     On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
@@ -327,7 +322,7 @@ const LaunchMainWindow = async (): Promise<void> =>
             BlurBackground(InterimFocus.Size);
         }
 
-        GetFocusData(_Event, ...Arguments);
+        // GetFocusData(_Event, ...Arguments);
         Log("FocusChange", FocusChange);
     });
 
@@ -442,7 +437,7 @@ function OnKey(Event: FKeyboardEvent): void
     }
 
     /** @TODO Make this a modifiable setting. */
-    const ActivationKey: FVirtualKey = Vk["F24"];
+    const ActivationKey: FVirtualKey = Vk["F20"];
 
     if (VkCode === ActivationKey)
     {

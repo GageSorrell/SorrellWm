@@ -1,0 +1,18 @@
+{
+    "DisabledCategories":
+    {
+        "Backend":
+        [
+            ""
+        ],
+        "Frontend":
+        [
+            "Event"
+        ],
+        "Native":
+        [
+            ""
+        ]
+    },
+    "LogDisabledCategoryAttempts": true
+}

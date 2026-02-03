@@ -10,7 +10,8 @@ import type {
     FLogFunction,
     FLogger,
     FLoggerInterim } from "?/Log.Types";
-import type { FLogLevel, FLogOrigin } from "Windows";
+import { DisabledCategories, LogDisabledCategoryAttempts } from "?/LogSettings.json";
+import type { FLogLevel, FLogOrigin, FLogOriginInternal } from "Windows";
 import Chalk from "chalk";
 import Util from "util";
 
@@ -80,12 +81,45 @@ const FormatLevel = (Level: FLogLevel): string =>
 };
 
 const LogInternal = (
-    Origin: FLogOrigin,
+    Origin: FLogOriginInternal,
     Category: string,
     Level: FLogLevel,
     ...Arguments: Array<unknown>
 ): void =>
 {
+    const DisabledCategoriesAttempted: typeof DisabledCategories =
+    {
+        Backend: [ ],
+        Frontend: [ ],
+        Native: [ ]
+    };
+
+    if (Origin !== "Meta")
+    {
+        const ShouldLogGivenStatements: boolean = !(Category in DisabledCategories);
+        if (!ShouldLogGivenStatements)
+        {
+            const ShouldLogDisabledCategory: boolean = (
+                LogDisabledCategoryAttempts &&
+                !DisabledCategoriesAttempted[Origin].includes(Category)
+            );
+
+            if (ShouldLogDisabledCategory)
+            {
+                DisabledCategoriesAttempted[Origin].push(Category);
+                LogInternal(
+                    "Meta",
+                    "Log",
+                    "Normal",
+                    /* eslint-disable-next-line @stylistic/max-len */
+                    `The category "${ Category }" was logged about, from ${ Origin } code.  Further attempts to log this category from this origin will not be reported.`
+                );
+            }
+
+            return;
+        }
+    }
+
     const OriginEmojiMap: Record<FLogOrigin, string> =
     {
         Backend: "🐛",

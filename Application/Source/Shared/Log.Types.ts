@@ -15,6 +15,16 @@ export type FLogFunction = (...Statements: Array<unknown>) => void;
 
 export type FLoggerRecord = Record<Exclude<FLogLevel, "Normal">, FLogFunction>;
 
+export type FLoggerSettings =
+{
+    DisabledCategories:
+    {
+        Backend: Array<string>;
+        Frontend: Array<string>;
+        /* @TODO Add "Native" property for filtering C++ log statements. */
+    };
+};
+
 export type FLogger = FLoggerRecord & FLogFunction;
 
 export type FLoggerInterim = FLogFunction & Partial<FLoggerRecord>;

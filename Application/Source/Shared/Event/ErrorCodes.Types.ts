@@ -5,6 +5,11 @@
  */
 
 export type FUnspecifiedErrorCode = "UnspecifiedError";
+
+export type FUnknownErrorCode =
+    | FUnspecifiedErrorCode
+    | string;
+
 type TEventErrorCode<T extends string> = T | FUnspecifiedErrorCode;
 
 export type FActivateErrorCode = TEventErrorCode<"">;
@@ -21,6 +26,10 @@ export type FGetFocusDataErrorCode = TEventErrorCode<
     | "CurrentPanelUndefined"
     | "FocusedVertexUndefined"
 >;
+
+export type FGetIsLightModeErrorCode = TEventErrorCode<"">;
+
+export type FGetThemeColorErrorCode = TEventErrorCode<"">;
 
 export type FGetPanelScreenshotsErrorCode = TEventErrorCode<"">;
 
