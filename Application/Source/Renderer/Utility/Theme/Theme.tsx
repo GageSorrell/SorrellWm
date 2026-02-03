@@ -11,13 +11,13 @@ import {
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
-import type { FHexColor } from "Windows";
 import { UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
+import type { FHexColor } from "Windows";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
 
 const UseThemeColor = (): Readonly<[ FHexColor ]> =>
 {
-    const DefaultThemeColor: FHexColor = "#FF00FF";
+    const DefaultThemeColor: FHexColor = "#0078D4";
     const { Data: ThemeColorData } = UseSendIpcEventStrict(
         "GetThemeColor",
         undefined,
@@ -27,12 +27,21 @@ const UseThemeColor = (): Readonly<[ FHexColor ]> =>
     return [ ThemeColorData.ThemeColor ] as const;
 };
 
+const UseIsLightMode = (): Readonly<[ boolean ]> =>
+{
+    const { Data } = UseSendIpcEvent("GetIsLightMode", undefined);
+
+    const IsLightMode: boolean = Data !== undefined
+        ? Data.IsLightMode
+        : true;
+
+    return [ IsLightMode ] as const;
+};
+
 const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
 {
-    const { Data: IsLightModeData } = UseSendIpcEvent("GetIsLightMode", undefined);
-    const IsLightMode: boolean = IsLightModeData !== undefined
-        ? IsLightModeData.IsLightMode
-        : true;
+    const [ ThemeColor ] = UseThemeColor();
+    const [ IsLightMode ] = UseIsLightMode();
 
     const SystemTheme: Theme = useMemo((): Theme =>
     {
