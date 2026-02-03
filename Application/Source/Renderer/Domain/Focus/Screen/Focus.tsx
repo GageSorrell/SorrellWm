@@ -227,9 +227,9 @@ export const Focus = (): ReactNode =>
                     Title="Step Up into Panel"
                 />
             </Action>
-            {/* <div style={ FooterRootStyle }>
+            <div style={ FooterRootStyle }>
                 <Footer { ...FocusData }/>
-            </div> */}
+            </div>
         </>
     );
 };

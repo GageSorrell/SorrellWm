@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FLogLevel } from "Windows";
+import type { FLogLevel, FLogOrigin } from "Windows";
 import type chalk from "chalk";
 
 export type FChalkBackground = Extract<keyof typeof chalk, `bg${ string }`>;
@@ -15,15 +15,18 @@ export type FLogFunction = (...Statements: Array<unknown>) => void;
 
 export type FLoggerRecord = Record<Exclude<FLogLevel, "Normal">, FLogFunction>;
 
-export type FLoggerSettings =
-{
+export type FLogSettings = Readonly<{
     DisabledCategories:
     {
-        Backend: Array<string>;
-        Frontend: Array<string>;
-        /* @TODO Add "Native" property for filtering C++ log statements. */
+        [ LogOrigin in FLogOrigin ]: Array<string>;
     };
-};
+    LogDisabledCategoryAttempts: boolean;
+    LimitStatementLength:
+    {
+        Enabled: boolean;
+        MaxLength: number;
+    };
+}>;
 
 export type FLogger = FLoggerRecord & FLogFunction;
 

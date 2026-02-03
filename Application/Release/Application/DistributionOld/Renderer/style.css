@@ -1,0 +1,2 @@
+body{align-items:center;background-color:#0000;color:#0000;display:flex;font-family:Segoe UI;height:100vh;justify-content:center;margin:0;overflow-y:hidden;padding:0;position:relative;user-select:none}@font-face{font-family:Segoe Fluent Icons;src:url(78be8bdef5eaa2604971.ttf)}.DEBUG_Draggable{-webkit-app-region:drag}.BackgroundGradient{animation:"gradient 20s ease infinite"}@keyframes gradient{0%{background-position:0 50%}50%{background-position:100% 50%}to{background-position:0 50%}}
+/*# sourceMappingURL=style.css.map*/

@@ -12,14 +12,16 @@ import type {
     FGetFocusDataErrorCode,
     FGetInsertableWindowDataErrorCode,
     FGetIsLightModeErrorCode,
+    FGetMonitorFromFocusedWindowErrorCode,
     FGetPanelScreenshotsErrorCode,
     FGetThemeColorErrorCode,
     FLogErrorCode,
     FOnChangeFocusErrorCode,
-    FReadyForRouteErrorCode } from "./ErrorCodes.Types";
+    FReadyForRouteErrorCode,
+    FRequestTearDownErrorCode} from "./ErrorCodes.Types";
+import type { FHexColor, HMonitor, HWindow } from "Windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
 import type { FFocusData } from "?/Event/Focus.Types";
-import type { FHexColor } from "Windows";
 import type { FInsertableWindowData } from "./Insert.Types";
 
 // @TODO Create proper string unions for the error codes for each event.
@@ -28,6 +30,11 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         FAnnotatedPanel,
         undefined,
         FBringIntoPanelErrorCode
+    >;
+    GetMonitorFromFocusedWindow: TIpcFrontendEvent<
+        HWindow,
+        { Monitor: HMonitor; },
+        FGetMonitorFromFocusedWindowErrorCode
     >;
     GetAnnotatedPanels: TIpcFrontendEvent<
         undefined,
@@ -56,7 +63,7 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
     >;
     GetPanelScreenshots: TIpcFrontendEvent<
         undefined,
-        { Screenshots: Array<string> },
+        { Screenshots: Array<string>; },
         FGetPanelScreenshotsErrorCode
     >;
     GetInsertableWindowData: TIpcFrontendEvent<
@@ -78,6 +85,11 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         undefined,
         FReadyForRouteErrorCode
+    >;
+    RequestTearDown: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FRequestTearDownErrorCode
     >;
 }>;
 

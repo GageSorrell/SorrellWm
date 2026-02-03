@@ -10,11 +10,14 @@ import type {
     FIpcBackendEvents,
     FIpcFrontendChannel,
     FRichFrontendEvents,
+    FSingleRichFrontendChannels,
     TEventCallback,
+    TGetDefaultRichResponseData,
     TGetResponseFromKey,
     TGetRichResponseAsFailure,
     TGetRichResponseAsSuccess,
     TGetRichResponseFromKey,
+    TGetSingleRichResponseData,
     TRequest } from "?/Event";
 import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "?/Utility.Types";
 import { type MutableRefObject, useCallback, useEffect, useState} from "react";
@@ -22,7 +25,8 @@ import type {
     TIpcState,
     TIpcStateStrict,
     TUseSendIpcEventReturnType,
-    TUseSendIpcEventStrictReturnType } from "./Event.Types";
+    TUseSendIpcEventStrictReturnType,
+    TUseSendIpcEventStrictSingleReturnType} from "./Event.Types";
 import type { FLogger } from "?/Log.Types";
 import { GetLogger } from "./Log";
 import { UseEffectAsync } from "./Utility";
@@ -32,7 +36,7 @@ const Log: FLogger = GetLogger("Event");
 /** Receive an event received by Main. */
 export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(
     Channel: T,
-    Callback: TEventCallback<FIpcBackendEvents[T]>,
+    Callback: TEventCallback<T>,
     DependencyArray: Array<unknown> = [ ]
 ): void =>
 {
@@ -41,7 +45,7 @@ export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const Wrapper = useCallback((Request: TRequest<T>): void =>
     {
-        const Response: ReturnType<TEventCallback<FIpcBackendEvents[T]>> = Callback(Request);
+        const Response: ReturnType<TEventCallback<T>> = Callback(Request);
         window.electron.ipcRenderer.Send(Channel, Response);
     }, DependencyArray);
 
@@ -119,6 +123,9 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
 
     Log("UseSendIpcEvent was called.");
 
+    /* eslint-disable-next-line @stylistic/max-len */
+    Log(`UseSendIpcEvent: Channel is ${ Channel }, Request is ${ JSON.stringify(Request) }, DependencyArray is ${ JSON.stringify(DependencyArray) }.`);
+
     const [ Response, SetResponse ] = useState<TIpcState<T>>(EmptyResponse);
     // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
     //     useRef<FSimpleCallback | undefined>(undefined);
@@ -139,7 +146,7 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
     {
-        Log("Going to await SendIpcEvent");
+        Log(`Going to await SendIpcEvent for event ${ Channel }.`);
         const NewResponse: TGetResponseFromKey<T> = await SendIpcEvent(Channel, Request);
         Log(`Response is ${ JSON.stringify(NewResponse) }.`);
         if (!AbortSignal.aborted)
@@ -154,6 +161,8 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
 
     UseEffectAsync(SideEffect, CleanupFunction, DependencyArray);
 
+    Log("This far.");
+
     return {
         Data: (Response?.Data === undefined ? undefined : Response.Data),
         Error: (Response?.Error === undefined ? undefined : Response.Error)
@@ -164,7 +173,7 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
 export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
     Channel: T,
     Request: TRequest<T>,
-    DefaultData: TGetRichResponseAsSuccess<T>["Data"],
+    DefaultData: TGetDefaultRichResponseData<T>,
     DependencyArray: Array<unknown> = [ ]
 ): TUseSendIpcEventStrictReturnType<T> =>
 {
@@ -188,14 +197,16 @@ export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
     {
-        Log("Going to await SendIpcEvent");
+        Log(`Going to await SendIpcEvent for event ${ Channel }.`);
         const NewResponse: TGetRichResponseFromKey<T> =
             (await SendIpcEvent(Channel, Request)) as TGetRichResponseFromKey<T>;
+
         Log(`Response is ${ JSON.stringify(NewResponse) }.`);
         if (!AbortSignal.aborted)
         {
             if (IsResponseSuccess(NewResponse))
             {
+                Log(`Event ${ Channel } responded successfully!`);
                 SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
                 {
                     return NewResponse;
@@ -205,6 +216,7 @@ export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
             {
                 const NewResponseFailure: TGetRichResponseAsFailure<T> = NewResponse;
 
+                Log(`Event ${ Channel } responded as a FAILURE!`);
                 SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
                 {
                     return {
@@ -222,4 +234,25 @@ export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
         Data: Response.Data,
         Error: Response.Error
     } as const;
+};
+
+/**
+ * This is the hook that is intended to be used most often, since most events
+ * are expected to be rich and only contain a single argument.
+ *
+ * This hook wraps `UseSendIpcEventSingle` to provide a more React-style signature.
+ */
+export const UseSendIpcEventStrictSingle = <T extends FSingleRichFrontendChannels>(
+    Channel: T,
+    Request: TRequest<T>,
+    DefaultData: TGetDefaultRichResponseData<T>,
+    DependencyArray: Array<unknown> = [ ]
+): TUseSendIpcEventStrictSingleReturnType<T> =>
+{
+    const { Data, Error } = UseSendIpcEventStrict(Channel, Request, DefaultData, DependencyArray);
+    const DataKeys: Array<PropertyKey> = Object.keys(Data);
+    const ZerothDataProperty: TGetSingleRichResponseData<T> =
+        (Data[DataKeys[0] as keyof typeof Data] as TGetSingleRichResponseData<T>);
+
+    return [ ZerothDataProperty, Error ] as const;
 };

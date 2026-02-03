@@ -9,7 +9,10 @@ import type {
     FIpcBackendChannel,
     FIpcFrontendChannel,
     FIpcFrontendEvents,
+    FPoorResponseAsSuccess,
     TEventCallback,
+    TGetErrorCode,
+    TPoorResponseAsFailure,
     TRequest,
     TResponse } from "?/Event";
 import { type FLogger, GetLogger } from "./Development";
@@ -25,7 +28,7 @@ const Log: FLogger = GetLogger("Event");
 export const RegisterIpcCallback = <T extends FIpcFrontendChannel>(
     BrowserWindow: BrowserWindow,
     Channel: T,
-    Callback: TEventCallback<FIpcFrontendEvents[T]>
+    Callback: TEventCallback<T>
 ): void =>
 {
     if (ipcMain.eventNames().includes(Channel))
@@ -39,7 +42,7 @@ export const RegisterIpcCallback = <T extends FIpcFrontendChannel>(
     {
         type FRequest = FIpcFrontendEvents[T]["Request"];
         // type FResponse = FIpcFrontendEvents[T]["Response"];
-        type FResponse = Awaited<ReturnType<TEventCallback<FIpcFrontendEvents[T]>>>;
+        type FResponse = Awaited<ReturnType<TEventCallback<T>>>;
         const Request: FRequest = ArgumentVector[0] as FRequest;
         const Response: FResponse = await Callback(Request) as FResponse;
 
@@ -70,4 +73,22 @@ export const SendIpcEvent = <T extends FIpcBackendChannel>(
 
             BrowserWindow.webContents.send(Channel, Request);
         });
+};
+
+export const PoorEventSuccess = (): FPoorResponseAsSuccess =>
+{
+    return {
+        Data: undefined,
+        Error: undefined
+    };
+};
+
+export const PoorEventFailure = <T extends FIpcBackendChannel>(
+    Error: TGetErrorCode<T>
+): TPoorResponseAsFailure<T> =>
+{
+    return {
+        Data: undefined,
+        Error
+    };
 };

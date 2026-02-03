@@ -10,9 +10,9 @@ import type {
     FLogFunction,
     FLogger,
     FLoggerInterim } from "?/Log.Types";
-import { DisabledCategories, LogDisabledCategoryAttempts } from "?/LogSettings.json";
-import type { FLogLevel, FLogOrigin, FLogOriginInternal } from "Windows";
+import type { FLogLevel, FLogOriginInternal } from "Windows";
 import Chalk from "chalk";
+import { LogSettings } from "../../Shared/LoggerSettings";
 import Util from "util";
 
 Chalk.level = 1;
@@ -87,7 +87,7 @@ const LogInternal = (
     ...Arguments: Array<unknown>
 ): void =>
 {
-    const DisabledCategoriesAttempted: typeof DisabledCategories =
+    const DisabledCategoriesAttempted: typeof LogSettings.DisabledCategories =
     {
         Backend: [ ],
         Frontend: [ ],
@@ -96,11 +96,11 @@ const LogInternal = (
 
     if (Origin !== "Meta")
     {
-        const ShouldLogGivenStatements: boolean = !(Category in DisabledCategories);
+        const ShouldLogGivenStatements: boolean = !(Category in LogSettings.DisabledCategories);
         if (!ShouldLogGivenStatements)
         {
             const ShouldLogDisabledCategory: boolean = (
-                LogDisabledCategoryAttempts &&
+                LogSettings.LogDisabledCategoryAttempts &&
                 !DisabledCategoriesAttempted[Origin].includes(Category)
             );
 
@@ -120,10 +120,11 @@ const LogInternal = (
         }
     }
 
-    const OriginEmojiMap: Record<FLogOrigin, string> =
+    const OriginEmojiMap: Record<FLogOriginInternal, string> =
     {
         Backend: "🐛",
         Frontend: "⚛️",
+        Meta: "🧠",
         Native: "🦾"
     };
 
@@ -134,24 +135,42 @@ const LogInternal = (
         return Util.format(Argument);
     });
 
-    const OutStatements: Array<string> =
-    [
-        OriginEmoji + " ",
-        FormatCategory(Category),
-        FormatLevel(Level),
-        " ",
-        ...FormattedArguments
-    ];
+    const GetOutStatements = (): string =>
+    {
+        const OutStatementsArray: Array<string> =
+        [
+            OriginEmoji + " ",
+            FormatCategory(Category),
+            FormatLevel(Level),
+            " ",
+            ...FormattedArguments
+        ];
+
+        const OutStatementsBase: string = OutStatementsArray.join("");
+
+        if (LogSettings.LimitStatementLength.Enabled)
+        {
+            const PrefixLength: number = OutStatementsArray.slice(0, 4).reduce(
+                (TotalLength: number, Statement: string): number =>
+                {
+                    return TotalLength + (Statement?.length ?? 0);
+                }, 0);
+
+            const TotalLength: number = PrefixLength + LogSettings.LimitStatementLength.MaxLength;
+
+            return OutStatementsBase.slice(0, TotalLength);
+        }
+        else
+        {
+            return OutStatementsBase;
+        }
+    };
 
     const Stream: NodeJS.WriteStream = Level === "Error"
         ? process.stderr
         : process.stdout;
 
-    // OutStatements.forEach((Statement: string): void =>
-    // {
-    //     Stream.write(Statement);
-    // });
-    Stream.write(OutStatements.join("") + "\n");
+    Stream.write(GetOutStatements() + "\n");
 };
 
 /** This should only be used when registering the Log event. */

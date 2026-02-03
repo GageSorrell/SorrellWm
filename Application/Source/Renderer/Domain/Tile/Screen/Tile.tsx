@@ -6,49 +6,80 @@
 
 import { Caption1, Title1 } from "@fluentui/react-components";
 import { Command, GetPanelKey, Panel } from "$/Common";
-import { type ReactElement, useEffect, useState } from "react";
+import type { FAnnotatedPanel, FAnnotatedPanelScreenshot } from "#/Tree/Tree.Types";
+import { type ReactElement, useCallback, useEffect, useMemo } from "react";
+import { SendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
 import { CompoundCommand } from "$/Common";
-import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
 import type { FLogger } from "?/Log.Types";
+import type { FSimpleCallbackAsync } from "?/Utility.Types";
 import { GetLogger } from "@/Log";
+import type { TGetDefaultRichResponseData } from "?/Event";
 import { UseIndex } from "@/Utility/Hook";
 
 const Log: FLogger = GetLogger("Tile");
 
+const UseAnnotatedPanelsBase = (): Readonly<[ Array<FAnnotatedPanel> ]> =>
+{
+    const DefaultData: TGetDefaultRichResponseData<"GetAnnotatedPanels"> =
+    {
+        AnnotatedPanels: [ ]
+    };
+
+    const { Data: { AnnotatedPanels } } = UseSendIpcEventStrict("GetAnnotatedPanels", undefined, DefaultData);
+
+    return [ AnnotatedPanels ] as const;
+};
+
+const UseGetPanelScreenshots = (): Readonly<[ Array<string> ]> =>
+{
+    const DefaultData: TGetDefaultRichResponseData<"GetPanelScreenshots"> =
+    {
+        Screenshots: [ ]
+    };
+
+    const { Data: { Screenshots } } = UseSendIpcEventStrict("GetPanelScreenshots", undefined, DefaultData);
+
+    return [ Screenshots ] as const;
+};
+
+const UseAnnotatedPanels = (): Readonly<[ Array<FAnnotatedPanel> ]> =>
+{
+    const [ AnnotatedPanelsBase ] = UseAnnotatedPanelsBase();
+    const [ Screenshots ] = UseGetPanelScreenshots();
+
+    Log("AnnotatedPanelsBase", AnnotatedPanelsBase);
+    Log("Screenshots", Screenshots);
+
+    const AnnotatedPanels: Array<FAnnotatedPanelScreenshot> = useMemo((): Array<FAnnotatedPanelScreenshot> =>
+    {
+        return AnnotatedPanelsBase.map(
+            (AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanelScreenshot =>
+            {
+                const Screenshot: string | undefined = Screenshots?.[Index];
+                return {
+                    ...AnnotatedPanel,
+                    Screenshot
+                };
+            }
+        );
+    }, [ AnnotatedPanelsBase, Screenshots ]);
+
+    return [ AnnotatedPanels ] as const;
+};
+
 export const Tile = (): ReactElement =>
 {
-    const [ AnnotatedPanels, SetAnnotatedPanels ] = useState<Array<FAnnotatedPanel>>([ ]);
-    useEffect((): void =>
-    {
-        window.electron.ipcRenderer.Send("GetAnnotatedPanels");
-        window.electron.ipcRenderer.On("GetAnnotatedPanels", (...Arguments: Array<unknown>): void =>
-        {
-            SetAnnotatedPanels((_Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
-            {
-                return Arguments[0] as Array<FAnnotatedPanel>;
-            });
-        });
+    // @TODO Set default selection to be the root panel of the monitor in which the window resides.
+    // const [ DefaultIndex, SetDefaultIndex ] = useState<number>(0);
+    // useEffect((): void =>
+    // {
 
-        window.electron.ipcRenderer.Send("GetPanelScreenshots");
-        window.electron.ipcRenderer.On("GetPanelScreenshots", (...Arguments: Array<unknown>): void =>
-        {
-            const Screenshots: Array<string> = Arguments[0] as Array<string>;
-            SetAnnotatedPanels((Old: Array<FAnnotatedPanel>): Array<FAnnotatedPanel> =>
-            {
-                const Out: Array<FAnnotatedPanel> =
-                    Old.map((AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanel =>
-                    {
-                        return {
-                            ...AnnotatedPanel,
-                            Screenshot: Screenshots[Index]
-                        };
-                    });
+    // }, [ AnnotatedPanels ]);
 
-                return Out;
-            });
-        });
-    }, [ SetAnnotatedPanels ]);
+    const [ AnnotatedPanels ] = UseAnnotatedPanels();
+
+    Log("AnnotatedPanels are ", AnnotatedPanels);
 
     const [ SelectionIndex, IncrementSelectionIndex, DecrementSelectionIndex ] =
         UseIndex(0, 0, AnnotatedPanels.length - 1);
@@ -58,11 +89,11 @@ export const Tile = (): ReactElement =>
         Log(`Index is now ${ SelectionIndex }.`);
     }, [ SelectionIndex ]);
 
-    const ConfirmSelection = (): void =>
+    const ConfirmSelection: FSimpleCallbackAsync = useCallback(async (): Promise<void> =>
     {
-        window.electron.ipcRenderer.Send("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
-        window.electron.ipcRenderer.Send("TearDown");
-    };
+        SendIpcEvent("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
+        SendIpcEvent("RequestTearDown", undefined);
+    }, [ AnnotatedPanels, SelectionIndex ]);
 
     return (
         <Action>

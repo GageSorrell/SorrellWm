@@ -8,9 +8,12 @@ import type {
     FIpcFrontendEvents,
     FRichEvents,
     FRichFrontendEvents,
+    FSingleRichFrontendEvents,
+    TGetErrorCode,
     TGetResponseFromKey,
     TGetRichResponseAsFailure,
-    TGetRichResponseAsSuccess } from "?/Event";
+    TGetRichResponseAsSuccess,
+    TGetSingleRichResponseData} from "?/Event";
 
 export type TIpcState<T extends keyof FIpcFrontendEvents> =
 {
@@ -25,7 +28,11 @@ export type TIpcStateStrict<T extends keyof FRichEvents> =
 };
 
 export type TUseSendIpcEventReturnType<T extends keyof FIpcFrontendEvents> = Readonly<TIpcState<T>>;
+
 export type TUseSendIpcEventStrictReturnType<T extends keyof FRichFrontendEvents> = Readonly<{
     Data: Exclude<TIpcStateStrict<T>["Data"], undefined>,
     Error: TIpcStateStrict<T>["Error"]
 }>;
+
+export type TUseSendIpcEventStrictSingleReturnType<T extends keyof FSingleRichFrontendEvents> =
+    Readonly<[ Data: TGetSingleRichResponseData<T>, Error: TGetErrorCode<T> | undefined ]>;

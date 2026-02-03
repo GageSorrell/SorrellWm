@@ -65,6 +65,13 @@ export type FAnnotatedPanel =
         Screenshot: string | undefined;
     };
 
+/** `FAnnotatedPanel` but the `Screenshot` property is certainly defined. */
+export type FAnnotatedPanelScreenshot =
+    Omit<FAnnotatedPanel, "Screenshot"> &
+    {
+        Screenshot: string;
+    };
+
 export type FFocusChange =
     | "Next"
     | "Previous"

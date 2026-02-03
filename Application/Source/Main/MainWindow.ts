@@ -25,28 +25,27 @@ import {
     type FLogLevel,
     GetDwmWindowRect,
     GetFocusedWindow,
+    GetIsLightMode,
+    GetMonitorFromWindow,
+    GetThemeColor,
     GetTileableWindows,
     GetWindowTitle,
+    type HMonitor,
     type HWindow,
-    // KillOrphans,
-    // UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
 import type { FFocusData, FFocusDataBase } from "?/Event/Focus.Types";
-import type { FIpcChannel, FIpcFrontendEvents, TEventCallback } from "?/Event";
+import type { FIpcChannel, TEventCallback } from "?/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
-// import { CreateNotepadTestWindows } from "./Development/TestWindows";
+import { PoorEventSuccess, RegisterIpcCallback } from "./Event";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
 import type { FInsertableWindowData } from "?/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
-// import { promises as Fs } from "fs";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
-// import type { TIpcHandlerReturnType } from "?/Event.Types";
-import { RegisterIpcCallback } from "./Event";
 import { Vk } from "$/Common/Component/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
@@ -197,17 +196,17 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     /** @TODO Find better place for this. */
-    On("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
-    {
-        const Panels: Array<FPanel> = GetPanels();
-        const AnnotatedPanels: Array<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
-            .filter((Value: FAnnotatedPanel | undefined): boolean =>
-            {
-                return Value !== undefined;
-            }) as Array<FAnnotatedPanel>;
+    // On("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    // {
+    //     const Panels: Array<FPanel> = GetPanels();
+    //     const AnnotatedPanels: Array<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
+    //         .filter((Value: FAnnotatedPanel | undefined): boolean =>
+    //         {
+    //             return Value !== undefined;
+    //         }) as Array<FAnnotatedPanel>;
 
-        MainWindow?.webContents.send("GetAnnotatedPanels", AnnotatedPanels);
-    });
+    //     MainWindow?.webContents.send("GetAnnotatedPanels", AnnotatedPanels);
+    // });
 
     /**
      * @TODO On the Focus screen, the Move buttons should be disabled
@@ -218,7 +217,7 @@ const LaunchMainWindow = async (): Promise<void> =>
     RegisterIpcCallback(
         MainWindow,
         "GetFocusData",
-        async (): ReturnType<TEventCallback<FIpcFrontendEvents["GetFocusData"]>> =>
+        async (): ReturnType<TEventCallback<"GetFocusData">> =>
         {
             const CurrentPanel: FPanel | undefined = GetCurrentPanel();
             let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
@@ -292,6 +291,110 @@ const LaunchMainWindow = async (): Promise<void> =>
 
             return {
                 Data: Out,
+                Error: undefined
+            };
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "GetMonitorFromFocusedWindow",
+        async (): ReturnType<TEventCallback<"GetMonitorFromFocusedWindow">> =>
+        {
+            const ActiveWindow: HWindow | undefined = GetActiveWindow();
+            if (ActiveWindow !== undefined)
+            {
+                const Monitor: HMonitor = GetMonitorFromWindow(ActiveWindow);
+                return {
+                    Data: { Monitor },
+                    Error: undefined
+                };
+            }
+            else
+            {
+                return {
+                    Data: undefined,
+                    Error: "ActiveWindowUndefined"
+                };
+            }
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "GetThemeColor",
+        async (): ReturnType<TEventCallback<"GetThemeColor">> =>
+        {
+            return {
+                Data:
+                {
+                    ThemeColor: GetThemeColor()
+                },
+                Error: undefined
+            };
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "GetIsLightMode",
+        async (): ReturnType<TEventCallback<"GetIsLightMode">> =>
+        {
+            return {
+                Data:
+                {
+                    IsLightMode: GetIsLightMode()
+                },
+                Error: undefined
+            };
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "RequestTearDown",
+        async (): ReturnType<TEventCallback<"RequestTearDown">> =>
+        {
+            ActiveWindow = undefined;
+            Deactivate();
+
+            return PoorEventSuccess();
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "GetPanelScreenshots",
+        async (): ReturnType<TEventCallback<"GetPanelScreenshots">> =>
+        {
+            const Panels: Array<FPanel> = GetPanels();
+            const Screenshots: Array<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
+                .filter((Value: string | undefined): boolean =>
+                {
+                    return Value !== undefined;
+                }) as Array<string>;
+
+            return {
+                Data: { Screenshots },
+                Error: undefined
+            };
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "GetAnnotatedPanels",
+        async (): ReturnType<TEventCallback<"GetAnnotatedPanels">> =>
+        {
+            const Panels: Array<FPanel> = GetPanels();
+            const AnnotatedPanels: Array<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
+                .filter((Value: FAnnotatedPanel | undefined): boolean =>
+                {
+                    return Value !== undefined;
+                }) as Array<FAnnotatedPanel>;
+
+            return {
+                Data: { AnnotatedPanels },
                 Error: undefined
             };
         }

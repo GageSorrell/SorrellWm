@@ -18,6 +18,8 @@ export type FTearDownErrorCode = TEventErrorCode<"">;
 
 export type FBringIntoPanelErrorCode = TEventErrorCode<"">;
 
+export type FGetMonitorFromFocusedWindowErrorCode = TEventErrorCode<"ActiveWindowUndefined">;
+
 export type FGetAnnotatedPanelsErrorCode = TEventErrorCode<"">;
 
 export type FGetCurrentPanelErrorCode = TEventErrorCode<"">;
@@ -41,3 +43,4 @@ export type FOnChangeFocusErrorCode = TEventErrorCode<"">;
 
 export type FReadyForRouteErrorCode = TEventErrorCode<"">;
 
+export type FRequestTearDownErrorCode = TEventErrorCode<"">;
