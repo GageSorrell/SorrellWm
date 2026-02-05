@@ -12,7 +12,7 @@ import type {
     FLoggerInterim } from "?/Log.Types";
 import type { FLogLevel, FLogOriginInternal } from "Windows";
 import Chalk from "chalk";
-import { LogSettings } from "../../Shared/LoggerSettings";
+import { LogSettings } from "../../../Shared/LoggerSettings";
 import Util from "util";
 
 Chalk.level = 1;
@@ -140,8 +140,8 @@ const LogInternal = (
         const OutStatementsArray: Array<string> =
         [
             OriginEmoji + " ",
-            FormatCategory(Category),
             FormatLevel(Level),
+            FormatCategory(Category),
             " ",
             ...FormattedArguments
         ];

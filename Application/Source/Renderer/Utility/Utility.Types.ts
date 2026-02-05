@@ -6,8 +6,6 @@
 
 import type { CSSProperties } from "react";
 
-export type TMaybeArray<T> = T | Array<T>;
-
 export type TPredicate<T> = (In: T) => boolean;
 
 export type PStyledComponent =

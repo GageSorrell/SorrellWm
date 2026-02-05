@@ -17,12 +17,14 @@ import "../Notification";
 setTimeout((): void =>
 {
     import("../MainWindow");
-    import("../RendererFunctions.Generated");
+    // import("../RendererFunctions.Generated");
     import("./Initialization");
     import("./Tray");
     import("../WinEvent");
 
     import("../Development/SetupPrimaryMonitor");
 });
+
+// setTimeout((): unknown => import("../Development/Log/LogTest"), 5000);
 
 // setTimeout(DelayedImports);

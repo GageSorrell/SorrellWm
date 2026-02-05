@@ -10,3 +10,5 @@ export type FSimpleCallbackMaybeAsync = FSimpleCallback | FSimpleCallbackAsync;
 
 export type TResolveFunction<T> = (Value: T | PromiseLike<T>) => void;
 export type FRejectFunction = (Reason?: unknown) => void;
+
+export type TMaybeArray<T> = T | Array<T>;

@@ -26,6 +26,8 @@ export type FLogSettings = Readonly<{
         Enabled: boolean;
         MaxLength: number;
     };
+    MaxTerminalWidth: number;
+    TabWidth: number;
 }>;
 
 export type FLogger = FLoggerRecord & FLogFunction;

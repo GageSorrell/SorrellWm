@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree/Tree.Types";
+import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type {
     FBringIntoPanelErrorCode,
     FGetAnnotatedPanelsErrorCode,
@@ -18,7 +18,7 @@ import type {
     FLogErrorCode,
     FOnChangeFocusErrorCode,
     FReadyForRouteErrorCode,
-    FRequestTearDownErrorCode} from "./ErrorCodes.Types";
+    FRequestTearDownErrorCode } from "./ErrorCodes.Types";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
 import type { FFocusData } from "?/Event/Focus.Types";

@@ -22,5 +22,7 @@ export const LogSettings: FLogSettings =
         Enabled: true,
         MaxLength: 256
     },
-    LogDisabledCategoryAttempts: true
+    LogDisabledCategoryAttempts: true,
+    MaxTerminalWidth: 100,
+    TabWidth: 4
 } as const;
