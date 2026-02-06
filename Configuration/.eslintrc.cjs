@@ -15,7 +15,8 @@ module.exports =
     ignorePatterns:
     [
         "**/Distribution/*",
-        "**/Intermediate/*"
+        "**/Intermediate/*",
+        "**/webpack.*.js"
     ],
     parser: "@typescript-eslint/parser",
     parserOptions:

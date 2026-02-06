@@ -16,6 +16,7 @@ export type FLogFunction = (...Statements: Array<unknown>) => void;
 export type FLoggerRecord = Record<Exclude<FLogLevel, "Normal">, FLogFunction>;
 
 export type FLogSettings = Readonly<{
+    Colors: boolean;
     DisabledCategories:
     {
         [ LogOrigin in FLogOrigin ]: Array<string>;

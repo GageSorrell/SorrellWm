@@ -113,7 +113,7 @@ export type FTypeofReturnValue =
     | "function";
 
 export type TLogFormatFunction<T> = (In: TLogPrimitive<T>) => FLogString;
-export type TLogObjectFormatFunction<T> = (In: TLogPrimitive<T>) => FLogString | Array<FLogString>;
+// export type TLogObjectFormatFunction<T> = (In: TLogPrimitive<T>) => FLogString | Array<FLogString>;
 
 export type FPrimitive =
     | string
@@ -126,12 +126,13 @@ export type FPrimitive =
 
 export type FValueFormatter =
 {
-    object: TLogObjectFormatFunction<object>;
+    // object: TLogObjectFormatFunction<object>;
 
     bigint: TLogFormatFunction<bigint>;
     boolean: TLogFormatFunction<boolean>;
     function: TLogFormatFunction<Function>;
     number: TLogFormatFunction<number>;
+    object: TLogFormatFunction<object>;
     string: TLogFormatFunction<string>;
     symbol: TLogFormatFunction<symbol>;
     undefined: TLogFormatFunction<undefined>;

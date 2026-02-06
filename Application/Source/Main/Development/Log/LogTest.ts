@@ -4,9 +4,9 @@
  * License:   MIT
  */
 
-/* eslint-disable sort-keys */
+/* eslint-disable sort-keys, @typescript-eslint/no-unused-vars */
 
-import type { FLogger } from "?/Log.Types";
+import type { FLogger } from "!/Log.Types";
 import { GetLogger } from "./Log";
 import { LogFormat } from "./LogUtility";
 
@@ -54,6 +54,7 @@ const TestLargeMap: Map<PropertyKey, unknown> = ((): Map<PropertyKey, unknown> =
     const Out: Map<PropertyKey, unknown> = new Map<PropertyKey, unknown>();
     Out.set("Foo", 10292);
     Out.set(19, [ 1, 3 ]);
+    Out.set(20, [ -10, 92, "Foo", "BarBaz", 100_000, -10_198, "FooBarBazBashBing" ]);
     Out.set("Bar Baz Foo", true);
     Out.set("Bar Baz Foobar", TestNum);
     return Out;
@@ -67,19 +68,21 @@ const TestSmallMap: Map<PropertyKey, unknown> = ((): Map<PropertyKey, unknown> =
     return Out;
 })();
 
-Log(LogFormat(LargeRecord));
-Log(LogFormat(SmallRecord));
-Log(LogFormat(TestString));
-Log(LogFormat(TestNum));
-Log(LogFormat(TestNull));
-Log(LogFormat(TestUndefined));
-Log(LogFormat(TestBoolean));
-Log(LogFormat(TestFunction));
-Log(LogFormat(TestLargeArray));
-Log(LogFormat(TestSmallArray));
-Log(LogFormat(TestLargeSet));
-Log(LogFormat(TestSmallSet));
-Log(LogFormat(TestLargeMap));
-Log(LogFormat(TestSmallMap));
+// Log(LogFormat(LargeRecord));
+// Log(LogFormat(SmallRecord));
+
+// Log(LogFormat(TestString));
+// Log(LogFormat(TestNum));
+// Log(LogFormat(TestNull));
+// Log(LogFormat(TestUndefined));
+// Log(LogFormat(TestBoolean));
+// Log(LogFormat(TestFunction));
+
+// Log(LogFormat(TestLargeArray));
+// Log(LogFormat(TestSmallArray));
+// Log(LogFormat(TestLargeSet));
+// Log(LogFormat(TestSmallSet));
+Log(LogFormat("TestLargeMap", TestLargeMap));
+// Log(LogFormat(TestSmallMap));
 
 export const Foo: string = "Foo";

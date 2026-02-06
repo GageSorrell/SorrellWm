@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FCardinalDirection } from "?/Shared.Types";
+import type { FCardinalDirection } from "!/Shared.Types";
 
 export type PHighlightedHalf =
 {

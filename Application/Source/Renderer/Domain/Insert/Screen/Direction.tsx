@@ -8,8 +8,8 @@ import { Command, CompoundCommand } from "@/Domain/Common";
 import { type NavigateFunction, useNavigate } from "react-router-dom";
 import { type ReactElement, useState } from "react";
 import { Action } from "@/Action";
-import type { FCardinalDirection } from "?/Shared.Types";
-import type { FInsertSizingMethod } from "?/Event/Focus.Types";
+import type { FCardinalDirection } from "!/Shared.Types";
+import type { FInsertSizingMethod } from "!/Event/Focus.Types";
 import { HighlightedHalf } from "../Component";
 import { UseIpcNavigatorState } from "@/Router";
 

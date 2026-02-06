@@ -16,7 +16,7 @@
             [
                 "./Source/Renderer/Domain/*"
             ],
-            "?/*":
+            "!/*":
             [
                 "./Source/Shared/*"
             ]
@@ -50,6 +50,6 @@
         "node_modules",
         "Release/Build",
         "Release/Application/Distribution",
-        "Distribution"
+        "Distribution_2_5_26"
     ]
 }

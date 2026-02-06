@@ -4,5 +4,5 @@
  * License:   MIT
  */
 
-export * from "./Log";
-export * from "./LogUtility";
+export { GetLogger, LogFrontend } from "./Log";
+export { LogFormat } from "./LogUtility";

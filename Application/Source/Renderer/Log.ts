@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FLogFunction, FLogger, FLoggerInterim } from "?/Log.Types";
+import type { FLogFunction, FLogger, FLoggerInterim } from "!/Log.Types";
 import type { FLogLevel } from "Windows";
 
 /** Use this to create a logger within a given module so that the log category is set for that module. */

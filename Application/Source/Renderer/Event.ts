@@ -18,8 +18,8 @@ import type {
     TGetRichResponseAsSuccess,
     TGetRichResponseFromKey,
     TGetSingleRichResponseData,
-    TRequest } from "?/Event";
-import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "?/Utility.Types";
+    TRequest } from "!/Event";
+import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "!/Utility.Types";
 import { type MutableRefObject, useCallback, useEffect, useState} from "react";
 import type {
     TIpcState,
@@ -27,7 +27,7 @@ import type {
     TUseSendIpcEventReturnType,
     TUseSendIpcEventStrictReturnType,
     TUseSendIpcEventStrictSingleReturnType} from "./Event.Types";
-import type { FLogger } from "?/Log.Types";
+import type { FLogger } from "!/Log.Types";
 import { GetLogger } from "./Log";
 import { UseEffectAsync } from "./Utility";
 
@@ -90,7 +90,7 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
                     RemoveListenerRef.current = undefined;
                 }
 
-                Log(`Resolving promise in SendIpcEvent, Response is ${ JSON.stringify(Response) }.`);
+                // Log(`Resolving promise in SendIpcEvent, Response is ${ JSON.stringify(Response) }.`);
 
                 Resolve(Response);
             };
@@ -121,10 +121,10 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
         Error: undefined
     };
 
-    Log("UseSendIpcEvent was called.");
+    // Log("UseSendIpcEvent was called.");
 
     /* eslint-disable-next-line @stylistic/max-len */
-    Log(`UseSendIpcEvent: Channel is ${ Channel }, Request is ${ JSON.stringify(Request) }, DependencyArray is ${ JSON.stringify(DependencyArray) }.`);
+    // Log(`UseSendIpcEvent: Channel is ${ Channel }, Request is ${ JSON.stringify(Request) }, DependencyArray is ${ JSON.stringify(DependencyArray) }.`);
 
     const [ Response, SetResponse ] = useState<TIpcState<T>>(EmptyResponse);
     // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
@@ -146,22 +146,20 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
     {
-        Log(`Going to await SendIpcEvent for event ${ Channel }.`);
+        // Log(`Going to await SendIpcEvent for event ${ Channel }.`);
         const NewResponse: TGetResponseFromKey<T> = await SendIpcEvent(Channel, Request);
-        Log(`Response is ${ JSON.stringify(NewResponse) }.`);
+        // Log(`Response is ${ JSON.stringify(NewResponse) }.`);
         if (!AbortSignal.aborted)
         {
             SetResponse((_Old: TIpcState<T>): TIpcState<T> =>
             {
-                Log("Going to set Response via SetResponse.");
+                // Log("Going to set Response via SetResponse.");
                 return NewResponse;
             });
         }
     }, [ Channel, Request, SendIpcEvent, SetResponse ]);
 
     UseEffectAsync(SideEffect, CleanupFunction, DependencyArray);
-
-    Log("This far.");
 
     return {
         Data: (Response?.Data === undefined ? undefined : Response.Data),
@@ -197,16 +195,16 @@ export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
     {
-        Log(`Going to await SendIpcEvent for event ${ Channel }.`);
+        // Log(`Going to await SendIpcEvent for event ${ Channel }.`);
         const NewResponse: TGetRichResponseFromKey<T> =
             (await SendIpcEvent(Channel, Request)) as TGetRichResponseFromKey<T>;
 
-        Log(`Response is ${ JSON.stringify(NewResponse) }.`);
+        // Log(`Response is ${ JSON.stringify(NewResponse) }.`);
         if (!AbortSignal.aborted)
         {
             if (IsResponseSuccess(NewResponse))
             {
-                Log(`Event ${ Channel } responded successfully!`);
+                // Log(`Event ${ Channel } responded successfully!`);
                 SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
                 {
                     return NewResponse;
@@ -216,7 +214,7 @@ export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
             {
                 const NewResponseFailure: TGetRichResponseAsFailure<T> = NewResponse;
 
-                Log(`Event ${ Channel } responded as a FAILURE!`);
+                // Log(`Event ${ Channel } responded as a FAILURE!`);
                 SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
                 {
                     return {

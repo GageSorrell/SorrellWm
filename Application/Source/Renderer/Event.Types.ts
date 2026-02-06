@@ -13,7 +13,7 @@ import type {
     TGetResponseFromKey,
     TGetRichResponseAsFailure,
     TGetRichResponseAsSuccess,
-    TGetSingleRichResponseData} from "?/Event";
+    TGetSingleRichResponseData} from "!/Event";
 
 export type TIpcState<T extends keyof FIpcFrontendEvents> =
 {

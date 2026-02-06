@@ -36,12 +36,12 @@ import {
 import { type BrowserWindow, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
-import type { FFocusData, FFocusDataBase } from "?/Event/Focus.Types";
-import type { FIpcChannel, TEventCallback } from "?/Event";
+import type { FFocusData, FFocusDataBase } from "!/Event/Focus.Types";
+import type { FIpcChannel, TEventCallback } from "!/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 import { PoorEventSuccess, RegisterIpcCallback } from "./Event";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
-import type { FInsertableWindowData } from "?/Event/Insert.Types";
+import type { FInsertableWindowData } from "!/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
 import { GetPngBase64 } from "./Utility";
@@ -399,6 +399,10 @@ const LaunchMainWindow = async (): Promise<void> =>
             };
         }
     );
+
+    /** TEMPORARY */
+    /* eslint-disable-next-line no-console */
+    import("./Development/Log/LogTest");
 
     On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {

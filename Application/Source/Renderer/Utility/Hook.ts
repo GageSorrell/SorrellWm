@@ -13,9 +13,9 @@ import {
     useEffect,
     useRef,
     useState } from "react";
-import type { FIpcFrontendChannel, TRequest, TResponse } from "?/Event";
+import type { FIpcFrontendChannel, TRequest, TResponse } from "!/Event";
 import type { FUseEffectAsyncCallback, FUseEffectAsyncCleanupFunction } from "./Hook.Types";
-import type { FSimpleCallback } from "?/Utility.Types";
+import type { FSimpleCallback } from "!/Utility.Types";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,

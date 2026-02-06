@@ -6,7 +6,7 @@
 
 /* @TODO Likely get rid of this module; there isn't enough logic regarding `BrowserWindow`s to warrant their own module. */
 
-import type { FSimpleCallback } from "?/Utility.Types";
+import type { FSimpleCallback } from "!/Utility.Types";
 import type { FVector2D } from "Windows";
 
 export type FBrowserWindow = Readonly<{

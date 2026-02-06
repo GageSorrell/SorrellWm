@@ -12,7 +12,7 @@ import {
 import { type NavigateFunction, useNavigate } from "react-router-dom";
 import { type ReactElement, useEffect } from "react";
 import { Action } from "@/Action";
-import type { FLogger } from "?/Log.Types";
+import type { FLogger } from "!/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
 

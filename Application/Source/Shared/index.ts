@@ -5,8 +5,9 @@
  */
 
 export * from "./Event";
+export * from "./LoggerSettings";
+export * from "./Log.Types";
 export * from "./Settings";
 export * from "./Settings.Types";
 export * from "./Shared.Types";
-export * from "./Event/Focus.Types";
 export * from "./Utility";

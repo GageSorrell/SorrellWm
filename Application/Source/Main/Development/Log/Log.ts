@@ -9,9 +9,10 @@ import type {
     FChalkForeground,
     FLogFunction,
     FLogger,
-    FLoggerInterim } from "?/Log.Types";
+    FLoggerInterim } from "!/Log.Types";
 import type { FLogLevel, FLogOriginInternal } from "Windows";
 import Chalk from "chalk";
+// import { LogSettings } from "!/LoggerSettings";
 import { LogSettings } from "../../../Shared/LoggerSettings";
 import Util from "util";
 

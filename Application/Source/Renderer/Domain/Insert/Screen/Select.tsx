@@ -5,8 +5,8 @@
  */
 
 import { Action } from "@/Action";
-import type { FCardinalDirection } from "?/Shared.Types";
-import type { FInsertSizingMethod } from "?/Event/Focus.Types";
+import type { FCardinalDirection } from "!/Shared.Types";
+import type { FInsertSizingMethod } from "!/Event/Focus.Types";
 import { type ReactElement } from "react";
 import { UseIpc_DEPRECATED } from "@/Utility";
 import { UseIpcNavigatorState } from "@/Router";

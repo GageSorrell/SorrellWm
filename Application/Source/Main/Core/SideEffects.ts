@@ -24,7 +24,3 @@ setTimeout((): void =>
 
     import("../Development/SetupPrimaryMonitor");
 });
-
-// setTimeout((): unknown => import("../Development/Log/LogTest"), 5000);
-
-// setTimeout(DelayedImports);

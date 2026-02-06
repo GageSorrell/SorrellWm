@@ -21,7 +21,7 @@ import type {
     FRequestTearDownErrorCode } from "./ErrorCodes.Types";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
-import type { FFocusData } from "?/Event/Focus.Types";
+import type { FFocusData } from "!/Event/Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
 
 // @TODO Create proper string unions for the error codes for each event.

@@ -9,7 +9,7 @@ import type {
     TIpcCallback,
     TIpcHandler,
     TRequestData,
-    TResponseData } from "?/Event/EventBase.Types";
+    TResponseData } from "!/Event/EventBase.Types";
 
 /* eslint-disable-next-line @typescript-eslint/naming-convention */
 export const SendIpcEvent_DEPRECATED = <T extends FIpcFrontendChannel>(
