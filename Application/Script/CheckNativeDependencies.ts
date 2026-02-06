@@ -42,7 +42,7 @@ if (dependencies)
         if (FilteredRootDependencies.length > 0)
         {
             const Plural: boolean = FilteredRootDependencies.length > 1;
-            /* eslint-disable-next-line @stylistic/max-len */
+            /* eslint-disable-next-line @stylistic/max-len, no-console */
             console.log(`\n ${chalk.whiteBright.bgYellow.bold("Webpack does not work with native dependencies.")}\n${ chalk.bold(FilteredRootDependencies.join(", ")) } ${ Plural ? "are native dependencies" : "is a native dependency" } and should be installed inside of the "./Release/Application" folder.\nFirst, uninstall the packages from "./package.json": ${ chalk.whiteBright.bgGreen.bold("npm uninstall your-package") }\n ${ chalk.bold("Then, instead of installing the package to the root \"./package.json\":") }\n ${ chalk.whiteBright.bgRed.bold("npm install your-package") }\n${ chalk.bold("Install the package to \"./Release/Application/package.json\"") }\n ${ chalk.whiteBright.bgGreen.bold("cd ./Release/Application && npm install your-package") }\n Read more about native dependencies at:\n${ chalk.bold("https://electron-react-boilerplate.js.org/docs/adding-dependencies/#module-structure") }\n`);
             process.exit(1);
         }
@@ -50,6 +50,7 @@ if (dependencies)
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     catch (_Error: unknown)
     {
+        /* eslint-disable-next-line no-console */
         console.log("Native dependencies could not be checked");
     }
 }
