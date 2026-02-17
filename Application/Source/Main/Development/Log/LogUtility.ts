@@ -180,15 +180,6 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
                 ? InLogStrings.slice(InnermostStopIndex + 1, undefined)
                 : [ ];
 
-            // console.log(
-            //     "Container:\n",
-            //     InnermostContainer,
-            //     "\nStartSubArray:\n",
-            //     InLogStrings.slice(0, InnermostStartIndex),
-            //     "\nStopSubArray:\n",
-            //     StopSubArray
-            // );
-
             return {
                 Container: InnermostContainer,
                 StartSubArray: InLogStrings.slice(0, InnermostStartIndex),
@@ -205,7 +196,6 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
                     return Accumulator + GetLength(CurrentValue.String);
                 }, 0);
 
-            // console.log("ShouldInline:", ContainerLogStrings, `TotalWidth is ${  TotalWidth }.`);
             return TotalWidth <= LogSettings.MaxTerminalWidth;
         };
 
@@ -616,10 +606,6 @@ export const Format = (Value: FLogValueType): string =>
                     if (StartDelimiters.includes(Next.String[0]))
                     {
                         String += ",";
-                    }
-                    else
-                    {
-                        console.log(`Next.String[0]: "${ Next.String }".`);
                     }
                 }
             }
