@@ -27,17 +27,23 @@ import type {
     TLogValue } from "./LogUtility.Types";
 import Chalk from "chalk";
 import { LogSettings } from "../../../Shared/LoggerSettings";
+import { Identity } from "@/Utility";
 
 Chalk.level = 3;
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-const GetLength = (In: string): number =>
+const GetWithoutAnsi = (In: string): string =>
 {
     /* eslint-disable-next-line @stylistic/max-len, no-control-regex */
     const AnsiEscapeSequencePattern: RegExp = /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g;
 
-    return In.replace(AnsiEscapeSequencePattern, "").length;
+    return In.replace(AnsiEscapeSequencePattern, "");
+};
+
+const GetLength = (In: string): number =>
+{
+    return GetWithoutAnsi(In).length;
 };
 
 const StyleString = (In: string): string =>
@@ -373,7 +379,7 @@ const FormatNull = ({ Depth }: TLogPrimitive<null>): Array<FLogString> =>
 {
     return [ {
         Depth,
-        String: "null"
+        String: LogSettings.Colors ? Chalk.yellow("null") : "null"
     } ];
 };
 
@@ -381,7 +387,7 @@ const FormatUndefined = ({ Depth }: TLogPrimitive<undefined>): FLogString =>
 {
     return {
         Depth,
-        String: "undefined"
+        String: LogSettings.Colors ? Chalk.gray("undefined") : "undefined"
     };
 };
 
@@ -395,9 +401,16 @@ const FormatFunction = ({ Depth }: TLogPrimitive<Function>): FLogString =>
 
 const FormatBoolean = ({ Depth, Value }: TLogPrimitive<boolean>): FLogString =>
 {
+    const StringBase: string = Value ? "true" : "false";
+    const StyleFunction: Function = LogSettings.Colors
+        ? (Value ? Chalk.blue : Chalk.red)
+        : Identity;
+
+    const String: string = StyleFunction(StringBase);
+
     return {
         Depth,
-        String: Value ? "true" : "false"
+        String
     };
 };
 
@@ -594,14 +607,19 @@ export const Format = (Value: FLogValueType): string =>
         .map(({ Depth, String }: FLogString, Index: number): string =>
         {
             const StopDelimiters: Array<string> = [ ">", "]", "}" ];
-            if (StopDelimiters.includes(String[GetLength(String) - 1]))
+            const StartDelimiters: Array<string> = [ "<", "[", "{" ];
+            if (StopDelimiters.includes(GetWithoutAnsi(String)[GetWithoutAnsi(String).length - 1]))
             {
                 if (Index !== InlinedArray.length - 1)
                 {
                     const Next: FLogString = InlinedArray[Index + 1];
-                    if (!StopDelimiters.includes(Next.String[0]))
+                    if (StartDelimiters.includes(Next.String[0]))
                     {
                         String += ",";
+                    }
+                    else
+                    {
+                        console.log(`Next.String[0]: "${ Next.String }".`);
                     }
                 }
             }
