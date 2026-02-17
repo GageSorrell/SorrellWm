@@ -8,7 +8,8 @@
 
 import type { FLogger } from "!/Log.Types";
 import { GetLogger } from "./Log";
-import { LogFormat } from "./LogUtility";
+// import { Format } from "./LogUtility.Old";
+import { Format } from "./LogUtility";
 
 const Log: FLogger = GetLogger("Log");
 
@@ -68,21 +69,24 @@ const TestSmallMap: Map<PropertyKey, unknown> = ((): Map<PropertyKey, unknown> =
     return Out;
 })();
 
-// Log(LogFormat(LargeRecord));
-// Log(LogFormat(SmallRecord));
+// Log(Format(LargeRecord));
+// Log(Format(SmallRecord));
 
-// Log(LogFormat(TestString));
-// Log(LogFormat(TestNum));
-// Log(LogFormat(TestNull));
-// Log(LogFormat(TestUndefined));
-// Log(LogFormat(TestBoolean));
-// Log(LogFormat(TestFunction));
+// Log(Format(TestString));
+// Log(Format(TestNum));
+// Log(Format(TestNull));
+// Log(Format(TestUndefined));
+// Log(Format(TestBoolean));
+// Log(Format(TestFunction));
 
-// Log(LogFormat(TestLargeArray));
-// Log(LogFormat(TestSmallArray));
-// Log(LogFormat(TestLargeSet));
-// Log(LogFormat(TestSmallSet));
-Log(LogFormat("TestLargeMap", TestLargeMap));
-// Log(LogFormat(TestSmallMap));
+// Log(Format(TestLargeArray));
+// Log(Format(TestSmallArray));
+// Log(Format(TestLargeSet));
+// Log(Format(TestSmallSet));
+setTimeout((): void =>
+{
+    Log(Format(TestLargeMap));
+}, 2000);
+// Log(Format(TestSmallMap));
 
 export const Foo: string = "Foo";

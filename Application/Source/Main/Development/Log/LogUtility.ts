@@ -5,32 +5,242 @@
  */
 
 import type {
-    FLogObjectType,
+    FArrayTypeName,
+    FContainerType,
+    FDelimiterStartString,
+    FDelimiters,
+    FKeyValuePair,
+    FLogArray,
+    FLogMap,
+    FLogRecord,
+    FLogSet,
     FLogString,
-    FTypeofReturnValue,
-    FValueFormatter,
-    TLogArray,
-    TLogMap,
+    FLogStringArray,
+    FLogValueType,
+    FMap,
+    FPrimitive,
+    FRecord,
+    FSetTypeName,
+    FTypeof,
+    TLogContainer,
     TLogPrimitive,
-    TLogRecord,
-    TLogSet } from "./LogUtility.Types";
+    TLogValue } from "./LogUtility.Types";
 import Chalk from "chalk";
 import { LogSettings } from "../../../Shared/LoggerSettings";
-import type { TMaybeArray } from "!/Utility.Types";
 
 Chalk.level = 3;
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-/** TEMPORARY FOR DEBUGGING. */
-/* eslint-disable no-console */
+const GetLength = (In: string): number =>
+{
+    /* eslint-disable-next-line @stylistic/max-len, no-control-regex */
+    const AnsiEscapeSequencePattern: RegExp = /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g;
 
-// 1. Call Format appropriate function
-// 2. If value is a Container, then call the corresponding container
-// 3. Collect all formatted values, such that no strings handle newlines, commas, or braces
-// 4. Iterate over all formatted values and insert newlines, commas, and braces where needed
+    return In.replace(AnsiEscapeSequencePattern, "").length;
+};
 
-const FormatNumberValue = (Value: number | bigint): string =>
+const StyleString = (In: string): string =>
+{
+    return LogSettings.Colors
+        ? Chalk.hex("#CA5010")(`"${ In }"`)
+        : `"${ In }"`;
+};
+
+const StyleSymbol = (In: symbol): string =>
+{
+    return LogSettings.Colors
+        ? Chalk.hex("#00B7C3")(In.toString())
+        : In.toString();
+};
+
+const StyleNumber = (In: bigint | number): string =>
+{
+    return LogSettings.Colors
+        ? Chalk.green(FormatDigits(In))
+        : FormatDigits(In);
+};
+
+const FormatString = ({ Depth, Value }: TLogPrimitive<string>): FLogString =>
+{
+    return {
+        Depth,
+        String: StyleString(Value)
+    };
+};
+
+const FormatSymbol = ({ Depth, Value }: TLogPrimitive<symbol>): FLogString =>
+{
+    return {
+        Depth,
+        String: StyleSymbol(Value)
+    };
+};
+
+const Inline = (In: FLogStringArray): FLogStringArray =>
+{
+    const SearchedIndices: Record<FDelimiterStartString, Array<number>> =
+    {
+        "<": [ ],
+        "[": [ ],
+        "{": [ ]
+    };
+
+    const Recurrence = (LogStrings: FLogStringArray): FLogStringArray =>
+    {
+        type FGetInnermostContainerReturnType =
+            | undefined
+            | {
+                Container: FLogStringArray;
+                StartSubArray: Array<FLogString>;
+                StopSubArray: Array<FLogString>;
+            };
+
+        const GetString = (InLogString: FLogString): string => InLogString.String;
+        const GetInnermostContainer = (InLogStrings: FLogStringArray): FGetInnermostContainerReturnType =>
+        {
+            const Strings: Array<string> = InLogStrings.map(GetString);
+            const StartDelimiters: Array<FDelimiterStartString> = [ "<", "[", "{" ];
+            const InnermostStartIndex: number = Math.max(...StartDelimiters
+                .map((StartDelimiter: FDelimiterStartString): number =>
+                {
+                    if (SearchedIndices[StartDelimiter].includes(-1))
+                    {
+                        return -1;
+                    }
+
+                    const StopSearchIndex: number = Math.min(...SearchedIndices[StartDelimiter]);
+
+                    const Out: number = Strings
+                        .slice(0, StopSearchIndex)
+                        .lastIndexOf(StartDelimiter);
+
+                    if (Out === -1)
+                    {
+                        SearchedIndices[StartDelimiter].push(-1);
+                    }
+
+                    return Out;
+                }).flat(20));
+
+            if (InnermostStartIndex === -1)
+            {
+                return undefined;
+            }
+
+            SearchedIndices[Strings[InnermostStartIndex] as FDelimiterStartString].push(InnermostStartIndex);
+
+            const GetFirstIndexOfValueAfterIndex = <T>(
+                Values: Readonly<Array<T>>,
+                TargetValue: T,
+                AfterIndex: number
+            ): number | undefined =>
+            {
+                const StartIndex: number = Math.min(Math.max(AfterIndex + 1, 0), Values.length);
+
+                for (let Index: number = StartIndex; Index < Values.length; Index++)
+                {
+                    if (Object.is(Values[Index], TargetValue))
+                    {
+                        return Index;
+                    }
+                }
+
+                return undefined;
+            };
+
+            const InnermostStartDelimiter: string = InLogStrings[InnermostStartIndex].String;
+            const InnermostStopDelimiter: string =
+                InnermostStartDelimiter === "{"
+                    ? "}"
+                    : InnermostStartDelimiter === "<"
+                        ? ">"
+                        : "]";
+
+            const InnermostStopIndex: number | undefined = GetFirstIndexOfValueAfterIndex(
+                Strings,
+                InnermostStopDelimiter,
+                InnermostStartIndex
+            );
+
+            if (InnermostStopIndex === undefined)
+            {
+                return undefined;
+            }
+
+            const InnermostContainer: FLogStringArray =
+                InLogStrings.slice(InnermostStartIndex, InnermostStopIndex + 1);
+            const StopSubArray: Array<FLogString> = InLogStrings.length >= InnermostStopIndex + 1
+                ? InLogStrings.slice(InnermostStopIndex + 1, undefined)
+                : [ ];
+
+            // console.log(
+            //     "Container:\n",
+            //     InnermostContainer,
+            //     "\nStartSubArray:\n",
+            //     InLogStrings.slice(0, InnermostStartIndex),
+            //     "\nStopSubArray:\n",
+            //     StopSubArray
+            // );
+
+            return {
+                Container: InnermostContainer,
+                StartSubArray: InLogStrings.slice(0, InnermostStartIndex),
+                StopSubArray
+            };
+        };
+
+        const ShouldInline = (ContainerLogStrings: FLogStringArray): boolean =>
+        {
+            const TotalWidth: number =
+                ContainerLogStrings[0].Depth * LogSettings.TabWidth +
+                ContainerLogStrings.reduce((Accumulator: number, CurrentValue: FLogString): number =>
+                {
+                    return Accumulator + GetLength(CurrentValue.String);
+                }, 0);
+
+            // console.log("ShouldInline:", ContainerLogStrings, `TotalWidth is ${  TotalWidth }.`);
+            return TotalWidth <= LogSettings.MaxTerminalWidth;
+        };
+
+        const InnermostContainer: FGetInnermostContainerReturnType = GetInnermostContainer(LogStrings);
+        if (InnermostContainer !== undefined)
+        {
+            const { Container, StartSubArray, StopSubArray } = InnermostContainer;
+            if (ShouldInline(InnermostContainer.Container))
+            {
+                const Inlined: FLogString =
+                {
+                    Depth: Container[0].Depth,
+                    String: Container.map(GetString).join(" ")
+                };
+                return [ ...StartSubArray, Inlined, ...StopSubArray ];
+            }
+        }
+
+        return LogStrings;
+    };
+
+    const ShouldRecur = (): boolean =>
+    {
+        return (
+            !SearchedIndices["<"].includes(-1) ||
+            !SearchedIndices["{"].includes(-1) ||
+            !SearchedIndices["["].includes(-1)
+        );
+    };
+
+    let Out: FLogStringArray = [ ...In ];
+
+    while (ShouldRecur())
+    {
+        Out = Recurrence([ ...Out ]);
+    }
+
+    return Out;
+};
+
+const FormatDigits = (Value: number | bigint): string =>
 {
     const GroupIntegralDigits = (IntegralDigits: string): string =>
     {
@@ -150,633 +360,28 @@ const FormatNumberValue = (Value: number | bigint): string =>
     return (IsNegative ? "-" : "") + GroupedIntegralDigits + "." + GroupedFractionalDigits;
 };
 
-const StyleString = (In: string): string =>
+const FormatNumber = ({ Depth, Value }: TLogPrimitive<number> | TLogPrimitive<bigint>): FLogString =>
 {
-    console.log(`StyleString was provided "${ In }"`);
-    return LogSettings.Colors
-        ? Chalk.hex("#CA5010")(`"${ In }"`)
-        : `"${ In }"`;
-};
 
-const StyleSymbol = (In: symbol): string =>
-{
-    return LogSettings.Colors
-        ? Chalk.hex("#00B7C3")(In.toString())
-        : In.toString();
-};
-
-const StyleNumber = (In: bigint | number): string =>
-{
-    return LogSettings.Colors
-        ? Chalk.green(FormatNumberValue(In))
-        : FormatNumberValue(In);
-};
-
-const StylePropertyKey = (In: PropertyKey): string =>
-{
-    if (typeof In === "number")
-    {
-        return StyleNumber(In);
-    }
-    else if (typeof In === "symbol")
-    {
-        return StyleSymbol(In);
-    }
-    else
-    {
-        return StyleString(In);
-    }
-};
-
-function FormatNumber({ Depth, Value }: TLogPrimitive<bigint>): FLogString;
-function FormatNumber({ Depth, Value }: TLogPrimitive<number>): FLogString;
-function FormatNumber({ Depth, Value }: TLogPrimitive<bigint> | TLogPrimitive<number>): FLogString
-{
     return {
         Depth,
         String: StyleNumber(Value)
     };
-}
-
-const Indent = (Depth: number): string => " ".repeat(LogSettings.TabWidth).repeat(Depth);
-
-const FormatArray = (LogObject: TLogPrimitive<object>): Array<FLogString> =>
-{
-    const { Depth, Value }: TLogArray = GetArrayFromPrimitive(LogObject);
-
-    console.log(`FormatArray::Depth is ${ Depth }.`);
-
-    if (Value.length === 0)
-    {
-        const EmptyArrayLogString: FLogString =
-        {
-            Depth,
-            String: "[ ]"
-        };
-
-        return [ EmptyArrayLogString ];
-    }
-
-    const StartString: FLogString =
-    {
-        Depth,
-        String: "["
-    };
-
-    const EndString: FLogString =
-    {
-        Depth,
-        String: "]"
-    };
-
-    const InsideStrings: Array<FLogString> = Value.map((Element: unknown): FLogString =>
-    {
-        console.log(`InsideStrings is formatting Element\n${ Stringify(Element) }.`);
-        const Out: FLogString = FormatValue({ Depth: Depth + 3, Value: Element });
-        console.log(`InsideStrings used FormatValue, returned\n${ Stringify(Out) }.`);
-        return Out;
-    });
-
-    if (ShouldObjectInline(InsideStrings))
-    {
-        const InsideString: string = InsideStrings.map(({ String }: FLogString): string => String).join(", ");
-        const OutString: string = `${ StartString.String } ${ InsideString } ${ EndString.String }`;
-        const OutLogString: FLogString = {
-            Depth,
-            String: OutString
-        };
-
-        return [ OutLogString ];
-    }
-    else
-    {
-        return [ StartString, ...InsideStrings, EndString ];
-    }
-
 };
 
-const FormatSet = (LogObject: TLogPrimitive<object>): Array<FLogString> =>
+const FormatNull = ({ Depth }: TLogPrimitive<null>): Array<FLogString> =>
 {
-    const { Depth, Value }: TLogSet = GetSetFromPrimitive(LogObject);
-
-    if (Value.size === 0)
-    {
-        const EmptySetLogString: FLogString =
-        {
-            Depth,
-            String: "{ }"
-        };
-
-        return [ EmptySetLogString ];
-    }
-
-    const StartString: FLogString =
-    {
-        Depth,
-        String: "{"
-    };
-
-    const EndString: FLogString =
-    {
-        Depth,
-        String: "}"
-    };
-
-    const FormatElement = (Element: unknown): FLogString =>
-    {
-        // console.log("FormatElement: Calling FormatValue!");
-        return FormatValue({ Depth: Depth + 1, Value: Element });
-    };
-
-    const InsideStrings: Array<FLogString> = Array.from(Value).map(FormatElement);
-
-    const SetLogStrings: Array<FLogString> = [ StartString, ...InsideStrings, EndString ];
-
-    if (ShouldObjectInline(InsideStrings))
-    {
-        const OutString: string = SetLogStrings.join(" ");
-        const OutLogString: FLogString =
-        {
-            Depth,
-            String: OutString
-        };
-
-        return [ OutLogString ];
-    }
-    else
-    {
-        return SetLogStrings;
-    }
-};
-
-const ShouldObjectInline = (InsideStrings: Array<FLogString>): boolean =>
-{
-    /* This function should be provided a set of `FLogString`s *
-     * all at the same Depth, so checking any is fine.         */
-    if (InsideStrings.length === 0)
-    {
-        return true;
-    }
-
-    const Depth: number = InsideStrings[0].Depth;
-    const LogStringsLength: number = InsideStrings
-        .map((InsideString: FLogString): number => StripChalk(InsideString.String.trim()).length)
-        .reduce((Accumulator: number, CurrentValue: number): number => Accumulator + CurrentValue, 0);
-
-    const SpacesWidth: number = InsideStrings.length - 1;
-    /* The start/ending braces, as well as a space after/before them respectively. */
-    const BracesLength: number = 4;
-
-    const TotalWidth: number =
-        Depth * LogSettings.TabWidth +
-        LogStringsLength +
-        SpacesWidth +
-        BracesLength;
-
-    return TotalWidth <= LogSettings.MaxTerminalWidth;
-};
-
-const FormatRecord = (LogObject: TLogPrimitive<object>): Array<FLogString> =>
-{
-    /* For keys whose values are not objects, a single FLogString is used.  *
-     * Otherwise, one FLogString is used for the key name, then FLogStrings *
-     * are created for each element in the value (which is a container).    */
-
-    const { Depth, Value: Record }: TLogRecord = GetRecordFromPrimitive(LogObject);
-
-    const StartBrace: FLogString =
-    {
-        Depth,
-        String: "{"
-    };
-
-    const EndBrace: FLogString =
-    {
-        Depth,
-        String: "}"
-    };
-
-    const Keys: Array<PropertyKey> = Object.keys(Record);
-    const InsideStrings: Array<FLogString> = [ ];
-    const AppendKeyValuePair = (Key: PropertyKey): void =>
-    {
-        const Value: unknown = Record[Key];
-        const LogPrimitive: TLogPrimitive = MakeLogPrimitive(Depth + 1, Value);
-        // console.log("FormatRecord::AppendKeyValuePair: Calling FormatValue!");
-        const LogString: FLogString = FormatValue(LogPrimitive);
-        const KeyString: string = `${ StylePropertyKey(Key) }:`;
-        if (typeof Value === "object")
-        {
-            const KeyLogString: FLogString =
-            {
-                Depth,
-                String: KeyString
-            };
-
-            InsideStrings.push(KeyLogString, LogString);
-        }
-        else
-        {
-            LogString.String = `${ KeyString } ${ LogString.String }`;
-            InsideStrings.push(LogString);
-        }
-    };
-
-    Keys.forEach(AppendKeyValuePair);
-
-    if (ShouldObjectInline(InsideStrings))
-    {
-        const GetStringFromLogString = ({ String }: FLogString): string => String;
-        const InlinedStrings: Array<string> = InsideStrings.map(GetStringFromLogString);
-
-        const OutArray: Array<string> = [ StartBrace.String, ...InlinedStrings, EndBrace.String ];
-        const OutString: string = OutArray.join(" ");
-        const OutLogString: FLogString =
-        {
-            Depth,
-            String: OutString
-        };
-
-        return [ OutLogString ];
-    }
-    else
-    {
-        return [ StartBrace, ...InsideStrings, EndBrace ];
-    }
-};
-
-const MakeLogPrimitive = (Depth: number, Value: unknown): TLogPrimitive =>
-{
-    return {
-        Depth,
-        Value
-    };
-};
-
-const FormatMap = (LogObject: TLogPrimitive<object>): Array<FLogString> =>
-{
-    const { Depth, Value: LogMap }: TLogMap = GetMapFromPrimitive(LogObject);
-
-    let LogMapString: string = "";
-    LogMap.forEach((Value: unknown, Key: PropertyKey): void =>
-    {
-        LogMapString += `{ ${ StylePropertyKey(Key) }, ${ JSON.stringify(Value) } }`;
-    });
-    // console.log(`Going to format map, which is\n${ LogMapString }.`);
-
-    const StartBrace: FLogString =
-    {
-        Depth,
-        String: "<"
-    };
-
-    const EndBrace: FLogString =
-    {
-        Depth,
-        String: ">"
-    };
-
-    const Keys: Array<PropertyKey> = Array.from(LogMap.keys());
-    const InsideStrings: Array<FLogString> = [ ];
-    const AppendKeyValuePair = (Key: PropertyKey): void =>
-    {
-        const Value: unknown = LogMap.get(Key);
-        const LogPrimitive: TLogPrimitive = MakeLogPrimitive(Depth + 2, Value);
-        // console.log("FormatMap::AppendKeyValuePair: Calling FormatValue!");
-        const LogString: FLogString = FormatValue(LogPrimitive);
-
-        const KeyString: string = `${ StylePropertyKey(Key) },`;
-
-        if (typeof Value === "object")
-        {
-            const EntryStartBrace: FLogString =
-            {
-                Depth: Depth + 1,
-                String: "{"
-            };
-
-            const EntryEndBrace: FLogString =
-            {
-                Depth: Depth + 1,
-                String: "}"
-            };
-
-            const KeyLogString: FLogString =
-            {
-                Depth: Depth + 2,
-                String: KeyString
-            };
-
-            InsideStrings.push(EntryStartBrace, KeyLogString, LogString, EntryEndBrace);
-        }
-        else
-        {
-            LogString.String = `{ ${ KeyString } ${ LogString.String } }`;
-            InsideStrings.push(LogString);
-        }
-    };
-
-    Keys.forEach(AppendKeyValuePair);
-
-    const MapLogStrings: Array<FLogString> = [ StartBrace, ...InsideStrings, EndBrace ];
-
-    if (ShouldObjectInline(InsideStrings))
-    {
-        const OutString: string = MapLogStrings.map(({ String }: FLogString): string => String).join(" ");
-        const OutLogString: FLogString =
-        {
-            Depth,
-            String: OutString
-        };
-
-        return [ OutLogString ];
-    }
-    else
-    {
-        return MapLogStrings;
-    }
-};
-
-const FormatValue = (LogPrimitive: TLogPrimitive): FLogString =>
-{
-    console.log(`FormatValue::LogPrimitive.Value is ${ Stringify(LogPrimitive.Value) }.`);
-    console.log(`FormatValue::LogPrimitive.Depth is ${ LogPrimitive.Depth }.`);
-    const InType: FTypeofReturnValue = typeof LogPrimitive.Value;
-    return ValueFormatters[InType](LogPrimitive as never);
-};
-
-const GetLogObjectType = ({ Value }: TLogPrimitive<object>): FLogObjectType =>
-{
-    if (Value === null)
-    {
-        return "null";
-    }
-    else if (Array.isArray(Value))
-    {
-        return "Array";
-    }
-    else if (Value instanceof Set)
-    {
-        return "Set";
-    }
-    else if (Value instanceof Map)
-    {
-        return "Map";
-    }
-    else
-    {
-        return "Record";
-    }
-};
-
-const FormatNull = ({ Depth }: TLogPrimitive<object>): Array<FLogString> =>
-{
-    const LogString: FLogString =
-    {
+    return [ {
         Depth,
         String: "null"
-    };
-
-    return [ LogString ];
+    } ];
 };
 
-const GetArrayFromPrimitive = ({ Depth, Value: InValue }: TLogPrimitive<object>): TLogArray =>
+const FormatUndefined = ({ Depth }: TLogPrimitive<undefined>): FLogString =>
 {
-    const Value: TLogArray["Value"] = InValue as TLogArray["Value"];
     return {
         Depth,
-        Type: "Array",
-        Value
-    };
-};
-
-const GetSetFromPrimitive = ({ Depth, Value: InValue }: TLogPrimitive<object>): TLogSet =>
-{
-    const Value: TLogSet["Value"] = InValue as TLogSet["Value"];
-    return {
-        Depth,
-        Type: "Set",
-        Value
-    };
-};
-
-const GetMapFromPrimitive = ({ Depth, Value: InValue }: TLogPrimitive<object>): TLogMap =>
-{
-    const Value: TLogMap["Value"] = InValue as TLogMap["Value"];
-    return {
-        Depth,
-        Type: "Map",
-        Value
-    };
-};
-
-const GetRecordFromPrimitive = ({ Depth, Value: InValue }: TLogPrimitive<object>): TLogRecord =>
-{
-    const Value: TLogRecord["Value"] = InValue as TLogRecord["Value"];
-    return {
-        Depth,
-        Type: "Record",
-        Value
-    };
-};
-
-const StripChalk = (In: string): string =>
-{
-    /* eslint-disable-next-line @stylistic/max-len, no-control-regex */
-    const AnsiEscapeSequencePattern: RegExp = /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nqry=><~]))/g;
-
-    return In.replace(AnsiEscapeSequencePattern, "");
-};
-
-const ReduceLogStrings = (LogStrings: Array<FLogString>): FLogString =>
-{
-    const MinDepth: number = ((): number =>
-    {
-        const GetDepth = (LogString: FLogString): number => LogString.Depth;
-        // console.log(`ReduceLogStrings: LogStrings is ${ JSON.stringify(LogStrings).slice(0, 40) }.`);
-        return Math.min(...(LogStrings.map(GetDepth)));
-    })();
-
-    const CollectLogString = ({ Depth: InDepth, String }: FLogString, Index: number): string =>
-    {
-        console.log(`CollectLogString: String is "${ String }".`);
-        const ShouldAppendComma: boolean = ((): boolean =>
-        {
-            const IsLast: boolean = LogStrings.length === Index - 1;
-            const StartBraces: Array<string> = [ "{", "[", "<" ];
-            const IsOnlyStartBrace: boolean = StartBraces.includes(StripChalk(String.trim()));
-            const AlreadyEndsWithComma: boolean = String[String.length - 1] === ",";
-
-            /* eslint-disable-next-line @stylistic/max-len */
-            // console.log(`CollectLogString: IsOnlyBrace is ${ IsOnlyBrace ? "true" : "false" } for LogString "${ String }"`);
-
-            return !IsLast && !IsOnlyStartBrace && !AlreadyEndsWithComma;
-        })();
-
-        const Depth: number = InDepth - MinDepth;
-        const LineEnd: string = ShouldAppendComma ? "," : "";
-        console.log(`CollectLogString: Depth is ${ Depth } for String "${ String }".`);
-        return Indent(Depth) + String + LineEnd;
-    };
-
-    const String: string = LogStrings.map(CollectLogString).join("\n");
-
-    const GetNextNonWhitespaceCharacter = (In: string, InIndex: number): number | undefined =>
-    {
-        for (let Index: number = InIndex + 1; Index < In.length; Index++)
-        {
-            const Character: string = In[Index];
-            const IsWhitespace = (InChar: string): boolean =>
-            {
-                return InChar.replace(/\s+/g, "") === "";
-            };
-
-            if (!IsWhitespace(Character))
-            {
-                return Index;
-            }
-        }
-
-        return undefined;
-    };
-
-    const EndingBraces: Array<string> = [ "}", ">", "]" ];
-    const IndicesToRemove: Array<number> = [ ];
-    for (let Index: number = 0; Index < String.length; Index++)
-    {
-        if (String[Index] !== ",")
-        {
-            continue;
-        }
-
-        const NextNonWhitespaceCharacterIndex: number | undefined =
-            GetNextNonWhitespaceCharacter(String, Index);
-
-        if (NextNonWhitespaceCharacterIndex !== undefined)
-        {
-            const NextNonWhitespaceCharacter: string = String[NextNonWhitespaceCharacterIndex];
-            if (EndingBraces.includes(NextNonWhitespaceCharacter))
-            {
-                IndicesToRemove.push(Index);
-            }
-        }
-    }
-
-    const RemoveCharactersAtIndices = (InString: string, Indices: Array<number>): string =>
-    {
-        if (typeof InString !== "string")
-        {
-            throw new TypeError("Text must be a string.");
-        }
-
-        if (!Array.isArray(Indices))
-        {
-            throw new TypeError("Indices must be an array of numbers.");
-        }
-
-        const TextLength: number = InString.length;
-
-        for (const Index of Indices)
-        {
-            if (!Number.isInteger(Index))
-            {
-                throw new TypeError(`All indices must be integers. Found: ${Index}`);
-            }
-
-            if (Index < 0 || Index >= TextLength)
-            {
-                throw new RangeError(`Index out of range: ${Index}. Valid range is [0, ${TextLength - 1}].`);
-            }
-        }
-
-        const UniqueSortedIndicesDescending: Array<number> = Array
-            .from(new Set(Indices))
-            .sort((Left: number, Right: number) => Right - Left);
-
-        let Result: string = InString;
-
-        for (const Index of UniqueSortedIndicesDescending)
-        {
-            Result = Result.slice(0, Index) + Result.slice(Index + 1);
-        }
-
-        return Result;
-    };
-
-    const OutString: string = RemoveCharactersAtIndices(String, IndicesToRemove);
-
-    return {
-        Depth: MinDepth,
-        String: OutString
-    };
-};
-
-/** Temporary helper to debug the formatter. */
-const Stringify = (In: unknown, Depth: number = 1): string =>
-{
-    const BaseString: string = JSON.stringify(In, null, 4);
-    if (Depth === 0)
-    {
-        return BaseString;
-    }
-    else
-    {
-        const Indent: string = " ".repeat(LogSettings.TabWidth * Depth);
-        const IndentedString: string = BaseString.replaceAll("\n", "\n" + Indent);
-        return IndentedString;
-    }
-};
-
-const FormatObject = (LogObject: TLogPrimitive<object>): FLogString =>
-{
-    const FormattedObject: TMaybeArray<FLogString> = FormatObjectInternal(LogObject);
-    if (Array.isArray(FormattedObject))
-    {
-        const Out: FLogString = FormattedObject.length > 1
-            ? ReduceLogStrings(FormattedObject)
-            : FormattedObject[0];
-
-        // console.log(`FormatObject: FormattedObject array had ${ FormattedObject.length } elements.`);
-        // console.log(`FormatObject: LogObject is\n${ Stringify(LogObject) }`);
-        // console.log(`FormatObject: typeof LogObject.Value === ${ typeof LogObject.Value }`);
-        const LogObjectValueKeys: Array<string> = LogObject.Value instanceof Map
-            ? Array.from(LogObject.Value.keys())
-            : Object.keys(LogObject.Value);
-
-        // console.log(`FormatObject: LogObject's Keys are ${ JSON.stringify(LogObjectValueKeys) }`);
-        // console.log(`FormatObject: Out is\n${ Stringify(Out) }`);
-
-        return Out;
-    }
-    else
-    {
-        return FormattedObject;
-    }
-};
-
-const FormatObjectInternal = (LogObject: TLogPrimitive<object>): TMaybeArray<FLogString> =>
-{
-    const LogObjectType: FLogObjectType = GetLogObjectType(LogObject);
-    type FObjectFormatters = Record<FLogObjectType, ((In: TLogPrimitive<object>) => Array<FLogString>)>;
-    const FormatFunctions: FObjectFormatters =
-    {
-        Array: FormatArray,
-        Map: FormatMap,
-        Record: FormatRecord,
-        Set: FormatSet,
-        null: FormatNull
-    };
-
-    return FormatFunctions[LogObjectType](LogObject);
-};
-
-const FormatBoolean = ({ Depth, Value }: TLogPrimitive<boolean>): FLogString =>
-{
-    const String: string = Value ? "true" : "false";
-
-    return {
-        Depth,
-        String
+        String: "undefined"
     };
 };
 
@@ -788,64 +393,222 @@ const FormatFunction = ({ Depth }: TLogPrimitive<Function>): FLogString =>
     };
 };
 
-const FormatString = ({ Depth, Value }: TLogPrimitive<string>): FLogString =>
+const FormatBoolean = ({ Depth, Value }: TLogPrimitive<boolean>): FLogString =>
 {
     return {
         Depth,
-        String: StyleString(Value)
+        String: Value ? "true" : "false"
     };
 };
 
-const FormatSymbol = ({ Depth, Value }: TLogPrimitive<symbol>): FLogString =>
+const Delimiters: FDelimiters =
 {
-    return {
-        Depth,
-        String: StyleSymbol(Value)
-    };
+    Array: [ "[", "]" ],
+    KeyValuePair: [ "{", "}" ],
+    Map: [ "<", ">" ],
+    Record: [ "{", "}" ],
+    Set: [ "{", "}" ]
 };
 
-const FormatUndefined = ({ Depth }: TLogPrimitive<undefined>): FLogString =>
+const GetDelimiters = (Depth: number, ContainerType: FContainerType): [ FLogString, FLogString ] =>
 {
-    return {
-        Depth,
-        String: "undefined"
-    };
+    const MakeDelimiterLogString = (String: string): FLogString => ({ Depth, String });
+    return Delimiters[ContainerType].map(MakeDelimiterLogString) as [ FLogString, FLogString ];
 };
 
-const ValueFormatters: FValueFormatter =
+const FormatArray = (LogArray: FLogArray): Array<FLogString> =>
 {
-    bigint: FormatNumber,
-    boolean: FormatBoolean,
-    function: FormatFunction,
-    number: FormatNumber,
-    object: FormatObject,
-    string: FormatString,
-    symbol: FormatSymbol,
-    undefined: FormatUndefined
+    return FormatContainer("Array", LogArray);
 };
 
-export const LogFormat = (Title: string, Value: unknown): string =>
+const FormatMap = ({ Depth, Value }: FLogMap): Array<FLogString> =>
 {
-    let LogMapString: string = "";
-    (Value as Map<PropertyKey, unknown>).forEach((Value: unknown, Key: PropertyKey): void =>
+    const FormatKeyValuePair = ({ Depth, Key, Value }: FKeyValuePair): FLogStringArray =>
     {
-        LogMapString += `{ ${ StylePropertyKey(Key) }, ${ JSON.stringify(Value) } }`;
-    });
-    // console.log(`LogFormat: Value is\n${ LogMapString }`);
+        const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "KeyValuePair");
 
-    const FormattedValue: string = FormatValue({ Depth: 0, Value }).String;
+        const FormatMapKey = ({ Depth, Key }: Omit<FKeyValuePair, "Value">): FLogString =>
+        {
+            const Out: FLogString = FormatValue({ Depth: Depth + 1, Value: Key })[0];
+            Out.String += ",";
+            return Out;
+        };
 
-    // console.log(`MaxTerminalWidth: ${ LogSettings.MaxTerminalWidth }.`);
+        const FormatMapValue = ({ Depth, Value }: Omit<FKeyValuePair, "Key">): FLogStringArray =>
+        {
+            return FormatValue({ Depth: Depth + 1, Value });
+        };
 
-    const PutValueOnNewLine: boolean = (
-        typeof Value === "object" && (
-            FormattedValue.length <= LogSettings.MaxTerminalWidth ||
-            FormattedValue.includes("\n")
-        )
-    );
+        const KeyLogString: FLogString = FormatMapKey({ Depth, Key });
+        const ValueLogStrings: FLogStringArray = FormatMapValue({ Depth, Value });
 
-    return PutValueOnNewLine
-        ? Chalk.bold(Title) + "\n" + FormattedValue
-        // ? Chalk.bold(Title) + "\n" + JSON.stringify(FormattedValue)
-        : `${ Chalk.bold(Title + ":") } ${ FormattedValue }`;
+        return [ StartDelimiterLogString, KeyLogString, ...ValueLogStrings, StopDelimiterLogString ];
+    };
+
+    const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "Map");
+    const GetKeyValuePairs = (InMap: FMap): Array<FKeyValuePair> =>
+    {
+        const Out: Array<FKeyValuePair> = [ ];
+
+        InMap.forEach((Value: unknown, Key: FPrimitive): void =>
+        {
+            Out.push({ Depth: Depth + 1, Key, Value: Value as TLogValue });
+        });
+
+        return Out;
+    };
+
+    const InnerLogStrings: FLogStringArray = GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20);
+
+    return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
+};
+
+const FormatRecord = ({ Depth, Value }: FLogRecord): Array<FLogString> =>
+{
+    const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "Record");
+
+    const GetKeyValuePairs = (InRecord: FRecord): Array<FKeyValuePair> =>
+    {
+        const Out: Array<FKeyValuePair> = [ ];
+
+        Object.keys(InRecord).forEach((Key: PropertyKey): void =>
+        {
+            Out.push({ Depth, Key, Value: InRecord[Key] as TLogValue });
+        });
+
+        return Out;
+    };
+
+    const FormatKeyValuePair = ({ Depth, Key, Value }: FKeyValuePair): FLogStringArray =>
+    {
+        const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "KeyValuePair");
+
+        const FormatMapKey = ({ Depth, Key }: Omit<FKeyValuePair, "Value">): FLogString =>
+        {
+            const Out: FLogString = FormatValue({ Depth: Depth + 1, Value: Key })[0];
+            Out.String += ":";
+            return Out;
+        };
+
+        const FormatMapValue = ({ Depth, Value }: Omit<FKeyValuePair, "Key">): FLogStringArray =>
+        {
+            return FormatValue({ Depth: Depth + 1, Value });
+        };
+
+        const KeyLogString: FLogString = FormatMapKey({ Depth, Key });
+        const ValueLogStrings: FLogStringArray = FormatMapValue({ Depth, Value });
+
+        return [ StartDelimiterLogString, KeyLogString, ...ValueLogStrings, StopDelimiterLogString ];
+    };
+
+    const InnerLogStrings: FLogStringArray = GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20);
+
+    return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
+};
+
+const FormatContainer = (
+    ContainerType: FSetTypeName | FArrayTypeName,
+    { Depth, Value }: FLogSet | FLogArray
+): Array<FLogString> =>
+{
+    const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, ContainerType);
+
+    const MakeLogValue = (In: FLogValueType): TLogValue => ({ Depth: Depth + 1, Value: In });
+
+    const ValueArray: Array<FLogValueType> = Array.isArray(Value)
+        ? Value
+        : Array.from(Value);
+
+    const AppendComma = ({ Depth, String }: FLogString, Index: number): FLogString =>
+    {
+        return Index !== ValueArray.length - 1
+            ? {
+                Depth,
+                String: String + ","
+            }
+            : {
+                Depth,
+                String
+            };
+    };
+
+    const InnerLogStrings: FLogStringArray =
+        ValueArray.map(MakeLogValue).map(FormatValue).flat(20).map(AppendComma);
+
+    return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
+};
+
+const FormatSet = (LogSet: FLogSet): Array<FLogString> =>
+{
+    return FormatContainer("Set", LogSet);
+};
+
+const FormatObject = ({ Depth, Value }: TLogContainer): Array<FLogString> =>
+{
+    let Formatter: Function = FormatRecord;
+    if (Value instanceof Map)
+    {
+        Formatter = FormatMap;
+    }
+    else if (Value instanceof Set)
+    {
+        Formatter = FormatSet;
+    }
+    else if (Array.isArray(Value))
+    {
+        Formatter = FormatArray;
+    }
+    else if (Value === null)
+    {
+        Formatter = FormatNull;
+    }
+
+    return Formatter({ Depth, Value });
+};
+
+const FormatValue = ({ Depth, Value }: TLogValue): FLogStringArray =>
+{
+    const Formatters: Record<FTypeof, Function> =
+    {
+        bigint: FormatNumber,
+        boolean: FormatBoolean,
+        function: FormatFunction,
+        number: FormatNumber,
+        object: FormatObject,
+        string: FormatString,
+        symbol: FormatSymbol,
+        undefined: FormatUndefined
+    };
+
+    const Values: FLogString | FLogStringArray = Formatters[typeof Value]({ Depth, Value });
+
+    return Array.isArray(Values)
+        ? Values
+        : [ Values ];
+};
+
+export const Format = (Value: FLogValueType): string =>
+{
+    const InlinedArray: FLogStringArray = Inline(FormatValue({ Depth: 0, Value }));
+    const Out: string = InlinedArray
+        .map(({ Depth, String }: FLogString, Index: number): string =>
+        {
+            const StopDelimiters: Array<string> = [ ">", "]", "}" ];
+            if (StopDelimiters.includes(String[GetLength(String) - 1]))
+            {
+                if (Index !== InlinedArray.length - 1)
+                {
+                    const Next: FLogString = InlinedArray[Index + 1];
+                    if (!StopDelimiters.includes(Next.String[0]))
+                    {
+                        String += ",";
+                    }
+                }
+            }
+
+            return " ".repeat(LogSettings.TabWidth * Depth) + String;
+        })
+        .join("\n");
+
+    return Out;
 };

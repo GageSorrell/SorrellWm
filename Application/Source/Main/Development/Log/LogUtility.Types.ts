@@ -7,133 +7,131 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 export type FLogDepth =
-{
-    Depth: number;
-};
-
-export type TLogPrimitive<T = unknown> =
-    FLogDepth &
-    {
-        Value: T;
-    };
-
-export type FLogString =
-    FLogDepth &
-    {
-        String: string;
-    };
-
-export type FContainerType =
-    | "Record"
-    | "Array"
-    | "Set"
-    | "Map";
-
-export type FLogObjectType =
-    | FContainerType
-    | "null";
-
-type TLogContainerBase<T extends FContainerType> =
-{
-    Type: T;
-    // Values: unknown;
-};
-
-export type TLogArray<T = unknown> =
-    TLogContainerBase<"Array"> &
-    TLogPrimitive<Array<T>>;
-    // {
-    //     Values: Array<TLogPrimitive<T>>;
-    // };
-
-export type TLogSet<T = unknown> =
-    TLogContainerBase<"Set"> &
-    TLogPrimitive<Set<T>>;
-    // {
-    //     Values: Array<TLogPrimitive<T>>;
-    // };
-
-export type TLogTuple<T extends PropertyKey = PropertyKey, U = unknown> =
-{
-    Key: T;
-    Value: U;
-};
-
-export type TLogRecord<T extends PropertyKey = PropertyKey, U = unknown> =
-    TLogContainerBase<"Record"> &
-    TLogPrimitive<Record<T, U>>;
-    // {
-    //     Type: "Record";
-    //     Values: Array<TLogTuple<T, U>>;
-    // };
-
-export type TLogMap<T extends PropertyKey = PropertyKey, U = unknown> =
-    TLogContainerBase<"Map"> &
-    TLogPrimitive<Map<T, U>>;
-    // {
-    //     Values: Array<TLogTuple<T, U>>;
-    // };
-
-export type TLogContainer<T = unknown, U extends PropertyKey = PropertyKey> =
-    | TLogArray<T>
-    | TLogSet<T>
-    | TLogMap<U, T>
-    | TLogRecord<U, T>;
-
-export type TLogValue<T = unknown> =
-    | TLogPrimitive<T>
-    | TLogContainer;
-
-export const IsLogContainer = (In: unknown): In is TLogContainer =>
-{
-    return (
-        typeof In === "object" &&
-        In !== null &&
-        "Depth" in In &&
-        "Type" in In &&
-        "Values" in In
-    );
-};
-
-export type TLogUnion<T = unknown> = TLogPrimitive<T> | FLogString;
-
-export type TValueFormatterProperty<TypeName extends string, Type> =
-{
-    [ Key in TypeName ]: (In: Type, Depth: number) => string;
-};
-
-export type FTypeofReturnValue =
-    | "object"
-    | "bigint"
-    | "number"
-    | "string"
-    | "boolean"
-    | "symbol"
-    | "undefined"
-    | "function";
-
-export type TLogFormatFunction<T> = (In: TLogPrimitive<T>) => FLogString;
-// export type TLogObjectFormatFunction<T> = (In: TLogPrimitive<T>) => FLogString | Array<FLogString>;
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
 
 export type FPrimitive =
     | string
     | number
     | bigint
     | boolean
-    | symbol
+    | Function
     | null
+    | symbol
     | undefined;
 
-export type FValueFormatter =
-{
-    // object: TLogObjectFormatFunction<object>;
+export type FValue =
+    | FPrimitive
+    | FObject;
 
-    bigint: TLogFormatFunction<bigint>;
-    boolean: TLogFormatFunction<boolean>;
-    function: TLogFormatFunction<Function>;
-    number: TLogFormatFunction<number>;
-    object: TLogFormatFunction<object>;
-    string: TLogFormatFunction<string>;
-    symbol: TLogFormatFunction<symbol>;
-    undefined: TLogFormatFunction<undefined>;
+export type FTypeof =
+    | "object"
+    | "string"
+    | "number"
+    | "bigint"
+    | "boolean"
+    | "function"
+    | "symbol"
+    | "undefined";
+
+export type TArrayNonempty<T = unknown> = [ T ] | Array<T>;
+
+export type FLogStringArray = TArrayNonempty<FLogString>;
+
+export type TContainer<T = unknown, U extends FPrimitive = FPrimitive> =
+    | Record<Extract<U, PropertyKey>, T>
+    | Map<U, T>
+    | Set<T>
+    | Array<T>;
+
+export type FArrayTypeName = "Array";
+export type FMapTypeName = "Map";
+export type FRecordTypeName = "Record";
+export type FSetTypeName = "Set";
+export type FKeyValuePairTypeName = "KeyValuePair";
+export type FContainerType =
+    | FArrayTypeName
+    | FMapTypeName
+    | FRecordTypeName
+    | FKeyValuePairTypeName
+    | FSetTypeName;
+
+export type FDelimiterStartString =
+    | "{"
+    | "<"
+    | "[";
+
+export type FDelimiterStopString =
+    | "}"
+    | ">"
+    | "]";
+
+export type FDelimiterString =
+    | FDelimiterStartString
+    | FDelimiterStopString;
+
+export type FDelimiterPair = [ FDelimiterStartString, FDelimiterStopString ];
+
+export type FDelimiters = Record<FContainerType, FDelimiterPair>;
+
+export type FArray = Array<FLogValueType>;
+export type FMap = Map<FPrimitive, unknown>;
+export type FRecord = Record<PropertyKey, unknown>;
+export type FSet = Set<FLogValueType>;
+
+export type TLogBase<T = FLogValueType> =
+{
+    Depth: number;
+    IsInlined?: boolean;
+    Value: T;
 };
+
+export type TLogPrimitive<T extends FPrimitive = FPrimitive> = TLogBase<T>;
+
+export type TLogContainer<T extends TContainer = TContainer> = TLogBase<T>;
+
+export type FLogArray = TLogContainer<FArray>;
+export type FLogMap = TLogContainer<FMap>;
+export type FLogRecord = TLogContainer<FRecord>;
+export type FLogSet = TLogContainer<FSet>;
+
+export type FLogString =
+    Pick<TLogBase, "Depth"> &
+    {
+        CheckedForInlining?: boolean;
+        String: string;
+    };
+
+export type FKeyValuePair =
+{
+    Depth: number;
+    Key: FPrimitive;
+    Value: FValue;
+};
+
+export type FLogValueType =
+    | FValue
+    | TContainer;
+
+export type FObject = Exclude<NonNullable<object>, Function>;
+
+export type TLogValue<T extends FLogValueType = FLogValueType> = TLogBase<T>;

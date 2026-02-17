@@ -5,4 +5,4 @@
  */
 
 export { GetLogger, LogFrontend } from "./Log";
-export { LogFormat } from "./LogUtility";
+export { Format } from "./LogUtility";
