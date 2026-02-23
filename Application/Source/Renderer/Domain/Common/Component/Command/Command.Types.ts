@@ -1,12 +1,41 @@
 /* File:      Command.Types.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
+ * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-export type PCommand =
+import type { FSimpleCallback } from "!/Utility";
+import type { TKeybindSet } from "!/Settings";
+
+export type FCommandBase =
 {
-    Key: string;
-    Title: string;
-    Action: () => void;
+    Description: string;
+    /**
+     * The user-facing name of the command.
+     * @TODO Extend this property to also allow `Name`
+     * to also be a function that returns a `string`,
+     * or a `Promise<string>`.
+     */
+    Name: string;
 };
+
+export type FSimpleCommand =
+    FCommandBase &
+    {
+        Callback: FSimpleCallback;
+        Keybinds: TKeybindSet;
+    };
+
+export type FSubCommand = Omit<FSimpleCommand, "Description">;
+
+export type FCompoundCommand =
+    FCommandBase &
+    {
+        SubCommands: Array<FSubCommand>;
+    };
+
+export type FCommand =
+    | FSimpleCommand
+    | FCompoundCommand;
+
+export type PCommand = FCommand;

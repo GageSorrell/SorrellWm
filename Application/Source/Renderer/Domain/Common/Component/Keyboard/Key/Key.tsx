@@ -6,7 +6,7 @@
 
 import { type CSSProperties, type ReactElement, useMemo } from "react";
 import type { FKey, PKey } from "./Key.Types";
-import type { FVirtualKey } from "../Keyboard.Types";
+import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";
 import { UseThemeColors } from "@/Utility";
 import { tokens } from "@fluentui/react-components";
 

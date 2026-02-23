@@ -14,6 +14,8 @@ import type {
     FGetIsLightModeErrorCode,
     FGetMonitorFromFocusedWindowErrorCode,
     FGetPanelScreenshotsErrorCode,
+    FGetSettingErrorCode,
+    FGetSettingsErrorCode,
     FGetThemeColorErrorCode,
     FLogErrorCode,
     FOnChangeFocusErrorCode,
@@ -55,6 +57,16 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         { IsLightMode: boolean; },
         FGetIsLightModeErrorCode
+    >;
+    GetSetting: TIpcFrontendEvent<
+        undefined,
+        { Setting: unknown; },
+        FGetSettingErrorCode
+    >;
+    GetSettings: TIpcFrontendEvent<
+        undefined,
+        { Settings: Record<string, unknown>; },
+        FGetSettingsErrorCode
     >;
     GetThemeColor: TIpcFrontendEvent<
         undefined,

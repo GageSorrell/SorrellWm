@@ -44,3 +44,7 @@ export type FOnChangeFocusErrorCode = TEventErrorCode<"">;
 export type FReadyForRouteErrorCode = TEventErrorCode<"">;
 
 export type FRequestTearDownErrorCode = TEventErrorCode<"">;
+
+export type FGetSettingsErrorCode = TEventErrorCode<"">;
+
+export type FGetSettingErrorCode = TEventErrorCode<"">;

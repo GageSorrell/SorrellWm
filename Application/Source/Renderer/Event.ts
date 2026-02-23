@@ -19,7 +19,7 @@ import type {
     TGetRichResponseFromKey,
     TGetSingleRichResponseData,
     TRequest } from "!/Event";
-import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "!/Utility.Types";
+import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "!/Utility/Utility.Types";
 import { type MutableRefObject, useCallback, useEffect, useState} from "react";
 import type {
     TIpcState,

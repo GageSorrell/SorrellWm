@@ -4,4 +4,6 @@
  * License:   MIT
  */
 
+import type { TPropertyGetter } from "./Utility.Types";
+
 export const Identity = <T>(...Arguments: Array<T>) => Arguments;

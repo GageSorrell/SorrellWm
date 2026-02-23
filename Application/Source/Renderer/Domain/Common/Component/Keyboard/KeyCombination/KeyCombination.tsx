@@ -5,9 +5,9 @@
  */
 
 import { type ReactElement, useMemo } from "react";
-import type { FVirtualKey } from "../Keyboard.Types";
+import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";
 import { Key } from "../Key";
-import { KeyIdsById } from "../Keyboard";
+import { KeyIdsById } from "../../../../../../Shared/Keyboard";
 import type { PKeyCombination } from "./KeyCombination.Types";
 
 /**

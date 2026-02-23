@@ -1,68 +1,43 @@
 /* File:      Command.tsx
  * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
+ * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-import {
-    type CSSProperties,
-    type EffectCallback,
-    type ReactElement,
-    useEffect } from "react";
-import { type IShortcutProviderRenderProps, useShortcut } from "@/Keybinds";
-import { Title3, tokens } from "@fluentui/react-components";
-import { Key } from "../Keyboard";
-import type { PCommand } from "./Command.Types";
+import type { CSSProperties, ReactNode } from "react";
+import type { FCommand, FCompoundCommand, FSimpleCommand, PCommand } from "./Command.Types";
+import type { TSimpleFunction } from "!/Utility/Functional.Types";
 
-export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =>
+export const AreCommandsEqual = (A: FCommand, B: FCommand): boolean =>
 {
-    const KeyString: string = InKey.toLowerCase();
+    return A.Name === B.Name;
+};
 
+export const IsCommandSimple = (In: FCommand): In is FSimpleCommand =>
+{
+    return "Keybinds" in In;
+};
+
+export const SwitchCommandType = <T,>(
+    In: FCommand,
+    OnSimple: TSimpleFunction<FSimpleCommand, T>,
+    OnCompound: TSimpleFunction<FCompoundCommand, T>): T =>
+{
+    return IsCommandSimple(In)
+        ? OnSimple(In)
+        : OnCompound(In);
+};
+
+export const Command = (InCommand: PCommand): ReactNode =>
+{
     const RootStyle: CSSProperties =
     {
-        alignItems: "center",
-        display: "flex",
-        flexDirection: "row",
-        gap: tokens.spacingHorizontalXL,
-        justifyContent: "flex-start",
-        width: "100%"
+
     };
 
-    const { registerShortcut, unregisterShortcut } = useShortcut() as IShortcutProviderRenderProps;
-    useEffect((): ReturnType<EffectCallback> =>
-    {
-        /* @TODO Investigate: the key F24 is registered as "Alt" by Electron and by online test tools. */
-        registerShortcut(Action, [ KeyString ], "Foo", "Foo");
-        return (): void =>
-        {
-            unregisterShortcut([ KeyString ]);
-        };
-    }, [ Action, KeyString, registerShortcut, unregisterShortcut ]);
-    // useEffect((): ReturnType<EffectCallback> =>
-    // {
-    //     const Listener = (...Arguments: Array<unknown>): void =>
-    //     {
-    //         if (KeyIdsById[(Arguments[0] as FKeyboardEvent).VkCode] === KeyString)
-    //         {
-    //             Log(`Key ${ KeyString } was pressed for command ${ Title }.`);
-    //         }
-    //     };
-
-    //     IpcRenderer.On("Keyboard", Listener);
-    //     return (): void =>
-    //     {
-    //         IpcRenderer.RemoveListener("Keyboard", Listener);
-    //     };
-    // }, [ KeyString, Title ]);
-
     return (
-        <div
-            onMouseDown={ Action }
-            style={ RootStyle }>
-            <Key Value={ InKey.toUpperCase() } />
-            <Title3>
-                { Title }
-            </Title3>
+        <div style={ RootStyle }>
+            { InCommand.Name }
         </div>
     );
 };

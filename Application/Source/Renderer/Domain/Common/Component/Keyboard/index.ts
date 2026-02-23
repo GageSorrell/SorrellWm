@@ -6,6 +6,6 @@
 
 export * from "./Key";
 export * from "./KeyCombination";
-export * from "./Keyboard";
-export * from "./Keyboard.Types";
+export * from "../../../../../Shared/Keyboard";
+export * from "../../../../../Shared/Keyboard.Types";
 // export * from "./RecordKeyCombination";

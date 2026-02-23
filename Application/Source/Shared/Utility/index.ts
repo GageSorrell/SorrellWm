@@ -4,5 +4,7 @@
  * License:   MIT
  */
 
-export * from "./Command";
-export * from "./Command.Types";
+export * from "./Array";
+export * from "./Functional.Types";
+export * from "./Utility";
+export * from "./Utility.Types";

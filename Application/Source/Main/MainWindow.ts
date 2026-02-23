@@ -43,7 +43,7 @@ import { PoorEventSuccess, RegisterIpcCallback } from "./Event";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
 import type { FInsertableWindowData } from "!/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
-import type { FVirtualKey } from "$/Common/Component/Keyboard/Keyboard.Types";
+import type { FVirtualKey } from "!/Keyboard.Types";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
 import { Vk } from "$/Common/Component/Keyboard";
@@ -400,6 +400,30 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
+    RegisterIpcCallback(
+        MainWindow,
+        "GetSettings",
+        async (): ReturnType<TEventCallback<"GetSettings">> =>
+        {
+            return {
+                Data: { },
+                Error: undefined
+            };
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "GetSetting",
+        async (): ReturnType<TEventCallback<"GetSetting">> =>
+        {
+            return {
+                Data: { },
+                Error: undefined
+            };
+        }
+    );
+
     /** TEMPORARY */
     /* eslint-disable-next-line no-console */
     import("./Development/Log/LogTest");
@@ -433,18 +457,18 @@ const LaunchMainWindow = async (): Promise<void> =>
         Log("FocusChange", FocusChange);
     });
 
-    /** @TODO Find better place for this. */
-    On("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
-    {
-        const Panels: Array<FPanel> = GetPanels();
-        const Screenshots: Array<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
-            .filter((Value: string | undefined): boolean =>
-            {
-                return Value !== undefined;
-            }) as Array<string>;
+    // /** @TODO Find better place for this. */
+    // On("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    // {
+    //     const Panels: Array<FPanel> = GetPanels();
+    //     const Screenshots: Array<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
+    //         .filter((Value: string | undefined): boolean =>
+    //         {
+    //             return Value !== undefined;
+    //         }) as Array<string>;
 
-        MainWindow?.webContents.send("GetPanelScreenshots", Screenshots);
-    });
+    //     MainWindow?.webContents.send("GetPanelScreenshots", Screenshots);
+    // });
 
     On("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {

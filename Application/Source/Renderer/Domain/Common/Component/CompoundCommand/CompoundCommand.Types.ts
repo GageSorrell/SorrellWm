@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { PCommand } from "../Command";
+import type { PCommand } from "../Command_Old";
 
 export type FSubCommand = Omit<PCommand, "Title">;
 

@@ -4,5 +4,5 @@
  * License:   MIT
  */
 
-export * from "./Command";
-export * from "./Command.Types";
+export * from "./CommandList";
+export * from "./CommandList.Types";

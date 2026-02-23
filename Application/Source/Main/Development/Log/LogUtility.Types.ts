@@ -53,7 +53,7 @@ export type FTypeof =
     | "symbol"
     | "undefined";
 
-export type TArrayNonempty<T = unknown> = [ T ] | Array<T>;
+export type TArrayNonempty<T = unknown> = [ T, ...Array<T> ];
 
 export type FLogStringArray = TArrayNonempty<FLogString>;
 

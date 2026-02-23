@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-export * from "./Command";
+export * from "./Command_Old";
 export * from "./CompoundCommand";
 export * from "./Keyboard";
 export * from "./Panel";

@@ -6,7 +6,7 @@
 
 import { type CSSProperties, type EffectCallback, type ReactElement, useEffect } from "react";
 import type { FSubCommand, PCompoundCommand } from "./CompoundCommand.Types";
-import { type IShortcutProviderRenderProps, useShortcut } from "@/Keybinds";
+import { type IShortcutProviderRenderProps, UseShortcut } from "@/Keybind";
 import { Title3, tokens } from "@fluentui/react-components";
 import { Key } from "../Keyboard";
 
@@ -22,7 +22,7 @@ export const CompoundCommand = ({ SubCommands, Title }: PCompoundCommand): React
         width: "100%"
     };
 
-    const { registerShortcut, unregisterShortcut } = useShortcut() as IShortcutProviderRenderProps;
+    const { registerShortcut, unregisterShortcut } = UseShortcut() as IShortcutProviderRenderProps;
     useEffect((): ReturnType<EffectCallback> =>
     {
         SubCommands.forEach(({ Action, Key }: FSubCommand): void =>

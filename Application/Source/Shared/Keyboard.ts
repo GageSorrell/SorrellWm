@@ -419,7 +419,7 @@ export const VirtualKeys: Readonly<Array<FVirtualKey>> =
 
 /* eslint-enable sort-keys */
 
-/** Is the `KeyCode` a VK Code **that this app uses**. */
+/** Is the `KeyCode` a VK Code **that this app uses?** */
 export const IsVirtualKey = (KeyCode: number): KeyCode is FVirtualKey =>
 {
     return VirtualKeys.includes(KeyCode as FVirtualKey);

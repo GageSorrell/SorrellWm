@@ -4,5 +4,7 @@
  * License:   MIT
  */
 
-export * from "./Command";
-export * from "./Command.Types";
+export * from "./Keybind";
+export * from "./Keybind.Types";
+export * from "./Settings";
+export * from "./Settings.Types";

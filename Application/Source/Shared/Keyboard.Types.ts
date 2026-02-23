@@ -136,9 +136,7 @@ export type FVirtualKey =
     | 0xDD
     | 0xDE;
 
-/**
- * Developer-friendly names for keys, assigned in `Key.tsx`.
- */
+/** Developer-friendly names for keys, assigned in `Key.tsx`. */
 export type FKeyId =
     | "MouseX1"
     | "MouseX2"

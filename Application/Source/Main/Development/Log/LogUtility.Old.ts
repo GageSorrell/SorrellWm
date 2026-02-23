@@ -16,7 +16,7 @@ import type {
     TLogSet } from "./LogUtility.Types.Old";
 import Chalk from "chalk";
 import { LogSettings } from "../../../Shared/LoggerSettings";
-import type { TMaybeArray } from "!/Utility.Types";
+import type { TMaybeArray } from "!/Utility/Utility.Types";
 
 Chalk.level = 3;
 

@@ -8,7 +8,7 @@ import "./App.css";
 import { FluentThemeProvider } from "./Utility/Theme";
 import type { ReactNode } from "react";
 import { Routes } from "./Router";
-import { ShortcutProvider } from "@/Keybinds";
+import { ShortcutProvider } from "@/Keybind";
 import { StoreProvider } from "./Store";
 
 export const App = (): ReactNode =>

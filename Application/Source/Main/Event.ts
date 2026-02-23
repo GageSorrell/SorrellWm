@@ -16,7 +16,7 @@ import type {
     TRequest,
     TResponse } from "!/Event";
 import { type FLogger, GetLogger } from "./Development";
-import type { FRejectFunction, TResolveFunction } from "!/Utility.Types";
+import type { FRejectFunction, TResolveFunction } from "!/Utility/Utility.Types";
 
 const Log: FLogger = GetLogger("Event");
 
