@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+import type { FKeyId } from "!/Keyboard.Types";
+
 export type FCommandKey =
     | "H"
     | "J"
@@ -44,6 +46,7 @@ export type FKey =
 
 export type PKey =
 {
-    Value: string | FCommandKey;
+    Value: FKeyId;
+    // Value: string | FCommandKey;
     // Value: FCommandKey;
 };

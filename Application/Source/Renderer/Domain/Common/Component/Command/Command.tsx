@@ -18,7 +18,7 @@ export const IsCommandSimple = (In: FCommand): In is FSimpleCommand =>
     return "Keybinds" in In;
 };
 
-export const SwitchCommandType = <T,>(
+export const SwitchOnCommandType = <T,>(
     In: FCommand,
     OnSimple: TSimpleFunction<FSimpleCommand, T>,
     OnCompound: TSimpleFunction<FCompoundCommand, T>): T =>

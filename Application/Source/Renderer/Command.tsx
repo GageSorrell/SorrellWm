@@ -10,7 +10,7 @@ import {
     type FCompoundCommand,
     type FSimpleCommand,
     type FSubCommand,
-    SwitchCommandType } from "./Domain/Common/Component/Command";
+    SwitchOnCommandType } from "./Domain/Common/Component/Command";
 import {
     type Context,
     type Dispatch,
@@ -91,7 +91,7 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     const UnregisterCommandShortcut: TSimpleFunction<FCommand> = useCallback((Command: FCommand): void =>
     {
-        const Keybinds: Array<TKeybindSet> = SwitchCommandType(
+        const Keybinds: Array<TKeybindSet> = SwitchOnCommandType(
             Command,
             (SimpleCommand: FSimpleCommand): Array<TKeybindSet> =>
             {
@@ -141,7 +141,7 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
                 });
             };
 
-        SwitchCommandType(
+        SwitchOnCommandType(
             Command,
             RegisterSimpleCommand,
             RegisterCompoundCommand
