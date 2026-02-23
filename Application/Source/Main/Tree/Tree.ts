@@ -140,8 +140,8 @@ const InitializeTree = (): void =>
         return {
             Children: [ ],
             MonitorId: Monitor.Handle,
-            Size: Monitor.Size,
-            Type: Monitor.Size.Width < Monitor.Size.Height
+            Size: Monitor.WorkSize,
+            Type: Monitor.WorkSize.Width < Monitor.WorkSize.Height
                 ? "Vertical"
                 : "Horizontal",
             ZOrder: 0

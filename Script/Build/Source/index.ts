@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/* eslint-disable no-console */
+
 import * as Fs from "fs";
 import * as Path from "path";
 import {
@@ -14,7 +16,6 @@ import {
     EndProfiling,
     GetPath,
     GetRef,
-    Log,
     LogError,
     MapSome,
     Run,
@@ -223,8 +224,8 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
             const IsCommentedOut: boolean = ((): boolean =>
             {
                 // 1. Get line
-                    // 1. Get preceding line break
-                    // 2. Get following line break
+                //     i. Get preceding line break
+                //     ii. Get following line break
                 // 2. Trim line
                 // 3. See if starts with `//` or `/*`
                 let FoundPrecedingLineBreak: boolean = false;
@@ -321,26 +322,7 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
                 {
                     FunctionArgumentVector.push(...MacroArgumentVector.slice(2));
                 }
-                // if (Flags.length > 0)
-                // {
-                //     /* eslint-disable @stylistic/max-len */
-                //     // console.log(
-                //     //     `Function ${ Name } of return type ${ ReturnType } has the following MacroArgumentVector,\n    `,
-                //     //     MacroArgumentVector,
-                //     //     "\n    while the sliced array is\n    ",
-                //     //     [ ...MacroArgumentVector ].slice(LastFlagIndex - 1)
-                //     // );
-                //     /* eslint-enable @stylistic/max-len */
-                //     FunctionArgumentVector.push(...MacroArgumentVector.slice(LastFlagIndex - 1));
-                // }
-                // else
-                // {
-                //     /* eslint-disable-next-line @stylistic/max-len */
-                //     /* The macro argument vector does not specify any flags, but specifies function arguments. */
-                //     FunctionArgumentVector.push(...MacroArgumentVector.slice(2 + Flags.length));
-                // }
 
-                // console.log(`FunctionArgumentVector is ${ FunctionArgumentVector.join(", ") }.`);
                 FunctionArgumentVector.forEach((FunctionArgumentPart: string, Index: number): void =>
                 {
                     if (Index % 2 === 1)
@@ -350,8 +332,6 @@ const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<F
 
                     const Name: string = FunctionArgumentPart;
                     const Type: string = FunctionArgumentVector[Index + 1];
-
-                    // console.log(`ARG: ${ Name } ${ Type } of ${ Name }.`);
 
                     Arguments.push({
                         Name,
@@ -660,7 +640,7 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
     const HookDefinitions: Array<FHookDefinition> =
         RegisteredFunctions.filter((RegisteredFunction: FRegisteredFunction): boolean =>
         {
-            return RegisteredFunction.Flags.map(Flag => Flag.Name).includes("Hook");
+            return RegisteredFunction.Flags.map((Flag: FFlag) => Flag.Name).includes("Hook");
         }).map((RegisteredFunction: FRegisteredFunction): FHookDefinition =>
         {
             const { Arguments, Name, ReturnType } = RegisteredFunction;
@@ -678,7 +658,7 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
             }
 
             const ArgumentVector: string = GetArgumentVector(Arguments);
-            const ArgumentNames: string = Arguments.map(Arg => Arg.Name).join(", ");
+            const ArgumentNames: string = Arguments.map((Arg: FFunctionArgument) => Arg.Name).join(", ");
             const Hook: string = `export const Use${ Name } = (InitialValue: ${ ReturnType }${ Arguments.length > 0 ? ", " : "" }${ ArgumentVector }): Readonly<[ ${ ReturnType } ]> =>
 {
     const [ ReturnValue, SetReturnValue ] = useState<${ ReturnType }>(InitialValue);
@@ -693,7 +673,7 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
                 return Result;
             });
         })();
-    }, [ SetReturnValue, window.electron.${ GetExportName(RegisteredFunction) }, ${ Arguments.map(Arg => Arg.Name).join(", ") } ]);
+    }, [ SetReturnValue, window.electron.${ GetExportName(RegisteredFunction) }, ${ Arguments.map((Arg: FFunctionArgument) => Arg.Name).join(", ") } ]);
 
     return [ ReturnValue ] as const;
 };`;
@@ -705,12 +685,12 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
 
         });
 
-    const ImportedTypes: Array<string> = Array.from(new Set<string>(HookDefinitions.map(Def => Def.ImportedTypes).flat()));
+    const ImportedTypes: Array<string> = Array.from(new Set<string>(HookDefinitions.map((Def: FHookDefinition) => Def.ImportedTypes).flat()));
     const SorrellWmImportStatement: string = ImportedTypes.length > 0
         ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrellwm/windows";`
         : "";
     const ImportStatements: string = `import { useEffect, useState } from "react";\n${ SorrellWmImportStatement }\n\n`;
-    const HookDefinitionsString: string = HookDefinitions.map(Def => Def.Hook).join("\n\n");
+    const HookDefinitionsString: string = HookDefinitions.map((Def: FHookDefinition) => Def.Hook).join("\n\n");
 
     const HookModuleContents: string = FileHeader + ImportStatements + HookDefinitionsString;
 

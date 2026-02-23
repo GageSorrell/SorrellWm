@@ -115,18 +115,6 @@ module.exports =
             { allowSingleLine: true }
         ],
         curly: [ "error", "all" ],
-        // "header/header":
-        // [
-        //     2,
-        //     "block",
-        //     [
-        //         { pattern: " File:  .*" },
-        //         { pattern: " \\* Author:  .*"},
-        //         { pattern: " \\* License: MIT" },
-        //         { pattern: " " }
-        //     ],
-        //     2
-        // ],
         "no-console": [ "error" ],
         "no-multiple-empty-lines": [ "error", { max: 1, maxBOF: 0, maxEOF: 1 } ],
         "quote-props": [ "error", "as-needed" ],
