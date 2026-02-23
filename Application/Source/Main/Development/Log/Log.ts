@@ -7,16 +7,16 @@
 import type {
     FChalkBackground,
     FChalkForeground,
+    FLogFormatFunction,
     FLogFunction,
     FLogger,
     FLoggerInterim } from "!/Log.Types";
 import type { FLogLevel, FLogOriginInternal } from "Windows";
 import Chalk from "chalk";
-// import { LogSettings } from "!/LoggerSettings";
 import { LogSettings } from "../../../Shared/LoggerSettings";
 import Util from "util";
 
-Chalk.level = 1;
+Chalk.level = 3;
 
 const FormatCategory = (Category: string): string =>
 {
@@ -81,6 +81,14 @@ const FormatLevel = (Level: FLogLevel): string =>
     return Colors[Level](` ${ Level } `);
 };
 
+const DisabledCategoriesAttempted: typeof LogSettings.Category.DisabledCategories =
+{
+    "*": [ ],
+    Backend: [ ],
+    Frontend: [ ],
+    Native: [ ]
+};
+
 const LogInternal = (
     Origin: FLogOriginInternal,
     Category: string,
@@ -88,26 +96,36 @@ const LogInternal = (
     ...Arguments: Array<unknown>
 ): void =>
 {
-    const DisabledCategoriesAttempted: typeof LogSettings.DisabledCategories =
-    {
-        Backend: [ ],
-        Frontend: [ ],
-        Native: [ ]
-    };
 
     if (Origin !== "Meta")
     {
-        const ShouldLogGivenStatements: boolean = !(Category in LogSettings.DisabledCategories);
+        const DisabledCategories: Array<string> =
+        [
+            ...LogSettings.Category.DisabledCategories[Origin],
+            ...LogSettings.Category.DisabledCategories["*"]
+        ];
+
+        const ShouldLogGivenStatements: boolean = !(Category in DisabledCategories);
         if (!ShouldLogGivenStatements)
         {
+            const IsCategoryDisabledUniversally: boolean =
+                Category in LogSettings.Category.DisabledCategories["*"];
+
+            const AttemptedCategories: Array<string> = IsCategoryDisabledUniversally
+                ? [
+                    ...DisabledCategoriesAttempted[Origin],
+                    ...DisabledCategoriesAttempted["*"]
+                ]
+                : DisabledCategoriesAttempted[Origin];
+
             const ShouldLogDisabledCategory: boolean = (
-                LogSettings.LogDisabledCategoryAttempts &&
-                !DisabledCategoriesAttempted[Origin].includes(Category)
+                LogSettings.Category.LogDisabledCategoryAttempts &&
+                !AttemptedCategories.includes(Category)
             );
 
             if (ShouldLogDisabledCategory)
             {
-                DisabledCategoriesAttempted[Origin].push(Category);
+                DisabledCategoriesAttempted[IsCategoryDisabledUniversally ? "*" : Origin].push(Category);
                 LogInternal(
                     "Meta",
                     "Log",
@@ -149,7 +167,7 @@ const LogInternal = (
 
         const OutStatementsBase: string = OutStatementsArray.join("");
 
-        if (LogSettings.LimitStatementLength.Enabled)
+        if (LogSettings.Size.LimitStatementLength.Enabled)
         {
             const PrefixLength: number = OutStatementsArray.slice(0, 4).reduce(
                 (TotalLength: number, Statement: string): number =>
@@ -157,7 +175,7 @@ const LogInternal = (
                     return TotalLength + (Statement?.length ?? 0);
                 }, 0);
 
-            const TotalLength: number = PrefixLength + LogSettings.LimitStatementLength.MaxLength;
+            const TotalLength: number = PrefixLength + LogSettings.Size.LimitStatementLength.MaxLength;
 
             return OutStatementsBase.slice(0, TotalLength);
         }
@@ -187,11 +205,19 @@ export const LogFrontend = (
 /** Use this to create a logger within a given module so that the log category is set for that module. */
 export const GetLogger = (Category: string): FLogger =>
 {
+    const Formatters: Array<FLogFormatFunction> = [ ];
     const MakeLoggerInternal = (Level: FLogLevel): FLogFunction =>
     {
         return (...Statements: Array<unknown>): void =>
         {
-            LogInternal("Backend", Category, Level, ...Statements);
+            const FormattedStatements: Array<unknown> = Formatters.length === 0
+                ? Statements
+                : Formatters.map((Formatter: FLogFormatFunction): unknown =>
+                {
+                    return Statements.map(Formatter);
+                }).flat(20);
+
+            LogInternal("Backend", Category, Level, ...FormattedStatements);
         };
     };
 
@@ -199,6 +225,7 @@ export const GetLogger = (Category: string): FLogger =>
     Logger.Error = MakeLoggerInternal("Error");
     Logger.Verbose = MakeLoggerInternal("Verbose");
     Logger.Warn = MakeLoggerInternal("Warn");
+    Logger.Formatters = Formatters;
 
     return Logger as FLogger;
 };

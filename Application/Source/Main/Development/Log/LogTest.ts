@@ -7,9 +7,8 @@
 /* eslint-disable sort-keys, @typescript-eslint/no-unused-vars */
 
 import type { FLogger } from "!/Log.Types";
-import { GetLogger } from "./Log";
-// import { Format } from "./LogUtility.Old";
 import { Format } from "./LogUtility";
+import { GetLogger } from "./Log";
 
 const Log: FLogger = GetLogger("Log");
 

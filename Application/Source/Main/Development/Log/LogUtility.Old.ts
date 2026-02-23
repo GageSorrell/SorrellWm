@@ -198,7 +198,7 @@ function FormatNumber({ Depth, Value }: TLogPrimitive<bigint> | TLogPrimitive<nu
     };
 }
 
-const Indent = (Depth: number): string => " ".repeat(LogSettings.TabWidth).repeat(Depth);
+const Indent = (Depth: number): string => " ".repeat(LogSettings.Size.TabWidth).repeat(Depth);
 
 const FormatArray = (LogObject: TLogPrimitive<object>): Array<FLogString> =>
 {
@@ -328,12 +328,12 @@ const ShouldObjectInline = (InsideStrings: Array<FLogString>): boolean =>
     const BracesLength: number = 4;
 
     const TotalWidth: number =
-        Depth * LogSettings.TabWidth +
+        Depth * LogSettings.Size.TabWidth +
         LogStringsLength +
         SpacesWidth +
         BracesLength;
 
-    return TotalWidth <= LogSettings.MaxTerminalWidth;
+    return TotalWidth <= LogSettings.Size.MaxTerminalWidth;
 };
 
 const FormatRecord = (LogObject: TLogPrimitive<object>): Array<FLogString> =>
@@ -721,7 +721,7 @@ const Stringify = (In: unknown, Depth: number = 1): string =>
     }
     else
     {
-        const Indent: string = " ".repeat(LogSettings.TabWidth * Depth);
+        const Indent: string = " ".repeat(LogSettings.Size.TabWidth * Depth);
         const IndentedString: string = BaseString.replaceAll("\n", "\n" + Indent);
         return IndentedString;
     }
@@ -826,20 +826,11 @@ const ValueFormatters: FValueFormatter =
 
 export const LogFormat = (Title: string, Value: unknown): string =>
 {
-    // let LogMapString: string = "";
-    // (Value as Map<PropertyKey, unknown>).forEach((Value: unknown, Key: PropertyKey): void =>
-    // {
-    //     LogMapString += `{ ${ StylePropertyKey(Key) }, ${ JSON.stringify(Value) } }`;
-    // });
-    // console.log(`LogFormat: Value is\n${ LogMapString }`);
-
     const FormattedValue: string = FormatValue({ Depth: 0, Value }).String;
-
-    // console.log(`MaxTerminalWidth: ${ LogSettings.MaxTerminalWidth }.`);
 
     const PutValueOnNewLine: boolean = (
         typeof Value === "object" && (
-            FormattedValue.length <= LogSettings.MaxTerminalWidth ||
+            FormattedValue.length <= LogSettings.Size.MaxTerminalWidth ||
             FormattedValue.includes("\n")
         )
     );

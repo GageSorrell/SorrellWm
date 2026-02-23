@@ -25,9 +25,10 @@ import type {
     TLogContainer,
     TLogPrimitive,
     TLogValue } from "./LogUtility.Types";
+import type { FLogDigitSeparator, FLogQuoteStyle } from "!/Log.Types";
 import Chalk from "chalk";
-import { LogSettings } from "../../../Shared/LoggerSettings";
 import { Identity } from "@/Utility";
+import { LogSettings } from "../../../Shared/LoggerSettings";
 
 Chalk.level = 3;
 
@@ -48,21 +49,30 @@ const GetLength = (In: string): number =>
 
 const StyleString = (In: string): string =>
 {
-    return LogSettings.Colors
-        ? Chalk.hex("#CA5010")(`"${ In }"`)
-        : `"${ In }"`;
+    const Style: Record<FLogQuoteStyle, string> =
+    {
+        Double: `"${ In }"`,
+        None: In,
+        Single: `'${ In }'`
+    };
+
+    const BaseString: string = Style[LogSettings.Format.QuoteStyle];
+
+    return LogSettings.Format.Colors
+        ? Chalk.hex("#CA5010")(BaseString)
+        : BaseString;
 };
 
 const StyleSymbol = (In: symbol): string =>
 {
-    return LogSettings.Colors
+    return LogSettings.Format.Colors
         ? Chalk.hex("#00B7C3")(In.toString())
         : In.toString();
 };
 
 const StyleNumber = (In: bigint | number): string =>
 {
-    return LogSettings.Colors
+    return LogSettings.Format.Colors
         ? Chalk.green(FormatDigits(In))
         : FormatDigits(In);
 };
@@ -190,13 +200,13 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
         const ShouldInline = (ContainerLogStrings: FLogStringArray): boolean =>
         {
             const TotalWidth: number =
-                ContainerLogStrings[0].Depth * LogSettings.TabWidth +
+                ContainerLogStrings[0].Depth * LogSettings.Size.TabWidth +
                 ContainerLogStrings.reduce((Accumulator: number, CurrentValue: FLogString): number =>
                 {
                     return Accumulator + GetLength(CurrentValue.String);
                 }, 0);
 
-            return TotalWidth <= LogSettings.MaxTerminalWidth;
+            return TotalWidth <= LogSettings.Size.MaxTerminalWidth;
         };
 
         const InnermostContainer: FGetInnermostContainerReturnType = GetInnermostContainer(LogStrings);
@@ -238,6 +248,16 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
 
 const FormatDigits = (Value: number | bigint): string =>
 {
+    const Separators: Record<FLogDigitSeparator, string> =
+    {
+        Comma: ",",
+        None: "",
+        Space: " ",
+        Underscore: "_"
+    };
+
+    const Separator: string = Separators[LogSettings.Format.DigitSeparator];
+
     const GroupIntegralDigits = (IntegralDigits: string): string =>
     {
         if (IntegralDigits.length <= 3)
@@ -245,7 +265,7 @@ const FormatDigits = (Value: number | bigint): string =>
             return IntegralDigits;
         }
 
-        const Groups: Array<string> = [];
+        const Groups: Array<string> = [ ];
         for (let Index: number = IntegralDigits.length; Index > 0; Index -= 3)
         {
             const StartIndex: number = Math.max(0, Index - 3);
@@ -253,7 +273,7 @@ const FormatDigits = (Value: number | bigint): string =>
         }
 
         Groups.reverse();
-        return Groups.join(" ");
+        return Groups.join(Separator);
     };
 
     const GroupFractionalDigits = (FractionalDigits: string): string =>
@@ -269,7 +289,7 @@ const FormatDigits = (Value: number | bigint): string =>
             Groups.push(FractionalDigits.slice(Index, Index + 3));
         }
 
-        return Groups.join(" ");
+        return Groups.join(Separator);
     };
 
     const ConvertScientificNotationToPlainDecimal = (NumberText: string): string =>
@@ -369,7 +389,7 @@ const FormatNull = ({ Depth }: TLogPrimitive<null>): Array<FLogString> =>
 {
     return [ {
         Depth,
-        String: LogSettings.Colors ? Chalk.yellow("null") : "null"
+        String: LogSettings.Format.Colors ? Chalk.yellow("null") : "null"
     } ];
 };
 
@@ -377,7 +397,7 @@ const FormatUndefined = ({ Depth }: TLogPrimitive<undefined>): FLogString =>
 {
     return {
         Depth,
-        String: LogSettings.Colors ? Chalk.gray("undefined") : "undefined"
+        String: LogSettings.Format.Colors ? Chalk.gray("undefined") : "undefined"
     };
 };
 
@@ -392,7 +412,7 @@ const FormatFunction = ({ Depth }: TLogPrimitive<Function>): FLogString =>
 const FormatBoolean = ({ Depth, Value }: TLogPrimitive<boolean>): FLogString =>
 {
     const StringBase: string = Value ? "true" : "false";
-    const StyleFunction: Function = LogSettings.Colors
+    const StyleFunction: Function = LogSettings.Format.Colors
         ? (Value ? Chalk.blue : Chalk.red)
         : Identity;
 
@@ -610,7 +630,7 @@ export const Format = (Value: FLogValueType): string =>
                 }
             }
 
-            return " ".repeat(LogSettings.TabWidth * Depth) + String;
+            return " ".repeat(LogSettings.Size.TabWidth * Depth) + String;
         })
         .join("\n");
 

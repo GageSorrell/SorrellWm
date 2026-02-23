@@ -4,42 +4,21 @@
  * License:   MIT
  */
 
-import { type FLogFunction, type FLogger, GetLogger } from "#/Development";
+import { type FLogger, GetLogger } from "#/Development";
 
-const LogBase: FLogger = GetLogger("Tree");
-
-/**
- * Intercept log statements, and abbreviate/format some data
- * specific to the `Tree` collection of modules.
- */
-const FormatTreeLogStatements: FLogFunction = (...Statements: Array<unknown>): void =>
+const TreeLogger: FLogger = GetLogger("Tree");
+TreeLogger.Formatters.push((Statement: unknown): unknown =>
 {
-    LogBase(Statements.map((Statement: unknown): unknown =>
+    if (typeof Statement === "object" && Statement !== null && "Screenshot" in Statement)
     {
-        /* Quick-and-dirty check to see if the object is an `FAnnotatedPanel` *
-         * whose `Screenshot` property is not `undefined`.                    */
-        const HasScreenshotProperty: boolean = (
-            typeof Statement === "object" &&
-            Statement !== null &&
-            "Screenshot" in Statement
-        );
-
-        if (HasScreenshotProperty)
-        {
-            const { Screenshot: _, ...RemainingStatement } = Statement as Record<string, unknown>;
-            return RemainingStatement;
-        }
-        else
-        {
-            return Statement;
-        }
-    }));
-};
-
-const LogInterim: FLogger = LogBase as FLogger;
-LogInterim.Error   = (...Statements: Array<unknown>) => LogBase.Error(  FormatTreeLogStatements(Statements));
-LogInterim.Verbose = (...Statements: Array<unknown>) => LogBase.Verbose(FormatTreeLogStatements(Statements));
-LogInterim.Warn    = (...Statements: Array<unknown>) => LogBase.Warn(   FormatTreeLogStatements(Statements));
+        const { Screenshot: _, ...Out } = Statement;
+        return Out;
+    }
+    else
+    {
+        return Statement;
+    }
+});
 
 /**
  * Log statements for the `Tree` collection of modules.
@@ -48,4 +27,4 @@ LogInterim.Warn    = (...Statements: Array<unknown>) => LogBase.Warn(   FormatTr
  * consistent with how the logger is typically retrieved
  * (retrieved at the top of each module).
  */
-export const GetTreeLogger: (() => FLogger) = (): FLogger => LogInterim;
+export const GetTreeLogger: (() => FLogger) = (): FLogger => TreeLogger;

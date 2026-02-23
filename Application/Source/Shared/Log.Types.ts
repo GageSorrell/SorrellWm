@@ -13,22 +13,52 @@ export type FChalkForeground = Extract<keyof typeof chalk, "black" | "whiteBrigh
 
 export type FLogFunction = (...Statements: Array<unknown>) => void;
 
-export type FLoggerRecord = Record<Exclude<FLogLevel, "Normal">, FLogFunction>;
+export type FLogFormatFunction = (Statement: unknown) => unknown;
+
+export type FLoggerRecord =
+    Record<Exclude<FLogLevel, "Normal">, FLogFunction> &
+    {
+        Formatters: Array<FLogFormatFunction>;
+    };
+
+export type FLogOriginExtended = FLogOrigin | "*";
+
+export type FLogDigitSeparator =
+    | "Space"
+    | "Comma"
+    | "Underscore"
+    | "None";
+
+export type FLogQuoteStyle =
+    | "Double"
+    | "Single"
+    | "None";
 
 export type FLogSettings = Readonly<{
-    Colors: boolean;
-    DisabledCategories:
+    Category:
     {
-        [ LogOrigin in FLogOrigin ]: Array<string>;
+        DisabledCategories:
+        {
+            [ LogOrigin in FLogOriginExtended ]: Array<string>;
+        };
+        LogDisabledCategoryAttempts: boolean;
     };
-    LogDisabledCategoryAttempts: boolean;
-    LimitStatementLength:
+    Format:
     {
-        Enabled: boolean;
-        MaxLength: number;
+        Colors: boolean;
+        DigitSeparator: FLogDigitSeparator;
+        QuoteStyle: FLogQuoteStyle;
     };
-    MaxTerminalWidth: number;
-    TabWidth: number;
+    Size:
+    {
+        LimitStatementLength:
+        {
+            Enabled: boolean;
+            MaxLength: number;
+        };
+        MaxTerminalWidth: number;
+        TabWidth: number;
+    };
 }>;
 
 export type FLogger = FLoggerRecord & FLogFunction;

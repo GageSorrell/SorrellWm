@@ -8,22 +8,34 @@ import type { FLogSettings } from "./Log.Types";
 
 export const LogSettings: FLogSettings =
 {
-    Colors: true,
-    DisabledCategories:
+    Category:
     {
-        Backend: [ ],
-        Frontend:
-        [
-            "Event"
-        ],
-        Native: [ ]
+        DisabledCategories:
+        {
+            "*": [ ],
+            Backend: [ ],
+            Frontend:
+            [
+                "Event"
+            ],
+            Native: [ ]
+        },
+        LogDisabledCategoryAttempts: true
     },
-    LimitStatementLength:
+    Format:
     {
-        Enabled: false,
-        MaxLength: 256
+        Colors: true,
+        DigitSeparator: "Space",
+        QuoteStyle: "Double"
     },
-    LogDisabledCategoryAttempts: true,
-    MaxTerminalWidth: 60,
-    TabWidth: 4
+    Size:
+    {
+        LimitStatementLength:
+        {
+            Enabled: false,
+            MaxLength: 256
+        },
+        MaxTerminalWidth: 60,
+        TabWidth: 4
+    }
 } as const;

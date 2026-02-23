@@ -9,7 +9,7 @@ import { type BrowserWindow, ipcMain } from "electron";
 import type { FPanel, FVertex } from "#/Tree/Tree.Types";
 import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "Windows";
 import { CreateBrowserWindow } from "#/BrowserWindow.Old";
-import { ForAsync, Sleep } from "#/Utility";
+import { Sleep } from "#/Utility";
 import { spawn } from "child_process";
 
 const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
