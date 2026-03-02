@@ -8,7 +8,8 @@ import type { PCommandBottomShelf } from "./CommandBottomShelf.Types";
 import type { PMainCommands } from "./MainCommands.Types";
 import type { ReactElement } from "react";
 
-export type PCommandContainer =
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
+export type PCommandContainer_DEPRECATED =
 {
     children: [ ReactElement<PMainCommands>, ReactElement<PCommandBottomShelf> ];
 };

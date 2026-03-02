@@ -4,6 +4,10 @@
  * License:   MIT
  */
 
+import type { FBox } from "Windows";
+import type { FSimpleCallback } from "../../Shared/Utility";
+import type { RefObject } from "react";
+
 export type FUseEffectCallback =
     | (() => void)
     | (() => (() => void));
@@ -15,3 +19,7 @@ export type FUseEffectAsyncCallback =
 export type FUseEffectAsyncCleanupFunction =
     | ((AbortSignal: AbortSignal) => void)
     | (() => void);
+
+export type FMakeNavigateFunction = (Route: string) => FSimpleCallback;
+
+export type TUseDomRectReturnValue<T extends HTMLElement> = Readonly<[ Box: FBox, Ref: RefObject<T> ]>;

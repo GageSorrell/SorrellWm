@@ -5,7 +5,10 @@
  */
 
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import type { FNavigateRequest } from "!/Event/Navigate.Types";
+import type { TEventCallback } from "../../Shared/Event";
+import { UseIpcEvent } from "@/Event";
 
 export const UseIpcNavigatorState = (): Readonly<[ State: unknown ]> =>
 {
@@ -16,30 +19,34 @@ export const UseIpcNavigatorState = (): Readonly<[ State: unknown ]> =>
 export const IpcNavigator = (): undefined =>
 {
     const Navigator: NavigateFunction = useNavigate();
+    type FOnNavigateCallback = (In: FNavigateRequest) => ReturnType<TEventCallback<"Navigate">>;
+    const OnNavigate: FOnNavigateCallback = useCallback(
+        async ({ Route, State }: FNavigateRequest): ReturnType<TEventCallback<"Navigate">> =>
+        {
+            const HasState: boolean = (
+                State !== undefined &&
+                typeof State === "object" &&
+                State !== null
+            );
+
+            if (HasState)
+            {
+                Navigator(Route, { state: State });
+            }
+            else
+            {
+                Navigator(Route);
+            }
+
+            return { Data: undefined, Error: undefined };
+        },
+        [ Navigator ]
+    );
+
+    UseIpcEvent("Navigate", OnNavigate);
+
     useEffect((): void =>
     {
-        window.electron.ipcRenderer.On("Navigate", (...Arguments: Array<unknown>): void =>
-        {
-            const HasRoute: boolean = Arguments.length > 0 && typeof Arguments[0] === "string";
-            if (HasRoute)
-            {
-                const Route: string = Arguments[0] as string;
-
-                const HasState: boolean =
-                    Arguments.length >= 2 &&
-                    typeof Arguments[1] === "object" &&
-                    Arguments[1] !== null;
-                if (HasState)
-                {
-                    Navigator(Route, { state: Arguments[1] });
-                }
-                else
-                {
-                    Navigator(Route);
-                }
-            }
-        });
-
         window.electron.ipcRenderer.Send("ReadyForRoute");
     }, [ Navigator ]);
 

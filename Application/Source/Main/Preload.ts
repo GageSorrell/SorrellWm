@@ -6,8 +6,6 @@
 /* eslint-disable */
 
 import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
-import { HWindow,FHexColor } from "@sorrellwm/windows";
-
 
 const ElectronHandler =
 {
@@ -15,37 +13,92 @@ const ElectronHandler =
     {
         On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
         {
-            const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
+            type FRecord = Record<PropertyKey, unknown>;
+            const Clone = (In: unknown): unknown =>
             {
-                return Listener(...args);
+                const IsRecord = (In: unknown): In is FRecord =>
+                {
+                    return typeof In === "object" && In !== null && !Array.isArray(In);
+                };
+
+                if (IsRecord(In))
+                {
+                    const OutRecord: FRecord = { };
+                    Object.keys(In).forEach((Key: PropertyKey): void =>
+                    {
+                        OutRecord[Key] = Clone(In[Key]);
+                    });
+                    return OutRecord;
+                }
+                else if (Array.isArray(In))
+                {
+                    return In.map(Clone);
+                }
+                else if (typeof In === "symbol")
+                {
+                    return In.toString();
+                }
+                else if (typeof In === "function")
+                {
+                    return "[ Function ]";
+                }
+                else // typeof In extends string | number | null | undefined | boolean;
+                {
+                    return In;
+                }
             };
 
-            ipcRenderer.on(Channel, subscription);
-
-            return () =>
+            try
             {
-                ipcRenderer.removeListener(Channel, subscription);
+                ipcRenderer.on(Channel, Listener);
+            }
+            catch (Error: unknown)
+            {
+                console.log("Error: ", Error);
+            }
+
+            return (): void =>
+            {
+                try
+                {
+                    ipcRenderer.removeListener(Channel, Listener);
+                }
+                catch (Error: unknown)
+                {
+                    console.log("Error: ", Error);
+                }
             };
         },
-        Once(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        Once(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
             ipcRenderer.once(
                 Channel,
-                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => Listener(..._Arguments)
+                (_Event: Electron.Event, ...ArgumentVector: Array<unknown>) => Listener(...ArgumentVector)
             );
         },
-        RemoveListener(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        RemoveListener(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
-            ipcRenderer.removeListener(Channel, Listener);
+            try
+            {
+                ipcRenderer.removeListener(Channel, Listener);
+            }
+            catch (Error: unknown)
+            {
+                console.log("Error in RemoveListener: ", Error);
+            }
         },
-        Send(Channel: string, ...Arguments: Array<unknown>)
+        Send(Channel: string, ...ArgumentVector: Array<unknown>)
         {
-            ipcRenderer.send(Channel, ...Arguments);
+            try
+            {
+                ipcRenderer.send(Channel, ...ArgumentVector);
+            }
+            catch (Error: unknown)
+            {
+                console.log("Error in Send: ", Error, Channel, ArgumentVector);
+            }
         }
-    },
-            GetFocusedWindow: async (): Promise<HWindow> => ipcRenderer.invoke("GetFocusedWindow"),
-        GetIsLightMode: async (): Promise<boolean> => ipcRenderer.invoke("GetIsLightMode"),
-        GetThemeColor: async (): Promise<FHexColor> => ipcRenderer.invoke("GetThemeColor")
+    }
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);

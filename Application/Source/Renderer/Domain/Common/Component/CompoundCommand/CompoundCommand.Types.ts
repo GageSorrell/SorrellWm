@@ -4,12 +4,6 @@
  * License:   MIT
  */
 
-import type { PCommand } from "../Command_Old";
+import type { FCompoundCommand } from "../Command";
 
-export type FSubCommand = Omit<PCommand, "Title">;
-
-export type PCompoundCommand =
-{
-    SubCommands: Array<FSubCommand>;
-    Title: string;
-};
+export type PCompoundCommand = FCompoundCommand;

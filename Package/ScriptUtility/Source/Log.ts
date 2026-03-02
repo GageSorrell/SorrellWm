@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/* eslint-disable no-console */
+
 import Chalk from "chalk";
 
 /** Format text to represent code when logged in the terminal. */

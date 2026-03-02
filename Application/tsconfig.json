@@ -39,7 +39,6 @@
     "include":
     [
         "Configuration",
-        "Script",
         "Source"
     ],
     "exclude":

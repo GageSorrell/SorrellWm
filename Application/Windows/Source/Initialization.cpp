@@ -16,6 +16,7 @@
 #include "Core/Hook.h"
 #include "Core/WindowUtilities.h"
 #include "Core/MonitorUtilities.h"
+#include "Development/Miscellaneous.h"
 #include "Keyboard.h"
 #include "MessageLoop/MessageLoop.h"
 #include "Core/Globals.h"
@@ -30,10 +31,13 @@
 #include "BlurBackground.h"
 #include "Screenshot.h"
 #include "Core/WindowUtilities.h"
-#include "Development/Miscellaneous.h"
 
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
-/* END AUTO-GENERATED REGION. */
+/* END AUTO-GENERATED REGION.             */
+
+// @TODO TEMPORARY
+#include "Core/DevSettings.h"
+
 
 Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
 {
@@ -123,6 +127,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "RestoreWindow", RestoreWindow },
         { "MinimizeWindow", MinimizeWindow },
         { "CloseApplication", CloseApplication },
+        { "StealFocus", StealFocusNode },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },

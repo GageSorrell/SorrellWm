@@ -29,21 +29,26 @@ import {
     GetMonitorFromWindow,
     GetThemeColor,
     GetTileableWindows,
+    GetWindowByName,
     GetWindowTitle,
     type HMonitor,
     type HWindow,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
-import { type BrowserWindow, app, ipcMain, screen } from "electron";
+import { type BrowserWindow, type BrowserWindowConstructorOptions, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
 import type { FFocusData, FFocusDataBase } from "!/Event/Focus.Types";
 import type { FIpcChannel, TEventCallback } from "!/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
-import { PoorEventSuccess, RegisterIpcCallback } from "./Event";
+import { PoorEventSuccess, RegisterIpcCallback, SendIpcEvent } from "./Event";
+import { DefaultSettings } from "../Shared/Settings";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
+import type { FDevSettings } from "./DevSettings.Types";
 import type { FInsertableWindowData } from "!/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
+import type { FNavigateRequest } from "!/Event/Navigate.Types";
 import type { FVirtualKey } from "!/Keyboard.Types";
+import { GetDevSettings } from "./DevSettings";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
 import { Vk } from "$/Common/Component/Keyboard";
@@ -60,7 +65,12 @@ const BlurBackground = (Bounds: FBox): void =>
 
     if (SourceHandle !== undefined)
     {
-        BlurBackgroundNative(Bounds, SourceHandle);
+        const DevSettings: FDevSettings = GetDevSettings();
+        const OutBounds: FBox = DevSettings.StaticMode.Enabled
+            ? DevSettings.StaticMode.WindowShape
+            : Bounds;
+
+        BlurBackgroundNative(OutBounds, SourceHandle);
     }
     else
     {
@@ -165,13 +175,17 @@ const MainBrowserElectronEvents: FBrowserWindowElectronEvents =
 {
     show: async (_Event: Electron.Event, _IsAlwaysOnTop: boolean): Promise<void> =>
     {
-        MainWindow?.webContents.send("Navigate", "Main");
+        // if (MainWindow)
+        // {
+        //     SendIpcEvent(MainWindow, "Navigate", { Route: "Main", State: { IsTiled: false } });
+        // }
     }
 };
 
 const LaunchMainWindow = async (): Promise<void> =>
 {
-    const { Window, LoadFrontend } = await CreateBrowserWindow({
+    const ConstructorOptions: BrowserWindowConstructorOptions =
+    {
         alwaysOnTop: true,
         backgroundMaterial: "acrylic",
         frame: false,
@@ -181,13 +195,17 @@ const LaunchMainWindow = async (): Promise<void> =>
         title: "SorrellWm Main Window",
         titleBarStyle: "hidden",
         transparent: true,
+        webPreferences:
+        {
+            devTools: false
+        },
         width: 900,
         ...GetLeastInvisiblePosition()
-    });
+    };
+
+    const { Window, LoadFrontend } = await CreateBrowserWindow(ConstructorOptions);
 
     MainWindow = Window;
-
-    RegisterBrowserWindowElectronEvents(MainWindow, MainBrowserElectronEvents);
 
     On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
@@ -406,7 +424,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         async (): ReturnType<TEventCallback<"GetSettings">> =>
         {
             return {
-                Data: { },
+                Data: { Settings: DefaultSettings },
                 Error: undefined
             };
         }
@@ -418,7 +436,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         async (): ReturnType<TEventCallback<"GetSetting">> =>
         {
             return {
-                Data: { },
+                Data: { Setting: 0 },
                 Error: undefined
             };
         }
@@ -475,11 +493,11 @@ const LaunchMainWindow = async (): Promise<void> =>
         BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindow() as HWindow);
     });
 
-    On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
-    {
-        ActiveWindow = undefined;
-        Deactivate();
-    });
+    // On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    // {
+    //     ActiveWindow = undefined;
+    //     Deactivate();
+    // });
 
     On("GetInsertableWindowData", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
@@ -534,6 +552,17 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     LoadFrontend();
 
+    setTimeout((): void =>
+    {
+        if (GetDevSettings().StaticMode.Enabled)
+        {
+            Log("DevSettings.StaticMode.Enabled is true: calling Activate()...");
+            Activate();
+        }
+    }, 3000);
+
+    RegisterBrowserWindowElectronEvents(Window, MainBrowserElectronEvents);
+
     /** @TODO Run this by flag with `npm start`. */
     // CreateTestWindows();
     // CreateNotepadTestWindows(4);
@@ -550,12 +579,25 @@ export const GetActiveWindow = (): HWindow | undefined =>
 /** Show the main window. */
 export const Activate = (): void =>
 {
-    if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window")
+    if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window" && MainWindow)
     {
         ActiveWindow = GetFocusedWindow();
+
         const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
-        MainWindow?.webContents.send("Navigate", "", { IsTiled });
+        const NavigateRequest: FNavigateRequest =
+        {
+            Route: "",
+            State: { IsTiled }
+        };
+
+        // MainWindow?.webContents.closeDevTools();
+
+        SendIpcEvent(MainWindow, "Navigate", NavigateRequest);
         BlurBackground(GetDwmWindowRect(ActiveWindow));
+
+        const MainWindowHandle: HWindow = GetWindowByName("SorrellWm Main Window");
+        Log(MainWindowHandle);
+        // StealFocus(GetWindowByName("SorrellWm Main Window"));
     }
 };
 
@@ -579,7 +621,8 @@ function OnKey(Event: FKeyboardEvent): void
         else
         {
             FinishFocus();
-            Deactivate();
+            // @TODO Uncomment this `Deactivate` call.
+            // Deactivate();
             // setTimeout(KillOrphans, 750);
         }
     }

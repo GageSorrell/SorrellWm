@@ -169,9 +169,9 @@ export type TEventCallback<T extends keyof FIpcEvents> = (
     Response: FIpcEvents[T]["Request"]
 ) => Promise<TGetResponse<FIpcEvents[T]["Response"]>>;
 
-type TIsUnion<Type, TOriginal = Type> =
+type TIsUnion<Type, Original = Type> =
     Type extends unknown
-        ? ([ TOriginal ] extends [ Type ] ? false : true)
+        ? ([ Original ] extends [ Type ] ? false : true)
         : false;
 
 type THasExactlyOneKey<Type> =

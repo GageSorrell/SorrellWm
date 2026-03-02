@@ -4,91 +4,104 @@
  * License:   MIT
  */
 
-import {
-    Command,
-    CommandBottomShelf,
-    CommandContainer,
-    MainCommands } from "$/Common/Component";
-import { type NavigateFunction, useNavigate } from "react-router-dom";
+import { CommandContainer, type FCommand } from "$/Common/Component";
 import { type ReactElement, useEffect } from "react";
 import { Action } from "@/Action";
-import type { FLogger } from "!/Log.Types";
+import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
+import { UseNavigator } from "@/Utility";
 
 const Log: FLogger = GetLogger("Activation");
 
 const ActivationTiled = (): ReactElement =>
 {
-    const Navigator: NavigateFunction = useNavigate();
+    const [ Navigate ] = UseNavigator();
+
+    const Commands: Array<FCommand> =
+    [
+        {
+            Callback: Navigate("/Focus"),
+            Description: "@TODO",
+            Keybind: [ "Direction.Left" ],
+            Name: "Focus"
+        },
+        {
+            Callback: Navigate("/Insert"),
+            Description: "@TODO",
+            Keybind: [ "Direction.Up" ],
+            Name: "Insert"
+        },
+        {
+            Callback: Navigate("/Move"),
+            Description: "@TODO",
+            Keybind:  [ "Direction.Down" ],
+            Name: "Move"
+        },
+        {
+            Callback: Navigate("/Resize"),
+            Description: "@TODO",
+            Keybind: [ "Direction.Right" ],
+            Name: "Resize"
+        }
+    ];
+
+    const BottomShelfCommands: Array<FCommand> =
+    [
+        {
+            Callback: () => Log("Settings was selected."),
+            Description: "@TODO",
+            Keybind: [ "Miscellaneous.Settings" ],
+            Name: "Settings"
+        }
+    ];
 
     return (
-        <CommandContainer>
-            <MainCommands>
-                <Command
-                    Action={ () => Navigator("/Focus") }
-                    Key="D"
-                    Title="Focus"
-                />
-                <Command
-                    Action={ () => Navigator("/Insert") }
-                    Key="H"
-                    Title="Insert"
-                />
-                <Command
-                    Action={ () => Navigator("/Move") }
-                    Key="T"
-                    Title="Move"
-                />
-                <Command
-                    Action={ () => Navigator("/Resize") }
-                    Key="N"
-                    Title="Resize"
-                />
-            </MainCommands>
-            <CommandBottomShelf>
-                <Command
-                    Action={ () => Log("Settings was selected.") }
-                    Key="Z"
-                    Title="Settings"
-                />
-            </CommandBottomShelf>
-        </CommandContainer>
+        <CommandContainer { ...{ BottomShelfCommands, Commands } } />
     );
 };
 
 const ActivationNotTiled = (): ReactElement =>
 {
-    const Navigator: NavigateFunction = useNavigate();
+    const [ Navigate ] = UseNavigator();
+
+    Log("ActivationNotTiled.");
+
+    const Commands: Array<FCommand> =
+    [
+        {
+            Callback: Navigate("/Tile"),
+            Description: "@TODO",
+            Keybind: [ "Direction.Up" ],
+            Name: "Tile (Bring into Panel)"
+        },
+        {
+            Callback: Navigate("/Move"),
+            Description: "@TODO",
+            Keybind: [ "Direction.Down" ],
+            Name: "Move"
+        },
+        {
+            Callback: Navigate("/Resize"),
+            Description: "@TODO",
+            Keybind: [ "Direction.Right" ],
+            Name: "Resize"
+        }
+    ];
+
+    const BottomShelfCommands: Array<FCommand> =
+    [
+        {
+            Callback: () => Log("Peek was selected."),
+            Description: "@TODO",
+            Keybind: [ "Miscellaneous.Peek" ],
+            Name: "Peek"
+        }
+    ];
 
     return (
         <Action>
-            <CommandContainer>
-                <MainCommands>
-                    <Command
-                        Action={ () => Navigator("/Tile") }
-                        Key="H"
-                        Title="Tile (Bring into Panel)"
-                    />
-                    <Command
-                        Action={ () => Navigator("/Move") }
-                        Key="T"
-                        Title="Move"
-                    />
-                    <Command
-                        Action={ () => Navigator("/Resize") }
-                        Key="N"
-                        Title="Resize"
-                    />
-                </MainCommands>
-                <CommandBottomShelf>
-                    <Command
-                        Action={ () => Log("Peek was selected.") }
-                        Key="Z"
-                        Title="Peek"
-                    />
-                </CommandBottomShelf>
-            </CommandContainer>
+            <CommandContainer { ...{ BottomShelfCommands, Commands } } />
         </Action>
     );
 };
@@ -96,12 +109,28 @@ const ActivationNotTiled = (): ReactElement =>
 export const Activation = (): ReactElement =>
 {
     const [ State ] = UseIpcNavigatorState();
-    let IsTiled: boolean = false;
 
-    if (State !== null && State !== undefined && typeof State === "object" && "IsTiled" in State)
+    const GetIsTiled = (): boolean =>
     {
-        IsTiled = State.IsTiled as boolean;
-    }
+        type FNavigatorState =
+        {
+            IsTiled: boolean;
+        };
+
+        const IsStateValid = (State: unknown): State is FNavigatorState =>
+        {
+            return (
+                State !== null &&
+                State !== undefined &&
+                typeof State === "object" &&
+                "IsTiled" in State
+            );
+        };
+
+        return IsStateValid(State)
+            ? State.IsTiled
+            : true;
+    };
 
     useEffect((): void =>
     {
@@ -136,7 +165,7 @@ export const Activation = (): ReactElement =>
                 SorrellWm
             </div>
             {
-                IsTiled
+                GetIsTiled()
                     ? <ActivationTiled />
                     : <ActivationNotTiled />
             }

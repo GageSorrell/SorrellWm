@@ -10,11 +10,9 @@ export type FUnknownErrorCode =
     | FUnspecifiedErrorCode
     | string;
 
+// #region Frontend
+
 type TEventErrorCode<T extends string> = T | FUnspecifiedErrorCode;
-
-export type FActivateErrorCode = TEventErrorCode<"">;
-
-export type FTearDownErrorCode = TEventErrorCode<"">;
 
 export type FBringIntoPanelErrorCode = TEventErrorCode<"">;
 
@@ -45,6 +43,18 @@ export type FReadyForRouteErrorCode = TEventErrorCode<"">;
 
 export type FRequestTearDownErrorCode = TEventErrorCode<"">;
 
+export type FUpdateSettingErrorCode = TEventErrorCode<"">;
+
 export type FGetSettingsErrorCode = TEventErrorCode<"">;
 
 export type FGetSettingErrorCode = TEventErrorCode<"">;
+
+// #endregion Frontend
+// #region Backend
+
+export type FActivateErrorCode = TEventErrorCode<"">;
+
+export type FNavigateErrorCode = TEventErrorCode<"">;
+
+export type FTearDownErrorCode = TEventErrorCode<"">;
+// #endregion Backend

@@ -10,22 +10,35 @@ import { tokens } from "@fluentui/react-components";
 
 export const CommandBottomShelf = ({ children }: PCommandBottomShelf): ReactElement =>
 {
-    const style: CSSProperties =
+    const RootStyle: CSSProperties =
     {
         alignItems: "center",
         bottom: 0,
         display: "flex",
         flexDirection: "row",
         justifyContent: "center",
-        position: "absolute",
         marginBottom: tokens.spacingVerticalL,
+        position: "absolute",
         width: "100vw"
     };
 
+    const InnerStyle: CSSProperties =
+    {
+        display: "flex",
+        justifyContent: "center",
+        width: 320
+    };
+
+    const InnerInnerStyle: CSSProperties =
+    {
+        display: "flex",
+        justifyContent: "center"
+    };
+
     return (
-        <div { ...{ style } }>
-            <div style={ { width: 320, display: "flex", justifyContent: "center" } }>
-                <div style={ { display: "flex", alignItems: "center" } }>
+        <div style={ RootStyle }>
+            <div style={ InnerStyle }>
+                <div style={ InnerInnerStyle }>
                     { children }
                 </div>
             </div>

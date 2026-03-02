@@ -5,13 +5,13 @@
  */
 
 import { Caption1, Title1 } from "@fluentui/react-components";
-import { Command, GetPanelKey, Panel } from "$/Common";
+import { CommandContainer, type FCommand, GetPanelKey, Panel } from "$/Common";
 import type { FAnnotatedPanel, FAnnotatedPanelScreenshot } from "#/Tree/Tree.Types";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { SendIpcEvent, UseSendIpcEventStrictSingle } from "@/Event";
 import { Action } from "@/Action";
-import { CompoundCommand } from "$/Common";
 import { UseIndex } from "@/Utility/Hook";
+import type { FSimpleCallback } from "!/Utility";
 
 // const Log: FLogger = GetLogger("Tile");
 
@@ -75,7 +75,7 @@ export const Tile = (): ReactElement =>
     //     Log(`Index is now ${ SelectionIndex }.`);
     // }, [ SelectionIndex ]);
 
-    const ConfirmSelection: (() => void) = useCallback((): void =>
+    const ConfirmSelection: FSimpleCallback = useCallback((): void =>
     {
         SendIpcEvent("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
         SendIpcEvent("RequestTearDown", undefined);
@@ -95,6 +95,31 @@ export const Tile = (): ReactElement =>
         });
     }, [ AnnotatedPanels, SelectionIndex ]);
 
+    const Commands: Array<FCommand> =
+    [
+        {
+            Description: "@TODO",
+            Name: "Change Selection (Up / Down)",
+            SubCommands:
+            [
+                {
+                    Callback: DecrementSelectionIndex,
+                    Keybind: [ "Direction.Up" ]
+                },
+                {
+                    Callback: IncrementSelectionIndex,
+                    Keybind: [ "Direction.Down" ]
+                }
+            ]
+        },
+        {
+            Callback: ConfirmSelection,
+            Description: "@TODO",
+            Keybind: [ "Primary[0]" ],
+            Name: "Confirm"
+        }
+    ];
+
     return (
         <Action>
             <Title1>
@@ -109,24 +134,7 @@ export const Tile = (): ReactElement =>
                 flexDirection: "column",
                 justifyContent: "center"
             } }>
-                <CompoundCommand
-                    SubCommands={ [
-                        {
-                            Action: DecrementSelectionIndex,
-                            Key: "H"
-                        },
-                        {
-                            Action: IncrementSelectionIndex,
-                            Key: "T"
-                        }
-                    ] }
-                    Title="Change Selection (Up / Down)"
-                />
-                <Command
-                    Action={ ConfirmSelection }
-                    Key="G"
-                    Title="Confirm"
-                />
+                <CommandContainer { ...{ Commands } } />
             </div>
             { PanelNodes }
         </Action>

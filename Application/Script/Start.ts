@@ -100,12 +100,21 @@ const Shutdown = async (_SignalName: string): Promise<void> =>
         }
     }
 
+    spawn(
+        "npm",
+        [ "run", "kill-electron" ],
+        {
+            shell: true,
+            stdio: [ "ignore", "pipe", "pipe" ]
+        }
+    );
+
     process.exit(0);
 };
 
 const RegisterSignalHandlers = (): void =>
 {
-    process.once("SIGINT", (): Promise<void> => Shutdown("SIGNINT"));
+    process.once("SIGINT", (): Promise<void> => Shutdown("SIGINT"));
     process.once("SIGTERM", (): Promise<void> => Shutdown("SIGTERM"));
 };
 

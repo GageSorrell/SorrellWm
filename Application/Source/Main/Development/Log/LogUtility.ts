@@ -21,12 +21,12 @@ import type {
     FPrimitive,
     FRecord,
     FSetTypeName,
-    FTypeof,
     TLogContainer,
     TLogPrimitive,
     TLogValue } from "./LogUtility.Types";
 import type { FLogDigitSeparator, FLogQuoteStyle } from "!/Log.Types";
 import Chalk from "chalk";
+import type { FTypeof } from "../../../Shared/Utility";
 import { Identity } from "@/Utility";
 import { LogSettings } from "../../../Shared/LoggerSettings";
 
@@ -185,7 +185,7 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
             }
 
             const InnermostContainer: FLogStringArray =
-                InLogStrings.slice(InnermostStartIndex, InnermostStopIndex + 1);
+                InLogStrings.slice(InnermostStartIndex, InnermostStopIndex + 1) as FLogStringArray;
             const StopSubArray: Array<FLogString> = InLogStrings.length >= InnermostStopIndex + 1
                 ? InLogStrings.slice(InnermostStopIndex + 1, undefined)
                 : [ ];
@@ -220,7 +220,7 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
                     Depth: Container[0].Depth,
                     String: Container.map(GetString).join(" ")
                 };
-                return [ ...StartSubArray, Inlined, ...StopSubArray ];
+                return [ ...StartSubArray, Inlined, ...StopSubArray ] as FLogStringArray;
             }
         }
 
@@ -481,7 +481,8 @@ const FormatMap = ({ Depth, Value }: FLogMap): Array<FLogString> =>
         return Out;
     };
 
-    const InnerLogStrings: FLogStringArray = GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20);
+    const InnerLogStrings: FLogStringArray =
+        GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20) as FLogStringArray;
 
     return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
 };
@@ -524,7 +525,8 @@ const FormatRecord = ({ Depth, Value }: FLogRecord): Array<FLogString> =>
         return [ StartDelimiterLogString, KeyLogString, ...ValueLogStrings, StopDelimiterLogString ];
     };
 
-    const InnerLogStrings: FLogStringArray = GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20);
+    const InnerLogStrings: FLogStringArray =
+        GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20) as FLogStringArray;
 
     return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
 };
@@ -556,7 +558,7 @@ const FormatContainer = (
     };
 
     const InnerLogStrings: FLogStringArray =
-        ValueArray.map(MakeLogValue).map(FormatValue).flat(20).map(AppendComma);
+        ValueArray.map(MakeLogValue).map(FormatValue).flat(20).map(AppendComma) as FLogStringArray;
 
     return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
 };

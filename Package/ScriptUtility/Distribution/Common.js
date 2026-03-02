@@ -20,7 +20,7 @@ export const DoTask = async (Task, Description) => {
 };
 const PrintBanner = (ScriptTitle, ScriptDescription) => {
     const TerminalWidth = process.stdout.columns;
-    const Title = "🪟  SorrellWm";
+    const Title = "◱  SorrellWm";
     const Padding = Math.max(0, TerminalWidth - Title.length);
     const PaddingLeftNum = Math.floor(Padding / 2);
     const PaddingRightNum = Math.ceil(Padding / 2);

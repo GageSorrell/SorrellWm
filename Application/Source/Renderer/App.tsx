@@ -5,21 +5,15 @@
 
 import "./App.css";
 
-import { FluentThemeProvider } from "./Utility/Theme";
+import { Providers } from "./Providers";
 import type { ReactNode } from "react";
 import { Routes } from "./Router";
-import { ShortcutProvider } from "@/Keybind";
-import { StoreProvider } from "./Store";
 
 export const App = (): ReactNode =>
 {
     return (
-        <StoreProvider>
-            <ShortcutProvider>
-                <FluentThemeProvider>
-                    <Routes/>
-                </FluentThemeProvider>
-            </ShortcutProvider>
-        </StoreProvider>
+        <Providers>
+            <Routes />
+        </Providers>
     );
 };

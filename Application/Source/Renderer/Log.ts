@@ -1,11 +1,12 @@
-/* File:      Api.ts
+/* File:      Log.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
 
 import type { FLogFunction, FLogger, FLoggerInterim } from "!/Log.Types";
-import type { FLogLevel } from "Windows";
+import type { FRecord, FTypeof } from "../Shared/Utility";
+import type { FLogLevel } from "@sorrellwm/windows";
 
 /** Use this to create a logger within a given module so that the log category is set for that module. */
 export const GetLogger = (Category: string): FLogger =>
@@ -14,7 +15,69 @@ export const GetLogger = (Category: string): FLogger =>
     {
         return (...Statements: Array<unknown>): void =>
         {
-            window.electron.ipcRenderer.Send("Log", Category, Level, ...Statements);
+            const FilteredStatements: Array<unknown> = Statements.map((Statement: unknown): unknown =>
+            {
+                const GetTypeString = (In: unknown): string => `[ ${ typeof In } ]`;
+                const CanSendViaIpc: boolean = (
+                    typeof Statement !== "function" &&
+                    typeof Statement !== "symbol"
+                );
+
+                if (!CanSendViaIpc)
+                {
+                    return GetTypeString(Statement);
+                }
+
+                const PruneByType = (
+                    Container: FRecord | Array<unknown>,
+                    ...Types: Array<FTypeof>
+                ): FRecord | Array<unknown> =>
+                {
+                    type FContainer = FRecord | Array<unknown>;
+                    if (Array.isArray(Container))
+                    {
+                        return Container.map((Element: unknown): unknown =>
+                        {
+                            if (Types.includes(typeof Element))
+                            {
+                                return GetTypeString(Element);
+                            }
+                            else
+                            {
+                                return (typeof Element === "object")
+                                    ? PruneByType(Element as FContainer, ...Types)
+                                    : Element;
+                            }
+                        });
+                    }
+                    else
+                    {
+                        const Out: FRecord = { };
+                        Object.keys(Container).forEach((Key: string): void =>
+                        {
+                            const Property: unknown = Container[Key];
+                            if (!Types.includes(typeof Property))
+                            {
+                                Out[Key] = (typeof Property === "object")
+                                    ? PruneByType(Property as FContainer, ...Types)
+                                    : Property;
+                            }
+                            else
+                            {
+                                Out[Key] = GetTypeString(Property);
+                            }
+                        });
+
+                        return Out as FContainer;
+                    }
+                };
+
+                return (typeof Statement === "object")
+                    ? PruneByType(Statement as FRecord | Array<unknown>)
+                    : Statement;
+            });
+
+            window.electron.ipcRenderer.Send("Log", Category, Level, ...FilteredStatements);
         };
     };
 

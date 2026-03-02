@@ -29,7 +29,7 @@ export const DoTask = async <T>(Task: (() => Promise<T>), Description: string): 
 const PrintBanner = (ScriptTitle: string, ScriptDescription: string): void =>
 {
     const TerminalWidth: number = process.stdout.columns;
-    const Title: string = "🪟  SorrellWm";
+    const Title: string = "◱  SorrellWm";
     const Padding: number = Math.max(0, TerminalWidth - Title.length);
     const PaddingLeftNum: number = Math.floor(Padding / 2);
     const PaddingRightNum: number = Math.ceil(Padding / 2);

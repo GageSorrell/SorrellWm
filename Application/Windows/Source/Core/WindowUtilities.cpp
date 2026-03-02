@@ -726,6 +726,8 @@ void StealFocus(HWND Window)
 
     SendInput(2, pInputs, sizeof(INPUT));
 
+    std::cout << "StealFocus: Window is " << Window << std::endl;
+
     SetForegroundWindow(Window);
 }
 

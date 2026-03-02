@@ -14,32 +14,32 @@ export const DefaultSettings: FSettings =
         Direction:
         {
             /* eslint-disable sort-keys */
-            Left: [ [ "D" ] ],
-            Up: [ [ "H" ] ],
-            Down: [ [ "T" ] ],
-            Right: [ [ "T" ] ]
+            Left: [ "D" ],
+            Up: [ "H" ],
+            Down: [ "T" ],
+            Right: [ "N" ]
             /* eslint-enable sort-keys */
         },
         Miscellaneous:
         {
-            FocusList: [ [ "`" ] ],
-            FocusTextInput: [ [ "Tab" ] ],
-            Peek: [ [ "Z" ] ],
-            Settings: [ [ "+" ] ]
+            FocusList: [ "`" ],
+            FocusTextInput: [ "Tab" ],
+            Peek: [ "Z" ],
+            Settings: [ "+" ]
         },
         Primary:
         {
-            0: [ [ "F" ] ],
-            1: [ [ "G" ] ],
-            2: [ [ "T" ] ],
-            3: [ [ "R" ] ]
+            0: [ "F" ],
+            1: [ "G" ],
+            2: [ "T" ],
+            3: [ "R" ]
         },
         Secondary:
         {
-            0: [ [ "Ctrl", "F" ] ],
-            1: [ [ "Ctrl", "G" ] ],
-            2: [ [ "Ctrl", "T" ] ],
-            3: [ [ "Ctrl", "R" ] ]
+            0: [ "Ctrl", "F" ],
+            1: [ "Ctrl", "G" ],
+            2: [ "Ctrl", "T" ],
+            3: [ "Ctrl", "R" ]
         }
     },
     RunOnStartup: false

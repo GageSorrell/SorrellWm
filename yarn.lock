@@ -443,6 +443,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"CleanRepo@workspace:Script/CleanRepo":
+  version: 0.0.0-use.local
+  resolution: "CleanRepo@workspace:Script/CleanRepo"
+  dependencies:
+    "@types/node": "npm:^22.10.1"
+    ScriptUtility: "npm:1.0.0"
+    chalk: "npm:^5.3.0"
+    concurrently: "npm:^9.1.0"
+    nodemon: "npm:^3.1.7"
+    ora: "npm:^8.1.1"
+    typescript: "npm:^5.7.2"
+  languageName: unknown
+  linkType: soft
+
 "ScriptUtility@npm:1.0.0, ScriptUtility@workspace:Package/ScriptUtility":
   version: 0.0.0-use.local
   resolution: "ScriptUtility@workspace:Package/ScriptUtility"

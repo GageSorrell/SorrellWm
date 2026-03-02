@@ -6,3 +6,11 @@
 
 export * from "./Command";
 export * from "./Command.Types";
+export * from "./CommandBottomShelf";
+export * from "./CommandBottomShelf.Types";
+export * from "./CommandContainer";
+export * from "./CommandContainer.Types";
+export * from "./CommandContainer_DEPRECATED";
+export * from "./CommandContainer_DEPRECATED.Types";
+export * from "./MainCommands";
+export * from "./MainCommands.Types";

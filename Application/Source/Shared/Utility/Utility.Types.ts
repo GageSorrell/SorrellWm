@@ -55,3 +55,44 @@ export type TIntegralRange<
                         : never
                     : never
                 : never;
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+export type FAnyFunction = (...Arguments: any) => any;
+
+export type TRecord<
+    KeyType extends PropertyKey = PropertyKey,
+    PropertyType = unknown
+> =
+    Record<KeyType, PropertyType>;
+
+export type FRecord = TRecord;
+
+export type TRecordNonNullable<RecordType extends FRecord> =
+{
+    [ Key in keyof RecordType ]: NonNullable<RecordType[Key]>;
+};
+
+export type TArrayNonempty<T = unknown> = [ T, ...Array<T> ];
+
+export type TMatrix<T> = Array<Array<T>>;
+export type TSafeMatrix<T> = TArrayNonempty<TArrayNonempty<T>>;
+
+export type TExtractFunction<T> =
+    T extends { (...Arguments: infer ArgumentVectorType): infer ReturnType }
+        ? (...Arguments: ArgumentVectorType) => ReturnType
+        : never;
+
+export type TPromiseThenFunction<T = unknown> =
+    NonNullable<Parameters<TExtractFunction<Promise<T>["then"]>>[0]>;
+export type TPromiseCatchFunction<T = unknown> =
+    NonNullable<Parameters<TExtractFunction<Promise<T>["catch"]>>[0]>;
+
+export type FTypeof =
+    | "object"
+    | "string"
+    | "number"
+    | "bigint"
+    | "boolean"
+    | "function"
+    | "symbol"
+    | "undefined";

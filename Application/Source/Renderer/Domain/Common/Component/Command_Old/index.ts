@@ -4,11 +4,11 @@
  * License:   MIT
  */
 
-export * from "./CommandBottomShelf";
-export * from "./CommandBottomShelf.Types";
+export * from "../Command/CommandBottomShelf";
+export * from "../Command/CommandBottomShelf.Types";
 export * from "./Command";
 export * from "./Command.Types";
-export * from "./MainCommands";
-export * from "./MainCommands.Types";
-export * from "./CommandContainer";
-export * from "./CommandContainer.Types";
+export * from "../Command/MainCommands";
+export * from "../Command/MainCommands.Types";
+export * from "../Command/CommandContainer_DEPRECATED";
+export * from "../Command/CommandContainer_DEPRECATED.Types";

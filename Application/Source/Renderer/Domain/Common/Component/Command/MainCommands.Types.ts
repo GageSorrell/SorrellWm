@@ -1,15 +1,15 @@
-/* File:      CommandBottomShelf.Types.ts
+/* File:      MainCommands.Types.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
 
-import type { PCommand } from "./Command.Types";
+import type { PCommand } from "../Command_Old/Command.Types";
 import type { ReactElement } from "react";
 
-export type PCommandBottomShelf =
+export type PMainCommands =
 {
     children:
         | ReactElement<PCommand>
-        | [ ReactElement<PCommand>, ReactElement<PCommand> ];
+        | Array<ReactElement<PCommand>>;
 };

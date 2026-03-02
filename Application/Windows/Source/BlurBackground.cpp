@@ -1014,13 +1014,15 @@ void SuperimposeBackdrop(FBackdrop* Backdrop)
 {
     ShowWindow(Backdrop->BackdropHandle, SW_SHOWNOACTIVATE);
     UpdateWindow(Backdrop->BackdropHandle);
-    SetWindowPos(Backdrop->BackdropHandle,
+    SetWindowPos(
+        Backdrop->BackdropHandle,
         GetNextWindow(Backdrop->SourceHandle, GW_HWNDPREV),
         0,
         0,
         0,
         0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+    );
 
     SetLayeredWindowAttributes(Backdrop->BackdropHandle, 0, 255, LWA_ALPHA);
 }
@@ -1047,9 +1049,9 @@ void SuperimposeMainWindow(FBackdrop* Backdrop)
 
     if (PositionSet)
     {
-        std::cout
-            << "MainWindow's position was set successfully."
-            << std::endl;
+        // std::cout
+        //     << "MainWindow's position was set successfully."
+        //     << std::endl;
 
         // std::cout
         //     << "MainWindow's position was set successfully.  Its bounds are ("
@@ -1085,15 +1087,15 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     Backdrop->SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
 
-    // const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
-    // if (!CreatedBackdrop)
-    // {
-    //     return Environment.Undefined();
-    // }
+    const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
+    if (!CreatedBackdrop)
+    {
+        return Environment.Undefined();
+    }
 
-    // CaptureWindowScreenshot(Backdrop);
+    CaptureWindowScreenshot(Backdrop);
 
-    // SuperimposeBackdrop(Backdrop);
+    SuperimposeBackdrop(Backdrop);
     SuperimposeMainWindow(Backdrop);
 
     return EncodeHandle(Environment, Backdrop->BackdropHandle);

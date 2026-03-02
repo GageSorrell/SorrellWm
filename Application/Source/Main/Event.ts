@@ -16,7 +16,7 @@ import type {
     TRequest,
     TResponse } from "!/Event";
 import { type FLogger, GetLogger } from "./Development";
-import type { FRejectFunction, TResolveFunction } from "!/Utility/Utility.Types";
+import type { FRejectFunction, TResolveFunction } from "!/Utility";
 
 const Log: FLogger = GetLogger("Event");
 
@@ -72,6 +72,7 @@ export const SendIpcEvent = <T extends FIpcBackendChannel>(
             });
 
             BrowserWindow.webContents.send(Channel, Request);
+            // BrowserWindow.webContents.send(Channel, JSON.stringify(Request));
         });
 };
 

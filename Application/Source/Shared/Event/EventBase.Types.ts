@@ -13,55 +13,46 @@ export type FIpcEventInitiator =
 
 export type FRichResponseData = Record<string, unknown>;
 
-export type TRichResponseSuccess<TResponseData extends FRichResponseData> =
+export type TRichResponseSuccess<ResponseData extends FRichResponseData> =
 {
-    Data: TResponseData;
+    Data: ResponseData;
     Error: undefined;
 };
 
-export type TRichResponseFailure<TErrorCode extends FUnknownErrorCode> =
+export type TRichResponseFailure<ErrorCode extends FUnknownErrorCode> =
 {
     Data: undefined;
-    Error: TErrorCode;
+    Error: ErrorCode;
 };
 
 export type TRichResponseDecl<
-    TResponsePayload extends FRichResponseData,
-    TErrorCode extends FUnknownErrorCode
+    ResponsePayload extends FRichResponseData,
+    ErrorCode extends FUnknownErrorCode
 > =
 {
-    Data: TResponsePayload;
-    Error: TErrorCode;
+    Data: ResponsePayload;
+    Error: ErrorCode;
 };
 
 export type FUnknownRichResponseDecl = TRichResponseDecl<FRichResponseData, FUnknownErrorCode>;
 
 /** "Rich" refers to responses that return data if there is no error. */
 export type TRichResponse<
-    TResponsePayload extends FRichResponseData,
-    TErrorCode extends FUnknownErrorCode
+    ResponsePayload extends FRichResponseData,
+    ErrorCode extends FUnknownErrorCode
 > =
-    | TRichResponseSuccess<TResponsePayload>
-    | TRichResponseFailure<TErrorCode>;
-// export type TRichResponse<TResponsePayload, TErrorString extends string> =
-//     {
-//         Data: TResponsePayload;
-//         Error: undefined;
-//     } |
-//     {
-//         Data: undefined;
-//         Error: TErrorString;
-//     };
+    | TRichResponseSuccess<ResponsePayload>
+    | TRichResponseFailure<ErrorCode>;
 
-export type TPoorResponse<TErrorCode extends FUnknownErrorCode> =
+export type TPoorResponse<ErrorCode extends FUnknownErrorCode> =
 {
     Data: undefined;
-    Error: TErrorCode | undefined;
+    Error: ErrorCode | undefined;
 };
 
-export type TPoorResponseDecl<TErrorCode extends FUnknownErrorCode> =
+export type TPoorResponseDecl<ErrorCode extends FUnknownErrorCode> =
 {
-    Error: TErrorCode;
+    Error: ErrorCode;
 };
 
 export type FNoResponseData = undefined;
@@ -77,29 +68,25 @@ export type FUnknownRichResponse =
     | FUnknownRichResponseSuccess
     | FUnknownRichResponseFailure;
 
-export type TResponseDecl<TResponsePayload extends FResponseData, TErrorCode extends FUnknownErrorCode> =
-    TResponsePayload extends FRichResponseData
-        ? TRichResponseDecl<TResponsePayload, TErrorCode>
-        : TPoorResponseDecl<TErrorCode>;
+export type TResponseDecl<
+    ResponsePayload extends FResponseData,
+    ErrorCode extends FUnknownErrorCode
+> =
+    ResponsePayload extends FRichResponseData
+        ? TRichResponseDecl<ResponsePayload, ErrorCode>
+        : TPoorResponseDecl<ErrorCode>;
 
 export type TIpcEvent<
-    TInitiator extends FIpcEventInitiator,
-    TRequest extends FNotFunction,
-    TResponsePayload extends FResponseData,
-    TErrorString extends string
+    Initiator extends FIpcEventInitiator,
+    Request extends FNotFunction,
+    ResponsePayload extends FResponseData,
+    ErrorString extends string
 > =
 {
-    Initiator: TInitiator;
-    Request: TRequest;
-    Response: TResponseDecl<TResponsePayload, TErrorString>;
+    Initiator: Initiator;
+    Request: Request;
+    Response: TResponseDecl<ResponsePayload, ErrorString>;
 };
-
-// export type FUnknownIpcEvent = TIpcEvent<
-//     FIpcEventInitiator,
-//     FNotFunction,
-//     FResponseData,
-//     FUnknownErrorCode
-// >;
 
 export type FUnknownRichEvent = TIpcEvent<
     FIpcEventInitiator,
@@ -124,25 +111,25 @@ export type TIpcEventsBase<T = Record<string, FUnknownIpcEvent>> = T extends Rec
     : never;
 
 export type TIpcFrontendEvent<
-    TRequest extends FNotFunction = FNotFunction,
-    TResponse extends FResponseData = FResponseData,
-    TErrorString extends string = string> =
+    Request extends FNotFunction = FNotFunction,
+    Response extends FResponseData = FResponseData,
+    ErrorString extends string = string> =
         TIpcEvent<
             "Frontend",
-            TRequest,
-            TResponse,
-            TErrorString
+            Request,
+            Response,
+            ErrorString
         >;
 
-export type TEventName<TEvents extends TIpcEventsBase> = keyof TEvents;
+export type TEventName<Events extends TIpcEventsBase> = keyof Events;
 
 export type TIpcBackendEvent<
-    TRequest extends FNotFunction,
-    TResponse extends FResponseData,
-    TErrorCode extends FUnknownErrorCode> =
+    Request extends FNotFunction,
+    Response extends FResponseData,
+    ErrorCode extends FUnknownErrorCode> =
         TIpcEvent<
             "Backend",
-            TRequest,
-            TResponse,
-            TErrorCode
+            Request,
+            Response,
+            ErrorCode
         >;

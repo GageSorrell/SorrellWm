@@ -4,9 +4,11 @@
  * License:   MIT
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import { type CSSProperties, type EffectCallback, type ReactNode, useEffect } from "react";
 import type { FCommand, FCompoundCommand, FSimpleCommand, PCommand } from "./Command.Types";
-import type { TSimpleFunction } from "!/Utility/Functional.Types";
+import type { TSimpleFunction } from "../../../../../Shared/Utility/Functional.Types";
+import { Title3 } from "@fluentui/react-components";
+import { UseShortcut } from "@/Keybind";
 
 export const AreCommandsEqual = (A: FCommand, B: FCommand): boolean =>
 {
@@ -15,7 +17,7 @@ export const AreCommandsEqual = (A: FCommand, B: FCommand): boolean =>
 
 export const IsCommandSimple = (In: FCommand): In is FSimpleCommand =>
 {
-    return "Keybinds" in In;
+    return !("SubCommands" in In);
 };
 
 export const SwitchOnCommandType = <T,>(
@@ -23,21 +25,37 @@ export const SwitchOnCommandType = <T,>(
     OnSimple: TSimpleFunction<FSimpleCommand, T>,
     OnCompound: TSimpleFunction<FCompoundCommand, T>): T =>
 {
-    return IsCommandSimple(In)
-        ? OnSimple(In)
-        : OnCompound(In);
+    if (IsCommandSimple(In))
+    {
+        return OnSimple(In);
+    }
+    {
+        return OnCompound(In);
+    }
 };
 
-export const Command = (InCommand: PCommand): ReactNode =>
+export const Command = ({ Callback, Keybind, Name  }: PCommand): ReactNode =>
 {
     const RootStyle: CSSProperties =
     {
 
     };
 
+    const { RegisterShortcut, UnregisterShortcut } = UseShortcut();
+    useEffect((): ReturnType<EffectCallback> =>
+    {
+        RegisterShortcut(Callback, Keybind, Name, 0);
+        return (): void =>
+        {
+            UnregisterShortcut(Keybind, false);
+        };
+    }, [ Callback, Keybind, Name, RegisterShortcut, UnregisterShortcut ]);
+
     return (
         <div style={ RootStyle }>
-            { InCommand.Name }
+            <Title3>
+                { Name }
+            </Title3>
         </div>
     );
 };

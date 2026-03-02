@@ -8,14 +8,29 @@
 
 import {
     type Dispatch,
+    type EffectCallback,
     type MutableRefObject,
+    type RefObject,
     type SetStateAction,
+    useCallback,
     useEffect,
+    useLayoutEffect,
     useRef,
     useState } from "react";
-import type { FIpcFrontendChannel, TRequest, TResponse } from "!/Event";
-import type { FUseEffectAsyncCallback, FUseEffectAsyncCleanupFunction } from "./Hook.Types";
-import type { FSimpleCallback } from "!/Utility/Utility.Types";
+import type { FIpcFrontendChannel, TRequest, TResponse } from "../../Shared/Event";
+import type {
+    FMakeNavigateFunction,
+    FUseEffectAsyncCallback,
+    FUseEffectAsyncCleanupFunction,
+    TUseDomRectReturnValue } from "./Hook.Types";
+import {
+    type FSimpleCallback,
+    type TPromiseCatchFunction,
+    type TPromiseThenFunction,
+    ZeroBox } from "../../Shared/Utility";
+import { GetBoxFromDomRect, Identity } from "./Utility";
+import { type NavigateFunction, useNavigate } from "react-router-dom";
+import type { FBox } from "@sorrellwm/windows";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,
@@ -103,7 +118,7 @@ export const UseEffectAsync = (
 {
     const [ Controller ] = useState<AbortController>(new AbortController());
 
-    DependencyArray.push(Function, CleanupFunction, Controller);
+    const OutDependencyArray: Array<unknown> = [ ...DependencyArray, Function, CleanupFunction, Controller ];
 
     useEffect((): void | FSimpleCallback =>
     {
@@ -121,5 +136,121 @@ export const UseEffectAsync = (
 
             return CleanupFunctionWithSignal;
         }
-    }, DependencyArray);
+    }, OutDependencyArray);
+};
+
+/**
+ * Returns a function that, when called with a given route, returns a function that
+ * will navigate to that route when called.  This makes it easier to define callbacks
+ * that are properties of TSX elements.
+ *
+ * That is, with this hook's return value `Navigate`, you can write
+ * ```
+ *     Callback={ Navigate("/My/Route")
+ * ```
+ * instead of
+ * ```
+ *     Callback={ (): void => Navigate("/My/Route") }
+ * ```
+ */
+export const UseNavigator = (): Readonly<[ Navigate: FMakeNavigateFunction ]> =>
+{
+    const Navigator: NavigateFunction = useNavigate();
+
+    const MakeNavigateFunction: FMakeNavigateFunction = useCallback((Route: string): FSimpleCallback =>
+    {
+        return (): void =>
+        {
+            Navigator(Route);
+        };
+    }, [ Navigator ]);
+
+    return [ MakeNavigateFunction ] as const;
+};
+
+/**
+ * Get the bounding box of an `HTMLElement`, using either (1) a given `RefObject`,
+ * or (2) the `RefObject` returned by the hook.
+ */
+export const UseDomRect = <T extends HTMLElement = HTMLElement>(
+    ElementRef?: RefObject<T>
+): TUseDomRectReturnValue<T> =>
+{
+    const DefaultElementReference: RefObject<T> = useRef<T>(null);
+
+    const ElementReference: RefObject<T> = (ElementRef !== undefined)
+        ? ElementRef
+        : DefaultElementReference;
+
+    const [ Box, SetBox ] = useState<FBox>(ZeroBox);
+
+    useLayoutEffect((): ReturnType<EffectCallback> =>
+    {
+        const Element: T | null = ElementReference.current;
+
+        if (Element === null)
+        {
+            return;
+        }
+
+        const SetBoxFromElement = (): void =>
+        {
+            SetBox((_Old: FBox | undefined): FBox =>
+            {
+                return GetBoxFromDomRect(Element.getBoundingClientRect());
+            });
+        };
+
+        const Observer: ResizeObserver = new ResizeObserver(SetBoxFromElement);
+
+        SetBoxFromElement();
+        Observer.observe(Element);
+
+        return (): void =>
+        {
+            Observer.disconnect();
+        };
+    }, [ ]);
+
+    return [ Box, ElementReference ] as const;
+};
+
+export const UsePromise = <T>(
+    InPromise: Promise<T>,
+    InitialValue: T,
+    Then?: TPromiseThenFunction<T>,
+    Catch?: TPromiseCatchFunction
+): Readonly<[ T ]> =>
+{
+    const [ Value, SetValue ] = useState<T>(InitialValue);
+
+    const DefaultCatchFunction: TPromiseCatchFunction = Identity;
+    const CatchFunction: TPromiseCatchFunction = Catch !== undefined
+        ? Catch
+        : DefaultCatchFunction;
+
+    const UpdateValue = (NewValue: T): T =>
+    {
+        SetValue((_Old: T): T =>
+        {
+            return NewValue;
+        });
+
+        return NewValue;
+    };
+
+    const ThenFunction: TPromiseThenFunction<unknown> = (Value: unknown): void =>
+    {
+        if (Then !== undefined)
+        {
+            Then(Value as T);
+        }
+    };
+
+    InPromise
+        .then(UpdateValue)
+        .then(ThenFunction)
+        .catch(CatchFunction);
+
+    return [ Value ] as const;
 };

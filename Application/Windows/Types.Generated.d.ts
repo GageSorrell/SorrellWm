@@ -16,7 +16,6 @@ export function KillOrphans(): void;
 export function GetScreenshot(Bounds: FBox): string;
 export function CaptureScreenSectionToTempPngFile(Bounds: FBox): string;
 export function WriteTaskbarIconToPng(Window: HWindow): string;
-export function SpawnNotepadInstances(NumWindows: number): Array<HWindow>;
 export function GetNotepadHandles(): Array<HWindow>;
 export function KillNotepadInstances(): void;
 export function GetMonitors(): Array<FMonitorInfo>;

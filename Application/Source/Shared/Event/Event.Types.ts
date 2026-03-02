@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type {
+    FActivateErrorCode,
     FBringIntoPanelErrorCode,
     FGetAnnotatedPanelsErrorCode,
     FGetCurrentPanelErrorCode,
@@ -18,13 +18,19 @@ import type {
     FGetSettingsErrorCode,
     FGetThemeColorErrorCode,
     FLogErrorCode,
+    FNavigateErrorCode,
     FOnChangeFocusErrorCode,
     FReadyForRouteErrorCode,
-    FRequestTearDownErrorCode } from "./ErrorCodes.Types";
+    FRequestTearDownErrorCode,
+    FTearDownErrorCode,
+    FUpdateSettingErrorCode } from "./ErrorCodes.Types";
+import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
 import type { FFocusData } from "!/Event/Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
+import type { FNavigateRequest } from "./Navigate.Types";
+import type { FSettings } from "../Settings";
 
 // @TODO Create proper string unions for the error codes for each event.
 export type FIpcFrontendEvents = TIpcEventsBase<{
@@ -59,13 +65,13 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         FGetIsLightModeErrorCode
     >;
     GetSetting: TIpcFrontendEvent<
-        undefined,
-        { Setting: unknown; },
+        keyof FSettings,
+        { Setting: FSettings[keyof FSettings] },
         FGetSettingErrorCode
     >;
     GetSettings: TIpcFrontendEvent<
         undefined,
-        { Settings: Record<string, unknown>; },
+        { Settings: FSettings; },
         FGetSettingsErrorCode
     >;
     GetThemeColor: TIpcFrontendEvent<
@@ -103,17 +109,27 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         FRequestTearDownErrorCode
     >;
+    UpdateSetting: TIpcFrontendEvent<
+        { Setting: keyof FSettings; Value: FSettings[keyof FSettings] },
+        undefined,
+        FUpdateSettingErrorCode
+    >;
 }>;
 
 export type FIpcBackendEvents = TIpcEventsBase<{
     Activate: TIpcBackendEvent<
         boolean,
         undefined,
-        string
+        FActivateErrorCode
+    >;
+    Navigate: TIpcBackendEvent<
+        FNavigateRequest,
+        undefined,
+        FNavigateErrorCode
     >;
     TearDown: TIpcBackendEvent<
         undefined,
         undefined,
-        string
+        FTearDownErrorCode
     >;
 }>;

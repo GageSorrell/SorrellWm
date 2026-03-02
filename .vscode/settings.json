@@ -26,16 +26,15 @@
         "typescript",
         "typescriptreact"
     ],
-
     "search.exclude":
     {
         ".git": true,
         ".eslintcache": true,
         "Release/{build,app/Distribution}": true,
-        "node_modules": true,
         "npm-debug.log.*": true,
         "test/**/__snapshots__": true,
         "package-lock.json": true,
-        "*.{css,sass,scss}.d.ts": true
+        "*.{css,sass,scss}.d.ts": true,
+        "**/node_modules": true
     }
 }

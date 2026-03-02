@@ -6,11 +6,11 @@
 
 import { type CSSProperties, type ReactNode, useEffect } from "react";
 import { Caption1Strong, tokens } from "@fluentui/react-components";
-import { Command, CompoundCommand } from "$/Common";
-import type { FFocusData, FPanelFocusData, FWindowFocusData } from "!/index";
+import { CommandContainer, type FCommand } from "$/Common";
+import type { FFocusData, FPanelFocusData, FWindowFocusData } from "../../../../Shared/Event/Focus.Types";
 import { Action } from "@/Action";
 import type { FFocusChange } from "#/Tree/Tree.Types";
-import type { FLogger } from "!/Log.Types";
+import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseSendIpcEvent } from "@/Event";
 import { WindowHeaderHorizontalRegular } from "@fluentui/react-icons";
@@ -91,10 +91,13 @@ const PanelFooter = ({ Direction, NumVertices }: PPanelFooter): ReactNode =>
 const WindowFooter = ({ FocusedWindowTitle }: PWindowFooter): ReactNode =>
 {
     /* @TODO Vary the cutoff with the width of the window. */
+    /* @TODO Display different value when in StaticMode. */
     const LengthCutoff: number = 40;
-    const FocusedWindowTitleTruncated: string = FocusedWindowTitle.length > LengthCutoff
-        ? FocusedWindowTitle.slice(0, LengthCutoff) + "…"
-        : FocusedWindowTitle;
+    const FocusedWindowTitleTruncated: string = (FocusedWindowTitle !== undefined)
+        ? FocusedWindowTitle.length > LengthCutoff
+            ? FocusedWindowTitle.slice(0, LengthCutoff) + "…"
+            : FocusedWindowTitle
+        : "Static Mode (No Window Focused)";
 
     return (
         <>
@@ -110,10 +113,10 @@ const Footer = (Props: PFooter): ReactNode =>
 {
     const RootStyle: CSSProperties =
     {
-        alignItems: "baseline",
+        alignItems: "center",
         display: "flex",
         flexDirection: "row",
-        gap: tokens.spacingHorizontalM,
+        gap: tokens.spacingHorizontalS,
         justifyContent: "center"
     };
 
@@ -199,33 +202,41 @@ export const Focus = (): ReactNode =>
         width: "100vw"
     };
 
-    // <div style={ RootStyle }>
+    const Commands: Array<FCommand> =
+    [
+        {
+            Description: "@TODO",
+            Name: `Move Focus (${ GetPreviousDirection() } / ${ GetNextDirection() })`,
+            SubCommands:
+            [
+                {
+                    Callback: MoveFocusPrevious,
+                    Keybind: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ]
+                },
+                {
+                    Callback: MoveFocusNext,
+                    Keybind: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ]
+                }
+            ]
+        },
+        {
+            Callback: StepDownIntoPanel,
+            Description: "@TODO",
+            Keybind: [ "Primary[1]" ],
+            Name: "Step Down into Panel"
+        },
+        {
+            Callback: StepUpIntoPanel,
+            Description: "@TODO",
+            Keybind: [ "Primary[0]" ],
+            Name: "Step Up into Panel"
+        }
+    ];
+
     return (
         <>
             <Action>
-                <CompoundCommand
-                    SubCommands={ [
-                        {
-                            Action: MoveFocusPrevious,
-                            Key: IsHorizontal ? "D" : "H"
-                        },
-                        {
-                            Action: MoveFocusNext,
-                            Key: IsHorizontal ? "N" : "T"
-                        }
-                    ] }
-                    Title={ `Move Focus (${ GetPreviousDirection() } / ${ GetNextDirection() })` }
-                />
-                <Command
-                    Action={ StepDownIntoPanel }
-                    Key="C"
-                    Title="Step Down into Panel"
-                />
-                <Command
-                    Action={ StepUpIntoPanel }
-                    Key="G"
-                    Title="Step Up into Panel"
-                />
+                <CommandContainer { ...{ Commands } } />
             </Action>
             <div style={ FooterRootStyle }>
                 <Footer { ...FocusData }/>

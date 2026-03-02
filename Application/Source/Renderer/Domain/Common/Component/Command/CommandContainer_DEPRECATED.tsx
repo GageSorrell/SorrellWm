@@ -5,11 +5,12 @@
  */
 
 import { type CSSProperties, type ReactElement } from "react";
-import type { PCommandContainer } from "./CommandContainer.Types";
+import type { PCommandContainer_DEPRECATED } from "./CommandContainer_DEPRECATED.Types";
 
-export const CommandContainer = ({ children }: PCommandContainer): ReactElement =>
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
+export const CommandContainer_DEPRECATED = ({ children }: PCommandContainer_DEPRECATED): ReactElement =>
 {
-    const style: CSSProperties =
+    const RootStyle: CSSProperties =
     {
         alignItems: "center",
         display: "flex",
@@ -19,7 +20,7 @@ export const CommandContainer = ({ children }: PCommandContainer): ReactElement 
     };
 
     return (
-        <div { ...{ style } }>
+        <div style={ RootStyle }>
             { children }
         </div>
     );

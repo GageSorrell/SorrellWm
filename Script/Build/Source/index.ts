@@ -459,6 +459,7 @@ const GenerateTypesDeclarationsFile = async (
     await Fs.promises.writeFile(GeneratedTypesFilePath, GeneratedTypesFileContents);
 };
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
 {
     const ExposedFunctions: Array<FRegisteredFunction> =
@@ -475,80 +476,85 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
     //    2. An anonymous function that calls `ipcRenderer.invoke` declared in the file that calls `exposeInMainWorld`, and whose name is the function name (but prefixed/suffixed with something like `_Internal`)
     //    3. A function in a Renderer module that shares the same name and signature as the actual JS function, and calls the exposed IPC function and returns the result
     /* eslint-enable @stylistic/max-len */
-    const HandleCallsFilePath: string = Path.resolve(
-        GetPath("Main"),
-        "RendererFunctions.Generated.ts"
-    );
 
-    const HandleStatements: string =
-        ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
-        {
-            const FunctionName: string = GetExportName(RegisteredFunction);
-            /* eslint-disable-next-line @stylistic/max-len */
-            return `ipcMain.handle("${ FunctionName }", (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ RegisteredFunction.ReturnType }> =>\n{\n    return Promise.resolve(${ FunctionName }(${ GetArguments(RegisteredFunction) }));\n});`;
-        }).join("\n\n");
+    /* eslint-disable @stylistic/max-len */
+    // const HandleCallsFilePath: string = Path.resolve(
+    //     GetPath("Main"),
+    //     "RendererFunctions.Generated.ts"
+    // );
 
-    const CoreTypeImports: Array<string> =
-    [
-        ...new Set<string>(
-            ExposedFunctions.map((ExposedFunction: FRegisteredFunction): Array<string> =>
-            {
-                const IsTypeNontrivial = (Type: string): boolean =>
-                {
-                    return Type[0] === Type[0].toUpperCase();
-                };
+    // const HandleStatements: string =
+    //     ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
+    //     {
+    //         const FunctionName: string = GetExportName(RegisteredFunction);
+    //         /* eslint-disable-next-line @stylistic/max-len */
+    //         return `ipcMain.handle("${ FunctionName }", (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ RegisteredFunction.ReturnType }> =>\n{\n    return Promise.resolve(${ FunctionName }(${ GetArguments(RegisteredFunction) }));\n});`;
+    //     }).join("\n\n");
 
-                const FunctionArgumentTypes: Array<string> =
-                    ExposedFunction.Arguments.map((Argument: FFunctionArgument): string =>
-                    {
-                        return Argument.Type;
-                    });
+    // const CoreTypeImports: Array<string> =
+    // [
+    //     ...new Set<string>(
+    //         ExposedFunctions.map((ExposedFunction: FRegisteredFunction): Array<string> =>
+    //         {
+    //             const IsTypeNontrivial = (Type: string): boolean =>
+    //             {
+    //                 return Type[0] === Type[0].toUpperCase();
+    //             };
 
-                /* eslint-disable-next-line @stylistic/max-len */
-                // console.log(`ATTEMPTING ExposedFunction ${ ExposedFunction.Name }.\nReturnType: ${ ExposedFunction.ReturnType }, ${ FunctionArgumentTypes.join(", ") }`);
-                const TypesToConsider: Array<string> =
-                [
-                    ExposedFunction.ReturnType,
-                    ...FunctionArgumentTypes
-                ];
+    //             const FunctionArgumentTypes: Array<string> =
+    //                 ExposedFunction.Arguments.map((Argument: FFunctionArgument): string =>
+    //                 {
+    //                     return Argument.Type;
+    //                 });
 
-                return TypesToConsider.filter(IsTypeNontrivial);
-            }).flat()
-        )
-    ];
+    //             /* eslint-disable-next-line @stylistic/max-len */
+    //             // console.log(`ATTEMPTING ExposedFunction ${ ExposedFunction.Name }.\nReturnType: ${ ExposedFunction.ReturnType }, ${ FunctionArgumentTypes.join(", ") }`);
+    //             const TypesToConsider: Array<string> =
+    //             [
+    //                 ExposedFunction.ReturnType,
+    //                 ...FunctionArgumentTypes
+    //             ];
 
-    const TypeImports: string = CoreTypeImports.map((Type: string): string => `type ${ Type }`).join(", ");
-    const FunctionImports: string = ExposedFunctions.map(GetExportName).join(", ");
+    //             return TypesToConsider.filter(IsTypeNontrivial);
+    //         }).flat()
+    //     )
+    // ];
 
-    const HandleFileImportStatement: string =
-        `import { ${ FunctionImports }, ${ TypeImports } } from "@sorrellwm/windows";\n\n`;
+    // const TypeImports: string = CoreTypeImports.map((Type: string): string => `type ${ Type }`).join(", ");
+    // const FunctionImports: string = ExposedFunctions.map(GetExportName).join(", ");
 
-    const IpcImportStatement: string = "import { ipcMain } from \"electron\"\n";
+    // const HandleFileImportStatement: string =
+    //     `import { ${ FunctionImports }, ${ TypeImports } } from "@sorrellwm/windows";\n\n`;
 
-    const HandleCallsFile: string =
-        FileHeader +
-        IpcImportStatement +
-        HandleFileImportStatement +
-        HandleStatements +
-        "\n";
+    // const IpcImportStatement: string = "import { ipcMain } from \"electron\"\n";
 
-    await Fs.promises.writeFile(HandleCallsFilePath, HandleCallsFile);
+    // const HandleCallsFile: string =
+    //     FileHeader +
+    //     IpcImportStatement +
+    //     HandleFileImportStatement +
+    //     HandleStatements +
+    //     "\n";
 
-    const ExposedCalls: string = ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
-    {
-        const FunctionName: string = GetExportName(RegisteredFunction);
-        const Arguments: string = GetArguments(RegisteredFunction);
-        const ReturnType: string = RegisteredFunction.ReturnType;
-        const HasArguments: boolean = Arguments !== "";
-        /* eslint-disable @stylistic/max-len */
-        return HasArguments
-            ? `${ FunctionName }: async (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }", ${ Arguments })`
-            : `${ FunctionName }: async (): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }")`;
-        /* eslint-enable @stylistic/max-len */
-    }).join(",\n");
+    // await Fs.promises.writeFile(HandleCallsFilePath, HandleCallsFile);
+
+    /* eslint-disable @stylistic/max-len */
+    // const ExposedCalls: string = ExposedFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
+    // {
+    //     const FunctionName: string = GetExportName(RegisteredFunction);
+    //     const Arguments: string = GetArguments(RegisteredFunction);
+    //     const ReturnType: string = RegisteredFunction.ReturnType;
+    //     const HasArguments: boolean = Arguments !== "";
+    //     /* eslint-disable @stylistic/max-len */
+    //     return HasArguments
+    //         ? `${ FunctionName }: async (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }", ${ Arguments })`
+    //         : `${ FunctionName }: async (): Promise<${ ReturnType }> => ipcRenderer.invoke("${ FunctionName }")`;
+    //     /* eslint-enable @stylistic/max-len */
+    // }).join(",\n");
+    /* eslint-enable @stylistic/max-len */
 
     /* eslint-disable-next-line @stylistic/max-len */
-    const PreloadImportStatement: string = `import { ${ CoreTypeImports } } from "@sorrellwm/windows";\n`;
+    // const PreloadImportStatement: string = `import { ${ CoreTypeImports } } from "@sorrellwm/windows";\n`;
+    /* eslint-enable @stylistic/max-len */
 
     const PreloadContents: string = `/* File:    Preload.ts
  * Author:  Gage Sorrell <gage@sorrell.sh>
@@ -558,7 +564,6 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
 /* eslint-disable */
 
 import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
-${ PreloadImportStatement }
 
 const ElectronHandler =
 {
@@ -566,40 +571,74 @@ const ElectronHandler =
     {
         On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
         {
-            const subscription = (_event: IpcRendererEvent, ...args: Array<unknown>) =>
+            type FRecord = Record<PropertyKey, unknown>;
+            const Clone = (In: unknown): unknown =>
             {
-                return Listener(...args);
+                const IsRecord = (In: unknown): In is FRecord =>
+                {
+                    return typeof In === "object" && In !== null && !Array.isArray(In);
+                };
+
+                if (IsRecord(In))
+                {
+                    const OutRecord: FRecord = { };
+                    Object.keys(In).forEach((Key: PropertyKey): void =>
+                    {
+                        OutRecord[Key] = Clone(In[Key]);
+                    });
+                    return OutRecord;
+                }
+                else if (Array.isArray(In))
+                {
+                    return In.map(Clone);
+                }
+                else if (typeof In === "symbol")
+                {
+                    return In.toString();
+                }
+                else if (typeof In === "function")
+                {
+                    return "[ Function ]";
+                }
+                else // typeof In extends string | number | null | undefined | boolean;
+                {
+                    return In;
+                }
             };
 
-            ipcRenderer.on(Channel, subscription);
+            ipcRenderer.on(Channel, Listener);
 
-            return () =>
+            return (): void =>
             {
-                ipcRenderer.removeListener(Channel, subscription);
+                ipcRenderer.removeListener(Channel, Listener);
             };
         },
-        Once(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        Once(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
             ipcRenderer.once(
                 Channel,
-                (_Event: Electron.Event, ..._Arguments: Array<unknown>) => Listener(..._Arguments)
+                (_Event: Electron.Event, ...ArgumentVector: Array<unknown>) => Listener(...ArgumentVector)
             );
         },
-        RemoveListener(Channel: string, Listener: ((...Arguments: Array<unknown>) => void)): void
+        RemoveListener(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
             ipcRenderer.removeListener(Channel, Listener);
         },
-        Send(Channel: string, ...Arguments: Array<unknown>)
+        Send(Channel: string, ...ArgumentVector: Array<unknown>)
         {
-            ipcRenderer.send(Channel, ...Arguments);
+            ipcRenderer.send(Channel, ...ArgumentVector);
         }
-    },
-    ${ ExposedCalls.split("\n").map((Call: string): string => "        " + Call).join("\n") }
+    }
 };
 
 contextBridge.exposeInMainWorld("electron", ElectronHandler);
 
 export type FElectronHandler = typeof ElectronHandler;\n`;
+    // This initially went in the above template literal, in the `ipcRenderer` object.
+    // ${ ExposedCalls.split("\n").map((Call: string): string => " ".repeat(8) + Call).join("\n") }
+    // If the `ExposedCalls` line is re-inserted into the template literal, then this should be
+    // re-inserted after the `import` statement.
+    // ${ PreloadImportStatement }
 
     const PreloadPath: string = Path.resolve(GetPath("Main"), "Preload.ts");
 
@@ -623,11 +662,12 @@ export type FElectronHandler = typeof ElectronHandler;\n`;
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 type FRegisteredFunctionHook =
-    <TReturnType, TArgumentTypeVector extends Array<unknown>>(
-        InitialValue: TReturnType,
-        ...Arguments: TArgumentTypeVector
-    ) => Readonly<[ ReturnValue: TReturnType ]>;
+    <ReturnType, ArgumentTypeVector extends Array<unknown>>(
+        InitialValue: ReturnType,
+        ...Arguments: ArgumentTypeVector
+    ) => Readonly<[ ReturnValue: ReturnType ]>;
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
 {
     /* eslint-disable @stylistic/max-len */
@@ -815,11 +855,11 @@ const Main = async (): Promise<void> =>
             [
                 () => GenerateIpcCode(RegisteredFunctions),
                 `Generating IPC calls for functions marked ${ C("Renderer") }`
-            ],
-            [
-                () => GenerateHooks(RegisteredFunctions),
-                `Generating hooks for functions marked ${ C("Hook") }`
             ]
+            // [
+            //     () => GenerateHooks(RegisteredFunctions),
+            //     `Generating hooks for functions marked ${ C("Hook") }`
+            // ]
         );
 
         console.log(`Building by running ${ C("npm run start") } in the ${ C("Windows") } directory`);

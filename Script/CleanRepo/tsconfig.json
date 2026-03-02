@@ -1,0 +1,14 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "../../Configuration/tsconfig.Script.json",
+    "compilerOptions":
+    {
+        "outDir": "./Distribution",
+        "rootDir": "./Source"
+    },
+    "include": [ "Source" ],
+    "references":
+    [
+        { "path": "../../Package/ScriptUtility" }
+    ]
+}

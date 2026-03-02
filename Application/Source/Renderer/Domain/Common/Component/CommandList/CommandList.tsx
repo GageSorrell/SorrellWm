@@ -12,7 +12,7 @@ import {
     type FSimpleCommand,
     type FSubCommand,
     SwitchOnCommandType } from "../Command";
-import type { FKeybind } from "!/Settings";
+import type { FKeybindId } from "!/Settings";
 import { Key } from "../Keyboard";
 import type { PCommandList } from "./CommandList.Types";
 import { UseCommands } from "@/Command";
@@ -50,7 +50,7 @@ export const CommandList = ({ Commands }: PCommandList): ReactNode =>
 
     const GetKeyComponentsFromCommand = (InCommand: FCommand): ReactNode =>
     {
-        const GetComponentFromKeybind = (Keybind: FKeybind): ReactNode =>
+        const GetComponentFromKeybind = (Keybind: FKeybindId): ReactNode =>
         {
             return (
                 <Key

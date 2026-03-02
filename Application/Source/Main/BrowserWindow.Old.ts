@@ -14,7 +14,11 @@ import type {
     FBrowserWindowElectronEvents,
     FBrowserWindowEventType,
     FCreateBrowserWindowReturnType } from "./BrowserWindow.Types.Old";
+import type { FLogger } from "../Shared/Log.Types";
 import { GetIconPath } from "./Core";
+import { GetLogger } from "./Development";
+
+const Log: FLogger = GetLogger("BrowserWindow.Old");
 
 export const RegisterBrowserWindowElectronEvents = (
     Window: BrowserWindow,
@@ -26,6 +30,8 @@ export const RegisterBrowserWindowElectronEvents = (
         const EventName: FBrowserWindowEventType = InEventName as FBrowserWindowEventType;
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
         const Callback: Function = Events[EventName] as Function;
+
+        Log(EventName, Callback);
 
         /* @ts-expect-error This results from the namespace approach used to define overloads by Electron. */
         Window.on(EventName, Callback);
@@ -60,7 +66,7 @@ export const CreateBrowserWindow = async (
 {
     const BaseWebPreferences: WebPreferences =
     {
-        devTools: false,
+        // devTools: false,
         nodeIntegration: true,
         preload: App.isPackaged
             ? Path.join(__dirname, "Preload.js")
@@ -100,7 +106,7 @@ export const CreateBrowserWindow = async (
         }
         catch (Error: unknown)
         {
-            console.log("LoadFrontend threw the following error", Error);
+            Log.Error("LoadFrontend threw the following error", Error);
         }
     };
 

@@ -5,8 +5,17 @@
  */
 
 import type { CSSProperties } from "react";
+import type { TRecordNonNullable } from "../../Shared/Utility";
 
 export type TPredicate<T> = (In: T) => boolean;
+
+export type FFlexStyle = TRecordNonNullable<Pick<
+    CSSProperties,
+    | "alignItems"
+    | "display"
+    | "flexDirection"
+    | "justifyContent"
+>>;
 
 export type PStyledComponent =
 {

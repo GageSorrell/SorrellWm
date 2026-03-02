@@ -27,10 +27,12 @@
   "scripts": {
     "build-script": "tsc -p tsconfig.Script.json",
     "build-scripts": "npm run build-script",
+    "build-win": "cd ./Windows && npm run build -- --disable-linting && cd ..",
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Dev.Dll.ts",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Prod.ts",
     "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Prod.ts",
+    "kill-electron": "powershell -ExecutionPolicy Bypass -File ..\\Script\\KillElectronInstances\\KillElectronInstances.ps1",
     "postinstall": "npm run build-script && node ./Distribution/Script/CheckNativeDependencies.js && electron-builder install-app-deps",
     "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
@@ -38,7 +40,8 @@
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir Release/Application",
     "prestart-proper": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Dev.ts",
     "start-proper": "node ./Distribution/Script/CheckPortInUse.js && npm run prestart-proper && npm run start:renderer",
-    "start": "node ./Distribution/Script/Start.js",
+    "start": "npm run build-win && npm run start-electron",
+    "start-electron": "node ./Distribution/Script/Start.js",
     "start:main": "concurrently --raw -k \"cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./Configuration/Main.Dev.ts\" \"electronmon .\"",
     "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Preload.Dev.ts",
     "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./Configuration/Renderer.Dev.ts",
@@ -235,8 +238,7 @@
     ],
     "logLevel": "info"
   },
-  "overrides":
-  {
+  "overrides": {
     "form-data": "^4.0.5"
   }
 }

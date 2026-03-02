@@ -4,30 +4,11 @@
  * License:   MIT
  */
 
+import type { TArrayNonempty, TIntegralRange } from "../../../Shared/Utility";
+
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-export type FLogDepth =
-    | 0
-    | 1
-    | 2
-    | 3
-    | 4
-    | 5
-    | 6
-    | 7
-    | 8
-    | 9
-    | 10
-    | 11
-    | 12
-    | 13
-    | 14
-    | 15
-    | 16
-    | 17
-    | 18
-    | 19
-    | 20;
+export type FLogDepth = TIntegralRange<0, 20>;
 
 export type FPrimitive =
     | string
@@ -39,21 +20,11 @@ export type FPrimitive =
     | symbol
     | undefined;
 
+export type FObject = Exclude<NonNullable<object>, Function>;
+
 export type FValue =
     | FPrimitive
     | FObject;
-
-export type FTypeof =
-    | "object"
-    | "string"
-    | "number"
-    | "bigint"
-    | "boolean"
-    | "function"
-    | "symbol"
-    | "undefined";
-
-export type TArrayNonempty<T = unknown> = [ T, ...Array<T> ];
 
 export type FLogStringArray = TArrayNonempty<FLogString>;
 
@@ -131,7 +102,5 @@ export type FKeyValuePair =
 export type FLogValueType =
     | FValue
     | TContainer;
-
-export type FObject = Exclude<NonNullable<object>, Function>;
 
 export type TLogValue<T extends FLogValueType = FLogValueType> = TLogBase<T>;

@@ -19,7 +19,12 @@ import {
     useState
 } from "react";
 import type { FSimpleCallback, TSimpleFunction } from "!/Utility/Functional.Types";
+import type { FLogger } from "../Shared/Log.Types";
+import { GetLogger } from "./Log";
 import { Identity } from "./Utility";
+
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+const Log: FLogger = GetLogger("Keybind");
 
 /** Shortcut. */
 export interface IShortcut
@@ -172,8 +177,10 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
             HoldInterval.current = window.setInterval(() =>
             {
                 Callback();
-                HoldTimer.current += 100;
-            }, 100);
+                HoldTimer.current += 10;
+            }, 10);
+            //     HoldTimer.current += 100;
+            // }, 100);
         }, [ ]);
 
     /** Reset the keypress timer. */
@@ -340,7 +347,8 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
                 {
                     PreviousKeys.current = [];
                     SequenceTimer.current = undefined;
-                }, Props.SequenceTimeout ?? 2000);
+                // }, Props.SequenceTimeout ?? 2000);
+                }, 100);
             }
         },
         [ Props, CreateTimer, ResetTimer ]
@@ -355,35 +363,35 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
             return;
         }
 
-        const keysUp: Array<string> = [];
-        const key: string = Event.key?.toLowerCase();
+        const KeysUp: Array<string> = [ ];
+        const Key: string = Event.key?.toLowerCase();
 
-        if (key === "control" || Event.ctrlKey)
+        if (Key === "control" || Event.ctrlKey)
         {
-            keysUp.push("ctrl");
+            KeysUp.push("ctrl");
         }
-        if (key === "alt" || Event.altKey)
+        if (Key === "alt" || Event.altKey)
         {
-            keysUp.push("alt");
+            KeysUp.push("alt");
         }
-        if (key === "meta" || Event.metaKey)
+        if (Key === "meta" || Event.metaKey)
         {
-            keysUp.push("meta");
+            KeysUp.push("meta");
         }
-        if (key === "shift" || Event.shiftKey)
+        if (Key === "shift" || Event.shiftKey)
         {
-            keysUp.push("shift");
+            KeysUp.push("shift");
         }
 
         const SpecialKeys: Array<string> = [ "control", "alt", "meta", "shift" ];
-        if (SpecialKeys.indexOf(key) < 0)
+        if (SpecialKeys.indexOf(Key) < 0)
         {
-            keysUp.push(key);
+            KeysUp.push(Key);
         }
 
         KeysDown.current = KeysDown.current.filter((CurrentKey: string): boolean =>
         {
-            return keysUp.indexOf(CurrentKey) < 0;
+            return KeysUp.indexOf(CurrentKey) < 0;
         });
 
         ResetTimer();
@@ -394,7 +402,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
      */
     const WindowBlur: FSimpleCallback = useCallback(() =>
     {
-        KeysDown.current = [];
+        KeysDown.current = [ ];
         ResetTimer();
     }, [ ResetTimer ]);
 
@@ -443,7 +451,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
                 {
                     if (!Listeners.current[Key])
                     {
-                        Listeners.current[Key] = [];
+                        Listeners.current[Key] = [ ];
                     }
 
                     Listeners.current[Key] = [ ...Listeners.current[Key], Method ];
@@ -582,7 +590,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
     {
         return {
             RegisterSequenceShortcut,
-            RegisterShortcut: RegisterShortcut,
+            RegisterShortcut,
             SetEnabled,
             Shortcuts: ShortcutsState,
             TriggerShortcut,
@@ -592,7 +600,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
         /* eslint-disable-next-line @stylistic/max-len */
     }, [ RegisterSequenceShortcut, RegisterShortcut, SetEnabled, ShortcutsState, TriggerShortcut, UnregisterShortcut ]);
 
-    useEffect(() =>
+    useEffect((): FSimpleCallback =>
     {
         window.addEventListener("keydown", KeyDown);
         window.addEventListener("keyup", KeyUp);

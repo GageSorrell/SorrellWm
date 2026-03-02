@@ -4,14 +4,14 @@
  * License:   MIT
  */
 
+import { type FBox, GetWindowLocationAndSize, InitializeWinEvents } from "@sorrellwm/windows";
+import { type FLogger, GetLogger } from "./Development";
+import { IsWindowTiled, Publish } from "./Tree";
 import type { FWinEventPayload } from "./WinEvent.Types";
-import { GetWindowLocationAndSize, InitializeWinEvents, type FBox, type HWindow } from "@sorrellwm/windows";
 import { Subscribe } from "./NodeIpc";
 import { TDispatcher } from "./Core/Dispatcher";
-import { IsWindowTiled, Publish } from "./Tree";
-import { GetLogger } from "./Development";
 
-const Log = GetLogger("WinEvent");
+const Log: FLogger = GetLogger("WinEvent");
 
 export const WinEvent: TDispatcher<undefined> = new TDispatcher<undefined>();
 
@@ -31,6 +31,8 @@ Subscribe("WinEvent", (...Arguments: Array<unknown>): void =>
     const IsWindowEvent: boolean = IdObject === 0 && Handle !== undefined && IsWindowTiled(Handle);
     if (IsWindowEvent)
     {
+        // @TODO Temporary.
+        return;
         const InitialBounds: FBox = GetWindowLocationAndSize(Handle);
         if (Event === MoveSizeStartEvent)
         {

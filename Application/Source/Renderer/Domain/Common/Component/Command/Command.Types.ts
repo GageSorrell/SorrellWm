@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { FSimpleCallback } from "!/Utility";
-import type { TKeybindSet } from "!/Settings";
+import type { FKeybind } from "../../../../../Shared/Settings";
+import type { FSimpleCallback } from "../../../../../Shared/Utility";
 
 export type FCommandBase =
 {
@@ -23,10 +23,10 @@ export type FSimpleCommand =
     FCommandBase &
     {
         Callback: FSimpleCallback;
-        Keybinds: TKeybindSet;
+        Keybind: FKeybind;
     };
 
-export type FSubCommand = Omit<FSimpleCommand, "Description">;
+export type FSubCommand = Omit<FSimpleCommand, "Description" | "Name">;
 
 export type FCompoundCommand =
     FCommandBase &
@@ -38,4 +38,4 @@ export type FCommand =
     | FSimpleCommand
     | FCompoundCommand;
 
-export type PCommand = FCommand;
+export type PCommand = FSimpleCommand;

@@ -1,0 +1,4 @@
+{
+    "$schema": "./DevSettings.Schema.json",
+    "StaticMode": false
+}

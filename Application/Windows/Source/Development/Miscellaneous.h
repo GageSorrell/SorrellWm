@@ -8,6 +8,5 @@
 
 #include "../Core/Core.h"
 
-// DECLARE_NAPI_FUNCTION(SpawnNotepadInstances, Array<HWindow>, NumWindows, number)
 DECLARE_NAPI_FUNCTION(GetNotepadHandles, Array<HWindow>)
 DECLARE_NAPI_FUNCTION(KillNotepadInstances, void)

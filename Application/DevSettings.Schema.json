@@ -1,0 +1,49 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "DevSettings",
+    "description": "Settings for development features.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "StaticMode"
+    ],
+    "properties": {
+        "StaticMode": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "Enabled",
+                "WindowShape"
+            ],
+            "properties": {
+                "Enabled": {
+                    "type": "boolean"
+                },
+                "WindowShape": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "X",
+                        "Y",
+                        "Height",
+                        "Width"
+                    ],
+                    "properties": {
+                        "X": {
+                            "type": "number"
+                        },
+                        "Y": {
+                            "type": "number"
+                        },
+                        "Height": {
+                            "type": "number"
+                        },
+                        "Width": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

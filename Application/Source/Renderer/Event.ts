@@ -6,60 +6,86 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 
+import { AppendDependencyList, UseEffectAsync, UsePromise } from "./Utility";
+import {
+    CallMaybeAsync,
+    type FRejectFunction,
+    type FSimpleCallback,
+    type TPromiseCatchFunction,
+    type TResolveFunction } from "../Shared/Utility";
+import {
+    type DependencyList,
+    type MutableRefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState} from "react";
 import type {
     FIpcBackendEvents,
+    FIpcEvents,
     FIpcFrontendChannel,
     FRichFrontendEvents,
     FSingleRichFrontendChannels,
     TEventCallback,
     TGetDefaultRichResponseData,
+    TGetResponse,
     TGetResponseFromKey,
     TGetRichResponseAsFailure,
     TGetRichResponseAsSuccess,
     TGetRichResponseFromKey,
     TGetSingleRichResponseData,
-    TRequest } from "!/Event";
-import type { FRejectFunction, FSimpleCallback, TResolveFunction } from "!/Utility/Utility.Types";
-import { type MutableRefObject, useCallback, useEffect, useState} from "react";
+    TRequest } from "../Shared/Event";
 import type {
     TIpcState,
     TIpcStateStrict,
     TUseSendIpcEventReturnType,
     TUseSendIpcEventStrictReturnType,
     TUseSendIpcEventStrictSingleReturnType} from "./Event.Types";
-import type { FLogger } from "!/Log.Types";
+import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
-import { UseEffectAsync } from "./Utility";
 
-const Log: FLogger = GetLogger("Event");
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+const Log: FLogger = GetLogger("IPC");
 
 /** Receive an event received by Main. */
 export const UseIpcEvent = <T extends keyof FIpcBackendEvents>(
     Channel: T,
     Callback: TEventCallback<T>,
-    DependencyArray: Array<unknown> = [ ]
+    DependencyArray: DependencyList = [ ]
 ): void =>
 {
-    DependencyArray.push(Callback, Channel);
+    const PrincipalDependencyArray: DependencyList = AppendDependencyList(
+        DependencyArray,
+        Callback,
+        Channel,
+        window.electron
+    );
 
     /* eslint-disable-next-line @typescript-eslint/typedef */
-    const Wrapper = useCallback((Request: TRequest<T>): void =>
+    const Wrapper = useCallback(async (_Event: unknown, Request: TRequest<T>): Promise<void> =>
     {
-        const Response: ReturnType<TEventCallback<T>> = Callback(Request);
-        window.electron.ipcRenderer.Send(Channel, Response);
-    }, DependencyArray);
+        type FCallback = (ArgumentVector_0: TRequest<T>) => TGetResponse<FIpcEvents[T]["Response"]>;
+        const Response: Awaited<ReturnType<TEventCallback<T>>> =
+            await CallMaybeAsync(
+                Callback as unknown as FCallback,
+                Request
+            ) as Awaited<ReturnType<TEventCallback<T>>>;
+            // await (async (): Promise<ReturnType<TEventCallback<T>>> =>
+            // {
+            //     return (Callback instanceof Promise)
+            //         ? await Callback(Request) as Awaited<ReturnType<TEventCallback<T>>>
+            //         : Callback(Request) as Awaited<ReturnType<TEventCallback<T>>>;
+            // })() as Awaited<ReturnType<TEventCallback<T>>>;
 
-    DependencyArray.push(Wrapper);
+        window.electron.ipcRenderer.Send(Channel, Response);
+    }, PrincipalDependencyArray);
+
+    const DependencyListWithWrapper: DependencyList = AppendDependencyList(PrincipalDependencyArray, Wrapper);
 
     useEffect((): FSimpleCallback =>
     {
-        window.electron.ipcRenderer.On(Channel, Wrapper);
-
-        return (): void =>
-        {
-            window.electron.ipcRenderer.RemoveListener(Channel);
-        };
-    }, DependencyArray);
+        return window.electron.ipcRenderer.On(Channel, Wrapper);
+    }, DependencyListWithWrapper);
 };
 
 /**
@@ -109,10 +135,13 @@ export const SendIpcEvent = <T extends FIpcFrontendChannel>(
 };
 
 /** `SendIpcEvent` wrapped into a hook. */
-export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
+export const UseSendIpcEvent = <
+    T extends FIpcFrontendChannel,
+    OnResponseReturnType  = unknown>(
     Channel: T,
     Request: TRequest<T>,
-    DependencyArray: Array<unknown> = [ ]
+    OnResponse?: ((Response: TIpcState<T>) => OnResponseReturnType),
+    Catch?: TPromiseCatchFunction
 ): TUseSendIpcEventReturnType<T> =>
 {
     const EmptyResponse: TIpcState<T> =
@@ -121,51 +150,75 @@ export const UseSendIpcEvent = <T extends FIpcFrontendChannel>(
         Error: undefined
     };
 
-    // Log("UseSendIpcEvent was called.");
+    const IpcEventPromise: Promise<TIpcState<T>> = useMemo(
+        (): Promise<TIpcState<T>> => SendIpcEvent(Channel, Request),
+        [ Channel, Request ]
+    );
 
-    /* eslint-disable-next-line @stylistic/max-len */
-    // Log(`UseSendIpcEvent: Channel is ${ Channel }, Request is ${ JSON.stringify(Request) }, DependencyArray is ${ JSON.stringify(DependencyArray) }.`);
+    const [ Response ] = UsePromise<TIpcState<T>>(
+        IpcEventPromise,
+        EmptyResponse,
+        OnResponse,
+        Catch
+    );
 
-    const [ Response, SetResponse ] = useState<TIpcState<T>>(EmptyResponse);
-    // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
-    //     useRef<FSimpleCallback | undefined>(undefined);
-
-    DependencyArray.push(Request, SetResponse);
-
-    /* eslint-disable-next-line @typescript-eslint/typedef */
-    const CleanupFunction = useCallback((): void =>
-    {
-        // if (RemoveListenerRef.current !== undefined)
-        // {
-        //     RemoveListenerRef.current();
-        // }
-    }, DependencyArray);
-
-    DependencyArray.push(CleanupFunction);
-
-    /* eslint-disable-next-line @typescript-eslint/typedef */
-    const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
-    {
-        // Log(`Going to await SendIpcEvent for event ${ Channel }.`);
-        const NewResponse: TGetResponseFromKey<T> = await SendIpcEvent(Channel, Request);
-        // Log(`Response is ${ JSON.stringify(NewResponse) }.`);
-        if (!AbortSignal.aborted)
-        {
-            SetResponse((_Old: TIpcState<T>): TIpcState<T> =>
-            {
-                // Log("Going to set Response via SetResponse.");
-                return NewResponse;
-            });
-        }
-    }, [ Channel, Request, SendIpcEvent, SetResponse ]);
-
-    UseEffectAsync(SideEffect, CleanupFunction, DependencyArray);
-
-    return {
-        Data: (Response?.Data === undefined ? undefined : Response.Data),
-        Error: (Response?.Error === undefined ? undefined : Response.Error)
-    } as const;
+    return Response;
 };
+
+/* eslint-disable @stylistic/max-len */
+// {
+//     const EmptyResponse: TIpcState<T> =
+//     {
+//         Data: undefined,
+//         Error: undefined
+//     };
+
+//     // Log("UseSendIpcEvent was called.");
+
+//     /* eslint-disable-next-line @stylistic/max-len */
+//     // Log(`UseSendIpcEvent: Channel is ${ Channel }, Request is ${ JSON.stringify(Request) }, DependencyArray is ${ JSON.stringify(DependencyArray) }.`);
+
+//     const [ Response, SetResponse ] = useState<TIpcState<T>>(EmptyResponse);
+//     // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
+//     //     useRef<FSimpleCallback | undefined>(undefined);
+
+//     DependencyArray.push(Request, SetResponse);
+
+//     /* eslint-disable-next-line @typescript-eslint/typedef */
+//     const CleanupFunction = useCallback((): void =>
+//     {
+//         // if (RemoveListenerRef.current !== undefined)
+//         // {
+//         //     RemoveListenerRef.current();
+//         // }
+//     }, DependencyArray);
+
+//     const OtherDependencyArray: Array<unknown> = [ ...DependencyArray, CleanupFunction ];
+
+//     /* eslint-disable-next-line @typescript-eslint/typedef */
+//     const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
+//     {
+//         // Log(`Going to await SendIpcEvent for event ${ Channel }.`);
+//         const NewResponse: TGetResponseFromKey<T> = await SendIpcEvent(Channel, Request);
+//         // Log(`Response is ${ JSON.stringify(NewResponse) }.`);
+//         if (!AbortSignal.aborted)
+//         {
+//             SetResponse((_Old: TIpcState<T>): TIpcState<T> =>
+//             {
+//                 // Log("Going to set Response via SetResponse.");
+//                 return NewResponse;
+//             });
+//         }
+//     }, [ Channel, Request, SendIpcEvent, SetResponse ]);
+
+//     UseEffectAsync(SideEffect, CleanupFunction, OtherDependencyArray);
+
+//     return {
+//         Data: (Response?.Data === undefined ? undefined : Response.Data),
+//         Error: (Response?.Error === undefined ? undefined : Response.Error)
+//     } as const;
+// };
+/* eslint-enable @stylistic/max-len */
 
 /** `SendIpcEvent` wrapped into a hook, with a required argument for a default value for `Data`. */
 export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(

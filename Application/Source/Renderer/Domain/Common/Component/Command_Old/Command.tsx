@@ -9,9 +9,9 @@ import {
     type EffectCallback,
     type ReactElement,
     useEffect } from "react";
+import { type FKeyId, Key } from "../Keyboard";
 import { type IShortcutProviderRenderProps, UseShortcut } from "@/Keybind";
 import { Title3, tokens } from "@fluentui/react-components";
-import { Key } from "../Keyboard";
 import type { PCommand } from "./Command.Types";
 
 export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =>
@@ -28,16 +28,17 @@ export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =
         width: "100%"
     };
 
-    const { registerShortcut, unregisterShortcut } = UseShortcut() as IShortcutProviderRenderProps;
+    const { RegisterShortcut, UnregisterShortcut } = UseShortcut() as IShortcutProviderRenderProps;
     useEffect((): ReturnType<EffectCallback> =>
     {
         /* @TODO Investigate: the key F24 is registered as "Alt" by Electron and by online test tools. */
-        registerShortcut(Action, [ KeyString ], "Foo", "Foo");
-        return (): void =>
-        {
-            unregisterShortcut([ KeyString ]);
-        };
-    }, [ Action, KeyString, registerShortcut, unregisterShortcut ]);
+        // const ActionFunction: FSimpleCallback = Action ?? (() => { });
+        // RegisterShortcut(ActionFunction, [ KeyString ], "Foo", 0);
+        // return (): void =>
+        // {
+        //     UnregisterShortcut([ KeyString ], false);
+        // };
+    }, [ Action, KeyString, RegisterShortcut, UnregisterShortcut ]);
     // useEffect((): ReturnType<EffectCallback> =>
     // {
     //     const Listener = (...Arguments: Array<unknown>): void =>
@@ -59,7 +60,7 @@ export const Command = ({ Action, Key: InKey, Title }: PCommand): ReactElement =
         <div
             onMouseDown={ Action }
             style={ RootStyle }>
-            <Key Value={ InKey.toUpperCase() } />
+            <Key Value={ (InKey.toUpperCase() as FKeyId) } />
             <Title3>
                 { Title }
             </Title3>

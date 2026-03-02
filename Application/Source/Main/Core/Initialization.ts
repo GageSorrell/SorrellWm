@@ -53,7 +53,11 @@ const CreateWindow = async (): Promise<void> =>
         height: 728,
         width: 1024,
 
-        show: false
+        show: false,
+        webPreferences:
+        {
+            devTools: true
+        }
     });
 
     MainWindow = Window;
@@ -108,16 +112,16 @@ app.on("window-all-closed", () =>
     }
 });
 
-app.whenReady()
-    .then(() =>
-    {
-        CreateWindow();
-        app.on("activate", () =>
-        {
-            if (MainWindow === null)
-            {
-                CreateWindow();
-            }
-        });
-    })
-    .catch(console.log);
+// app.whenReady()
+//     .then(() =>
+//     {
+//         CreateWindow();
+//         app.on("activate", () =>
+//         {
+//             if (MainWindow === null)
+//             {
+//                 CreateWindow();
+//             }
+//         });
+//     })
+//     .catch(console.log);
