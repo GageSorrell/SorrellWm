@@ -27,13 +27,13 @@ export const Insert = (): ReactElement =>
             <Command
                 Callback={ OnSelectSizingMethod("Bisection") }
                 Description="@TODO"
-                Keybind={ [ "Primary[1]" ] }
+                Action={ [ "Primary[1]" ] }
                 Name="Insert by Bisection"
             />
             <Command
                 Callback={ OnSelectSizingMethod("UniformResize") }
                 Description="@TODO"
-                Keybind={ [ "Primary[0]" ] }
+                Action={ [ "Primary[0]" ] }
                 Name="Insert by Uniform Resize"
             />
         </Action>

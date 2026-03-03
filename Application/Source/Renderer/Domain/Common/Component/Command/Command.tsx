@@ -34,7 +34,7 @@ export const SwitchOnCommandType = <T,>(
     }
 };
 
-export const Command = ({ Callback, Keybind, Name  }: PCommand): ReactNode =>
+export const Command = ({ Callback, Action: Keybind, Name  }: PCommand): ReactNode =>
 {
     const RootStyle: CSSProperties =
     {

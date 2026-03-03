@@ -5,9 +5,9 @@
  */
 
 import { type CSSProperties, type ReactNode } from "react";
+import type { FAction, FActionKey } from "../../../../../Shared/Settings";
 import type { FCommand, FCompoundCommand, FSimpleCommand } from "./Command.Types";
 import { type FKeyId, Key } from "../Keyboard";
-import type { FKeybind, FKeybindKey } from "!/Settings";
 import { GetKeybindIdFromKeybind, UseCommands } from "@/Command";
 import { Title3, tokens } from "@fluentui/react-components";
 import { ExtractFromRecordArray } from "../../../../../Shared/Utility";
@@ -46,7 +46,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
             {
                 return SwitchOnCommandType(
                     Command,
-                    ({ Keybind }: FSimpleCommand): Array<FKeyId> =>
+                    ({ Action: Keybind }: FSimpleCommand): Array<FKeyId> =>
                     {
                         const Out: Array<FKeyId> = GetKeybindIdFromKeybind(Keybind, Keybinds);
                         return Out;
@@ -54,13 +54,19 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                     (CompoundCommand: FCompoundCommand): Array<FKeyId> =>
                     {
                         const { SubCommands } = CompoundCommand;
-                        const GetKeyIds = (In: Array<FKeybindKey>): Array<FKeyId> =>
+                        const GetKeyIds = (In: Array<FActionKey>): Array<FKeyId> =>
                         {
-                            return GetKeybindIdFromKeybind(In as FKeybind, Keybinds);
+                            return GetKeybindIdFromKeybind(In as FAction, Keybinds);
                         };
 
-                        const Out: Array<FKeyId> =
-                            GetKeyIds(ExtractFromRecordArray("Keybind", SubCommands).flat());
+                        const Out: Array<FKeyId> = GetKeyIds(
+                            ExtractFromRecordArray(
+                                "Keybind",
+                                /* @TODO This is probably the cause of a yet-to-be-discovered bug. */
+                                SubCommands as unknown as Array<Record<"Keybind", unknown>>
+                            ).flat() as Array<FActionKey>
+                        );
+
                         return Out;
                     }
                 );

@@ -56,19 +56,19 @@ export const Direction = (): ReactElement =>
                 SubCommands={ [
                     {
                         Callback: SetPosition("Left"),
-                        Keybind: [ "Direction.Left" ]
+                        Action: [ "Direction.Left" ]
                     },
                     {
                         Callback: SetPosition("Up"),
-                        Keybind: [ "Direction.Up" ]
+                        Action: [ "Direction.Up" ]
                     },
                     {
                         Callback: SetPosition("Down"),
-                        Keybind: [ "Direction.Down" ]
+                        Action: [ "Direction.Down" ]
                     },
                     {
                         Callback: SetPosition("Right"),
-                        Keybind: [ "Direction.Right" ]
+                        Action: [ "Direction.Right" ]
                     }
                 ] }
             />
@@ -76,7 +76,7 @@ export const Direction = (): ReactElement =>
             <Command
                 Callback={ Confirm }
                 Description="@TODO"
-                Keybind={ [ "Primary[1]" ] }
+                Action={ [ "Primary[1]" ] }
                 Name="Confirm"
             />
         </Action>

@@ -17,12 +17,9 @@ export type FKeybindActionLevel =
     | "Primary"
     | "Secondary";
 
-export type FKeybindId = TStaticArray<FKeyId, TIntegralRange<1, 4>>;
+export type FKeySequence = TStaticArray<FKeyId, TIntegralRange<1, 4>>;
 
-export type FKeybindActionLevelSet = Record<TIntegralRange<0, 3>, FKeybindId>;
-
-export type TKeybindSet<NumAllowedKeybinds extends TIntegralRange<1, 2> = TIntegralRange<1, 2>> =
-    TStaticArray<FKeybindId, NumAllowedKeybinds>;
+export type FKeySequenceSet = Record<TIntegralRange<0, 3>, FKeySequence>;
 
 export type FKeybindActionMiscellaneous =
     | "Peek"
@@ -31,15 +28,15 @@ export type FKeybindActionMiscellaneous =
     | "Settings";
 
 export type FKeybinds =
-    Record<FKeybindActionLevel, FKeybindActionLevelSet> &
+    Record<FKeybindActionLevel, FKeySequenceSet> &
     {
-        Direction: Record<FKeybindDirection, FKeybindId>;
-        Miscellaneous: Record<FKeybindActionMiscellaneous, FKeybindId>;
+        Direction: Record<FKeybindDirection, FKeySequence>;
+        Miscellaneous: Record<FKeybindActionMiscellaneous, FKeySequence>;
     };
 
-export type FKeybindKey =
-    | `${ FKeybindActionLevel }[${ keyof FKeybindActionLevelSet }]`
+export type FActionKey =
+    | `${ FKeybindActionLevel }[${ keyof FKeySequenceSet }]`
     | `Direction.${ FKeybindDirection }`
     | `Miscellaneous.${ FKeybindActionMiscellaneous }`;
 
-export type FKeybind = TStaticArray<FKeybindKey, TIntegralRange<1, 4>>;
+export type FAction = TStaticArray<FActionKey, TIntegralRange<1, 4>>;

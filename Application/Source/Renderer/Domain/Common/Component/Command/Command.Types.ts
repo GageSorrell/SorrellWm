@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FKeybind } from "../../../../../Shared/Settings";
+import type { FAction } from "../../../../../Shared/Settings";
 import type { FSimpleCallback } from "../../../../../Shared/Utility";
 
 export type FCommandBase =
@@ -22,8 +22,8 @@ export type FCommandBase =
 export type FSimpleCommand =
     FCommandBase &
     {
+        Action: FAction;
         Callback: FSimpleCallback;
-        Keybind: FKeybind;
     };
 
 export type FSubCommand = Omit<FSimpleCommand, "Description" | "Name">;

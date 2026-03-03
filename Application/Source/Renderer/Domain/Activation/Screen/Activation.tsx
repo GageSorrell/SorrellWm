@@ -23,25 +23,25 @@ const ActivationTiled = (): ReactElement =>
         {
             Callback: Navigate("/Focus"),
             Description: "@TODO",
-            Keybind: [ "Direction.Left" ],
+            Action: [ "Direction.Left" ],
             Name: "Focus"
         },
         {
             Callback: Navigate("/Insert"),
             Description: "@TODO",
-            Keybind: [ "Direction.Up" ],
+            Action: [ "Direction.Up" ],
             Name: "Insert"
         },
         {
             Callback: Navigate("/Move"),
             Description: "@TODO",
-            Keybind:  [ "Direction.Down" ],
+            Action:  [ "Direction.Down" ],
             Name: "Move"
         },
         {
             Callback: Navigate("/Resize"),
             Description: "@TODO",
-            Keybind: [ "Direction.Right" ],
+            Action: [ "Direction.Right" ],
             Name: "Resize"
         }
     ];
@@ -51,7 +51,7 @@ const ActivationTiled = (): ReactElement =>
         {
             Callback: () => Log("Settings was selected."),
             Description: "@TODO",
-            Keybind: [ "Miscellaneous.Settings" ],
+            Action: [ "Miscellaneous.Settings" ],
             Name: "Settings"
         }
     ];
@@ -72,19 +72,19 @@ const ActivationNotTiled = (): ReactElement =>
         {
             Callback: Navigate("/Tile"),
             Description: "@TODO",
-            Keybind: [ "Direction.Up" ],
+            Action: [ "Direction.Up" ],
             Name: "Tile (Bring into Panel)"
         },
         {
             Callback: Navigate("/Move"),
             Description: "@TODO",
-            Keybind: [ "Direction.Down" ],
+            Action: [ "Direction.Down" ],
             Name: "Move"
         },
         {
             Callback: Navigate("/Resize"),
             Description: "@TODO",
-            Keybind: [ "Direction.Right" ],
+            Action: [ "Direction.Right" ],
             Name: "Resize"
         }
     ];
@@ -94,7 +94,7 @@ const ActivationNotTiled = (): ReactElement =>
         {
             Callback: () => Log("Peek was selected."),
             Description: "@TODO",
-            Keybind: [ "Miscellaneous.Peek" ],
+            Action: [ "Miscellaneous.Peek" ],
             Name: "Peek"
         }
     ];

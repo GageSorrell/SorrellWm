@@ -24,18 +24,15 @@ import type {
     FIpcEvents,
     FIpcFrontendChannel,
     FRichFrontendEvents,
-    FSingleRichFrontendChannels,
     TEventCallback,
     TGetDefaultRichResponseData,
     TGetResponse,
     TGetResponseFromKey,
-    TGetSingleRichResponseData,
     TRequest } from "../Shared/Event";
 import type {
     TIpcState,
     TUseSendIpcEventReturnType,
-    TUseSendIpcEventStrictReturnType,
-    TUseSendIpcEventStrictSingleReturnType } from "./Event.Types";
+    TUseSendIpcEventStrictReturnType } from "./Event.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
 
@@ -295,23 +292,23 @@ export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
     // } as const;
 };
 
-/**
- * This is the hook that is intended to be used most often, since most events
- * are expected to be rich and only contain a single argument.
- *
- * This hook wraps `UseSendIpcEventSingle` to provide a more React-style signature.
- */
-export const UseSendIpcEventStrictSingle = <T extends FSingleRichFrontendChannels>(
-    Channel: T,
-    Request: TRequest<T>,
-    DefaultData: TGetDefaultRichResponseData<T>,
-    DependencyArray: Array<unknown> = [ ]
-): TUseSendIpcEventStrictSingleReturnType<T> =>
-{
-    const { Data, Error } = UseSendIpcEventStrict(Channel, Request, DefaultData, DependencyArray);
-    const DataKeys: Array<PropertyKey> = Object.keys(Data);
-    const ZerothDataProperty: TGetSingleRichResponseData<T> =
-        (Data[DataKeys[0] as keyof typeof Data] as TGetSingleRichResponseData<T>);
+// /**
+//  * This is the hook that is intended to be used most often, since most events
+//  * are expected to be rich and only contain a single argument.
+//  *
+//  * This hook wraps `UseSendIpcEventSingle` to provide a more React-style signature.
+//  */
+// export const UseSendIpcEventStrictSingle = <T extends FSingleRichFrontendChannels>(
+//     Channel: T,
+//     Request: TRequest<T>,
+//     DefaultData: TGetDefaultRichResponseData<T>,
+//     DependencyArray: Array<unknown> = [ ]
+// ): TUseSendIpcEventStrictSingleReturnType<T> =>
+// {
+//     const { Data, Error } = UseSendIpcEventStrict(Channel, Request, DefaultData, DependencyArray);
+//     const DataKeys: Array<PropertyKey> = Object.keys(Data);
+//     const ZerothDataProperty: TGetSingleRichResponseData<T> =
+//         (Data[DataKeys[0] as keyof typeof Data] as TGetSingleRichResponseData<T>);
 
-    return [ ZerothDataProperty, Error ] as const;
-};
+//     return [ ZerothDataProperty, Error ] as const;
+// };

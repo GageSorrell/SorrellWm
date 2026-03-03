@@ -104,18 +104,18 @@ export const Tile = (): ReactElement =>
             [
                 {
                     Callback: DecrementSelectionIndex,
-                    Keybind: [ "Direction.Up" ]
+                    Action: [ "Direction.Up" ]
                 },
                 {
                     Callback: IncrementSelectionIndex,
-                    Keybind: [ "Direction.Down" ]
+                    Action: [ "Direction.Down" ]
                 }
             ]
         },
         {
             Callback: ConfirmSelection,
             Description: "@TODO",
-            Keybind: [ "Primary[0]" ],
+            Action: [ "Primary[0]" ],
             Name: "Confirm"
         }
     ];

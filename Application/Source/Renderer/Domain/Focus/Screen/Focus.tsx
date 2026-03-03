@@ -210,24 +210,24 @@ export const Focus = (): ReactNode =>
             [
                 {
                     Callback: MoveFocusPrevious,
-                    Keybind: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ]
+                    Action: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ]
                 },
                 {
                     Callback: MoveFocusNext,
-                    Keybind: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ]
+                    Action: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ]
                 }
             ]
         },
         {
             Callback: StepDownIntoPanel,
             Description: "@TODO",
-            Keybind: [ "Primary[1]" ],
+            Action: [ "Primary[1]" ],
             Name: "Step Down into Panel"
         },
         {
             Callback: StepUpIntoPanel,
             Description: "@TODO",
-            Keybind: [ "Primary[0]" ],
+            Action: [ "Primary[0]" ],
             Name: "Step Up into Panel"
         }
     ];

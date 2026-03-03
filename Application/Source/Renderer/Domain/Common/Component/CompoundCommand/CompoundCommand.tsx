@@ -38,13 +38,13 @@ export const CompoundCommand = ({ SubCommands, Name }: PCompoundCommand): ReactE
     const { RegisterShortcut, UnregisterShortcut } = UseShortcut() as IShortcutProviderRenderProps;
     useEffect((): ReturnType<EffectCallback> =>
     {
-        SubCommands.forEach(({ Callback, Keybind }: FSubCommand, Index: number): void =>
+        SubCommands.forEach(({ Callback, Action: Keybind }: FSubCommand, Index: number): void =>
         {
             RegisterShortcut(Callback, Keybind, `${ Name }_${ Index }`, 0);
         });
         return (): void =>
         {
-            SubCommands.forEach(({ Keybind }: FSubCommand): void =>
+            SubCommands.forEach(({ Action: Keybind }: FSubCommand): void =>
             {
                 UnregisterShortcut(Keybind, false);
             });
@@ -56,7 +56,7 @@ export const CompoundCommand = ({ SubCommands, Name }: PCompoundCommand): ReactE
     return (
         <div style={ RootStyle }>
             {
-                SubCommands.flatMap(({ Keybind }: FSubCommand): Array<ReactNode> =>
+                SubCommands.flatMap(({ Action: Keybind }: FSubCommand): Array<ReactNode> =>
                 {
                     return GetKeybindIdFromKeybind(Keybind, Keybinds).map((Value: FKeyId): ReactNode =>
                     {
