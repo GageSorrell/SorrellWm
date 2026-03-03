@@ -16,7 +16,7 @@
             [
                 "./Source/Renderer/Domain/*"
             ],
-            "!/*":
+            "()/*":
             [
                 "./Source/Shared/*"
             ]

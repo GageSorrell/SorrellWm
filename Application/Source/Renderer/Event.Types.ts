@@ -12,21 +12,21 @@ import type {
     TGetRichResponseAsFailure,
     TGetRichResponseAsSuccess } from "../Shared/Event";
 
-export type TIpcState<T extends keyof FIpcFrontendEvents> =
+export type TIpcState<Type extends keyof FIpcFrontendEvents> =
 {
-    Data: TGetResponseFromKey<T>["Data"] | undefined;
-    Error: TGetResponseFromKey<T>["Error"] | undefined;
+    Data: TGetResponseFromKey<Type>["Data"] | undefined;
+    Error: TGetResponseFromKey<Type>["Error"] | undefined;
 };
 
-export type TIpcStateStrict<T extends keyof FRichEvents> =
+export type TIpcStateStrict<Type extends keyof FRichEvents> =
 {
-    Data: TGetRichResponseAsSuccess<T>["Data"];
-    Error: TGetRichResponseAsFailure<T>["Error"] | undefined;
+    Data: TGetRichResponseAsSuccess<Type>["Data"];
+    Error: TGetRichResponseAsFailure<Type>["Error"] | undefined;
 };
 
-export type TUseSendIpcEventReturnType<T extends keyof FIpcFrontendEvents> = Readonly<TIpcState<T>>;
+export type TUseSendIpcEventReturnType<Type extends keyof FIpcFrontendEvents> = Readonly<TIpcState<Type>>;
 
-export type TUseSendIpcEventStrictReturnType<T extends keyof FRichFrontendEvents> = Readonly<{
-    Data: Exclude<TIpcStateStrict<T>["Data"], undefined>,
-    Error: TIpcStateStrict<T>["Error"]
+export type TUseSendIpcEventStrictReturnType<Type extends keyof FRichFrontendEvents> = Readonly<{
+    Data: Exclude<TIpcStateStrict<Type>["Data"], undefined>,
+    Error: TIpcStateStrict<Type>["Error"]
 }>;

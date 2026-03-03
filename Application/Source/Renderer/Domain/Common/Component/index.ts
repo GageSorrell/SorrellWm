@@ -5,6 +5,5 @@
  */
 
 export * from "./Command";
-export * from "./CompoundCommand";
 export * from "./Keyboard";
 export * from "./Panel";

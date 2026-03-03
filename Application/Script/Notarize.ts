@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/* eslint-disable no-console */
+
 import { build } from "../package.json";
 import { notarize } from "@electron/notarize";
 
@@ -18,7 +20,7 @@ interface IContext
             productFilename: string;
         }
     }
-};
+}
 
 exports.default = async function notarizeMacos(Context: IContext)
 {

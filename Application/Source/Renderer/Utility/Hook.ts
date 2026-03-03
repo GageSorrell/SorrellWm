@@ -172,13 +172,13 @@ export const UseNavigator = (): Readonly<[ Navigate: FMakeNavigateFunction ]> =>
  * Get the bounding box of an `HTMLElement`, using either (1) a given `RefObject`,
  * or (2) the `RefObject` returned by the hook.
  */
-export const UseDomRect = <T extends HTMLElement = HTMLElement>(
-    ElementRef?: RefObject<T>
-): TUseDomRectReturnValue<T> =>
+export const UseDomRect = <Type extends HTMLElement = HTMLElement>(
+    ElementRef?: RefObject<Type>
+): TUseDomRectReturnValue<Type> =>
 {
-    const DefaultElementReference: RefObject<T> = useRef<T>(null);
+    const DefaultElementReference: RefObject<Type> = useRef<Type>(null);
 
-    const ElementReference: RefObject<T> = (ElementRef !== undefined)
+    const ElementReference: RefObject<Type> = (ElementRef !== undefined)
         ? ElementRef
         : DefaultElementReference;
 
@@ -186,7 +186,7 @@ export const UseDomRect = <T extends HTMLElement = HTMLElement>(
 
     useLayoutEffect((): ReturnType<EffectCallback> =>
     {
-        const Element: T | null = ElementReference.current;
+        const Element: Type | null = ElementReference.current;
 
         if (Element === null)
         {
@@ -215,23 +215,23 @@ export const UseDomRect = <T extends HTMLElement = HTMLElement>(
     return [ Box, ElementReference ] as const;
 };
 
-export const UsePromise = <T>(
-    InPromise: Promise<T>,
-    InitialValue: T,
-    Then?: TPromiseThenFunction<T>,
+export const UsePromise = <Type>(
+    InPromise: Promise<Type>,
+    InitialValue: Type,
+    Then?: TPromiseThenFunction<Type>,
     Catch?: TPromiseCatchFunction
-): Readonly<[ T ]> =>
+): Readonly<[ Type ]> =>
 {
-    const [ Value, SetValue ] = useState<T>(InitialValue);
+    const [ Value, SetValue ] = useState<Type>(InitialValue);
 
     const DefaultCatchFunction: TPromiseCatchFunction = Identity;
     const CatchFunction: TPromiseCatchFunction = Catch !== undefined
         ? Catch
         : DefaultCatchFunction;
 
-    const UpdateValue = (NewValue: T): T =>
+    const UpdateValue = (NewValue: Type): Type =>
     {
-        SetValue((_Old: T): T =>
+        SetValue((_Old: Type): Type =>
         {
             return NewValue;
         });
@@ -243,7 +243,7 @@ export const UsePromise = <T>(
     {
         if (Then !== undefined)
         {
-            Then(Value as T);
+            Then(Value as Type);
         }
     };
 

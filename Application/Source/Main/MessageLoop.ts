@@ -10,7 +10,10 @@ import { InitializeMessageLoop } from "@sorrellwm/windows";
 
 const RunInitializeMessageLoop = (): void =>
 {
-    InitializeMessageLoop(() => { });
+    InitializeMessageLoop(() =>
+    {
+
+    });
 };
 
 RunInitializeMessageLoop();

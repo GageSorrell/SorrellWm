@@ -106,9 +106,10 @@ export type FUnknownIpcEvent =
     | FUnknownRichEvent
     | FUnknownPoorEvent;
 
-export type TIpcEventsBase<T = Record<string, FUnknownIpcEvent>> = T extends Record<string, FUnknownIpcEvent>
-    ? T
-    : never;
+export type TIpcEventsBase<Type = Record<string, FUnknownIpcEvent>> =
+    Type extends Record<string, FUnknownIpcEvent>
+        ? Type
+        : never;
 
 export type TIpcFrontendEvent<
     Request extends FNotFunction = FNotFunction,

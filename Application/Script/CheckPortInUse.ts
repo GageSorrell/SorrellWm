@@ -16,7 +16,7 @@ detectPort(Port as unknown as number, (_Error: unknown, AvailablePort: number) =
         throw new Error(
             chalk.whiteBright.bgRed.bold(
                 /* eslint-disable-next-line @stylistic/max-len */
-                `Port "${Port}" on "localhost" is already in use. Please use another port. ex: PORT=4343 npm start`,
+                `Port "${ Port }" on "localhost" is already in use. Please use another port. ex: PORT=4343 npm start`
             )
         );
     }

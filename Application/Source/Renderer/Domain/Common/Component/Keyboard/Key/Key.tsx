@@ -6,12 +6,12 @@
 
 import { type CSSProperties, type ReactElement, useMemo } from "react";
 import type { FKey, PKey } from "./Key.Types";
-import type { FLogger } from "../../../Shared/Log.Types";
+import type { FLogger } from "../../../../../../Shared/Log.Types";
 import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";
 import { GetLogger } from "@/Log";
-import { UseThemeColors } from "@/Utility";
 import { tokens } from "@fluentui/react-components";
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Key");
 
 const WindowsLogo: string = "\uE782";
@@ -819,9 +819,9 @@ const IsUnicodeCharacter = (Input: string): boolean =>
     }
 };
 
-export const Key = ({ Value }: PKey): ReactElement =>
+export const Key = ({ KeyId }: PKey): ReactElement =>
 {
-    // const { Display, Modifier, Side } = Keys[Value];
+    // const { Display, Modifier, Side } = Keys[KeyId];
     // const CornerDisplay: string | undefined = useMemo((): string | undefined =>
     // {
     //     if (Modifier !== undefined)
@@ -840,8 +840,8 @@ export const Key = ({ Value }: PKey): ReactElement =>
 
     const DisplayStyle: CSSProperties = useMemo((): CSSProperties =>
     {
-        const IsFluentIcon: boolean = IsUnicodeCharacter(Value);
-        const fontSize: string = Value.length > 1
+        const IsFluentIcon: boolean = IsUnicodeCharacter(KeyId);
+        const fontSize: string = KeyId.length > 1
             ? "2rem"
             : "1rem";
 
@@ -856,9 +856,9 @@ export const Key = ({ Value }: PKey): ReactElement =>
             marginBottom,
             textWrap: "nowrap"
         };
-    }, [ Value ]);
+    }, [ KeyId ]);
 
-    const maxWidth: string | undefined = Value.length === 1
+    const maxWidth: string | undefined = KeyId.length === 1
         ? "2rem"
         : undefined;
 
@@ -882,7 +882,7 @@ export const Key = ({ Value }: PKey): ReactElement =>
     return (
         <div style={ RootStyle }>
             <span style={ DisplayStyle }>
-                { Value }
+                { KeyId }
             </span>
         </div>
     );

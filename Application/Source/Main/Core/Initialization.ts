@@ -6,7 +6,7 @@
 
 import { type BrowserWindow, app, shell } from "electron";
 import { CreateBrowserWindow } from "#/BrowserWindow.Old";
-import type { FLogger } from "!/Log.Types";
+import type { FLogger } from "()/Log.Types";
 import { GetLogger } from "#/Development";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";

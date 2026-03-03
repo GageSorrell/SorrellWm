@@ -4,21 +4,21 @@
  * License:   MIT
  */
 
-export type TSubscriptionHandle<T> =
+export type TSubscriptionHandle<Type> =
 {
-    Subscribe(Callback: ((Argument: T) => void)): number;
+    Subscribe(Callback: ((Argument: Type) => void)): number;
     Unsubscribe(Id: number): void;
 };
 
-export class TDispatcher<T>
+export class TDispatcher<Type>
 {
     private NextListenerId: number = 0;
 
-    private Listeners: Map<number, (Argument: T) => void> = new Map<number, (Argument: T) => void>();
+    private Listeners: Map<number, (Argument: Type) => void> = new Map<number, (Argument: Type) => void>();
 
-    public GetHandle = (): TSubscriptionHandle<T> =>
+    public GetHandle = (): TSubscriptionHandle<Type> =>
     {
-        const Subscribe = (Callback: ((Argument: T) => void)): number =>
+        const Subscribe = (Callback: ((Argument: Type) => void)): number =>
         {
             const Id: number = this.NextListenerId++;
             this.Listeners.set(Id, Callback);
@@ -36,26 +36,26 @@ export class TDispatcher<T>
         };
     };
 
-    public Dispatch = (Message: T): void =>
+    public Dispatch = (Message: Type): void =>
     {
         if (this.Listeners.size > 0)
         {
-            this.Listeners.forEach((Callback: ((Argument: T) => void)): void =>
+            this.Listeners.forEach((Callback: ((Argument: Type) => void)): void =>
             {
                 Callback(Message);
             });
         }
     };
-};
+}
 
 /* eslint-disable-next-line @typescript-eslint/naming-convention */
-export class TDispatcher_DEPRECATED<T = unknown>
+export class TDispatcher_DEPRECATED<Type = unknown>
 {
     private NextListenerId: number = 0;
 
-    private Listeners: Map<number, (Argument: T) => void> = new Map<number, (Argument: T) => void>();
+    private Listeners: Map<number, (Argument: Type) => void> = new Map<number, (Argument: Type) => void>();
 
-    public Subscribe(Callback: ((Argument: T) => void)): number
+    public Subscribe(Callback: ((Argument: Type) => void)): number
     {
         const Id: number = this.NextListenerId++;
         this.Listeners.set(Id, Callback);
@@ -67,14 +67,14 @@ export class TDispatcher_DEPRECATED<T = unknown>
         this.Listeners.delete(Id);
     }
 
-    public Dispatch = (Message: T): void =>
+    public Dispatch = (Message: Type): void =>
     {
         if (this.Listeners.size > 0)
         {
-            this.Listeners.forEach((Callback: ((Argument: T) => void)): void =>
+            this.Listeners.forEach((Callback: ((Argument: Type) => void)): void =>
             {
                 Callback(Message);
             });
         }
     };
-};
+}

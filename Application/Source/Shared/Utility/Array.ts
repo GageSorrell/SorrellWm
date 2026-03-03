@@ -6,7 +6,7 @@
 
 import type { TIsNonNegativeInteger } from "./Utility.Types";
 
-export type TMaybeArray<T> = T | Array<T>;
+export type TMaybeArray<Type> = Type | Array<Type>;
 
 type TBuildStaticArray<
     ElementType,

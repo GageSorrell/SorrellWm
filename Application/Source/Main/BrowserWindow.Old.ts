@@ -56,7 +56,7 @@ const ResolveHtmlPath = (HtmlFileName: string, Component?: string): string =>
     else
     {
         return BasePath;
-    };
+    }
 };
 
 /** Factory function for `BrowserWindow`.  Provides some defaults, particularly *wrt* `webPreferences`. */

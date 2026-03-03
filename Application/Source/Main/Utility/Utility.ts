@@ -4,7 +4,7 @@
  */
 
 import type { FBox } from "@sorrellwm/windows";
-import type { FLogger } from "!/Log.Types";
+import type { FLogger } from "()/Log.Types";
 import { promises as Fs } from "fs";
 import { GetLogger } from "#/Development";
 import type { HHandle } from "./Utility.Types";
@@ -12,11 +12,11 @@ import type { TRef } from "#/Core";
 
 const Log: FLogger = GetLogger("Utility");
 
-export const MakeRef = <T>(): TRef<T> =>
+export const MakeRef = <Type>(): TRef<Type> =>
 {
     return {
         Ref: undefined
-    } as TRef<T>;
+    } as TRef<Type>;
 };
 
 export const AreBoxesEqual = (A: FBox, B: FBox): boolean =>
@@ -35,16 +35,16 @@ export const AreHandlesEqual = (A: HHandle, B: HHandle): boolean =>
     return A.Handle === B.Handle;
 };
 
-export const MapKeys = <T extends object = object, U = unknown>(
+export const MapKeys = <InType extends object = object, OutType = unknown>(
     InObject: object,
-    Callback: (Key: keyof T, Index?: number) => U
-): Array<U> =>
+    Callback: (Key: keyof InType, Index?: number) => OutType
+): Array<OutType> =>
 {
-    const OutArray: Array<U> = [ ];
+    const OutArray: Array<OutType> = [ ];
 
     Object.keys(InObject).forEach((Key: string, Index: number): void =>
     {
-        OutArray.push(Callback(Key as keyof T, Index));
+        OutArray.push(Callback(Key as keyof InType, Index));
     });
 
     return OutArray;

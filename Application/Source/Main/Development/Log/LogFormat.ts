@@ -150,9 +150,9 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
 
             SearchedIndices[Strings[InnermostStartIndex] as FDelimiterStartString].push(InnermostStartIndex);
 
-            const GetFirstIndexOfValueAfterIndex = <T>(
-                Values: Readonly<Array<T>>,
-                TargetValue: T,
+            const GetFirstIndexOfValueAfterIndex = <Type>(
+                Values: Readonly<Array<Type>>,
+                TargetValue: Type,
                 AfterIndex: number
             ): number | undefined =>
             {

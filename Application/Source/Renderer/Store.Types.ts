@@ -7,14 +7,14 @@
 import type { StoreApi, UseBoundStore } from "zustand";
 import type { FHexColor } from "@sorrellwm/windows";
 
-type TUnget<T extends string> = T extends `Set${ infer R }`
+type TUnget<Type extends string> = Type extends `Set${ infer R }`
     ? R
     : never;
 
-type TMakeBasicStore<T extends Record<string, unknown>> =
-    T &
+type TMakeBasicStore<Type extends Record<string, unknown>> =
+    Type &
     {
-        [ Key in `Set${ Extract<keyof T, string> }` ]: (Input: T[TUnget<Key>]) => void;
+        [ Key in `Set${ Extract<keyof Type, string> }` ]: (Input: Type[TUnget<Key>]) => void;
     };
 
 export type GGlobalData =

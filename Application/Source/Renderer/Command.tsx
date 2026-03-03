@@ -25,7 +25,7 @@ import {
     useState } from "react";
 import type { FAction, FActionKey, FKeybinds } from "../Shared/Settings";
 import type { FSimpleCallback, TRecord, TSimpleFunction } from "../Shared/Utility";
-import type { FKeyId } from "!/Keyboard.Types";
+import type { FKeyId } from "()/Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { Identity } from "./Utility";

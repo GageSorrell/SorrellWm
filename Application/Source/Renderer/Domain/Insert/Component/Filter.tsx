@@ -5,9 +5,6 @@
  */
 
 import type { CSSProperties, ReactElement } from "react";
-import type { PHighlightedHalf } from "./HighlightedHalf.Types";
-import { Pulse } from "@/Domain/Common/Component/Pulse";
-import { UseThemeColors } from "@/Utility";
 import { Input } from "@fluentui/react-components";
 import { Key } from "@/Domain/Common";
 
@@ -20,13 +17,13 @@ export const Filter = (): ReactElement =>
     /* @TODO Should have a hint reminding the user that, if they have entered    *
      * input then this component loses focus, pressing square will return focus. */
     return (
-        <div>
+        <div style={ RootStyle }>
             <Input
                 size="large"
-                style={{ position: "relative" }}
+                style={ { position: "relative" } }
             />
             <div>
-                Press <Key Value="C"/> to type and filter.
+                Press <Key KeyId="C"/> to type and filter.
             </div>
         </div>
     );

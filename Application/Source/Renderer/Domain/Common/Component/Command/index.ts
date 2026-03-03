@@ -10,5 +10,3 @@ export * from "./CommandBottomShelf";
 export * from "./CommandBottomShelf.Types";
 export * from "./CommandContainer";
 export * from "./CommandContainer.Types";
-export * from "./MainCommands";
-export * from "./MainCommands.Types";

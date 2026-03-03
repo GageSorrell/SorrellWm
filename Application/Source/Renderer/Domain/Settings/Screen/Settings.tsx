@@ -4,7 +4,14 @@
  * License:   MIT
  */
 
-import { useState, type CSSProperties, type ReactElement } from "react";
+import { type CSSProperties, type ReactElement, useState } from "react";
+import {
+    Divider,
+    type SelectTabData,
+    type SelectTabEvent,
+    Tab,
+    TabList,
+    tokens } from "@fluentui/react-components";
 import {
     type FluentIcon,
     InfoFilled,
@@ -14,10 +21,9 @@ import {
     StarFilled,
     StarRegular,
     bundleIcon } from "@fluentui/react-icons";
-import { Divider, Tab, TabList, tokens, type SelectTabData, type SelectTabEvent } from "@fluentui/react-components";
+import { About } from "./About";
 import { Basic } from "./Basic";
 import { Keyboard } from "./Keyboard";
-import { About } from "./About";
 
 export const Settings = (): ReactElement =>
 {
@@ -74,7 +80,7 @@ export const Settings = (): ReactElement =>
                 </Tab>
                 <Tab
                     icon={ <AboutIcon /> }
-                    style={{ position: "absolute", bottom: 0 }}
+                    style={ { bottom: 0, position: "absolute" } }
                     value="About">
                     About
                 </Tab>

@@ -7,7 +7,7 @@
 import { Body1, Skeleton, SkeletonItem, Title3, makeStyles, tokens } from "@fluentui/react-components";
 import { type CSSProperties, type ReactElement, useMemo } from "react";
 import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
-import type { FLogger } from "!/Log.Types";
+import type { FLogger } from "()/Log.Types";
 import { Fade } from "@fluentui/react-motion-components-preview";
 import { GetLogger } from "@/Log";
 import type { PPanel } from "./Panel.Types";
@@ -115,9 +115,9 @@ export const Panel = ({
             return {
                 ...BaseStyle,
                 height: Size.Height,
-                width: Size.Width,
+                left: 0.5 * Size.Width,
                 top: 0.5 * Size.Height,
-                left: 0.5 * Size.Width
+                width: Size.Width
             };
         }
 
@@ -131,11 +131,11 @@ export const Panel = ({
         const ScaledHeight: number = Math.floor(Size.Height * Scale);
 
         // Choose the height from SIZES that is closest to ScaledHeight
-        const NearestHeight: number = SIZES.reduce((previous, current) =>
+        const NearestHeight: number = SIZES.reduce((Previous: number, Current: number) =>
         {
-            return Math.abs(current - ScaledHeight) < Math.abs(previous - ScaledHeight)
-                ? current
-                : previous;
+            return Math.abs(Current - ScaledHeight) < Math.abs(Previous - ScaledHeight)
+                ? Current
+                : Previous;
         }, SIZES[0]);
 
         // Adjust width to preserve the approximate aspect ratio after snapping the height
@@ -147,12 +147,13 @@ export const Panel = ({
         return {
             ...BaseStyle,
             height: NearestHeight,
-            width: FinalWidth,
+            left: -0.5 * FinalWidth,
             top: -0.5 * NearestHeight,
-            left: -0.5 * FinalWidth
+            width: FinalWidth
         };
     }, [ SIZES, Size ]);
 
+    /* eslint-disable @stylistic/max-len */
     // const SkeletonStyle: CSSProperties = useMemo<CSSProperties>((): CSSProperties =>
     // {
     //     const MaxWidth: number = 128;
@@ -187,6 +188,7 @@ export const Panel = ({
     //         width: Math.floor(Size.Width * Scale)
     //     };
     // }, [ Size ]);
+    /* eslint-enable @stylistic/max-len */
 
     const FluentStyles: Record<string, string> = UseStyles();
 
@@ -195,7 +197,7 @@ export const Panel = ({
             className={ IsSelected ? FluentStyles.Selected : undefined }
             style={ RootStyle }>
             <div style={ InnerRootStyle }>
-                <div style={{ position: "relative" }}>
+                <div style={ { position: "relative" } }>
                     <img
                         height={ 0.1 * Size.Height }
                         src={ Screenshot }

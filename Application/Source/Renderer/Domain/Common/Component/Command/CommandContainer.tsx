@@ -97,7 +97,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                     {
                         return <Key
                             key={ Value }
-                            { ...{ Value } }
+                            { ...{ KeyId: Value } }
                         />;
                     });
                 };

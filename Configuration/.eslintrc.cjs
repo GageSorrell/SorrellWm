@@ -70,7 +70,7 @@ module.exports =
                 custom:
                 {
                     match: true,
-                    regex: "^[A-Z](?:$|[^A-Z])"
+                    regex: "^[A-Z][a-z].+"
                 },
                 format: [ "PascalCase" ],
                 selector: "typeParameter"

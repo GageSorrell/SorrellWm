@@ -72,20 +72,21 @@ export type TRecordNonNullable<RecordType extends FRecord> =
     [ Key in keyof RecordType ]: NonNullable<RecordType[Key]>;
 };
 
-export type TArrayNonempty<T = unknown> = [ T, ...Array<T> ];
+export type TArrayNonempty<Type = unknown> = [ Type, ...Array<Type> ];
 
-export type TMatrix<T> = Array<Array<T>>;
-export type TSafeMatrix<T> = TArrayNonempty<TArrayNonempty<T>>;
+export type TMatrix<Type> = Array<Array<Type>>;
+export type TSafeMatrix<Type> = TArrayNonempty<TArrayNonempty<Type>>;
 
-export type TExtractFunction<T> =
-    T extends { (...Arguments: infer ArgumentVectorType): infer ReturnType }
+export type TExtractFunction<Type> =
+    Type extends { (...Arguments: infer ArgumentVectorType): infer ReturnType }
         ? (...Arguments: ArgumentVectorType) => ReturnType
         : never;
 
-export type TPromiseThenFunction<T = unknown> =
-    NonNullable<Parameters<TExtractFunction<Promise<T>["then"]>>[0]>;
-export type TPromiseCatchFunction<T = unknown> =
-    NonNullable<Parameters<TExtractFunction<Promise<T>["catch"]>>[0]>;
+export type TPromiseThenFunction<ParameterType = unknown, ReturnType = unknown> =
+    (Value: ParameterType) => ReturnType;
+
+export type TPromiseCatchFunction<Type = unknown> =
+    Parameters<TExtractFunction<Promise<Type>["catch"]>>[0];
 
 export type FTypeof =
     | "object"

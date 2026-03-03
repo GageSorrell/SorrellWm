@@ -28,11 +28,11 @@ export type FValue =
 
 export type FLogStringArray = TArrayNonempty<FLogString>;
 
-export type TContainer<T = unknown, U extends FPrimitive = FPrimitive> =
-    | Record<Extract<U, PropertyKey>, T>
-    | Map<U, T>
-    | Set<T>
-    | Array<T>;
+export type TContainer<Type = unknown, KeyType extends FPrimitive = FPrimitive> =
+    | Record<Extract<KeyType, PropertyKey>, Type>
+    | Map<KeyType, Type>
+    | Set<Type>
+    | Array<Type>;
 
 export type FArrayTypeName = "Array";
 export type FMapTypeName = "Map";
@@ -69,16 +69,16 @@ export type FMap = Map<FPrimitive, unknown>;
 export type FRecord = Record<PropertyKey, unknown>;
 export type FSet = Set<FLogValueType>;
 
-export type TLogBase<T = FLogValueType> =
+export type TLogBase<Type = FLogValueType> =
 {
     Depth: number;
     IsInlined?: boolean;
-    Value: T;
+    Value: Type;
 };
 
-export type TLogPrimitive<T extends FPrimitive = FPrimitive> = TLogBase<T>;
+export type TLogPrimitive<Type extends FPrimitive = FPrimitive> = TLogBase<Type>;
 
-export type TLogContainer<T extends TContainer = TContainer> = TLogBase<T>;
+export type TLogContainer<Type extends TContainer = TContainer> = TLogBase<Type>;
 
 export type FLogArray = TLogContainer<FArray>;
 export type FLogMap = TLogContainer<FMap>;
@@ -103,4 +103,4 @@ export type FLogValueType =
     | FValue
     | TContainer;
 
-export type TLogValue<T extends FLogValueType = FLogValueType> = TLogBase<T>;
+export type TLogValue<Type extends FLogValueType = FLogValueType> = TLogBase<Type>;

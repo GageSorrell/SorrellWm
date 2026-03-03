@@ -10,5 +10,5 @@ export type FSimpleCallbackMaybeAsync = FSimpleCallback | FSimpleCallbackAsync;
 
 export type TSimpleFunction<ParameterType, ReturnType = void> = (In: ParameterType) => ReturnType;
 
-export type TResolveFunction<T> = (Value: T | PromiseLike<T>) => void;
+export type TResolveFunction<Type> = (Value: Type | PromiseLike<Type>) => void;
 export type FRejectFunction = (Reason?: unknown) => void;

@@ -8,7 +8,7 @@ import type { CSSProperties, DependencyList } from "react";
 import type { FBox } from "@sorrellwm/windows";
 import type { FFlexStyle } from "./Utility.Types";
 
-export const Identity = <T>(...Arguments: Array<T>) => Arguments;
+export const Identity = <Type>(...Arguments: Array<Type>) => Arguments;
 
 export const AppendDependencyList = (
     InitialDependencyList: DependencyList,

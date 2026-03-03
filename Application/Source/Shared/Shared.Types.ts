@@ -10,7 +10,7 @@ export type FCardinalDirection =
     | "Left"
     | "Right";
 
-export type TFunction<TParameterTypes extends Array<unknown>, TReturnType> =
-    (...Arguments: TParameterTypes) => TReturnType;
+export type TFunction<ParameterTypes extends Array<unknown>, ReturnType> =
+    (...Arguments: ParameterTypes) => ReturnType;
 
 export type FNotFunction = Exclude<unknown, (...Arguments: Array<unknown>) => unknown>;

@@ -4,81 +4,85 @@
  * License:   MIT
  */
 
-import { Command, CompoundCommand } from "@/Domain/Common";
-import { type NavigateFunction, useNavigate } from "react-router-dom";
-import { type ReactElement, useState } from "react";
-import { Action } from "@/Action";
-import type { FCardinalDirection } from "!/Shared.Types";
-import type { FInsertSizingMethod } from "../../../../Shared/Event/Insert.Types";
-import type { FSimpleCallback } from "../../../../Shared/Utility";
-import { HighlightedHalf } from "../Component";
-import { UseIpcNavigatorState } from "@/Router";
+// import { Command, CompoundCommand } from "@/Domain/Common";
+// import { type NavigateFunction, useNavigate } from "react-router-dom";
+// import { type ReactElement, useState } from "react";
+// import { Action } from "@/Action";
+// import type { FCardinalDirection } from "()/Shared.Types";
+// import type { FInsertSizingMethod } from "../../../../Shared/Event/Insert.Types";
+// import type { FSimpleCallback } from "../../../../Shared/Utility";
+// import { HighlightedHalf } from "../Component";
+// import { UseIpcNavigatorState } from "@/Router";
 
-const UseDirectionNavigatorState = (): Readonly<[ FInsertSizingMethod ]> =>
+import { type ReactNode } from "react";
+
+// const UseDirectionNavigatorState = (): Readonly<[ FInsertSizingMethod ]> =>
+// {
+//     const [ State ] = UseIpcNavigatorState();
+
+//     if (State !== undefined && typeof State === "string")
+//     {
+//         return [ State as FInsertSizingMethod ] as const;
+//     }
+//     else
+//     {
+//         return [ "Bisection" ] as const;
+//     }
+// };
+
+export const Direction = (): ReactNode =>
 {
-    const [ State ] = UseIpcNavigatorState();
+    // const Navigator: NavigateFunction = useNavigate();
+    // const [ SizingMethod ] = UseDirectionNavigatorState();
+    // const [ Position, SetPositionProper ] = useState<FCardinalDirection>("Left");
 
-    if (State !== undefined && typeof State === "string")
-    {
-        return [ State as FInsertSizingMethod ] as const;
-    }
-    else
-    {
-        return [ "Bisection" ] as const;
-    }
-};
+    // const SetPosition = (In: FCardinalDirection): FSimpleCallback =>
+    // {
+    //     return (): void =>
+    //     {
+    //         return SetPositionProper(In);
+    //     };
+    // };
 
-export const Direction = (): ReactElement =>
-{
-    const Navigator: NavigateFunction = useNavigate();
-    const [ SizingMethod ] = UseDirectionNavigatorState();
-    const [ Position, SetPositionProper ] = useState<FCardinalDirection>("Left");
+    // const Confirm = (): void =>
+    // {
+    //     Navigator("/Insert/Direction/Select", { state: { Position, SizingMethod } });
+    // };
 
-    const SetPosition = (In: FCardinalDirection): FSimpleCallback =>
-    {
-        return (): void =>
-        {
-            return SetPositionProper(In);
-        };
-    };
+    return <div></div>;
 
-    const Confirm = (): void =>
-    {
-        Navigator("/Insert/Direction/Select", { state: { Position, SizingMethod } });
-    };
-
-    return (
-        <Action>
-            <HighlightedHalf { ...{ Position } }/>
-            <CompoundCommand
-                Description="@TODO"
-                Name="Choose Direction"
-                SubCommands={ [
-                    {
-                        Callback: SetPosition("Left"),
-                        Action: [ "Direction.Left" ]
-                    },
-                    {
-                        Callback: SetPosition("Up"),
-                        Action: [ "Direction.Up" ]
-                    },
-                    {
-                        Callback: SetPosition("Down"),
-                        Action: [ "Direction.Down" ]
-                    },
-                    {
-                        Callback: SetPosition("Right"),
-                        Action: [ "Direction.Right" ]
-                    }
-                ] }
-            />
-            { /* @TODO "Or hover and click to select." */ }
-            <Command
-                Callback={ Confirm }
-                Description="@TODO"
-                Action={ [ "Primary[1]" ] }
-                Name="Confirm"
-            />
-        </Action>
-    );
+    // return (
+    //     <Action>
+    //         <HighlightedHalf { ...{ Position } }/>
+    //         <CompoundCommand
+    //             Description="@TODO"
+    //             Name="Choose Direction"
+    //             SubCommands={ [
+    //                 {
+    //                     Action: [ "Direction.Left" ],
+    //                     Callback: SetPosition("Left")
+    //                 },
+    //                 {
+    //                     Action: [ "Direction.Up" ],
+    //                     Callback: SetPosition("Up")
+    //                 },
+    //                 {
+    //                     Action: [ "Direction.Down" ],
+    //                     Callback: SetPosition("Down")
+    //                 },
+    //                 {
+    //                     Action: [ "Direction.Right" ],
+    //                     Callback: SetPosition("Right")
+    //                 }
+    //             ] }
+    //         />
+    //         { /* @TODO "Or hover and click to select." */ }
+    //         <Command
+    //             Action={ [ "Primary[1]" ] }
+    //             Callback={ Confirm }
+    //             Description="@TODO"
+    //             Name="Confirm"
+    //         />
+    //     </Action>
+    // );
 };

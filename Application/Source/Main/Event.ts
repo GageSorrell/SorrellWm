@@ -15,9 +15,9 @@ import type {
     TGetErrorCode,
     TPoorResponseAsFailure,
     TRequest,
-    TResponse } from "!/Event";
+    TResponse } from "()/Event";
 import { type FLogger, GetLogger } from "./Development";
-import type { FRejectFunction, TResolveFunction } from "!/Utility";
+import type { FRejectFunction, TResolveFunction } from "()/Utility";
 
 const Log: FLogger = GetLogger("Event");
 
@@ -26,10 +26,10 @@ const Log: FLogger = GetLogger("Event");
  * All calls to this should be made as early as possible in the application's
  * lifetime.
  */
-export const RegisterIpcCallback = <T extends FIpcFrontendChannel>(
+export const RegisterIpcCallback = <Type extends FIpcFrontendChannel>(
     BrowserWindow: BrowserWindow,
-    Channel: T,
-    Callback: TEventCallback<T>
+    Channel: Type,
+    Callback: TEventCallback<Type>
 ): void =>
 {
     if (ipcMain.eventNames().includes(Channel))
@@ -41,9 +41,9 @@ export const RegisterIpcCallback = <T extends FIpcFrontendChannel>(
 
     const Wrapper = async (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): Promise<void> =>
     {
-        type FRequest = FIpcFrontendEvents[T]["Request"];
+        type FRequest = FIpcFrontendEvents[Type]["Request"];
         // type FResponse = FIpcFrontendEvents[T]["Response"];
-        type FResponse = Awaited<ReturnType<TEventCallback<T>>>;
+        type FResponse = Awaited<ReturnType<TEventCallback<Type>>>;
         const Request: FRequest = ArgumentVector[0] as FRequest;
         const Response: FResponse = await Callback(Request) as FResponse;
 
@@ -57,18 +57,18 @@ export const RegisterIpcCallback = <T extends FIpcFrontendChannel>(
 };
 
 /** Send an event to the Renderer, and receive a response. */
-export const SendIpcEvent = <T extends FIpcBackendChannel>(
+export const SendIpcEvent = <Type extends FIpcBackendChannel>(
     BrowserWindow: BrowserWindow,
-    Channel: T,
-    Request: TRequest<T>
-): Promise<TResponse<T>> =>
+    Channel: Type,
+    Request: TRequest<Type>
+): Promise<TResponse<Type>> =>
 {
-    return new Promise<TResponse<T>>(
-        (Resolve: TResolveFunction<TResponse<T>>, _Reject: FRejectFunction): void =>
+    return new Promise<TResponse<Type>>(
+        (Resolve: TResolveFunction<TResponse<Type>>, _Reject: FRejectFunction): void =>
         {
             ipcMain.once(Channel, (_Event: Electron.Event, ...ArgumentVector: Array<unknown>): void =>
             {
-                const Response: TResponse<T> = ArgumentVector[0] as TResponse<T>;
+                const Response: TResponse<Type> = ArgumentVector[0] as TResponse<Type>;
                 Resolve(Response);
             });
 
@@ -85,9 +85,9 @@ export const PoorEventSuccess = (): FPoorResponseAsSuccess =>
     };
 };
 
-export const PoorEventFailure = <T extends keyof FPoorBackendEvents>(
-    Error: TGetErrorCode<T>
-): TPoorResponseAsFailure<T> =>
+export const PoorEventFailure = <Type extends keyof FPoorBackendEvents>(
+    Error: TGetErrorCode<Type>
+): TPoorResponseAsFailure<Type> =>
 {
     return {
         Data: undefined,

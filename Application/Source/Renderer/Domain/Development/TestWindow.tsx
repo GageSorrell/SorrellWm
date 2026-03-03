@@ -119,7 +119,9 @@ export const TestWindow = (): ReactElement =>
     };
 
     return (
-        <div className="BackgroundGradient" style={ RootStyle }>
+        <div
+            className="BackgroundGradient"
+            style={ RootStyle }>
         </div>
     );
 };

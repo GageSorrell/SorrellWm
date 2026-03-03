@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import { type MotionImperativeRef, createPresenceComponent, motionTokens } from "@fluentui/react-components";
-import { type MutableRefObject, type ReactElement, useEffect, useRef, useState } from "react";
+import { type ReactElement, useState } from "react";
+import { createPresenceComponent, motionTokens } from "@fluentui/react-components";
 import type { PPulse } from "./Pulse.Types";
 import { createFadePresence } from "@fluentui/react-motion-components-preview";
 

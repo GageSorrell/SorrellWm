@@ -12,7 +12,7 @@ export type FUnknownErrorCode =
 
 // #region Frontend
 
-type TEventErrorCode<T extends string> = T | FUnspecifiedErrorCode;
+type TEventErrorCode<Type extends string> = Type | FUnspecifiedErrorCode;
 
 export type FBringIntoPanelErrorCode = TEventErrorCode<"">;
 

@@ -209,25 +209,25 @@ export const Focus = (): ReactNode =>
             SubCommands:
             [
                 {
-                    Callback: MoveFocusPrevious,
-                    Action: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ]
+                    Action: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ],
+                    Callback: MoveFocusPrevious
                 },
                 {
-                    Callback: MoveFocusNext,
-                    Action: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ]
+                    Action: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ],
+                    Callback: MoveFocusNext
                 }
             ]
         },
         {
+            Action: [ "Primary[1]" ],
             Callback: StepDownIntoPanel,
             Description: "@TODO",
-            Action: [ "Primary[1]" ],
             Name: "Step Down into Panel"
         },
         {
+            Action: [ "Primary[0]" ],
             Callback: StepUpIntoPanel,
             Description: "@TODO",
-            Action: [ "Primary[0]" ],
             Name: "Step Up into Panel"
         }
     ];

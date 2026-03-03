@@ -41,8 +41,8 @@ export type FBrowserWindowEventType =
     | "will-move"
     | "will-resize";
 
-export type TBrowserWindowEventCallback<T extends Array<unknown> = Array<unknown>> =
-    (Event: Event, ...Arguments: T) => Promise<void>;
+export type TBrowserWindowEventCallback<Type extends Array<unknown> = Array<unknown>> =
+    (Event: Event, ...Arguments: Type) => Promise<void>;
 
 export type FBrowserWindowElectronEvents = Partial<{
     "always-on-top-changed": (Event: Event, IsAlwaysOnTop: boolean) => Promise<void>;

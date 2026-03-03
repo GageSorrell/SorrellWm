@@ -4,12 +4,12 @@
  * License:   MIT
  */
 
-import type { PCommand } from "../Command_Old/Command.Types";
+import type { FCommand } from "./Command.Types";
 import type { ReactElement } from "react";
 
 export type PCommandBottomShelf =
 {
     children:
-        | ReactElement<PCommand>
-        | [ ReactElement<PCommand>, ReactElement<PCommand> ];
+        | ReactElement<FCommand>
+        | [ ReactElement<FCommand>, ReactElement<FCommand> ];
 };

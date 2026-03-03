@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { type ReactElement, useMemo } from "react";
+import { type CSSProperties, type ReactElement, useMemo } from "react";
 import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";
 import { Key } from "../Key";
 import { KeyIdsById } from "../../../../../../Shared/Keyboard";
@@ -26,18 +26,23 @@ export const KeyCombination = ({ Keys }: PKeyCombination): ReactElement =>
         {
             return (
                 <Key
-                    Value={ KeyIdsById[VirtualKey] }
+                    KeyId={ KeyIdsById[VirtualKey] }
                     key={ VirtualKey }
                 />
             );
         });
     }, [ Keys ]);
 
+    const RootStyle: CSSProperties =
+    {
+        alignItems: "center",
+        display: "flex",
+        justifyContent: "flex-start"
+    };
+
     return (
-        <div style={ { alignItems: "center", display: "flex", justifyContent: "flex-start" } }>
-            {
-                KeyElements
-            }
+        <div style={ RootStyle }>
+            { KeyElements }
         </div>
     );
 };

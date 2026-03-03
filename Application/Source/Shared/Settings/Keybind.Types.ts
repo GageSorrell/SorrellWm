@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { TIntegralRange, TStaticArray } from "!/Utility";
-import type { FKeyId } from "!/Keyboard.Types";
+import type { TIntegralRange, TStaticArray } from "()/Utility";
+import type { FKeyId } from "()/Keyboard.Types";
 
 export type FKeybindDirection =
     | "Left"

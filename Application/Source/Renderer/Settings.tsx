@@ -18,13 +18,13 @@ import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
 import { Identity } from "./Utility";
 import type { TIpcState } from "./Event.Types";
-import type { TPromiseThenFunction } from "!/Utility";
+import type { TPromiseThenFunction } from "()/Utility";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Settings");
 
 export type FSettings = Readonly<FAppSettings>;
-type TUpdateFunction = <T extends keyof FSettings,>(Setting: T, Value: FSettings[T]) => void;
+type TUpdateFunction = <Type extends keyof FSettings,>(Setting: Type, Value: FSettings[Type]) => void;
 
 export type CSettings =
 {
@@ -54,7 +54,7 @@ export const UseSetting = <SettingKey extends keyof FSettings,>(
     return [ Setting ] as const;
 };
 
-export const UpdateSetting = <T extends keyof FSettings,>(Setting: T, Value: FSettings[T]): void =>
+export const UpdateSetting = <Type extends keyof FSettings,>(Setting: Type, Value: FSettings[Type]): void =>
 {
     const { OutUpdateFunction } = useContext<CSettings>(SettingsContext);
     OutUpdateFunction(Setting, Value);
@@ -79,7 +79,7 @@ export const Settings = ({ children }: PropsWithChildren): ReactNode =>
     UseSendIpcEvent("GetSettings", undefined, OnGetSettings);
 
     const OutUpdateFunction: TUpdateFunction =
-        <T extends keyof FSettings,>(Setting: T, Value: FSettings[T]): void =>
+        <Type extends keyof FSettings,>(Setting: Type, Value: FSettings[Type]): void =>
         {
             SendIpcEvent("UpdateSetting", { Setting, Value });
         };

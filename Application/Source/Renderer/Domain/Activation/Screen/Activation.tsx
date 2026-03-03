@@ -21,27 +21,27 @@ const ActivationTiled = (): ReactElement =>
     const Commands: Array<FCommand> =
     [
         {
+            Action: [ "Direction.Left" ],
             Callback: Navigate("/Focus"),
             Description: "@TODO",
-            Action: [ "Direction.Left" ],
             Name: "Focus"
         },
         {
+            Action: [ "Direction.Up" ],
             Callback: Navigate("/Insert"),
             Description: "@TODO",
-            Action: [ "Direction.Up" ],
             Name: "Insert"
         },
         {
+            Action:  [ "Direction.Down" ],
             Callback: Navigate("/Move"),
             Description: "@TODO",
-            Action:  [ "Direction.Down" ],
             Name: "Move"
         },
         {
+            Action: [ "Direction.Right" ],
             Callback: Navigate("/Resize"),
             Description: "@TODO",
-            Action: [ "Direction.Right" ],
             Name: "Resize"
         }
     ];
@@ -49,9 +49,9 @@ const ActivationTiled = (): ReactElement =>
     const BottomShelfCommands: Array<FCommand> =
     [
         {
+            Action: [ "Miscellaneous.Settings" ],
             Callback: () => Log("Settings was selected."),
             Description: "@TODO",
-            Action: [ "Miscellaneous.Settings" ],
             Name: "Settings"
         }
     ];
@@ -70,21 +70,21 @@ const ActivationNotTiled = (): ReactElement =>
     const Commands: Array<FCommand> =
     [
         {
+            Action: [ "Direction.Up" ],
             Callback: Navigate("/Tile"),
             Description: "@TODO",
-            Action: [ "Direction.Up" ],
             Name: "Tile (Bring into Panel)"
         },
         {
+            Action: [ "Direction.Down" ],
             Callback: Navigate("/Move"),
             Description: "@TODO",
-            Action: [ "Direction.Down" ],
             Name: "Move"
         },
         {
+            Action: [ "Direction.Right" ],
             Callback: Navigate("/Resize"),
             Description: "@TODO",
-            Action: [ "Direction.Right" ],
             Name: "Resize"
         }
     ];
@@ -92,9 +92,9 @@ const ActivationNotTiled = (): ReactElement =>
     const BottomShelfCommands: Array<FCommand> =
     [
         {
+            Action: [ "Miscellaneous.Peek" ],
             Callback: () => Log("Peek was selected."),
             Description: "@TODO",
-            Action: [ "Miscellaneous.Peek" ],
             Name: "Peek"
         }
     ];

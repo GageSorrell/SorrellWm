@@ -29,7 +29,6 @@ import {
     GetMonitorFromWindow,
     GetThemeColor,
     GetTileableWindows,
-    GetWindowByName,
     GetWindowTitle,
     type HMonitor,
     type HWindow,
@@ -38,17 +37,17 @@ import {
 import { type BrowserWindow, type BrowserWindowConstructorOptions, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
-import type { FFocusData, FFocusDataBase } from "!/Event/Focus.Types";
-import type { FIpcChannel, TEventCallback } from "!/Event";
+import type { FFocusData, FFocusDataBase } from "()/Event/Focus.Types";
+import type { FIpcChannel, TEventCallback } from "()/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 import { PoorEventSuccess, RegisterIpcCallback, SendIpcEvent } from "./Event";
 import { DefaultSettings } from "../Shared/Settings";
 import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
 import type { FDevSettings } from "./DevSettings.Types";
-import type { FInsertableWindowData } from "!/Event/Insert.Types";
+import type { FInsertableWindowData } from "()/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
-import type { FNavigateRequest } from "!/Event/Navigate.Types";
-import type { FVirtualKey } from "!/Keyboard.Types";
+import type { FNavigateRequest } from "()/Event/Navigate.Types";
+import type { FVirtualKey } from "()/Keyboard.Types";
 import { GetDevSettings } from "./DevSettings";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
@@ -132,7 +131,7 @@ const On = (
 };
 
 // /** Send an event from the backend to the frontend. */
-// export const SendIpcEvent = async <T extends FIpcBackendChannel>(
+// export const SendIpcEvent = async <Type extends FIpcBackendChannel>(
 //     BrowserWindow: BrowserWindow,
 //     Channel: T,
 //     RequestData: TRequestData<T>
@@ -158,7 +157,7 @@ const On = (
 //     });
 // };
 
-// export const OnIpcEvent = <T extends FIpcFrontendChannel>(
+// export const OnIpcEvent = <Type extends FIpcFrontendChannel>(
 //     BrowserWindow: BrowserWindow,
 //     Channel: T,
 //     Callback: TIpcHandler<T>,

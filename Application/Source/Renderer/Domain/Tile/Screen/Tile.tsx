@@ -8,7 +8,7 @@ import { Caption1, Title1 } from "@fluentui/react-components";
 import { CommandContainer, type FCommand, GetPanelKey, Panel } from "$/Common";
 import type { FAnnotatedPanel, FAnnotatedPanelScreenshot } from "#/Tree/Tree.Types";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
-import { SendIpcEvent, UseSendIpcEventStrictSingle } from "@/Event";
+import { SendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
 import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { UseIndex } from "@/Utility/Hook";
@@ -17,11 +17,11 @@ import { UseIndex } from "@/Utility/Hook";
 
 const UseAnnotatedPanels = (): Readonly<[ Array<FAnnotatedPanel> ]> =>
 {
-    const [ AnnotatedPanelsBase ] =
-        UseSendIpcEventStrictSingle("GetAnnotatedPanels", undefined, { AnnotatedPanels: [ ] });
+    const { Data: { AnnotatedPanels: AnnotatedPanelsBase } } =
+        UseSendIpcEventStrict("GetAnnotatedPanels", undefined, { AnnotatedPanels: [ ] });
 
-    const [ Screenshots ] =
-        UseSendIpcEventStrictSingle("GetPanelScreenshots", undefined, { Screenshots: [ ] });
+    const { Data: { Screenshots } } =
+        UseSendIpcEventStrict("GetPanelScreenshots", undefined, { Screenshots: [ ] });
 
     const AnnotatedPanels: Array<FAnnotatedPanelScreenshot> = useMemo((): Array<FAnnotatedPanelScreenshot> =>
     {
@@ -103,19 +103,19 @@ export const Tile = (): ReactElement =>
             SubCommands:
             [
                 {
-                    Callback: DecrementSelectionIndex,
-                    Action: [ "Direction.Up" ]
+                    Action: [ "Direction.Up" ],
+                    Callback: DecrementSelectionIndex
                 },
                 {
-                    Callback: IncrementSelectionIndex,
-                    Action: [ "Direction.Down" ]
+                    Action: [ "Direction.Down" ],
+                    Callback: IncrementSelectionIndex
                 }
             ]
         },
         {
+            Action: [ "Primary[0]" ],
             Callback: ConfirmSelection,
             Description: "@TODO",
-            Action: [ "Primary[0]" ],
             Name: "Confirm"
         }
     ];

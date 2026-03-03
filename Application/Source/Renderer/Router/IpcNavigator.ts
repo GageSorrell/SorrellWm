@@ -6,7 +6,7 @@
 
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect } from "react";
-import type { FNavigateRequest } from "!/Event/Navigate.Types";
+import type { FNavigateRequest } from "()/Event/Navigate.Types";
 import type { TEventCallback } from "../../Shared/Event";
 import { UseIpcEvent } from "@/Event";
 

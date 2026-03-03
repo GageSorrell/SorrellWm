@@ -4,18 +4,7 @@
  * License:   MIT
  */
 
-import type { FKeyId } from "!/Keyboard.Types";
-
-export type FCommandKey =
-    | "H"
-    | "J"
-    | "K"
-    | "L"
-    | "Circle"
-    | "Square"
-    | "Hex"
-    | "Triangle"
-    | "Cross";
+import type { FKeyId } from "()/Keyboard.Types";
 
 export type FKeySide =
     | "L"
@@ -46,7 +35,5 @@ export type FKey =
 
 export type PKey =
 {
-    Value: FKeyId;
-    // Value: string | FCommandKey;
-    // Value: FCommandKey;
+    KeyId: FKeyId;
 };
