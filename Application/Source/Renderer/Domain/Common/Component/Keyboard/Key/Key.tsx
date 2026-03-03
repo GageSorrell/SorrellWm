@@ -6,9 +6,13 @@
 
 import { type CSSProperties, type ReactElement, useMemo } from "react";
 import type { FKey, PKey } from "./Key.Types";
+import type { FLogger } from "../../../Shared/Log.Types";
 import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";
+import { GetLogger } from "@/Log";
 import { UseThemeColors } from "@/Utility";
 import { tokens } from "@fluentui/react-components";
+
+const Log: FLogger = GetLogger("Key");
 
 const WindowsLogo: string = "\uE782";
 const GlobeSymbol: string = "\uE774";
@@ -834,8 +838,6 @@ export const Key = ({ Value }: PKey): ReactElement =>
     //     }
     // }, [ Modifier, Side ]);
 
-    const [ backgroundColor, color ] = UseThemeColors();
-
     const DisplayStyle: CSSProperties = useMemo((): CSSProperties =>
     {
         const IsFluentIcon: boolean = IsUnicodeCharacter(Value);
@@ -848,13 +850,13 @@ export const Key = ({ Value }: PKey): ReactElement =>
             : 4;
 
         return {
-            color,
+            color: tokens.colorBrandBackgroundInverted,
             fontFamily: "Segoe Fluent Icons, Segoe UI",
             fontSize,
             marginBottom,
             textWrap: "nowrap"
         };
-    }, [ color, Value ]);
+    }, [ Value ]);
 
     const maxWidth: string | undefined = Value.length === 1
         ? "2rem"
@@ -864,7 +866,7 @@ export const Key = ({ Value }: PKey): ReactElement =>
     {
         return {
             alignItems: "center",
-            backgroundColor,
+            backgroundColor: tokens.colorBrandForeground1,
             borderRadius: tokens.borderRadiusMedium,
             paddingLeft: tokens.spacingHorizontalXS,
             paddingRight: tokens.spacingHorizontalXS,
@@ -875,7 +877,7 @@ export const Key = ({ Value }: PKey): ReactElement =>
             maxWidth,
             minWidth: "2rem"
         };
-    }, [ backgroundColor, maxWidth ]);
+    }, [ maxWidth ]);
 
     return (
         <div style={ RootStyle }>

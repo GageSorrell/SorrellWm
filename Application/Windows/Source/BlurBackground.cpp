@@ -443,7 +443,7 @@ BOOL OnCreate(HWND hWnd, CREATESTRUCT FAR* lpCreateStruct)
         << std::endl;
 
     Backdrop->BlurLastTimestamp = Backdrop->BlurStartTime;
-    SetTimer(hWnd, BlurTimerId, GetMsPerFrame(Backdrop), nullptr);
+    // SetTimer(hWnd, BlurTimerId, GetMsPerFrame(Backdrop), nullptr);
     if ((Backdrop->ScreenshotBmi = CreateDib(Backdrop->Width, Backdrop->Height, Backdrop->Depth, Backdrop->Screenshot)) == nullptr)
     {
         return FALSE;
@@ -907,8 +907,8 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
         return Environment.Undefined();
     }
 
-    BOOL Shadow = false;
-    SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
+    // BOOL Shadow = false;
+    // SystemParametersInfoA(SPI_GETDROPSHADOW, 0, &Shadow, 0);
 
     /* @TODO If this is called while the blur is still animating, then the fade
      * animation should only take the length of time that the blur animation
@@ -918,18 +918,18 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     BackdropToUnblur->FadeStartTime = GetTickCount();
     BackdropToUnblur->FadeLastTimestamp = BackdropToUnblur->FadeStartTime;
-    UINT_PTR SetTimerResult = SetTimer(
-        BackdropToUnblur->BackdropHandle,
-        FadeTimerId,
-        BackdropToUnblur->MsPerFrame,
-        nullptr
-    );
+    // UINT_PTR SetTimerResult = SetTimer(
+    //     BackdropToUnblur->BackdropHandle,
+    //     FadeTimerId,
+    //     BackdropToUnblur->MsPerFrame,
+    //     nullptr
+    // );
 
-    std::cout
-        << "UnblurBackground: SetTimerResult was "
-        << SetTimerResult
-        << "."
-        << std::endl;
+    // std::cout
+    //     << "UnblurBackground: SetTimerResult was "
+    //     << SetTimerResult
+    //     << "."
+    //     << std::endl;
 
     return Environment.Undefined();
 }
@@ -1087,15 +1087,15 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 
     Backdrop->SourceHandle = (HWND) DecodeHandle(CallbackInfo[1].As<Napi::Object>());
 
-    const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
-    if (!CreatedBackdrop)
-    {
-        return Environment.Undefined();
-    }
+    // const bool CreatedBackdrop = CreateBackdropWindow(Backdrop);
+    // if (!CreatedBackdrop)
+    // {
+    //     return Environment.Undefined();
+    // }
 
-    CaptureWindowScreenshot(Backdrop);
+    // CaptureWindowScreenshot(Backdrop);
 
-    SuperimposeBackdrop(Backdrop);
+    // SuperimposeBackdrop(Backdrop);
     SuperimposeMainWindow(Backdrop);
 
     return EncodeHandle(Environment, Backdrop->BackdropHandle);

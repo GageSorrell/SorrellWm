@@ -6,7 +6,7 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import { AppendDependencyList, UseEffectAsync, UsePromise } from "./Utility";
+import { AppendDependencyList, UsePromise } from "./Utility";
 import {
     CallMaybeAsync,
     type FRejectFunction,
@@ -18,8 +18,7 @@ import {
     type MutableRefObject,
     useCallback,
     useEffect,
-    useMemo,
-    useState} from "react";
+    useMemo } from "react";
 import type {
     FIpcBackendEvents,
     FIpcEvents,
@@ -30,17 +29,13 @@ import type {
     TGetDefaultRichResponseData,
     TGetResponse,
     TGetResponseFromKey,
-    TGetRichResponseAsFailure,
-    TGetRichResponseAsSuccess,
-    TGetRichResponseFromKey,
     TGetSingleRichResponseData,
     TRequest } from "../Shared/Event";
 import type {
     TIpcState,
-    TIpcStateStrict,
     TUseSendIpcEventReturnType,
     TUseSendIpcEventStrictReturnType,
-    TUseSendIpcEventStrictSingleReturnType} from "./Event.Types";
+    TUseSendIpcEventStrictSingleReturnType } from "./Event.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
 
@@ -224,67 +219,80 @@ export const UseSendIpcEvent = <
 export const UseSendIpcEventStrict = <T extends keyof FRichFrontendEvents>(
     Channel: T,
     Request: TRequest<T>,
-    DefaultData: TGetDefaultRichResponseData<T>,
-    DependencyArray: Array<unknown> = [ ]
+    DefaultData: TGetDefaultRichResponseData<T>
 ): TUseSendIpcEventStrictReturnType<T> =>
 {
-    const EmptyResponse: TIpcStateStrict<T> =
+    const Result: TIpcState<T> = UseSendIpcEvent(Channel, Request);
+
+    if (Result.Data === undefined && Result.Error === undefined)
     {
-        Data: DefaultData,
-        Error: undefined
-    };
-
-    const [ Response, SetResponse ] = useState<TIpcStateStrict<T>>(EmptyResponse);
-    // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
-    //     useRef<FSimpleCallback | undefined>(undefined);
-
-    DependencyArray.push(Request, SetResponse);
-
-    const IsResponseSuccess = (In: TGetRichResponseFromKey<T>): In is TGetRichResponseAsSuccess<T> =>
+        return {
+            Data: DefaultData,
+            Error: undefined
+        };
+    }
+    else
     {
-        return "Data" in In && In.Data !== undefined;
-    };
+        return Result as TUseSendIpcEventStrictReturnType<T>;
+    }
 
-    /* eslint-disable-next-line @typescript-eslint/typedef */
-    const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
-    {
-        // Log(`Going to await SendIpcEvent for event ${ Channel }.`);
-        const NewResponse: TGetRichResponseFromKey<T> =
-            (await SendIpcEvent(Channel, Request)) as TGetRichResponseFromKey<T>;
+    // const EmptyResponse: TIpcStateStrict<T> =
+    // {
+    //     Data: DefaultData,
+    //     Error: undefined
+    // };
 
-        // Log(`Response is ${ JSON.stringify(NewResponse) }.`);
-        if (!AbortSignal.aborted)
-        {
-            if (IsResponseSuccess(NewResponse))
-            {
-                // Log(`Event ${ Channel } responded successfully!`);
-                SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
-                {
-                    return NewResponse;
-                });
-            }
-            else
-            {
-                const NewResponseFailure: TGetRichResponseAsFailure<T> = NewResponse;
+    // const [ Response, SetResponse ] = useState<TIpcStateStrict<T>>(EmptyResponse);
+    // // const RemoveListenerRef: MutableRefObject<FSimpleCallback | undefined> =
+    // //     useRef<FSimpleCallback | undefined>(undefined);
 
-                // Log(`Event ${ Channel } responded as a FAILURE!`);
-                SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
-                {
-                    return {
-                        Data: EmptyResponse.Data,
-                        Error: NewResponseFailure.Error
-                    };
-                });
-            }
-        }
-    }, [ Channel, Request, SendIpcEvent, SetResponse ]);
+    // DependencyArray.push(Request, SetResponse);
 
-    UseEffectAsync(SideEffect, undefined, DependencyArray);
+    // const IsResponseSuccess = (In: TGetRichResponseFromKey<T>): In is TGetRichResponseAsSuccess<T> =>
+    // {
+    //     return "Data" in In && In.Data !== undefined;
+    // };
 
-    return {
-        Data: Response.Data,
-        Error: Response.Error
-    } as const;
+    // /* eslint-disable-next-line @typescript-eslint/typedef */
+    // const SideEffect = useCallback(async (AbortSignal: AbortSignal): Promise<void> =>
+    // {
+    //     // Log(`Going to await SendIpcEvent for event ${ Channel }.`);
+    //     const NewResponse: TGetRichResponseFromKey<T> =
+    //         (await SendIpcEvent(Channel, Request)) as TGetRichResponseFromKey<T>;
+
+    //     // Log(`Response is ${ JSON.stringify(NewResponse) }.`);
+    //     if (!AbortSignal.aborted)
+    //     {
+    //         if (IsResponseSuccess(NewResponse))
+    //         {
+    //             // Log(`Event ${ Channel } responded successfully!`);
+    //             SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
+    //             {
+    //                 return NewResponse;
+    //             });
+    //         }
+    //         else
+    //         {
+    //             const NewResponseFailure: TGetRichResponseAsFailure<T> = NewResponse;
+
+    //             // Log(`Event ${ Channel } responded as a FAILURE!`);
+    //             SetResponse((_Old: TIpcStateStrict<T>): TIpcStateStrict<T> =>
+    //             {
+    //                 return {
+    //                     Data: EmptyResponse.Data,
+    //                     Error: NewResponseFailure.Error
+    //                 };
+    //             });
+    //         }
+    //     }
+    // }, [ Channel, Request, SendIpcEvent, SetResponse ]);
+
+    // UseEffectAsync(SideEffect, undefined, DependencyArray);
+
+    // return {
+    //     Data: Response.Data,
+    //     Error: Response.Error
+    // } as const;
 };
 
 /**

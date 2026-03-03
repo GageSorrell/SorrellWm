@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
+import { Body1Strong, tokens } from "@fluentui/react-components";
 import { type CSSProperties, type ReactNode, useEffect } from "react";
-import { Caption1Strong, tokens } from "@fluentui/react-components";
 import { CommandContainer, type FCommand } from "$/Common";
 import type { FFocusData, FPanelFocusData, FWindowFocusData } from "../../../../Shared/Event/Focus.Types";
 import { Action } from "@/Action";
@@ -81,9 +81,9 @@ const PanelFooter = ({ Direction, NumVertices }: PPanelFooter): ReactNode =>
     return (
         <>
             <PanelIcon { ...{ Direction } }/>
-            <Caption1Strong>
+            <Body1Strong>
                 { Direction }{" "}Panel &#8226; { NumVertices } Nodes
-            </Caption1Strong>
+            </Body1Strong>
         </>
     );
 };
@@ -91,7 +91,6 @@ const PanelFooter = ({ Direction, NumVertices }: PPanelFooter): ReactNode =>
 const WindowFooter = ({ FocusedWindowTitle }: PWindowFooter): ReactNode =>
 {
     /* @TODO Vary the cutoff with the width of the window. */
-    /* @TODO Display different value when in StaticMode. */
     const LengthCutoff: number = 40;
     const FocusedWindowTitleTruncated: string = (FocusedWindowTitle !== undefined)
         ? FocusedWindowTitle.length > LengthCutoff
@@ -101,10 +100,10 @@ const WindowFooter = ({ FocusedWindowTitle }: PWindowFooter): ReactNode =>
 
     return (
         <>
-            <WindowHeaderHorizontalRegular/>
-            <Caption1Strong>
+            <WindowHeaderHorizontalRegular fontSize={ 20 }/>
+            <Body1Strong>
                 { FocusedWindowTitleTruncated }
-            </Caption1Strong>
+            </Body1Strong>
         </>
     );
 };

@@ -27,7 +27,7 @@ import type {
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
-import type { FFocusData } from "!/Event/Focus.Types";
+import type { FFocusData } from "./Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
 import type { FNavigateRequest } from "./Navigate.Types";
 import type { FSettings } from "../Settings";

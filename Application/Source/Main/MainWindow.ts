@@ -597,9 +597,6 @@ export const Activate = (): void =>
 
         SendIpcEvent(MainWindow, "Navigate", NavigateRequest);
         BlurBackground(GetDwmWindowRect(ActiveWindow));
-
-        const MainWindowHandle: HWindow = GetWindowByName("SorrellWm Main Window");
-        Log(MainWindowHandle);
         // StealFocus(GetWindowByName("SorrellWm Main Window"));
     }
 };
