@@ -4,9 +4,13 @@
  */
 
 import type { FBox } from "@sorrellwm/windows";
+import type { FLogger } from "!/Log.Types";
 import { promises as Fs } from "fs";
+import { GetLogger } from "#/Development";
 import type { HHandle } from "./Utility.Types";
 import type { TRef } from "#/Core";
+
+const Log: FLogger = GetLogger("Utility");
 
 export const MakeRef = <T>(): TRef<T> =>
 {
@@ -54,19 +58,19 @@ export const ForAsync = async (
 {
     if (!Number.isInteger(StartIndex))
     {
-        console.error("ForAsync was given a StartIndex that wasn't an integer.");
+        Log.Error("ForAsync was given a StartIndex that wasn't an integer.");
         return;
     }
 
     if (!Number.isInteger(EndIndex))
     {
-        console.error("ForAsync was given a EndIndex that wasn't an integer.");
+        Log.Error("ForAsync was given a EndIndex that wasn't an integer.");
         return;
     }
 
     if (StartIndex > EndIndex)
     {
-        console.error("ForAsync was given a StartIndex that is greater than the given EndIndex.");
+        Log.Error("ForAsync was given a StartIndex that is greater than the given EndIndex.");
         return;
     }
 

@@ -1,49 +1,150 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "DevSettings",
-    "description": "Settings for development features.",
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-        "StaticMode"
-    ],
-    "properties": {
-        "StaticMode": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "Enabled",
-                "WindowShape"
-            ],
-            "properties": {
-                "Enabled": {
-                    "type": "boolean"
-                },
-                "WindowShape": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                        "X",
-                        "Y",
-                        "Height",
-                        "Width"
-                    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "FBox": {
+            "allOf": [
+                {
                     "properties": {
                         "X": {
                             "type": "number"
                         },
                         "Y": {
                             "type": "number"
-                        },
+                        }
+                    },
+                    "type": "object"
+                },
+                {
+                    "properties": {
                         "Height": {
                             "type": "number"
                         },
                         "Width": {
                             "type": "number"
                         }
-                    }
+                    },
+                    "type": "object"
                 }
-            }
+            ]
+        },
+        "FLogDigitSeparator": {
+            "enum": [
+                "Comma",
+                "None",
+                "Space",
+                "Underscore"
+            ],
+            "type": "string"
+        },
+        "FLogQuoteStyle": {
+            "enum": [
+                "Double",
+                "None",
+                "Single"
+            ],
+            "type": "string"
+        },
+        "{\"*\":string[];Frontend:string[];Backend:string[];Native:string[];}": {
+            "properties": {
+                "*": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "Backend": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "Frontend": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "Native": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
         }
-    }
+    },
+    "properties": {
+        "Log": {
+            "properties": {
+                "Category": {
+                    "properties": {
+                        "DisabledCategories": {
+                            "$ref": "#/definitions/%7B%22*%22%3Astring%5B%5D%3BFrontend%3Astring%5B%5D%3BBackend%3Astring%5B%5D%3BNative%3Astring%5B%5D%3B%7D"
+                        },
+                        "LogDisabledCategoryAttempts": {
+                            "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                },
+                "Format": {
+                    "properties": {
+                        "AlwaysApplyFormat": {
+                            "type": "boolean"
+                        },
+                        "Colors": {
+                            "type": "boolean"
+                        },
+                        "DigitSeparator": {
+                            "$ref": "#/definitions/FLogDigitSeparator"
+                        },
+                        "QuoteStyle": {
+                            "$ref": "#/definitions/FLogQuoteStyle"
+                        },
+                        "TruncateBase64Strings": {
+                            "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                },
+                "Size": {
+                    "properties": {
+                        "LimitStatementLength": {
+                            "properties": {
+                                "Enabled": {
+                                    "type": "boolean"
+                                },
+                                "MaxLength": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "MaxTerminalWidth": {
+                            "type": "number"
+                        },
+                        "TabWidth": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "StaticMode": {
+            "properties": {
+                "Enabled": {
+                    "type": "boolean"
+                },
+                "WindowShape": {
+                    "$ref": "#/definitions/FBox"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "type": "object"
 }
+

@@ -18,6 +18,7 @@ import type { PCommandContainer } from "./CommandContainer.Types";
 import { SwitchOnCommandType } from "./Command";
 import { UseSetting } from "@/Settings";
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("CommandContainer");
 
 export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
@@ -43,13 +44,11 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
         {
             const GetKeyIdArrayFromCommand = (Command: FCommand): Array<FKeyId> =>
             {
-                Log(`Command is ${ Command.Name }.`, JSON.stringify(Command));
                 return SwitchOnCommandType(
                     Command,
                     ({ Keybind }: FSimpleCommand): Array<FKeyId> =>
                     {
                         const Out: Array<FKeyId> = GetKeybindIdFromKeybind(Keybind, Keybinds);
-                        Log("Simple Command Out:", JSON.stringify(Out));
                         return Out;
                     },
                     (CompoundCommand: FCompoundCommand): Array<FKeyId> =>
@@ -62,7 +61,6 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
 
                         const Out: Array<FKeyId> =
                             GetKeyIds(ExtractFromRecordArray("Keybind", SubCommands).flat());
-                        Log("CompoundCommand Out:", JSON.stringify(Out));
                         return Out;
                     }
                 );

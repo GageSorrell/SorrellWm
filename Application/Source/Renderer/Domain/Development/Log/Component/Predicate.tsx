@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useMemo, type CSSProperties, type ReactElement } from "react";
-import type { FColor, FHexColor } from "Windows";
+import type { FColor, FHexColor } from "@sorrellwm/windows";
 import type { PPredicate } from "./Predicate.Types";
 
 /** The base element for the elements within a logged statement. */

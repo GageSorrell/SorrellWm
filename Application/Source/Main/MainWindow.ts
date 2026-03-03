@@ -33,6 +33,7 @@ import {
     GetWindowTitle,
     type HMonitor,
     type HWindow,
+    UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, app, ipcMain, screen } from "electron";
 import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
@@ -89,6 +90,7 @@ const Deactivate = (): void =>
     if (MainWindow)
     {
         MainWindow.setPosition(X, Y, false);
+        UnblurBackground();
     }
 };
 
@@ -374,7 +376,10 @@ const LaunchMainWindow = async (): Promise<void> =>
         async (): ReturnType<TEventCallback<"RequestTearDown">> =>
         {
             ActiveWindow = undefined;
-            Deactivate();
+            if (!GetDevSettings().StaticMode.Enabled)
+            {
+                Deactivate();
+            }
 
             return PoorEventSuccess();
         }
@@ -442,10 +447,6 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
-    /** TEMPORARY */
-    /* eslint-disable-next-line no-console */
-    import("./Development/Log/LogTest");
-
     On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
         const FocusChange: FFocusChange = Arguments[0] as FFocusChange;
@@ -488,16 +489,18 @@ const LaunchMainWindow = async (): Promise<void> =>
     //     MainWindow?.webContents.send("GetPanelScreenshots", Screenshots);
     // });
 
+    Log("Foo", 3, [ ]);
+
     On("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
     {
         BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindow() as HWindow);
     });
 
-    // On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
-    // {
-    //     ActiveWindow = undefined;
-    //     Deactivate();
-    // });
+    On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    {
+        ActiveWindow = undefined;
+        Deactivate();
+    });
 
     On("GetInsertableWindowData", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
     {
@@ -621,8 +624,10 @@ function OnKey(Event: FKeyboardEvent): void
         else
         {
             FinishFocus();
-            // @TODO Uncomment this `Deactivate` call.
-            // Deactivate();
+            if (!GetDevSettings().StaticMode.Enabled)
+            {
+                Deactivate();
+            }
             // setTimeout(KillOrphans, 750);
         }
     }

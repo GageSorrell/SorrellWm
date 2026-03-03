@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FLogLevel } from "Windows";
+import type { FLogLevel } from "@sorrellwm/windows";
 
 export type PStatement =
 {

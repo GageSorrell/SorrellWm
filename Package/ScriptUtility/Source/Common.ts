@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/* eslint-disable no-console */
+
 import * as Path from "path";
 import type { FCommonPath, TRef, TTaskTuple } from "./Common.Types.js";
 import Ora, { type Ora as FOra } from "ora";
@@ -29,19 +31,23 @@ export const DoTask = async <T>(Task: (() => Promise<T>), Description: string): 
 const PrintBanner = (ScriptTitle: string, ScriptDescription: string): void =>
 {
     const TerminalWidth: number = process.stdout.columns;
-    const Title: string = "◱  SorrellWm";
-    const Padding: number = Math.max(0, TerminalWidth - Title.length);
-    const PaddingLeftNum: number = Math.floor(Padding / 2);
-    const PaddingRightNum: number = Math.ceil(Padding / 2);
-    const PaddingLeft: string = " ".repeat(PaddingLeftNum);
-    const PaddingRight: string = " ".repeat(PaddingRightNum);
-    const PaddedText: string = PaddingLeft + Title + PaddingRight;
+    const Center = (In: string): string =>
+    {
+        const Padding: number = Math.max(0, TerminalWidth - Chalk.reset(In).length);
+        const PaddingLeftNum: number = Math.floor(Padding / 2);
+        const PaddingRightNum: number = Math.ceil(Padding / 2);
+        const PaddingLeft: string = " ".repeat(PaddingLeftNum);
+        const PaddingRight: string = " ".repeat(PaddingRightNum);
+        return PaddingLeft + In + PaddingRight;
+    };
+
+    const Title: string = "◱ SorrellWm";
     const EmptyLine: string = Chalk.bgBlue(" ".repeat(TerminalWidth));
     console.log(
         Chalk.bgBlue.white(
-            PaddedText +
+            Center(Title) +
             EmptyLine +
-            " " + Chalk.bold(ScriptTitle + ": ") + ScriptDescription +
+            Center(Chalk.bold(ScriptTitle + ": ") + ScriptDescription) +
             EmptyLine
         )
     );

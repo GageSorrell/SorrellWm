@@ -48,25 +48,11 @@ const ElectronHandler =
                 }
             };
 
-            try
-            {
-                ipcRenderer.on(Channel, Listener);
-            }
-            catch (Error: unknown)
-            {
-                console.log("Error: ", Error);
-            }
+            ipcRenderer.on(Channel, Listener);
 
             return (): void =>
             {
-                try
-                {
-                    ipcRenderer.removeListener(Channel, Listener);
-                }
-                catch (Error: unknown)
-                {
-                    console.log("Error: ", Error);
-                }
+                ipcRenderer.removeListener(Channel, Listener);
             };
         },
         Once(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
@@ -78,25 +64,11 @@ const ElectronHandler =
         },
         RemoveListener(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
-            try
-            {
-                ipcRenderer.removeListener(Channel, Listener);
-            }
-            catch (Error: unknown)
-            {
-                console.log("Error in RemoveListener: ", Error);
-            }
+            ipcRenderer.removeListener(Channel, Listener);
         },
         Send(Channel: string, ...ArgumentVector: Array<unknown>)
         {
-            try
-            {
-                ipcRenderer.send(Channel, ...ArgumentVector);
-            }
-            catch (Error: unknown)
-            {
-                console.log("Error in Send: ", Error, Channel, ArgumentVector);
-            }
+            ipcRenderer.send(Channel, ...ArgumentVector);
         }
     }
 };

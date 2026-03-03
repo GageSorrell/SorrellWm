@@ -33,6 +33,7 @@ import type { TMaybeArray } from "../Shared/Utility";
 import { UseSetting } from "./Settings";
 import { UseShortcut } from "./Keybind";
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Command");
 
 export type CCommand =
@@ -61,12 +62,10 @@ export const UseCommands = (InCommands: TMaybeArray<FCommand>): void =>
     {
         SetCommands((OldCommands: Array<FCommand>): Array<FCommand> =>
         {
-            OldCommands.filter((In: FCommand): boolean =>
+            return OldCommands.filter((In: FCommand): boolean =>
             {
                 return AreCommandsEqual(In, Command);
             });
-
-            return [ ...OldCommands ];
         });
     }, [ SetCommands ]);
 
@@ -98,8 +97,6 @@ export const GetKeybindIdFromKeybind = (Keybind: FKeybind, Keybinds: FKeybinds):
             .replaceAll("]", ".")
             .split(".")
             .filter((KeyString: string): boolean => KeyString !== "");
-
-        Log(ObjectKeyStrings);
 
         const GetTypedPropertyKey = (KeyString: string): string | number =>
         {
@@ -171,7 +168,6 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
             (SimpleCommand: FSimpleCommand): void =>
             {
                 const Out: Array<FKeyId> = GetKeybindIdFromKeybind(SimpleCommand.Keybind, Keybinds);
-                Log(`Registering Shortcut for Command ${ SimpleCommand.Name }: ${ Out }`);
                 RegisterShortcut(
                     SimpleCommand.Callback,
                     Out,

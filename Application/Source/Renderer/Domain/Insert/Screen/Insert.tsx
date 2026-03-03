@@ -4,11 +4,11 @@
  * License:   MIT
  */
 
+import { type NavigateFunction, useNavigate } from "react-router-dom";
 import { Action } from "@/Action";
-import { type ReactElement } from "react";
 import { Command } from "@/Domain/Common";
-import { useNavigate, type NavigateFunction } from "react-router-dom";
-import type { FInsertSizingMethod } from "!/Event/Focus.Types";
+import type { FInsertSizingMethod } from "../../../../Shared/Event/Insert.Types";
+import { type ReactElement } from "react";
 
 export const Insert = (): ReactElement =>
 {
@@ -25,14 +25,16 @@ export const Insert = (): ReactElement =>
     return (
         <Action>
             <Command
-                Action={ OnSelectSizingMethod("Bisection") }
-                Key="C"
-                Title="Insert by Bisection"
+                Callback={ OnSelectSizingMethod("Bisection") }
+                Description="@TODO"
+                Keybind={ [ "Primary[1]" ] }
+                Name="Insert by Bisection"
             />
             <Command
-                Action={ OnSelectSizingMethod("UniformResize") }
-                Key="G"
-                Title="Insert by Uniform Resize"
+                Callback={ OnSelectSizingMethod("UniformResize") }
+                Description="@TODO"
+                Keybind={ [ "Primary[0]" ] }
+                Name="Insert by Uniform Resize"
             />
         </Action>
     );

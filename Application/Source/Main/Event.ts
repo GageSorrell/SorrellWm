@@ -9,6 +9,7 @@ import type {
     FIpcBackendChannel,
     FIpcFrontendChannel,
     FIpcFrontendEvents,
+    FPoorBackendEvents,
     FPoorResponseAsSuccess,
     TEventCallback,
     TGetErrorCode,
@@ -84,7 +85,7 @@ export const PoorEventSuccess = (): FPoorResponseAsSuccess =>
     };
 };
 
-export const PoorEventFailure = <T extends FIpcBackendChannel>(
+export const PoorEventFailure = <T extends keyof FPoorBackendEvents>(
     Error: TGetErrorCode<T>
 ): TPoorResponseAsFailure<T> =>
 {

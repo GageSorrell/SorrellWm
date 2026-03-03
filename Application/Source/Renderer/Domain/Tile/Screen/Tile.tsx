@@ -10,8 +10,8 @@ import type { FAnnotatedPanel, FAnnotatedPanelScreenshot } from "#/Tree/Tree.Typ
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { SendIpcEvent, UseSendIpcEventStrictSingle } from "@/Event";
 import { Action } from "@/Action";
+import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { UseIndex } from "@/Utility/Hook";
-import type { FSimpleCallback } from "!/Utility";
 
 // const Log: FLogger = GetLogger("Tile");
 

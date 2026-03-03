@@ -9,6 +9,7 @@ import type { FSettings } from "./Settings.Types";
 export const DefaultSettings: FSettings =
 {
     AnimationScalar: 1,
+    Gap: 4,
     Keybinds:
     {
         Direction:

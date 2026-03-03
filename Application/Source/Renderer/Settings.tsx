@@ -20,6 +20,7 @@ import { Identity } from "./Utility";
 import type { TIpcState } from "./Event.Types";
 import type { TPromiseThenFunction } from "!/Utility";
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Settings");
 
 export type FSettings = Readonly<FAppSettings>;
@@ -66,7 +67,6 @@ export const Settings = ({ children }: PropsWithChildren): ReactNode =>
     const OnGetSettings: TPromiseThenFunction<TIpcState<"GetSettings">> =
         useCallback(({ Data }: TIpcState<"GetSettings">): void =>
         {
-            Log("OnGetSettings");
             if (Data !== undefined)
             {
                 SetOutSettings((_Old: FSettings): FSettings =>

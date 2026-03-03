@@ -4,95 +4,97 @@
  * License:   MIT
  */
 
-import type { CSSProperties, ReactNode } from "react";
-import {
-    Command,
-    type FCommand,
-    type FCompoundCommand,
-    type FSimpleCommand,
-    type FSubCommand,
-    SwitchOnCommandType } from "../Command";
-import type { FKeybindId } from "!/Settings";
-import { Key } from "../Keyboard";
-import type { PCommandList } from "./CommandList.Types";
-import { UseCommands } from "@/Command";
+// import type { CSSProperties, ReactNode } from "react";
+// import {
+//     Command,
+//     type FCommand,
+//     type FCompoundCommand,
+//     type FSimpleCommand,
+//     type FSubCommand,
+//     SwitchOnCommandType } from "../Command";
+// import type { FKeybindId } from "!/Settings";
+// import { Key } from "../Keyboard";
+// import type { PCommandList } from "./CommandList.Types";
+// import { UseCommands } from "@/Command";
 
-export const CommandList = ({ Commands }: PCommandList): ReactNode =>
-{
-    const RootStyle: CSSProperties =
-    {
-        alignItems: "flex-start",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "flex-start"
-    };
+export const CommandList: string = "Foo";
 
-    const ColumnStyleBase: CSSProperties =
-    {
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start"
-    };
+// export const CommandList = ({ Commands }: PCommandList): ReactNode =>
+// {
+//     const RootStyle: CSSProperties =
+//     {
+//         alignItems: "flex-start",
+//         display: "flex",
+//         flexDirection: "row",
+//         justifyContent: "flex-start"
+//     };
 
-    const KeybindColumnStyle: CSSProperties =
-    {
-        ...ColumnStyleBase,
-        alignItems: "flex-end"
-    };
+//     const ColumnStyleBase: CSSProperties =
+//     {
+//         display: "flex",
+//         flexDirection: "column",
+//         justifyContent: "flex-start"
+//     };
 
-    const NameColumnStyle: CSSProperties =
-    {
-        ...ColumnStyleBase,
-        alignItems: "flex-start"
-    };
+//     const KeybindColumnStyle: CSSProperties =
+//     {
+//         ...ColumnStyleBase,
+//         alignItems: "flex-end"
+//     };
 
-    UseCommands(Commands);
+//     const NameColumnStyle: CSSProperties =
+//     {
+//         ...ColumnStyleBase,
+//         alignItems: "flex-start"
+//     };
 
-    const GetKeyComponentsFromCommand = (InCommand: FCommand): ReactNode =>
-    {
-        const GetComponentFromKeybind = (Keybind: FKeybindId): ReactNode =>
-        {
-            return (
-                <Key
-                    Value={ Keybind[0] }
-                    key={ InCommand.Name + Keybind[0] }
-                />
-            );
-        };
+//     UseCommands(Commands);
 
-        return SwitchOnCommandType(
-            InCommand,
-            ({ Keybinds }: FSimpleCommand): ReactNode =>
-            {
-                return GetComponentFromKeybind(Keybinds[0]);
-            },
-            ({ SubCommands }: FCompoundCommand): ReactNode =>
-            {
-                return SubCommands.map(({ Keybinds }: FSubCommand): ReactNode =>
-                {
-                    return GetComponentFromKeybind(Keybinds[0]);
-                });
-            }
-        );
-    };
+//     const GetKeyComponentsFromCommand = (InCommand: FCommand): ReactNode =>
+//     {
+//         const GetComponentFromKeybind = (Keybind: FKeybindId): ReactNode =>
+//         {
+//             return (
+//                 <Key
+//                     Value={ Keybind[0] }
+//                     key={ InCommand.Name + Keybind[0] }
+//                 />
+//             );
+//         };
 
-    return (
-        <div style={ RootStyle }>
-            <div style={ KeybindColumnStyle }>
-                {
-                    Commands.map(GetKeyComponentsFromCommand)
-                }
-            </div>
-            <div style={ NameColumnStyle }>
-                {
-                    Commands.map((InCommand: FCommand): ReactNode => (
-                        <Command
-                            key={ InCommand.Name }
-                            { ...InCommand }
-                        />
-                    ))
-                }
-            </div>
-        </div>
-    );
-};
+//         return SwitchOnCommandType(
+//             InCommand,
+//             ({ Keybinds }: FSimpleCommand): ReactNode =>
+//             {
+//                 return GetComponentFromKeybind(Keybinds[0]);
+//             },
+//             ({ SubCommands }: FCompoundCommand): ReactNode =>
+//             {
+//                 return SubCommands.map(({ Keybinds }: FSubCommand): ReactNode =>
+//                 {
+//                     return GetComponentFromKeybind(Keybinds[0]);
+//                 });
+//             }
+//         );
+//     };
+
+//     return (
+//         <div style={ RootStyle }>
+//             <div style={ KeybindColumnStyle }>
+//                 {
+//                     Commands.map(GetKeyComponentsFromCommand)
+//                 }
+//             </div>
+//             <div style={ NameColumnStyle }>
+//                 {
+//                     Commands.map((InCommand: FCommand): ReactNode => (
+//                         <Command
+//                             key={ InCommand.Name }
+//                             { ...InCommand }
+//                         />
+//                     ))
+//                 }
+//             </div>
+//         </div>
+//     );
+// };

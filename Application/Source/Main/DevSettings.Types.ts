@@ -4,9 +4,11 @@
  * License:   MIT
  */
 
-import type { FBox } from "Windows";
+import type { FBox } from "@sorrellwm/windows";
+import type { FLogSettings } from "../Shared/Log.Types";
 
 export type FDevSettings = Readonly<{
+    Log: FLogSettings;
     StaticMode:
     {
         Enabled: boolean;

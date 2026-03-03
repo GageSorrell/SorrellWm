@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FHexColor, FLogLevel } from "Windows";
+import type { FHexColor, FLogLevel } from "@sorrellwm/windows";
 import type { PLevel } from "./Level.Types";
 import { Predicate } from "./Predicate";
 import type { ReactElement } from "react";

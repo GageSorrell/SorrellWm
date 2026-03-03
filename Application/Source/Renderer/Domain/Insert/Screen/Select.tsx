@@ -5,10 +5,9 @@
  */
 
 import { Action } from "@/Action";
-import type { FCardinalDirection } from "!/Shared.Types";
-import type { FInsertSizingMethod } from "!/Event/Focus.Types";
+import type { FCardinalDirection } from "../../../../Shared/Shared.Types";
+import type { FInsertSizingMethod } from "../../../../Shared/Event/Insert.Types";
 import { type ReactElement } from "react";
-import { UseIpc_DEPRECATED } from "@/Utility";
 import { UseIpcNavigatorState } from "@/Router";
 
 type FSelectNavigatorState = Readonly<[ FInsertSizingMethod, FCardinalDirection ] | [ undefined, undefined ]>;
@@ -34,9 +33,9 @@ const UseSelectNavigatorState = (): FSelectNavigatorState =>
 
 export const Select = (): ReactElement =>
 {
-    const [ SizingMethod, Direction ] = UseSelectNavigatorState();
+    // const [ SizingMethod, Direction ] = UseSelectNavigatorState();
 
-    const [ InsertableWindowData ] = UseIpc_DEPRECATED("GetInsertableWindowData", undefined);
+    // const [ InsertableWindowData ] = UseIpc_DEPRECATED("GetInsertableWindowData", undefined);
 
     return (
         <Action>

@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FBox } from "Windows";
+import type { FBox } from "@sorrellwm/windows";
 import type { FSimpleCallback } from "../../Shared/Utility";
 import type { RefObject } from "react";
 

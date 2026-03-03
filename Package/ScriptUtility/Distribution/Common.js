@@ -3,6 +3,7 @@
  * Copyright: (c) 2024 Gage Sorrell
  * License:   MIT
  */
+/* eslint-disable no-console */
 import * as Path from "path";
 import Ora from "ora";
 import Chalk from "chalk";
@@ -20,17 +21,19 @@ export const DoTask = async (Task, Description) => {
 };
 const PrintBanner = (ScriptTitle, ScriptDescription) => {
     const TerminalWidth = process.stdout.columns;
-    const Title = "◱  SorrellWm";
-    const Padding = Math.max(0, TerminalWidth - Title.length);
-    const PaddingLeftNum = Math.floor(Padding / 2);
-    const PaddingRightNum = Math.ceil(Padding / 2);
-    const PaddingLeft = " ".repeat(PaddingLeftNum);
-    const PaddingRight = " ".repeat(PaddingRightNum);
-    const PaddedText = PaddingLeft + Title + PaddingRight;
+    const Center = (In) => {
+        const Padding = Math.max(0, TerminalWidth - Chalk.reset(In).length);
+        const PaddingLeftNum = Math.floor(Padding / 2);
+        const PaddingRightNum = Math.ceil(Padding / 2);
+        const PaddingLeft = " ".repeat(PaddingLeftNum);
+        const PaddingRight = " ".repeat(PaddingRightNum);
+        return PaddingLeft + In + PaddingRight;
+    };
+    const Title = "◱ SorrellWm";
     const EmptyLine = Chalk.bgBlue(" ".repeat(TerminalWidth));
-    console.log(Chalk.bgBlue.white(PaddedText +
+    console.log(Chalk.bgBlue.white(Center(Title) +
         EmptyLine +
-        " " + Chalk.bold(ScriptTitle + ": ") + ScriptDescription +
+        Center(Chalk.bold(ScriptTitle + ": ") + ScriptDescription) +
         EmptyLine));
 };
 export const Run = (MainFunction, ScriptTitle, ScriptDescription) => {

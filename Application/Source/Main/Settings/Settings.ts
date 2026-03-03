@@ -6,8 +6,8 @@
 
 import * as Path from "path";
 import { type BrowserWindow, ipcMain } from "electron";
+import { DefaultSettings, type FSettings } from "../../Shared/Settings";
 import { CreateBrowserWindow } from "#/BrowserWindow.Old";
-import type { FSettings } from "./Settings.Types";
 import { GetPaths } from "#/Core/Paths";
 import Settings from "electron-settings";
 
@@ -70,10 +70,10 @@ export const UpdateSettings = async (): Promise<void> =>
 
 };
 
-export const GetSettings = async (): Promise<FSettings | undefined> =>
+export const GetSettings = async (): Promise<Readonly<FSettings>> =>
 {
     const OutSettings: FSettings | null = await Settings.get("Settings") as FSettings | null;
     return OutSettings !== null
         ? OutSettings
-        : undefined;
+        : DefaultSettings;
 };

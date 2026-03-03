@@ -23,14 +23,16 @@ import type {
     FSetTypeName,
     TLogContainer,
     TLogPrimitive,
-    TLogValue } from "./LogUtility.Types";
-import type { FLogDigitSeparator, FLogQuoteStyle } from "!/Log.Types";
+    TLogValue } from "./LogFormat.Types";
+import type { FLogDigitSeparator, FLogQuoteStyle, FLogSettings } from "../../../Shared/Log.Types";
 import Chalk from "chalk";
 import type { FTypeof } from "../../../Shared/Utility";
+import { GetDevSettings } from "#/DevSettings";
 import { Identity } from "@/Utility";
-import { LogSettings } from "../../../Shared/LoggerSettings";
 
 Chalk.level = 3;
+
+const LogSettings: FLogSettings = GetDevSettings().Log;
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
@@ -81,7 +83,9 @@ const FormatString = ({ Depth, Value }: TLogPrimitive<string>): FLogString =>
 {
     return {
         Depth,
-        String: StyleString(Value)
+        String: (IsBase64String(Value) && LogSettings.Format.TruncateBase64Strings)
+            ? FormatBase64String(Value)
+            : StyleString(Value)
     };
 };
 
@@ -405,7 +409,7 @@ const FormatFunction = ({ Depth }: TLogPrimitive<Function>): FLogString =>
 {
     return {
         Depth,
-        String: "[ Function ]"
+        String: LogSettings.Format.Colors ? Chalk.red("[ Function ]") : "[ Function ]"
     };
 };
 
@@ -503,30 +507,50 @@ const FormatRecord = ({ Depth, Value }: FLogRecord): Array<FLogString> =>
         return Out;
     };
 
-    const FormatKeyValuePair = ({ Depth, Key, Value }: FKeyValuePair): FLogStringArray =>
-    {
-        const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "KeyValuePair");
+    const KeyValuePairs: Array<FKeyValuePair> = GetKeyValuePairs(Value);
 
-        const FormatMapKey = ({ Depth, Key }: Omit<FKeyValuePair, "Value">): FLogString =>
+    const FormatKeyValuePair = ({ Depth, Key, Value }: FKeyValuePair, Index: number): FLogStringArray =>
+    {
+        // const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "Record");
+
+        const FormatRecordKey = ({ Depth, Key }: Omit<FKeyValuePair, "Value">): FLogString =>
         {
             const Out: FLogString = FormatValue({ Depth: Depth + 1, Value: Key })[0];
             Out.String += ":";
             return Out;
         };
 
-        const FormatMapValue = ({ Depth, Value }: Omit<FKeyValuePair, "Key">): FLogStringArray =>
+        const FormatRecordValue = ({ Depth, Value }: Omit<FKeyValuePair, "Key">): FLogStringArray =>
         {
-            return FormatValue({ Depth: Depth + 1, Value });
+            const Out: FLogStringArray = FormatValue({ Depth: Depth + 1, Value });
+            if (Index !== KeyValuePairs.length - 1)
+            {
+                Out[Out.length - 1].String += ",";
+            }
+            return Out;
         };
 
-        const KeyLogString: FLogString = FormatMapKey({ Depth, Key });
-        const ValueLogStrings: FLogStringArray = FormatMapValue({ Depth, Value });
+        const KeyLogString: FLogString = FormatRecordKey({ Depth, Key });
+        const ValueLogStrings: FLogStringArray = FormatRecordValue({ Depth, Value });
 
-        return [ StartDelimiterLogString, KeyLogString, ...ValueLogStrings, StopDelimiterLogString ];
+        if (ValueLogStrings.length === 1)
+        {
+            const Out: FLogString =
+            {
+                Depth: Depth + 1,
+                String: KeyLogString.String + " " + ValueLogStrings[0].String
+            };
+
+            return [ Out ];
+        }
+        else
+        {
+            return [ KeyLogString, ...ValueLogStrings ];
+        }
     };
 
     const InnerLogStrings: FLogStringArray =
-        GetKeyValuePairs(Value).map(FormatKeyValuePair).flat(20) as FLogStringArray;
+        KeyValuePairs.map(FormatKeyValuePair).flat(20) as FLogStringArray;
 
     return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
 };
@@ -560,7 +584,17 @@ const FormatContainer = (
     const InnerLogStrings: FLogStringArray =
         ValueArray.map(MakeLogValue).map(FormatValue).flat(20).map(AppendComma) as FLogStringArray;
 
-    return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
+    if (InnerLogStrings.length === 0)
+    {
+        return [ {
+            Depth,
+            String: StartDelimiterLogString.String + " " + StopDelimiterLogString.String
+        } ];
+    }
+    else
+    {
+        return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
+    }
 };
 
 const FormatSet = (LogSet: FLogSet): Array<FLogString> =>
@@ -637,4 +671,44 @@ export const Format = (Value: FLogValueType): string =>
         .join("\n");
 
     return Out;
+};
+
+export const FormatInline = (Value: FLogValueType): string =>
+{
+    return Format(Value).replaceAll("\n", " ");
+};
+
+const IsBase64String = (In: string): boolean =>
+{
+    // const NormalizedInput: string = In.replace(/\s+/g, "");
+
+    // if (NormalizedInput.length === 0 || NormalizedInput.length % 4 !== 0)
+    // {
+    //     return false;
+    // }
+
+    // return /^[A-Za-z0-9+/]*={0,2}$/.test(NormalizedInput);
+    return (
+        In.startsWith("data:") &&
+        In.includes(";") &&
+        In.length > 20
+    );
+};
+
+export const FormatBase64String = (In: string): string =>
+{
+    if (!LogSettings.Format.TruncateBase64Strings)
+    {
+        return In;
+    }
+
+    if (IsBase64String(In))
+    {
+        return Chalk.gray(`[ Base64 (${ In.slice("data:".length).split(";")[0] }) ]`);
+    }
+    else
+    {
+        return In;
+    }
+
 };

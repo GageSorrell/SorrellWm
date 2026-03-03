@@ -4,9 +4,15 @@
  * License:   MIT
  */
 
-import type { FLogFunction, FLogger, FLoggerInterim } from "!/Log.Types";
+import type { FGetTimeToken, FLogFunction, FLogger, FLoggerInterim } from "../Shared/Log.Types";
 import type { FRecord, FTypeof } from "../Shared/Utility";
 import type { FLogLevel } from "@sorrellwm/windows";
+import { GetTimeToken } from "../Shared/Log";
+
+export const GetTime = (): FGetTimeToken =>
+{
+    return GetTimeToken;
+};
 
 /** Use this to create a logger within a given module so that the log category is set for that module. */
 export const GetLogger = (Category: string): FLogger =>

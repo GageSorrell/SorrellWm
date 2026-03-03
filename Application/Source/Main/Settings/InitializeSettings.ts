@@ -5,14 +5,8 @@
  */
 
 // import { app, Notification } from "electron";
-import type { FSettings } from "./Settings.Types";
+import { DefaultSettings } from "../../Shared/Settings";
 import Settings from "electron-settings";
-
-const DefaultSettings: FSettings =
-{
-    Gap: 4,
-    RunOnStartup: true
-};
 
 const InitializeSettings = async (): Promise<void> =>
 {
@@ -27,6 +21,7 @@ const InitializeSettings = async (): Promise<void> =>
     // }));
 };
 
+/* eslint-disable @stylistic/max-len */
 // const InitializeSettings = async (): Promise<void> =>
 // {
 //     if (!Settings.hasSync("Gap"))
@@ -62,5 +57,6 @@ const InitializeSettings = async (): Promise<void> =>
 //     //     AskToEnableRunOnStartup();
 //     // }
 // };
+/* eslint-enable @stylistic/max-len */
 
 InitializeSettings();

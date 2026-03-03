@@ -4,10 +4,11 @@
  * License:   MIT
  */
 
+/* eslint-disable-next-line @stylistic/max-len */
 /* @TODO Likely get rid of this module; there isn't enough logic regarding `BrowserWindow`s to warrant their own module. */
 
-import type { FSimpleCallback } from "!/Utility/Utility.Types";
-import type { FVector2D } from "Windows";
+import type { FSimpleCallback } from "../Shared/Utility";
+import type { FVector2D } from "@sorrellwm/windows";
 
 export type FBrowserWindow = Readonly<{
     GetHandle: () => FBrowserWindowHandle;

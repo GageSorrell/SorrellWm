@@ -6,4 +6,3 @@
 
 export * from "./InitializeSettings";
 export * from "./Settings";
-export * from "./Settings.Types";

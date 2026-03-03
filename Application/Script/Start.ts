@@ -6,6 +6,7 @@
 
 import * as FilteredLogStatements from "./FilteredLogStatements.json";
 import { type ChildProcess, spawn } from "child_process";
+import Chalk from "chalk";
 
 const ModifyOutput = (Output: string): string =>
 {
@@ -17,7 +18,41 @@ const ModifyOutput = (Output: string): string =>
         }
         else if (Line.startsWith("<i> "))
         {
-            return "📦 " + Line.slice(4);
+            return (
+                Chalk.hex("#FFFFFF").bgHex("#AAAAAA")(" ⬢ ") +
+                Chalk.hex("#FFFFFF").bgGray(" Normal ") +
+                Line
+                    .slice(4)
+                    .replace("[webpack-dev-server]", Chalk.bgGreen(" Webpack "))
+                    .replace("[webpack-dev-middleware]", Chalk.bgGreen(" Webpack "))
+            );
+        }
+        else if (Line.startsWith("[electronmon]"))
+        {
+            if (Line.includes("renderer file change"))
+            {
+                let OutLine: string = Line
+                    .replace("[electronmon]", Chalk.bgMagenta(" Electronmon "))
+                    .replace("renderer file change: ", "Module modified: ./")
+                    .replaceAll("\\", "/")
+                    .replace("Source/", "");
+
+                OutLine = OutLine.split(": ")[0] + ": " + Chalk.hex("#EB4657")(OutLine.split(": ")[1]);
+
+                return (
+                    Chalk.hex("#FFFFFF").bgHex("#AAAAAA")(" • ") +
+                    Chalk.hex("#FFFFFF").bgGray(" Normal ") +
+                    OutLine
+                );
+            }
+            else
+            {
+                return (
+                    Chalk.hex("#FFFFFF").bgHex("#AAAAAA")(" • ") +
+                    Chalk.hex("#FFFFFF").bgGray(" Normal ") +
+                    Line.replace("[electronmon]", Chalk.bgMagenta(" Electronmon "))
+                );
+            }
         }
 
         const HasExcludedStatement: boolean =

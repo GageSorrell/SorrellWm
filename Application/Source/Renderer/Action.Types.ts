@@ -5,7 +5,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { TMaybeArray } from "!/Utility/Utility.Types";
+import type { TMaybeArray } from "../Shared/Utility";
 
 export type PAction =
 {

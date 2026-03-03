@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { HWindow } from "Windows";
+import type { HWindow } from "@sorrellwm/windows";
 
 /**
  * When a new vertex is created within a panel, how should its size

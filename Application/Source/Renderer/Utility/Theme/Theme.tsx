@@ -12,7 +12,7 @@ import {
     createLightTheme } from "@fluentui/react-components";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
 import { UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
-import type { FHexColor } from "Windows";
+import type { FHexColor } from "@sorrellwm/windows";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
 
 const UseThemeColor = (): Readonly<[ FHexColor ]> =>

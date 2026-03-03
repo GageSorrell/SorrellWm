@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FLogLevel, FLogOrigin } from "Windows";
+import type { FLogLevel, FLogOrigin } from "@sorrellwm/windows";
 import type chalk from "chalk";
 
 export type FChalkBackground = Extract<keyof typeof chalk, `bg${ string }`>;
@@ -15,11 +15,7 @@ export type FLogFunction = (...Statements: Array<unknown>) => void;
 
 export type FLogFormatFunction = (Statement: unknown) => unknown;
 
-export type FLoggerRecord =
-    Record<Exclude<FLogLevel, "Normal">, FLogFunction> &
-    {
-        Formatters: Array<FLogFormatFunction>;
-    };
+export type FLoggerRecord = Record<Exclude<FLogLevel, "Normal">, FLogFunction>;
 
 export type FLogOriginExtended = FLogOrigin | "*";
 
@@ -45,9 +41,11 @@ export type FLogSettings = Readonly<{
     };
     Format:
     {
+        AlwaysApplyFormat: boolean;
         Colors: boolean;
         DigitSeparator: FLogDigitSeparator;
         QuoteStyle: FLogQuoteStyle;
+        TruncateBase64Strings: boolean;
     };
     Size:
     {
@@ -66,3 +64,8 @@ export type FLogger = FLoggerRecord & FLogFunction;
 export type FLoggerInterim = FLogFunction & Partial<FLoggerRecord>;
 
 export type FLog = (...Arguments: Array<unknown>) => void;
+
+export type FGetTimeToken = "__GetTime__";
+
+export type FLogFrontendTokens =
+    | FGetTimeToken;

@@ -18,7 +18,7 @@ import {
     useRef,
     useState
 } from "react";
-import type { FSimpleCallback, TSimpleFunction } from "!/Utility/Functional.Types";
+import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility/Functional.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
 import { Identity } from "./Utility";

@@ -35,10 +35,10 @@ import type {
     FPanel,
     FPanelBase,
     FVertex } from "./Tree.Types";
-import { type FSettings, GetSettings } from "../Settings";
-import type { FLogger } from "#/Development";
+import { type FLogger, Format } from "#/Development";
 import { GetActiveWindow } from "../MainWindow";
 import { GetMonitors } from "../Monitor";
+import { GetSettings } from "#/Settings";
 import { GetTreeLogger } from "./Log";
 import { type TPredicate } from "@/Utility";
 
@@ -72,6 +72,10 @@ const GetDepth = (Vertex: FVertex): number =>
  */
 export const LogForest = (Transformer?: FLogTransformer): void =>
 {
+    Log(Forest);
+    Log("Logged Forest!");
+    return;
+
     let OutString: string = "";
 
     Traverse((Vertex: FVertex): boolean =>
@@ -110,7 +114,7 @@ export const LogForest = (Transformer?: FLogTransformer): void =>
         return true;
     });
 
-    Log(OutString);
+    Log(Format(JSON.parse(OutString)));
 };
 
 const Cell = (Handle: HWindow): FCell =>
@@ -412,12 +416,12 @@ const TraverseLevelOrder = (Root: FVertex, Callback: (Vertex: FVertex, Level: nu
     }
 };
 
-const ComputeGapData = (): Map<FVertex, FBox> =>
+const ComputeGapData = async (): Promise<Map<FVertex, FBox>> =>
 {
     const GapData: Map<FVertex, FGapData> = new Map<FVertex, FGapData>();
 
     /** @TODO Make this a setting. */
-    const Gap: number = 4;
+    const { Gap } = await GetSettings();
 
     Forest.forEach((Root: FVertex): void =>
     {
@@ -592,17 +596,17 @@ const ComputeGapData = (): Map<FVertex, FBox> =>
 
 export const Publish = async (): Promise<void> =>
 {
-    const Settings: FSettings | undefined = await GetSettings();
-    const GapSettingIsNonzero: boolean = Settings !== undefined && Settings.Gap > 0;
-    const GapAdjustedSizes: Map<FVertex, FBox> | undefined = GapSettingIsNonzero
-        ? ComputeGapData()
+    const { Gap } = await GetSettings();
+    const IsGapNonzero: boolean = Gap > 0;
+    const GapAdjustedSizes: Map<FVertex, FBox> | undefined = IsGapNonzero
+        ? await ComputeGapData()
         : undefined;
 
     Traverse((Vertex: FVertex): boolean =>
     {
         if (IsCell(Vertex))
         {
-            if (GapSettingIsNonzero)
+            if (IsGapNonzero)
             {
                 if (GapAdjustedSizes !== undefined)
                 {
@@ -837,6 +841,11 @@ export const IsPanel = (Vertex: FVertex): Vertex is FPanel =>
 {
     return "Children" in Vertex;
 };
+
+// const FormatPanel = (InPanel: FPanel | FAnnotatedPanel): string =>
+// {
+//     return "";
+// };
 
 export const GetPanelFromAnnotated = (Panel: FAnnotatedPanel): FPanel | undefined =>
 {

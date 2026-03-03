@@ -5,7 +5,6 @@
  */
 
 export * from "./Event";
-export * from "./LoggerSettings";
 export * from "./Log.Types";
 export * from "./Settings/Settings";
 export * from "./Settings/Settings.Types";

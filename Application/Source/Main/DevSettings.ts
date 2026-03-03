@@ -10,5 +10,5 @@ import type { FDevSettings } from "./DevSettings.Types";
 export const GetDevSettings = (): FDevSettings =>
 {
     const { $schema: _, ...Settings } = DevSettings;
-    return Settings;
+    return Settings as FDevSettings;
 };

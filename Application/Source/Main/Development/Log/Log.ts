@@ -5,63 +5,199 @@
  */
 
 import type {
-    FChalkBackground,
-    FChalkForeground,
-    FLogFormatFunction,
+    FLogFrontendTokens,
     FLogFunction,
+    FLogSettings,
     FLogger,
-    FLoggerInterim } from "!/Log.Types";
-import type { FLogLevel, FLogOriginInternal } from "Windows";
+    FLoggerInterim } from "../../../Shared/Log.Types";
+import type { FLogHandler, FShortTimestamp } from "./Log.Types";
+import type { FLogLevel, FLogOriginInternal } from "@sorrellwm/windows";
+import { Format, FormatBase64String, FormatInline } from "./LogFormat";
 import Chalk from "chalk";
-import { LogSettings } from "../../../Shared/LoggerSettings";
+import { GetDevSettings } from "#/DevSettings";
 import Util from "util";
 
 Chalk.level = 3;
 
+const LogSettings: FLogSettings = GetDevSettings().Log;
+
 const FormatCategory = (Category: string): string =>
 {
-    const PaddedCategory: string = ` ${ Category } `;
-    let HashValue: number = 0;
-    for (let Index: number = 0; Index < Category.length; Index++)
+    type FRgb = Record<"Red" | "Green" | "Blue", number>;
+
+    const HashStringToBackgroundColor = (Input: string): string =>
     {
-        HashValue = (HashValue << 5) - HashValue + PaddedCategory.charCodeAt(Index);
-        HashValue |= 0;
-    }
+        let HashValue: number = 2166136261;
 
-    const BackgroundColors: Array<FChalkBackground> =
-    [
-        "bgBlack",
-        "bgRed",
-        "bgGreen",
-        "bgYellow",
-        "bgBlue",
-        "bgMagenta",
-        "bgCyan",
-        "bgWhite",
-        "bgGray",
-        "bgGrey"
-    ];
+        for (let Index: number = 0; Index < Input.length; Index++)
+        {
+            HashValue ^= Input.charCodeAt(Index);
+            HashValue = Math.imul(HashValue, 16777619);
+        }
 
-    const HashedIndex: number = Math.abs(HashValue) % BackgroundColors.length;
+        HashValue >>>= 0;
 
-    const SelectedBackground: FChalkBackground = BackgroundColors[HashedIndex];
+        const Hue: number = HashValue % 360;
+        const Saturation: number = 58 + ((HashValue >>> 8) % 23);
 
-    const BrightBackgrounds: Array<FChalkBackground> =
-    [
-        "bgWhite",
-        "bgYellow",
-        "bgCyan",
-        "bgGray",
-        "bgGrey"
-    ];
+        let Lightness: number = 26 + ((HashValue >>> 16) % 12);
 
-    const IsBright: boolean = BrightBackgrounds.includes(SelectedBackground);
+        let RgbColor: FRgb = ConvertHslToRgb(Hue, Saturation / 100, Lightness / 100);
 
-    const ForegroundColor: FChalkForeground = IsBright ? "black" : "whiteBright";
+        const ShouldAdjustRgbColor = (): boolean =>
+        {
+            return (
+                CalculateContrastRatioWithWhite(RgbColor.Red, RgbColor.Green, RgbColor.Blue) < 4.5 &&
+                Lightness > 12
+            );
+        };
 
-    /* @ts-expect-error Type safety hell, using union types that mix functions with objects. */
-    return Chalk[SelectedBackground][ForegroundColor](PaddedCategory);
+        while (ShouldAdjustRgbColor())
+        {
+            Lightness--;
+            RgbColor = ConvertHslToRgb(Hue, Saturation / 100, Lightness / 100);
+        }
+
+        return ConvertRgbToHexColor(RgbColor.Red, RgbColor.Green, RgbColor.Blue);
+    };
+
+    const ConvertHslToRgb = (Hue: number, Saturation: number, Lightness: number): FRgb =>
+    {
+        const Chroma: number = (1 - Math.abs(2 * Lightness - 1)) * Saturation;
+        const HuePrime: number = Hue / 60;
+        const SecondComponent: number = Chroma * (1 - Math.abs((HuePrime % 2) - 1));
+        const MatchValue: number = Lightness - Chroma / 2;
+
+        let RedPrime: number = 0;
+        let GreenPrime: number = 0;
+        let BluePrime: number = 0;
+
+        if (HuePrime >= 0 && HuePrime < 1)
+        {
+            RedPrime = Chroma;
+            GreenPrime = SecondComponent;
+        }
+        else if (HuePrime >= 1 && HuePrime < 2)
+        {
+            RedPrime = SecondComponent;
+            GreenPrime = Chroma;
+        }
+        else if (HuePrime >= 2 && HuePrime < 3)
+        {
+            GreenPrime = Chroma;
+            BluePrime = SecondComponent;
+        }
+        else if (HuePrime >= 3 && HuePrime < 4)
+        {
+            GreenPrime = SecondComponent;
+            BluePrime = Chroma;
+        }
+        else if (HuePrime >= 4 && HuePrime < 5)
+        {
+            RedPrime = SecondComponent;
+            BluePrime = Chroma;
+        }
+        else
+        {
+            RedPrime = Chroma;
+            BluePrime = SecondComponent;
+        }
+
+        return {
+            Blue: Math.round((BluePrime + MatchValue) * 255),
+            Green: Math.round((GreenPrime + MatchValue) * 255),
+            Red: Math.round((RedPrime + MatchValue) * 255)
+        };
+    };
+
+    const CalculateContrastRatioWithWhite = (Red: number, Green: number, Blue: number): number =>
+    {
+        const RelativeLuminance: number = CalculateSrgbRelativeLuminance(Red, Green, Blue);
+
+        return (1.0 + 0.05) / (RelativeLuminance + 0.05);
+    };
+
+    const CalculateSrgbRelativeLuminance = (Red: number, Green: number, Blue: number): number =>
+    {
+        const RedChannel: number = ConvertSrgbChannelToLinear(Red / 255);
+        const GreenChannel: number = ConvertSrgbChannelToLinear(Green / 255);
+        const BlueChannel: number = ConvertSrgbChannelToLinear(Blue / 255);
+
+        return 0.2126 * RedChannel + 0.7152 * GreenChannel + 0.0722 * BlueChannel;
+    };
+
+    const ConvertSrgbChannelToLinear = (Channel: number): number =>
+    {
+        if (Channel <= 0.04045)
+        {
+            return Channel / 12.92;
+        }
+
+        return Math.pow((Channel + 0.055) / 1.055, 2.4);
+    };
+
+    const ConvertRgbToHexColor = (Red: number, Green: number, Blue: number): string =>
+    {
+        return (
+            "#" +
+            ConvertByteToHex(Red) +
+            ConvertByteToHex(Green) +
+            ConvertByteToHex(Blue)
+        );
+    };
+
+    const ConvertByteToHex = (Value: number): string =>
+    {
+        return Value.toString(16).padStart(2, "0").toUpperCase();
+    };
+
+    return Chalk.hex("#FFFFFF").bgHex(HashStringToBackgroundColor(Category))(` ${ Category } `);
 };
+
+// const FormatCategoryBasic = (Category: string): string =>
+// {
+//     const PaddedCategory: string = ` ${ Category } `;
+//     let HashValue: number = 0;
+//     for (let Index: number = 0; Index < Category.length; Index++)
+//     {
+//         HashValue = (HashValue << 5) - HashValue + PaddedCategory.charCodeAt(Index);
+//         HashValue |= 0;
+//     }
+
+//     const BackgroundColors: Array<FChalkBackground> =
+//     [
+//         "bgBlack",
+//         "bgRed",
+//         "bgGreen",
+//         "bgYellow",
+//         "bgBlue",
+//         "bgMagenta",
+//         "bgCyan",
+//         "bgWhite",
+//         "bgGray",
+//         "bgGrey"
+//     ];
+
+//     const HashedIndex: number = Math.abs(HashValue) % BackgroundColors.length;
+
+//     const SelectedBackground: FChalkBackground = BackgroundColors[HashedIndex];
+
+//     const BrightBackgrounds: Array<FChalkBackground> =
+//     [
+//         "bgWhite",
+//         "bgYellow",
+//         "bgCyan",
+//         "bgGray",
+//         "bgGrey"
+//     ];
+
+//     const IsBright: boolean = BrightBackgrounds.includes(SelectedBackground);
+
+//     const ForegroundColor: FChalkForeground = IsBright ? "black" : "whiteBright";
+
+//     /* @ts-expect-error Type safety hell, using union types that mix functions with objects. */
+//     return Chalk[SelectedBackground][ForegroundColor](PaddedCategory);
+// };
 
 const FormatLevel = (Level: FLogLevel): string =>
 {
@@ -141,10 +277,10 @@ const LogInternal = (
 
     const OriginEmojiMap: Record<FLogOriginInternal, string> =
     {
-        Backend: "🐛",
-        Frontend: "⚛️",
-        Meta: "🧠",
-        Native: "🦾"
+        Backend: "λ",
+        Frontend: "ƒ",
+        Meta: "◈",
+        Native: "ϑ"
     };
 
     const OriginEmoji: string = OriginEmojiMap[Origin];
@@ -158,7 +294,7 @@ const LogInternal = (
     {
         const OutStatementsArray: Array<string> =
         [
-            OriginEmoji + " ",
+            Chalk.bgHex("#AAAAAA").white(` ${ OriginEmoji } `),
             FormatLevel(Level),
             FormatCategory(Category),
             " ",
@@ -199,25 +335,165 @@ export const LogFrontend = (
     ...Statements: Array<unknown>
 ): void =>
 {
-    LogInternal("Frontend", Category, Level, ...Statements);
+    const StatementsUntokenized: Array<unknown> = Statements.map(HandleFrontendTokens);
+    LogInternal("Frontend", Category, Level, ...StatementsUntokenized);
+};
+
+export const GetTime = (): FShortTimestamp =>
+{
+    const Now: Date = new Date();
+
+    const Minutes: string = Now
+        .getMinutes()
+        .toString()
+        .padStart(2, "0");
+
+    const Seconds: string = Now
+        .getSeconds()
+        .toString()
+        .padStart(2, "0");
+
+    const Milliseconds: string = Now
+        .getMilliseconds()
+        .toString()
+        .padStart(3, "0");
+
+    return `${ Minutes }:${ Seconds }.${ Milliseconds }`;
+};
+
+const FrontendTokens: Readonly<Record<FLogFrontendTokens, () => string>> =
+{
+    __GetTime__: GetTime
+} as const;
+
+const HandleFrontendTokens = (Statement: unknown): unknown =>
+{
+    const IsFrontendToken = (In: unknown): In is FLogFrontendTokens =>
+    {
+        if (typeof In === "string")
+        {
+            return Object.keys(FrontendTokens).includes(In);
+        }
+        else
+        {
+            return false;
+        }
+    };
+
+    if (IsFrontendToken(Statement))
+    {
+        return FrontendTokens[Statement]();
+    }
+    else
+    {
+        return Statement;
+    }
+};
+
+const HandleAlwaysApplyFormat = (Statement: unknown, Statements: Array<unknown>): unknown =>
+{
+    if (LogSettings.Format.AlwaysApplyFormat)
+    {
+        if (typeof Statement === "string" && Statements.length === 1)
+        {
+            return Statement;
+        }
+        else if (typeof Statement === "object")
+        {
+            return Format(Statement);
+        }
+        else
+        {
+            return FormatInline(Statement);
+        }
+    }
+    else
+    {
+        return Statement;
+    }
+};
+
+export const HandleBase64Strings = (Statement: unknown, _Statements: Array<unknown>): unknown =>
+{
+    if (typeof Statement === "string" && !LogSettings.Format.AlwaysApplyFormat)
+    {
+        return FormatBase64String(Statement);
+    }
+    else
+    {
+        return Statement;
+    }
 };
 
 /** Use this to create a logger within a given module so that the log category is set for that module. */
 export const GetLogger = (Category: string): FLogger =>
 {
-    const Formatters: Array<FLogFormatFunction> = [ ];
     const MakeLoggerInternal = (Level: FLogLevel): FLogFunction =>
     {
         return (...Statements: Array<unknown>): void =>
         {
-            const FormattedStatements: Array<unknown> = Formatters.length === 0
-                ? Statements
-                : Formatters.map((Formatter: FLogFormatFunction): unknown =>
-                {
-                    return Statements.map(Formatter);
-                }).flat(20);
+            // const IsSimple: boolean = Statements.length === 1 && typeof Statements[1] === "string";
+            type FStatementTuple = [ unknown, Array<unknown> ];
 
-            LogInternal("Backend", Category, Level, ...FormattedStatements);
+            const MultiMap = (
+                InArray: Array<unknown>,
+                ...Handlers: Array<FLogHandler>
+            ): Array<unknown> =>
+            {
+                let Out: Array<FStatementTuple> = InArray.map((Statement: unknown): FStatementTuple =>
+                {
+                    return [ Statement, Statements ];
+                });
+
+                Handlers.forEach((Handler: FLogHandler): void =>
+                {
+                    Out = Out.map(([ Statement, Statements ]: FStatementTuple): FStatementTuple =>
+                    {
+                        return [ Handler(Statement, Statements), Statements ];
+                    });
+                });
+
+                return Out.map(([ Statement ]: FStatementTuple): unknown =>
+                {
+                    return Statement;
+                });
+            };
+
+            // const FormattedStatements: Array<unknown> = Statements;
+            const FormattedStatements: Array<unknown> = MultiMap(
+                Statements,
+                HandleBase64Strings,
+                HandleAlwaysApplyFormat
+            );
+
+            // const FormattedStatements: Array<unknown> =
+            //     IsSimple
+            //         ? Statements
+            //         : LogSettings.Format.AlwaysApplyFormat
+            //             ? (Statements as Array<FLogValueType>).map((Statement: FLogValueType): string =>
+            //             {
+            //                 if (typeof Statement === "object")
+            //                 {
+            //                     return Format(Statement);
+            //                 }
+            //                 else
+            //                 {
+            //                     return FormatInline(Statement);
+            //                 }
+            //             })
+            //             : Statements;
+            //     // : Formatters.map((Formatter: FLogFormatFunction): unknown =>
+            //     // {
+            //     //     return Statements.map(Formatter);
+            //     // }).flat(20);
+
+            const SpacedOutStatements: Array<unknown> =
+                FormattedStatements.flatMap((Statement: unknown): Array<unknown> =>
+                {
+                    return [ Statement, " " ];
+                });
+
+            LogInternal("Backend", Category, Level, ...SpacedOutStatements);
         };
     };
 
@@ -225,7 +501,6 @@ export const GetLogger = (Category: string): FLogger =>
     Logger.Error = MakeLoggerInternal("Error");
     Logger.Verbose = MakeLoggerInternal("Verbose");
     Logger.Warn = MakeLoggerInternal("Warn");
-    Logger.Formatters = Formatters;
 
     return Logger as FLogger;
 };

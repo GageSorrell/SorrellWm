@@ -7,7 +7,7 @@
 import { BringIntoPanel, Find, IsPanel } from "#/Tree";
 import { type BrowserWindow, ipcMain } from "electron";
 import type { FPanel, FVertex } from "#/Tree/Tree.Types";
-import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "Windows";
+import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "@sorrellwm/windows";
 import { CreateBrowserWindow } from "#/BrowserWindow.Old";
 import { Sleep } from "#/Utility";
 import { spawn } from "child_process";

@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FHexColor } from "Windows";
+import type { FHexColor } from "@sorrellwm/windows";
 
 export type PPredicate =
 {
