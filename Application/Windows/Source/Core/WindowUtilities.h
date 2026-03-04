@@ -39,7 +39,7 @@ DECLARE_NAPI_FUNCTION(GetWindowTitle, string, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetApplicationFriendlyName, string | undefined, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(MinimizeWindow, void, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(RestoreAllWindows, void)
-DECLARE_NAPI_FUNCTION(RestoreInPlace, HWindow, void)
+DECLARE_NAPI_FUNCTION(RestoreInPlace, void, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(RestoreWindow, void, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(StealFocusNode, void, ExportName="StealFocus", Handle, HWindow)
 

@@ -136,7 +136,7 @@ export const Panel = ({
             return Math.abs(Current - ScaledHeight) < Math.abs(Previous - ScaledHeight)
                 ? Current
                 : Previous;
-        }, SIZES[0]);
+        }, SIZES[0] || 0);
 
         // Adjust width to preserve the approximate aspect ratio after snapping the height
         const AspectRatio: number = NearestHeight / ScaledHeight;

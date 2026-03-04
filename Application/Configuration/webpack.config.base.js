@@ -25,7 +25,9 @@ exports.BaseConfiguration = {
                     loader: "ts-loader",
                     options: {
                         compilerOptions: {
-                            module: "esnext"
+                            // module: "esnext"
+                            module: "es2016",
+                            allowImportingTsExtensions: true
                         },
                         /* Remove this line to enable type checking in webpack builds. */
                         transpileOnly: true

@@ -11,7 +11,7 @@ import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
 import { UseNavigator } from "@/Utility";
-import { MakeSendIpcEventCallback, SendIpcEvent, UseSendIpcEvent } from "@/Event";
+import { MakeSendIpcEventCallback, SendIpcEvent, UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import type { FSimpleCallback } from "()/Utility";
 
 const Log: FLogger = GetLogger("Activation");
@@ -77,6 +77,8 @@ const ActivationNotTiled = (): ReactElement =>
 
     Log("ActivationNotTiled.");
 
+    // const { Data } = UseSendIpcEventStrict();
+
     const MaximizeCommand: FSimpleCommand =
     {
         Action: [ "Primary[0]" ],
@@ -113,18 +115,18 @@ const ActivationNotTiled = (): ReactElement =>
             Description: "@TODO",
             Name: "Resize"
         },
-        {
-            Action: [ "Primary[0]" ],
-            Callback: Navigate("/Resize"),
-            Description: "@TODO",
-            Name: "Maximize"
-        },
-        {
-            Action: [ "Primary[0]" ],
-            Callback: Navigate("/Resize"),
-            Description: "@TODO",
-            Name: "Maximize"
-        }
+        // {
+        //     Action: [ "Primary[0]" ],
+        //     Callback: Navigate("/Resize"),
+        //     Description: "@TODO",
+        //     Name: "Maximize"
+        // },
+        // {
+        //     Action: [ "Primary[0]" ],
+        //     Callback: Navigate("/Resize"),
+        //     Description: "@TODO",
+        //     Name: "Maximize"
+        // }
     ];
 
     const BottomShelfCommands: TArray<FCommand> =

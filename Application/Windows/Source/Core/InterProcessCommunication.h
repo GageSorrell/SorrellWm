@@ -14,7 +14,9 @@ class FIpc
 public:
     FIpc(Napi::Env Environment, Napi::Function InCallback) : Environment(Environment)
     {
+        std::cout << "Constructing FIpc" << std::endl;
         Callback = Napi::Persistent(InCallback);
+        std::cout << "Finished Constructing FIpc" << std::endl;
     }
 
     void Send(std::string Channel, Napi::Value Message)

@@ -5,18 +5,16 @@
  */
 
 import { type ReactElement, useState } from "react";
-import { createPresenceComponent, motionTokens } from "@fluentui/react-components";
+import { createPresenceComponentVariant, motionTokens } from "@fluentui/react-components";
+import { Fade } from "@fluentui/react-motion-components-preview";
 import type { PPulse } from "./Pulse.Types";
-import { createFadePresence } from "@fluentui/react-motion-components-preview";
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
-const CustomFadeVariant = createPresenceComponent(
-    createFadePresence({
-        enterDuration: motionTokens.durationUltraSlow,
-        enterEasing: motionTokens.curveEasyEase,
-        exitDuration: motionTokens.durationUltraSlow
-    })
-);
+const CustomFadeVariant = createPresenceComponentVariant(Fade, {
+    duration: motionTokens.durationUltraSlow,
+    easing: motionTokens.curveEasyEase,
+    exitDuration: motionTokens.durationUltraSlow
+});
 
 export const Pulse = ({ children }: PPulse): ReactElement =>
 {

@@ -12,6 +12,7 @@ HHOOK ActivationKeyHook = NULL;
 
 LRESULT CALLBACK KeyProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
+    // std::cout << "GGlobals::Ipc is " << GGlobals::Ipc << std::endl;
     Napi::Env Environment = GGlobals::Ipc->Env();
     Napi::HandleScope Scope(Environment);
 
@@ -40,8 +41,13 @@ void RegisterActivationKey()
 {
     ActivationKeyHook = GGlobals::Hook->Register(WH_KEYBOARD_LL, KeyProc, NULL, 0);
 
+
     if (ActivationKeyHook == nullptr)
     {
-        std::cerr << "Failed to install activation key hook." << std::endl;
+        std::cout << "Failed to install activation key hook." << std::endl;
+    }
+    else
+    {
+        std::cout << "RegisteredActivationKey" << std::endl;
     }
 }

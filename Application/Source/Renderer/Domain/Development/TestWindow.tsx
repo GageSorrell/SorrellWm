@@ -4,7 +4,6 @@
  * License:   MIT
  */
 
-import "./TestWindow.css";
 import {
     type CSSProperties,
     type ReactElement,

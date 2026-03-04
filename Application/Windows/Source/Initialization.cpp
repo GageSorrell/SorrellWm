@@ -5,10 +5,10 @@
  */
 
 /* This is the least value that enables experimental features, such as BigInt support. */
-#ifdef NAPI_VERSION
-    #undef NAPI_VERSION
-    #define NAPI_VERSION 2147483647
-#endif
+// #ifdef NAPI_VERSION
+//     #undef NAPI_VERSION
+//     #define NAPI_VERSION 2147483647
+// #endif
 
 #include "Core/Core.h"
 #include "Core/InterProcessCommunication.h"
@@ -46,6 +46,9 @@ Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
     Napi::Function Callback = Information[0].As<Napi::Function>();
 
     GGlobals::Ipc = new FIpc(Environment, Callback);
+
+    std::cout << "FinishedIpc" << std::endl;
+    return Environment.Undefined();
 }
 
 void HooksExitCleanup(void* _)
@@ -67,13 +70,42 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
     GGlobals::Hook = new FHook();
+
     napi_add_env_cleanup_hook(Environment, HooksExitCleanup, nullptr);
     napi_add_env_cleanup_hook(Environment, ShutdownGdiPlus, nullptr);
 
     GGlobals::WinEvent = new FWinEvent();
 
+    // return Environment.Undefined();
+
     /* @TODO Find better place to register listeners */
-    RegisterActivationKey();
+    try
+    {
+        std::cout << "MyFunction" << std::endl;
+        RegisterActivationKey();
+
+        std::cout << "After MyFunction" << std::endl;
+        return Environment.Undefined();
+    }
+    catch (const Napi::Error& Error)
+    {
+        std::cout << "Napi Error" << std::endl;
+        OutputDebugStringW(L"MyFunction: caught Napi::Error\n");
+        Error.ThrowAsJavaScriptException();
+    }
+    catch (const std::exception& Exception)
+    {
+        std::cout << "Regular Exception" << std::endl;
+        OutputDebugStringW(L"MyFunction: caught std::exception\n");
+        Napi::Error::New(Environment, Exception.what()).ThrowAsJavaScriptException();
+    }
+    catch (...)
+    {
+        std::cout << "Something else" << std::endl;
+        OutputDebugStringW(L"MyFunction: caught unknown exception\n");
+        Napi::Error::New(Environment, "Unknown native exception").ThrowAsJavaScriptException();
+    }
+    // RegisterActivationKey();
 
     return Environment.Undefined();
 }

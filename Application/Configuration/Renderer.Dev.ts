@@ -135,41 +135,143 @@ const Configuration: Configuration =
     mode: "development",
     module:
     {
+        // rules:
+        // [
+        //     {
+        //         include: /\.module\.s?(c|a)ss$/,
+        //         test: /\.s?(c|a)ss$/,
+        //         use:
+        //         [
+        //             "style-loader",
+        //             {
+        //                 loader: "css-loader",
+        //                 options:
+        //                 {
+        //                     importLoaders: 1,
+        //                     modules: true,
+        //                     sourceMap: true
+        //                 }
+        //             },
+        //             "sass-loader"
+        //         ]
+        //     },
+        //     {
+        //         exclude: /\.module\.s?(c|a)ss$/,
+        //         test: /\.s?css$/,
+        //         use: [ "style-loader", "css-loader", "sass-loader" ]
+        //     },
+        //     {
+        //         test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        //         type: "asset/resource"
+        //     },
+        //     {
+        //         test: /\.(png|jpg|jpeg|gif)$/i,
+        //         type: "asset/resource"
+        //     },
+        //     {
+        //         test: /\.svg$/,
+        //         use:
+        //         [
+        //             {
+        //                 loader: "@svgr/webpack",
+        //                 options:
+        //                 {
+        //                     prettier: false,
+        //                     ref: true,
+        //                     svgo: false,
+        //                     svgoConfig:
+        //                     {
+        //                         plugins: [ { removeViewBox: false } ]
+        //                     },
+        //                     titleProp: true
+        //                 }
+        //             },
+        //             "file-loader"
+        //         ]
+        //     }
+        // ]
         rules:
+[
+    {
+        test: /\.module\.css$/i,
+        use:
+        [
+            "style-loader",
+            {
+                loader: "css-loader",
+                options:
+                {
+                    modules: true,
+                    sourceMap: true
+                }
+            }
+        ]
+    },
+    {
+        test: /\.module\.s[ac]ss$/i,
+        use:
+        [
+            "style-loader",
+            {
+                loader: "css-loader",
+                options:
+                {
+                    importLoaders: 1,
+                    modules: true,
+                    sourceMap: true
+                }
+            },
+            {
+                loader: "sass-loader",
+                options:
+                {
+                    implementation: require("sass"),
+                    api: "modern"
+                }
+            }
+        ]
+    },
+    {
+        test: /\.css$/i,
+        exclude: /\.module\.css$/i,
+        use:
+        [
+            "style-loader",
+            "css-loader"
+        ]
+    },
+    {
+        test: /\.s[ac]ss$/i,
+        exclude: /\.module\.s[ac]ss$/i,
+        use:
+        [
+            "style-loader",
+            "css-loader",
+            {
+                loader: "sass-loader",
+                options:
+                {
+                    implementation: require("sass"),
+                    api: "modern"
+                }
+            }
+        ]
+    },
+    {
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: "asset/resource"
+    },
+    {
+        test: /\.(png|jpg|jpeg|gif)$/i,
+        type: "asset/resource"
+    },
+    {
+        test: /\.svg$/i,
+        oneOf:
         [
             {
-                include: /\.module\.s?(c|a)ss$/,
-                test: /\.s?(c|a)ss$/,
-                use:
-                [
-                    "style-loader",
-                    {
-                        loader: "css-loader",
-                        options:
-                        {
-                            importLoaders: 1,
-                            modules: true,
-                            sourceMap: true
-                        }
-                    },
-                    "sass-loader"
-                ]
-            },
-            {
-                exclude: /\.module\.s?(c|a)ss$/,
-                test: /\.s?css$/,
-                use: [ "style-loader", "css-loader", "sass-loader" ]
-            },
-            {
-                test: /\.(woff|woff2|eot|ttf|otf)$/i,
-                type: "asset/resource"
-            },
-            {
-                test: /\.(png|jpg|jpeg|gif)$/i,
-                type: "asset/resource"
-            },
-            {
-                test: /\.svg$/,
+                issuer: /\.[jt]sx?$/i,
+                resourceQuery: /react/,
                 use:
                 [
                     {
@@ -185,11 +287,15 @@ const Configuration: Configuration =
                             },
                             titleProp: true
                         }
-                    },
-                    "file-loader"
+                    }
                 ]
+            },
+            {
+                type: "asset/resource"
             }
         ]
+    }
+]
     },
     node:
     {

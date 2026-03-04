@@ -2,9 +2,8 @@
 # Author:    Gage Sorrell <gage@sorrell.sh>
 # Copyright: (c) 2025 Gage Sorrell
 # License:   MIT
-# Comment:   In the event of orphaned processes
-#            during development, kill all processes
-#            named `Electron`.
+# Comment:   In the event of orphaned processes during development,
+#            kill all processes named `Electron`.
 
 $TargetExecutablePath = "E:\\SorrellWm\\Application\\node_modules\\electron\\dist\\electron.exe"
 

@@ -11,8 +11,8 @@ import { execSync } from "child_process";
 
 if (dependencies)
 {
-    const DependenciesKeys: TArray<string> = Object.keys(dependencies);
-    const NativeDeps: TArray<string> = Fs
+    const DependenciesKeys: Array<string> = Object.keys(dependencies);
+    const NativeDeps: Array<string> = Fs
         .readdirSync("node_modules")
         .filter((folder: string): boolean =>
         {
@@ -32,8 +32,8 @@ if (dependencies)
             execSync(`npm ls ${NativeDeps.join(" ")} --json`).toString()
         );
 
-        const RootDependencies: TArray<string> = Object.keys(dependenciesObject);
-        const FilteredRootDependencies: TArray<string> =
+        const RootDependencies: Array<string> = Object.keys(dependenciesObject);
+        const FilteredRootDependencies: Array<string> =
             RootDependencies.filter((RootDependency: string): boolean =>
             {
                 return DependenciesKeys.includes(RootDependency);

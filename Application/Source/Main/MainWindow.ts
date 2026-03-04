@@ -76,7 +76,27 @@ const BlurBackground = (Bounds: FBox): void =>
             ? DevSettings.StaticMode.WindowShape
             : Bounds;
 
+        Log("OutBounds", OutBounds);
         BlurBackgroundNative(OutBounds, SourceHandle);
+        if (MainWindow)
+        {
+            const Foo: number = screen.getDisplayMatching(MainWindow.getBounds()).scaleFactor;
+            MainWindow.setBounds({
+                height: OutBounds.Height / Foo,
+                width: OutBounds.Width / Foo,
+                x: OutBounds.X,
+                y: OutBounds.Y
+            });
+
+            // MainWindow.setPosition(OutBounds.X, OutBounds.Y);
+            // MainWindow.setSize(OutBounds.Width, OutBounds.Height, false);
+        }
+        // MainWindow?.setBounds({
+        //     height: OutBounds.Height / 1.25,
+        //     width: OutBounds.Width / 1.25,
+        //     x: OutBounds.X,
+        //     y: OutBounds.Y
+        // }, false);
     }
     else
     {
@@ -670,6 +690,9 @@ export const Activate = (): void =>
 
         SendIpcEvent(MainWindow, "Navigate", NavigateRequest);
         BlurBackground(GetDwmWindowRect(ActiveWindow));
+
+        Log(MainWindow?.getPosition());
+        Log(MainWindow?.getSize());
         // StealFocus(GetWindowByName("SorrellWm Main Window"));
     }
 };

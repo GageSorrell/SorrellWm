@@ -1041,40 +1041,48 @@ void SuperimposeMainWindow(FBackdrop* Backdrop)
     //     GetWindowLong(Backdrop->SorrellWmMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED
     // );
     // SetLayeredWindowAttributes(Backdrop->SorrellWmMainWindow, 0, 0, LWA_ALPHA);
-    BOOL PositionSet = SetWindowPos(
-        Backdrop->SorrellWmMainWindow,
-        HWND_TOP,
-        Backdrop->Bounds.left,
-        Backdrop->Bounds.top,
-        Backdrop->Bounds.right - Backdrop->Bounds.left,
-        Backdrop->Bounds.bottom - Backdrop->Bounds.top,
-        SWP_SHOWWINDOW
-    );
+    // BOOL PositionSet = SetWindowPos(
+    //     Backdrop->SorrellWmMainWindow,
+    //     HWND_TOP,
+    //     Backdrop->Bounds.left,
+    //     Backdrop->Bounds.top,
+    //     Backdrop->Bounds.right - Backdrop->Bounds.left,
+    //     Backdrop->Bounds.bottom - Backdrop->Bounds.top,
+    //     SWP_SHOWWINDOW
+    // );
 
-    if (PositionSet)
-    {
-        // std::cout
-        //     << "MainWindow's position was set successfully."
-        //     << std::endl;
+    // if (PositionSet)
+    // {
+    //     std::cout
+    //         << "MainWindow's position was set successfully."
+    //         << "\n"
+    //         << Backdrop->Bounds.left
+    //         << "\n"
+    //         << Backdrop->Bounds.top
+    //         << "\n"
+    //         << Backdrop->Bounds.right - Backdrop->Bounds.left
+    //         << "\n"
+    //         << Backdrop->Bounds.bottom - Backdrop->Bounds.top
+    //         << std::endl;
 
-        // std::cout
-        //     << "MainWindow's position was set successfully.  Its bounds are ("
-        //     << Backdrop->Bounds.left
-        //     << ", "
-        //     << Backdrop->Bounds.top
-        //     << ", "
-        //     << Backdrop->Bounds.right
-        //     << ", "
-        //     << Backdrop->Bounds.bottom
-        //     << ")."
-        //     << std::endl;
-    }
-    else
-    {
-        std::cout
-            << "Failed to set MainWindow's position on top of blurred background."
-            << std::endl;
-    }
+    //     // std::cout
+    //     //     << "MainWindow's position was set successfully.  Its bounds are ("
+    //     //     << Backdrop->Bounds.left
+    //     //     << ", "
+    //     //     << Backdrop->Bounds.top
+    //     //     << ", "
+    //     //     << Backdrop->Bounds.right
+    //     //     << ", "
+    //     //     << Backdrop->Bounds.bottom
+    //     //     << ")."
+    //     //     << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout
+    //         << "Failed to set MainWindow's position on top of blurred background."
+    //         << std::endl;
+    // }
 
     StealFocus(Backdrop->SorrellWmMainWindow);
 }

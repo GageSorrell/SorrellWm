@@ -27,7 +27,8 @@ export const BaseConfiguration: Configuration =
                     {
                         compilerOptions:
                         {
-                            module: "esnext"
+                            module: "node16",
+                            allowImportingTsExtensions: true
                         },
                         /* Remove this line to enable type checking in webpack builds. */
                         transpileOnly: true
