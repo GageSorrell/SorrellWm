@@ -8,7 +8,7 @@ import { type CSSProperties, type ReactNode } from "react";
 import type { FAction, FActionKey } from "../../../../../Shared/Settings";
 import type { FCommand, FCompoundCommand, FSimpleCommand } from "./Command.Types";
 import { type FKeyId, Key } from "../Keyboard";
-import { GetKeybindIdFromKeybind, UseCommands } from "@/Command";
+import { GetKeyIdsFromAction, UseCommands } from "@/Command";
 import { Title3, tokens } from "@fluentui/react-components";
 import { ExtractFromRecordArray } from "../../../../../Shared/Utility";
 import type { FLogger } from "../../../../../Shared/Log.Types";
@@ -40,32 +40,33 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
 
     const CommandKeybinds = (): ReactNode =>
     {
-        const GetKeybindMatrix = (): Array<Array<FKeyId>> =>
+        const GetKeybindMatrix = (): TArray<TArray<FKeyId>> =>
         {
-            const GetKeyIdArrayFromCommand = (Command: FCommand): Array<FKeyId> =>
+            const GetKeyIdArrayFromCommand = (Command: FCommand): TArray<FKeyId> =>
             {
                 return SwitchOnCommandType(
                     Command,
-                    ({ Action: Keybind }: FSimpleCommand): Array<FKeyId> =>
+                    ({ Action }: FSimpleCommand): TArray<FKeyId> =>
                     {
-                        const Out: Array<FKeyId> = GetKeybindIdFromKeybind(Keybind, Keybinds);
+                        const Out: TArray<FKeyId> = GetKeyIdsFromAction(Action, Keybinds);
                         return Out;
                     },
-                    (CompoundCommand: FCompoundCommand): Array<FKeyId> =>
+                    (CompoundCommand: FCompoundCommand): TArray<FKeyId> =>
                     {
                         const { SubCommands } = CompoundCommand;
-                        const GetKeyIds = (In: Array<FActionKey>): Array<FKeyId> =>
+                        const GetKeyIds = (In: TArray<FActionKey>): TArray<FKeyId> =>
                         {
-                            return GetKeybindIdFromKeybind(In as FAction, Keybinds);
+                            return GetKeyIdsFromAction(In as FAction, Keybinds);
                         };
 
-                        const Out: Array<FKeyId> = GetKeyIds(
+                        const Out: TArray<FKeyId> = GetKeyIds(
                             ExtractFromRecordArray(
-                                "Keybind",
-                                /* @TODO This is probably the cause of a yet-to-be-discovered bug. */
-                                SubCommands as unknown as Array<Record<"Keybind", unknown>>
-                            ).flat() as Array<FActionKey>
+                                "Action",
+                                SubCommands
+                            ).flat()
                         );
+
+                        // Log(Out);
 
                         return Out;
                     }
@@ -75,7 +76,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
             return Commands.map(GetKeyIdArrayFromCommand);
         };
 
-        const Rows = (): Array<ReactNode> =>
+        const Rows = (): TArray<ReactNode> =>
         {
             const RowStyleBase: CSSProperties =
             {
@@ -83,7 +84,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                 minHeight: RowHeight
             };
 
-            const GetRow = (KeyIds: Array<FKeyId>): ReactNode =>
+            const GetRow = (KeyIds: TArray<FKeyId>): ReactNode =>
             {
                 const RowStyle: CSSProperties =
                 {
@@ -145,7 +146,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
             position: "relative",
             top: 0
         };
-        const GetCommandTitles = (): Array<ReactNode> =>
+        const GetCommandTitles = (): TArray<ReactNode> =>
         {
 
             const CommandTitle = ({ Name }: FCommand): ReactNode =>

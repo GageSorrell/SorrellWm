@@ -18,10 +18,14 @@ import type {
     FGetSettingsErrorCode,
     FGetThemeColorErrorCode,
     FLogErrorCode,
+    FMaximizeFloatingWindowErrorCode,
+    FMinimizeFloatingWindowErrorCode,
+    FMoveFloatingWindowErrorCode,
     FNavigateErrorCode,
     FOnChangeFocusErrorCode,
     FReadyForRouteErrorCode,
     FRequestTearDownErrorCode,
+    FRestoreFloatingWindowErrorCode,
     FTearDownErrorCode,
     FUpdateSettingErrorCode } from "./ErrorCodes.Types";
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
@@ -31,6 +35,8 @@ import type { FFocusData } from "./Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
 import type { FNavigateRequest } from "./Navigate.Types";
 import type { FSettings } from "../Settings";
+import type { FTranslation } from "./Move.Types";
+import type { FExternalWindow } from "()/ExternalWindow.Types";
 
 // @TODO Create proper string unions for the error codes for each event.
 export type FIpcFrontendEvents = TIpcEventsBase<{
@@ -46,7 +52,7 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
     >;
     GetAnnotatedPanels: TIpcFrontendEvent<
         undefined,
-        { AnnotatedPanels: Array<FAnnotatedPanel> },
+        { AnnotatedPanels: TArray<FAnnotatedPanel> },
         FGetAnnotatedPanelsErrorCode
     >;
     GetCurrentPanel: TIpcFrontendEvent<
@@ -81,18 +87,43 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
     >;
     GetPanelScreenshots: TIpcFrontendEvent<
         undefined,
-        { Screenshots: Array<string>; },
+        { Screenshots: TArray<string>; },
         FGetPanelScreenshotsErrorCode
+    >;
+    GetExternalWindowState: TIpcFrontendEvent<
+        undefined,
+        FExternalWindow,
+        FGetExternalWindowStateErrorCode
+    >;
+    GetFloatingWindowState: TIpcFrontendEvent<
+        undefined,
+        FFloatingWindow,
+        FGetFloatingWindowStateErrorCode
     >;
     GetInsertableWindowData: TIpcFrontendEvent<
         undefined,
-        { InsertableWindowData: Array<FInsertableWindowData> },
+        { InsertableWindowData: TArray<FInsertableWindowData> },
         FGetInsertableWindowDataErrorCode
     >;
     Log: TIpcFrontendEvent<
-        Array<unknown>,
+        TArray<unknown>,
         undefined,
         FLogErrorCode
+    >;
+    MaximizeFloatingWindow: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FMaximizeFloatingWindowErrorCode
+    >;
+    MinimizeFloatingWindow: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FMinimizeFloatingWindowErrorCode
+    >;
+    MoveFloatingWindow: TIpcFrontendEvent<
+        FTranslation,
+        undefined,
+        FMoveFloatingWindowErrorCode
     >;
     OnChangeFocus: TIpcFrontendEvent<
         FFocusChange,
@@ -103,6 +134,11 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         undefined,
         FReadyForRouteErrorCode
+    >;
+    RestoreFloatingWindow: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FRestoreFloatingWindowErrorCode
     >;
     RequestTearDown: TIpcFrontendEvent<
         undefined,

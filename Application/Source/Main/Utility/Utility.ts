@@ -38,9 +38,9 @@ export const AreHandlesEqual = (A: HHandle, B: HHandle): boolean =>
 export const MapKeys = <InType extends object = object, OutType = unknown>(
     InObject: object,
     Callback: (Key: keyof InType, Index?: number) => OutType
-): Array<OutType> =>
+): TArray<OutType> =>
 {
-    const OutArray: Array<OutType> = [ ];
+    const OutArray: TArray<OutType> = [ ];
 
     Object.keys(InObject).forEach((Key: string, Index: number): void =>
     {
@@ -74,7 +74,7 @@ export const ForAsync = async (
         return;
     }
 
-    const Range: Array<number> = [ ...Array(EndIndex - StartIndex + 1).keys() ];
+    const Range: TArray<number> = [ ...Array(EndIndex - StartIndex + 1).keys() ];
 
     for await (const Index of Range)
     {

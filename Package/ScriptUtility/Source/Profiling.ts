@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-const ProfilingMap: Map<string, number> = new Map();
+const ProfilingMap: TMap<string, number> = new Map();
 
 export function BeginProfiling(TaskName: string): void
 {

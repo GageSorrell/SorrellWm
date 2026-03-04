@@ -134,7 +134,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "InitializeHooks", InitializeHooks },
         { "InitializeWinEvents", FWinEvent::Initialize },
         { "GetFocusedWindow", GetFocusedWindow },
-        { "GetWindowLocationAndSize", GetWindowLocationAndSize },
+        { "GetWindowShape", GetWindowShape },
         { "CaptureWindowScreenshot", CaptureWindowScreenshot },
         { "GetTitlebarHeight", GetTitlebarHeight },
         { "GetWindowByName", GetWindowByName },

@@ -23,15 +23,19 @@ import {
     BlurBackground as BlurBackgroundNative,
     type FBox,
     type FLogLevel,
+    type FMonitorInfo,
+    type FVector2D,
     GetDwmWindowRect,
     GetFocusedWindow,
     GetIsLightMode,
     GetMonitorFromWindow,
     GetThemeColor,
     GetTileableWindows,
+    GetWindowShape,
     GetWindowTitle,
     type HMonitor,
     type HWindow,
+    SetWindowPosition,
     UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, app, ipcMain, screen } from "electron";
@@ -47,8 +51,10 @@ import type { FDevSettings } from "./DevSettings.Types";
 import type { FInsertableWindowData } from "()/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FNavigateRequest } from "()/Event/Navigate.Types";
+import type { FTranslation } from "()/Event/Move.Types";
 import type { FVirtualKey } from "()/Keyboard.Types";
 import { GetDevSettings } from "./DevSettings";
+import { GetMonitors } from "./Monitor";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
 import { Vk } from "$/Common/Component/Keyboard";
@@ -95,10 +101,10 @@ const Deactivate = (): void =>
 
 const GetLeastInvisiblePosition = (): { x: number; y: number } =>
 {
-    const Displays: Array<Electron.Display> = screen.getAllDisplays();
+    const Displays: TArray<Electron.Display> = screen.getAllDisplays();
 
     type FMonitorBounds = { left: number; right: number; top: number; bottom: number };
-    const MonitorBounds: Array<FMonitorBounds> = Displays.map((display: Electron.Display): FMonitorBounds =>
+    const MonitorBounds: TArray<FMonitorBounds> = Displays.map((display: Electron.Display): FMonitorBounds =>
     {
         return {
             bottom: display.bounds.y + display.bounds.height,
@@ -125,7 +131,7 @@ const GetLeastInvisiblePosition = (): { x: number; y: number } =>
 /** @deprecated A type-safe version of `ipcMain.on`. */
 const On = (
     Event: FIpcChannel,
-    Callback: ((Event: Electron.Event, ...Arguments: Array<unknown>) => void)) =>
+    Callback: ((Event: Electron.Event, ...Arguments: TArray<unknown>) => void)) =>
 {
     ipcMain.on(Event, Callback);
 };
@@ -142,7 +148,7 @@ const On = (
 //         _Reject: FRejectFunction
 //     ): void =>
 //     {
-//         const Subscription = (_Event: Electron.Event, ...Arguments: Array<unknown>): void =>
+//         const Subscription = (_Event: Electron.Event, ...Arguments: TArray<unknown>): void =>
 //         {
 //             const Response: TResponseDataBase<T> = Arguments[0] as TResponseDataBase<T>;
 //             const RemoveListener = (): void =>
@@ -164,7 +170,7 @@ const On = (
 //     bFireOnce: boolean = false
 // ): void =>
 // {
-//     ipcMain.on(Channel, async (_Event: Electron.Event, ...Arguments: Array<unknown>): Promise<void> =>
+//     ipcMain.on(Channel, async (_Event: Electron.Event, ...Arguments: TArray<unknown>): Promise<void> =>
 //     {
 //         const RequestData: TRequestData<T> = Arguments[0] as TRequestData<T>;
 //         const ResponseData: TResponseData<T> = await Callback(RequestData);
@@ -208,21 +214,21 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     MainWindow = Window;
 
-    On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: TArray<unknown>) =>
     {
         const Panel: FPanel | undefined = GetCurrentPanel();
         MainWindow?.webContents.send("GetCurrentPanel", Panel);
     });
 
     /** @TODO Find better place for this. */
-    // On("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    // On("GetAnnotatedPanels", async (_Event: Electron.Event, ..._Arguments: TArray<unknown>) =>
     // {
-    //     const Panels: Array<FPanel> = GetPanels();
-    //     const AnnotatedPanels: Array<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
+    //     const Panels: TArray<FPanel> = GetPanels();
+    //     const AnnotatedPanels: TArray<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
     //         .filter((Value: FAnnotatedPanel | undefined): boolean =>
     //         {
     //             return Value !== undefined;
-    //         }) as Array<FAnnotatedPanel>;
+    //         }) as TArray<FAnnotatedPanel>;
 
     //     MainWindow?.webContents.send("GetAnnotatedPanels", AnnotatedPanels);
     // });
@@ -275,9 +281,11 @@ const LaunchMainWindow = async (): Promise<void> =>
             const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
             const CanStepUp: boolean = ParentPanel !== undefined;
             const CanStepDown: boolean = IsPanel(FocusedVertex);
+            const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
 
             const DataBase: FFocusDataBase =
             {
+                CanMoveWithinPanel,
                 CanStepDown,
                 CanStepUp,
                 Direction
@@ -341,6 +349,72 @@ const LaunchMainWindow = async (): Promise<void> =>
 
     RegisterIpcCallback(
         MainWindow,
+        "MoveFloatingWindow",
+        async (Translation: FTranslation): ReturnType<TEventCallback<"MoveFloatingWindow">> =>
+        {
+            const ActiveWindow: HWindow | undefined = GetActiveWindow();
+            if (ActiveWindow !== undefined)
+            {
+                const { Height, Width, X, Y }: FBox = GetWindowShape(ActiveWindow);
+                const NewShape: FBox = Translation.Direction === "X"
+                    ? {
+                        Height,
+                        Width,
+                        X: X + Translation.Distance,
+                        Y
+                    }
+                    : {
+                        Height,
+                        Width,
+                        X,
+                        Y: Y + Translation.Distance
+                    };
+
+                const LeftCorner: FVector2D = { X, Y };
+                const RightCorner: FVector2D = { X: X + Width, Y };
+
+                const WouldBeOutOfBounds: boolean = !GetMonitors().some(({ Size }: FMonitorInfo): boolean =>
+                {
+                    const IsPointInBounds = (Point: FVector2D): boolean =>
+                    {
+                        return (
+                            Size.X <= Point.X && Point.X <= Size.X + Size.Width &&
+                            Size.Y <= Point.Y && Point.Y <= Size.Y + Size.Height
+                        );
+                    };
+
+                    return IsPointInBounds(LeftCorner) || IsPointInBounds(RightCorner);
+                });
+
+                if (WouldBeOutOfBounds)
+                {
+                    return {
+                        Data: undefined,
+                        Error: ""
+                    };
+                }
+                else
+                {
+                    SetWindowPosition(ActiveWindow, NewShape);
+                    return {
+                        Data: undefined,
+                        Error: undefined
+                    };
+                }
+
+            }
+            else
+            {
+                return {
+                    Data: undefined,
+                    Error: ""
+                };
+            }
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
         "GetThemeColor",
         async (): ReturnType<TEventCallback<"GetThemeColor">> =>
         {
@@ -389,12 +463,12 @@ const LaunchMainWindow = async (): Promise<void> =>
         "GetPanelScreenshots",
         async (): ReturnType<TEventCallback<"GetPanelScreenshots">> =>
         {
-            const Panels: Array<FPanel> = GetPanels();
-            const Screenshots: Array<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
+            const Panels: TArray<FPanel> = GetPanels();
+            const Screenshots: TArray<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
                 .filter((Value: string | undefined): boolean =>
                 {
                     return Value !== undefined;
-                }) as Array<string>;
+                }) as TArray<string>;
 
             return {
                 Data: { Screenshots },
@@ -408,12 +482,12 @@ const LaunchMainWindow = async (): Promise<void> =>
         "GetAnnotatedPanels",
         async (): ReturnType<TEventCallback<"GetAnnotatedPanels">> =>
         {
-            const Panels: Array<FPanel> = GetPanels();
-            const AnnotatedPanels: Array<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
+            const Panels: TArray<FPanel> = GetPanels();
+            const AnnotatedPanels: TArray<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
                 .filter((Value: FAnnotatedPanel | undefined): boolean =>
                 {
                     return Value !== undefined;
-                }) as Array<FAnnotatedPanel>;
+                }) as TArray<FAnnotatedPanel>;
 
             return {
                 Data: { AnnotatedPanels },
@@ -446,7 +520,7 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     );
 
-    On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: TArray<unknown>) =>
     {
         const FocusChange: FFocusChange = Arguments[0] as FFocusChange;
         const InterimFocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
@@ -476,32 +550,32 @@ const LaunchMainWindow = async (): Promise<void> =>
     });
 
     // /** @TODO Find better place for this. */
-    // On("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    // On("GetPanelScreenshots", async (_Event: Electron.Event, ..._Arguments: TArray<unknown>) =>
     // {
-    //     const Panels: Array<FPanel> = GetPanels();
-    //     const Screenshots: Array<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
+    //     const Panels: TArray<FPanel> = GetPanels();
+    //     const Screenshots: TArray<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
     //         .filter((Value: string | undefined): boolean =>
     //         {
     //             return Value !== undefined;
-    //         }) as Array<string>;
+    //         }) as TArray<string>;
 
     //     MainWindow?.webContents.send("GetPanelScreenshots", Screenshots);
     // });
 
     Log("Foo", 3, [ ]);
 
-    On("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    On("BringIntoPanel", async (_Event: Electron.Event, ...Arguments: TArray<unknown>) =>
     {
         BringIntoPanel(Arguments[0] as FAnnotatedPanel, GetActiveWindow() as HWindow);
     });
 
-    On("TearDown", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("TearDown", async (_Event: Electron.Event, ..._Arguments: TArray<unknown>) =>
     {
         ActiveWindow = undefined;
         Deactivate();
     });
 
-    On("GetInsertableWindowData", async (_Event: Electron.Event, ..._Arguments: Array<unknown>) =>
+    On("GetInsertableWindowData", async (_Event: Electron.Event, ..._Arguments: TArray<unknown>) =>
     {
         const GetInsertableWindowDatum = async (TileableWindow: HWindow): Promise<FInsertableWindowData> =>
         {
@@ -514,16 +588,16 @@ const LaunchMainWindow = async (): Promise<void> =>
             };
         };
 
-        const InsertableWindowData: Array<FInsertableWindowData> =
+        const InsertableWindowData: TArray<FInsertableWindowData> =
             await Promise.all(GetTileableWindows().map(GetInsertableWindowDatum));
 
         MainWindow?.webContents.send("GetInsertableWindowData", InsertableWindowData);
     });
 
-    On("Log", async (_Event: Electron.Event, ...Arguments: Array<unknown>) =>
+    On("Log", async (_Event: Electron.Event, ...Arguments: TArray<unknown>) =>
     {
         /* eslint-disable-next-line @stylistic/max-len */
-        const [ Category, Level, ...Statements ] = Arguments as [ string, FLogLevel, ...Array<unknown> ];
+        const [ Category, Level, ...Statements ] = Arguments as [ string, FLogLevel, ...TArray<unknown> ];
         LogFrontend(Category, Level, ...Statements);
         // const StringifiedArguments: string = Arguments
         //     .map((Argument: unknown): string =>

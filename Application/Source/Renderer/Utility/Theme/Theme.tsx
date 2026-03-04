@@ -12,19 +12,13 @@ import {
     createLightTheme } from "@fluentui/react-components";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
 import type { FHexColor } from "@sorrellwm/windows";
-import type { FLogger } from "../../../Shared/Log.Types";
-import { GetLogger } from "@/Log";
 import { UseSendIpcEvent } from "@/Event";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
-
-const Log: FLogger = GetLogger("Theme");
 
 const UseThemeColor = (): Readonly<[ FHexColor ]> =>
 {
     const DefaultThemeColor: FHexColor = "#0078D4";
     const { Data } = UseSendIpcEvent("GetThemeColor", undefined);
-
-    Log("ThemeColor", Data);
 
     if (Data !== undefined)
     {
@@ -75,7 +69,6 @@ const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
 export const FluentThemeProvider = ({ children }: PropsWithChildren): ReactNode =>
 {
     const [ theme ] = UseSystemTheme();
-    Log(theme);
     return (
         <FluentProvider { ...{ theme } }>
             { children }

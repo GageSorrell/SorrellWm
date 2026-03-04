@@ -8,19 +8,19 @@ import { type FMonitorInfo, InitializeMonitors } from "@sorrellwm/windows";
 import { TDispatcher, type TSubscriptionHandle } from "./Core/Dispatcher";
 import { Subscribe } from "./NodeIpc";
 
-const Monitors: Array<FMonitorInfo> = [ ];
+const Monitors: TArray<FMonitorInfo> = [ ];
 
-export const GetMonitors = (): Array<FMonitorInfo> =>
+export const GetMonitors = (): TArray<FMonitorInfo> =>
 {
     return [ ...Monitors ];
 };
 
-const MonitorsDispatcher: TDispatcher<Array<FMonitorInfo>> = new TDispatcher<Array<FMonitorInfo>>();
-export const MonitorsHandle: TSubscriptionHandle<Array<FMonitorInfo>> = MonitorsDispatcher.GetHandle();
+const MonitorsDispatcher: TDispatcher<TArray<FMonitorInfo>> = new TDispatcher<TArray<FMonitorInfo>>();
+export const MonitorsHandle: TSubscriptionHandle<TArray<FMonitorInfo>> = MonitorsDispatcher.GetHandle();
 
-const OnMonitorsChanged = (...Data: Array<unknown>): void =>
+const OnMonitorsChanged = (...Data: TArray<unknown>): void =>
 {
-    const NewMonitors: Array<FMonitorInfo> = Data[0] as Array<FMonitorInfo>;
+    const NewMonitors: TArray<FMonitorInfo> = Data[0] as TArray<FMonitorInfo>;
     Monitors.length = 0;
     Monitors.push(...NewMonitors);
     MonitorsDispatcher.Dispatch(NewMonitors);

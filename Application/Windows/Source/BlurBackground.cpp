@@ -836,16 +836,16 @@ FBackdrop* GetBackdropToUnblur()
         return nullptr;
     }
 
-    std::cout
-        << "Before getting the backdrop to unblur, the current BackdropsBeingUnblurred is:"
-        << std::endl;
-    for (FBackdrop* BackdropBeingUnblurred : BackdropsBeingUnblurred)
-    {
-        std::cout
-            << "    "
-            << BackdropBeingUnblurred->BackdropHandle
-            << std::endl;
-    }
+    // std::cout
+    //     << "Before getting the backdrop to unblur, the current BackdropsBeingUnblurred is:"
+    //     << std::endl;
+    // for (FBackdrop* BackdropBeingUnblurred : BackdropsBeingUnblurred)
+    // {
+    //     std::cout
+    //         << "    "
+    //         << BackdropBeingUnblurred->BackdropHandle
+    //         << std::endl;
+    // }
 
     for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
     {
@@ -856,7 +856,7 @@ FBackdrop* GetBackdropToUnblur()
             if (BackdropBeingUnblurred->BackdropHandle == Backdrop->BackdropHandle)
             {
                 IsNotAlreadyBeingUnblurred = false;
-                std::cout << "Backdrop " << Backdrop->BackdropHandle << " is already being unblurred." << std::endl;
+                // std::cout << "Backdrop " << Backdrop->BackdropHandle << " is already being unblurred." << std::endl;
                 break;
             }
         }
@@ -872,13 +872,13 @@ FBackdrop* GetBackdropToUnblur()
     {
         BackdropsBeingUnblurred.push_back(BackdropToUnblur);
 
-        std::cout << "BackdropToUnblur is " << BackdropToUnblur << std::endl;
+        // std::cout << "BackdropToUnblur is " << BackdropToUnblur << std::endl;
     }
     else
     {
-        std::cout
-            << "BackdropToUnblur could not be determined!  Here are the Backdrops, ID'd by their BackdropHandles:"
-            << std::endl;
+        // std::cout
+        //     << "BackdropToUnblur could not be determined!  Here are the Backdrops, ID'd by their BackdropHandles:"
+        //     << std::endl;
 
         for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
         {
@@ -897,13 +897,13 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    std::cout << "Tearing down window!" << std::endl;
+    // std::cout << "Tearing down window!" << std::endl;
 
     FBackdrop* BackdropToUnblur = GetBackdropToUnblur();
 
     if (BackdropToUnblur == nullptr)
     {
-        std::cout << "UnblurBackground was called before BlurBackground could construct a new blurred background." << std::endl;
+        // std::cout << "UnblurBackground was called before BlurBackground could construct a new blurred background." << std::endl;
         return Environment.Undefined();
     }
 

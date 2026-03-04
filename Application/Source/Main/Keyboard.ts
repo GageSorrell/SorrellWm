@@ -40,7 +40,7 @@ class FKeyboard extends TDispatcher_DEPRECATED<FKeyboardEvent>
         }
     };
 
-    public OnKey = (...Data: Array<unknown>): void =>
+    public OnKey = (...Data: TArray<unknown>): void =>
     {
         const Event: FKeyboardEvent = Data[0] as FKeyboardEvent;
         const IsDebounced: boolean = this.Debounce(Event.State);

@@ -37,7 +37,7 @@ const SmallRecord: Record<PropertyKey, unknown> =
     Bar: 2
 };
 
-const TestLargeArray: Array<unknown> =
+const TestLargeArray: TArray<unknown> =
 [
     TestFunction,
     900,
@@ -45,13 +45,13 @@ const TestLargeArray: Array<unknown> =
     TestUndefined
 ];
 
-const TestSmallArray: Array<unknown> = [ 1, 2, 3 ];
+const TestSmallArray: TArray<unknown> = [ 1, 2, 3 ];
 const TestLargeSet: Set<unknown> = new Set<unknown>(TestLargeArray);
 const TestSmallSet: Set<unknown> = new Set<unknown>(TestSmallArray);
 
-const TestLargeMap: Map<PropertyKey, unknown> = ((): Map<PropertyKey, unknown> =>
+const TestLargeMap: TMap<PropertyKey, unknown> = ((): TMap<PropertyKey, unknown> =>
 {
-    const Out: Map<PropertyKey, unknown> = new Map<PropertyKey, unknown>();
+    const Out: TMap<PropertyKey, unknown> = new Map<PropertyKey, unknown>();
     Out.set("Foo", 10292);
     Out.set(19, [ 1, 3 ]);
     Out.set(20, [ -10, 92, "Foo", "BarBaz", 100_000, -10_198, "FooBarBazBashBing" ]);
@@ -60,9 +60,9 @@ const TestLargeMap: Map<PropertyKey, unknown> = ((): Map<PropertyKey, unknown> =
     return Out;
 })();
 
-const TestSmallMap: Map<PropertyKey, unknown> = ((): Map<PropertyKey, unknown> =>
+const TestSmallMap: TMap<PropertyKey, unknown> = ((): TMap<PropertyKey, unknown> =>
 {
-    const Out: Map<PropertyKey, unknown> = new Map<PropertyKey, unknown>();
+    const Out: TMap<PropertyKey, unknown> = new Map<PropertyKey, unknown>();
     Out.set("MyMap", 1);
     Out.set(19, 2);
     return Out;

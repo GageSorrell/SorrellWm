@@ -13,7 +13,7 @@ export type TIsNonNegativeInteger<ArraySize extends number> =
 
 type TBuildTuple<
     Length extends number,
-    Accumulator extends Array<unknown> = []
+    Accumulator extends TArray<unknown> = []
 > =
     Accumulator["length"] extends Length
         ? Accumulator
@@ -28,7 +28,7 @@ type TIsLessThanOrEqual<
         : false;
 
 type TInclusiveRangeFromTuple<
-    CurrentTuple extends Array<unknown>,
+    CurrentTuple extends TArray<unknown>,
     EndValue extends number,
     Result extends number = never
 > =
@@ -72,9 +72,9 @@ export type TRecordNonNullable<RecordType extends FRecord> =
     [ Key in keyof RecordType ]: NonNullable<RecordType[Key]>;
 };
 
-export type TArrayNonempty<Type = unknown> = [ Type, ...Array<Type> ];
+export type TArrayNonempty<Type = unknown> = [ Type, ...TArray<Type> ];
 
-export type TMatrix<Type> = Array<Array<Type>>;
+export type TMatrix<Type> = TArray<TArray<Type>>;
 export type TSafeMatrix<Type> = TArrayNonempty<TArrayNonempty<Type>>;
 
 export type TExtractFunction<Type> =

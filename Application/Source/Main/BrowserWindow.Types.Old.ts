@@ -41,7 +41,7 @@ export type FBrowserWindowEventType =
     | "will-move"
     | "will-resize";
 
-export type TBrowserWindowEventCallback<Type extends Array<unknown> = Array<unknown>> =
+export type TBrowserWindowEventCallback<Type extends TArray<unknown> = TArray<unknown>> =
     (Event: Event, ...Arguments: Type) => Promise<void>;
 
 export type FBrowserWindowElectronEvents = Partial<{

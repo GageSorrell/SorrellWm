@@ -4,13 +4,15 @@
  * License:   MIT
  */
 
-import { CommandContainer, type FCommand } from "$/Common/Component";
+import { CommandContainer, type FCommand, type FSimpleCommand } from "$/Common/Component";
 import { type ReactElement, useEffect } from "react";
 import { Action } from "@/Action";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
 import { UseNavigator } from "@/Utility";
+import { MakeSendIpcEventCallback, SendIpcEvent, UseSendIpcEvent } from "@/Event";
+import type { FSimpleCallback } from "()/Utility";
 
 const Log: FLogger = GetLogger("Activation");
 
@@ -18,14 +20,8 @@ const ActivationTiled = (): ReactElement =>
 {
     const [ Navigate ] = UseNavigator();
 
-    const Commands: Array<FCommand> =
+    const Commands: TArray<FCommand> =
     [
-        {
-            Action: [ "Direction.Left" ],
-            Callback: Navigate("/Focus"),
-            Description: "@TODO",
-            Name: "Focus"
-        },
         {
             Action: [ "Direction.Up" ],
             Callback: Navigate("/Insert"),
@@ -46,7 +42,21 @@ const ActivationTiled = (): ReactElement =>
         }
     ];
 
-    const BottomShelfCommands: Array<FCommand> =
+    const FocusCommand: FSimpleCommand =
+    {
+        Action: [ "Direction.Left" ],
+        Callback: Navigate("/Focus"),
+        Description: "@TODO",
+        Name: "Focus"
+    };
+
+    const { Data: FocusData } = UseSendIpcEvent("GetFocusData", undefined);
+    if (FocusData?.CanMoveWithinPanel || FocusData?.CanStepDown || FocusData?.CanStepUp)
+    {
+        Commands.unshift(FocusCommand);
+    }
+
+    const BottomShelfCommands: TArray<FCommand> =
     [
         {
             Action: [ "Miscellaneous.Settings" ],
@@ -67,29 +77,57 @@ const ActivationNotTiled = (): ReactElement =>
 
     Log("ActivationNotTiled.");
 
-    const Commands: Array<FCommand> =
+    const MaximizeCommand: FSimpleCommand =
+    {
+        Action: [ "Primary[0]" ],
+        Callback: MakeSendIpcEventCallback("MaximizeFloatingWindow", undefined),
+        Description: "@TODO",
+        Name: "Maximize"
+    };
+
+    const RestoreCommand: FSimpleCommand =
+    {
+        Action: [ "Primary[0]" ],
+        Callback: MakeSendIpcEventCallback("RestoreFloatingWindow", undefined),
+        Description: "@TODO",
+        Name: "Restore"
+    };
+
+    const Commands: TArray<FCommand> =
     [
         {
-            Action: [ "Direction.Up" ],
+            Action: [ "Direction.Left" ],
             Callback: Navigate("/Tile"),
             Description: "@TODO",
             Name: "Tile (Bring into Panel)"
         },
         {
-            Action: [ "Direction.Down" ],
+            Action: [ "Direction.Up" ],
             Callback: Navigate("/Move"),
             Description: "@TODO",
             Name: "Move"
         },
         {
-            Action: [ "Direction.Right" ],
+            Action: [ "Direction.Down" ],
             Callback: Navigate("/Resize"),
             Description: "@TODO",
             Name: "Resize"
+        },
+        {
+            Action: [ "Primary[0]" ],
+            Callback: Navigate("/Resize"),
+            Description: "@TODO",
+            Name: "Maximize"
+        },
+        {
+            Action: [ "Primary[0]" ],
+            Callback: Navigate("/Resize"),
+            Description: "@TODO",
+            Name: "Maximize"
         }
     ];
 
-    const BottomShelfCommands: Array<FCommand> =
+    const BottomShelfCommands: TArray<FCommand> =
     [
         {
             Action: [ "Miscellaneous.Peek" ],

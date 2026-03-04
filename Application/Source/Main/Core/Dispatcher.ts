@@ -14,7 +14,7 @@ export class TDispatcher<Type>
 {
     private NextListenerId: number = 0;
 
-    private Listeners: Map<number, (Argument: Type) => void> = new Map<number, (Argument: Type) => void>();
+    private Listeners: TMap<number, (Argument: Type) => void> = new Map<number, (Argument: Type) => void>();
 
     public GetHandle = (): TSubscriptionHandle<Type> =>
     {
@@ -53,7 +53,7 @@ export class TDispatcher_DEPRECATED<Type = unknown>
 {
     private NextListenerId: number = 0;
 
-    private Listeners: Map<number, (Argument: Type) => void> = new Map<number, (Argument: Type) => void>();
+    private Listeners: TMap<number, (Argument: Type) => void> = new Map<number, (Argument: Type) => void>();
 
     public Subscribe(Callback: ((Argument: Type) => void)): number
     {

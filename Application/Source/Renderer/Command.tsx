@@ -25,7 +25,7 @@ import {
     useState } from "react";
 import type { FAction, FActionKey, FKeybinds } from "../Shared/Settings";
 import type { FSimpleCallback, TRecord, TSimpleFunction } from "../Shared/Utility";
-import type { FKeyId } from "()/Keyboard.Types";
+import type { FKeyId } from "../Shared/Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { Identity } from "./Utility";
@@ -38,7 +38,7 @@ const Log: FLogger = GetLogger("Command");
 
 export type CCommand =
 {
-    SetCommands: Dispatch<SetStateAction<Array<FCommand>>>;
+    SetCommands: Dispatch<SetStateAction<TArray<FCommand>>>;
 };
 
 const EmptyContext: CCommand =
@@ -50,7 +50,7 @@ const CommandsContext: Context<CCommand> = createContext<CCommand>(EmptyContext)
 
 export const UseCommands = (InCommands: TMaybeArray<FCommand>): void =>
 {
-    const Commands: Array<FCommand> = useMemo((): Array<FCommand> =>
+    const Commands: TArray<FCommand> = useMemo((): TArray<FCommand> =>
     {
         return Array.isArray(InCommands)
             ? InCommands
@@ -60,7 +60,7 @@ export const UseCommands = (InCommands: TMaybeArray<FCommand>): void =>
     const { SetCommands } = useContext<CCommand>(CommandsContext);
     const RevokeCommand: TSimpleFunction<FCommand> = useCallback((Command: FCommand): void =>
     {
-        SetCommands((OldCommands: Array<FCommand>): Array<FCommand> =>
+        SetCommands((OldCommands: TArray<FCommand>): TArray<FCommand> =>
         {
             return OldCommands.filter((In: FCommand): boolean =>
             {
@@ -71,7 +71,7 @@ export const UseCommands = (InCommands: TMaybeArray<FCommand>): void =>
 
     const SubmitCommand: TSimpleFunction<FCommand> = useCallback((Command: FCommand): void =>
     {
-        SetCommands((OldCommands: Array<FCommand>): Array<FCommand> =>
+        SetCommands((OldCommands: TArray<FCommand>): TArray<FCommand> =>
         {
             return [ ...OldCommands, Command ];
         });
@@ -88,11 +88,11 @@ export const UseCommands = (InCommands: TMaybeArray<FCommand>): void =>
     }, [ Commands, RevokeCommand, SubmitCommand ]);
 };
 
-export const GetKeybindIdFromKeybind = (Keybind: FAction, Keybinds: FKeybinds): Array<FKeyId> =>
+export const GetKeyIdsFromAction = (Action: FAction, Keybinds: FKeybinds): TArray<FKeyId> =>
 {
-    return Keybind.flatMap((KeybindKey: FActionKey): Array<FKeyId> =>
+    return Action.flatMap((KeybindKey: FActionKey): TArray<FKeyId> =>
     {
-        const ObjectKeyStrings: Array<string> = KeybindKey
+        const ObjectKeyStrings: TArray<string> = KeybindKey
             .replaceAll("[", ".")
             .replaceAll("]", ".")
             .split(".")
@@ -110,7 +110,7 @@ export const GetKeybindIdFromKeybind = (Keybind: FAction, Keybinds: FKeybinds): 
                 : KeyString;
         };
 
-        const ObjectKeys: Array<string | number> = ObjectKeyStrings.map(GetTypedPropertyKey);
+        const ObjectKeys: TArray<string | number> = ObjectKeyStrings.map(GetTypedPropertyKey);
 
         let Out: unknown = Keybinds;
         ObjectKeys.forEach((Key: string | number): void =>
@@ -119,13 +119,13 @@ export const GetKeybindIdFromKeybind = (Keybind: FAction, Keybinds: FKeybinds): 
             Out = (Out as TRecord<typeof Key>)[Key];
         });
 
-        return Out as Array<FKeyId>;
+        return Out as TArray<FKeyId>;
     });
 };
 
 export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
 {
-    const [ Commands, SetCommands ] = useState<Array<FCommand>>([ ]);
+    const [ Commands, SetCommands ] = useState<TArray<FCommand>>([ ]);
 
     const { RegisterShortcut, UnregisterShortcut } = UseShortcut();
 
@@ -133,27 +133,27 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     const UnregisterCommandShortcut: TSimpleFunction<FCommand> = useCallback((Command: FCommand): void =>
     {
-        const GetKeyIds = (Keybind: FAction): Array<FKeyId> =>
+        const GetKeyIds = (Action: FAction): TArray<FKeyId> =>
         {
-            return GetKeybindIdFromKeybind(Keybind, Keybinds);
+            return GetKeyIdsFromAction(Action, Keybinds);
         };
 
-        const OutKeybinds: Array<Array<FKeyId>> = SwitchOnCommandType(
+        const OutKeybinds: TArray<TArray<FKeyId>> = SwitchOnCommandType(
             Command,
-            ({ Action: Keybind }: FSimpleCommand): Array<Array<FKeyId>> =>
+            ({ Action }: FSimpleCommand): TArray<TArray<FKeyId>> =>
             {
-                return [ GetKeyIds(Keybind) ];
+                return [ GetKeyIds(Action) ];
             },
-            (CompoundCommand: FCompoundCommand): Array<Array<FKeyId>> =>
+            (CompoundCommand: FCompoundCommand): TArray<TArray<FKeyId>> =>
             {
-                return CompoundCommand.SubCommands.map(({ Action: Keybind }: FSubCommand): Array<FKeyId> =>
+                return CompoundCommand.SubCommands.map(({ Action }: FSubCommand): TArray<FKeyId> =>
                 {
-                    return GetKeyIds(Keybind);
+                    return GetKeyIds(Action);
                 });
             }
         );
 
-        const UnregisterKeybind = (Keybind: Array<FKeyId>): void =>
+        const UnregisterKeybind = (Keybind: TArray<FKeyId>): void =>
         {
             /** @TODO If keybinds act up, then the second parameter might need to be `true`. */
             UnregisterShortcut(Keybind, false);
@@ -167,7 +167,8 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
         const RegisterSimpleCommand: TSimpleFunction<FSimpleCommand> =
             (SimpleCommand: FSimpleCommand): void =>
             {
-                const Out: Array<FKeyId> = GetKeybindIdFromKeybind(SimpleCommand.Action, Keybinds);
+                const Out: TArray<FKeyId> = GetKeyIdsFromAction(SimpleCommand.Action, Keybinds);
+                // Log("Registering Simple Command", SimpleCommand.Name, Out);
                 RegisterShortcut(
                     SimpleCommand.Callback,
                     Out,
@@ -178,11 +179,13 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
         const RegisterCompoundCommand: TSimpleFunction<FCompoundCommand> =
             (CompoundCommand: FCompoundCommand): void =>
             {
+                // Log("Registering Compound Command", CompoundCommand.Name);
                 CompoundCommand.SubCommands.forEach((SubCommand: FSubCommand, Index: number): void =>
                 {
+                    // Log(`Registering the ${ Index }th command.`);
                     RegisterShortcut(
                         SubCommand.Callback,
-                        GetKeybindIdFromKeybind(SubCommand.Action, Keybinds),
+                        GetKeyIdsFromAction(SubCommand.Action, Keybinds),
                         `${ CompoundCommand.Name }_${ Index }`
                     );
                 });

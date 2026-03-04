@@ -10,7 +10,9 @@ export type FCardinalDirection =
     | "Left"
     | "Right";
 
-export type TFunction<ParameterTypes extends Array<unknown>, ReturnType> =
+export type TFunction<ParameterTypes extends TArray<unknown>, ReturnType> =
     (...Arguments: ParameterTypes) => ReturnType;
 
-export type FNotFunction = Exclude<unknown, (...Arguments: Array<unknown>) => unknown>;
+export type FNotFunction = Exclude<unknown, (...Arguments: TArray<unknown>) => unknown>;
+
+export type FAxis = "X" | "Y";

@@ -8,6 +8,6 @@ import type { FCommand } from "./Command.Types";
 
 export type PCommandContainer =
 {
-    BottomShelfCommands?: Array<FCommand>;
-    Commands: Array<FCommand>;
+    BottomShelfCommands?: TArray<FCommand>;
+    Commands: TArray<FCommand>;
 };

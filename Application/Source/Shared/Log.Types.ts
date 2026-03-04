@@ -11,7 +11,7 @@ export type FChalkBackground = Extract<keyof typeof chalk, `bg${ string }`>;
 
 export type FChalkForeground = Extract<keyof typeof chalk, "black" | "whiteBright">;
 
-export type FLogFunction = (...Statements: Array<unknown>) => void;
+export type FLogFunction = (...Statements: TArray<unknown>) => void;
 
 export type FLogFormatFunction = (Statement: unknown) => unknown;
 
@@ -35,7 +35,7 @@ export type FLogSettings = Readonly<{
     {
         DisabledCategories:
         {
-            [ LogOrigin in FLogOriginExtended ]: Array<string>;
+            [ LogOrigin in FLogOriginExtended ]: TArray<string>;
         };
         LogDisabledCategoryAttempts: boolean;
     };
@@ -63,7 +63,7 @@ export type FLogger = FLoggerRecord & FLogFunction;
 
 export type FLoggerInterim = FLogFunction & Partial<FLoggerRecord>;
 
-export type FLog = (...Arguments: Array<unknown>) => void;
+export type FLog = (...Arguments: TArray<unknown>) => void;
 
 export type FGetTimeToken = "__GetTime__";
 

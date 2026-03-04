@@ -6,22 +6,22 @@
 
 import type { TIsNonNegativeInteger } from "./Utility.Types";
 
-export type TMaybeArray<Type> = Type | Array<Type>;
+export type TMaybeArray<Type> = Type | TArray<Type>;
 
-type TBuildStaticArray<
+type TBuildStaticTArray<
     ElementType,
     ArraySize extends number,
-    Accumulator extends Array<ElementType> = [ ]
+    Accumulator extends TArray<ElementType> = [ ]
 > =
     Accumulator["length"] extends ArraySize
         ? Accumulator
-        : TBuildStaticArray<ElementType, ArraySize, [ ...Accumulator, ElementType ]>;
+        : TBuildStaticTArray<ElementType, ArraySize, [ ...Accumulator, ElementType ]>;
 
 export type TStaticArray<ElementType, ArraySize extends number> =
     ArraySize extends ArraySize
         ? number extends ArraySize
-            ? Array<ElementType>
+            ? TArray<ElementType>
             : TIsNonNegativeInteger<ArraySize> extends true
-                ? TBuildStaticArray<ElementType, ArraySize>
+                ? TBuildStaticTArray<ElementType, ArraySize>
                 : never
         : never;

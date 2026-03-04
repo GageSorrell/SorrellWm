@@ -52,7 +52,7 @@ export const CreateNotepadTestWindows = async (_NumWindows: number): Promise<voi
 
     await Sleep(3000);
 
-    const NotepadHandles: Array<HWindow> = GetNotepadHandles();
+    const NotepadHandles: TArray<HWindow> = GetNotepadHandles();
 
     const RightMonitor: FPanel | undefined = Find((Vertex: FVertex): boolean =>
     {
@@ -77,7 +77,7 @@ export const CreateNotepadTestWindows = async (_NumWindows: number): Promise<voi
 
 export const CreateTestWindows = async (): Promise<void> =>
 {
-    const TestWindows: Array<BrowserWindow> = [ ];
+    const TestWindows: TArray<BrowserWindow> = [ ];
     for (let Index: number = 0; Index < 3; Index++)
     {
         TestWindows.push(await CreateTestWindow(Index));

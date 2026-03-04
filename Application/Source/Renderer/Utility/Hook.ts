@@ -113,12 +113,12 @@ export const UseIpc_DEPRECATED = <TChannel extends FIpcFrontendChannel>(
 export const UseEffectAsync = (
     Function: FUseEffectAsyncCallback,
     CleanupFunction: FUseEffectAsyncCleanupFunction  | undefined = undefined,
-    DependencyArray: Array<unknown> = [ ]
+    DependencyArray: TArray<unknown> = [ ]
 ): void =>
 {
     const [ Controller ] = useState<AbortController>(new AbortController());
 
-    const OutDependencyArray: Array<unknown> = [ ...DependencyArray, Function, CleanupFunction, Controller ];
+    const OutDependencyArray: TArray<unknown> = [ ...DependencyArray, Function, CleanupFunction, Controller ];
 
     useEffect((): void | FSimpleCallback =>
     {

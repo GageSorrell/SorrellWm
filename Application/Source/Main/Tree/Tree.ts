@@ -18,7 +18,7 @@ import {
     GetMonitorFriendlyName,
     GetMonitorFromWindow,
     GetTileableWindows,
-    GetWindowLocationAndSize,
+    GetWindowShape,
     GetWindowTitle,
     type HMonitor,
     type HWindow,
@@ -137,7 +137,7 @@ export const UpdateForest = (UpdateFunction: (OldForest: FForest) => FForest): v
 
 const InitializeTree = (): void =>
 {
-    const Monitors: Array<FMonitorInfo> = GetMonitors();
+    const Monitors: TArray<FMonitorInfo> = GetMonitors();
 
     Forest.push(...Monitors.map((Monitor: FMonitorInfo): FPanel =>
     {
@@ -165,9 +165,9 @@ const InitializeTree = (): void =>
  */
 export const TileAllWindows = (): void =>
 {
-    const Monitors: Array<FMonitorInfo> = GetMonitors();
+    const Monitors: TArray<FMonitorInfo> = GetMonitors();
 
-    const TileableWindows: Array<HWindow> = GetTileableWindows().filter((Handle: HWindow): boolean =>
+    const TileableWindows: TArray<HWindow> = GetTileableWindows().filter((Handle: HWindow): boolean =>
     {
         /** @TODO For now, exclude VS Code, just to make development less annoying. */
         return !GetWindowTitle(Handle).includes("SorrellWm (Workspace)");
@@ -240,7 +240,7 @@ export const TileAllWindows = (): void =>
         }
     });
 
-    const Cells: Array<FCell> = GetAllCells(Forest);
+    const Cells: TArray<FCell> = GetAllCells(Forest);
 
     Cells.forEach((Cell: FCell): void =>
     {
@@ -272,9 +272,9 @@ export const IsCell = (Vertex: FVertex): Vertex is FCell =>
     return "Handle" in Vertex;
 };
 
-export const Flatten = (): Array<FVertex> =>
+export const Flatten = (): TArray<FVertex> =>
 {
-    const OutArray: Array<FVertex> = [ ];
+    const OutArray: TArray<FVertex> = [ ];
 
     Traverse((Vertex: FVertex): boolean =>
     {
@@ -320,9 +320,9 @@ export const Traverse = (Predicate: TPredicate<FVertex>, Entry?: FVertex): void 
     }
 };
 
-const GetAllCells = (Panels: Array<FPanel>): Array<FCell> =>
+const GetAllCells = (Panels: TArray<FPanel>): TArray<FCell> =>
 {
-    const Result: Array<FCell> = [ ];
+    const Result: TArray<FCell> = [ ];
 
     function Traverse(Vertex: FVertex): void
     {
@@ -393,15 +393,15 @@ export const GetCellFromHandle = (Handle: HWindow): FCell | undefined =>
     }) as FCell | undefined;
 };
 
-export const GetPanels = (): Array<FPanel> =>
+export const GetPanels = (): TArray<FPanel> =>
 {
-    const Vertices: Array<FVertex> = Flatten();
-    return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as Array<FPanel>;
+    const Vertices: TArray<FVertex> = Flatten();
+    return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as TArray<FPanel>;
 };
 
 const TraverseLevelOrder = (Root: FVertex, Callback: (Vertex: FVertex, Level: number) => void): void =>
 {
-    const Queue: Array<{ Vertex: FVertex; Level: number }> = [ { Level: 0, Vertex: Root } ];
+    const Queue: TArray<{ Vertex: FVertex; Level: number }> = [ { Level: 0, Vertex: Root } ];
     while (Queue.length > 0)
     {
         const { Vertex, Level } = Queue.shift()!;
@@ -416,9 +416,9 @@ const TraverseLevelOrder = (Root: FVertex, Callback: (Vertex: FVertex, Level: nu
     }
 };
 
-const ComputeGapData = async (): Promise<Map<FVertex, FBox>> =>
+const ComputeGapData = async (): Promise<TMap<FVertex, FBox>> =>
 {
-    const GapData: Map<FVertex, FGapData> = new Map<FVertex, FGapData>();
+    const GapData: TMap<FVertex, FGapData> = new Map<FVertex, FGapData>();
 
     /** @TODO Make this a setting. */
     const { Gap } = await GetSettings();
@@ -584,7 +584,7 @@ const ComputeGapData = async (): Promise<Map<FVertex, FBox>> =>
         });
     });
 
-    const Out: Map<FVertex, FBox> = new Map<FVertex, FBox>();
+    const Out: TMap<FVertex, FBox> = new Map<FVertex, FBox>();
 
     GapData.forEach((GapData: FGapData, Vertex: FVertex): void =>
     {
@@ -598,7 +598,7 @@ export const Publish = async (): Promise<void> =>
 {
     const { Gap } = await GetSettings();
     const IsGapNonzero: boolean = Gap > 0;
-    const GapAdjustedSizes: Map<FVertex, FBox> | undefined = IsGapNonzero
+    const GapAdjustedSizes: TMap<FVertex, FBox> | undefined = IsGapNonzero
         ? await ComputeGapData()
         : undefined;
 
@@ -671,9 +671,9 @@ export const GetRootPanel = (Vertex: FVertex): FPanel | undefined =>
     return undefined;
 };
 
-const GetPanelApplicationNames = (Panel: FPanel): Array<string> =>
+const GetPanelApplicationNames = (Panel: FPanel): TArray<string> =>
 {
-    const ResultNames: Array<string> = [ ];
+    const ResultNames: TArray<string> = [ ];
 
     Traverse((Vertex: FVertex): boolean =>
     {
@@ -702,7 +702,7 @@ export const AnnotatePanel = (Panel: FPanel): FAnnotatedPanel | undefined =>
     const RootPanel: FPanel | undefined = GetRootPanel(Panel);
     if (RootPanel !== undefined && RootPanel.MonitorId !== undefined)
     {
-        const ApplicationNames: Array<string> = GetPanelApplicationNames(Panel);
+        const ApplicationNames: TArray<string> = GetPanelApplicationNames(Panel);
         const IsRoot: boolean = RootPanel === Panel;
         const Monitor: string = GetMonitorFriendlyName(RootPanel.MonitorId) || "";
 
@@ -1045,7 +1045,7 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
         const ActiveWindow: HWindow | undefined = GetActiveWindow();
         if (ActiveWindow !== undefined)
         {
-            const ActiveWindowPosition: FBox = GetWindowLocationAndSize(ActiveWindow);
+            const ActiveWindowPosition: FBox = GetWindowShape(ActiveWindow);
             /* eslint-disable-next-line @stylistic/max-len */
             Log(`In ChangeFocus, the ActiveWindow is ${ GetWindowTitle(ActiveWindow) } at ${ PositionToString(ActiveWindowPosition) }.`);
             InterimFocusedVertex = GetCellFromHandle(ActiveWindow);

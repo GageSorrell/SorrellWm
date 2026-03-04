@@ -4,13 +4,13 @@
  * License:   MIT
  */
 
-export const Log = (...Statements: Array<unknown>): void =>
+export const Log = (...Statements: TArray<unknown>): void =>
 {
     /* eslint-disable-next-line no-console */
     console.log("📦", ...Statements);
 };
 
-export const LogError = (...Statements: Array<unknown>): void =>
+export const LogError = (...Statements: TArray<unknown>): void =>
 {
     /* eslint-disable-next-line no-console */
     console.log("📦🚨", ...Statements);

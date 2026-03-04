@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-export type FIpcCallback = (...Data: Array<unknown>) => void;
+export type FIpcCallback = (...Data: TArray<unknown>) => void;
 
 export type FIpcCallbackSerialized =
 {

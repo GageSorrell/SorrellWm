@@ -12,7 +12,7 @@ import Ora, { type Ora as FOra } from "ora";
 import Chalk from "chalk";
 import { LogError } from "./Log.js";
 
-export const DoTasks = async <T>(...Tasks: Array<TTaskTuple<T>>): Promise<void> =>
+export const DoTasks = async <T>(...Tasks: TArray<TTaskTuple<T>>): Promise<void> =>
 {
     await Promise.all(Tasks.map(([ Task, Description ]: TTaskTuple<T>): Promise<T> =>
     {
@@ -81,11 +81,11 @@ export const GetRef = <T>(InitialValue?: T): TRef<T> =>
  * returned array.
  */
 export const MapSome = <T, U>(
-    InArray: Array<T> | Readonly<Array<T>>,
+    InArray: TArray<T> | Readonly<TArray<T>>,
     Predicate: (Item: T) => (U | undefined)
-): Array<U> =>
+): TArray<U> =>
 {
-    return InArray.map(Predicate).filter((Item: U | undefined): boolean => Item !== undefined) as Array<U>;
+    return InArray.map(Predicate).filter((Item: U | undefined): boolean => Item !== undefined) as TArray<U>;
 };
 
 export const GetPath = (CommonPath: FCommonPath): string =>

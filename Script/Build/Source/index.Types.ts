@@ -41,6 +41,6 @@ export type FRegisteredFunction =
     Name: string;
     FilePath: string;
     ReturnType: string;
-    Arguments: Array<FFunctionArgument>;
-    Flags: Array<FFlag>;
+    Arguments: TArray<FFunctionArgument>;
+    Flags: TArray<FFlag>;
 };

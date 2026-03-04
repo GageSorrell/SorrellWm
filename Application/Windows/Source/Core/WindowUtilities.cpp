@@ -185,9 +185,9 @@ Napi::Value CaptureWindowScreenshot(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    HWND hwnd = GetHandleArgument(Environment, CallbackInfo, 0);
+    HWND Window = GetHandleArgument(Environment, CallbackInfo, 0);
     RECT clientRect;
-    DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &clientRect, sizeof(clientRect));
+    DwmGetWindowAttribute(Window, DWMWA_EXTENDED_FRAME_BOUNDS, &clientRect, sizeof(clientRect));
 
     POINT topLeft = { clientRect.left, clientRect.top };
 
@@ -232,7 +232,7 @@ Napi::Value CaptureWindowScreenshot(const Napi::CallbackInfo& CallbackInfo)
     }
 
     /* Construct the file path: %TEMP%\SorrellWm\Screenshot-<HandleString>-<Timestamp>.png */
-    std::wstring HandleString = StringToWString(HandleToString(hwnd));
+    std::wstring HandleString = StringToWString(HandleToString(Window));
     std::wstring tempPath = L"%TEMP%\\SorrellWm\\Screenshot-" +
         HandleString +
         L"-" +
@@ -291,51 +291,133 @@ Napi::Value GetTitlebarHeight(const Napi::CallbackInfo& CallbackInfo)
     return Napi::Number::New(Environment, TitleBarHeight);
 }
 
-Napi::Value GetWindowLocationAndSize(const Napi::CallbackInfo& info)
+/**
+ * Given a window handle, if the window is maximized, then restore it,
+ * and set its shape to the shape that it had when maximized.
+ */
+Napi::Value RestoreInPlace(const Napi::CallbackInfo& CallbackInfo)
 {
-    Napi::Env env = info.Env();
+    Napi::Env Environment = CallbackInfo.Env();
 
-    HWND hwnd = (HWND) DecodeHandle(info[0].As<Napi::Object>());
+    HWND Window = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
 
-    RECT rect;
-    if (!GetWindowRect(hwnd, &rect)) {
-        Napi::Error::New(env, "Failed to get window rectangle").ThrowAsJavaScriptException();
-        return Napi::Object::New(env);
-    }
-
-    HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-    if (!hMonitor)
+    if (!IsWindow(Window))
     {
-        Napi::Error::New(env, "Failed to get monitor").ThrowAsJavaScriptException();
-        return Napi::Object::New(env);
+        return Environment.Undefined();
     }
 
-    MONITORINFO monitorInfo = { 0 };
-    monitorInfo.cbSize = sizeof(MONITORINFO);
-    if (!GetMonitorInfo(hMonitor, &monitorInfo))
+    if (!IsZoomed(Window))
     {
-        Napi::Error::New(env, "Failed to get monitor information").ThrowAsJavaScriptException();
-        return Napi::Object::New(env);
+        return Environment.Undefined();
     }
 
-    int absoluteX = rect.left - monitorInfo.rcMonitor.left;
-    int absoluteY = rect.top - monitorInfo.rcMonitor.top;
+    RECT WindowRect = { };
 
-    // std::cout << "Left: " << rect.left << std::endl;
-    // std::cout << "Top: " << rect.top << std::endl;
-    // std::cout << "Monitor Left: " << monitorInfo.rcMonitor.left << std::endl;
-    // std::cout << "Monitor Top: " << monitorInfo.rcMonitor.top << std::endl;
+    const bool bGotWindowRect = GetWindowRect(Window, &WindowRect);
 
-    Napi::Object result = Napi::Object::New(env);
+    if (!bGotWindowRect)
+    {
+        return Environment.Undefined();
+    }
 
-    result.Set("MonitorX", Napi::Number::New(env, monitorInfo.rcMonitor.left));
-    result.Set("MonitorY", Napi::Number::New(env, monitorInfo.rcMonitor.top));
-    result.Set("X", Napi::Number::New(env, rect.left));
-    result.Set("Y", Napi::Number::New(env, rect.top));
-    result.Set("Width", Napi::Number::New(env, rect.right - rect.left));
-    result.Set("Height", Napi::Number::New(env, rect.bottom - rect.top));
+    ShowWindow(Window, SW_RESTORE);
 
-    return result;
+    const int Width = WindowRect.right - WindowRect.left;
+    const int Height = WindowRect.bottom - WindowRect.top;
+
+    const bool bSetPosition = SetWindowPos(
+        Window,
+        nullptr,
+        WindowRect.left,
+        WindowRect.top,
+        Width,
+        Height,
+        SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER
+    );
+
+    if (!bSetPosition)
+    {
+        return Environment.Undefined();
+    }
+
+    return Environment.Undefined();
+}
+
+bool IsWindowSnapped(HWND WindowHandle)
+{
+    HMODULE User32Module = LoadLibraryW(L"User32.dll");
+
+    if (User32Module == nullptr)
+    {
+        return false;
+    }
+
+    auto IsWindowArrangedFunction =
+        reinterpret_cast<BOOL (WINAPI*)(HWND)>(
+            GetProcAddress(User32Module, "IsWindowArranged")
+        );
+
+    bool Result = false;
+
+    if (IsWindowArrangedFunction != nullptr)
+    {
+        Result = (IsWindowArrangedFunction(WindowHandle) != FALSE);
+    }
+
+    FreeLibrary(User32Module);
+
+    return Result;
+}
+
+Napi::Value GetIsWindowSnapped(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    HWND Window = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    return Napi::Boolean::New(Environment, IsWindowSnapped(Window));
+}
+
+Napi::Value GetWindowShape(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    HWND Window = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+    RECT Rect;
+    if (!GetWindowRect(Window, &Rect)) {
+        Napi::Error::New(Environment, "Failed to get window rectangle").ThrowAsJavaScriptException();
+        return Napi::Object::New(Environment);
+    }
+
+    HMONITOR Monitor = MonitorFromWindow(Window, MONITOR_DEFAULTTONEAREST);
+    if (!Monitor)
+    {
+        Napi::Error::New(Environment, "Failed to get monitor").ThrowAsJavaScriptException();
+        return Napi::Object::New(Environment);
+    }
+
+    MONITORINFO MonitorInfo = { 0 };
+    MonitorInfo.cbSize = sizeof(MONITORINFO);
+    if (!GetMonitorInfo(Monitor, &MonitorInfo))
+    {
+        Napi::Error::New(Environment, "Failed to get monitor information").ThrowAsJavaScriptException();
+        return Napi::Object::New(Environment);
+    }
+
+    const int AbsoluteX = Rect.left - MonitorInfo.rcMonitor.left;
+    const int AbsoluteY = Rect.top - MonitorInfo.rcMonitor.top;
+
+    Napi::Object Result = Napi::Object::New(Environment);
+
+    Result.Set("MonitorX", Napi::Number::New(Environment, MonitorInfo.rcMonitor.left));
+    Result.Set("MonitorY", Napi::Number::New(Environment, MonitorInfo.rcMonitor.top));
+    Result.Set("X", Napi::Number::New(Environment, Rect.left));
+    Result.Set("Y", Napi::Number::New(Environment, Rect.top));
+    Result.Set("Width", Napi::Number::New(Environment, Rect.right - Rect.left));
+    Result.Set("Height", Napi::Number::New(Environment, Rect.bottom - Rect.top));
+
+    return Result;
 }
 
 Napi::Value GetWindowByName(const Napi::CallbackInfo& CallbackInfo)
@@ -725,8 +807,6 @@ void StealFocus(HWND Window)
     };
 
     SendInput(2, pInputs, sizeof(INPUT));
-
-    std::cout << "StealFocus: Window is " << Window << std::endl;
 
     SetForegroundWindow(Window);
 }

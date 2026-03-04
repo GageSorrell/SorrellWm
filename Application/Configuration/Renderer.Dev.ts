@@ -63,7 +63,7 @@ const Configuration: Configuration =
         },
         hot: true,
         port: Port,
-        setupMiddlewares(Middlewares: Array<Middleware>)
+        setupMiddlewares(Middlewares: TArray<Middleware>)
         {
             Log("Starting Preload.js builder...");
             const PreloadProcess: ChildProcess = spawn(
@@ -78,7 +78,7 @@ const Configuration: Configuration =
                 .on("error", LogError);
 
             Log("Starting Main Process...");
-            let Arguments: Array<string> = [ "run", "start:main" ];
+            let Arguments: TArray<string> = [ "run", "start:main" ];
             if (process.env.MAIN_ARGS)
             {
                 Arguments = Arguments.concat(

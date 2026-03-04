@@ -119,6 +119,7 @@
 			"KBDLLHOOKSTRUCT",
 			"Keybind",
 			"Keybinds",
+			"keypresses",
 			"libc",
 			"llvmlibc",
 			"LOWORD",

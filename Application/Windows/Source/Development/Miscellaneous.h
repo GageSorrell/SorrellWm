@@ -8,5 +8,5 @@
 
 #include "../Core/Core.h"
 
-DECLARE_NAPI_FUNCTION(GetNotepadHandles, Array<HWindow>)
+DECLARE_NAPI_FUNCTION(GetNotepadHandles, TArray<HWindow>)
 DECLARE_NAPI_FUNCTION(KillNotepadInstances, void)

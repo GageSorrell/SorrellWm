@@ -19,9 +19,9 @@ export const GetLogger = (Category: string): FLogger =>
 {
     const MakeLoggerInternal = (Level: FLogLevel): FLogFunction =>
     {
-        return (...Statements: Array<unknown>): void =>
+        return (...Statements: TArray<unknown>): void =>
         {
-            const FilteredStatements: Array<unknown> = Statements.map((Statement: unknown): unknown =>
+            const FilteredStatements: TArray<unknown> = Statements.map((Statement: unknown): unknown =>
             {
                 const GetTypeString = (In: unknown): string => `[ ${ typeof In } ]`;
                 const CanSendViaIpc: boolean = (
@@ -35,11 +35,11 @@ export const GetLogger = (Category: string): FLogger =>
                 }
 
                 const PruneByType = (
-                    Container: FRecord | Array<unknown>,
-                    ...Types: Array<FTypeof>
-                ): FRecord | Array<unknown> =>
+                    Container: FRecord | TArray<unknown>,
+                    ...Types: TArray<FTypeof>
+                ): FRecord | TArray<unknown> =>
                 {
-                    type FContainer = FRecord | Array<unknown>;
+                    type FContainer = FRecord | TArray<unknown>;
                     if (Array.isArray(Container))
                     {
                         return Container.map((Element: unknown): unknown =>
@@ -79,7 +79,7 @@ export const GetLogger = (Category: string): FLogger =>
                 };
 
                 return (typeof Statement === "object")
-                    ? PruneByType(Statement as FRecord | Array<unknown>)
+                    ? PruneByType(Statement as FRecord | TArray<unknown>)
                     : Statement;
             });
 

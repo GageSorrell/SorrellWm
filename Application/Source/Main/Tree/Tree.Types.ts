@@ -25,7 +25,7 @@ export type FVertex =
 export type FPanelBase =
     FVertexBase &
     {
-        Children: Array<FVertex>;
+        Children: TArray<FVertex>;
         /** Should only be set when this is the root panel of a monitor. */
         MonitorId?: HMonitor;
         Type: string;
@@ -54,12 +54,12 @@ export type FPanel =
     | FPanelVertical;
     // | FPanelStack;
 
-export type FForest = Array<FPanel>;
+export type FForest = TArray<FPanel>;
 
 export type FAnnotatedPanel =
     FPanel &
     {
-        ApplicationNames: Array<string>;
+        ApplicationNames: TArray<string>;
         MonitorName: string;
         IsRoot: boolean;
         Screenshot: string | undefined;

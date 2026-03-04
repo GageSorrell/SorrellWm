@@ -53,7 +53,7 @@ const SetUpPrimaryMonitor = async (): Promise<void> =>
         return;
     }
 
-    const MonitorsInfo: Array<FMonitorInfo> = GetMonitors();
+    const MonitorsInfo: TArray<FMonitorInfo> = GetMonitors();
     const SmallMonitorInfo: FMonitorInfo | undefined =
         MonitorsInfo.find((MonitorInfo: FMonitorInfo): boolean =>
         {
@@ -86,7 +86,7 @@ const SetUpPrimaryMonitor = async (): Promise<void> =>
         SetWindowPosition(VsCodeWindow, SmallMonitorInfo.WorkSize);
     };
 
-    const MainMonitorWindows: Array<HWindow> = GetTileableWindows().filter((Window: HWindow): boolean =>
+    const MainMonitorWindows: TArray<HWindow> = GetTileableWindows().filter((Window: HWindow): boolean =>
     {
         return (
             AreHandlesEqual(GetMonitorFromWindow(Window), MainMonitorInfo.Handle) &&
@@ -172,14 +172,14 @@ const SetUpPrimaryMonitor = async (): Promise<void> =>
         SetWindowPosition(VsCodeWindow, MainMonitorInfo.WorkSize);
     };
 
-    const OnAppExit = (..._Arguments: Array<unknown>): void =>
+    const OnAppExit = (..._Arguments: TArray<unknown>): void =>
     {
         ClosePaintInstances();
         RestoreVsCode();
         RestoreMainWindows();
     };
 
-    const ProcessEndEventNames: Array<string> =
+    const ProcessEndEventNames: TArray<string> =
     [
         "SIGINT",
         "SIGTERM"

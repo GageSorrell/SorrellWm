@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { type BrowserWindow, app, shell } from "electron";
+import { type BrowserWindow, type Event, Notification, app, shell } from "electron";
 import { CreateBrowserWindow } from "#/BrowserWindow.Old";
 import type { FLogger } from "()/Log.Types";
 import { GetLogger } from "#/Development";
@@ -40,7 +40,7 @@ const Initialize = async (): Promise<void> =>
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
         const Installer: any = require("electron-devtools-installer");
         const ForceDownload: boolean = !!process.env.UPGRADE_EXTENSIONS;
-        const Extensions: Array<string> = [ "REACT_DEVELOPER_TOOLS" ];
+        const Extensions: TArray<string> = [ "REACT_DEVELOPER_TOOLS" ];
 
         Installer
             .default(
@@ -140,5 +140,50 @@ app.whenReady()
     .then((): void =>
     {
         app.on("activate", Initialize);
+        // <image placement="appLogoOverride" src="file:///C:/Temp/Profile.png" hint-crop="circle"/>
+
+        /* eslint-disable @stylistic/max-len */
+        const ToastXml: string = `
+            <toast launch="action=openThread&amp;threadId=42">
+                <visual>
+                    <binding template="ToastGeneric">
+                        <text>Andrew Bares</text>
+                        <text>Shall we meet up at 8?</text>
+                    </binding>
+                </visual>
+                <actions>
+                    <input id="ReplyBox" type="text" placeHolderContent="Type a reply"/>
+                    <action
+                        content="Send"
+                        arguments="action=reply&amp;threadId=42"
+                        hint-inputId="ReplyBox"/>
+                </actions>
+            </toast>`;
+        /* eslint-enable @stylistic/max-len */
+
+        const NotificationInstance: Notification = new Notification({ toastXml: ToastXml });
+
+        NotificationInstance.on("click", () =>
+        {
+            // eslint-disable-next-line no-console
+            console.log("Notification clicked");
+        });
+
+        NotificationInstance.on("reply", (_Event: Event, Reply: string) =>
+        {
+            // eslint-disable-next-line no-console
+            console.log("User reply:", Reply);
+        });
+
+        NotificationInstance.on("failed", (_Event: Event, ErrorMessage: string) =>
+        {
+            // eslint-disable-next-line no-console
+            console.error("Notification failed:", ErrorMessage);
+        });
+
+        NotificationInstance.show();
     })
     .catch(Log.Error);
+app.setAppUserModelId("YourCompany.YourApp");
+app.setToastActivatorCLSID("{12345678-1234-1234-1234-1234567890AB}");
+

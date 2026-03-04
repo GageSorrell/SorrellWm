@@ -8,7 +8,7 @@ import type { FIpcCallback, FIpcCallbackSerialized } from "./NodeIpc.Types";
 import { InitializeIpc } from "@sorrellwm/windows";
 
 let NextListenerId: number = 0;
-const Listeners: Map<number, FIpcCallbackSerialized> = new Map<number, FIpcCallbackSerialized>();
+const Listeners: TMap<number, FIpcCallbackSerialized> = new Map<number, FIpcCallbackSerialized>();
 
 export const Subscribe = (Channel: string, Callback: FIpcCallback): number =>
 {

@@ -23,9 +23,9 @@ export const WinEvent: TDispatcher<undefined> = new TDispatcher<undefined>();
 
 InitializeWinEvents();
 
-// const WindowInitialRect: Map<string, FBox> = new Map<string, FBox>();
+// const WindowInitialRect: TMap<string, FBox> = new Map<string, FBox>();
 
-Subscribe("WinEvent", (...Arguments: Array<unknown>): void =>
+Subscribe("WinEvent", (...Arguments: TArray<unknown>): void =>
 {
     // const { Event, Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;
     const { Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;

@@ -37,9 +37,17 @@ export type FGetInsertableWindowDataErrorCode = TEventErrorCode<"">;
 
 export type FLogErrorCode = TEventErrorCode<"">;
 
+export type FMaximizeFloatingWindowErrorCode = TEventErrorCode<"">;
+
+export type FMinimizeFloatingWindowErrorCode = TEventErrorCode<"">;
+
+export type FMoveFloatingWindowErrorCode = TEventErrorCode<"">;
+
 export type FOnChangeFocusErrorCode = TEventErrorCode<"">;
 
 export type FReadyForRouteErrorCode = TEventErrorCode<"">;
+
+export type FRestoreFloatingWindowErrorCode = TEventErrorCode<"">;
 
 export type FRequestTearDownErrorCode = TEventErrorCode<"">;
 

@@ -10,12 +10,14 @@ import type { FAnnotatedPanel, FAnnotatedPanelScreenshot } from "#/Tree/Tree.Typ
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { SendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
+import type { FLogger } from "../../../../Shared/Log.Types";
 import type { FSimpleCallback } from "../../../../Shared/Utility";
+import { GetLogger } from "@/Log";
 import { UseIndex } from "@/Utility/Hook";
 
-// const Log: FLogger = GetLogger("Tile");
+const Log: FLogger = GetLogger("Tile");
 
-const UseAnnotatedPanels = (): Readonly<[ Array<FAnnotatedPanel> ]> =>
+const UseAnnotatedPanels = (): Readonly<[ TArray<FAnnotatedPanel> ]> =>
 {
     const { Data: { AnnotatedPanels: AnnotatedPanelsBase } } =
         UseSendIpcEventStrict("GetAnnotatedPanels", undefined, { AnnotatedPanels: [ ] });
@@ -23,19 +25,20 @@ const UseAnnotatedPanels = (): Readonly<[ Array<FAnnotatedPanel> ]> =>
     const { Data: { Screenshots } } =
         UseSendIpcEventStrict("GetPanelScreenshots", undefined, { Screenshots: [ ] });
 
-    const AnnotatedPanels: Array<FAnnotatedPanelScreenshot> = useMemo((): Array<FAnnotatedPanelScreenshot> =>
-    {
-        return AnnotatedPanelsBase.map(
-            (AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanelScreenshot =>
-            {
-                const Screenshot: string | undefined = Screenshots?.[Index];
-                return {
-                    ...AnnotatedPanel,
-                    Screenshot
-                };
-            }
-        );
-    }, [ AnnotatedPanelsBase, Screenshots ]);
+    const AnnotatedPanels: TArray<FAnnotatedPanelScreenshot> =
+        useMemo((): TArray<FAnnotatedPanelScreenshot> =>
+        {
+            return AnnotatedPanelsBase.map(
+                (AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanelScreenshot =>
+                {
+                    const Screenshot: string | undefined = Screenshots?.[Index];
+                    return {
+                        ...AnnotatedPanel,
+                        Screenshot
+                    };
+                }
+            );
+        }, [ AnnotatedPanelsBase, Screenshots ]);
 
     return [ AnnotatedPanels ] as const;
 };
@@ -70,16 +73,25 @@ export const Tile = (): ReactElement =>
     const [ SelectionIndex, IncrementSelectionIndex, DecrementSelectionIndex ] =
         UseIndex(0, 0, AnnotatedPanels.length - 1);
 
-    // useEffect((): void =>
-    // {
-    //     Log(`Index is now ${ SelectionIndex }.`);
-    // }, [ SelectionIndex ]);
+    const Foo = (): void =>
+    {
+        Log("Decrementing");
+        DecrementSelectionIndex();
+    };
+
+    const Bar = (): void =>
+    {
+        Log("Incrementing");
+        IncrementSelectionIndex();
+    };
 
     const ConfirmSelection: FSimpleCallback = useCallback((): void =>
     {
         SendIpcEvent("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
         SendIpcEvent("RequestTearDown", undefined);
     }, [ AnnotatedPanels, SelectionIndex ]);
+
+    Log(`AnnotatedPanels.length == ${ AnnotatedPanels.length }, SelectionIndex == ${ SelectionIndex }`);
 
     const PanelNodes: ReactNode = useMemo((): ReactNode =>
     {
@@ -95,7 +107,7 @@ export const Tile = (): ReactElement =>
         });
     }, [ AnnotatedPanels, SelectionIndex ]);
 
-    const Commands: Array<FCommand> =
+    const Commands: TArray<FCommand> =
     [
         {
             Description: "@TODO",
@@ -104,11 +116,11 @@ export const Tile = (): ReactElement =>
             [
                 {
                     Action: [ "Direction.Up" ],
-                    Callback: DecrementSelectionIndex
+                    Callback: Foo
                 },
                 {
                     Action: [ "Direction.Down" ],
-                    Callback: IncrementSelectionIndex
+                    Callback: Bar
                 }
             ]
         },

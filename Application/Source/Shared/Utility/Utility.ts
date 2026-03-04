@@ -34,7 +34,7 @@ export const GetEmptyWindow = (): HWindow =>
 /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type, @stylistic/brace-style */
 const AsyncFunction: Function = (async function () { }).constructor;
 
-export function IsAsyncFunction(Value: unknown): Value is (...Arguments: Array<unknown>) => Promise<unknown>
+export function IsAsyncFunction(Value: unknown): Value is (...Arguments: TArray<unknown>) => Promise<unknown>
 {
     return typeof Value === "function" && Value.constructor === AsyncFunction;
 }
@@ -69,8 +69,8 @@ export const ExtractFromRecordArray = <
     KeyType extends PropertyKey = PropertyKey,
     RecordType extends Record<KeyType, unknown> = Record<KeyType, unknown>>(
     Key: KeyType,
-    InArray: Array<RecordType>
-): Array<RecordType[KeyType]> =>
+    InArray: TArray<RecordType>
+): TArray<RecordType[KeyType]> =>
 {
     return InArray.map((Record: RecordType): RecordType[KeyType] =>
     {

@@ -16,9 +16,9 @@ import type { PKeyCombination } from "./KeyCombination.Types";
  */
 export const KeyCombination = ({ Keys }: PKeyCombination): ReactElement =>
 {
-    const KeyElements: Array<ReactElement> = useMemo((): Array<ReactElement> =>
+    const KeyElements: TArray<ReactElement> = useMemo((): TArray<ReactElement> =>
     {
-        const KeyArray: Array<FVirtualKey> = Array.isArray(Keys)
+        const KeyArray: TArray<FVirtualKey> = Array.isArray(Keys)
             ? Keys
             : [ Keys ];
 

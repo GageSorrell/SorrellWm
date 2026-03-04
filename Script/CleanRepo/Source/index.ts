@@ -80,7 +80,7 @@ async function DeleteArtifactsRecursivelyAsync(RootDirectoryPath: string): Promi
             isSymbolicLink: () => boolean;
         };
 
-        let DirectoryEntries: Array<FDirectoryEntry>;
+        let DirectoryEntries: TArray<FDirectoryEntry>;
 
         try
         {
@@ -149,7 +149,7 @@ async function DeleteArtifactsRecursivelyAsync(RootDirectoryPath: string): Promi
 
 function RunCommandAsync(
     Command: string,
-    Arguments: Array<string>,
+    Arguments: TArray<string>,
     WorkingDirectoryPath: string
 ): Promise<FCommandResult>
 {
@@ -177,7 +177,7 @@ function RunCommandAsync(
 
 async function RunCommandOrThrowAsync(
     Command: string,
-    Arguments: Array<string>,
+    Arguments: TArray<string>,
     WorkingDirectoryPath: string
 ): Promise<void>
 {

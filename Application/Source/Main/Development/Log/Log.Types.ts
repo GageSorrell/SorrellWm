@@ -4,6 +4,6 @@
  * License:   MIT
  */
 
-export type FLogHandler = (Statement: unknown, Statements: Array<unknown>) => unknown;
+export type FLogHandler = (Statement: unknown, Statements: TArray<unknown>) => unknown;
 
 export type FShortTimestamp = `${ string }:${ string }.${ string }`;

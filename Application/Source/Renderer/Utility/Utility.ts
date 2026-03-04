@@ -8,14 +8,14 @@ import type { CSSProperties, DependencyList } from "react";
 import type { FBox } from "@sorrellwm/windows";
 import type { FFlexStyle } from "./Utility.Types";
 
-export const Identity = <Type>(...Arguments: Array<Type>) => Arguments;
+export const Identity = <Type>(...Arguments: TArray<Type>) => Arguments;
 
 export const AppendDependencyList = (
     InitialDependencyList: DependencyList,
-    ...Dependencies: Array<unknown>
+    ...Dependencies: TArray<unknown>
 ): DependencyList =>
 {
-    const Out: Array<unknown> = [ ];
+    const Out: TArray<unknown> = [ ];
     const PushDependency = (Dependency: unknown): void =>
     {
         Out.push(Dependency);

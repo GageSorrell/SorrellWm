@@ -6,7 +6,7 @@
 
 import { Body1Strong, tokens } from "@fluentui/react-components";
 import { type CSSProperties, type ReactNode, useEffect } from "react";
-import { CommandContainer, type FCommand } from "$/Common";
+import { CommandContainer, type FCommand, type FCompoundCommand, type FSimpleCommand } from "$/Common";
 import type { FFocusData, FPanelFocusData, FWindowFocusData } from "../../../../Shared/Event/Focus.Types";
 import { Action } from "@/Action";
 import type { FFocusChange } from "#/Tree/Tree.Types";
@@ -98,10 +98,17 @@ const WindowFooter = ({ FocusedWindowTitle }: PWindowFooter): ReactNode =>
             : FocusedWindowTitle
         : "Static Mode (No Window Focused)";
 
+    const TextStyle: CSSProperties =
+    {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+    };
+
     return (
         <>
             <WindowHeaderHorizontalRegular fontSize={ 20 }/>
-            <Body1Strong>
+            <Body1Strong style={ TextStyle }>
                 { FocusedWindowTitleTruncated }
             </Body1Strong>
         </>
@@ -201,36 +208,55 @@ export const Focus = (): ReactNode =>
         width: "100vw"
     };
 
-    const Commands: Array<FCommand> =
-    [
-        {
-            Description: "@TODO",
-            Name: `Move Focus (${ GetPreviousDirection() } / ${ GetNextDirection() })`,
-            SubCommands:
-            [
-                {
-                    Action: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ],
-                    Callback: MoveFocusPrevious
-                },
-                {
-                    Action: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ],
-                    Callback: MoveFocusNext
-                }
-            ]
-        },
-        {
-            Action: [ "Primary[1]" ],
-            Callback: StepDownIntoPanel,
-            Description: "@TODO",
-            Name: "Step Down into Panel"
-        },
-        {
-            Action: [ "Primary[0]" ],
-            Callback: StepUpIntoPanel,
-            Description: "@TODO",
-            Name: "Step Up into Panel"
-        }
-    ];
+    const MoveFocusCommand: FCompoundCommand =
+    {
+        Description: "@TODO",
+        Name: `Move Focus (${ GetPreviousDirection() } / ${ GetNextDirection() })`,
+        SubCommands:
+        [
+            {
+                Action: [ IsHorizontal ? "Direction.Left" : "Direction.Up" ],
+                Callback: MoveFocusPrevious
+            },
+            {
+                Action: [ IsHorizontal ? "Direction.Right" : "Direction.Down" ],
+                Callback: MoveFocusNext
+            }
+        ]
+    };
+
+    const StepDownCommand: FSimpleCommand =
+    {
+        Action: [ "Primary[1]" ],
+        Callback: StepDownIntoPanel,
+        Description: "@TODO",
+        Name: "Step Down into Panel"
+    };
+
+    const StepUpCommand: FSimpleCommand =
+    {
+        Action: [ "Primary[0]" ],
+        Callback: StepUpIntoPanel,
+        Description: "@TODO",
+        Name: "Step Up into Panel"
+    };
+
+    const Commands: TArray<FCommand> = [ ];
+
+    if (FocusData?.CanMoveWithinPanel)
+    {
+        Commands.push(MoveFocusCommand);
+    }
+
+    if (FocusData?.CanStepDown)
+    {
+        Commands.push(StepDownCommand);
+    }
+
+    if (FocusData?.CanStepUp)
+    {
+        Commands.push(StepUpCommand);
+    }
 
     return (
         <>

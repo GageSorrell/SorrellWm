@@ -38,6 +38,6 @@ export type FBrowserWindowCreateArguments =
 export type FBrowserWindowManager =
 {
     Create: () => FBrowserWindow | undefined;
-    GetAll: () => Array<FBrowserWindow>;
+    GetAll: () => TArray<FBrowserWindow>;
     Get: (Handle: FBrowserWindowHandle) => (FBrowserWindow | undefined);
 };

@@ -8,7 +8,7 @@ import * as Fs from "fs";
 import { Paths } from "../Configuration/Paths";
 import { rimrafSync } from "rimraf";
 
-const FoldersToRemove: Array<string> =
+const FoldersToRemove: TArray<string> =
 [
     Paths.Distribution,
     Paths.Build

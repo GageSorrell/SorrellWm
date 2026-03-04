@@ -31,7 +31,7 @@ export type FSubCommand = Omit<FSimpleCommand, "Description" | "Name">;
 export type FCompoundCommand =
     FCommandBase &
     {
-        SubCommands: Array<FSubCommand>;
+        SubCommands: TArray<FSubCommand>;
     };
 
 export type FCommand =

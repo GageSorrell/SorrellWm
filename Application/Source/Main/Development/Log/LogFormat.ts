@@ -99,7 +99,7 @@ const FormatSymbol = ({ Depth, Value }: TLogPrimitive<symbol>): FLogString =>
 
 const Inline = (In: FLogStringArray): FLogStringArray =>
 {
-    const SearchedIndices: Record<FDelimiterStartString, Array<number>> =
+    const SearchedIndices: Record<FDelimiterStartString, TArray<number>> =
     {
         "<": [ ],
         "[": [ ],
@@ -112,15 +112,15 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
             | undefined
             | {
                 Container: FLogStringArray;
-                StartSubArray: Array<FLogString>;
-                StopSubArray: Array<FLogString>;
+                StartSubArray: TArray<FLogString>;
+                StopSubArray: TArray<FLogString>;
             };
 
         const GetString = (InLogString: FLogString): string => InLogString.String;
         const GetInnermostContainer = (InLogStrings: FLogStringArray): FGetInnermostContainerReturnType =>
         {
-            const Strings: Array<string> = InLogStrings.map(GetString);
-            const StartDelimiters: Array<FDelimiterStartString> = [ "<", "[", "{" ];
+            const Strings: TArray<string> = InLogStrings.map(GetString);
+            const StartDelimiters: TArray<FDelimiterStartString> = [ "<", "[", "{" ];
             const InnermostStartIndex: number = Math.max(...StartDelimiters
                 .map((StartDelimiter: FDelimiterStartString): number =>
                 {
@@ -151,7 +151,7 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
             SearchedIndices[Strings[InnermostStartIndex] as FDelimiterStartString].push(InnermostStartIndex);
 
             const GetFirstIndexOfValueAfterIndex = <Type>(
-                Values: Readonly<Array<Type>>,
+                Values: Readonly<TArray<Type>>,
                 TargetValue: Type,
                 AfterIndex: number
             ): number | undefined =>
@@ -190,7 +190,7 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
 
             const InnermostContainer: FLogStringArray =
                 InLogStrings.slice(InnermostStartIndex, InnermostStopIndex + 1) as FLogStringArray;
-            const StopSubArray: Array<FLogString> = InLogStrings.length >= InnermostStopIndex + 1
+            const StopSubArray: TArray<FLogString> = InLogStrings.length >= InnermostStopIndex + 1
                 ? InLogStrings.slice(InnermostStopIndex + 1, undefined)
                 : [ ];
 
@@ -269,7 +269,7 @@ const FormatDigits = (Value: number | bigint): string =>
             return IntegralDigits;
         }
 
-        const Groups: Array<string> = [ ];
+        const Groups: TArray<string> = [ ];
         for (let Index: number = IntegralDigits.length; Index > 0; Index -= 3)
         {
             const StartIndex: number = Math.max(0, Index - 3);
@@ -287,7 +287,7 @@ const FormatDigits = (Value: number | bigint): string =>
             return FractionalDigits;
         }
 
-        const Groups: Array<string> = [];
+        const Groups: TArray<string> = [];
         for (let Index: number = 0; Index < FractionalDigits.length; Index += 3)
         {
             Groups.push(FractionalDigits.slice(Index, Index + 3));
@@ -364,7 +364,7 @@ const FormatDigits = (Value: number | bigint): string =>
     const AbsoluteValue: number = Math.abs(Value);
 
     const PlainDecimalText: string = ConvertScientificNotationToPlainDecimal(AbsoluteValue.toString());
-    const Parts: Array<string> = PlainDecimalText.split(".");
+    const Parts: TArray<string> = PlainDecimalText.split(".");
     const IntegralDigits: string = Parts[0] ?? "0";
     const FractionalDigits: string | undefined = Parts[1];
 
@@ -389,7 +389,7 @@ const FormatNumber = ({ Depth, Value }: TLogPrimitive<number> | TLogPrimitive<bi
     };
 };
 
-const FormatNull = ({ Depth }: TLogPrimitive<null>): Array<FLogString> =>
+const FormatNull = ({ Depth }: TLogPrimitive<null>): TArray<FLogString> =>
 {
     return [ {
         Depth,
@@ -443,12 +443,12 @@ const GetDelimiters = (Depth: number, ContainerType: FContainerType): [ FLogStri
     return Delimiters[ContainerType].map(MakeDelimiterLogString) as [ FLogString, FLogString ];
 };
 
-const FormatArray = (LogArray: FLogArray): Array<FLogString> =>
+const FormatArray = (LogArray: FLogArray): TArray<FLogString> =>
 {
     return FormatContainer("Array", LogArray);
 };
 
-const FormatMap = ({ Depth, Value }: FLogMap): Array<FLogString> =>
+const FormatMap = ({ Depth, Value }: FLogMap): TArray<FLogString> =>
 {
     const FormatKeyValuePair = ({ Depth, Key, Value }: FKeyValuePair): FLogStringArray =>
     {
@@ -473,9 +473,9 @@ const FormatMap = ({ Depth, Value }: FLogMap): Array<FLogString> =>
     };
 
     const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "Map");
-    const GetKeyValuePairs = (InMap: FMap): Array<FKeyValuePair> =>
+    const GetKeyValuePairs = (InMap: FMap): TArray<FKeyValuePair> =>
     {
-        const Out: Array<FKeyValuePair> = [ ];
+        const Out: TArray<FKeyValuePair> = [ ];
 
         InMap.forEach((Value: unknown, Key: FPrimitive): void =>
         {
@@ -491,13 +491,13 @@ const FormatMap = ({ Depth, Value }: FLogMap): Array<FLogString> =>
     return [ StartDelimiterLogString, ...InnerLogStrings, StopDelimiterLogString ];
 };
 
-const FormatRecord = ({ Depth, Value }: FLogRecord): Array<FLogString> =>
+const FormatRecord = ({ Depth, Value }: FLogRecord): TArray<FLogString> =>
 {
     const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, "Record");
 
-    const GetKeyValuePairs = (InRecord: FRecord): Array<FKeyValuePair> =>
+    const GetKeyValuePairs = (InRecord: FRecord): TArray<FKeyValuePair> =>
     {
-        const Out: Array<FKeyValuePair> = [ ];
+        const Out: TArray<FKeyValuePair> = [ ];
 
         Object.keys(InRecord).forEach((Key: PropertyKey): void =>
         {
@@ -507,7 +507,7 @@ const FormatRecord = ({ Depth, Value }: FLogRecord): Array<FLogString> =>
         return Out;
     };
 
-    const KeyValuePairs: Array<FKeyValuePair> = GetKeyValuePairs(Value);
+    const KeyValuePairs: TArray<FKeyValuePair> = GetKeyValuePairs(Value);
 
     const FormatKeyValuePair = ({ Depth, Key, Value }: FKeyValuePair, Index: number): FLogStringArray =>
     {
@@ -558,13 +558,13 @@ const FormatRecord = ({ Depth, Value }: FLogRecord): Array<FLogString> =>
 const FormatContainer = (
     ContainerType: FSetTypeName | FArrayTypeName,
     { Depth, Value }: FLogSet | FLogArray
-): Array<FLogString> =>
+): TArray<FLogString> =>
 {
     const [ StartDelimiterLogString, StopDelimiterLogString ] = GetDelimiters(Depth, ContainerType);
 
     const MakeLogValue = (In: FLogValueType): TLogValue => ({ Depth: Depth + 1, Value: In });
 
-    const ValueArray: Array<FLogValueType> = Array.isArray(Value)
+    const ValueArray: TArray<FLogValueType> = Array.isArray(Value)
         ? Value
         : Array.from(Value);
 
@@ -597,12 +597,12 @@ const FormatContainer = (
     }
 };
 
-const FormatSet = (LogSet: FLogSet): Array<FLogString> =>
+const FormatSet = (LogSet: FLogSet): TArray<FLogString> =>
 {
     return FormatContainer("Set", LogSet);
 };
 
-const FormatObject = ({ Depth, Value }: TLogContainer): Array<FLogString> =>
+const FormatObject = ({ Depth, Value }: TLogContainer): TArray<FLogString> =>
 {
     let Formatter: Function = FormatRecord;
     if (Value instanceof Map)
@@ -652,8 +652,8 @@ export const Format = (Value: FLogValueType): string =>
     const Out: string = InlinedArray
         .map(({ Depth, String }: FLogString, Index: number): string =>
         {
-            const StopDelimiters: Array<string> = [ ">", "]", "}" ];
-            const StartDelimiters: Array<string> = [ "<", "[", "{" ];
+            const StopDelimiters: TArray<string> = [ ">", "]", "}" ];
+            const StartDelimiters: TArray<string> = [ "<", "[", "{" ];
             if (StopDelimiters.includes(GetWithoutAnsi(String)[GetWithoutAnsi(String).length - 1]))
             {
                 if (Index !== InlinedArray.length - 1)

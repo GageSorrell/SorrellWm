@@ -39,7 +39,7 @@ export const RegisterIpcCallback = <Type extends FIpcFrontendChannel>(
         return;
     }
 
-    const Wrapper = async (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): Promise<void> =>
+    const Wrapper = async (_Event: IpcMainEvent, ...ArgumentVector: TArray<unknown>): Promise<void> =>
     {
         type FRequest = FIpcFrontendEvents[Type]["Request"];
         // type FResponse = FIpcFrontendEvents[T]["Response"];
@@ -66,7 +66,7 @@ export const SendIpcEvent = <Type extends FIpcBackendChannel>(
     return new Promise<TResponse<Type>>(
         (Resolve: TResolveFunction<TResponse<Type>>, _Reject: FRejectFunction): void =>
         {
-            ipcMain.once(Channel, (_Event: Electron.Event, ...ArgumentVector: Array<unknown>): void =>
+            ipcMain.once(Channel, (_Event: Electron.Event, ...ArgumentVector: TArray<unknown>): void =>
             {
                 const Response: TResponse<Type> = ArgumentVector[0] as TResponse<Type>;
                 Resolve(Response);

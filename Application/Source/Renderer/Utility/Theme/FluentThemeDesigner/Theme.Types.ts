@@ -24,13 +24,13 @@ export type Palette =
 
 export type Curve =
 {
-    cacheArcLengths?: Array<number>;
+    cacheArcLengths?: TArray<number>;
     points: [Vec3, Vec3, Vec3];
 };
 export interface CurvePath
 {
-    cacheLengths?: Array<number>;
-    curves: Array<Curve>;
+    cacheLengths?: TArray<number>;
+    curves: TArray<Curve>;
 }
 
 export interface CurvedHelixPath extends CurvePath

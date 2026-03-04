@@ -28,7 +28,7 @@
 //             ? BrowserWindows[Handle.BrowserWindowHandle]
 //             : undefined;
 //     },
-//     GetAll: (): Array<FBrowserWindow> =>
+//     GetAll: (): TArray<FBrowserWindow> =>
 //     {
 //         return Object.values(BrowserWindows);
 //     }

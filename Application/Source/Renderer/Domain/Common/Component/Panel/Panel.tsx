@@ -64,7 +64,7 @@ export const Panel = ({
         width: 128
     };
 
-    const SIZES: Array<number> = useMemo<Array<number>>((): Array<number> =>
+    const SIZES: TArray<number> = useMemo<TArray<number>>((): TArray<number> =>
     {
         return [ 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 96, 120, 128 ];
     }, [ ]);

@@ -27,7 +27,7 @@ import {
 //         InductiveStep();
 //     }, [ ]);
 
-//     const Colors: Array<string> =
+//     const Colors: TArray<string> =
 //     [
 //         "pink",
 //         "cyan",

@@ -283,7 +283,7 @@ export const Vk: Readonly<Record<FKeyId, FVirtualKey>> =
     "'": 0xDE
 } as const;
 
-export const VirtualKeys: Readonly<Array<FVirtualKey>> =
+export const VirtualKeys: Readonly<TArray<FVirtualKey>> =
 [
     0x05,
     0x06,

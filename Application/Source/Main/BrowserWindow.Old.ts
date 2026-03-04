@@ -31,7 +31,7 @@ export const RegisterBrowserWindowElectronEvents = (
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
         const Callback: Function = Events[EventName] as Function;
 
-        Log(EventName, Callback);
+        // Log(EventName, Callback);
 
         /* @ts-expect-error This results from the namespace approach used to define overloads by Electron. */
         Window.on(EventName, Callback);

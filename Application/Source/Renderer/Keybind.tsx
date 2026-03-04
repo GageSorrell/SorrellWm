@@ -32,7 +32,7 @@ export interface IShortcut
     Hold: boolean;
     HoldDuration: number;
     Id: string;
-    Keys: Array<string>;
+    Keys: TArray<string>;
     Method: (Props: KeyboardEvent) => unknown;
     Sequence: boolean;
     Title: string;
@@ -48,25 +48,25 @@ export interface IShortcutBinding
 export interface IShortcutProviderProps
 {
     children?: ReactNode;
-    IgnoreKeys?: Array<string>;
-    IgnoreTagNames?: Array<string>;
+    IgnoreKeys?: TArray<string>;
+    IgnoreTagNames?: TArray<string>;
     PreventDefault?: boolean;
     SequenceTimeout?: number;
 }
 
 /** Shortcut State. */
-export type IShortcutProviderState = Array<IShortcut>;
+export type IShortcutProviderState = TArray<IShortcut>;
 
 export type FRegisterFunction = (
     Method: () => unknown,
-    Keys: Array<string>,
+    Keys: TArray<string>,
     Title: string,
     HoldDuration?: number
 ) => void;
 
 export type FRegisterSequenceFunction = (
     Method: () => unknown,
-    Keys: Array<string>,
+    Keys: TArray<string>,
     Title: string
 ) => void;
 
@@ -78,7 +78,7 @@ export type IShortcutProviderRenderProps =
     SetEnabled: TSimpleFunction<boolean>;
     Shortcuts: IShortcutProviderState;
     TriggerShortcut: TSimpleFunction<string, unknown>;
-    UnregisterShortcut: (Keys: Array<string>, Sequence: boolean) => void;
+    UnregisterShortcut: (Keys: TArray<string>, Sequence: boolean) => void;
 };
 
 /** Listener Interface. */
@@ -93,13 +93,13 @@ interface ISingleShortcutListener
  */
 interface IShortcutListener
 {
-    [ Key: string ]: Array<(Event?: KeyboardEvent) => unknown>;
+    [ Key: string ]: TArray<(Event?: KeyboardEvent) => unknown>;
 }
 
 type FKeyboardEventCallback = (Event: KeyboardEvent) => void;
 
 /** Default tags to ignore shortcuts when focused */
-const IgnoreForTagNames: Array<string> = [ "input", "textarea", "select" ];
+const IgnoreForTagNames: TArray<string> = [ "input", "textarea", "select" ];
 
 const EmptyProps: IShortcutProviderRenderProps =
 {
@@ -122,12 +122,12 @@ const ShortcutContext: Context<IShortcutProviderRenderProps> =
  *  - control = ctrl
  *  - cmd, command = meta
  */
-const transformKeys = (keys: Array<string>) =>
+const transformKeys = (keys: TArray<string>) =>
 {
     return keys.map((RawKeys: string): string =>
     {
-        const SplitKeys: Array<string> = `${ RawKeys }`.split("+");
-        const TransformedKeys: Array<string> = SplitKeys.map((Key: string): string =>
+        const SplitKeys: TArray<string> = `${ RawKeys }`.split("+");
+        const TransformedKeys: TArray<string> = SplitKeys.map((Key: string): string =>
         {
             const KeyEvent: string = Key.toLowerCase();
             switch (KeyEvent)
@@ -160,9 +160,9 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
     const HoldInterval: MutableRefObject<number | undefined> = useRef<number>();
     const HoldListeners: MutableRefObject<ISingleShortcutListener> = useRef<ISingleShortcutListener>({ });
     const HoldTimer: MutableRefObject<number> = useRef<number>(0);
-    const KeysDown: MutableRefObject<Array<string>> = useRef<Array<string>>([ ]);
+    const KeysDown: MutableRefObject<TArray<string>> = useRef<TArray<string>>([ ]);
     const Listeners: MutableRefObject<IShortcutListener> = useRef<IShortcutListener>({ });
-    const PreviousKeys: MutableRefObject<Array<string>> = useRef<Array<string>>([ ]);
+    const PreviousKeys: MutableRefObject<TArray<string>> = useRef<TArray<string>>([ ]);
     const SequenceListeners: MutableRefObject<ISingleShortcutListener> = useRef<ISingleShortcutListener>({ });
     const SequenceTimer: MutableRefObject<number | undefined> = useRef<number | undefined>();
     const Shortcuts: MutableRefObject<IShortcutProviderState> = useRef<IShortcutProviderState>([ ]);
@@ -218,7 +218,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
             const Target: HTMLElement = InEvent.target as HTMLElement;
 
             /* Ignore listening when certain elements are focused. */
-            const Ignore: Array<string> = IgnoreTagNames
+            const Ignore: TArray<string> = IgnoreTagNames
                 ? IgnoreTagNames.map((Tag: string) => Tag.toLowerCase())
                 : IgnoreForTagNames;
 
@@ -234,8 +234,8 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
 
             if (IsNotFocusedOnInputElement)
             {
-                const NextKeysDown: Array<string> = [ ];
-                const NextModKeys: Array<string> = [ ];
+                const NextKeysDown: TArray<string> = [ ];
+                const NextModKeys: TArray<string> = [ ];
 
                 if ((Key === "control" || InEvent.ctrlKey) && IgnoreKeys.indexOf("ctrl") < 0)
                 {
@@ -363,7 +363,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
             return;
         }
 
-        const KeysUp: Array<string> = [ ];
+        const KeysUp: TArray<string> = [ ];
         const Key: string = Event.key?.toLowerCase();
 
         if (Key === "control" || Event.ctrlKey)
@@ -383,7 +383,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
             KeysUp.push("shift");
         }
 
-        const SpecialKeys: Array<string> = [ "control", "alt", "meta", "shift" ];
+        const SpecialKeys: TArray<string> = [ "control", "alt", "meta", "shift" ];
         if (SpecialKeys.indexOf(Key) < 0)
         {
             KeysUp.push(Key);
@@ -415,17 +415,17 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
     const RegisterShortcut: FRegisterFunction = useCallback(
         (
             Method: (e?: KeyboardEvent) => unknown,
-            Keys: Array<string> = [],
+            Keys: TArray<string> = [],
             Title: string,
             HoldDuration?: number
         ) =>
         {
-            const NextShortcuts: Array<IShortcut> = [ ...Shortcuts.current ];
+            const NextShortcuts: TArray<IShortcut> = [ ...Shortcuts.current ];
 
             /* Do we need to hold this shortcut? */
             const Hold: boolean = HoldDuration !== undefined;
             const Duration: number = HoldDuration !== undefined ? HoldDuration : 0;
-            const TransformedKeys: Array<string> = transformKeys(Keys);
+            const TransformedKeys: TArray<string> = transformKeys(Keys);
 
             const Shortcut: IShortcut = {
                 Hold: Hold,
@@ -466,7 +466,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
 
     type FRegisterSequenceCallback = (
         Method: FSimpleCallback,
-        Keys: Array<string>,
+        Keys: TArray<string>,
         Title: string
     ) => void;
 
@@ -478,11 +478,11 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
      */
     const RegisterSequenceShortcut: FRegisterSequenceCallback = useCallback((
         Method: FSimpleCallback,
-        Keys: Array<string> = [ ],
+        Keys: TArray<string> = [ ],
         Title: string
     ): void =>
     {
-        const NextShortcuts: Array<IShortcut> = [ ...Shortcuts.current ];
+        const NextShortcuts: TArray<IShortcut> = [ ...Shortcuts.current ];
 
         /* Create new shortcut. */
         const Shortcut: IShortcut =
@@ -525,7 +525,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
      */
     const TriggerShortcut: TSimpleFunction<string> = useCallback((Key: string) =>
     {
-        const TransformedKeys: Array<string> = transformKeys([ Key ]);
+        const TransformedKeys: TArray<string> = transformKeys([ Key ]);
         const TransformKey: string | undefined = TransformedKeys.pop();
         if (TransformKey && Listeners.current[TransformKey])
         {
@@ -533,13 +533,13 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
         }
     }, [ ]);
 
-    type FUnregisterShortcutCallback = (Keys: Array<string>, Sequence: boolean) => void;
+    type FUnregisterShortcutCallback = (Keys: TArray<string>, Sequence: boolean) => void;
 
     /** Remove a shortcut from the application. */
     const UnregisterShortcut: FUnregisterShortcutCallback =
-        useCallback((Keys: Array<string>, Sequence: boolean = false) =>
+        useCallback((Keys: TArray<string>, Sequence: boolean = false) =>
         {
-            const TransformedKeys: Array<string> = transformKeys(Keys);
+            const TransformedKeys: TArray<string> = transformKeys(Keys);
             if (!Sequence)
             {
                 TransformedKeys.forEach((Key: string) =>
@@ -564,7 +564,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
             }
 
             /* Delete the shortcut. */
-            const NextShortcuts: Array<IShortcut> =
+            const NextShortcuts: TArray<IShortcut> =
                 Shortcuts.current.filter(({ Keys: ShortcutKeys }: Pick<IShortcut, "Keys">) =>
                 {
                     let IsMatch: boolean = true;

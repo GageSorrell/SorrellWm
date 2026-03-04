@@ -164,7 +164,7 @@ const FormatCategory = (Category: string): string =>
 //         HashValue |= 0;
 //     }
 
-//     const BackgroundColors: Array<FChalkBackground> =
+//     const BackgroundColors: TArray<FChalkBackground> =
 //     [
 //         "bgBlack",
 //         "bgRed",
@@ -182,7 +182,7 @@ const FormatCategory = (Category: string): string =>
 
 //     const SelectedBackground: FChalkBackground = BackgroundColors[HashedIndex];
 
-//     const BrightBackgrounds: Array<FChalkBackground> =
+//     const BrightBackgrounds: TArray<FChalkBackground> =
 //     [
 //         "bgWhite",
 //         "bgYellow",
@@ -229,13 +229,13 @@ const LogInternal = (
     Origin: FLogOriginInternal,
     Category: string,
     Level: FLogLevel,
-    ...Arguments: Array<unknown>
+    ...Arguments: TArray<unknown>
 ): void =>
 {
 
     if (Origin !== "Meta")
     {
-        const DisabledCategories: Array<string> =
+        const DisabledCategories: TArray<string> =
         [
             ...LogSettings.Category.DisabledCategories[Origin],
             ...LogSettings.Category.DisabledCategories["*"]
@@ -247,7 +247,7 @@ const LogInternal = (
             const IsCategoryDisabledUniversally: boolean =
                 Category in LogSettings.Category.DisabledCategories["*"];
 
-            const AttemptedCategories: Array<string> = IsCategoryDisabledUniversally
+            const AttemptedCategories: TArray<string> = IsCategoryDisabledUniversally
                 ? [
                     ...DisabledCategoriesAttempted[Origin],
                     ...DisabledCategoriesAttempted["*"]
@@ -285,14 +285,14 @@ const LogInternal = (
 
     const OriginEmoji: string = OriginEmojiMap[Origin];
 
-    const FormattedArguments: Array<string> = Arguments.map((Argument: unknown): string =>
+    const FormattedArguments: TArray<string> = Arguments.map((Argument: unknown): string =>
     {
         return Util.format(Argument);
     });
 
     const GetOutStatements = (): string =>
     {
-        const OutStatementsArray: Array<string> =
+        const OutStatementsArray: TArray<string> =
         [
             Chalk.bgHex("#AAAAAA").white(` ${ OriginEmoji } `),
             FormatLevel(Level),
@@ -332,10 +332,10 @@ const LogInternal = (
 export const LogFrontend = (
     Category: string,
     Level: FLogLevel,
-    ...Statements: Array<unknown>
+    ...Statements: TArray<unknown>
 ): void =>
 {
-    const StatementsUntokenized: Array<unknown> = Statements.map(HandleFrontendTokens);
+    const StatementsUntokenized: TArray<unknown> = Statements.map(HandleFrontendTokens);
     LogInternal("Frontend", Category, Level, ...StatementsUntokenized);
 };
 
@@ -390,7 +390,7 @@ const HandleFrontendTokens = (Statement: unknown): unknown =>
     }
 };
 
-const HandleAlwaysApplyFormat = (Statement: unknown, Statements: Array<unknown>): unknown =>
+const HandleAlwaysApplyFormat = (Statement: unknown, Statements: TArray<unknown>): unknown =>
 {
     if (LogSettings.Format.AlwaysApplyFormat)
     {
@@ -413,7 +413,7 @@ const HandleAlwaysApplyFormat = (Statement: unknown, Statements: Array<unknown>)
     }
 };
 
-export const HandleBase64Strings = (Statement: unknown, _Statements: Array<unknown>): unknown =>
+export const HandleBase64Strings = (Statement: unknown, _Statements: TArray<unknown>): unknown =>
 {
     if (typeof Statement === "string" && !LogSettings.Format.AlwaysApplyFormat)
     {
@@ -430,17 +430,17 @@ export const GetLogger = (Category: string): FLogger =>
 {
     const MakeLoggerInternal = (Level: FLogLevel): FLogFunction =>
     {
-        return (...Statements: Array<unknown>): void =>
+        return (...Statements: TArray<unknown>): void =>
         {
             // const IsSimple: boolean = Statements.length === 1 && typeof Statements[1] === "string";
-            type FStatementTuple = [ unknown, Array<unknown> ];
+            type FStatementTuple = [ unknown, TArray<unknown> ];
 
             const MultiMap = (
-                InArray: Array<unknown>,
-                ...Handlers: Array<FLogHandler>
-            ): Array<unknown> =>
+                InArray: TArray<unknown>,
+                ...Handlers: TArray<FLogHandler>
+            ): TArray<unknown> =>
             {
-                let Out: Array<FStatementTuple> = InArray.map((Statement: unknown): FStatementTuple =>
+                let Out: TArray<FStatementTuple> = InArray.map((Statement: unknown): FStatementTuple =>
                 {
                     return [ Statement, Statements ];
                 });
@@ -459,18 +459,18 @@ export const GetLogger = (Category: string): FLogger =>
                 });
             };
 
-            // const FormattedStatements: Array<unknown> = Statements;
-            const FormattedStatements: Array<unknown> = MultiMap(
+            // const FormattedStatements: TArray<unknown> = Statements;
+            const FormattedStatements: TArray<unknown> = MultiMap(
                 Statements,
                 HandleBase64Strings,
                 HandleAlwaysApplyFormat
             );
 
-            // const FormattedStatements: Array<unknown> =
+            // const FormattedStatements: TArray<unknown> =
             //     IsSimple
             //         ? Statements
             //         : LogSettings.Format.AlwaysApplyFormat
-            //             ? (Statements as Array<FLogValueType>).map((Statement: FLogValueType): string =>
+            //             ? (Statements as TArray<FLogValueType>).map((Statement: FLogValueType): string =>
             //             {
             //                 if (typeof Statement === "object")
             //                 {
@@ -487,8 +487,8 @@ export const GetLogger = (Category: string): FLogger =>
             //     //     return Statements.map(Formatter);
             //     // }).flat(20);
 
-            const SpacedOutStatements: Array<unknown> =
-                FormattedStatements.flatMap((Statement: unknown): Array<unknown> =>
+            const SpacedOutStatements: TArray<unknown> =
+                FormattedStatements.flatMap((Statement: unknown): TArray<unknown> =>
                 {
                     return [ Statement, " " ];
                 });

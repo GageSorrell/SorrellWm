@@ -14,14 +14,14 @@ export const C = (Code: string): string =>
     return Chalk.bgGray.white(Code);
 };
 
-export const Log = (...Arguments: Array<unknown>): void =>
+export const Log = (...Arguments: TArray<unknown>): void =>
 {
     console.log("📄 ", ...Arguments);
 };
 
-export const LogError = (...Arguments: Array<unknown>): void =>
+export const LogError = (...Arguments: TArray<unknown>): void =>
 {
-    const FormattedArguments: Array<unknown> = Arguments.map((Argument: unknown): unknown =>
+    const FormattedArguments: TArray<unknown> = Arguments.map((Argument: unknown): unknown =>
     {
         return typeof Argument === "string"
             ? Chalk.yellow(Argument)

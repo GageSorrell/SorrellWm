@@ -25,6 +25,7 @@ const ModifyOutput = (Output: string): string =>
                     .slice(4)
                     .replace("[webpack-dev-server]", Chalk.bgGreen(" Webpack "))
                     .replace("[webpack-dev-middleware]", Chalk.bgGreen(" Webpack "))
+                    .replaceAll("wait", "Wait")
             );
         }
         else if (Line.startsWith("[electronmon]"))
@@ -35,6 +36,7 @@ const ModifyOutput = (Output: string): string =>
                     .replace("[electronmon]", Chalk.bgMagenta(" Electronmon "))
                     .replace("renderer file change: ", "Module modified: ./")
                     .replaceAll("\\", "/")
+                    .replaceAll("wait", "Wait")
                     .replace("Source/", "");
 
                 OutLine = OutLine.split(": ")[0] + ": " + Chalk.hex("#EB4657")(OutLine.split(": ")[1]);

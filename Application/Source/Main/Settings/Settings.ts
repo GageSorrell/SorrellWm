@@ -59,7 +59,7 @@ export const OpenSettings = async (): Promise<void> =>
         }
     );
 
-    ipcMain.on("UpdateSettings", (_Event: Electron.Event, ..._Arguments: Array<unknown>): void =>
+    ipcMain.on("UpdateSettings", (_Event: Electron.Event, ..._Arguments: TArray<unknown>): void =>
     {
         UpdateSettings();
     });

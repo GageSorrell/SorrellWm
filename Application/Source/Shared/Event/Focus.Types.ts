@@ -19,6 +19,7 @@ export type FPanelFocusData =
 export type FFocusDataBase =
 {
     Direction: "Horizontal" | "Vertical";
+    CanMoveWithinPanel: boolean;
     CanStepUp: boolean;
     CanStepDown: boolean;
 };

@@ -30,9 +30,9 @@ export type FLogStringArray = TArrayNonempty<FLogString>;
 
 export type TContainer<Type = unknown, KeyType extends FPrimitive = FPrimitive> =
     | Record<Extract<KeyType, PropertyKey>, Type>
-    | Map<KeyType, Type>
+    | TMap<KeyType, Type>
     | Set<Type>
-    | Array<Type>;
+    | TArray<Type>;
 
 export type FArrayTypeName = "Array";
 export type FMapTypeName = "Map";
@@ -64,8 +64,8 @@ export type FDelimiterPair = [ FDelimiterStartString, FDelimiterStopString ];
 
 export type FDelimiters = Record<FContainerType, FDelimiterPair>;
 
-export type FArray = Array<FLogValueType>;
-export type FMap = Map<FPrimitive, unknown>;
+export type FArray = TArray<FLogValueType>;
+export type FMap = TMap<FPrimitive, unknown>;
 export type FRecord = Record<PropertyKey, unknown>;
 export type FSet = Set<FLogValueType>;
 
