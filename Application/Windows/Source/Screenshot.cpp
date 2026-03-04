@@ -387,23 +387,25 @@ std::unique_ptr<Gdiplus::Bitmap> CaptureScreenSectionAsBitmap(const RECT &captur
     return std::unique_ptr<Gdiplus::Bitmap>(rawBitmap);
 }
 
-// This function uses the above capture function and writes the image to a temporary PNG,
-// returning the path of that PNG.
+/**
+ * This function uses the above capture function and writes the image
+ * to a temporary PNG, returning the path of that PNG.
+ */
 Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callbackInfo)
 {
     Napi::Env environment = callbackInfo.Env();
 
-    // Decode the capture-area rectangle from the JS argument.
+    /* Decode the capture-area rectangle from the JS argument. */
     RECT captureArea = DecodeRect(callbackInfo[0].As<Napi::Object>());
 
-    // Capture as a GDI+ Bitmap.
+    /* Capture as a GDI+ Bitmap. */
     std::unique_ptr<Gdiplus::Bitmap> pngBitmap = CaptureScreenSectionAsBitmap(captureArea);
     if (!pngBitmap)
     {
         // throw std::runtime_error("CaptureScreenSectionAsBitmap returned null.");
     }
 
-    // Create a temporary file path for writing.
+    /* Create a temporary file path for writing. */
     wchar_t tempPathBuffer[MAX_PATH] = {0};
     DWORD tempPathLength = GetTempPathW(MAX_PATH, tempPathBuffer);
     if (tempPathLength == 0 || tempPathLength > MAX_PATH)
@@ -411,13 +413,13 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
         // throw std::runtime_error("Failed to get temporary path.");
     }
 
-    wchar_t tempFileName[MAX_PATH] = {0};
+    wchar_t tempFileName[MAX_PATH] = { 0 };
     if (!GetTempFileNameW(tempPathBuffer, L"PNG", 0, tempFileName))
     {
         // throw std::runtime_error("Failed to generate temporary file name.");
     }
 
-    // By default, GetTempFileNameW() might assign a .tmp extension; change it to .png
+    /* By default, `GetTempFileNameW` might assign a `.tmp` extension; change it to `.png`. */
     std::wstring tempFilePath(tempFileName);
     size_t dotPosition = tempFilePath.rfind(L'.');
     if (dotPosition != std::wstring::npos)
@@ -429,14 +431,14 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
         tempFilePath += L".png";
     }
 
-    // Obtain the CLSID for the PNG encoder.
+    /* Obtain the CLSID for the PNG encoder. */
     CLSID pngClsid;
     if (GetEncoderClsid(L"image/png", &pngClsid) == -1)
     {
         // throw std::runtime_error("Failed to get PNG encoder CLSID.");
     }
 
-    // Save the Bitmap as a PNG to the temporary path.
+    /* Save the Bitmap as a PNG to the temporary path. */
     Gdiplus::Status saveStatus = pngBitmap->Save(tempFilePath.c_str(), &pngClsid, nullptr);
     if (saveStatus != Gdiplus::Ok)
     {
@@ -448,26 +450,29 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
 
 Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
 {
-    Napi::Env& Environment = CallbackInfo.Env();
+    Napi::Env Environment = CallbackInfo.Env();
 
     HWND WindowHandle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
 
-    // Retrieve the icon used in the taskbar.
+    /* Retrieve the icon used in the taskbar. */
     HICON WindowIcon = (HICON) SendMessage(WindowHandle, WM_GETICON, ICON_SMALL, 0);
+
     if (WindowIcon == nullptr)
     {
         WindowIcon = (HICON)  GetClassLongPtr(WindowHandle, -34);
     }
+
     if (WindowIcon == nullptr)
     {
         WindowIcon = (HICON) GetClassLongPtr(WindowHandle, -14);
     }
+
     if (WindowIcon == nullptr)
     {
         return Environment.Undefined();
     }
 
-    // Create a Bitmap from the icon.
+    /* Create a Bitmap from the icon. */
     Gdiplus::Bitmap* IconBitmap = Gdiplus::Bitmap::FromHICON(WindowIcon);
     if (IconBitmap == nullptr)
     {
@@ -488,7 +493,7 @@ Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
         // throw std::runtime_error("Failed to generate temporary file name.");
     }
 
-    // By default, GetTempFileNameW() might assign a .tmp extension; change it to .png
+    /* By default, `GetTempFileNameW` might assign a `.tmp` extension; change it to `.png`. */
     std::wstring FilePath(tempFileName);
     size_t dotPosition = FilePath.rfind(L'.');
     if (dotPosition != std::wstring::npos)
@@ -506,7 +511,7 @@ Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
     }
     FilePath.append(L"taskbar_icon.png");
 
-    // Retrieve the CLSID of the PNG encoder.
+    /* Retrieve the CLSID of the PNG encoder. */
     CLSID PngEncoderClsid;
     if (GetEncoderClsid(L"image/png", &PngEncoderClsid) < 0)
     {
@@ -514,16 +519,15 @@ Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
         return Environment.Undefined();
     }
 
-    // Save the bitmap as a PNG file.
+    /* Save the bitmap as a PNG file. */
     Gdiplus::Status SaveStatus = IconBitmap->Save(FilePath.c_str(), &PngEncoderClsid, nullptr);
     if (SaveStatus != Gdiplus::Ok)
     {
         // Handle error if necessary.
     }
 
-    // Cleanup.
+    /* Cleanup. */
     delete IconBitmap;
 
     return Napi::String::New(Environment, WStringToString(FilePath));
 }
-

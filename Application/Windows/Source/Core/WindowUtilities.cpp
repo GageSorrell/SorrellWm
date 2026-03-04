@@ -273,7 +273,7 @@ Napi::Value CaptureWindowScreenshot(const Napi::CallbackInfo& CallbackInfo)
     }
     else
     {
-        std::cout << "Screenshot saved to " << resolvedPath << std::endl;
+        std::cout << "Screenshot saved to " << WStringToString(resolvedPath) << std::endl;
     }
 
     DeleteObject(hBitmap);

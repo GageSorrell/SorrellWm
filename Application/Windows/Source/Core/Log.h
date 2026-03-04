@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <sstream>
 #include <string>
 #include <iostream>

@@ -6,6 +6,10 @@
 
 #include "BlurBackground.h"
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "Core/Utility.h"
 #include "ThirdParty/Blur.h"
 #include "Core/WinEvent.h"
@@ -120,7 +124,7 @@ int32_t GetMsPerFrame(FBackdrop* Backdrop)
 
     const int32_t RefreshRate = GetLeastRefreshRateOverRect(Backdrop->Bounds);
 
-    return 1000 / min(RefreshRate, BaseMsPerFrame);
+    return 1000 / std::min(RefreshRate, BaseMsPerFrame);
 }
 
 double CalculateScalingFactor(double AverageLuminance)
@@ -954,8 +958,8 @@ bool CreateBackdropWindow(FBackdrop* Backdrop)
 {
     HINSTANCE ModuleHandle = GetModuleHandle(nullptr);
     WNDCLASSEXA WindowClass;
-    char* WindowTitle = "SorrellWm Blurred Background";
-    char* WindowClassName = WindowTitle;
+    const char* WindowTitle = "SorrellWm Blurred Background";
+    const char* WindowClassName = WindowTitle;
 
     WindowClass.cbSize        = sizeof(WindowClass);
     WindowClass.style         = CS_VREDRAW | CS_HREDRAW;
@@ -1103,7 +1107,7 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
 
 Napi::Value KillOrphans(const Napi::CallbackInfo& CallbackInfo)
 {
-    Napi::Env& Environment = CallbackInfo.Env();
+    Napi::Env Environment = CallbackInfo.Env();
 
     FBackdrop* BackdropToUnblur = GetBackdropToUnblur();
 

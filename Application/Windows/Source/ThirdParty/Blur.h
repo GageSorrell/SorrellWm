@@ -44,7 +44,10 @@ inline int remap_index(const int begin, const int end, const int index)
         }
         else if constexpr (P == kExtend)
         {
-            return std::min(end-1, std::max(begin, index));
+            const int MyMax = (begin > index) ? begin : index;
+            const int EndMinusOne = end - 1;
+            const int Out = (EndMinusOne < MyMax) ? EndMinusOne : MyMax;
+            return Out;
         }
     }
     return index;

@@ -12,14 +12,13 @@
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",
-    "node-addon-api": "^7.1.1",
-    "node-gyp": "^10.2.0"
+    "node-addon-api": "^8.6.0",
+    "node-gyp": "^12.2.0"
   },
   "devDependencies": {
-    "cmake-js": "^7.3.0"
+    "cmake-js": "^8.0.0"
   },
-  "overrides":
-  {
+  "overrides": {
     "form-data": "^4.0.5"
   }
 }

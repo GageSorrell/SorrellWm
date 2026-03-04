@@ -6,6 +6,8 @@
 
 export * from "./Log.Types";
 
+type TArray<ElementType> = Array<ElementType>;
+
 /** @TODO Temporary; replace with separate type for each callback. */
 export type FMessageLoopCallback = (Argument: unknown) => void;
 

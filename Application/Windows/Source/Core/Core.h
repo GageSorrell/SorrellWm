@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <napi.h>
 #include <string>
 #include <Windows.h>

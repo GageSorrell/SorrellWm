@@ -136,6 +136,9 @@ const Initialize = async (): Promise<void> =>
 //     })
 //     .catch(console.log);
 
+app.setAppUserModelId("YourCompany.YourApp");
+app.setToastActivatorCLSID("{12345678-1234-1234-1234-1234567890AB}");
+
 app.whenReady()
     .then((): void =>
     {
@@ -165,25 +168,20 @@ app.whenReady()
 
         NotificationInstance.on("click", () =>
         {
-            // eslint-disable-next-line no-console
-            console.log("Notification clicked");
+            Log("Notification clicked");
         });
 
         NotificationInstance.on("reply", (_Event: Event, Reply: string) =>
         {
-            // eslint-disable-next-line no-console
-            console.log("User reply:", Reply);
+            Log("User reply:", Reply);
         });
 
         NotificationInstance.on("failed", (_Event: Event, ErrorMessage: string) =>
         {
-            // eslint-disable-next-line no-console
-            console.error("Notification failed:", ErrorMessage);
+            Log.Error("Notification failed:", ErrorMessage);
         });
 
         NotificationInstance.show();
     })
     .catch(Log.Error);
-app.setAppUserModelId("YourCompany.YourApp");
-app.setToastActivatorCLSID("{12345678-1234-1234-1234-1234567890AB}");
 
