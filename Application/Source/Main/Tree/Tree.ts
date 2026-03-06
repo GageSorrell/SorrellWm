@@ -24,7 +24,8 @@ import {
     type HWindow,
     RestoreWindow,
     SetForegroundWindow,
-    SetWindowPosition } from "@sorrellwm/windows";
+    SetWindowPosition,
+    UpdateTiledList } from "@sorrellwm/windows";
 import type {
     FAnnotatedPanel,
     FCell,
@@ -478,7 +479,11 @@ const ComputeGapData = async (): Promise<TMap<FVertex, FBox>> =>
 
                 for (let Index: number = 0; Index < GivenIndex; Index++)
                 {
-                    CumulativePreviousPrincipalMeasures += Parent.Children[Index].Size[PrincipalMeasure];
+                    const Child: FVertex | undefined = Parent.Children[Index];
+                    if (Child !== undefined)
+                    {
+                        CumulativePreviousPrincipalMeasures += Child.Size[PrincipalMeasure];
+                    }
                 }
 
                 return CumulativePreviousPrincipalMeasures / Parent.Size[PrincipalMeasure];
@@ -634,6 +639,18 @@ export const Publish = async (): Promise<void> =>
 
         return true;
     });
+
+    const TiledWindows: Array<HWindow> = [ ];
+    Traverse((Vertex: FVertex): boolean =>
+    {
+        if (IsCell(Vertex))
+        {
+            TiledWindows.push(Vertex.Handle);
+        }
+        return true;
+    });
+
+    UpdateTiledList(TiledWindows);
 };
 
 const PanelContainsVertex = (currentVertex: FVertex, targetVertex: FVertex): boolean =>
@@ -1146,7 +1163,7 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
  */
 const GetZerothCell = (Panel: FPanel): FCell | undefined =>
 {
-    if (Panel.Children.length > 0)
+    if (Panel.Children[0] !== undefined)
     {
         return IsCell(Panel.Children[0])
             ? Panel.Children[0]

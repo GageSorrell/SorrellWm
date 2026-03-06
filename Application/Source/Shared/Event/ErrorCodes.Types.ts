@@ -43,6 +43,8 @@ export type FMinimizeFloatingWindowErrorCode = TEventErrorCode<"">;
 
 export type FMoveFloatingWindowErrorCode = TEventErrorCode<"">;
 
+export type FNotifyReadyErrorCode = TEventErrorCode<"">;
+
 export type FOnChangeFocusErrorCode = TEventErrorCode<"">;
 
 export type FReadyForRouteErrorCode = TEventErrorCode<"">;
@@ -52,6 +54,10 @@ export type FRestoreFloatingWindowErrorCode = TEventErrorCode<"">;
 export type FRequestTearDownErrorCode = TEventErrorCode<"">;
 
 export type FUpdateSettingErrorCode = TEventErrorCode<"">;
+
+export type FGetExternalWindowStateErrorCode = TEventErrorCode<"">;
+
+export type FGetFloatingWindowStateErrorCode = TEventErrorCode<"">;
 
 export type FGetSettingsErrorCode = TEventErrorCode<"">;
 

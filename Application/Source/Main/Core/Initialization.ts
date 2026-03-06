@@ -19,9 +19,8 @@ const Initialize = async (): Promise<void> =>
 
     if (process.env.NODE_ENV === "production")
     {
-        /* eslint-disable-next-line @stylistic/max-len */
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
-        const SourceMapSupport: any = require("source-map-support");
+        /* eslint-disable-next-line @typescript-eslint/typedef, @typescript-eslint/no-require-imports */
+        const SourceMapSupport = require("source-map-support");
         SourceMapSupport.install();
     }
 
@@ -72,13 +71,13 @@ const Initialize = async (): Promise<void> =>
         MainWindow = Window;
         await LoadFrontend();
 
-        MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
-        {
-            setTimeout((): void =>
-            {
-                MainWindow?.webContents.send("Navigate", "TestWindow");
-            }, 2000);
-        });
+        // MainWindow.on("show", (_Event: Electron.Event, _IsAlwaysOnTop: boolean): void =>
+        // {
+        //     setTimeout((): void =>
+        //     {
+        //         MainWindow?.webContents.send("Navigate", "TestWindow");
+        //     }, 2000);
+        // });
 
         MainWindow.on("ready-to-show", () =>
         {

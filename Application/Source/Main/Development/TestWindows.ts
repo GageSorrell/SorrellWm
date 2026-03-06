@@ -99,8 +99,11 @@ export const CreateTestWindows = async (): Promise<void> =>
         TestWindows.forEach((TestWindow: BrowserWindow): void =>
         {
             const WindowTitle: string = TestWindow.getTitle();
-            const Handle: HWindow = GetWindowByName(WindowTitle);
-            BringIntoPanel(RightMonitor, Handle);
+            const Handle: HWindow | undefined = GetWindowByName(WindowTitle);
+            if (Handle !== undefined)
+            {
+                BringIntoPanel(RightMonitor, Handle);
+            }
         });
     }
 };

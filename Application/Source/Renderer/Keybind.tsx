@@ -312,11 +312,18 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
                 {
                     NextKeysDown.forEach((Key: string) =>
                     {
-                        if (HoldTimer.current >= HoldDurations.current[Key])
+                        const CurrentHoldTimer: number | undefined = HoldDurations.current[Key];
+                        if (CurrentHoldTimer !== undefined)
                         {
-                            /* We are given the duration; execute and reset the timer check. */
-                            HoldListeners.current?.[KeyPress](InEvent);
-                            ResetTimer();
+                            if (HoldTimer.current >= CurrentHoldTimer)
+                            {
+                                /* We are given the duration; execute and reset the timer check. */
+                                if (HoldListeners.current[KeyPress] !== undefined)
+                                {
+                                    HoldListeners.current[KeyPress](InEvent);
+                                    ResetTimer();
+                                }
+                            }
                         }
                     });
                 });

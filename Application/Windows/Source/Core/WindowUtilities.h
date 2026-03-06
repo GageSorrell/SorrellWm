@@ -28,11 +28,11 @@ DECLARE_NAPI_FUNCTION(GetDwmWindowRectNode, FBox, ExportName="GetDwmWindowRect",
 DECLARE_NAPI_FUNCTION(GetWindowShape, FBox, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(GetTitlebarHeight, number)
 DECLARE_NAPI_FUNCTION(SetForegroundWindowNode, void, ExportName="SetForegroundWindow", Handle, HWindow)
-DECLARE_NAPI_FUNCTION(GetWindowByName, HWindow, Name, string)
+DECLARE_NAPI_FUNCTION(GetWindowByName, HWindow | undefined, Name, string)
 DECLARE_NAPI_FUNCTION(GetIsLightMode, boolean, Renderer, Hook)
 DECLARE_NAPI_FUNCTION(GetThemeColor, FHexColor, Renderer, Hook)
 DECLARE_NAPI_FUNCTION(CanTile, boolean)
-DECLARE_NAPI_FUNCTION(GetTileableWindows, TArray<HWindow>)
+DECLARE_NAPI_FUNCTION(GetTileableWindowsNode, TArray<HWindow>, ExportName="GetTileableWindows")
 DECLARE_NAPI_FUNCTION(GetMonitorFromWindow, HMonitor, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(SetWindowPosition, void, Handle, HWindow, Box, FBox)
 DECLARE_NAPI_FUNCTION(GetWindowTitle, string, Handle, HWindow)
@@ -47,6 +47,8 @@ std::string CaptureWindowScreenshot_Internal(HWND hwnd);
 BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);
 HWND GetMainWindow();
+std::vector<HWND> GetTileableWindows();
+bool IsTileableWindow(HWND WindowHandle);
 bool IsWindowSnapped(HWND WindowHandle);
 void StealFocus(HWND Window);
 

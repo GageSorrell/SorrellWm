@@ -4,6 +4,9 @@
  * License:   MIT
  */
 
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+
 import "../MessageLoop";
 import "../Hook";
 import "../NodeIpc";
@@ -15,15 +18,11 @@ import "../Notification";
 
 setTimeout((): void =>
 {
-    /* @ts-expect-error Webpack. */
     import("../MainWindow");
-    /* @ts-expect-error Webpack. */
     import("./Initialization");
-    /* @ts-expect-error Webpack. */
     import("./Tray");
-    /* @ts-expect-error Webpack. */
     import("../WinEvent");
-    /* @ts-expect-error Webpack. */
+    import("../BorderManager");
     import("../Development/SetupPrimaryMonitor");
 
     // Require("../Source/Main/Core/Initialization.ts");

@@ -5,14 +5,13 @@
  */
 
 import { CommandContainer, type FCommand, type FSimpleCommand } from "$/Common/Component";
+import { MakeSendIpcEventCallback, SendIpcEvent, UseSendIpcEvent } from "@/Event";
 import { type ReactElement, useEffect } from "react";
+import { UseNavigator, UseOnce } from "@/Utility";
 import { Action } from "@/Action";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
-import { UseNavigator } from "@/Utility";
-import { MakeSendIpcEventCallback, SendIpcEvent, UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
-import type { FSimpleCallback } from "()/Utility";
 
 const Log: FLogger = GetLogger("Activation");
 
@@ -114,7 +113,7 @@ const ActivationNotTiled = (): ReactElement =>
             Callback: Navigate("/Resize"),
             Description: "@TODO",
             Name: "Resize"
-        },
+        }
         // {
         //     Action: [ "Primary[0]" ],
         //     Callback: Navigate("/Resize"),
@@ -171,6 +170,11 @@ export const Activation = (): ReactElement =>
             ? State.IsTiled
             : true;
     };
+
+    UseOnce((): void =>
+    {
+        SendIpcEvent("NotifyReady", undefined);
+    });
 
     useEffect((): void =>
     {

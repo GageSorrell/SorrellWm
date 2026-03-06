@@ -429,7 +429,15 @@ Napi::Value GetWindowByName(const Napi::CallbackInfo& CallbackInfo)
 
     HWND Window = FindWindow(NULL, WindowName);
 
-    return EncodeHandle(Environment, Window);
+    if (Window != nullptr)
+    {
+        return EncodeHandle(Environment, Window);
+    }
+    else
+    {
+        return Environment.Undefined();
+    }
+
 }
 
 Napi::Value SetForegroundWindowNode(const Napi::CallbackInfo& CallbackInfo)
@@ -658,11 +666,17 @@ BOOL CALLBACK EnumTileableWindowsProc(HWND WindowHandle, LPARAM LParameter)
     return TRUE;
 }
 
-Napi::Value GetTileableWindows(const Napi::CallbackInfo& CallbackInfo)
+std::vector<HWND> GetTileableWindows()
 {
-    Napi::Env Environment = CallbackInfo.Env();
     std::vector<HWND> TileableWindows;
     EnumWindows(EnumTileableWindowsProc, reinterpret_cast<LPARAM>(&TileableWindows));
+    return TileableWindows;
+}
+
+Napi::Value GetTileableWindowsNode(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+    std::vector<HWND> TileableWindows = GetTileableWindows();
 
     return EncodeArray(Environment, TileableWindows, std::function<Napi::Object(const Napi::Env&, HWND)>(EncodeHandle));
 }
@@ -821,3 +835,52 @@ Napi::Value StealFocusNode(const Napi::CallbackInfo& CallbackInfo)
 
     return Environment.Undefined();
 }
+
+bool TrySetDwmBorderColor(HWND TargetWindowHandle, COLORREF BorderColor)
+{
+    if (TargetWindowHandle == nullptr)
+    {
+        return false;
+    }
+
+    const HRESULT Result = DwmSetWindowAttribute(
+        TargetWindowHandle,
+        DWMWA_BORDER_COLOR,
+        &BorderColor,
+        static_cast<DWORD>(sizeof(BorderColor))
+    );
+
+    return SUCCEEDED(Result);
+}
+
+// Napi::Value SetBorderColorTest(const Napi::CallbackInfo& CallbackInfo)
+// {
+//     Napi::Env Environment = CallbackInfo.Env();
+
+//     std::cout << "SetBorderColorTest" << std::endl;
+
+//     HWND TargetWindowHandle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
+
+//     std::cout << "Target Window Handle: " << TargetWindowHandle << std::endl;
+
+//     if (TargetWindowHandle == nullptr)
+//     {
+//         std::cout << "Target Window Handle was the nullptr." << std::endl;
+//         return Napi::Boolean::New(Environment, false);
+//     }
+
+//     const COLORREF DefaultColor = 0xFFFFFFFFu;
+
+//     std::cout << "Created DefaultColor." << std::endl;
+
+//     const HRESULT Result = DwmSetWindowAttribute(
+//         TargetWindowHandle,
+//         DWMWA_BORDER_COLOR,
+//         &DefaultColor,
+//         static_cast<DWORD>(sizeof(DefaultColor))
+//     );
+
+//     std::cout << "Result" << Result << std::endl;
+
+//     return Napi::Boolean::New(Environment, SUCCEEDED(Result));
+// }

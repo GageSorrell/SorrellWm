@@ -5,6 +5,9 @@
  * Comment:   Webpack config for production electron main process.
  */
 
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+
 import * as Path from "path";
 import { type Configuration, DefinePlugin, EnvironmentPlugin } from "webpack";
 import { BaseConfiguration } from "./Base";
@@ -64,13 +67,12 @@ const configuration: Configuration =
         /**
          * Create global constants which can be configured at compile time.
          *
-         * Useful for allowing different behaviour between development builds and
-         * release builds
+         * Useful for allowing different behavior between development builds and
+         * release builds.
          *
-         * NODE_ENV should be production so that modules do not perform certain
-         * development checks
+         * `NODE_ENV` should be `"production"` so that modules do not perform certain
+         * development checks.
          */
-        /* @ts-expect-error DEBUG_PROD type. */
         new EnvironmentPlugin({
             DEBUG_PROD: false,
             NODE_ENV: "production",

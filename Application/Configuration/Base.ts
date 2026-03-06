@@ -27,11 +27,10 @@ export const BaseConfiguration: Configuration =
                     {
                         compilerOptions:
                         {
-                            module: "node16",
-                            allowImportingTsExtensions: true
+                            allowImportingTsExtensions: true,
+                            module: "node16"
                         },
-                        /* Remove this line to enable type checking in webpack builds. */
-                        transpileOnly: true
+                        transpileOnly: false
                     }
                 }
             }

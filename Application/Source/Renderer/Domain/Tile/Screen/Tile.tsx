@@ -6,10 +6,10 @@
 
 import { Caption1, Title1 } from "@fluentui/react-components";
 import { CommandContainer, type FCommand, GetPanelKey, Panel } from "$/Common";
-import type { FAnnotatedPanel, FAnnotatedPanelScreenshot } from "#/Tree/Tree.Types";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { SendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
+import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { GetLogger } from "@/Log";
@@ -25,11 +25,11 @@ const UseAnnotatedPanels = (): Readonly<[ TArray<FAnnotatedPanel> ]> =>
     const { Data: { Screenshots } } =
         UseSendIpcEventStrict("GetPanelScreenshots", undefined, { Screenshots: [ ] });
 
-    const AnnotatedPanels: TArray<FAnnotatedPanelScreenshot> =
-        useMemo((): TArray<FAnnotatedPanelScreenshot> =>
+    const AnnotatedPanels: TArray<FAnnotatedPanel> =
+        useMemo((): TArray<FAnnotatedPanel> =>
         {
             return AnnotatedPanelsBase.map(
-                (AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanelScreenshot =>
+                (AnnotatedPanel: FAnnotatedPanel, Index: number): FAnnotatedPanel =>
                 {
                     const Screenshot: string | undefined = Screenshots?.[Index];
                     return {
@@ -87,8 +87,12 @@ export const Tile = (): ReactElement =>
 
     const ConfirmSelection: FSimpleCallback = useCallback((): void =>
     {
-        SendIpcEvent("BringIntoPanel", AnnotatedPanels[SelectionIndex]);
-        SendIpcEvent("RequestTearDown", undefined);
+        const Selection: FAnnotatedPanel | undefined = AnnotatedPanels[SelectionIndex];
+        if (Selection !== undefined)
+        {
+            SendIpcEvent("BringIntoPanel", Selection);
+            SendIpcEvent("RequestTearDown", undefined);
+        }
     }, [ AnnotatedPanels, SelectionIndex ]);
 
     Log(`AnnotatedPanels.length == ${ AnnotatedPanels.length }, SelectionIndex == ${ SelectionIndex }`);

@@ -169,7 +169,13 @@ const Inline = (In: FLogStringArray): FLogStringArray =>
                 return undefined;
             };
 
-            const InnermostStartDelimiter: string = InLogStrings[InnermostStartIndex].String;
+            const InnermostLogString: FLogString | undefined = InLogStrings[InnermostStartIndex];
+            if (InnermostLogString === undefined)
+            {
+                return undefined;
+            }
+
+            const InnermostStartDelimiter: string = InnermostLogString.String;
             const InnermostStopDelimiter: string =
                 InnermostStartDelimiter === "{"
                     ? "}"
@@ -525,7 +531,11 @@ const FormatRecord = ({ Depth, Value }: FLogRecord): TArray<FLogString> =>
             const Out: FLogStringArray = FormatValue({ Depth: Depth + 1, Value });
             if (Index !== KeyValuePairs.length - 1)
             {
-                Out[Out.length - 1].String += ",";
+                const Last: FLogString | undefined = Out.at(-1);
+                if (Last !== undefined)
+                {
+                    Last.String += ",";
+                }
             }
             return Out;
         };
@@ -654,14 +664,22 @@ export const Format = (Value: FLogValueType): string =>
         {
             const StopDelimiters: TArray<string> = [ ">", "]", "}" ];
             const StartDelimiters: TArray<string> = [ "<", "[", "{" ];
-            if (StopDelimiters.includes(GetWithoutAnsi(String)[GetWithoutAnsi(String).length - 1]))
+            const Character: string = GetWithoutAnsi(String)[GetWithoutAnsi(String).length - 1] || "";
+            if (StopDelimiters.includes(Character))
             {
                 if (Index !== InlinedArray.length - 1)
                 {
-                    const Next: FLogString = InlinedArray[Index + 1];
-                    if (StartDelimiters.includes(Next.String[0]))
+                    const Next: FLogString | undefined = InlinedArray[Index + 1];
+                    if (Next !== undefined)
                     {
-                        String += ",";
+                        const NextStringStart: string | undefined = Next.String[0];
+                        if (NextStringStart !== undefined)
+                        {
+                            if (StartDelimiters.includes(NextStringStart))
+                            {
+                                String += ",";
+                            }
+                        }
                     }
                 }
             }

@@ -1,5 +1,6 @@
 /* eslint-disable */
 /* cSpell:disable */
+// @ts-nocheck
 
 import type { BrandVariants } from "@fluentui/react-components";
 import { hex_to_LCH, hexColorsFromPalette } from "./Palettes";

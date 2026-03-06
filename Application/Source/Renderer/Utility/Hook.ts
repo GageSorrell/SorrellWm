@@ -7,6 +7,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import {
+    type DependencyList,
     type Dispatch,
     type EffectCallback,
     type MutableRefObject,
@@ -253,4 +254,27 @@ export const UsePromise = <Type>(
         .catch(CatchFunction);
 
     return [ Value ] as const;
+};
+
+export const UseEffectOnce = (Callback: FSimpleCallback, DependencyArray?: DependencyList): void =>
+{
+    const Ref: MutableRefObject<boolean> = useRef<boolean>(false);
+    useEffect((): ReturnType<EffectCallback> =>
+    {
+        if (!Ref.current)
+        {
+            Ref.current = true;
+            return Callback();
+        }
+    }, DependencyArray);
+};
+
+export const UseOnce = (Callback: FSimpleCallback): void =>
+{
+    const Ref: MutableRefObject<boolean> = useRef<boolean>(false);
+    if (!Ref.current)
+    {
+        Ref.current = true;
+        Callback();
+    }
 };

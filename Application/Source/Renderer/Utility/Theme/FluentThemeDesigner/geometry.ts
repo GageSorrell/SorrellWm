@@ -1,4 +1,5 @@
 /* eslint-disable */
+// @ts-nocheck
 
 /**
  * This file was lifted with minimal modifications from

@@ -17,7 +17,7 @@ class TDispatcher
 public:
     using TaskId = uint64_t;
 
-    TaskId Register(const std::function<void(PayloadType)>& task)
+    TaskId RegisterEx(const std::function<void(PayloadType)>& task)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         TaskId id = nextId_++;

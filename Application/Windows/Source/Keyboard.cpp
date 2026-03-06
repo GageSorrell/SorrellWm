@@ -39,15 +39,11 @@ LRESULT CALLBACK KeyProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 void RegisterActivationKey()
 {
-    ActivationKeyHook = GGlobals::Hook->Register(WH_KEYBOARD_LL, KeyProc, NULL, 0);
+    ActivationKeyHook = GGlobals::Hook->RegisterEx(WH_KEYBOARD_LL, KeyProc, NULL, 0);
 
 
     if (ActivationKeyHook == nullptr)
     {
         std::cout << "Failed to install activation key hook." << std::endl;
-    }
-    else
-    {
-        std::cout << "RegisteredActivationKey" << std::endl;
     }
 }

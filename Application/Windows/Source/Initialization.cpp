@@ -10,7 +10,9 @@
 //     #define NAPI_VERSION 2147483647
 // #endif
 
+#include "Border.h"
 #include "Core/Core.h"
+#include "Core/Globals.h"
 #include "Core/InterProcessCommunication.h"
 #include "Core/WinEvent.h"
 #include "Core/Hook.h"
@@ -19,7 +21,7 @@
 #include "Development/Miscellaneous.h"
 #include "Keyboard.h"
 #include "MessageLoop/MessageLoop.h"
-#include "Core/Globals.h"
+#include "WindowTracker.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -35,10 +37,6 @@
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
 /* END AUTO-GENERATED REGION.             */
 
-// @TODO TEMPORARY
-#include "Core/DevSettings.h"
-
-
 Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
@@ -47,7 +45,6 @@ Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
 
     GGlobals::Ipc = new FIpc(Environment, Callback);
 
-    std::cout << "FinishedIpc" << std::endl;
     return Environment.Undefined();
 }
 
@@ -81,10 +78,7 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
     /* @TODO Find better place to register listeners */
     try
     {
-        std::cout << "MyFunction" << std::endl;
         RegisterActivationKey();
-
-        std::cout << "After MyFunction" << std::endl;
         return Environment.Undefined();
     }
     catch (const Napi::Error& Error)
@@ -139,7 +133,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
     const std::map<std::string, FFunctionPointer> FunctionDefinitions =
     {
         { "InitializeMonitors", InitializeMonitors },
-        { "GetTileableWindows", GetTileableWindows },
+        { "GetTileableWindows", GetTileableWindowsNode },
+        { "UpdateTiledList", UpdateTiledList },
         { "SetWindowPosition", SetWindowPosition },
         { "GetMonitorFromWindow", GetMonitorFromWindow },
         { "GetWindowTitle", GetWindowTitle },
@@ -160,6 +155,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "MinimizeWindow", MinimizeWindow },
         { "CloseApplication", CloseApplication },
         { "StealFocus", StealFocusNode },
+        { "InitializeBorderManager", InitializeBorderManager },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },

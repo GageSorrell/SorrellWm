@@ -31,6 +31,7 @@ import {
     GetMonitorFromWindow,
     GetThemeColor,
     GetTileableWindows,
+    GetWindowByName,
     GetWindowShape,
     GetWindowTitle,
     type HMonitor,
@@ -430,6 +431,15 @@ const LaunchMainWindow = async (): Promise<void> =>
                     Error: ""
                 };
             }
+        }
+    );
+
+    RegisterIpcCallback(
+        MainWindow,
+        "NotifyReady",
+        async (): ReturnType<TEventCallback<"NotifyReady">> =>
+        {
+            return PoorEventSuccess();
         }
     );
 

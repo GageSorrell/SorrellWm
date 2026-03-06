@@ -5,6 +5,9 @@
  * Comment:   Build config for electron renderer process.
  */
 
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+
 import * as Path from "path";
 import { type Configuration, DefinePlugin, EnvironmentPlugin } from "webpack";
 import { BaseConfiguration } from "./Base";
@@ -105,7 +108,6 @@ const Configuration: Configuration =
          * NODE_ENV should be production so that modules do not perform certain
          * development checks
          */
-        /* @ts-expect-error Something with Webpack. */
         new EnvironmentPlugin({
             DEBUG_PROD: false,
             NODE_ENV: "production"

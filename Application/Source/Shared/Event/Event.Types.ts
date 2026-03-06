@@ -9,6 +9,8 @@ import type {
     FBringIntoPanelErrorCode,
     FGetAnnotatedPanelsErrorCode,
     FGetCurrentPanelErrorCode,
+    FGetExternalWindowStateErrorCode,
+    FGetFloatingWindowStateErrorCode,
     FGetFocusDataErrorCode,
     FGetInsertableWindowDataErrorCode,
     FGetIsLightModeErrorCode,
@@ -22,6 +24,7 @@ import type {
     FMinimizeFloatingWindowErrorCode,
     FMoveFloatingWindowErrorCode,
     FNavigateErrorCode,
+    FNotifyReadyErrorCode,
     FOnChangeFocusErrorCode,
     FReadyForRouteErrorCode,
     FRequestTearDownErrorCode,
@@ -31,12 +34,13 @@ import type {
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
+import type { FExternalWindow } from "()/Window/ExternalWindow.Types";
+import type { FFloatingWindow } from "()/Window/FloatingWindow.Types";
 import type { FFocusData } from "./Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
 import type { FNavigateRequest } from "./Navigate.Types";
 import type { FSettings } from "../Settings";
 import type { FTranslation } from "./Move.Types";
-import type { FExternalWindow } from "()/ExternalWindow.Types";
 
 // @TODO Create proper string unions for the error codes for each event.
 export type FIpcFrontendEvents = TIpcEventsBase<{
@@ -124,6 +128,11 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         FTranslation,
         undefined,
         FMoveFloatingWindowErrorCode
+    >;
+    NotifyReady: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FNotifyReadyErrorCode
     >;
     OnChangeFocus: TIpcFrontendEvent<
         FFocusChange,

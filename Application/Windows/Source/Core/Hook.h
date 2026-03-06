@@ -12,35 +12,76 @@
 class FHook
 {
 public:
-    std::vector<HHOOK> GetHooks() const
+    std::vector<HHOOK> GetExHooks() const
     {
-        return Hooks;
+        return ExHooks;
     }
 
     void OnExit()
     {
-        for(HHOOK Hook : Hooks)
+        for(HHOOK Hook : ExHooks)
         {
             UnhookWindowsHookEx(Hook);
         }
+
+        for(HWINEVENTHOOK Hook : WinEventHooks)
+        {
+            UnhookWinEvent(Hook);
+        }
     }
 
-    HHOOK Register(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId)
+    HWINEVENTHOOK RegisterWinEventHook(
+        DWORD EventMin,
+        DWORD EventMax,
+        HMODULE Module,
+        WINEVENTPROC WinEventProc,
+        DWORD IdProcess,
+        DWORD IdThread,
+        DWORD Flags
+    )
     {
-        HHOOK Hook = SetWindowsHookEx(idHook, lpfn, hmod, dwThreadId);
+        HWINEVENTHOOK Hook = SetWinEventHook(
+            EventMin,
+            EventMax,
+            Module,
+            WinEventProc,
+            IdProcess,
+            IdThread,
+            Flags
+        );
 
         if (Hook)
         {
-            Hooks.push_back(Hook);
+            WinEventHooks.push_back(Hook);
         }
 
         return Hook;
     }
 
-    void Unregister(HHOOK Hook)
+    HHOOK RegisterEx(int IdHook, HOOKPROC HookProc, HINSTANCE Module, DWORD ThreadId)
     {
-        Hooks.erase(std::remove(Hooks.begin(), Hooks.end(), Hook), Hooks.end());
+        HHOOK Hook = SetWindowsHookEx(IdHook, HookProc, Module, ThreadId);
+
+        if (Hook)
+        {
+            ExHooks.push_back(Hook);
+        }
+
+        return Hook;
+    }
+
+    void UnregisterEx(HHOOK Hook)
+    {
+        UnhookWindowsHookEx(Hook);
+        ExHooks.erase(std::remove(ExHooks.begin(), ExHooks.end(), Hook), ExHooks.end());
+    }
+
+    void UnregisterWinEvent(HWINEVENTHOOK Hook)
+    {
+        UnhookWinEvent(Hook);
+        WinEventHooks.erase(std::remove(WinEventHooks.begin(), WinEventHooks.end(), Hook), WinEventHooks.end());
     }
 private:
-    std::vector<HHOOK> Hooks;
+    std::vector<HHOOK> ExHooks;
+    std::vector<HWINEVENTHOOK> WinEventHooks;
 };

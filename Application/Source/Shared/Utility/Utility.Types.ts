@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+import type { HWindow } from "@sorrellwm/windows";
+
 export type TIsNonNegativeInteger<ArraySize extends number> =
     `${ ArraySize }` extends `-${ string }`
         ? false

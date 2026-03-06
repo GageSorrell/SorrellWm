@@ -58,7 +58,8 @@
     "start:main": "concurrently --raw -k \"cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./Configuration/Main.Dev.ts\" \"electronmon . --enable-logging\"",
     "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Preload.Dev.ts",
     "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./Configuration/Renderer.Dev.ts",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "ts-patch install"
   },
   "browserslist": [
     "extends browserslist-config-erb"
@@ -102,7 +103,6 @@
     "@fluentui/react-icons": "^2.0.320",
     "@fluentui/react-motion-components-preview": "^0.15.2",
     "@react-spring/web": "^9.7.5",
-    "@sorrellwm/windows": "file:Windows",
     "electron-debug": "^4.1.0",
     "electron-log": "^5.4.3",
     "electron-settings": "^4.0.4",
@@ -111,11 +111,14 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
+    "source-map-support": "^0.5.21",
+    "typia": "^11.0.3",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
+    "@sorrellwm/windows": "file:Windows",
     "@stylistic/eslint-plugin": "^2.11.0",
     "@svgr/webpack": "^8.1.0",
     "@teamsupercell/typings-for-css-modules-loader": "^2.5.2",
@@ -127,6 +130,7 @@
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "@types/react-test-renderer": "^18.0.1",
+    "@types/source-map-support": "^0.5.10",
     "@types/webpack-bundle-analyzer": "^4.6.0",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
@@ -171,8 +175,9 @@
     "ts-jest": "^29.1.1",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
+    "ts-patch": "^3.3.0",
     "tsconfig-paths-webpack-plugin": "^4.1.0",
-    "typescript": "^5.2.2",
+    "typescript": "~5.9.3",
     "url-loader": "^4.1.1",
     "webpack": "^5.88.2",
     "webpack-bundle-analyzer": "^4.9.1",

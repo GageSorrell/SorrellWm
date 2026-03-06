@@ -42,18 +42,18 @@ const FileHeader: string = "/* File:      GeneratedTypes.d.ts\n * Author:    Gag
 
 const MacroName: string = "DECLARE_NAPI_FUNCTION";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-const MacroSimpleFlagKeys: Readonly<TArray<FSimpleFlagKey>> =
+const MacroSimpleFlagKeys: Readonly<Array<FSimpleFlagKey>> =
 [
     "Hook",
     "Renderer"
 ] as const;
 
-const MacroComplexFlagKeys: Readonly<TArray<FComplexFlagKey>> =
+const MacroComplexFlagKeys: Readonly<Array<FComplexFlagKey>> =
 [
     "ExportName"
 ] as const;
 
-const MacroFlagKeys: Readonly<TArray<FFlagKey>> =
+const MacroFlagKeys: Readonly<Array<FFlagKey>> =
 [
     "ExportName",
     "Hook",
@@ -61,7 +61,7 @@ const MacroFlagKeys: Readonly<TArray<FFlagKey>> =
 ] as const;
 
 /** Get the argument vector as it would appear in a TypeScript function definition. */
-const GetArgumentVector = (Arguments: TArray<FFunctionArgument>): string =>
+const GetArgumentVector = (Arguments: Array<FFunctionArgument>): string =>
 {
     let OutString: string = "";
     Arguments.forEach((Argument: FFunctionArgument, Index: number): void =>
@@ -129,7 +129,7 @@ const GetFlagByName = (
     }
 };
 
-const HasFlag = (MacroArgumentVector: TArray<string>, FlagKey: FFlagKey, ValueRef?: TRef<string>): boolean =>
+const HasFlag = (MacroArgumentVector: Array<string>, FlagKey: FFlagKey, ValueRef?: TRef<string>): boolean =>
 {
     const FlagInstance: string | undefined = MacroArgumentVector.find((MacroArgument: string): boolean =>
     {
@@ -158,9 +158,9 @@ const HasFlag = (MacroArgumentVector: TArray<string>, FlagKey: FFlagKey, ValueRe
     }
 };
 
-const FindAllIndices = (String: string, Substring: string): TArray<number> =>
+const FindAllIndices = (String: string, Substring: string): Array<number> =>
 {
-    const OutArray: TArray<number> = [ ];
+    const OutArray: Array<number> = [ ];
 
     /* eslint-disable-next-line no-constant-condition */
     while (true)
@@ -193,7 +193,7 @@ const FindFirstCapitalAfterIndex = (Input: string, StartIndex: number): number =
     return -1;
 };
 
-const GetCppFiles = async (): Promise<TArray<string>> =>
+const GetCppFiles = async (): Promise<Array<string>> =>
 {
     const SourcePath: string = Path.resolve(GetPath("Windows"), "Source");
     return (await Fs.promises.readdir(SourcePath, { recursive: true }))
@@ -212,13 +212,13 @@ const GetCppFiles = async (): Promise<TArray<string>> =>
         });
 };
 
-const GetFunctionDeclarations = async (CppFiles: TArray<string>): Promise<TArray<FRegisteredFunction>> =>
+const GetFunctionDeclarations = async (CppFiles: Array<string>): Promise<Array<FRegisteredFunction>> =>
 {
-    const RegisteredFunctions: TArray<FRegisteredFunction> = [ ];
+    const RegisteredFunctions: Array<FRegisteredFunction> = [ ];
     for await (const FilePath of CppFiles)
     {
         const Contents: string = await Fs.promises.readFile(FilePath, { encoding: "utf-8" });
-        const MacroCallIndices: TArray<number> = FindAllIndices(Contents, MacroName);
+        const MacroCallIndices: Array<number> = FindAllIndices(Contents, MacroName);
         for await (const MacroCallIndex of MacroCallIndices)
         {
             const IsCommentedOut: boolean = ((): boolean =>
@@ -256,14 +256,14 @@ const GetFunctionDeclarations = async (CppFiles: TArray<string>): Promise<TArray
             const MacroArgumentVectorEndIndex: number = Contents.indexOf(")", MacroArgumentVectorStartIndex);
             const MacroArgumentVectorString: string =
                 Contents.substring(MacroArgumentVectorStartIndex, MacroArgumentVectorEndIndex);
-            const MacroArgumentVector: TArray<string> =
+            const MacroArgumentVector: Array<string> =
                 MacroArgumentVectorString.split(",").map((MacroArgument: string): string =>
                 {
                     return MacroArgument.trim();
                 });
             const Name: string = MacroArgumentVector[0];
             const ReturnType: string = MacroArgumentVector[1];
-            const Flags: TArray<FFlag> = MapSome(MacroFlagKeys, (MacroFlag: FFlagKey): FFlag | undefined =>
+            const Flags: Array<FFlag> = MapSome(MacroFlagKeys, (MacroFlag: FFlagKey): FFlag | undefined =>
             {
                 const FlagValueRef: TRef<string> = GetRef<string>();
                 if (HasFlag(MacroArgumentVector, MacroFlag, FlagValueRef))
@@ -283,7 +283,7 @@ const GetFunctionDeclarations = async (CppFiles: TArray<string>): Promise<TArray
                 }
             });
 
-            const Arguments: TArray<FFunctionArgument> = [ ];
+            const Arguments: Array<FFunctionArgument> = [ ];
             const LastFlagIndex: number = ((): number =>
             {
                 if (Flags.length === 0)
@@ -292,7 +292,7 @@ const GetFunctionDeclarations = async (CppFiles: TArray<string>): Promise<TArray
                 }
                 else
                 {
-                    const Indices: TArray<number> = Flags.map((Flag: FFlag): number =>
+                    const Indices: Array<number> = Flags.map((Flag: FFlag): number =>
                     {
                         // console.log("MacroArgVec", MacroArgumentVector, Flag.Name);
                         return MacroArgumentVector.findIndex((MacroArgument: string): boolean =>
@@ -305,7 +305,7 @@ const GetFunctionDeclarations = async (CppFiles: TArray<string>): Promise<TArray
                 }
             })();
 
-            const FunctionArgumentVector: TArray<string> = [ ];
+            const FunctionArgumentVector: Array<string> = [ ];
 
             /* The function name and return type are the `2`. */
             const HasFunctionArguments: boolean = MacroArgumentVector.length - Flags.length > 2;
@@ -353,7 +353,7 @@ const GetFunctionDeclarations = async (CppFiles: TArray<string>): Promise<TArray
     return RegisteredFunctions;
 };
 
-const PatchInitializationFile = async (RegisteredFunctions: TArray<FRegisteredFunction>): Promise<void> =>
+const PatchInitializationFile = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
 {
     const InitializationFilePath: string = Path.resolve(
         GetPath("Windows"),
@@ -361,7 +361,7 @@ const PatchInitializationFile = async (RegisteredFunctions: TArray<FRegisteredFu
         "Initialization.cpp"
     );
 
-    const InitializationSourceFile: TArray<string> =
+    const InitializationSourceFile: Array<string> =
         (await Fs.promises.readFile(InitializationFilePath, { encoding: "utf-8" })).split("\n");
     const IncludesRegionBeginComment: string = "/* BEGIN AUTO-GENERATED REGION: INCLUDES. */";
     const ExportsRegionBeginComment: string = "/* BEGIN AUTO-GENERATED REGION: EXPORTS. */";
@@ -397,10 +397,10 @@ const PatchInitializationFile = async (RegisteredFunctions: TArray<FRegisteredFu
 };
 
 const GenerateTypesDeclarationsFile = async (
-    RegisteredFunctions: TArray<FRegisteredFunction>
+    RegisteredFunctions: Array<FRegisteredFunction>
 ): Promise<void> =>
 {
-    const Declarations: TArray<string> =
+    const Declarations: Array<string> =
         RegisteredFunctions.map((RegisteredFunction: FRegisteredFunction): string =>
         {
             const ExportName: string = GetExportName(RegisteredFunction);
@@ -415,7 +415,7 @@ const GenerateTypesDeclarationsFile = async (
         const Matches: Set<string> = new Set<string>();
         const Pattern: RegExp = /: (\w+)/g;
         let Match: RegExpExecArray | null = null;
-        const BuiltInTypes: TArray<string> =
+        const BuiltInTypes: Array<string> =
         [
             "Array"
         ];
@@ -460,9 +460,9 @@ const GenerateTypesDeclarationsFile = async (
 };
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-const GenerateIpcCode = async (RegisteredFunctions: TArray<FRegisteredFunction>): Promise<void> =>
+const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
 {
-    const ExposedFunctions: TArray<FRegisteredFunction> =
+    const ExposedFunctions: Array<FRegisteredFunction> =
         RegisteredFunctions.filter((RegisteredFunction: FRegisteredFunction): boolean =>
         {
             return RegisteredFunction.Flags.map((Flag: FFlag): string => Flag.Name).includes("Renderer");
@@ -491,17 +491,17 @@ const GenerateIpcCode = async (RegisteredFunctions: TArray<FRegisteredFunction>)
     //         return `ipcMain.handle("${ FunctionName }", (${ GetArgumentVector(RegisteredFunction.Arguments) }): Promise<${ RegisteredFunction.ReturnType }> =>\n{\n    return Promise.resolve(${ FunctionName }(${ GetArguments(RegisteredFunction) }));\n});`;
     //     }).join("\n\n");
 
-    // const CoreTypeImports: TArray<string> =
+    // const CoreTypeImports: Array<string> =
     // [
     //     ...new Set<string>(
-    //         ExposedFunctions.map((ExposedFunction: FRegisteredFunction): TArray<string> =>
+    //         ExposedFunctions.map((ExposedFunction: FRegisteredFunction): Array<string> =>
     //         {
     //             const IsTypeNontrivial = (Type: string): boolean =>
     //             {
     //                 return Type[0] === Type[0].toUpperCase();
     //             };
 
-    //             const FunctionArgumentTypes: TArray<string> =
+    //             const FunctionArgumentTypes: Array<string> =
     //                 ExposedFunction.Arguments.map((Argument: FFunctionArgument): string =>
     //                 {
     //                     return Argument.Type;
@@ -509,7 +509,7 @@ const GenerateIpcCode = async (RegisteredFunctions: TArray<FRegisteredFunction>)
 
     //             /* eslint-disable-next-line @stylistic/max-len */
     //             // console.log(`ATTEMPTING ExposedFunction ${ ExposedFunction.Name }.\nReturnType: ${ ExposedFunction.ReturnType }, ${ FunctionArgumentTypes.join(", ") }`);
-    //             const TypesToConsider: TArray<string> =
+    //             const TypesToConsider: Array<string> =
     //             [
     //                 ExposedFunction.ReturnType,
     //                 ...FunctionArgumentTypes
@@ -569,7 +569,7 @@ const ElectronHandler =
 {
     ipcRenderer:
     {
-        On(Channel: string, Listener: ((...Arguments: TArray<unknown>) => void))
+        On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
         {
             type FRecord = Record<PropertyKey, unknown>;
             const Clone = (In: unknown): unknown =>
@@ -613,18 +613,18 @@ const ElectronHandler =
                 ipcRenderer.removeListener(Channel, Listener);
             };
         },
-        Once(Channel: string, Listener: ((...ArgumentVector: TArray<unknown>) => void)): void
+        Once(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
             ipcRenderer.once(
                 Channel,
-                (_Event: Electron.Event, ...ArgumentVector: TArray<unknown>) => Listener(...ArgumentVector)
+                (_Event: Electron.Event, ...ArgumentVector: Array<unknown>) => Listener(...ArgumentVector)
             );
         },
-        RemoveListener(Channel: string, Listener: ((...ArgumentVector: TArray<unknown>) => void)): void
+        RemoveListener(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
             ipcRenderer.removeListener(Channel, Listener);
         },
-        Send(Channel: string, ...ArgumentVector: TArray<unknown>)
+        Send(Channel: string, ...ArgumentVector: Array<unknown>)
         {
             ipcRenderer.send(Channel, ...ArgumentVector);
         }
@@ -662,29 +662,29 @@ export type FElectronHandler = typeof ElectronHandler;\n`;
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 type FRegisteredFunctionHook =
-    <ReturnType, ArgumentTypeVector extends TArray<unknown>>(
+    <ReturnType, ArgumentTypeVector extends Array<unknown>>(
         InitialValue: ReturnType,
         ...Arguments: ArgumentTypeVector
     ) => Readonly<[ ReturnValue: ReturnType ]>;
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-const GenerateHooks = async (RegisteredFunctions: TArray<FRegisteredFunction>): Promise<void> =>
+const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): Promise<void> =>
 {
     /* eslint-disable @stylistic/max-len */
     type FHookDefinition =
     {
         Hook: string;
-        ImportedTypes: TArray<string>;
+        ImportedTypes: Array<string>;
     };
 
-    const HookDefinitions: TArray<FHookDefinition> =
+    const HookDefinitions: Array<FHookDefinition> =
         RegisteredFunctions.filter((RegisteredFunction: FRegisteredFunction): boolean =>
         {
             return RegisteredFunction.Flags.map((Flag: FFlag) => Flag.Name).includes("Hook");
         }).map((RegisteredFunction: FRegisteredFunction): FHookDefinition =>
         {
             const { Arguments, Name, ReturnType } = RegisteredFunction;
-            const ImportedTypes: TArray<string> = Arguments.filter((Argument: FFunctionArgument): boolean =>
+            const ImportedTypes: Array<string> = Arguments.filter((Argument: FFunctionArgument): boolean =>
             {
                 return Argument.Type[0] === Argument.Type[0].toUpperCase();
             }).map((Argument: FFunctionArgument): string =>
@@ -725,7 +725,7 @@ const GenerateHooks = async (RegisteredFunctions: TArray<FRegisteredFunction>): 
 
         });
 
-    const ImportedTypes: TArray<string> = Array.from(new Set<string>(HookDefinitions.map((Def: FHookDefinition) => Def.ImportedTypes).flat()));
+    const ImportedTypes: Array<string> = Array.from(new Set<string>(HookDefinitions.map((Def: FHookDefinition) => Def.ImportedTypes).flat()));
     const SorrellWmImportStatement: string = ImportedTypes.length > 0
         ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrellwm/windows";`
         : "";
@@ -739,7 +739,7 @@ const GenerateHooks = async (RegisteredFunctions: TArray<FRegisteredFunction>): 
     await Fs.promises.writeFile(GeneratedModulePath, HookModuleContents, { encoding: "utf-8" });
 };
 
-const Lint = async (CppFiles: TArray<string>): Promise<void> =>
+const Lint = async (CppFiles: Array<string>): Promise<void> =>
 {
     const DisablesLinting: boolean = process.argv.includes("--disable-linting");
 
@@ -749,7 +749,7 @@ const Lint = async (CppFiles: TArray<string>): Promise<void> =>
     }
 
     /* Enforce `Log` macro instead of `std::cout`. */
-    const CppFilesContents: TArray<string> = await Promise.all(CppFiles.map((CppFile: string): Promise<string> =>
+    const CppFilesContents: Array<string> = await Promise.all(CppFiles.map((CppFile: string): Promise<string> =>
     {
         return Fs.promises.readFile(CppFile, { encoding: "utf-8" });
     }));
@@ -761,12 +761,12 @@ const Lint = async (CppFiles: TArray<string>): Promise<void> =>
         Position: number;
     };
 
-    const FindStdCOutCalls = (CppFile: string, CppFileIndex: number): TArray<FStdCOutInstance> =>
+    const FindStdCOutCalls = (CppFile: string, CppFileIndex: number): Array<FStdCOutInstance> =>
     {
         /* @TODO Ignore if the call is commented out. */
-        const Lines: TArray<string> = CppFile.split("\n");
+        const Lines: Array<string> = CppFile.split("\n");
 
-        return Lines.map((Line: string, LineIndex: number): TArray<FStdCOutInstance> =>
+        return Lines.map((Line: string, LineIndex: number): Array<FStdCOutInstance> =>
         {
             return FindAllIndices(Line, "std::cout").map((StdCOutIndex: number): FStdCOutInstance =>
             {
@@ -779,7 +779,7 @@ const Lint = async (CppFiles: TArray<string>): Promise<void> =>
         }).flat();
     };
 
-    const StdCOutCalls: TArray<FStdCOutInstance> = CppFilesContents.map(FindStdCOutCalls).flat();
+    const StdCOutCalls: Array<FStdCOutInstance> = CppFilesContents.map(FindStdCOutCalls).flat();
 
     StdCOutCalls.forEach((StdCOutCall: FStdCOutInstance): void =>
     {
@@ -834,8 +834,8 @@ const Main = async (): Promise<void> =>
 {
     BeginProfiling("Build");
 
-    const CppFiles: TArray<string> = await DoTask(GetCppFiles, "Finding project C++ files");
-    const RegisteredFunctions: TArray<FRegisteredFunction> =
+    const CppFiles: Array<string> = await DoTask(GetCppFiles, "Finding project C++ files");
+    const RegisteredFunctions: Array<FRegisteredFunction> =
         await DoTask(() => GetFunctionDeclarations(CppFiles), "Parsing function declarations");
 
     try

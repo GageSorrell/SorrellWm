@@ -9,14 +9,18 @@
 #include "Core.h"
 #include <iostream>
 
+/**
+ * @TODO 3/5/26 8PM: Extend this class via a function exposed to Node that allows main
+ * to *send* events to C++, and extend this class to act as a basic event emitter,
+ * such that functions can be passed to this class, and be called when main sends
+ * an event of the channel associated with that function.
+ */
 class FIpc
 {
 public:
     FIpc(Napi::Env Environment, Napi::Function InCallback) : Environment(Environment)
     {
-        std::cout << "Constructing FIpc" << std::endl;
         Callback = Napi::Persistent(InCallback);
-        std::cout << "Finished Constructing FIpc" << std::endl;
     }
 
     void Send(std::string Channel, Napi::Value Message)

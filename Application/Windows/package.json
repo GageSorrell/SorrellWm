@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "cd ../../Script/Build && yarn run start",
-    "cmake-step": "cmake-js compile --out ../build",
+    "cmake-step": "cmake-js compile --out ../Build",
     "start": "npm run build"
   },
   "author": "Gage Sorrell",
