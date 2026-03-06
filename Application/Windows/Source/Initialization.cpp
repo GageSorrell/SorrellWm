@@ -45,7 +45,7 @@ Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
 
     GGlobals::Ipc = new FIpc(Environment, Callback);
 
-    return Environment.Undefined();
+    RETURN_NAPI();
 }
 
 void HooksExitCleanup(void* _)
@@ -156,6 +156,7 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "CloseApplication", CloseApplication },
         { "StealFocus", StealFocusNode },
         { "InitializeBorderManager", InitializeBorderManager },
+        { "SendNativeIpc", SendNativeIpc },
         /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },

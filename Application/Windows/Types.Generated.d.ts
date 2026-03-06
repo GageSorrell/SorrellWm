@@ -8,7 +8,7 @@
 
 /* eslint-disable */
 
-import type { FBox, HWindow, TArray, HMonitor, FHexColor } from "./Core";
+import type { FBox, HWindow, TArray, FRecord, HMonitor, FHexColor } from "./Core";
 
 export function BlurBackground(Bounds: FBox, SourceHandle: HWindow): HWindow;
 export function UnblurBackground(): void;
@@ -21,6 +21,7 @@ export function InitializeWindowTracker(): void;
 export function UpdateTiledList(In: Array<HWindow>): void;
 export function GetNotepadHandles(): TArray<HWindow>;
 export function KillNotepadInstances(): void;
+export function SendNativeIpc(Channel: string, Payload: FRecord | undefined): void;
 export function GetMonitors(): TArray<FMonitorInfo>;
 export function InitializeMonitors(): TArray<FMonitorInfo>;
 export function GetMonitorFriendlyName(Handle: HMonitor): string | undefined;

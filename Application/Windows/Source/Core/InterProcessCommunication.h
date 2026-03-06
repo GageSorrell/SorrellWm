@@ -9,6 +9,12 @@
 #include "Core.h"
 #include <iostream>
 
+DECLARE_NAPI_FUNCTION(SendNativeIpc, void, Channel, string, Payload, FRecord | undefined);
+
+typedef std::function<void (const Napi::Env&, const Napi::Value&)> FIpcCallback;
+typedef std::unordered_map<int, FIpcCallback> FIpcCallbacks;
+typedef std::unordered_map<std::string, FIpcCallbacks> FBoundFunctions;
+
 /**
  * @TODO 3/5/26 8PM: Extend this class via a function exposed to Node that allows main
  * to *send* events to C++, and extend this class to act as a basic event emitter,
@@ -18,33 +24,18 @@
 class FIpc
 {
 public:
-    FIpc(Napi::Env Environment, Napi::Function InCallback) : Environment(Environment)
-    {
-        Callback = Napi::Persistent(InCallback);
-    }
+    FIpc(Napi::Env Environment, Napi::Function InCallback);
 
-    void Send(std::string Channel, Napi::Value Message)
-    {
-        Napi::HandleScope Scope(Environment);
+    int Bind(const std::string& Channel, const FIpcCallback& Callback);
+    void Unbind(int Id);
+    void Broadcast(const std::string& Channel, const Napi::Env& InEnvironment, const Napi::Value& Payload);
 
-        // std::cout << "Sending IPC " + Channel + " with message." << std::endl;
-        Callback.Call({ Napi::String::New(Environment, Channel), Message });
-    }
+    void Send(const std::string& Channel, const Napi::Value& Message);
+    void Send(const std::string& Channel);
 
-    void Send(std::string Channel)
-    {
-        Napi::HandleScope Scope(Environment);
-
-        // std::cout << "Sending IPC with no message on channel " + Channel + "." << std::endl;
-        Callback.Call({ Napi::String::New(Environment, Channel) });
-    }
-
-    Napi::Env Env() const
-    {
-        return Environment;
-    }
-
-  private:
+    Napi::Env Env() const;
+private:
     Napi::FunctionReference Callback;
     Napi::Env Environment = NULL;
+    FBoundFunctions BoundFunctions;
 };

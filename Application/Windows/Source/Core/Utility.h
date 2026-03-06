@@ -70,3 +70,34 @@ struct FBox
 };
 
 FBox GetBoxArgument(const Napi::CallbackInfo& CallbackInfo, int32_t Index);
+
+template <typename ElementType, typename PredicateType>
+bool RemoveFirstIf(std::vector<ElementType>& Elements, PredicateType Predicate)
+{
+    const auto Iterator = std::find_if(Elements.begin(), Elements.end(), Predicate);
+    if (Iterator == Elements.end())
+    {
+        return false;
+    }
+
+    Elements.erase(Iterator);
+    return true;
+}
+
+template <typename TKey, typename TValue, typename THash, typename TKeyEqual, typename TAllocator, typename TPredicate>
+bool RemoveFirstIfMap(
+    std::unordered_map<TKey, TValue, THash, TKeyEqual, TAllocator>& Map,
+    TPredicate Predicate
+)
+{
+    for (auto Iterator = Map.begin(); Iterator != Map.end(); ++Iterator)
+    {
+        if (Predicate(*Iterator))
+        {
+            Map.erase(Iterator);
+            return true;
+        }
+    }
+
+    return false;
+}

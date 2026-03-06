@@ -31,11 +31,11 @@ import {
     GetMonitorFromWindow,
     GetThemeColor,
     GetTileableWindows,
-    GetWindowByName,
     GetWindowShape,
     GetWindowTitle,
     type HMonitor,
     type HWindow,
+    SendNativeIpc,
     SetWindowPosition,
     UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
@@ -685,6 +685,7 @@ export const GetActiveWindow = (): HWindow | undefined =>
 /** Show the main window. */
 export const Activate = (): void =>
 {
+    SendNativeIpc("Test", { Bar: "Baz" });
     if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window" && MainWindow)
     {
         ActiveWindow = GetFocusedWindow();

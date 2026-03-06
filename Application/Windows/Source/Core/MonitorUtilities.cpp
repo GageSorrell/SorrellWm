@@ -12,68 +12,74 @@
 #include <Dbt.h>
 #include "Utility.h"
 
-static std::wstring GetFriendlyNameFromDisplayConfig(const std::wstring &deviceName)
+static std::wstring GetFriendlyNameFromDisplayConfig(const std::wstring &DeviceName)
 {
-    // 1. Get buffer sizes for the active display paths.
-    UINT32 numPathArrayElements = 0;
-    UINT32 numModeInfoArrayElements = 0;
-    LONG status = GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS,
-                                              &numPathArrayElements,
-                                              &numModeInfoArrayElements);
-    if (status != ERROR_SUCCESS)
+    /* 1. Get buffer sizes for the active display paths. */
+    UINT32 NumPathArrayElements = 0;
+    UINT32 NumModeInfoArrayElements = 0;
+    LONG Status = GetDisplayConfigBufferSizes(
+        QDC_ONLY_ACTIVE_PATHS,
+        &NumPathArrayElements,
+        &NumModeInfoArrayElements
+    );
+
+    if (Status != ERROR_SUCCESS)
     {
         return L"";
     }
 
-    // 2. Allocate arrays to hold path and mode info.
-    std::vector<DISPLAYCONFIG_PATH_INFO> pathInfoArray(numPathArrayElements);
-    std::vector<DISPLAYCONFIG_MODE_INFO> modeInfoArray(numModeInfoArrayElements);
+    /* 2. Allocate arrays to hold path and mode info. */
+    std::vector<DISPLAYCONFIG_PATH_INFO> PathInfoArray(NumPathArrayElements);
+    std::vector<DISPLAYCONFIG_MODE_INFO> ModeInfoArray(NumModeInfoArrayElements);
 
-    // 3. Query active paths.
-    status = QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS,
-                                &numPathArrayElements,
-                                pathInfoArray.data(),
-                                &numModeInfoArrayElements,
-                                modeInfoArray.data(),
-                                nullptr);
-    if (status != ERROR_SUCCESS)
+    /* 3. Query active paths. */
+    Status = QueryDisplayConfig(
+        QDC_ONLY_ACTIVE_PATHS,
+        &NumPathArrayElements,
+        PathInfoArray.data(),
+        &NumModeInfoArrayElements,
+        ModeInfoArray.data(),
+        nullptr
+    );
+
+    if (Status != ERROR_SUCCESS)
     {
         return L"";
     }
 
-    // 4. Scan each path to find one whose GDI device name (wide) matches deviceName.
-    for (UINT32 i = 0; i < numPathArrayElements; i++)
+    /* 4. Scan each path to find one whose GDI device name (wide) matches DeviceName. */
+    for (UINT32 i = 0; i < NumPathArrayElements; i++)
     {
-        DISPLAYCONFIG_SOURCE_DEVICE_NAME sourceName;
-        ZeroMemory(&sourceName, sizeof(sourceName));
-        sourceName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
-        sourceName.header.size = sizeof(sourceName);
-        sourceName.header.adapterId = pathInfoArray[i].sourceInfo.adapterId;
-        sourceName.header.id = pathInfoArray[i].sourceInfo.id;
+        DISPLAYCONFIG_SOURCE_DEVICE_NAME SourceName;
+        ZeroMemory(&SourceName, sizeof(SourceName));
+        SourceName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+        SourceName.header.size = sizeof(SourceName);
+        SourceName.header.adapterId = PathInfoArray[i].sourceInfo.adapterId;
+        SourceName.header.id = PathInfoArray[i].sourceInfo.id;
 
-        if (DisplayConfigGetDeviceInfo(&sourceName.header) == ERROR_SUCCESS)
+        if (DisplayConfigGetDeviceInfo(&SourceName.header) == ERROR_SUCCESS)
         {
-            // Compare (case-insensitive) the device names: sourceName.viewGdiDeviceName vs deviceName
-            if (_wcsicmp(sourceName.viewGdiDeviceName, deviceName.c_str()) == 0)
+            /* Compare (case-insensitive) the device names: `SourceName.viewGdiDeviceName` *vs* `DeviceName`. */
+            if (_wcsicmp(SourceName.viewGdiDeviceName, DeviceName.c_str()) == 0)
             {
-                // 5. Retrieve the target's friendly name.
-                DISPLAYCONFIG_TARGET_DEVICE_NAME targetName;
-                ZeroMemory(&targetName, sizeof(targetName));
-                targetName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
-                targetName.header.size = sizeof(targetName);
-                targetName.header.adapterId = pathInfoArray[i].targetInfo.adapterId;
-                targetName.header.id = pathInfoArray[i].targetInfo.id;
+                /* 5. Retrieve the target's friendly name. */
+                DISPLAYCONFIG_TARGET_DEVICE_NAME TargetName;
+                ZeroMemory(&TargetName, sizeof(TargetName));
+                TargetName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
+                TargetName.header.size = sizeof(TargetName);
+                TargetName.header.adapterId = PathInfoArray[i].targetInfo.adapterId;
+                TargetName.header.id = PathInfoArray[i].targetInfo.id;
 
-                if (DisplayConfigGetDeviceInfo(&targetName.header) == ERROR_SUCCESS)
+                if (DisplayConfigGetDeviceInfo(&TargetName.header) == ERROR_SUCCESS)
                 {
-                    // The monitor's human-readable name is in monitorFriendlyDeviceName (wide chars).
-                    return targetName.monitorFriendlyDeviceName;
+                    /* The monitor's human-readable name is in monitorFriendlyDeviceName (wide chars). */
+                    return TargetName.monitorFriendlyDeviceName;
                 }
             }
         }
     }
 
-    // Nothing found, or no match
+    /* Nothing found, or no match. */
     return L"";
 }
 

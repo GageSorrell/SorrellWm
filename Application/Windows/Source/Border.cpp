@@ -100,60 +100,34 @@ static LRESULT CALLBACK OverlayWindowProcedure(
         }
         case WM_ERASEBKGND:
         {
-            /* We paint the whole region in WM_PAINT. */
             return 1;
         }
         case WM_PAINT:
         {
-            // PAINTSTRUCT PaintStruct{};
-            // HDC DeviceContext = BeginPaint(WindowHandle, &PaintStruct);
             HWND Target = nullptr;
             for (auto Border : BorderMap)
             {
                 if (Border.second.Overlay == WindowHandle)
                 {
-                    std::cout << "Found match!\n" << std::endl;
                     Target = Border.first;
                 }
             }
-            if (Target == nullptr)
-            {
-                std::cout << "Did NOT find match!" << std::endl;
-            }
-
-
-            // RECT ClientRectangle{};
-            // GetClientRect(WindowHandle, &ClientRectangle);
-
-            // const HBRUSH BrushHandle = CreateSolidBrush(RGB(0, 255, 0));
-            // FillRect(DeviceContext, &ClientRectangle, BrushHandle);
-            // DeleteObject(BrushHandle);
-
-            // EndPaint(WindowHandle, &PaintStruct);
-            // return 0;
 
             PAINTSTRUCT PaintStruct{};
             HDC DeviceContext = BeginPaint(WindowHandle, &PaintStruct);
 
-            COLORREF FocusedColor = RGB(0, 255, 0);
-            COLORREF BlurredColor = RGB(0, 100, 0);
-
             RECT ClientRectangle{};
             GetClientRect(WindowHandle, &ClientRectangle);
 
-            const COLORREF BorderColor = Target == GetForegroundWindow()
-                ? FocusedColor
-                : BlurredColor;
-
-            std::cout << "Target:\n\t" << Target << "\nForeground Window:\n\t" << GetForegroundWindow() << std::endl;
+            /** @TODO Make this a configurable setting. */
+            const COLORREF BorderColor = RGB(255, 100, 90);
 
             const HBRUSH BrushHandle = CreateSolidBrush(BorderColor);
             FillRect(DeviceContext, &ClientRectangle, BrushHandle);
             DeleteObject(BrushHandle);
 
             EndPaint(WindowHandle, &PaintStruct);
-            return 0;
-
+            return HTTRANSPARENT;
         }
     }
 
@@ -182,11 +156,24 @@ static void StopTrackingWindow(HWND Window)
 
 static void UpdateFocusStateFromForeground(HWND ForegroundWindowHandle)
 {
+    for (auto& [ Window, Border ] : BorderMap)
+    {
+        InvalidateRect(Border.Overlay, nullptr, TRUE);
+        if (Window == GetForegroundWindow())
+        {
+            ShowWindow(Border.Overlay, SW_SHOWNOACTIVATE);
+        }
+        else
+        {
+            ShowWindow(Border.Overlay, SW_HIDE);
+        }
+    }
+
+    return;
     if (!BorderMap.contains(ForegroundWindowHandle))
     {
         for (auto& Border : BorderMap)
         {
-            InvalidateRect(Border.second.Overlay, nullptr, TRUE);
         }
 
         return;
@@ -318,8 +305,6 @@ void CreateBorder(HWND TargetWindowHandle)
     OutBorder.FocusHook = FocusHook;
     BorderMap[TargetWindowHandle] = OutBorder;
 
-    UpdateOverlayToMatchTarget(TargetWindowHandle);
-
     std::cout << "SetBorderColorTest was successful." << std::endl;
 }
 
@@ -337,10 +322,11 @@ Napi::Value InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
     std::vector<HWND> TileableWindows = GetTileableWindows();
     for (HWND Window : TileableWindows)
     {
-        if (!IsTiledWindow(Window))
-        {
-            CreateBorder(Window);
-        }
+        CreateBorder(Window);
+        // if (!IsTiledWindow(Window))
+        // {
+        //     CreateBorder(Window);
+        // }
     }
 
     RETURN_NAPI();

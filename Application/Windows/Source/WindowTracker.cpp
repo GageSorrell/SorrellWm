@@ -15,17 +15,19 @@ Napi::Value UpdateTiledList(const Napi::CallbackInfo& CallbackInfo)
     Napi::Env Environment = CallbackInfo.Env();
 
     TiledWindows.empty();
-    for (const Napi::Value& Window : CallbackInfo[0].As<Napi::Array>())
+    for (auto Window : CallbackInfo[0].As<Napi::Array>())
     {
-        TiledWindows.emplace((HWND) DecodeHandle(Window.As<Napi::Object>()));
+        Napi::Value HandleValue = Window.second;
+        HWND Out = (HWND) DecodeHandle(HandleValue.As<Napi::Object>());
+        TiledWindows.push_back(Out);
     }
 
     RETURN_NAPI();
 }
 
-bool IsWindowTiled(HWND WindowHandle)
+bool IsWindowTiled(HWND Window)
 {
-    return std::find(TiledWindows.begin(), TiledWindows.end(), WindowHandle) != TiledWindows.end();
+    return std::find(TiledWindows.begin(), TiledWindows.end(), Window) != TiledWindows.end();
 }
 
 Napi::Value InitializeWindowTracker(const Napi::CallbackInfo& CallbackInfo)

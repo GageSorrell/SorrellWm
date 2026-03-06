@@ -24,12 +24,13 @@ import {
     useMemo,
     useState } from "react";
 import type { FAction, FActionKey, FKeybinds } from "../Shared/Settings";
-import type { FSimpleCallback, TRecord, TSimpleFunction } from "../Shared/Utility";
+import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility";
 import type { FKeyId } from "../Shared/Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { Identity } from "./Utility";
 import type { TMaybeArray } from "../Shared/Utility";
+import type { TRecord } from "@sorrellwm/windows";
 import { UseSetting } from "./Settings";
 import { UseShortcut } from "./Keybind";
 

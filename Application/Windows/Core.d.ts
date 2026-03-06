@@ -127,3 +127,11 @@ export type FThemeMode =
     | "Indeterminate";
 
 export function InitializeWinEvents(): void;
+
+export type TRecord<
+    KeyType extends PropertyKey = PropertyKey,
+    PropertyType = unknown
+> =
+    Record<KeyType, PropertyType>;
+
+export type FRecord = TRecord;

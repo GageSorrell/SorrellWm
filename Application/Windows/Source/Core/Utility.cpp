@@ -5,10 +5,9 @@
  */
 
 #include "Utility.h"
+#include <utility>
 
-// DECLARE_LOG_CATEGORY(Utility)
-
-std::tm convertToUTC(std::time_t time)
+std::tm ConvertToUTC(std::time_t time)
 {
     std::tm tm_utc;
     #ifdef _WIN32
@@ -42,7 +41,7 @@ std::wstring GetTimestamp()
     std::time_t NowTimeT = std::chrono::system_clock::to_time_t(Now);
     auto NowMs = std::chrono::duration_cast<std::chrono::milliseconds>(Now.time_since_epoch()) % 1000;
 
-    std::tm TmUtc = convertToUTC(NowTimeT);
+    std::tm TmUtc = ConvertToUTC(NowTimeT);
 
     std::wstringstream WideStringStream;
     WideStringStream << std::put_time(&TmUtc, L"%Y-%m-%dT%H:%M:%S");

@@ -10,3 +10,4 @@
 
 DECLARE_NAPI_FUNCTION(InitializeWindowTracker, void)
 DECLARE_NAPI_FUNCTION(UpdateTiledList, void, In, Array<HWindow>)
+bool IsWindowTiled(HWND Window);

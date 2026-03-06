@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { HWindow } from "@sorrellwm/windows";
+import type { FRecord } from "@sorrellwm/windows";
 
 export type TIsNonNegativeInteger<ArraySize extends number> =
     `${ ArraySize }` extends `-${ string }`
@@ -60,14 +60,6 @@ export type TIntegralRange<
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type FAnyFunction = (...Arguments: any) => any;
-
-export type TRecord<
-    KeyType extends PropertyKey = PropertyKey,
-    PropertyType = unknown
-> =
-    Record<KeyType, PropertyType>;
-
-export type FRecord = TRecord;
 
 export type TRecordNonNullable<RecordType extends FRecord> =
 {

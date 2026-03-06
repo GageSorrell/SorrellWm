@@ -23,6 +23,7 @@ setTimeout((): void =>
     import("./Tray");
     import("../WinEvent");
     import("../BorderManager");
+    import("../WindowTracker");
     import("../Development/SetupPrimaryMonitor");
 
     // Require("../Source/Main/Core/Initialization.ts");
