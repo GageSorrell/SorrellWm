@@ -7,7 +7,7 @@ FMessageLoop::FMessageLoop(Napi::Function OkCallback)
     , TDispatcher<MSG>()
 { }
 
-std::vector<FWindowProc> FMessageLoop::WindowProcs;
+TArray<FWindowProc> FMessageLoop::WindowProcs;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

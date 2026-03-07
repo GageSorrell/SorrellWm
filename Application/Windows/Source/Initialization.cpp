@@ -37,16 +37,16 @@
 /* BEGIN AUTO-GENERATED REGION: INCLUDES. */
 /* END AUTO-GENERATED REGION.             */
 
-Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
-{
-    Napi::Env Environment = Information.Env();
+// Napi::Value InitializeIpc(const Napi::CallbackInfo& Information)
+// {
+//     Napi::Env Environment = Information.Env();
 
-    Napi::Function Callback = Information[0].As<Napi::Function>();
+//     Napi::Function Callback = Information[0].As<Napi::Function>();
 
-    GGlobals::Ipc = new FIpc(Environment, Callback);
+//     GGlobals::Ipc = new FIpc(Environment, Callback);
 
-    RETURN_NAPI();
-}
+//     return;
+// }
 
 void HooksExitCleanup(void* _)
 {

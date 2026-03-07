@@ -38,7 +38,7 @@ template <typename THandle>
 std::string HandleToString(THandle Handle);
 
 template <typename T>
-Napi::Array EncodeArray(const Napi::Env& Environment, std::vector<T> Vector, std::function<Napi::Object(const Napi::Env&, T)> MapFunction)
+Napi::Array EncodeArray(const Napi::Env& Environment, TArray<T> Vector, std::function<Napi::Object(const Napi::Env&, T)> MapFunction)
 {
     Napi::Array OutArray = Napi::Array::New(Environment);
 
@@ -72,7 +72,7 @@ struct FBox
 FBox GetBoxArgument(const Napi::CallbackInfo& CallbackInfo, int32_t Index);
 
 template <typename ElementType, typename PredicateType>
-bool RemoveFirstIf(std::vector<ElementType>& Elements, PredicateType Predicate)
+bool RemoveFirstIf(TArray<ElementType>& Elements, PredicateType Predicate)
 {
     const auto Iterator = std::find_if(Elements.begin(), Elements.end(), Predicate);
     if (Iterator == Elements.end())
@@ -84,10 +84,10 @@ bool RemoveFirstIf(std::vector<ElementType>& Elements, PredicateType Predicate)
     return true;
 }
 
-template <typename TKey, typename TValue, typename THash, typename TKeyEqual, typename TAllocator, typename TPredicate>
+template <typename KeyType, typename ValueType, typename HashType, typename KeyEqualType, typename AllocatorType, typename PredicateType>
 bool RemoveFirstIfMap(
-    std::unordered_map<TKey, TValue, THash, TKeyEqual, TAllocator>& Map,
-    TPredicate Predicate
+    TMap<KeyType, ValueType, HashType, KeyEqualType, AllocatorType>& Map,
+    PredicateType Predicate
 )
 {
     for (auto Iterator = Map.begin(); Iterator != Map.end(); ++Iterator)

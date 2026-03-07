@@ -29,8 +29,8 @@ static std::wstring GetFriendlyNameFromDisplayConfig(const std::wstring &DeviceN
     }
 
     /* 2. Allocate arrays to hold path and mode info. */
-    std::vector<DISPLAYCONFIG_PATH_INFO> PathInfoArray(NumPathArrayElements);
-    std::vector<DISPLAYCONFIG_MODE_INFO> ModeInfoArray(NumModeInfoArrayElements);
+    TArray<DISPLAYCONFIG_PATH_INFO> PathInfoArray(NumPathArrayElements);
+    TArray<DISPLAYCONFIG_MODE_INFO> ModeInfoArray(NumModeInfoArrayElements);
 
     /* 3. Query active paths. */
     Status = QueryDisplayConfig(
@@ -163,7 +163,7 @@ struct FMonitorInfo
 
 BOOL CALLBACK MonitorEnumProc(HMONITOR HMonitor, HDC HDCMonitor, LPRECT LprcMonitor, LPARAM LParam)
 {
-    std::vector<FMonitorInfo>& Monitors = *reinterpret_cast<std::vector<FMonitorInfo>*>(LParam);
+    TArray<FMonitorInfo>& Monitors = *reinterpret_cast<TArray<FMonitorInfo>*>(LParam);
 
     MONITORINFOEX InfoEx = { };
     InfoEx.cbSize = sizeof(InfoEx);
@@ -219,7 +219,7 @@ Napi::Value GetMonitors(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    std::vector<FMonitorInfo> Monitors;
+    TArray<FMonitorInfo> Monitors;
     EnumDisplayMonitors(
         NULL,
         NULL,

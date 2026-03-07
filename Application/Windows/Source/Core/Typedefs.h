@@ -26,4 +26,10 @@
 /** Assumes that an `Napi::Env Environment` is defined. */
 #define RETURN_NAPI(...) return NAPI_UNDEFINED
 
+#define NAPI_VOID Napi::Value
+
+#define FString std::string
+#define TArray std::vector
+#define TMap std::unordered_map
+
 typedef std::chrono::milliseconds FTimeDuration;

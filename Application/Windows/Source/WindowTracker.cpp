@@ -7,8 +7,8 @@
 #include "WindowTracker.h"
 #include "Core/WindowUtilities.h"
 
-static std::vector<HWND> TileableWindows;
-static std::vector<HWND> TiledWindows;
+static TArray<HWND> TileableWindows;
+static TArray<HWND> TiledWindows;
 
 Napi::Value UpdateTiledList(const Napi::CallbackInfo& CallbackInfo)
 {
@@ -30,7 +30,7 @@ bool IsWindowTiled(HWND Window)
     return std::find(TiledWindows.begin(), TiledWindows.end(), Window) != TiledWindows.end();
 }
 
-Napi::Value InitializeWindowTracker(const Napi::CallbackInfo& CallbackInfo)
+NAPI_VOID InitializeWindowTracker(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 

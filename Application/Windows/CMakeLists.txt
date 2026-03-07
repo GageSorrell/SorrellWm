@@ -19,7 +19,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 include_directories(${CMAKE_JS_INC})
 
-file(GLOB SOURCE_FILES "Source/**/*.cpp" "Source/**/*.h" "Source/*.cpp" "Source/*.h")
+file(GLOB SOURCE_FILES "Source/**/*.cpp" "Source/**/*.h" "Source/*.cpp" "Source/*.h" "ThirdParty/**/*.cpp" "ThirdParty/**/*.h")
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${CMAKE_JS_SRC})
 
@@ -37,8 +37,3 @@ string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_ADDON_API_DIR})
 add_definitions(-DNAPI_VERSION=4)
-
-# if(MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
-#   # Generate node.lib
-#   execute_process(COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF} /out:${CMAKE_JS_NODELIB_TARGET} ${CMAKE_STATIC_LINKER_FLAGS})
-# endif()

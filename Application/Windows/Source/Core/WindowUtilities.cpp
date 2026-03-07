@@ -658,7 +658,7 @@ Napi::Value CanTile(const Napi::CallbackInfo& CallbackInfo)
 
 BOOL CALLBACK EnumTileableWindowsProc(HWND WindowHandle, LPARAM LParameter)
 {
-    std::vector<HWND>* TileableWindows = reinterpret_cast<std::vector<HWND>*>(LParameter);
+    TArray<HWND>* TileableWindows = reinterpret_cast<TArray<HWND>*>(LParameter);
     if (IsTileableWindow(WindowHandle))
     {
         TileableWindows->push_back(WindowHandle);
@@ -666,9 +666,9 @@ BOOL CALLBACK EnumTileableWindowsProc(HWND WindowHandle, LPARAM LParameter)
     return TRUE;
 }
 
-std::vector<HWND> GetTileableWindows()
+TArray<HWND> GetTileableWindows()
 {
-    std::vector<HWND> TileableWindows;
+    TArray<HWND> TileableWindows;
     EnumWindows(EnumTileableWindowsProc, reinterpret_cast<LPARAM>(&TileableWindows));
     return TileableWindows;
 }
@@ -676,7 +676,7 @@ std::vector<HWND> GetTileableWindows()
 Napi::Value GetTileableWindowsNode(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
-    std::vector<HWND> TileableWindows = GetTileableWindows();
+    TArray<HWND> TileableWindows = GetTileableWindows();
 
     return EncodeArray(Environment, TileableWindows, std::function<Napi::Object(const Napi::Env&, HWND)>(EncodeHandle));
 }
@@ -745,7 +745,7 @@ Napi::Value GetApplicationFriendlyName(const Napi::CallbackInfo& CallbackInfo)
 
     if (VersionInformationSize > 0)
     {
-        std::vector<char> VersionInformationData(VersionInformationSize);
+        TArray<char> VersionInformationData(VersionInformationSize);
         if (GetFileVersionInfoA(ModuleFilePath, 0, VersionInformationSize, VersionInformationData.data()))
         {
             /* The block for "FileDescription" in a typical US-English resource is under: *

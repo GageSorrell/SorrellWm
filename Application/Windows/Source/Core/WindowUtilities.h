@@ -17,7 +17,7 @@
 #include <cmath>
 #include <chrono>
 #include <thread>
-#include "../ThirdParty/Blur.h"
+#include "../../ThirdParty/Blur.h"
 
 // DEFINE_LOG_CATEGORY(Window)
 
@@ -47,7 +47,7 @@ std::string CaptureWindowScreenshot_Internal(HWND hwnd);
 BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);
 HWND GetMainWindow();
-std::vector<HWND> GetTileableWindows();
+TArray<HWND> GetTileableWindows();
 bool IsTileableWindow(HWND WindowHandle);
 bool IsWindowSnapped(HWND WindowHandle);
 void StealFocus(HWND Window);

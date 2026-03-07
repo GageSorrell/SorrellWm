@@ -22,6 +22,7 @@ export function UpdateTiledList(In: Array<HWindow>): void;
 export function GetNotepadHandles(): TArray<HWindow>;
 export function KillNotepadInstances(): void;
 export function SendNativeIpc(Channel: string, Payload: FRecord | undefined): void;
+export function InitializeIpc(OnMessage: ((Channel: string, Message: unknown: undefined): void;
 export function GetMonitors(): TArray<FMonitorInfo>;
 export function InitializeMonitors(): TArray<FMonitorInfo>;
 export function GetMonitorFriendlyName(Handle: HMonitor): string | undefined;

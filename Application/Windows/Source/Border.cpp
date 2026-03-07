@@ -16,7 +16,7 @@ struct FBorder
     HWND Overlay;
 };
 
-typedef std::unordered_map<HWND, FBorder> FBorderMap;
+typedef TMap<HWND, FBorder> FBorderMap;
 
 static FBorderMap BorderMap = FBorderMap();
 static int BorderWidth = 1;
@@ -308,7 +308,7 @@ void CreateBorder(HWND TargetWindowHandle)
     std::cout << "SetBorderColorTest was successful." << std::endl;
 }
 
-Napi::Value InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
+NAPI_VOID InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -319,7 +319,7 @@ Napi::Value InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
 
     RegisterClassExW(&WindowClass);
 
-    std::vector<HWND> TileableWindows = GetTileableWindows();
+    TArray<HWND> TileableWindows = GetTileableWindows();
     for (HWND Window : TileableWindows)
     {
         CreateBorder(Window);

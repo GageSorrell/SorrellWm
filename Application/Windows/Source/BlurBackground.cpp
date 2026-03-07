@@ -11,7 +11,7 @@
 #endif
 
 #include "Core/Utility.h"
-#include "ThirdParty/Blur.h"
+#include "../ThirdParty/Blur.h"
 #include "Core/WinEvent.h"
 #include "Core/WindowUtilities.h"
 #include "Core/Math.h"
@@ -56,8 +56,8 @@ struct FBackdrop
     float MinSigma = 1.f;
     float MaxSigma = 10.f;
     float Sigma = MinSigma;
-    std::vector<BYTE> BlurredScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
-    std::vector<BYTE> ScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
+    TArray<BYTE> BlurredScreenshotData = TArray<BYTE>(3840 * 2160 * 3);
+    TArray<BYTE> ScreenshotData = TArray<BYTE>(3840 * 2160 * 3);
     BYTE* Screenshot = nullptr;
     BYTE* BlurredScreenshot = nullptr;
     bool CalledOnce = false;
@@ -84,8 +84,8 @@ struct FBackdrop
  *   Backdrops can be removed by pointer.
  */
 
-std::vector<FBackdrop> Backdrops;
-std::vector<FBackdrop*> BackdropsBeingUnblurred;
+TArray<FBackdrop> Backdrops;
+TArray<FBackdrop*> BackdropsBeingUnblurred;
 
 FBackdrop* GetBackdrop(HWND WindowHandle)
 {
@@ -897,7 +897,7 @@ FBackdrop* GetBackdropToUnblur()
     return BackdropToUnblur;
 }
 
-Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
+NAPI_VOID UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -935,7 +935,7 @@ Napi::Value UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
     //     << "."
     //     << std::endl;
 
-    return Environment.Undefined();
+    RETURN_NAPI();
 }
 
 std::string GetDerivedThemeMode(double Luminance)
@@ -1113,13 +1113,13 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
     return EncodeHandle(Environment, Backdrop->BackdropHandle);
 }
 
-Napi::Value KillOrphans(const Napi::CallbackInfo& CallbackInfo)
+NAPI_VOID KillOrphans(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
     FBackdrop* BackdropToUnblur = GetBackdropToUnblur();
 
-    BackdropsBeingUnblurred.empty();
+    BackdropsBeingUnblurred.clear();
     for (uint32_t Index = 0; Index < Backdrops.size(); Index++)
     {
         FBackdrop* Orphan = &Backdrops[Index];
@@ -1147,5 +1147,5 @@ Napi::Value KillOrphans(const Napi::CallbackInfo& CallbackInfo)
         );
     }
 
-    return Environment.Undefined();
+    RETURN_NAPI();
 }

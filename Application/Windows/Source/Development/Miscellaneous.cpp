@@ -114,8 +114,8 @@ BOOL CALLBACK EnumerationCallback(HWND WindowHandle, LPARAM lParam)
 
     if (std::string(ClassName) == "Notepad")
     {
-        std::vector<HWND> *Handles =
-            reinterpret_cast<std::vector<HWND>*>(lParam);
+        TArray<HWND> *Handles =
+            reinterpret_cast<TArray<HWND>*>(lParam);
         Handles->push_back(WindowHandle);
     }
 
@@ -126,7 +126,7 @@ Napi::Value GetNotepadHandles(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    std::vector<HWND> WindowHandles;
+    TArray<HWND> WindowHandles;
     EnumWindows(EnumerationCallback, reinterpret_cast<LPARAM>(&WindowHandles));
 
     std::function<Napi::Object(const Napi::Env &, HWND)> MapFunction([](const Napi::Env& InEnvironment, HWND Handle) -> Napi::Object

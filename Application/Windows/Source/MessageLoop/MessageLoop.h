@@ -34,6 +34,6 @@ public:
     /** This must be overridden so that `AsyncProgressQueueWorker` can be extended, but we don't use it. */
     virtual void OnProgress(const int* _Data, size_t Count) override;
 
-    static std::vector<FWindowProc> WindowProcs;
+    static TArray<FWindowProc> WindowProcs;
 };
 

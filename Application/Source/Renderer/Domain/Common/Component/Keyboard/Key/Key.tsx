@@ -858,9 +858,9 @@ export const Key = ({ KeyId }: PKey): ReactElement =>
         };
     }, [ KeyId ]);
 
-    const maxWidth: string | undefined = KeyId.length === 1
-        ? "2rem"
-        : undefined;
+    // const maxWidth: string | undefined = KeyId.length === 1
+    //     ? "2rem"
+    //     : undefined;
 
     const RootStyle: CSSProperties = useMemo((): CSSProperties =>
     {
@@ -874,10 +874,11 @@ export const Key = ({ KeyId }: PKey): ReactElement =>
             height: "2rem",
             justifyContent: "center",
             maxHeight: "2rem",
-            maxWidth,
+            maxWidth: "2rem",
+            minHeight: "2rem",
             minWidth: "2rem"
         };
-    }, [ maxWidth ]);
+    }, [ ]);
 
     return (
         <div style={ RootStyle }>

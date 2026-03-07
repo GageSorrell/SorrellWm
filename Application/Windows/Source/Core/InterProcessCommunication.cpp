@@ -7,22 +7,23 @@
 #include "InterProcessCommunication.h"
 #include "Math.h"
 #include "Utility.h"
+#include "Globals.h"
 
 FIpc::FIpc(Napi::Env Environment, Napi::Function InCallback) : Environment(Environment)
 {
-    Callback = Napi::Persistent(InCallback);
+    OnMessage = Napi::Persistent(InCallback);
 }
 
-void FIpc::Send(const std::string& Channel, const Napi::Value& Message)
+void FIpc::Send(const FString& Channel, const Napi::Value& Payload)
 {
     Napi::HandleScope Scope(Environment);
-    Callback.Call({ Napi::String::New(Environment, Channel), Message });
+    OnMessage.Call({ Napi::String::New(Environment, Channel), Payload });
 }
 
-void FIpc::Send(const std::string& Channel)
+void FIpc::Send(const FString& Channel)
 {
     Napi::HandleScope Scope(Environment);
-    Callback.Call({ Napi::String::New(Environment, Channel) });
+    OnMessage.Call({ Napi::String::New(Environment, Channel) });
 }
 
 Napi::Env FIpc::Env() const
@@ -30,61 +31,95 @@ Napi::Env FIpc::Env() const
     return Environment;
 }
 
-int FIpc::Bind(const std::string& Channel, const FIpcCallback& Callback)
+void FIpc::Unbind(const FDelegateHandle& Handle)
 {
-    const int Id = GetRandomNumber<int>();
-    BoundFunctions[Channel][Id] = Callback;
-    return Id;
-}
-
-void FIpc::Unbind(int Id)
-{
-    for (auto& [ Channel, IdCallbackMap ] : BoundFunctions)
+    for (auto& [ Channel, Wrappers ] : BoundFunctions)
     {
-        auto MatchesId = [Id](const auto& IdCallbackPair) -> bool
-        {
-            return IdCallbackPair.first == Id;
-        };
+        const bool bFound = RemoveFirstIf(
+            Wrappers,
+            [&](const FCallbackWrapper& Wrapper) -> bool
+            {
+                return Wrapper.Handle == Handle;
+            }
+        );
 
-        const bool bFoundMatch = RemoveFirstIfMap(IdCallbackMap, MatchesId);
-        if (bFoundMatch)
+        if (bFound)
         {
-            return;
+            break;
         }
     }
 }
 
-void FIpc::Broadcast(
-    const std::string& InChannel,
-    const Napi::Env& InEnvironment,
-    const Napi::Value& Payload
-)
+FIpc::FCallbackWrapper::FCallbackWrapper(bool bInCallOnce, const FIpcCallback& InCallback)
+    : bCallOnce(bInCallOnce)
+    , Callback(InCallback)
 {
-    for (const auto& [ Channel, IdCallbackMap ] : BoundFunctions)
+    Handle = FDelegateHandle(GetRandomNumber<int>());
+}
+
+FDelegateHandle FIpc::Bind(const FString& Channel, const FIpcCallback& Callback)
+{
+    return BindBase(Channel, Callback, false);
+}
+
+FDelegateHandle FIpc::BindOnce(const FString& Channel, const FIpcCallback& Callback)
+{
+    return BindBase(Channel, Callback, true);
+}
+
+FDelegateHandle FIpc::BindBase(const FString& Channel, const FIpcCallback& Callback, bool bCallOnce)
+{
+    FCallbackWrapper Wrapper(bCallOnce, Callback);
+    BoundFunctions[Channel].push_back(Wrapper);
+    return Wrapper.Handle;
+}
+
+void FIpc::Broadcast(const FString& Channel, const Napi::Value& Payload)
+{
+    TArray<FDelegateHandle> HandlesToRemove;
+
+    for (const auto& [ BoundChannel, CallbackWrappers ] : BoundFunctions)
     {
-        if (InChannel == Channel)
+        if (Channel == BoundChannel)
         {
-            for (const auto& [ Id, Callback ] : IdCallbackMap)
+            for (const FCallbackWrapper& Wrapper : CallbackWrappers)
             {
-                Callback(InEnvironment, Payload);
+                Wrapper.Callback(Environment, Payload);
+
+                if (Wrapper.bCallOnce)
+                {
+                    HandlesToRemove.push_back(Wrapper.Handle);
+                }
             }
         }
     }
+
+    for (const FDelegateHandle& Handle : HandlesToRemove)
+    {
+        Unbind(Handle);
+    }
 }
 
-Napi::Value SendNativeIpc(const Napi::CallbackInfo& Information)
+NAPI_VOID SendNativeIpc(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    FString Channel = CallbackInfo[0].As<Napi::String>();
+    const Napi::Value& Payload = (CallbackInfo.Length() == 1)
+        ? Environment.Undefined()
+        : CallbackInfo[1];
+
+    GGlobals::Ipc->Broadcast(Channel, Payload);
+
+    RETURN_NAPI();
+}
+
+NAPI_VOID InitializeIpc(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
 
-    std::string Channel = Information[0].As<Napi::String>();
-    if (Information.Length() == 1)
-    {
-        GGlobals::Ipc->Broadcast(Channel, Environment, Environment.Undefined());
-    }
-    else
-    {
-        GGlobals::Ipc->Broadcast(Channel, Environment, Information[1]);
-    }
+    Napi::Function OnMessage = Information[0].As<Napi::Function>();
+    GGlobals::Ipc = new FIpc(Environment, OnMessage);
 
     RETURN_NAPI();
 }

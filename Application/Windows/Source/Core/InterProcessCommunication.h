@@ -10,32 +10,70 @@
 #include <iostream>
 
 DECLARE_NAPI_FUNCTION(SendNativeIpc, void, Channel, string, Payload, FRecord | undefined);
+DECLARE_NAPI_FUNCTION(InitializeIpc, void, OnMessage, ((Channel: string, Message: unknown) => void));
+
+struct FDelegateHandle
+{
+public:
+    FDelegateHandle(int HandleId) : Id(HandleId) { }
+    FDelegateHandle() : Id(0) { }
+
+    operator int() const
+    {
+        return Id;
+    }
+
+    operator bool() const
+    {
+        return Id == 0;
+    }
+
+    bool operator ==(const FDelegateHandle& Other) const
+    {
+        return Get() == Other.Get();
+    }
+
+    int Get() const
+    {
+        return Id;
+    }
+private:
+    int Id;
+};
 
 typedef std::function<void (const Napi::Env&, const Napi::Value&)> FIpcCallback;
-typedef std::unordered_map<int, FIpcCallback> FIpcCallbacks;
-typedef std::unordered_map<std::string, FIpcCallbacks> FBoundFunctions;
 
-/**
- * @TODO 3/5/26 8PM: Extend this class via a function exposed to Node that allows main
- * to *send* events to C++, and extend this class to act as a basic event emitter,
- * such that functions can be passed to this class, and be called when main sends
- * an event of the channel associated with that function.
- */
 class FIpc
 {
 public:
-    FIpc(Napi::Env Environment, Napi::Function InCallback);
+    FIpc(Napi::Env Environment, Napi::Function InOnMessage);
 
-    int Bind(const std::string& Channel, const FIpcCallback& Callback);
-    void Unbind(int Id);
-    void Broadcast(const std::string& Channel, const Napi::Env& InEnvironment, const Napi::Value& Payload);
+    struct FCallbackWrapper
+    {
+        FCallbackWrapper(bool bInCallOnce, const FIpcCallback& InCallback);
 
-    void Send(const std::string& Channel, const Napi::Value& Message);
-    void Send(const std::string& Channel);
+        bool bCallOnce;
+        FIpcCallback Callback;
+        FDelegateHandle Handle;
+    };
+
+    typedef TMap<FString, TArray<FCallbackWrapper>> FBoundFunctions;
+
+    void Send(const FString& Channel, const Napi::Value& Payload);
+    void Send(const FString& Channel);
+
+    FDelegateHandle Bind(const FString& Channel, const FIpcCallback& Callback);
+    FDelegateHandle BindOnce(const FString& Channel, const FIpcCallback& Callback);
+    void Unbind(const FDelegateHandle& Handle);
+
+    bool IsBound(const FDelegateHandle& Handle) const;
 
     Napi::Env Env() const;
+
+    void Broadcast(const FString& Channel, const Napi::Value& Payload);
 private:
-    Napi::FunctionReference Callback;
+    Napi::FunctionReference OnMessage;
     Napi::Env Environment = NULL;
     FBoundFunctions BoundFunctions;
+    FDelegateHandle BindBase(const FString& Channel, const FIpcCallback& Callback, bool bCallOnce);
 };
