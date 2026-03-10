@@ -10,7 +10,8 @@
 #include <iostream>
 
 DECLARE_NAPI_FUNCTION(SendNativeIpc, void, Channel, string, Payload, FRecord | undefined);
-DECLARE_NAPI_FUNCTION(InitializeIpc, void, OnMessage, ((Channel: string, Message: unknown) => void));
+DECLARE_NAPI_FUNCTION(InitializeIpc, void, OnMessage, FOnIpcMessage);
+DECLARE_NAPI_FUNCTION(TestIpc, void);
 
 struct FDelegateHandle
 {
@@ -57,7 +58,7 @@ public:
         FDelegateHandle Handle;
     };
 
-    typedef TMap<FString, TArray<FCallbackWrapper>> FBoundFunctions;
+    typedef TMap<FString, std::vector<FCallbackWrapper>> FBoundFunctions;
 
     void Send(const FString& Channel, const Napi::Value& Payload);
     void Send(const FString& Channel);

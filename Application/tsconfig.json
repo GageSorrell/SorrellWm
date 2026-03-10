@@ -10,9 +10,6 @@
       ],
       "$/*": [
         "./Source/Renderer/Domain/*"
-      ],
-      "()/*": [
-        "./Source/Shared/*"
       ]
     },
     "incremental": true,

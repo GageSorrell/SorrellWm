@@ -1,3 +1,9 @@
+/* File:      MessageLoop.h
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2026 Gage Sorrell
+ * License:   MIT
+ */
+
 #pragma once
 
 #include "../Core/Core.h"
@@ -34,6 +40,6 @@ public:
     /** This must be overridden so that `AsyncProgressQueueWorker` can be extended, but we don't use it. */
     virtual void OnProgress(const int* _Data, size_t Count) override;
 
-    static TArray<FWindowProc> WindowProcs;
+    static std::vector<FWindowProc> WindowProcs;
 };
 

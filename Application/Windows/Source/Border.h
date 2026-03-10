@@ -8,4 +8,4 @@
 
 #include "Core/Core.h"
 
-DECLARE_NAPI_FUNCTION(InitializeBorderManager, void)
+DECLARE_NAPI_FUNCTION(InitializeBorderManager, void);

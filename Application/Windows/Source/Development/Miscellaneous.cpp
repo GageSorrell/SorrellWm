@@ -42,7 +42,7 @@ HWND FindMainWindowHandle(DWORD processIdentifier)
     return data.MainWindowHandle;
 }
 
-Napi::Value KillNotepadInstances(const Napi::CallbackInfo& CallbackInfo)
+void KillNotepadInstances(const Napi::CallbackInfo& CallbackInfo)
 {
     // HANDLE ProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     // if(ProcessSnapshot == INVALID_HANDLE_VALUE)
@@ -80,7 +80,7 @@ Napi::Value KillNotepadInstances(const Napi::CallbackInfo& CallbackInfo)
     HANDLE SnapshotHandle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (SnapshotHandle == INVALID_HANDLE_VALUE)
     {
-        return CallbackInfo.Env().Undefined();
+        return;
     }
 
     PROCESSENTRY32 ProcessEntry = { 0 };
@@ -103,8 +103,6 @@ Napi::Value KillNotepadInstances(const Napi::CallbackInfo& CallbackInfo)
     }
 
     CloseHandle(SnapshotHandle);
-
-    return CallbackInfo.Env().Undefined();
 }
 
 BOOL CALLBACK EnumerationCallback(HWND WindowHandle, LPARAM lParam)
@@ -114,8 +112,8 @@ BOOL CALLBACK EnumerationCallback(HWND WindowHandle, LPARAM lParam)
 
     if (std::string(ClassName) == "Notepad")
     {
-        TArray<HWND> *Handles =
-            reinterpret_cast<TArray<HWND>*>(lParam);
+        std::vector<HWND> *Handles =
+            reinterpret_cast<std::vector<HWND>*>(lParam);
         Handles->push_back(WindowHandle);
     }
 
@@ -126,7 +124,7 @@ Napi::Value GetNotepadHandles(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
-    TArray<HWND> WindowHandles;
+    std::vector<HWND> WindowHandles;
     EnumWindows(EnumerationCallback, reinterpret_cast<LPARAM>(&WindowHandles));
 
     std::function<Napi::Object(const Napi::Env &, HWND)> MapFunction([](const Napi::Env& InEnvironment, HWND Handle) -> Napi::Object

@@ -30,7 +30,8 @@ export const AppendDependencyList = (
 export const GetFlexStyle = (
     Direction: NonNullable<CSSProperties["flexDirection"]>,
     JustifyContent: NonNullable<CSSProperties["justifyContent"]>,
-    AlignItems: NonNullable<CSSProperties["alignItems"]>
+    AlignItems: NonNullable<CSSProperties["alignItems"]>,
+    Rest: CSSProperties = { }
 
 ): FFlexStyle =>
 {
@@ -38,7 +39,8 @@ export const GetFlexStyle = (
         alignItems: AlignItems,
         display: "flex",
         flexDirection: Direction,
-        justifyContent: JustifyContent
+        justifyContent: JustifyContent,
+        ...Rest
     };
 };
 

@@ -23,4 +23,3 @@ namespace Napi
 {
     class Value;
 }
-

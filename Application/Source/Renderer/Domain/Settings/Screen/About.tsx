@@ -5,12 +5,13 @@
  */
 
 import type { ReactElement } from "react";
+import { SettingsScreen } from "./SettingsScreen";
 
 export const About = (): ReactElement =>
 {
     return (
-        <div style={ { height: "100%", width: "100%" } }>
+        <SettingsScreen Title="About">
             About Screen
-        </div>
+        </SettingsScreen>
     );
 };

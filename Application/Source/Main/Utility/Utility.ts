@@ -4,7 +4,7 @@
  */
 
 import type { FBox } from "@sorrellwm/windows";
-import type { FLogger } from "()/Log.Types";
+import type { FLogger } from "../../Shared/Log.Types";
 import { promises as Fs } from "fs";
 import { GetLogger } from "#/Development";
 import type { HHandle } from "./Utility.Types";

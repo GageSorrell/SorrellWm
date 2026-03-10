@@ -27,9 +27,7 @@ import {
     type FVector2D,
     GetDwmWindowRect,
     GetFocusedWindow,
-    GetIsLightMode,
     GetMonitorFromWindow,
-    GetThemeColor,
     GetTileableWindows,
     GetWindowShape,
     GetWindowTitle,
@@ -37,27 +35,30 @@ import {
     type HWindow,
     SendNativeIpc,
     SetWindowPosition,
+    TestIpc,
     UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
-import { type BrowserWindow, type BrowserWindowConstructorOptions, app, ipcMain, screen } from "electron";
-import { CreateBrowserWindow, RegisterBrowserWindowElectronEvents } from "./BrowserWindow.Old";
+import { type BrowserWindow, type BrowserWindowConstructorOptions, ipcMain, screen } from "electron";
 import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
-import type { FFocusData, FFocusDataBase } from "()/Event/Focus.Types";
-import type { FIpcChannel, TEventCallback } from "()/Event";
+import type { FFocusData, FFocusDataBase } from "../Shared/Event/Focus.Types";
+import type { FIpcChannel, TEventCallback } from "../Shared/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
-import { PoorEventSuccess, RegisterIpcCallback, SendIpcEvent } from "./Event";
+import { PoorEventSuccess, RegisterIpcCallbacks, SendIpcEvent } from "./Event";
+import { CreateBrowserWindow } from "./BrowserWindow";
 import { DefaultSettings } from "../Shared/Settings";
-import type { FBrowserWindowElectronEvents } from "./BrowserWindow.Types.Old";
 import type { FDevSettings } from "./DevSettings.Types";
-import type { FInsertableWindowData } from "()/Event/Insert.Types";
+import type { FInsertableWindowData } from "../Shared/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
-import type { FNavigateRequest } from "()/Event/Navigate.Types";
-import type { FTranslation } from "()/Event/Move.Types";
-import type { FVirtualKey } from "()/Keyboard.Types";
+import type { FNavigateRequest } from "../Shared/Event/Navigate.Types";
+import type { FTranslation } from "../Shared/Event/Move.Types";
+import type { FVirtualKey } from "../Shared/Keyboard.Types";
 import { GetDevSettings } from "./DevSettings";
 import { GetMonitors } from "./Monitor";
 import { GetPngBase64 } from "./Utility";
 import { Keyboard } from "./Keyboard";
+import { RegisterCommonIpcCallbacks } from "./CommonEvents";
+import { RegisterInitializationFunction } from "./Core/Initialize";
+import type { TIpcCallback } from "./Event.Types";
 import { Vk } from "$/Common/Component/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
@@ -199,18 +200,7 @@ const On = (
 //     });
 // };
 
-const MainBrowserElectronEvents: FBrowserWindowElectronEvents =
-{
-    show: async (_Event: Electron.Event, _IsAlwaysOnTop: boolean): Promise<void> =>
-    {
-        // if (MainWindow)
-        // {
-        //     SendIpcEvent(MainWindow, "Navigate", { Route: "Main", State: { IsTiled: false } });
-        // }
-    }
-};
-
-const LaunchMainWindow = async (): Promise<void> =>
+RegisterInitializationFunction(async (): Promise<void> =>
 {
     const ConstructorOptions: BrowserWindowConstructorOptions =
     {
@@ -260,295 +250,250 @@ const LaunchMainWindow = async (): Promise<void> =>
      */
 
     /** @TODO Find better place for this. */
-    RegisterIpcCallback(
-        MainWindow,
-        "GetFocusData",
-        async (): ReturnType<TEventCallback<"GetFocusData">> =>
+    const IpcCallbacks: Array<TIpcCallback> =
+    [
         {
-            const CurrentPanel: FPanel | undefined = GetCurrentPanel();
-            let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
-            if (FocusedVertex === undefined)
+            Callback: async (): ReturnType<TEventCallback<"GetFocusData">> =>
             {
-                SetInterimFocusedVertexToActive();
-                FocusedVertex = GetInterimFocusedVertex();
-            }
-
-            if (FocusedVertex === undefined)
-            {
-                /* eslint-disable-next-line @stylistic/max-len */
-                Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
-                return {
-                    Data: undefined,
-                    Error: "FocusedVertexUndefined"
-                };
-            }
-
-            if (CurrentPanel === undefined)
-            {
-                Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
-                return {
-                    Data: undefined,
-                    Error: "CurrentPanelUndefined"
-                };
-            }
-            // if (CurrentPanel === undefined || FocusedVertex === undefined)
-            // {
-            /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
-            //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
-            //     return;
-            // }
-
-            const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
-            const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
-            const CanStepUp: boolean = ParentPanel !== undefined;
-            const CanStepDown: boolean = IsPanel(FocusedVertex);
-            const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
-
-            const DataBase: FFocusDataBase =
-            {
-                CanMoveWithinPanel,
-                CanStepDown,
-                CanStepUp,
-                Direction
-            };
-
-            let Out: FFocusData | undefined = undefined;
-
-            if (IsPanel(FocusedVertex))
-            {
-                const NumVertices: number = FocusedVertex.Children.length;
-
-                Out =
+                const CurrentPanel: FPanel | undefined = GetCurrentPanel();
+                let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+                if (FocusedVertex === undefined)
                 {
-                    ...DataBase,
-                    NumVertices
-                };
-            }
-            else
-            {
-                const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
+                    SetInterimFocusedVertexToActive();
+                    FocusedVertex = GetInterimFocusedVertex();
+                }
 
-                Out =
+                if (FocusedVertex === undefined)
                 {
-                    ...DataBase,
-                    FocusedWindowTitle
+                    /* eslint-disable-next-line @stylistic/max-len */
+                    Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
+                    return {
+                        Data: undefined,
+                        Error: "FocusedVertexUndefined"
+                    };
+                }
+
+                if (CurrentPanel === undefined)
+                {
+                    Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
+                    return {
+                        Data: undefined,
+                        Error: "CurrentPanelUndefined"
+                    };
+                }
+                // if (CurrentPanel === undefined || FocusedVertex === undefined)
+                // {
+                /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
+                //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
+                //     return;
+                // }
+
+                const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
+                const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
+                const CanStepUp: boolean = ParentPanel !== undefined;
+                const CanStepDown: boolean = IsPanel(FocusedVertex);
+                const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
+
+                const DataBase: FFocusDataBase =
+                {
+                    CanMoveWithinPanel,
+                    CanStepDown,
+                    CanStepUp,
+                    Direction
                 };
-            }
 
-            Log("GetFocusData is sending to the frontend:", Out);
+                let Out: FFocusData | undefined = undefined;
 
-            return {
-                Data: Out,
-                Error: undefined
-            };
-        }
-    );
+                if (IsPanel(FocusedVertex))
+                {
+                    const NumVertices: number = FocusedVertex.Children.length;
 
-    RegisterIpcCallback(
-        MainWindow,
-        "GetMonitorFromFocusedWindow",
-        async (): ReturnType<TEventCallback<"GetMonitorFromFocusedWindow">> =>
-        {
-            const ActiveWindow: HWindow | undefined = GetActiveWindow();
-            if (ActiveWindow !== undefined)
-            {
-                const Monitor: HMonitor = GetMonitorFromWindow(ActiveWindow);
+                    Out =
+                    {
+                        ...DataBase,
+                        NumVertices
+                    };
+                }
+                else
+                {
+                    const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
+
+                    Out =
+                    {
+                        ...DataBase,
+                        FocusedWindowTitle
+                    };
+                }
+
+                Log("GetFocusData is sending to the frontend:", Out);
+
                 return {
-                    Data: { Monitor },
+                    Data: Out,
                     Error: undefined
                 };
-            }
-            else
-            {
-                return {
-                    Data: undefined,
-                    Error: "ActiveWindowUndefined"
-                };
-            }
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "MoveFloatingWindow",
-        async (Translation: FTranslation): ReturnType<TEventCallback<"MoveFloatingWindow">> =>
+            },
+            Channel: "GetFocusData"
+        },
         {
-            const ActiveWindow: HWindow | undefined = GetActiveWindow();
-            if (ActiveWindow !== undefined)
+            Callback: async (): ReturnType<TEventCallback<"GetMonitorFromFocusedWindow">> =>
             {
-                const { Height, Width, X, Y }: FBox = GetWindowShape(ActiveWindow);
-                const NewShape: FBox = Translation.Direction === "X"
-                    ? {
-                        Height,
-                        Width,
-                        X: X + Translation.Distance,
-                        Y
-                    }
-                    : {
-                        Height,
-                        Width,
-                        X,
-                        Y: Y + Translation.Distance
-                    };
-
-                const LeftCorner: FVector2D = { X, Y };
-                const RightCorner: FVector2D = { X: X + Width, Y };
-
-                const WouldBeOutOfBounds: boolean = !GetMonitors().some(({ Size }: FMonitorInfo): boolean =>
+                const ActiveWindow: HWindow | undefined = GetActiveWindow();
+                if (ActiveWindow !== undefined)
                 {
-                    const IsPointInBounds = (Point: FVector2D): boolean =>
-                    {
-                        return (
-                            Size.X <= Point.X && Point.X <= Size.X + Size.Width &&
-                            Size.Y <= Point.Y && Point.Y <= Size.Y + Size.Height
-                        );
+                    const Monitor: HMonitor = GetMonitorFromWindow(ActiveWindow);
+                    return {
+                        Data: { Monitor },
+                        Error: undefined
                     };
+                }
+                else
+                {
+                    return {
+                        Data: undefined,
+                        Error: "ActiveWindowUndefined"
+                    };
+                }
+            },
+            Channel: "GetMonitorFromFocusedWindow"
+        },
+        {
+            Callback: async (InTranslation: unknown): ReturnType<TEventCallback<"MoveFloatingWindow">> =>
+            {
+                const Translation: FTranslation = InTranslation as FTranslation;
+                const ActiveWindow: HWindow | undefined = GetActiveWindow();
+                if (ActiveWindow !== undefined)
+                {
+                    const { Height, Width, X, Y }: FBox = GetWindowShape(ActiveWindow);
+                    const NewShape: FBox = Translation.Direction === "X"
+                        ? {
+                            Height,
+                            Width,
+                            X: X + Translation.Distance,
+                            Y
+                        }
+                        : {
+                            Height,
+                            Width,
+                            X,
+                            Y: Y + Translation.Distance
+                        };
 
-                    return IsPointInBounds(LeftCorner) || IsPointInBounds(RightCorner);
-                });
+                    const LeftCorner: FVector2D = { X, Y };
+                    const RightCorner: FVector2D = { X: X + Width, Y };
 
-                if (WouldBeOutOfBounds)
+                    const WouldBeOutOfBounds: boolean =
+                        !GetMonitors().some(({ Size }: FMonitorInfo): boolean =>
+                        {
+                            const IsPointInBounds = (Point: FVector2D): boolean =>
+                            {
+                                return (
+                                    Size.X <= Point.X && Point.X <= Size.X + Size.Width &&
+                                    Size.Y <= Point.Y && Point.Y <= Size.Y + Size.Height
+                                );
+                            };
+
+                            return IsPointInBounds(LeftCorner) || IsPointInBounds(RightCorner);
+                        });
+
+                    if (WouldBeOutOfBounds)
+                    {
+                        return {
+                            Data: undefined,
+                            Error: ""
+                        };
+                    }
+                    else
+                    {
+                        SetWindowPosition(ActiveWindow, NewShape);
+                        return {
+                            Data: undefined,
+                            Error: undefined
+                        };
+                    }
+
+                }
+                else
                 {
                     return {
                         Data: undefined,
                         Error: ""
                     };
                 }
-                else
+            },
+            Channel: "MoveFloatingWindow"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"RequestTearDown">> =>
+            {
+                ActiveWindow = undefined;
+                if (!GetDevSettings().StaticMode.Enabled)
                 {
-                    SetWindowPosition(ActiveWindow, NewShape);
-                    return {
-                        Data: undefined,
-                        Error: undefined
-                    };
+                    Deactivate();
                 }
 
-            }
-            else
+                return PoorEventSuccess();
+            },
+            Channel: "RequestTearDown"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetPanelScreenshots">> =>
+            {
+                const Panels: TArray<FPanel> = GetPanels();
+                const Screenshots: TArray<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
+                    .filter((Value: string | undefined): boolean =>
+                    {
+                        return Value !== undefined;
+                    }) as TArray<string>;
+
+                return {
+                    Data: { Screenshots },
+                    Error: undefined
+                };
+            },
+            Channel: "GetPanelScreenshots"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetAnnotatedPanels">> =>
+            {
+                const Panels: TArray<FPanel> = GetPanels();
+                const AnnotatedPanels: TArray<FAnnotatedPanel> =
+                    (await Promise.all(Panels.map(AnnotatePanel)))
+                        .filter((Value: FAnnotatedPanel | undefined): boolean =>
+                        {
+                            return Value !== undefined;
+                        }) as TArray<FAnnotatedPanel>;
+
+                return {
+                    Data: { AnnotatedPanels },
+                    Error: undefined
+                };
+            },
+            Channel: "GetAnnotatedPanels"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetSettings">> =>
             {
                 return {
-                    Data: undefined,
-                    Error: ""
+                    Data: { Settings: DefaultSettings },
+                    Error: undefined
                 };
-            }
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "NotifyReady",
-        async (): ReturnType<TEventCallback<"NotifyReady">> =>
+            },
+            Channel: "GetSettings"
+        },
         {
-            return PoorEventSuccess();
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "GetThemeColor",
-        async (): ReturnType<TEventCallback<"GetThemeColor">> =>
-        {
-            return {
-                Data:
-                {
-                    ThemeColor: GetThemeColor()
-                },
-                Error: undefined
-            };
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "GetIsLightMode",
-        async (): ReturnType<TEventCallback<"GetIsLightMode">> =>
-        {
-            return {
-                Data:
-                {
-                    IsLightMode: GetIsLightMode()
-                },
-                Error: undefined
-            };
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "RequestTearDown",
-        async (): ReturnType<TEventCallback<"RequestTearDown">> =>
-        {
-            ActiveWindow = undefined;
-            if (!GetDevSettings().StaticMode.Enabled)
+            Callback: async (): ReturnType<TEventCallback<"GetSetting">> =>
             {
-                Deactivate();
-            }
-
-            return PoorEventSuccess();
+                return {
+                    Data: { Setting: 0 },
+                    Error: undefined
+                };
+            },
+            Channel: "GetSetting"
         }
-    );
+    ];
 
-    RegisterIpcCallback(
-        MainWindow,
-        "GetPanelScreenshots",
-        async (): ReturnType<TEventCallback<"GetPanelScreenshots">> =>
-        {
-            const Panels: TArray<FPanel> = GetPanels();
-            const Screenshots: TArray<string> = (await Promise.all(Panels.map(GetPanelScreenshot)))
-                .filter((Value: string | undefined): boolean =>
-                {
-                    return Value !== undefined;
-                }) as TArray<string>;
-
-            return {
-                Data: { Screenshots },
-                Error: undefined
-            };
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "GetAnnotatedPanels",
-        async (): ReturnType<TEventCallback<"GetAnnotatedPanels">> =>
-        {
-            const Panels: TArray<FPanel> = GetPanels();
-            const AnnotatedPanels: TArray<FAnnotatedPanel> = (await Promise.all(Panels.map(AnnotatePanel)))
-                .filter((Value: FAnnotatedPanel | undefined): boolean =>
-                {
-                    return Value !== undefined;
-                }) as TArray<FAnnotatedPanel>;
-
-            return {
-                Data: { AnnotatedPanels },
-                Error: undefined
-            };
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "GetSettings",
-        async (): ReturnType<TEventCallback<"GetSettings">> =>
-        {
-            return {
-                Data: { Settings: DefaultSettings },
-                Error: undefined
-            };
-        }
-    );
-
-    RegisterIpcCallback(
-        MainWindow,
-        "GetSetting",
-        async (): ReturnType<TEventCallback<"GetSetting">> =>
-        {
-            return {
-                Data: { Setting: 0 },
-                Error: undefined
-            };
-        }
-    );
+    RegisterCommonIpcCallbacks(MainWindow);
+    RegisterIpcCallbacks(MainWindow, IpcCallbacks);
 
     On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: TArray<unknown>) =>
     {
@@ -667,12 +612,10 @@ const LaunchMainWindow = async (): Promise<void> =>
         }
     }, 3000);
 
-    RegisterBrowserWindowElectronEvents(Window, MainBrowserElectronEvents);
-
     /** @TODO Run this by flag with `npm start`. */
     // CreateTestWindows();
     // CreateNotepadTestWindows(4);
-};
+});
 
 /** The window(s) that SorrellWm is being drawn over. */
 let ActiveWindow: HWindow | undefined = undefined;
@@ -685,6 +628,7 @@ export const GetActiveWindow = (): HWindow | undefined =>
 /** Show the main window. */
 export const Activate = (): void =>
 {
+    TestIpc();
     SendNativeIpc("Test", { Bar: "Baz" });
     if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window" && MainWindow)
     {
@@ -740,9 +684,5 @@ function OnKey(Event: FKeyboardEvent): void
         MainWindow.webContents.send("Keyboard", Event);
     }
 }
-
-app.whenReady()
-    .then(LaunchMainWindow)
-    .catch(Log);
 
 Keyboard.Subscribe(OnKey);

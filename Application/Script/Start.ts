@@ -86,13 +86,7 @@ const KillChildProcesses = async (): Promise<void> =>
     await new Promise<void>((Resolve: ((Value: void | PromiseLike<void>) => void)) =>
     {
         const TaskKill: ChildProcess = spawn(
-            "taskkill",
-            [
-                "/PID",
-                String(ChildProcessIdentifier),
-                "/T",
-                "/F"
-            ],
+            `taskkill /PID ${ String(ChildProcessIdentifier) } /T /F`,
             {
                 shell: false,
                 stdio: "ignore",
@@ -138,8 +132,7 @@ const Shutdown = async (_SignalName: string): Promise<void> =>
     }
 
     spawn(
-        "npm",
-        [ "run", "kill-electron" ],
+        "npm run kill-electron",
         {
             shell: true,
             stdio: [ "ignore", "pipe", "pipe" ]
@@ -162,8 +155,7 @@ const Start = async (): Promise<void> =>
         RegisterSignalHandlers();
 
         Child = spawn(
-            "npm",
-            [ "run", "start-proper" ],
+            "npm run start-proper",
             {
                 shell: true,
                 stdio: [ "ignore", "pipe", "pipe" ]

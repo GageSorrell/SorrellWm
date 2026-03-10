@@ -5,13 +5,14 @@
  */
 
 import { type BrowserWindow, type Event, Notification, app, shell } from "electron";
-import { CreateBrowserWindow } from "#/BrowserWindow.Old";
-import type { FLogger } from "()/Log.Types";
+import { CreateBrowserWindow } from "#/BrowserWindow";
+import type { FLogger } from "../../Shared/Log.Types";
 import { GetLogger } from "#/Development";
+import { RegisterInitializationFunction } from "./Initialize";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 
-const Log: FLogger = GetLogger("Initialization");
+const Log: FLogger = GetLogger("Electron");
 
 const Initialize = async (): Promise<void> =>
 {
@@ -138,49 +139,47 @@ const Initialize = async (): Promise<void> =>
 app.setAppUserModelId("YourCompany.YourApp");
 app.setToastActivatorCLSID("{12345678-1234-1234-1234-1234567890AB}");
 
-app.whenReady()
-    .then((): void =>
+RegisterInitializationFunction(async (): Promise<void> =>
+{
+    app.on("activate", Initialize);
+    // <image placement="appLogoOverride" src="file:///C:/Temp/Profile.png" hint-crop="circle"/>
+
+    /* eslint-disable @stylistic/max-len */
+    const ToastXml: string = `
+        <toast launch="action=openThread&amp;threadId=42">
+            <visual>
+                <binding template="ToastGeneric">
+                    <text>Andrew Bares</text>
+                    <text>Shall we meet up at 8?</text>
+                </binding>
+            </visual>
+            <actions>
+                <input id="ReplyBox" type="text" placeHolderContent="Type a reply"/>
+                <action
+                    content="Send"
+                    arguments="action=reply&amp;threadId=42"
+                    hint-inputId="ReplyBox"/>
+            </actions>
+        </toast>`;
+    /* eslint-enable @stylistic/max-len */
+
+    const NotificationInstance: Notification = new Notification({ toastXml: ToastXml });
+
+    NotificationInstance.on("click", () =>
     {
-        app.on("activate", Initialize);
-        // <image placement="appLogoOverride" src="file:///C:/Temp/Profile.png" hint-crop="circle"/>
+        Log("Notification clicked");
+    });
 
-        /* eslint-disable @stylistic/max-len */
-        const ToastXml: string = `
-            <toast launch="action=openThread&amp;threadId=42">
-                <visual>
-                    <binding template="ToastGeneric">
-                        <text>Andrew Bares</text>
-                        <text>Shall we meet up at 8?</text>
-                    </binding>
-                </visual>
-                <actions>
-                    <input id="ReplyBox" type="text" placeHolderContent="Type a reply"/>
-                    <action
-                        content="Send"
-                        arguments="action=reply&amp;threadId=42"
-                        hint-inputId="ReplyBox"/>
-                </actions>
-            </toast>`;
-        /* eslint-enable @stylistic/max-len */
+    NotificationInstance.on("reply", (_Event: Event, Reply: string) =>
+    {
+        Log("User reply:", Reply);
+    });
 
-        const NotificationInstance: Notification = new Notification({ toastXml: ToastXml });
+    NotificationInstance.on("failed", (_Event: Event, ErrorMessage: string) =>
+    {
+        Log.Error("Notification failed:", ErrorMessage);
+    });
 
-        NotificationInstance.on("click", () =>
-        {
-            Log("Notification clicked");
-        });
-
-        NotificationInstance.on("reply", (_Event: Event, Reply: string) =>
-        {
-            Log("User reply:", Reply);
-        });
-
-        NotificationInstance.on("failed", (_Event: Event, ErrorMessage: string) =>
-        {
-            Log.Error("Notification failed:", ErrorMessage);
-        });
-
-        NotificationInstance.show();
-    })
-    .catch(Log.Error);
+    NotificationInstance.show();
+});
 

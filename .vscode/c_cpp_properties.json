@@ -2,17 +2,31 @@
     "configurations": [
         {
             "name": "Win32",
-            "includePath": [
-                "${default}"
+            "includePath":
+            [
+                "${workspaceFolder}/Application/Windows/Source/**",
+                "${workspaceFolder}/Application/Windows/ThirdParty/**"
             ],
-            "defines": [
+            "defines":
+            [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
+            "browse":
+            {
+                "path":
+                [
+                    "${workspaceFolder}/Application/Windows/Source/**",
+                    "${workspaceFolder}/Application/Windows/ThirdParty/**",
+                    "${workspaceFolder}/Application/Windows/node_modules/node-addon-api",
+                    "${workspaceFolder}/Application/Windows/node_modules/node-api-headers/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
             "windowsSdkVersion": "10.0.26100.0",
             "compilerPath": "cl.exe",
-            "cStandard": "c17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "windows-msvc-x64"
         }
     ],

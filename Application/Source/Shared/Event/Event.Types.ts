@@ -12,6 +12,7 @@ import type {
     FGetExternalWindowStateErrorCode,
     FGetFloatingWindowStateErrorCode,
     FGetFocusDataErrorCode,
+    FGetIdErrorCode,
     FGetInsertableWindowDataErrorCode,
     FGetIsLightModeErrorCode,
     FGetMonitorFromFocusedWindowErrorCode,
@@ -30,24 +31,28 @@ import type {
     FRequestTearDownErrorCode,
     FRestoreFloatingWindowErrorCode,
     FTearDownErrorCode,
-    FUpdateSettingErrorCode } from "./ErrorCodes.Types";
+    FUpdateSettingsErrorCode } from "./ErrorCodes.Types";
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
-import type { FExternalWindow } from "()/Window/ExternalWindow.Types";
-import type { FFloatingWindow } from "()/Window/FloatingWindow.Types";
+import type { FExternalWindow } from "../Window/ExternalWindow.Types";
+import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FFocusData } from "./Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
 import type { FNavigateRequest } from "./Navigate.Types";
 import type { FSettings } from "../Settings";
 import type { FTranslation } from "./Move.Types";
 
-// @TODO Create proper string unions for the error codes for each event.
 export type FIpcFrontendEvents = TIpcEventsBase<{
     BringIntoPanel: TIpcFrontendEvent<
         FAnnotatedPanel,
         undefined,
         FBringIntoPanelErrorCode
+    >;
+    GetId: TIpcFrontendEvent<
+        undefined,
+        { Id: number | undefined; },
+        FGetIdErrorCode
     >;
     GetMonitorFromFocusedWindow: TIpcFrontendEvent<
         undefined,
@@ -154,10 +159,10 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         FRequestTearDownErrorCode
     >;
-    UpdateSetting: TIpcFrontendEvent<
-        { Setting: keyof FSettings; Value: FSettings[keyof FSettings] },
+    UpdateSettings: TIpcFrontendEvent<
+        FSettings,
         undefined,
-        FUpdateSettingErrorCode
+        FUpdateSettingsErrorCode
     >;
 }>;
 

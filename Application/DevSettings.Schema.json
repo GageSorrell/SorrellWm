@@ -44,7 +44,7 @@
             ],
             "type": "string"
         },
-        "{\"*\":string[];Frontend:string[];Backend:string[];Native:string[];}": {
+        "{\"*\":TArray<string>;Frontend:TArray<string>;Backend:TArray<string>;Native:TArray<string>;}": {
             "properties": {
                 "*": {
                     "items": {
@@ -80,7 +80,7 @@
                 "Category": {
                     "properties": {
                         "DisabledCategories": {
-                            "$ref": "#/definitions/%7B%22*%22%3Astring%5B%5D%3BFrontend%3Astring%5B%5D%3BBackend%3Astring%5B%5D%3BNative%3Astring%5B%5D%3B%7D"
+                            "$ref": "#/definitions/%7B%22*%22%3ATArray%3Cstring%3E%3BFrontend%3ATArray%3Cstring%3E%3BBackend%3ATArray%3Cstring%3E%3BNative%3ATArray%3Cstring%3E%3B%7D"
                         },
                         "LogDisabledCategoryAttempts": {
                             "type": "boolean"
@@ -126,6 +126,23 @@
                         },
                         "TabWidth": {
                             "type": "number"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "SettingsWindow": {
+            "properties": {
+                "ShowOnLaunch": {
+                    "properties": {
+                        "Enabled": {
+                            "const": true,
+                            "type": "boolean"
+                        },
+                        "Position": {
+                            "$ref": "#/definitions/FBox"
                         }
                     },
                     "type": "object"

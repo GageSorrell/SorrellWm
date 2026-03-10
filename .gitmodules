@@ -1,3 +1,0 @@
-[submodule "Application/Windows/ThirdParty/EventEmitter"]
-	path = Application/Windows/ThirdParty/EventEmitter
-	url = https://github.com/heapwolf/cxx-eventemitter.git

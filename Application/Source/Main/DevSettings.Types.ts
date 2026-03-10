@@ -9,6 +9,14 @@ import type { FLogSettings } from "../Shared/Log.Types";
 
 export type FDevSettings = Readonly<{
     Log: FLogSettings;
+    SettingsWindow:
+    {
+        ShowOnLaunch:
+        {
+            Enabled: true;
+            Position: FBox;
+        };
+    };
     StaticMode:
     {
         Enabled: boolean;

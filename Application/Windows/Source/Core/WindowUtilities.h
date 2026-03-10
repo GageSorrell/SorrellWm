@@ -43,11 +43,11 @@ DECLARE_NAPI_FUNCTION(RestoreInPlace, void, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(RestoreWindow, void, Handle, HWindow)
 DECLARE_NAPI_FUNCTION(StealFocusNode, void, ExportName="StealFocus", Handle, HWindow)
 
-std::string CaptureWindowScreenshot_Internal(HWND hwnd);
+FString CaptureWindowScreenshot_Internal(HWND hwnd);
 BOOL GetDwmWindowRect(HWND Handle, RECT* Rect);
 HWND GetHandleArgument(const Napi::Env& Environment, const Napi::CallbackInfo& CallbackInfo, int Index);
 HWND GetMainWindow();
-TArray<HWND> GetTileableWindows();
+std::vector<HWND> GetTileableWindows();
 bool IsTileableWindow(HWND WindowHandle);
 bool IsWindowSnapped(HWND WindowHandle);
 void StealFocus(HWND Window);

@@ -6,17 +6,17 @@
 
 #include "String.h"
 
-std::wstring StringToWString(const std::string& str)
+FWideString StringToWString(const std::string& str)
 {
     if (str.empty()) {
-        return std::wstring();
+        return FWideString();
     }
 
     // Calculate the length of the wide string
     int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
 
     // Allocate the wide string
-    std::wstring wstr(size_needed, 0);
+    FWideString wstr(size_needed, 0);
 
     // Perform the conversion
     MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstr[0], size_needed);
@@ -24,7 +24,7 @@ std::wstring StringToWString(const std::string& str)
     return wstr;
 }
 
-std::string WStringToString(const std::wstring& wstr)
+std::string WStringToString(const FWideString& wstr)
 {
     if (wstr.empty()) return std::string();
 

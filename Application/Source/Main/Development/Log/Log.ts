@@ -14,6 +14,7 @@ import type { FLogHandler, FShortTimestamp } from "./Log.Types";
 import type { FLogLevel, FLogOriginInternal } from "@sorrellwm/windows";
 import { Format, FormatBase64String, FormatInline } from "./LogFormat";
 import Chalk from "chalk";
+import type { FLogValueType } from "./LogFormat.Types";
 import { GetDevSettings } from "#/DevSettings";
 import Util from "util";
 
@@ -404,7 +405,7 @@ const HandleAlwaysApplyFormat = (Statement: unknown, Statements: TArray<unknown>
         }
         else
         {
-            return FormatInline(Statement);
+            return FormatInline(Statement as FLogValueType);
         }
     }
     else

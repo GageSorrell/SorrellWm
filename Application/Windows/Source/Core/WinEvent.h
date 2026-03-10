@@ -1,9 +1,17 @@
+/* File:      WinEvent.h
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2026 Gage Sorrell
+ * License:   MIT
+ */
+
 #pragma once
 
 #include "Core.h"
 #include "Dispatcher.h"
 #include "WindowUtilities.h"
 #include <atomic>
+
+DECLARE_NAPI_FUNCTION(InitializeWinEvent, void);
 
 struct FWinEventPayload
 {
@@ -19,8 +27,6 @@ class FWinEvent : public TDispatcher<FWinEventPayload>
 {
 public:
     FWinEvent();
-
-    static Napi::Value Initialize(const Napi::CallbackInfo& CallbackInfo);
 
     static void DispatchFromEventProc_INTERNAL(FWinEventPayload Payload);
 

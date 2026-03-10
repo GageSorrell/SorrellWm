@@ -14,7 +14,7 @@
 
 // DEFINE_LOG_CATEGORY(Screenshot)
 
-static std::string Base64Encode(const TArray<BYTE> &BinaryData)
+static std::string Base64Encode(const std::vector<BYTE> &BinaryData)
 {
     static const char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -62,7 +62,7 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
 
     const int32_t FairlyHighResolution = 3840 * 2160 * ChannelsNum;
 
-    TArray<BYTE> ScreenshotData(FairlyHighResolution);
+    std::vector<BYTE> ScreenshotData(FairlyHighResolution);
     BYTE* Screenshot = nullptr;
     LPBITMAPINFO ScreenshotBmi = nullptr;
 
@@ -129,7 +129,7 @@ Napi::Value GetScreenshot(const Napi::CallbackInfo& CallbackInfo)
     DWORD infoHeaderSize = sizeof(BITMAPINFOHEADER);
     DWORD totalSize = fileHeaderSize + infoHeaderSize + pixelDataSize;
 
-    TArray<BYTE> bmpBuffer(totalSize);
+    std::vector<BYTE> bmpBuffer(totalSize);
     BITMAPFILEHEADER *fileHeader = reinterpret_cast<BITMAPFILEHEADER*>(bmpBuffer.data());
     BITMAPINFOHEADER *infoHeader =
         reinterpret_cast<BITMAPINFOHEADER*>(bmpBuffer.data() + fileHeaderSize);
@@ -195,7 +195,7 @@ static int GetEncoderClsid(const WCHAR* Format, CLSID* pClsid)
     return -1;
 }
 
-void GetScreenshotNew(const RECT& CaptureArea, TArray<BYTE>* ScreenshotData)
+void GetScreenshotNew(const RECT& CaptureArea, std::vector<BYTE>* ScreenshotData)
 {
     int32_t Width = CaptureArea.right - CaptureArea.left;
     int32_t Height = CaptureArea.bottom - CaptureArea.top;
@@ -274,7 +274,7 @@ void GetScreenshotNew(const RECT& CaptureArea, TArray<BYTE>* ScreenshotData)
     DWORD infoHeaderSize = sizeof(BITMAPINFOHEADER);
     DWORD totalSize = fileHeaderSize + infoHeaderSize + pixelDataSize;
 
-    TArray<BYTE> bmpBuffer(totalSize);
+    std::vector<BYTE> bmpBuffer(totalSize);
     BITMAPFILEHEADER *fileHeader = reinterpret_cast<BITMAPFILEHEADER*>(bmpBuffer.data());
     BITMAPINFOHEADER *infoHeader =
         reinterpret_cast<BITMAPINFOHEADER*>(bmpBuffer.data() + fileHeaderSize);
@@ -420,9 +420,9 @@ Napi::Value CaptureScreenSectionToTempPngFile(const Napi::CallbackInfo &callback
     }
 
     /* By default, `GetTempFileNameW` might assign a `.tmp` extension; change it to `.png`. */
-    std::wstring tempFilePath(tempFileName);
+    FWideString tempFilePath(tempFileName);
     size_t dotPosition = tempFilePath.rfind(L'.');
-    if (dotPosition != std::wstring::npos)
+    if (dotPosition != FWideString::npos)
     {
         tempFilePath = tempFilePath.substr(0, dotPosition) + L".png";
     }
@@ -494,9 +494,9 @@ Napi::Value WriteTaskbarIconToPng(const Napi::CallbackInfo& CallbackInfo)
     }
 
     /* By default, `GetTempFileNameW` might assign a `.tmp` extension; change it to `.png`. */
-    std::wstring FilePath(tempFileName);
+    FWideString FilePath(tempFileName);
     size_t dotPosition = FilePath.rfind(L'.');
-    if (dotPosition != std::wstring::npos)
+    if (dotPosition != FWideString::npos)
     {
         FilePath = FilePath.substr(0, dotPosition) + L".png";
     }

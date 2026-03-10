@@ -18,7 +18,7 @@ std::tm ConvertToUTC(std::time_t time)
     return tm_utc;
 }
 
-std::wstring GetFileNameTimestamp()
+FWideString GetFileNameTimestamp()
 {
     auto Now = std::chrono::system_clock::now();
     std::time_t NowTimeT = std::chrono::system_clock::to_time_t(Now);
@@ -30,20 +30,20 @@ std::wstring GetFileNameTimestamp()
         localtime_r(&NowTimeT, &TmNow);
     #endif
 
-    std::wstringstream WideStringStream;
+    FWideStringStream WideStringStream;
     WideStringStream << std::put_time(&TmNow, L"%Y%m%d%H%M%S");
     return WideStringStream.str();
 }
 
-std::wstring GetTimestamp()
+FWideString GetTimestamp()
 {
     auto Now = std::chrono::system_clock::now();
     std::time_t NowTimeT = std::chrono::system_clock::to_time_t(Now);
-    auto NowMs = std::chrono::duration_cast<std::chrono::milliseconds>(Now.time_since_epoch()) % 1000;
+    auto NowMs = std::chrono::duration_cast<FMilliseconds>(Now.time_since_epoch()) % 1000;
 
     std::tm TmUtc = ConvertToUTC(NowTimeT);
 
-    std::wstringstream WideStringStream;
+    FWideStringStream WideStringStream;
     WideStringStream << std::put_time(&TmUtc, L"%Y-%m-%dT%H:%M:%S");
     WideStringStream
         << L"."
@@ -55,7 +55,7 @@ std::wstring GetTimestamp()
     return WideStringStream.str();
 }
 
-std::wstring GetTempPath()
+FWideString GetTempPath()
 {
     const DWORD BufferSize = MAX_PATH;
     wchar_t TempPathBuffer[BufferSize];
@@ -66,9 +66,9 @@ std::wstring GetTempPath()
         std::wcerr << L"Error: Unable to retrieve %TEMP% environment variable. Error code: " << GetLastError() << std::endl;
     }
 
-    std::wstring TempPath(TempPathBuffer, TempPathLength);
+    FWideString TempPath(TempPathBuffer, TempPathLength);
 
-    std::wstring TargetPath = TempPath + L"\\SorrellWm";
+    FWideString TargetPath = TempPath + L"\\SorrellWm";
     return TargetPath;
 }
 
@@ -168,3 +168,28 @@ FBox GetBoxArgument(const Napi::CallbackInfo& CallbackInfo, int32_t Index)
 
     return FBox(X, Y, Width, Height);
 }
+
+// template <typename ReturnElementType>
+// std::vector<ReturnElementType> MapObject(const TObjectIterator<ReturnElementType>& Function, const Napi::Object& Object)
+// {
+//     std::vector<ReturnElementType> Out;
+
+//     Napi::Array PropertyNames = Object.GetPropertyNames();
+//     const uint32_t Length = PropertyNames.Length();
+
+//     for (uint32_t Index = 0; Index < Length; ++Index)
+//     {
+//         Napi::Value Key = PropertyNames.Get(Index).As<Napi::String>();
+//         Napi::Value Value = Object.Get(Key);
+
+//         Out.push_back(Function(Key, Value));
+//     }
+
+//     for (int Index = 0; Index < Object.)
+
+//     for (const auto& [ Key, Value ] : Object)
+//     {
+//     }
+
+//     return Out;
+// }

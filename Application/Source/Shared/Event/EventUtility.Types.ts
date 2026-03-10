@@ -147,7 +147,7 @@ export type TGetPoorResponse<Type extends TPoorResponseDecl<FUnknownErrorCode>> 
 export type TGetPoorResponseFromKey<Type extends keyof FPoorEvents> =
     TGetPoorResponse<FPoorEvents[Type]["Response"]>;
 
-export type TGetErrorCode<Type extends keyof FIpcEvents> = FIpcEvents[Type]["Response"]["Error"];
+export type TGetErrorCode<Type extends keyof FIpcEvents> = FIpcEvents[Type]["Response"]["Error"] | "";
 
 export type TGetResponse<
     Type extends
@@ -208,3 +208,21 @@ export type FSingleRichFrontendEvents = Pick<FRichFrontendEvents, FSingleRichFro
 
 export type TGetSingleRichResponseData<Type extends FSingleRichFrontendChannels> =
     TGetValueOfSinglePropertyRecord<FSingleRichFrontendEvents[Type]["Response"]["Data"]>;
+
+type TChannelTaggedBase<ChannelType extends string = string> = `${ number }-${ ChannelType }`;
+
+export type TBackendChannelTagged<ChannelType extends FIpcBackendChannel> = TChannelTaggedBase<ChannelType>;
+export type TFrontendChannelTagged<ChannelType extends FIpcFrontendChannel> = TChannelTaggedBase<ChannelType>;
+export type TChannelTagged<ChannelType extends FIpcChannel> =
+    ChannelType extends FIpcBackendChannel
+        ? TBackendChannelTagged<ChannelType>
+        : ChannelType extends FIpcFrontendChannel
+            ? TFrontendChannelTagged<ChannelType>
+            : never;
+
+export type FBackendChannelTagged = TBackendChannelTagged<FIpcBackendChannel>;
+export type FFrontendChannelTagged = TFrontendChannelTagged<FIpcFrontendChannel>;
+export type FChannelTagged = TChannelTagged<FIpcChannel>;
+
+export type FBackendChannelTagger = (Channel: FIpcBackendChannel) => FBackendChannelTagged | undefined;
+export type FFrontendChannelTagger = (Channel: FIpcFrontendChannel) => FFrontendChannelTagged | undefined;

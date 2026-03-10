@@ -13,12 +13,12 @@ import {
     useContext,
     useState } from "react";
 import { DefaultSettings, type FSettings as FAppSettings } from "../Shared/Settings";
-import { SendIpcEvent, UseSendIpcEvent } from "./Event";
+import { UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
 import { Identity } from "./Utility";
 import type { TIpcState } from "./Event.Types";
-import type { TPromiseThenFunction } from "()/Utility";
+import type { TPromiseThenFunction } from "../Shared/Utility";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Settings");
@@ -64,24 +64,33 @@ export const Settings = ({ children }: PropsWithChildren): ReactNode =>
 {
     const [ OutSettings, SetOutSettings ] = useState<FSettings>(DefaultSettings);
 
-    const OnGetSettings: TPromiseThenFunction<TIpcState<"GetSettings">> =
-        useCallback(({ Data }: TIpcState<"GetSettings">): void =>
+    const OnGetSettings: TPromiseThenFunction<TIpcState<"GetSettings"> | undefined> =
+        useCallback((Value: TIpcState<"GetSettings"> | undefined): void =>
         {
-            if (Data !== undefined)
+            SetOutSettings((Old: FSettings): FSettings =>
             {
-                SetOutSettings((_Old: FSettings): FSettings =>
+                if (Value !== undefined)
                 {
-                    return Data.Settings;
-                });
-            }
+                    if (Value.Data !== undefined)
+                    {
+                        return Value.Data.Settings;
+                    }
+                }
+
+                return Old;
+            });
         }, [ ]);
 
     UseSendIpcEvent("GetSettings", undefined, OnGetSettings);
 
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+
     const OutUpdateFunction: TUpdateFunction =
         <Type extends keyof FSettings,>(Setting: Type, Value: FSettings[Type]): void =>
         {
-            SendIpcEvent("UpdateSetting", { Setting, Value });
+            const NewSettings: FAppSettings = { ...OutSettings };
+            NewSettings[Setting] = Value;
+            SendIpcEvent("UpdateSettings", NewSettings);
         };
 
     const value: CSettings =

@@ -27,6 +27,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB} nlohmann_json::nlohmann_json)
 
+if (MSVC)
+    target_compile_options(SorrellWm PRIVATE /Zc:preprocessor)
+endif ()
+
 execute_process(COMMAND node -p "require('node-addon-api').include"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE NODE_ADDON_API_DIR

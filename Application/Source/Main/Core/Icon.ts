@@ -5,21 +5,23 @@
  */
 
 import * as Path from "path";
-import type { FIcon } from "./Icon.Types";
+import type { FIcon, FIconExtension } from "./Icon.Types";
+import { type NativeImage, nativeImage, nativeTheme } from "electron";
 import { GetPaths } from "./Paths";
-import { nativeTheme } from "electron";
 
-export const GetIconPath = async (Icon: FIcon): Promise<string> =>
+export const GetIconPath = (Icon: FIcon, Extension: FIconExtension = "PNG"): string =>
 {
     const LightDarkMode: "Light" | "Dark" = nativeTheme.shouldUseDarkColors
         ? "Dark"
         : "Light";
 
-    const Extension: ".png" | ".ico" = Icon === "Brand"
-        ? ".ico"
-        : ".png";
+    const IconFileName: string = Icon + LightDarkMode + "." + Extension.toLowerCase();
 
-    const IconFileName: string = Icon + LightDarkMode + Extension;
-
-    return Path.join(GetPaths().Resource, "Icon", Icon, IconFileName);
+    return Path.resolve(GetPaths().Resource, "Icon", Icon, IconFileName);
 };
+
+export const GetIcon = (Icon: FIcon, Extension: FIconExtension = "PNG"): NativeImage =>
+{
+    return nativeImage.createFromPath(GetIconPath(Icon, Extension));
+};
+

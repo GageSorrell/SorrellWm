@@ -5,12 +5,16 @@
 
 /* eslint-disable */
 
-import { type IpcRendererEvent, contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
 
 const ElectronHandler =
 {
     ipcRenderer:
     {
+        GetId(): Promise<unknown>
+        {
+            return ipcRenderer.invoke("GetId");
+        },
         On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
         {
             type FRecord = Record<PropertyKey, unknown>;

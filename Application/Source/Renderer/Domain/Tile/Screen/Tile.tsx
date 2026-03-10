@@ -7,7 +7,7 @@
 import { Caption1, Title1 } from "@fluentui/react-components";
 import { CommandContainer, type FCommand, GetPanelKey, Panel } from "$/Common";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
-import { SendIpcEvent, UseSendIpcEventStrict } from "@/Event";
+import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
 import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
 import type { FLogger } from "../../../../Shared/Log.Types";
@@ -46,6 +46,8 @@ const UseAnnotatedPanels = (): Readonly<[ TArray<FAnnotatedPanel> ]> =>
 export const Tile = (): ReactElement =>
 {
     const [ AnnotatedPanels ] = UseAnnotatedPanels();
+
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
     // @TODO Make default option be the root panel of the monitor to which the floating window belongs.
     // const [ MonitorFocusedWindow ] =
@@ -93,7 +95,7 @@ export const Tile = (): ReactElement =>
             SendIpcEvent("BringIntoPanel", Selection);
             SendIpcEvent("RequestTearDown", undefined);
         }
-    }, [ AnnotatedPanels, SelectionIndex ]);
+    }, [ AnnotatedPanels, SelectionIndex, SendIpcEvent ]);
 
     Log(`AnnotatedPanels.length == ${ AnnotatedPanels.length }, SelectionIndex == ${ SelectionIndex }`);
 

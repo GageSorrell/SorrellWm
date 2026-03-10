@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FVirtualKey } from "()/Keyboard.Types";
+import type { FVirtualKey } from "../Shared/Keyboard.Types";
 
 export type FActivationKeyState =
     | "Down"

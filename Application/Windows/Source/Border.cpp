@@ -308,7 +308,7 @@ void CreateBorder(HWND TargetWindowHandle)
     std::cout << "SetBorderColorTest was successful." << std::endl;
 }
 
-NAPI_VOID InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
+void InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -319,7 +319,7 @@ NAPI_VOID InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
 
     RegisterClassExW(&WindowClass);
 
-    TArray<HWND> TileableWindows = GetTileableWindows();
+    std::vector<HWND> TileableWindows = GetTileableWindows();
     for (HWND Window : TileableWindows)
     {
         CreateBorder(Window);
@@ -328,6 +328,4 @@ NAPI_VOID InitializeBorderManager(const Napi::CallbackInfo& CallbackInfo)
         //     CreateBorder(Window);
         // }
     }
-
-    RETURN_NAPI();
 }

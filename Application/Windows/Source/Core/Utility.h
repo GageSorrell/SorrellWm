@@ -22,12 +22,12 @@
  * Get the current time as a wstring, ISO timestamp.
  * Intended for writing file names.
  */
-std::wstring GetTimestamp();
+FWideString GetTimestamp();
 
 /** `GetTimestamp`, with punctuation removed, so that file names can include the time. */
-std::wstring GetFileNameTimestamp();
+FWideString GetFileNameTimestamp();
 
-std::wstring GetTempPath();
+FWideString GetTempPath();
 
 Napi::Object EncodeHandle(const Napi::Env& Environment, void* Handle);
 void* DecodeHandle(const Napi::Object& Object);
@@ -38,7 +38,7 @@ template <typename THandle>
 std::string HandleToString(THandle Handle);
 
 template <typename T>
-Napi::Array EncodeArray(const Napi::Env& Environment, TArray<T> Vector, std::function<Napi::Object(const Napi::Env&, T)> MapFunction)
+Napi::Array EncodeArray(const Napi::Env& Environment, std::vector<T> Vector, std::function<Napi::Object(const Napi::Env&, T)> MapFunction)
 {
     Napi::Array OutArray = Napi::Array::New(Environment);
 
@@ -72,7 +72,7 @@ struct FBox
 FBox GetBoxArgument(const Napi::CallbackInfo& CallbackInfo, int32_t Index);
 
 template <typename ElementType, typename PredicateType>
-bool RemoveFirstIf(TArray<ElementType>& Elements, PredicateType Predicate)
+bool RemoveFirstIf(std::vector<ElementType>& Elements, PredicateType Predicate)
 {
     const auto Iterator = std::find_if(Elements.begin(), Elements.end(), Predicate);
     if (Iterator == Elements.end())

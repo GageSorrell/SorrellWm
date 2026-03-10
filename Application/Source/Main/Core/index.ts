@@ -8,7 +8,7 @@ export * from "./Core.Types";
 export * from "./EventListeners";
 export * from "./Icon";
 export * from "./Icon.Types";
-export * from "./Initialization";
+export * from "./Electron";
 export * from "./Paths";
 export * from "./Paths.Types";
 export * from "./SideEffects";

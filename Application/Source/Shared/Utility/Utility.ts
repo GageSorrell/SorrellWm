@@ -4,10 +4,9 @@
  * License:   MIT
  */
 
+import type { FBox, FRecord } from "@sorrellwm/windows";
+import type { FRejectFunction, TResolveFunction } from "./Functional.Types";
 import type { FAnyFunction } from "./Utility.Types";
-import type { FBox } from "@sorrellwm/windows";
-
-// import type { HMonitor, HWindow } from "@sorrellwm/windows";
 
 type HMonitor = {
     Handle: number;
@@ -76,4 +75,78 @@ export const ExtractFromRecordArray = <
     {
         return Record[Key];
     });
+};
+
+export const GetByKey = <RecordType extends FRecord, KeyType extends keyof RecordType>(
+    Key: KeyType
+): ((In: RecordType) => RecordType[KeyType]) =>
+{
+    return (Record: RecordType): RecordType[KeyType] =>
+    {
+        return Record[Key];
+    };
+};
+
+export const Delay = async (Duration: number): Promise<void> =>
+{
+    return new Promise<void>((Resolve: TResolveFunction<void>, _Reject: FRejectFunction): void =>
+    {
+        setTimeout(Resolve, Duration);
+    });
+};
+
+export const RetryUntilFulfilled = async <Type>(
+    In: (() => Promise<Type>),
+    NumTries: number | undefined = undefined,
+    DurationToTry: number | undefined = undefined
+): Promise<Type | undefined> =>
+{
+    let StartTime: number | undefined = undefined;
+
+    let LastCompletionTime: number | undefined = undefined;
+    let NumAttempts: number = 0;
+
+    const HasExceededLimits = (): boolean =>
+    {
+        const ExceededNumAttempts: boolean = (NumTries !== undefined)
+            ? NumAttempts === NumTries
+            : false;
+
+        const AreDurationVariablesInitialized: boolean = (
+            DurationToTry !== undefined &&
+            LastCompletionTime !== undefined &&
+            StartTime !== undefined
+        );
+
+        if (StartTime !== undefined && LastCompletionTime !== undefined)
+        {
+            StartTime = LastCompletionTime;
+        }
+
+        const ExceededDurationToTry: boolean = AreDurationVariablesInitialized
+            ? ((LastCompletionTime as number) - (StartTime as number)) >= (DurationToTry as number)
+            : false;
+
+        return ExceededNumAttempts || ExceededDurationToTry;
+    };
+
+    while (HasExceededLimits())
+    {
+        try
+        {
+            const Out: Type = await In();
+            return Out;
+        }
+        /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+        catch (_Error: unknown)
+        {
+            LastCompletionTime = new Date().getTime();
+            if (NumTries !== undefined)
+            {
+                NumAttempts++;
+            }
+        }
+    }
+
+    return undefined;
 };

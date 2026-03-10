@@ -5,39 +5,39 @@
  */
 
 import { BringIntoPanel, Find, IsPanel } from "#/Tree";
-import { type BrowserWindow, ipcMain } from "electron";
 import type { FPanel, FVertex } from "#/Tree/Tree.Types";
 import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "@sorrellwm/windows";
-import { CreateBrowserWindow } from "#/BrowserWindow.Old";
+import { type BrowserWindow } from "electron";
 import { Sleep } from "#/Utility";
 import { spawn } from "child_process";
 
-const CreateTestWindow = async (Index: number): Promise<BrowserWindow> =>
+const CreateTestWindow = async (_Index: number): Promise<BrowserWindow> =>
 {
-    const { Window: TestWindow, LoadFrontend } = await CreateBrowserWindow({
-        autoHideMenuBar: true,
-        show: true,
-        title: `Test Window #${ Index + 1 }`
-    });
+    return { } as BrowserWindow;
+    // const { Window: TestWindow, LoadFrontend } = await FooMyFunction({
+    //     autoHideMenuBar: true,
+    //     show: true,
+    //     title: `Test Window #${ Index + 1 }`
+    // });
 
-    TestWindow.setMenu(null);
+    // TestWindow.setMenu(null);
 
-    ipcMain.on("ReadyForRoute", (_Event: Electron.Event): void =>
-    {
-        TestWindow.webContents.send("Navigate", "TestWindow");
-    });
+    // ipcMain.on("ReadyForRoute", (_Event: Electron.Event): void =>
+    // {
+    //     TestWindow.webContents.send("Navigate", "TestWindow");
+    // });
 
-    await LoadFrontend();
+    // await LoadFrontend();
 
-    TestWindow.on(
-        "page-title-updated",
-        (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
-        {
-            Event.preventDefault();
-        }
-    );
+    // TestWindow.on(
+    //     "page-title-updated",
+    //     (Event: Electron.Event, _Title: string, _ExplicitSet: boolean): void =>
+    //     {
+    //         Event.preventDefault();
+    //     }
+    // );
 
-    return TestWindow;
+    // return TestWindow;
 };
 
 export const CreateNotepadTestWindows = async (_NumWindows: number): Promise<void> =>

@@ -6,6 +6,8 @@
 
 import { type BrowserWindow, type IpcMainEvent, ipcMain } from "electron";
 import type {
+    FChannelTagged,
+    FFrontendChannelTagged,
     FIpcBackendChannel,
     FIpcFrontendChannel,
     FIpcFrontendEvents,
@@ -15,9 +17,11 @@ import type {
     TGetErrorCode,
     TPoorResponseAsFailure,
     TRequest,
-    TResponse } from "()/Event";
+    TResponse } from "../Shared/Event";
 import { type FLogger, GetLogger } from "./Development";
-import type { FRejectFunction, TResolveFunction } from "()/Utility";
+import type { FRejectFunction, TResolveFunction } from "../Shared/Utility";
+import { MakeTagBackend, MakeTagFrontend } from "../Shared/Event/Event";
+import type { TIpcCallback, TPoorEventResponse } from "./Event.Types";
 
 const Log: FLogger = GetLogger("Event");
 
@@ -26,53 +30,92 @@ const Log: FLogger = GetLogger("Event");
  * All calls to this should be made as early as possible in the application's
  * lifetime.
  */
-export const RegisterIpcCallback = <Type extends FIpcFrontendChannel>(
+export const RegisterIpcCallback = <ChannelType extends FIpcFrontendChannel>(
     BrowserWindow: BrowserWindow,
-    Channel: Type,
-    Callback: TEventCallback<Type>
+    Channel: ChannelType,
+    Callback: TEventCallback<ChannelType>
 ): void =>
 {
-    if (ipcMain.eventNames().includes(Channel))
+    const ChannelTagged: FFrontendChannelTagged | undefined = MakeTagFrontend(BrowserWindow.id)(Channel);
+
+    /* eslint-disable-next-line @stylistic/max-len */
+    Log(`RegisterIpcCallback: ChannelTagged == ${ ChannelTagged }`);
+
+    if (ChannelTagged === undefined)
+    {
+        return;
+    }
+
+    if (ipcMain.eventNames().includes(ChannelTagged))
     {
         /* eslint-disable-next-line @stylistic/max-len */
-        Log.Warn(`Main attempted to register IPC callback for Event ${ Channel }, but a callback has already been registered.`);
+        Log.Warn(`Main attempted to register IPC callback for Event ${ Channel } on window with ID ${ BrowserWindow.id }, but a callback has already been registered.`);
         return;
     }
 
     const Wrapper = async (_Event: IpcMainEvent, ...ArgumentVector: TArray<unknown>): Promise<void> =>
     {
-        type FRequest = FIpcFrontendEvents[Type]["Request"];
+        type FRequest = FIpcFrontendEvents[ChannelType]["Request"];
         // type FResponse = FIpcFrontendEvents[T]["Response"];
-        type FResponse = Awaited<ReturnType<TEventCallback<Type>>>;
+        type FResponse = Awaited<ReturnType<TEventCallback<ChannelType>>>;
         const Request: FRequest = ArgumentVector[0] as FRequest;
         const Response: FResponse = await Callback(Request) as FResponse;
 
         /* eslint-disable-next-line @stylistic/max-len */
         // Log(`Response inside Wrapper is going to be sent to the BrowserWindow.  The Response is ${ Response }.`);
 
-        BrowserWindow.webContents.send(Channel, Response);
+        BrowserWindow.webContents.send(ChannelTagged, Response);
     };
 
-    ipcMain.on(Channel, Wrapper);
+    ipcMain.on(ChannelTagged, Wrapper);
+};
+
+export const RegisterIpcCallbacks = (
+    BrowserWindow: BrowserWindow,
+    IpcCallbacks: Array<TIpcCallback>
+): void =>
+{
+    const Register = ({ Callback, Channel }: TIpcCallback): void =>
+    {
+        RegisterIpcCallback(BrowserWindow, Channel, Callback);
+    };
+
+    IpcCallbacks.forEach(Register);
 };
 
 /** Send an event to the Renderer, and receive a response. */
-export const SendIpcEvent = <Type extends FIpcBackendChannel>(
+export const SendIpcEvent = <ChannelType extends FIpcBackendChannel>(
     BrowserWindow: BrowserWindow,
-    Channel: Type,
-    Request: TRequest<Type>
-): Promise<TResponse<Type>> =>
+    Channel: ChannelType,
+    Request: TRequest<ChannelType>
+): Promise<TResponse<ChannelType>> =>
 {
-    return new Promise<TResponse<Type>>(
-        (Resolve: TResolveFunction<TResponse<Type>>, _Reject: FRejectFunction): void =>
+    return new Promise<TResponse<ChannelType>>(
+        (Resolve: TResolveFunction<TResponse<ChannelType>>, Reject: FRejectFunction): void =>
         {
-            ipcMain.once(Channel, (_Event: Electron.Event, ...ArgumentVector: TArray<unknown>): void =>
-            {
-                const Response: TResponse<Type> = ArgumentVector[0] as TResponse<Type>;
-                Resolve(Response);
-            });
+            const ChannelTagged: FChannelTagged | undefined = MakeTagBackend(BrowserWindow.id)(Channel);
 
-            BrowserWindow.webContents.send(Channel, Request);
+            Log(`SendIpcEvent: Attempting to fulfill message having channel ${ ChannelTagged }.`);
+
+            if (ChannelTagged === undefined)
+            {
+                Reject("Channel was not tagged.");
+            }
+
+            const ChannelTaggedSafe: FChannelTagged = ChannelTagged as FChannelTagged;
+
+            ipcMain.once(
+                ChannelTaggedSafe,
+                (_Event: Electron.Event, ...ArgumentVector: TArray<unknown>): void =>
+                {
+                    const Response: TResponse<ChannelType> = ArgumentVector[0] as TResponse<ChannelType>;
+                    Resolve(Response);
+                }
+            );
+
+            Log(`SendIpcEvent: ${ ChannelTagged }.`);
+
+            BrowserWindow.webContents.send(ChannelTaggedSafe, Request);
             // BrowserWindow.webContents.send(Channel, JSON.stringify(Request));
         });
 };
@@ -93,4 +136,22 @@ export const PoorEventFailure = <Type extends keyof FPoorBackendEvents>(
         Data: undefined,
         Error
     };
+};
+
+export const PoorEventFailureSimple =
+    <Type extends keyof FPoorBackendEvents>(): TPoorResponseAsFailure<Type> =>
+    {
+        return {
+            Data: undefined,
+            Error: ""
+        };
+    };
+
+export const GetPoorResponse = <Type extends keyof FPoorBackendEvents>(
+    Success: boolean
+): TPoorEventResponse<Type> =>
+{
+    return Success
+        ? PoorEventSuccess()
+        : PoorEventFailureSimple();
 };

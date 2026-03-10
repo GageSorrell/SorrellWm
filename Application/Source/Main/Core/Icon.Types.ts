@@ -6,4 +6,9 @@
 
 export type FIcon =
     | "Brand"
+    | "Settings"
     | "Tray";
+
+export type FIconExtension =
+    | "ICO"
+    | "PNG";

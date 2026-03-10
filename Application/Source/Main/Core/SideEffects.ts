@@ -18,13 +18,15 @@ import "../Notification";
 
 setTimeout((): void =>
 {
+    import("../BrowserWindow");
     import("../MainWindow");
-    import("./Initialization");
+    import("./Electron");
     import("./Tray");
     import("../WinEvent");
     import("../BorderManager");
     import("../WindowTracker");
     import("../Development/SetupPrimaryMonitor");
+    import("../Settings/Settings");
 
     // Require("../Source/Main/Core/Initialization.ts");
     // Require("../Source/Main/Core/Tray");

@@ -40,35 +40,31 @@ Napi::Value GetDwmWindowRectNode(const Napi::CallbackInfo& CallbackInfo)
     return EncodeRect(Environment, Bounds);
 }
 
-Napi::Value MinimizeWindow(const Napi::CallbackInfo& CallbackInfo)
+void MinimizeWindow(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
     HWND Handle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
 
     ShowWindowAsync(Handle, SW_MINIMIZE);
-
-    return Environment.Undefined();
 }
 
-Napi::Value RestoreWindow(const Napi::CallbackInfo& CallbackInfo)
+void RestoreWindow(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
     HWND Handle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
 
     ShowWindowAsync(Handle, SW_RESTORE);
-
-    return Environment.Undefined();
 }
 
 /** Given a process identifier (from NodeJS's `spawn`), kill that process. */
-Napi::Value CloseApplication(const Napi::CallbackInfo& Info)
+void CloseApplication(const Napi::CallbackInfo& Info)
 {
     Napi::Env Environment = Info.Env();
 
     if (Info.Length() < 1 || !Info[0].IsNumber())
     {
         Napi::TypeError::New(Environment, "Expected a single, number argument.").ThrowAsJavaScriptException();
-        return Environment.Undefined();
+        return;
     }
 
     Napi::Number ProcessIdentifierValue = Info[0].As<Napi::Number>();
@@ -76,7 +72,7 @@ Napi::Value CloseApplication(const Napi::CallbackInfo& Info)
     double ProcessIdentifierNumber = ProcessIdentifierValue.As<Napi::Number>().DoubleValue();
     if (ProcessIdentifierNumber <= 0.0 || ProcessIdentifierNumber > 4294967295.0)
     {
-        return Environment.Undefined();
+        return;
     }
 
     DWORD ProcessIdentifier = static_cast<DWORD>(ProcessIdentifierNumber);
@@ -84,13 +80,11 @@ Napi::Value CloseApplication(const Napi::CallbackInfo& Info)
     HANDLE ProcessHandle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessIdentifier);
     if (ProcessHandle == nullptr)
     {
-        return Environment.Undefined();
+        return;
     }
 
     TerminateProcess(ProcessHandle, 1);
     CloseHandle(ProcessHandle);
-
-    return Environment.Undefined();
 }
 
 Napi::Value GetFocusedWindow(const Napi::CallbackInfo& CallbackInfo)
@@ -232,8 +226,8 @@ Napi::Value CaptureWindowScreenshot(const Napi::CallbackInfo& CallbackInfo)
     }
 
     /* Construct the file path: %TEMP%\SorrellWm\Screenshot-<HandleString>-<Timestamp>.png */
-    std::wstring HandleString = StringToWString(HandleToString(Window));
-    std::wstring tempPath = L"%TEMP%\\SorrellWm\\Screenshot-" +
+    FWideString HandleString = StringToWString(HandleToString(Window));
+    FWideString tempPath = L"%TEMP%\\SorrellWm\\Screenshot-" +
         HandleString +
         L"-" +
         GetFileNameTimestamp() +
@@ -295,7 +289,7 @@ Napi::Value GetTitlebarHeight(const Napi::CallbackInfo& CallbackInfo)
  * Given a window handle, if the window is maximized, then restore it,
  * and set its shape to the shape that it had when maximized.
  */
-Napi::Value RestoreInPlace(const Napi::CallbackInfo& CallbackInfo)
+void RestoreInPlace(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -303,12 +297,12 @@ Napi::Value RestoreInPlace(const Napi::CallbackInfo& CallbackInfo)
 
     if (!IsWindow(Window))
     {
-        return Environment.Undefined();
+        return;
     }
 
     if (!IsZoomed(Window))
     {
-        return Environment.Undefined();
+        return;
     }
 
     RECT WindowRect = { };
@@ -317,7 +311,7 @@ Napi::Value RestoreInPlace(const Napi::CallbackInfo& CallbackInfo)
 
     if (!bGotWindowRect)
     {
-        return Environment.Undefined();
+        return;
     }
 
     ShowWindow(Window, SW_RESTORE);
@@ -334,13 +328,6 @@ Napi::Value RestoreInPlace(const Napi::CallbackInfo& CallbackInfo)
         Height,
         SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER
     );
-
-    if (!bSetPosition)
-    {
-        return Environment.Undefined();
-    }
-
-    return Environment.Undefined();
 }
 
 bool IsWindowSnapped(HWND WindowHandle)
@@ -440,15 +427,13 @@ Napi::Value GetWindowByName(const Napi::CallbackInfo& CallbackInfo)
 
 }
 
-Napi::Value SetForegroundWindowNode(const Napi::CallbackInfo& CallbackInfo)
+void SetForegroundWindowNode(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
     HWND WindowToFocus = GetHandleArgument(Environment, CallbackInfo, 0);
 
     SetForegroundWindow(WindowToFocus);
-
-    return Environment.Undefined();
 }
 
 /** SetWindowPos takes drop shadow into account when using `cx`, `cy`.  */
@@ -463,7 +448,7 @@ int32_t GetWindowMargin(HWND Handle)
     return DwmRect.left - Rect.left;
 }
 
-Napi::Value SetWindowPosition(const Napi::CallbackInfo& CallbackInfo)
+void SetWindowPosition(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -492,8 +477,6 @@ Napi::Value SetWindowPosition(const Napi::CallbackInfo& CallbackInfo)
         Box.Height + Margin,
         SWP_SHOWWINDOW
     );
-
-    return Environment.Undefined();
 }
 
 Napi::Value GetIsLightMode(const Napi::CallbackInfo& CallbackInfo)
@@ -658,7 +641,7 @@ Napi::Value CanTile(const Napi::CallbackInfo& CallbackInfo)
 
 BOOL CALLBACK EnumTileableWindowsProc(HWND WindowHandle, LPARAM LParameter)
 {
-    TArray<HWND>* TileableWindows = reinterpret_cast<TArray<HWND>*>(LParameter);
+    std::vector<HWND>* TileableWindows = reinterpret_cast<std::vector<HWND>*>(LParameter);
     if (IsTileableWindow(WindowHandle))
     {
         TileableWindows->push_back(WindowHandle);
@@ -666,9 +649,9 @@ BOOL CALLBACK EnumTileableWindowsProc(HWND WindowHandle, LPARAM LParameter)
     return TRUE;
 }
 
-TArray<HWND> GetTileableWindows()
+std::vector<HWND> GetTileableWindows()
 {
-    TArray<HWND> TileableWindows;
+    std::vector<HWND> TileableWindows;
     EnumWindows(EnumTileableWindowsProc, reinterpret_cast<LPARAM>(&TileableWindows));
     return TileableWindows;
 }
@@ -676,7 +659,7 @@ TArray<HWND> GetTileableWindows()
 Napi::Value GetTileableWindowsNode(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
-    TArray<HWND> TileableWindows = GetTileableWindows();
+    std::vector<HWND> TileableWindows = GetTileableWindows();
 
     return EncodeArray(Environment, TileableWindows, std::function<Napi::Object(const Napi::Env&, HWND)>(EncodeHandle));
 }
@@ -745,7 +728,7 @@ Napi::Value GetApplicationFriendlyName(const Napi::CallbackInfo& CallbackInfo)
 
     if (VersionInformationSize > 0)
     {
-        TArray<char> VersionInformationData(VersionInformationSize);
+        std::vector<char> VersionInformationData(VersionInformationSize);
         if (GetFileVersionInfoA(ModuleFilePath, 0, VersionInformationSize, VersionInformationData.data()))
         {
             /* The block for "FileDescription" in a typical US-English resource is under: *
@@ -796,10 +779,9 @@ BOOL CALLBACK EnumWindowsRestore(HWND WindowHandle, LPARAM LParam)
     return TRUE;
 }
 
-Napi::Value RestoreAllWindows(const Napi::CallbackInfo& CallbackInfo)
+void RestoreAllWindows(const Napi::CallbackInfo& CallbackInfo)
 {
     EnumWindows(EnumWindowsRestore, 0);
-    return CallbackInfo.Env().Undefined();
 }
 
 /** Get the main window of the window manager. */
@@ -826,14 +808,12 @@ void StealFocus(HWND Window)
 }
 
 /** Exposed copy of `StealFocus`. */
-Napi::Value StealFocusNode(const Napi::CallbackInfo& CallbackInfo)
+void StealFocusNode(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
     HWND Window = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
 
     StealFocus(Window);
-
-    return Environment.Undefined();
 }
 
 bool TrySetDwmBorderColor(HWND TargetWindowHandle, COLORREF BorderColor)
@@ -852,35 +832,3 @@ bool TrySetDwmBorderColor(HWND TargetWindowHandle, COLORREF BorderColor)
 
     return SUCCEEDED(Result);
 }
-
-// Napi::Value SetBorderColorTest(const Napi::CallbackInfo& CallbackInfo)
-// {
-//     Napi::Env Environment = CallbackInfo.Env();
-
-//     std::cout << "SetBorderColorTest" << std::endl;
-
-//     HWND TargetWindowHandle = (HWND) DecodeHandle(CallbackInfo[0].As<Napi::Object>());
-
-//     std::cout << "Target Window Handle: " << TargetWindowHandle << std::endl;
-
-//     if (TargetWindowHandle == nullptr)
-//     {
-//         std::cout << "Target Window Handle was the nullptr." << std::endl;
-//         return Napi::Boolean::New(Environment, false);
-//     }
-
-//     const COLORREF DefaultColor = 0xFFFFFFFFu;
-
-//     std::cout << "Created DefaultColor." << std::endl;
-
-//     const HRESULT Result = DwmSetWindowAttribute(
-//         TargetWindowHandle,
-//         DWMWA_BORDER_COLOR,
-//         &DefaultColor,
-//         static_cast<DWORD>(sizeof(DefaultColor))
-//     );
-
-//     std::cout << "Result" << Result << std::endl;
-
-//     return Napi::Boolean::New(Environment, SUCCEEDED(Result));
-// }

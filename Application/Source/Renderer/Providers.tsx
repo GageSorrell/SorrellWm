@@ -6,15 +6,15 @@
 
 import type { PropsWithChildren, ReactNode } from "react";
 import { CommandsProvider } from "./Command";
+import { EventProvider } from "./Event";
 import { FluentThemeProvider } from "./Utility/Theme";
 import { Settings } from "./Settings";
 import { ShortcutProvider } from "./Keybind";
-import { StoreProvider } from "./Store";
 
 export const Providers = ({ children }: PropsWithChildren): ReactNode =>
 {
     return (
-        <StoreProvider>
+        <EventProvider>
             <Settings>
                 <ShortcutProvider>
                     <CommandsProvider>
@@ -24,6 +24,6 @@ export const Providers = ({ children }: PropsWithChildren): ReactNode =>
                     </CommandsProvider>
                 </ShortcutProvider>
             </Settings>
-        </StoreProvider>
+        </EventProvider>
     );
 };

@@ -5,12 +5,16 @@
  */
 
 import type {
+    FIpcFrontendChannel,
     FIpcFrontendEvents,
     FRichEvents,
     FRichFrontendEvents,
     TGetResponseFromKey,
     TGetRichResponseAsFailure,
-    TGetRichResponseAsSuccess } from "../Shared/Event";
+    TGetRichResponseAsSuccess,
+    TRequest } from "../Shared/Event";
+import type { FSimpleCallback } from "../Shared/Utility";
+import type { MutableRefObject } from "react";
 
 export type TIpcState<Type extends keyof FIpcFrontendEvents> =
 {
@@ -24,7 +28,19 @@ export type TIpcStateStrict<Type extends keyof FRichEvents> =
     Error: TGetRichResponseAsFailure<Type>["Error"] | undefined;
 };
 
-export type TUseSendIpcEventReturnType<Type extends keyof FIpcFrontendEvents> = Readonly<TIpcState<Type>>;
+export type TUseSendIpcEventReturnType<Type extends keyof FIpcFrontendEvents> =
+    Readonly<TIpcState<Type>>;
+
+export type FSendIpcEventCallback = <ChannelType extends FIpcFrontendChannel>(
+    Channel: ChannelType,
+    Request: TRequest<ChannelType>
+) => FSimpleCallback;
+
+export type FSendIpcEvent = <ChannelType extends FIpcFrontendChannel>(
+    Channel: ChannelType,
+    Request: TRequest<ChannelType>,
+    RemoveListenerRef?: MutableRefObject<FSimpleCallback | undefined>
+) => Promise<TIpcState<ChannelType>>;
 
 export type TUseSendIpcEventStrictReturnType<Type extends keyof FRichFrontendEvents> = Readonly<{
     Data: Exclude<TIpcStateStrict<Type>["Data"], undefined>,

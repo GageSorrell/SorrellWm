@@ -5,14 +5,14 @@
  */
 
 import { app as App, Tray as ElectronTray, Menu } from "electron";
-import { Activate } from "#/MainWindow";
 import type { FTray } from "./Tray.Types";
 import { GetIconPath } from "./Icon";
 import { OpenSettings } from "#/Settings";
+import { RegisterInitializationFunction } from "./Initialize";
 
 const Tray: FTray = { Ref: undefined };
 
-const MakeTray = async (): Promise<void> =>
+RegisterInitializationFunction(async (): Promise<void> =>
 {
     Tray.Ref = new ElectronTray(await GetIconPath("Tray"));
 
@@ -20,6 +20,7 @@ const MakeTray = async (): Promise<void> =>
         {
             click: OpenSettings,
             label: "Settings",
+            sublabel: "Double-click",
             type: "normal"
         },
         {
@@ -31,7 +32,5 @@ const MakeTray = async (): Promise<void> =>
 
     Tray.Ref.setToolTip("SorrellWm v0.0.1\nUp to date");
     Tray.Ref.setContextMenu(ContextMenu);
-    Tray.Ref.addListener("click", Activate);
-};
-
-App.whenReady().then(MakeTray);
+    Tray.Ref.addListener("click", OpenSettings);
+});

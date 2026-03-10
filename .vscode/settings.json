@@ -9,7 +9,6 @@
 	{
 		"overrideConfigFile": "./Configuration/.eslintrc.cjs"
 	},
-    // "C_Cpp.codeAnalysis.clangTidy.enabled": true,
     "cSpell.enabledFileTypes": {
         "*": true,
         "json": false
@@ -26,6 +25,17 @@
         "typescript",
         "typescriptreact"
     ],
+    "files.exclude":
+    {
+        "**/node_modules/**": true,
+        "**/Application/Build/**": true
+    },
+    "search.useIgnoreFiles": false,
+    "files.watcherExclude":
+    {
+        "**/node_modules/**": true,
+        "**/Application/Build/**": true
+    },
     "search.exclude":
     {
         ".git": true,
@@ -35,6 +45,26 @@
         "test/**/__snapshots__": true,
         "package-lock.json": true,
         "*.{css,sass,scss}.d.ts": true,
-        "**/node_modules": true
+        "**/node_modules": true,
+        "**/logs": true,
+        "**/*.log": true,
+        "**/pids": true,
+        "**/*.pid": true,
+        "**/*.seed": true,
+        "**/coverage": true,
+        "**/.eslintcache": true,
+        "**/.DS_Store": true,
+        "./Application/Release/Application/Distribution": true,
+        "./Application/Release/Build": true,
+        "./Application/Distribution": true,
+        "**/Distribution/**": true,
+        "**/.idea": true,
+        "**/npm-debug.log.*": true,
+        "**/*.css.d.ts": true,
+        "**/*.sass.d.ts": true,
+        "**/*.scss.d.ts": true,
+        "Application/build/**/*": true,
+        "Application/Windows/node_modules/**/*": true,
+        "Application/Intermediate/**/*": true,
     }
 }

@@ -56,8 +56,8 @@ struct FBackdrop
     float MinSigma = 1.f;
     float MaxSigma = 10.f;
     float Sigma = MinSigma;
-    TArray<BYTE> BlurredScreenshotData = TArray<BYTE>(3840 * 2160 * 3);
-    TArray<BYTE> ScreenshotData = TArray<BYTE>(3840 * 2160 * 3);
+    std::vector<BYTE> BlurredScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
+    std::vector<BYTE> ScreenshotData = std::vector<BYTE>(3840 * 2160 * 3);
     BYTE* Screenshot = nullptr;
     BYTE* BlurredScreenshot = nullptr;
     bool CalledOnce = false;
@@ -84,8 +84,8 @@ struct FBackdrop
  *   Backdrops can be removed by pointer.
  */
 
-TArray<FBackdrop> Backdrops;
-TArray<FBackdrop*> BackdropsBeingUnblurred;
+std::vector<FBackdrop> Backdrops;
+std::vector<FBackdrop*> BackdropsBeingUnblurred;
 
 FBackdrop* GetBackdrop(HWND WindowHandle)
 {
@@ -897,7 +897,7 @@ FBackdrop* GetBackdropToUnblur()
     return BackdropToUnblur;
 }
 
-NAPI_VOID UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
+void UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -908,7 +908,7 @@ NAPI_VOID UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
     if (BackdropToUnblur == nullptr)
     {
         // std::cout << "UnblurBackground was called before BlurBackground could construct a new blurred background." << std::endl;
-        return Environment.Undefined();
+        return;
     }
 
     // BOOL Shadow = false;
@@ -934,8 +934,6 @@ NAPI_VOID UnblurBackground(const Napi::CallbackInfo& CallbackInfo)
     //     << SetTimerResult
     //     << "."
     //     << std::endl;
-
-    RETURN_NAPI();
 }
 
 std::string GetDerivedThemeMode(double Luminance)
@@ -1113,7 +1111,7 @@ Napi::Value BlurBackground(const Napi::CallbackInfo& CallbackInfo)
     return EncodeHandle(Environment, Backdrop->BackdropHandle);
 }
 
-NAPI_VOID KillOrphans(const Napi::CallbackInfo& CallbackInfo)
+void KillOrphans(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -1146,6 +1144,4 @@ NAPI_VOID KillOrphans(const Napi::CallbackInfo& CallbackInfo)
             nullptr
         );
     }
-
-    RETURN_NAPI();
 }

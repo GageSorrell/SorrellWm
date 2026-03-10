@@ -16,6 +16,8 @@ type TEventErrorCode<Type extends string> = Type | FUnspecifiedErrorCode;
 
 export type FBringIntoPanelErrorCode = TEventErrorCode<"">;
 
+export type FGetIdErrorCode = TEventErrorCode<"">;
+
 export type FGetMonitorFromFocusedWindowErrorCode = TEventErrorCode<"ActiveWindowUndefined">;
 
 export type FGetAnnotatedPanelsErrorCode = TEventErrorCode<"">;
@@ -53,7 +55,7 @@ export type FRestoreFloatingWindowErrorCode = TEventErrorCode<"">;
 
 export type FRequestTearDownErrorCode = TEventErrorCode<"">;
 
-export type FUpdateSettingErrorCode = TEventErrorCode<"">;
+export type FUpdateSettingsErrorCode = TEventErrorCode<"">;
 
 export type FGetExternalWindowStateErrorCode = TEventErrorCode<"">;
 

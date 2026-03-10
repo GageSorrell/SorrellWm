@@ -12,7 +12,7 @@
 class FHook
 {
 public:
-    TArray<HHOOK> GetExHooks() const
+    std::vector<HHOOK> GetExHooks() const
     {
         return ExHooks;
     }
@@ -82,6 +82,6 @@ public:
         WinEventHooks.erase(std::remove(WinEventHooks.begin(), WinEventHooks.end(), Hook), WinEventHooks.end());
     }
 private:
-    TArray<HHOOK> ExHooks;
-    TArray<HWINEVENTHOOK> WinEventHooks;
+    std::vector<HHOOK> ExHooks;
+    std::vector<HWINEVENTHOOK> WinEventHooks;
 };

@@ -4,12 +4,6 @@
  * License:   MIT
  */
 
-/* This is the least value that enables experimental features, such as BigInt support. */
-// #ifdef NAPI_VERSION
-//     #undef NAPI_VERSION
-//     #define NAPI_VERSION 2147483647
-// #endif
-
 #include "Border.h"
 #include "Core/Core.h"
 #include "Core/Globals.h"
@@ -29,6 +23,7 @@
 #include <dwmapi.h>
 #include <codecvt>
 #include <map>
+#include <variant>
 
 #include "BlurBackground.h"
 #include "Screenshot.h"
@@ -63,7 +58,7 @@ void ShutdownGdiPlus(void* _)
  * their initializations should be added here, and the function should be renamed
  * to be more generic.
  */
-Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
+void InitializeHooks(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
     GGlobals::Hook = new FHook();
@@ -79,7 +74,7 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
     try
     {
         RegisterActivationKey();
-        return Environment.Undefined();
+        return;
     }
     catch (const Napi::Error& Error)
     {
@@ -100,11 +95,9 @@ Napi::Value InitializeHooks(const Napi::CallbackInfo& Information)
         Napi::Error::New(Environment, "Unknown native exception").ThrowAsJavaScriptException();
     }
     // RegisterActivationKey();
-
-    return Environment.Undefined();
 }
 
-Napi::Value InitializeMessageLoop(const Napi::CallbackInfo& Information)
+void InitializeMessageLoop(const Napi::CallbackInfo& Information)
 {
     Napi::Env Environment = Information.Env();
 
@@ -113,8 +106,6 @@ Napi::Value InitializeMessageLoop(const Napi::CallbackInfo& Information)
 
     GGlobals::MessageLoop = new FMessageLoop(EmptyCallback);
     GGlobals::MessageLoop->Queue();
-
-    return Environment.Undefined();
 }
 
 void InitializeGdiPlus()
@@ -126,16 +117,15 @@ void InitializeGdiPlus()
     }
 }
 
+using FValueCallback = Napi::Value (*)(const Napi::CallbackInfo&);
+using FVoidCallback = void (*)(const Napi::CallbackInfo&);
+
 void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
 {
-    typedef Napi::Value (*FFunctionPointer)(const Napi::CallbackInfo&);
-
-    const std::map<std::string, FFunctionPointer> FunctionDefinitions =
+    const std::map<std::string, FValueCallback> ValueFunctions =
     {
         { "InitializeMonitors", InitializeMonitors },
         { "GetTileableWindows", GetTileableWindowsNode },
-        { "UpdateTiledList", UpdateTiledList },
-        { "SetWindowPosition", SetWindowPosition },
         { "GetMonitorFromWindow", GetMonitorFromWindow },
         { "GetWindowTitle", GetWindowTitle },
         { "GetScreenshot", GetScreenshot },
@@ -143,49 +133,61 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "CaptureScreenSectionToTempPngFile", CaptureScreenSectionToTempPngFile },
         { "GetMonitorFriendlyName", GetMonitorFriendlyName },
         { "GetApplicationFriendlyName", GetApplicationFriendlyName },
-        { "RestoreAllWindows", RestoreAllWindows },
         { "BlurBackground", BlurBackground },
-        { "UnblurBackground", UnblurBackground },
         { "GetNotepadHandles", GetNotepadHandles },
-        { "KillNotepadInstances", KillNotepadInstances },
-        { "KillOrphans", KillOrphans },
         { "WriteTaskbarIconToPng", WriteTaskbarIconToPng },
         { "GetMonitors", GetMonitors },
+        { "GetFocusedWindow", GetFocusedWindow },
+        { "GetWindowShape", GetWindowShape },
+        { "CaptureWindowScreenshot", CaptureWindowScreenshot },
+        { "GetTitlebarHeight", GetTitlebarHeight },
+        { "GetWindowByName", GetWindowByName },
+        { "GetIsLightMode", GetIsLightMode },
+        { "GetThemeColor", GetThemeColor }
+    };
+
+    const std::map<std::string, FVoidCallback> VoidFunctions =
+    {
+        { "UpdateTiledList", UpdateTiledList },
+        { "SetWindowPosition", SetWindowPosition },
+        { "RestoreAllWindows", RestoreAllWindows },
+        { "UnblurBackground", UnblurBackground },
+        { "KillNotepadInstances", KillNotepadInstances },
+        { "KillOrphans", KillOrphans },
         { "RestoreWindow", RestoreWindow },
         { "MinimizeWindow", MinimizeWindow },
         { "CloseApplication", CloseApplication },
         { "StealFocus", StealFocusNode },
         { "InitializeBorderManager", InitializeBorderManager },
         { "SendNativeIpc", SendNativeIpc },
-        /* BEGIN AUTO-GENERATED REGION: EXPORTS. */
         { "InitializeMessageLoop", InitializeMessageLoop },
         { "InitializeIpc", InitializeIpc },
         { "InitializeHooks", InitializeHooks },
-        { "InitializeWinEvents", FWinEvent::Initialize },
-        { "GetFocusedWindow", GetFocusedWindow },
-        { "GetWindowShape", GetWindowShape },
-        { "CaptureWindowScreenshot", CaptureWindowScreenshot },
-        { "GetTitlebarHeight", GetTitlebarHeight },
-        { "GetWindowByName", GetWindowByName },
+        { "InitializeWinEvents", InitializeWinEvent },
         { "SetForegroundWindow", SetForegroundWindowNode },
-        { "GetIsLightMode", GetIsLightMode },
-        { "GetThemeColor", GetThemeColor },
-        /* END AUTO-GENERATED REGION. */
+        { "TestIpc", TestIpc }
     };
 
-    for (const std::pair<std::string, FFunctionPointer> FunctionDefinition : FunctionDefinitions)
+    for (auto [ Name, Pointer ] : ValueFunctions)
     {
         Exports.Set(
-            FunctionDefinition.first,
-            Napi::Function::New(Environment, FunctionDefinition.second)
+            Name,
+            Napi::Function::New(Environment, Pointer)
+        );
+    }
+
+    for (auto [ Name, Pointer ] : VoidFunctions)
+    {
+        Exports.Set(
+            Name,
+            Napi::Function::New(Environment, Pointer)
         );
     }
 }
 
 void InitializeTempDirectory()
 {
-    std::wstring TempPath = GetTempPath();
-    // Step 3: Check if the directory exists
+    FWideString TempPath = GetTempPath();
     DWORD attributes = GetFileAttributesW(TempPath.c_str());
 
     if (attributes == INVALID_FILE_ATTRIBUTES)

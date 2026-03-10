@@ -45,7 +45,7 @@ void CALLBACK WinEventProc(
     FWinEvent::DispatchFromEventProc_INTERNAL({ Event, Handle, IdObject, IdChild, EventThread, EventTime });
 }
 
-Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& CallbackInfo)
+void InitializeWinEvent(const Napi::CallbackInfo& CallbackInfo)
 {
     GGlobals::WinEvent->Environment = CallbackInfo.Env();
 
@@ -62,14 +62,11 @@ Napi::Value FWinEvent::Initialize(const Napi::CallbackInfo& CallbackInfo)
     if (!ObjectCreateEventHook)
     {
         Napi::Error::New(GGlobals::WinEvent->Environment, "Failed to set up event hook").ThrowAsJavaScriptException();
-        return GGlobals::WinEvent->Environment.Null();
     }
     else
     {
-        EventHook = ObjectCreateEventHook;
+        FWinEvent::EventHook = ObjectCreateEventHook;
     }
-
-    return GGlobals::WinEvent->Environment.Undefined();
 }
 
 void FWinEvent::OnExit(void* _)

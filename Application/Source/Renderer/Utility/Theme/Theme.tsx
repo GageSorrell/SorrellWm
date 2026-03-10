@@ -11,14 +11,25 @@ import {
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
+import { UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import type { FHexColor } from "@sorrellwm/windows";
-import { UseSendIpcEvent } from "@/Event";
+import type { FLogger } from "../../../Shared/Log.Types";
+import { GetLogger } from "@/Log";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
 
-const UseThemeColor = (): Readonly<[ FHexColor ]> =>
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+const Log: FLogger = GetLogger("Theme");
+
+export const UseThemeColor = (): Readonly<[ FHexColor ]> =>
 {
     const DefaultThemeColor: FHexColor = "#0078D4";
-    const { Data } = UseSendIpcEvent("GetThemeColor", undefined);
+    const { Data } = UseSendIpcEventStrict(
+        "GetThemeColor",
+        undefined,
+        { ThemeColor: DefaultThemeColor }
+    );
+
+    Log(`ThemeColor is ${ Data.ThemeColor }.`);
 
     if (Data !== undefined)
     {

@@ -4,13 +4,15 @@
  * License:   MIT
  */
 
-import { CommandContainer, type FCommand, type FCompoundCommand, type FSimpleCommand } from "@/Domain/Common";
+import { CommandContainer, type FCommand, type FCompoundCommand } from "@/Domain/Common";
 import { Action } from "@/Action";
 import type { ReactElement } from "react";
-import { SendIpcEvent } from "@/Event";
+import { UseSendIpcEventDeferred } from "@/Event";
 
 export const Move = (): ReactElement =>
 {
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+
     const StepSizes: TArray<number> = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ];
 
     // const ChangeMoveModeCommand: FSimpleCommand =

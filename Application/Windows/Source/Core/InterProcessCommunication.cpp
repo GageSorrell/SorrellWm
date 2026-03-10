@@ -76,7 +76,7 @@ FDelegateHandle FIpc::BindBase(const FString& Channel, const FIpcCallback& Callb
 
 void FIpc::Broadcast(const FString& Channel, const Napi::Value& Payload)
 {
-    TArray<FDelegateHandle> HandlesToRemove;
+    std::vector<FDelegateHandle> HandlesToRemove;
 
     for (const auto& [ BoundChannel, CallbackWrappers ] : BoundFunctions)
     {
@@ -100,7 +100,7 @@ void FIpc::Broadcast(const FString& Channel, const Napi::Value& Payload)
     }
 }
 
-NAPI_VOID SendNativeIpc(const Napi::CallbackInfo& CallbackInfo)
+void SendNativeIpc(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
 
@@ -110,16 +110,22 @@ NAPI_VOID SendNativeIpc(const Napi::CallbackInfo& CallbackInfo)
         : CallbackInfo[1];
 
     GGlobals::Ipc->Broadcast(Channel, Payload);
-
-    RETURN_NAPI();
 }
 
-NAPI_VOID InitializeIpc(const Napi::CallbackInfo& Information)
+void TestIpc(const Napi::CallbackInfo& CallbackInfo)
 {
-    Napi::Env Environment = Information.Env();
+    Napi::Env Environment = CallbackInfo.Env();
 
-    Napi::Function OnMessage = Information[0].As<Napi::Function>();
+    GGlobals::Ipc->Bind("Test", [](const Napi::Env& Environment, const Napi::Value& Payload) -> void
+    {
+        std::cout << "RECEIVED TEST" << std::endl;
+    });
+}
+
+void InitializeIpc(const Napi::CallbackInfo& CallbackInfo)
+{
+    Napi::Env Environment = CallbackInfo.Env();
+
+    Napi::Function OnMessage = CallbackInfo[0].As<Napi::Function>();
     GGlobals::Ipc = new FIpc(Environment, OnMessage);
-
-    RETURN_NAPI();
 }

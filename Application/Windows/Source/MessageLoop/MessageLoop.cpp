@@ -1,3 +1,9 @@
+/* File:      MessageLoop.cpp
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2026 Gage Sorrell
+ * License:   MIT
+ */
+
 #include "MessageLoop.h"
 
 // DECLARE_LOG_CATEGORY(MessageLoop)
@@ -7,7 +13,7 @@ FMessageLoop::FMessageLoop(Napi::Function OkCallback)
     , TDispatcher<MSG>()
 { }
 
-TArray<FWindowProc> FMessageLoop::WindowProcs;
+std::vector<FWindowProc> FMessageLoop::WindowProcs;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

@@ -5,9 +5,9 @@
  */
 
 import { CommandContainer, type FCommand, type FSimpleCommand } from "$/Common/Component";
-import { MakeSendIpcEventCallback, SendIpcEvent, UseSendIpcEvent } from "@/Event";
 import { type ReactElement, useEffect } from "react";
 import { UseNavigator, UseOnce } from "@/Utility";
+import { UseSendIpcEvent, UseSendIpcEventDeferred, UseSendIpcEventDeferredCallback } from "@/Event";
 import { Action } from "@/Action";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
@@ -78,10 +78,12 @@ const ActivationNotTiled = (): ReactElement =>
 
     // const { Data } = UseSendIpcEventStrict();
 
+    const [ SendIpcEventCallback ] = UseSendIpcEventDeferredCallback();
+
     const MaximizeCommand: FSimpleCommand =
     {
         Action: [ "Primary[0]" ],
-        Callback: MakeSendIpcEventCallback("MaximizeFloatingWindow", undefined),
+        Callback: SendIpcEventCallback("MaximizeFloatingWindow", undefined),
         Description: "@TODO",
         Name: "Maximize"
     };
@@ -89,7 +91,7 @@ const ActivationNotTiled = (): ReactElement =>
     const RestoreCommand: FSimpleCommand =
     {
         Action: [ "Primary[0]" ],
-        Callback: MakeSendIpcEventCallback("RestoreFloatingWindow", undefined),
+        Callback: SendIpcEventCallback("RestoreFloatingWindow", undefined),
         Description: "@TODO",
         Name: "Restore"
     };
@@ -170,6 +172,8 @@ export const Activation = (): ReactElement =>
             ? State.IsTiled
             : true;
     };
+
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
     UseOnce((): void =>
     {

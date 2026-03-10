@@ -5,10 +5,10 @@
  */
 
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";
+import { UseIpcEvent, UseSendIpcEventDeferred } from "@/Event";
 import { useCallback, useEffect } from "react";
-import type { FNavigateRequest } from "()/Event/Navigate.Types";
+import type { FNavigateRequest } from "../../Shared/Event/Navigate.Types";
 import type { TEventCallback } from "../../Shared/Event";
-import { UseIpcEvent } from "@/Event";
 
 export const UseIpcNavigatorState = (): Readonly<[ State: unknown ]> =>
 {
@@ -45,10 +45,12 @@ export const IpcNavigator = (): undefined =>
 
     UseIpcEvent("Navigate", OnNavigate);
 
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+
     useEffect((): void =>
     {
-        window.electron.ipcRenderer.Send("ReadyForRoute");
-    }, [ Navigator ]);
+        SendIpcEvent("ReadyForRoute", undefined);
+    }, [ Navigator, SendIpcEvent ]);
 
     return undefined;
 };

@@ -135,3 +135,5 @@ export type TRecord<
     Record<KeyType, PropertyType>;
 
 export type FRecord = TRecord;
+
+export type FOnIpcMessage = (Channel: string, Message: unknown) => void;

@@ -4,13 +4,16 @@
  * License:   MIT
  */
 
+import { Checkbox } from "@fluentui/react-components";
 import type { ReactElement } from "react";
+import { SettingsScreen } from "./SettingsScreen";
 
 export const Keyboard = (): ReactElement =>
 {
     return (
-        <div style={ { height: "100%", width: "100%" } }>
+        <SettingsScreen Title="Keyboard">
             Keyboard Screen
-        </div>
+            <Checkbox/>
+        </SettingsScreen>
     );
 };

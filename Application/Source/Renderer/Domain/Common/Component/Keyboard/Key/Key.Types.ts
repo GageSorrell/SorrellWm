@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FKeyId } from "()/Keyboard.Types";
+import type { FKeyId } from "../../../../../../Shared/Keyboard.Types";
 
 export type FKeySide =
     | "L"

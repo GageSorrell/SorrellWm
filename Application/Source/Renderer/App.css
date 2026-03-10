@@ -20,7 +20,7 @@ body
     src: url("../../Resource/SegoeFluentIcons.ttf");
 }
 
-.DEBUG_Draggable
+.Titlebar
 {
-    -webkit-app-region: drag;
+    app-region: drag;
 }
