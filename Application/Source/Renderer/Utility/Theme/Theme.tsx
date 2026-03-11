@@ -10,7 +10,7 @@ import {
     type Theme,
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
-import { type PropsWithChildren, type ReactNode, useMemo } from "react";
+import { type CSSProperties, type PropsWithChildren, type ReactNode, useMemo } from "react";
 import { UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import type { FHexColor } from "@sorrellwm/windows";
 import type { FLogger } from "../../../Shared/Log.Types";
@@ -68,7 +68,8 @@ const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
         const OutTheme: Theme = CreateTheme(Brand);
 
         /* Patch background color to have transparent background. */
-        OutTheme.colorNeutralBackground1 = "#00000000";
+        // OutTheme.colorNeutralBackground1 = "#00000000";
+        OutTheme.colorCompoundBrandBackground = ThemeColor;
 
         return OutTheme;
     }, [ IsLightMode, ThemeColor ]);
@@ -80,8 +81,16 @@ const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
 export const FluentThemeProvider = ({ children }: PropsWithChildren): ReactNode =>
 {
     const [ theme ] = UseSystemTheme();
+
+    const RootStyle: CSSProperties =
+    {
+        background: "none"
+    };
+
     return (
-        <FluentProvider { ...{ theme } }>
+        <FluentProvider
+            style={ RootStyle }
+            { ...{ theme } } >
             { children }
         </FluentProvider>
     );

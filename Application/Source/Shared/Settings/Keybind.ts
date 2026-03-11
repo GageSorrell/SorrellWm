@@ -3,5 +3,3 @@
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
-
-export const Foo: string = "";

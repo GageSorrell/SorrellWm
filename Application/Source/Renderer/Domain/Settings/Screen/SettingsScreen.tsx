@@ -14,14 +14,14 @@ export const SettingsScreen = ({ children, Title }: PSettingsScreen): ReactNode 
 {
     const RootStyle: CSSProperties =
     {
-        ...GetFlexStyle("column", "flex-start", "flex-start"),
+        // ...GetFlexStyle("column", "flex-start", "flex-start"),
         flex: 1,
         height: "100%",
-        marginRight: 16,
         marginTop: 0,
-        maxWidth: "100%",
+        // maxWidth: "100%",
         minHeight: "100%",
         paddingTop: 0
+        // width: "100%"
         // minWidth: "100%",
         // visibility: Visible ? "visible" : "hidden"
         // position: "absolute",
@@ -30,12 +30,14 @@ export const SettingsScreen = ({ children, Title }: PSettingsScreen): ReactNode 
 
     const BodyStyle: CSSProperties =
     {
-        ...GetFlexStyle("column", "flex-start", "flex-start"),
+        ...GetFlexStyle("column", "flex-start", "stretch"),
         gap: 16,
         height: "100%",
+        marginRight: 16,
         maxWidth: "100%",
-        minHeight: "100%",
-        overflowY: "auto"
+        minHeight: "100%"
+        // width: "100%"
+        // width: "100%"
         // minWidth: "100%",
     };
 

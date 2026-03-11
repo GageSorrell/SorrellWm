@@ -7,7 +7,6 @@
 import { type CSSProperties, type FC, type ReactElement, type ReactNode, useState } from "react";
 import {
     Caption1,
-    Divider,
     type SelectTabData,
     type SelectTabEvent,
     Tab,
@@ -23,10 +22,10 @@ import {
     StarFilled,
     StarRegular,
     bundleIcon } from "@fluentui/react-icons";
-import { GetFlexStyle, type TFunctionalComponent } from "@/Utility";
 import { About } from "./About";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { General } from "./General";
+import { GetFlexStyle } from "@/Utility";
 import { GetLogger } from "@/Log";
 import { Keyboard } from "./Keyboard";
 import { Tokens } from "../../../../Shared/Tokens";
@@ -185,7 +184,7 @@ export const Settings = (): ReactElement =>
                     </TabList>
                 </div>
                 <VerticalDivider />
-                <div style={ { flex: 1, height: "100%", width: "100%" } }>
+                <div style={ { flex: 1, maxHeight: "100%", width: "100%" } }>
                     { SelectedValue === "General" && <General /> }
                     { SelectedValue === "Keyboard" && <Keyboard /> }
                     { SelectedValue === "About" && <About /> }

@@ -34,6 +34,18 @@ export type FKeybinds =
         Miscellaneous: Record<FKeybindActionMiscellaneous, FKeySequence>;
     };
 
+type TRecurrence<Type> = Type extends Record<PropertyKey, Record<PropertyKey, unknown>>
+    ? {
+        [ Key in keyof Type ]: TRecurrence<Type[Key]>;
+    }
+    : Type extends Record<PropertyKey, unknown>
+        ? {
+            [ Key in keyof Type ]: string;
+        }
+        : string;
+
+export type FKeybindDisplayNames = TRecurrence<FKeybinds>;
+
 export type FActionKey =
     | `${ FKeybindActionLevel }[${ keyof FKeySequenceSet }]`
     | `Direction.${ FKeybindDirection }`
