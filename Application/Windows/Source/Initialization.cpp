@@ -14,6 +14,7 @@
 #include "Core/MonitorUtilities.h"
 #include "Development/Miscellaneous.h"
 #include "Keyboard.h"
+#include "Lifetime.h"
 #include "MessageLoop/MessageLoop.h"
 #include "WindowTracker.h"
 #include <string>
@@ -143,7 +144,9 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetTitlebarHeight", GetTitlebarHeight },
         { "GetWindowByName", GetWindowByName },
         { "GetIsLightMode", GetIsLightMode },
-        { "GetThemeColor", GetThemeColor }
+        { "GetThemeColor", GetThemeColor },
+        { "GetRunOnStartup", GetRunOnStartup },
+        { "GetIsElevated", GetIsElevated }
     };
 
     const std::map<std::string, FVoidCallback> VoidFunctions =
@@ -165,7 +168,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "InitializeHooks", InitializeHooks },
         { "InitializeWinEvents", InitializeWinEvent },
         { "SetForegroundWindow", SetForegroundWindowNode },
-        { "TestIpc", TestIpc }
+        { "TestIpc", TestIpc },
+        { "SetRunOnStartup", SetRunOnStartup }
     };
 
     for (auto [ Name, Pointer ] : ValueFunctions)
@@ -213,6 +217,25 @@ void InitializeTempDirectory()
 
 Napi::Object Init(Napi::Env Environment, Napi::Object Exports)
 {
+    //  Set general COM security levels.
+    HRESULT hr = CoInitializeSecurity(
+        NULL,
+        -1,
+        NULL,
+        NULL,
+        RPC_C_AUTHN_LEVEL_PKT_PRIVACY,
+        RPC_C_IMP_LEVEL_IMPERSONATE,
+        NULL,
+        0,
+        NULL
+    );
+
+    if( FAILED(hr) )
+    {
+        std::cout << "CoInitializeSecurity failed: " << hr << std::endl;
+        CoUninitialize();
+    }
+
     ExportFunctions(Environment, Exports);
     InitializeTempDirectory();
     InitializeGdiPlus();

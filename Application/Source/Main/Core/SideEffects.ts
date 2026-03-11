@@ -19,6 +19,7 @@ import "../Notification";
 setTimeout((): void =>
 {
     import("../BrowserWindow");
+    import("../CheckAdmin");
     import("../MainWindow");
     import("./Electron");
     import("./Tray");

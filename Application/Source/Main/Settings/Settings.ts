@@ -13,7 +13,12 @@ import {
     PoorEventSuccess,
     RegisterIpcCallbacks
 } from "#/Event";
-import { GetWindowByName, type HWindow, SetWindowPosition } from "@sorrellwm/windows";
+import {
+    GetRunOnStartup,
+    GetWindowByName,
+    type HWindow,
+    SetRunOnStartup,
+    SetWindowPosition } from "@sorrellwm/windows";
 import { CreateBrowserWindow } from "#/BrowserWindow";
 import { Delay } from "Source/Shared";
 import type { FLogger } from "../../Shared/Log.Types";
@@ -134,6 +139,20 @@ const CreateSettingsWindow = async (): Promise<void> =>
         SettingsWindow.setPosition(X / 1.25, Y / 1.25, false);
         await Delay(100);
         SettingsWindow.setSize(Width / 1.25, Height / 1.25, false);
+
+        await Delay(100);
+        // Log("Registering to run on Startup...");
+        Log("Trying Task function...");
+        await Delay(100);
+        SetRunOnStartup(true, process.execPath, (Result: unknown, Other: unknown): void =>
+        {
+            Log("SetRunResult: ", Result, Other);
+        });
+        // Log((await SetRunOnStartup(process.execPath)) ? "Success" : "Failed");
+        // const Foo: unknown = await GetTaskExistsAsync();
+        // Log("Task function Results: ", Foo);
+        // await Delay(100);
+        // Log(`Get: ${ GetRunOnStartup(process.execPath) }`);
     }
 };
 
@@ -145,11 +164,11 @@ export const OpenSettings = async (): Promise<void> =>
     }
 };
 
-export const UpdateSettings = async (InSettings: FSettings): Promise<boolean> =>
+const SaveSettings = async (NewSettings: FSettings): Promise<boolean> =>
 {
     try
     {
-        await Settings.set("Settings", InSettings);
+        await Settings.set("Settings", NewSettings);
         return true;
     }
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -157,6 +176,27 @@ export const UpdateSettings = async (InSettings: FSettings): Promise<boolean> =>
     {
         return false;
     }
+};
+
+const OnUpdateSettings = async (NewSettings: FSettings): Promise<boolean> =>
+{
+    if (NewSettings.RunOnStartup)
+    {
+        // SetRunOnStartup(true, process.execPath, ());
+    }
+
+    return true;
+};
+
+export const UpdateSettings = async (InSettings: FSettings): Promise<boolean> =>
+{
+    const SavedSuccessful: boolean = await SaveSettings(InSettings);
+    if (SavedSuccessful)
+    {
+        return await OnUpdateSettings(InSettings);
+    }
+
+    return false;
 };
 
 export const GetSettings = async (): Promise<Readonly<FSettings>> =>

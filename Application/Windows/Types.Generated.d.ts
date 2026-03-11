@@ -8,12 +8,16 @@
 
 /* eslint-disable */
 
-import type { FBox, HWindow, TArray, FRecord, FOnIpcMessage, HMonitor, FHexColor } from "./Core";
+import type { FBox, HWindow, Promise, TArray, FRecord, FOnIpcMessage, HMonitor, FHexColor } from "./Core";
 
 export function BlurBackground(Bounds: FBox, SourceHandle: HWindow): HWindow;
 export function UnblurBackground(): void;
 export function KillOrphans(): void;
 export function InitializeBorderManager(): void;
+export function GetRunOnStartup(ExecutablePath: string): boolean;
+export function GetIsElevated(): boolean;
+export function SetRunOnStartup(Enabled: boolean, ExecutablePath: string, Callback: unknown): void;
+export function GetTaskExistsAsync(): Promise<unknown>;
 export function GetScreenshot(Bounds: FBox): string;
 export function CaptureScreenSectionToTempPngFile(Bounds: FBox): string;
 export function WriteTaskbarIconToPng(Window: HWindow): string;

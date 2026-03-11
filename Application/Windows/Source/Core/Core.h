@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define SECURITY_WIN32
+
 #include "CoreBase.h"
 #include "Map.h"
 #include "Array.h"
