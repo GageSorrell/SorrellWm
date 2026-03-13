@@ -6,7 +6,7 @@
 
 import type { FColor, FHexColor, FHslColor } from "@sorrellwm/windows";
 import type { FThemeColors } from "./Color.Types";
-import { UseStore } from "@/Store";
+import { UseStore } from "@/Store.Old";
 import { contrast } from "./Theme/FluentThemeDesigner";
 import { hex_to_sRGB } from "./Theme/FluentThemeDesigner/Palettes";
 import { useMemo } from "react";

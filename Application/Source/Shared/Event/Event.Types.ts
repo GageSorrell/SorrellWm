@@ -9,6 +9,7 @@ import type {
     FBringIntoPanelErrorCode,
     FGetAnnotatedPanelsErrorCode,
     FGetCurrentPanelErrorCode,
+    FGetExternalSettingStateErrorCode,
     FGetExternalWindowStateErrorCode,
     FGetFloatingWindowStateErrorCode,
     FGetFocusDataErrorCode,
@@ -19,6 +20,7 @@ import type {
     FGetPanelScreenshotsErrorCode,
     FGetSettingErrorCode,
     FGetSettingsErrorCode,
+    FGetStoreErrorCode,
     FGetThemeColorErrorCode,
     FLogErrorCode,
     FMaximizeFloatingWindowErrorCode,
@@ -30,9 +32,13 @@ import type {
     FReadyForRouteErrorCode,
     FRequestTearDownErrorCode,
     FRestoreFloatingWindowErrorCode,
+    FSetStoreErrorCode,
     FTearDownErrorCode,
-    FUpdateSettingsErrorCode } from "./ErrorCodes.Types";
+    FUpdateSettingsErrorCode,
+    FCheckForUpdatesErrorCode,
+    FUpdateErrorCode} from "./ErrorCodes.Types";
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
+import type { FExternalSetting, FSettings } from "../Settings";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcEventsBase, TIpcFrontendEvent } from "./EventBase.Types";
 import type { FExternalWindow } from "../Window/ExternalWindow.Types";
@@ -40,8 +46,9 @@ import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FFocusData } from "./Focus.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
 import type { FNavigateRequest } from "./Navigate.Types";
-import type { FSettings } from "../Settings";
+import type { FStore } from "../Store.Types";
 import type { FTranslation } from "./Move.Types";
+import type { FUpdateStatus } from "./Settings.Types";
 
 export type FIpcFrontendEvents = TIpcEventsBase<{
     BringIntoPanel: TIpcFrontendEvent<
@@ -84,10 +91,35 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         { Setting: FSettings[keyof FSettings] },
         FGetSettingErrorCode
     >;
+    CheckForUpdates: TIpcFrontendEvent<
+        undefined,
+        FUpdateStatus,
+        FCheckForUpdatesErrorCode
+    >;
+    Update: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FUpdateErrorCode
+    >;
     GetSettings: TIpcFrontendEvent<
         undefined,
-        { Settings: FSettings; },
+        FSettings,
         FGetSettingsErrorCode
+    >;
+    GetStore: TIpcFrontendEvent<
+        undefined,
+        FStore,
+        FGetStoreErrorCode
+    >;
+    SetStore: TIpcFrontendEvent<
+        FStore,
+        undefined,
+        FSetStoreErrorCode
+    >;
+    GetExternalSettingState: TIpcFrontendEvent<
+        FExternalSetting,
+        { Setting: FSettings[FExternalSetting] },
+        FGetExternalSettingStateErrorCode
     >;
     GetThemeColor: TIpcFrontendEvent<
         undefined,

@@ -263,121 +263,218 @@ namespace
     }
 }
 
-Napi::Value GetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
+void GetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
 {
     Napi::Env Environment = CallbackInfo.Env();
-    const bool bCallbackInfoIsValid = CallbackInfo.Length() == 1 && CallbackInfo[0].IsString();
-    if (!bCallbackInfoIsValid)
+
+    class TGetTaskExistsWorker : public Napi::AsyncWorker
     {
-        Napi::TypeError::New(
-            Environment,
-            "GetRunsOnStartup expects (executablePath: string)"
-        ).ThrowAsJavaScriptException();
+    public:
+        TGetTaskExistsWorker(
+            Napi::Function& CallbackFunction,
+            const std::wstring& InExecutablePath
+        )
+            : Napi::AsyncWorker(CallbackFunction)
+            , ExecutablePath(InExecutablePath)
+            , Success(false)
+        { }
 
-        return Environment.Undefined();
-    }
+        void Execute() override
+        {
+            Success = false;
+            HRESULT ApartmentInitializationResult = CoInitializeEx(
+                nullptr,
+                COINIT_MULTITHREADED
+            );
 
-    std::wstring ApplicationName = Utf8ToWide("SorrellWm");
-    std::wstring ExecutablePath = Utf8ToWide(CallbackInfo[0].As<Napi::String>().Utf8Value());
-    std::wstring OptionalArguments;
+            bool ShouldUninitialize = SUCCEEDED(ApartmentInitializationResult);
 
-    if (ExecutablePath.empty())
-    {
-        Napi::TypeError::New(Environment, "Executable path must not be empty.").ThrowAsJavaScriptException();
-        return Environment.Undefined();
-    }
+            if (FAILED(ApartmentInitializationResult))
+            {
+                std::cout << "CoInitializeEx failed: " << ApartmentInitializationResult << std::endl;
+                return;
+            }
 
-    std::wstring ExpectedCommandLine = QuoteIfNeeded(ExecutablePath) + L" --launch-at-startup";
+            ITaskService *pService = NULL;
+            HRESULT hr = CoCreateInstance(
+                CLSID_TaskScheduler,
+                NULL,
+                CLSCTX_INPROC_SERVER,
+                IID_ITaskService,
+                (void**)&pService
+            );
+            std::cout << "UnregisterTask: This far" << std::endl;
 
-    if (!OptionalArguments.empty())
-    {
-        ExpectedCommandLine += L" ";
-        ExpectedCommandLine += OptionalArguments;
-    }
+            if (FAILED(hr))
+            {
+                std::cout << "Failed to create an instance of ITaskService: " << hr << std::endl;
+                CoUninitialize();
+            }
 
-    HKEY StartupKey = nullptr;
+            ITaskFolder *pRootFolder = NULL;
+            hr = pService->GetFolder( _bstr_t( L"\\") , &pRootFolder );
+            if( FAILED(hr) )
+            {
+                std::cout << "Cannot get Root Folder pointer: " << hr << std::endl;
+                pService->Release();
+                CoUninitialize();
+            }
 
-    LONG OpenResult = RegOpenKeyExW(
-        HKEY_CURRENT_USER,
-        L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-        0,
-        KEY_QUERY_VALUE,
-        &StartupKey
+            IRegisteredTask* RegisteredTaskPointer = nullptr;
+
+            HRESULT Result = pRootFolder->GetTask(
+                _bstr_t(TaskName),
+                &RegisteredTaskPointer
+            );
+
+            if (SUCCEEDED(Result))
+            {
+                Success = true;
+                RegisteredTaskPointer->Release();
+            }
+
+            pRootFolder->Release();
+            pService->Release();
+
+            if (ShouldUninitialize)
+            {
+                CoUninitialize();
+            }
+        }
+
+        void OnOK() override
+        {
+            Napi::HandleScope HandleScope(Env());
+
+            std::cout << "OnOK: Calling Callback" << std::endl;
+            Callback().Call({ Napi::Boolean::New(Env(), Success) });
+        }
+
+        void OnError(const Napi::Error& Error) override
+        {
+            Napi::HandleScope HandleScope(Env());
+
+            std::cout << "OnError: Calling Callback" << std::endl;
+            Callback().Call({ Error.Value() });
+        }
+
+    private:
+        LPCWSTR TaskName = L"Launch SorrellWm on Login";
+        std::wstring ExecutablePath;
+        bool Success;
+        bool NewState;
+    };
+
+    std::wstring ExecutablePath = Utf8ToWide(CallbackInfo[0].As<Napi::String>());
+    Napi::Function CallbackFunction = CallbackInfo[1].As<Napi::Function>();
+
+    TGetTaskExistsWorker* Worker = new TGetTaskExistsWorker(
+        CallbackFunction,
+        ExecutablePath
     );
 
-    if (OpenResult == ERROR_FILE_NOT_FOUND || OpenResult == ERROR_PATH_NOT_FOUND)
-    {
-        return Napi::Boolean::New(Environment, false);
-    }
+    Worker->Queue();
 
-    if (OpenResult != ERROR_SUCCESS)
-    {
-        ThrowLastError(Environment, "Failed to open HKCU Run key", OpenResult);
-        return Environment.Undefined();
-    }
+    // std::wstring ApplicationName = Utf8ToWide("SorrellWm");
+    // std::wstring OptionalArguments;
 
-    DWORD ValueType = 0;
-    DWORD ValueSizeInBytes = 0;
+    // if (ExecutablePath.empty())
+    // {
+    //     Napi::TypeError::New(Environment, "Executable path must not be empty.").ThrowAsJavaScriptException();
+    //     return Environment.Undefined();
+    // }
 
-    LONG QuerySizeResult = RegGetValueW(
-        StartupKey,
-        nullptr,
-        ApplicationName.c_str(),
-        RRF_RT_REG_SZ,
-        &ValueType,
-        nullptr,
-        &ValueSizeInBytes
-    );
+    // std::wstring ExpectedCommandLine = QuoteIfNeeded(ExecutablePath) + L" --launch-at-startup";
 
-    if (QuerySizeResult == ERROR_FILE_NOT_FOUND || QuerySizeResult == ERROR_PATH_NOT_FOUND)
-    {
-        RegCloseKey(StartupKey);
-        return Napi::Boolean::New(Environment, false);
-    }
+    // if (!OptionalArguments.empty())
+    // {
+    //     ExpectedCommandLine += L" ";
+    //     ExpectedCommandLine += OptionalArguments;
+    // }
 
-    if (QuerySizeResult != ERROR_SUCCESS)
-    {
-        RegCloseKey(StartupKey);
-        ThrowLastError(Environment, "Failed to query startup value size", QuerySizeResult);
-        return Environment.Undefined();
-    }
+    // HKEY StartupKey = nullptr;
 
-    if (ValueSizeInBytes == 0)
-    {
-        RegCloseKey(StartupKey);
-        return Napi::Boolean::New(Environment, false);
-    }
+    // LONG OpenResult = RegOpenKeyExW(
+    //     HKEY_CURRENT_USER,
+    //     L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+    //     0,
+    //     KEY_QUERY_VALUE,
+    //     &StartupKey
+    // );
 
-    std::vector<wchar_t> ValueBuffer(ValueSizeInBytes / sizeof(wchar_t));
+    // if (OpenResult == ERROR_FILE_NOT_FOUND || OpenResult == ERROR_PATH_NOT_FOUND)
+    // {
+    //     return Napi::Boolean::New(Environment, false);
+    // }
 
-    LONG QueryValueResult = RegGetValueW(
-        StartupKey,
-        nullptr,
-        ApplicationName.c_str(),
-        RRF_RT_REG_SZ,
-        nullptr,
-        ValueBuffer.data(),
-        &ValueSizeInBytes
-    );
+    // if (OpenResult != ERROR_SUCCESS)
+    // {
+    //     ThrowLastError(Environment, "Failed to open HKCU Run key", OpenResult);
+    //     return Environment.Undefined();
+    // }
 
-    RegCloseKey(StartupKey);
+    // DWORD ValueType = 0;
+    // DWORD ValueSizeInBytes = 0;
 
-    if (QueryValueResult == ERROR_FILE_NOT_FOUND || QueryValueResult == ERROR_PATH_NOT_FOUND)
-    {
-        return Napi::Boolean::New(Environment, false);
-    }
+    // LONG QuerySizeResult = RegGetValueW(
+    //     StartupKey,
+    //     nullptr,
+    //     ApplicationName.c_str(),
+    //     RRF_RT_REG_SZ,
+    //     &ValueType,
+    //     nullptr,
+    //     &ValueSizeInBytes
+    // );
 
-    if (QueryValueResult != ERROR_SUCCESS)
-    {
-        ThrowLastError(Environment, "Failed to read startup value", QueryValueResult);
-        return Environment.Undefined();
-    }
+    // if (QuerySizeResult == ERROR_FILE_NOT_FOUND || QuerySizeResult == ERROR_PATH_NOT_FOUND)
+    // {
+    //     RegCloseKey(StartupKey);
+    //     return Napi::Boolean::New(Environment, false);
+    // }
 
-    std::wstring RegisteredCommandLine(ValueBuffer.data());
+    // if (QuerySizeResult != ERROR_SUCCESS)
+    // {
+    //     RegCloseKey(StartupKey);
+    //     ThrowLastError(Environment, "Failed to query startup value size", QuerySizeResult);
+    //     return Environment.Undefined();
+    // }
 
-    bool IsRegistered = (RegisteredCommandLine == ExpectedCommandLine);
+    // if (ValueSizeInBytes == 0)
+    // {
+    //     RegCloseKey(StartupKey);
+    //     return Napi::Boolean::New(Environment, false);
+    // }
 
-    return Napi::Boolean::New(Environment, IsRegistered);
+    // std::vector<wchar_t> ValueBuffer(ValueSizeInBytes / sizeof(wchar_t));
+
+    // LONG QueryValueResult = RegGetValueW(
+    //     StartupKey,
+    //     nullptr,
+    //     ApplicationName.c_str(),
+    //     RRF_RT_REG_SZ,
+    //     nullptr,
+    //     ValueBuffer.data(),
+    //     &ValueSizeInBytes
+    // );
+
+    // RegCloseKey(StartupKey);
+
+    // if (QueryValueResult == ERROR_FILE_NOT_FOUND || QueryValueResult == ERROR_PATH_NOT_FOUND)
+    // {
+    //     return Napi::Boolean::New(Environment, false);
+    // }
+
+    // if (QueryValueResult != ERROR_SUCCESS)
+    // {
+    //     ThrowLastError(Environment, "Failed to read startup value", QueryValueResult);
+    //     return Environment.Undefined();
+    // }
+
+    // std::wstring RegisteredCommandLine(ValueBuffer.data());
+
+    // bool IsRegistered = (RegisteredCommandLine == ExpectedCommandLine);
+
+    // return Napi::Boolean::New(Environment, IsRegistered);
 }
 
 std::wstring GetUserName()
@@ -837,6 +934,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 std::cout << "Failed to create an instance of ITaskService: " << hr << std::endl;
                 CoUninitialize();
                 Success = false;
+                return;
                 // return Napi::Boolean::New(Environment, false);
             }
             ITaskFolder *pRootFolder = NULL;
@@ -847,7 +945,23 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pService->Release();
                 CoUninitialize();
                 Success = false;
+                return;
                 // return Napi::Boolean::New(Environment, false);
+            }
+
+            IRegisteredTask* RegisteredTaskPointer = nullptr;
+            hr = pRootFolder->GetTask(
+                _bstr_t(TaskName),
+                &RegisteredTaskPointer
+            );
+
+            if (FAILED(hr))
+            {
+                pRootFolder->Release();
+                pService->Release();
+                CoUninitialize();
+                Success = false;
+                return;
             }
 
             std::cout << "Going to delete task." << std::endl;

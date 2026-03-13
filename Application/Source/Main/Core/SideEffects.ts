@@ -28,6 +28,7 @@ setTimeout((): void =>
     import("../WindowTracker");
     import("../Development/SetupPrimaryMonitor");
     import("../Settings/Settings");
+    import("../Store");
 
     // Require("../Source/Main/Core/Initialization.ts");
     // Require("../Source/Main/Core/Tray");

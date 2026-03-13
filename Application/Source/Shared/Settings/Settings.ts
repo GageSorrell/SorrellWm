@@ -43,5 +43,6 @@ export const DefaultSettings: FSettings =
             3: [ "Ctrl", "R" ]
         }
     },
-    RunOnStartup: false
+    RunOnStartup: false,
+    ShowUpdateNotifications: true
 };

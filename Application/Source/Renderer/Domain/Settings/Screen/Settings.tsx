@@ -24,7 +24,7 @@ import {
     bundleIcon } from "@fluentui/react-icons";
 import { About } from "./About";
 import type { FLogger } from "../../../../Shared/Log.Types";
-import { General } from "./General";
+import { General } from "./General/General";
 import { GetFlexStyle } from "@/Utility";
 import { GetLogger } from "@/Log";
 import { Keyboard } from "./Keyboard";

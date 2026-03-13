@@ -5,10 +5,14 @@
  */
 
 import { GetIsLightMode, GetThemeColor } from "@sorrellwm/windows";
+import { GetStore, SetStore } from "./Store";
 import { PoorEventSuccess, RegisterIpcCallbacks } from "./Event";
 import type { BrowserWindow } from "electron";
 import type { FLogger } from "../Shared/Log.Types";
+import type { FSettings } from "Source/Shared";
+import type { FStore } from "Source/Shared/Store.Types";
 import { GetLogger } from "./Development";
+import { GetSettings } from "./Settings";
 import type { TEventCallback } from "../Shared/Event";
 import type { TIpcCallback } from "./Event.Types";
 
@@ -51,6 +55,47 @@ export const RegisterCommonIpcCallbacks = (Window: BrowserWindow): void =>
                 };
             },
             Channel: "GetIsLightMode"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetSettings">> =>
+            {
+                const Settings: FSettings = await GetSettings();
+                return {
+                    Data: Settings,
+                    Error: undefined
+                };
+            },
+            Channel: "GetSettings"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetSetting">> =>
+            {
+                return {
+                    Data: { Setting: 0 },
+                    Error: undefined
+                };
+            },
+            Channel: "GetSetting"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetStore">> =>
+            {
+                const Data: FStore = await GetStore();
+                return {
+                    Data,
+                    Error: undefined
+                };
+            },
+            Channel: "GetStore"
+        },
+        {
+            Callback: async (InStore: unknown): ReturnType<TEventCallback<"SetStore">> =>
+            {
+                const NewStore: FStore = InStore as FStore;
+                SetStore(NewStore);
+                return PoorEventSuccess();
+            },
+            Channel: "SetStore"
         }
     ];
 

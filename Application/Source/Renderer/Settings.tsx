@@ -40,24 +40,25 @@ const DefaultContextSettings: CSettings =
 
 const SettingsContext: Context<CSettings> = createContext<CSettings>(DefaultContextSettings);
 
-export const UseSettings = (): FSettings =>
+export const UseSettings = (): Readonly<[ FSettings ]> =>
 {
-    return useContext<CSettings>(SettingsContext).OutSettings;
+    return [ useContext<CSettings>(SettingsContext).OutSettings ];
 };
 
 export const UseSetting = <SettingKey extends keyof FSettings,>(
     SettingKey: SettingKey
 ): Readonly<[ Setting: FSettings[SettingKey] ]> =>
 {
-    const Setting: FSettings[SettingKey] = UseSettings()[SettingKey];
+    const [ Settings ] = UseSettings();
+    const Setting: FSettings[SettingKey] = Settings[SettingKey];
 
     return [ Setting ] as const;
 };
 
-export const UpdateSetting = <Type extends keyof FSettings,>(Setting: Type, Value: FSettings[Type]): void =>
+export const UseUpdateSetting = (): Readonly<[ TUpdateFunction ]> =>
 {
     const { OutUpdateFunction } = useContext<CSettings>(SettingsContext);
-    OutUpdateFunction(Setting, Value);
+    return [ OutUpdateFunction ] as const;
 };
 
 export const Settings = ({ children }: PropsWithChildren): ReactNode =>
@@ -73,7 +74,7 @@ export const Settings = ({ children }: PropsWithChildren): ReactNode =>
                 {
                     if (Value.Data !== undefined)
                     {
-                        return Value.Data.Settings;
+                        return Value.Data;
                     }
                 }
 

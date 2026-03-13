@@ -145,7 +145,6 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "GetWindowByName", GetWindowByName },
         { "GetIsLightMode", GetIsLightMode },
         { "GetThemeColor", GetThemeColor },
-        { "GetRunOnStartup", GetRunOnStartup },
         { "GetIsElevated", GetIsElevated }
     };
 
@@ -169,7 +168,8 @@ void ExportFunctions(Napi::Env& Environment, Napi::Object& Exports)
         { "InitializeWinEvents", InitializeWinEvent },
         { "SetForegroundWindow", SetForegroundWindowNode },
         { "TestIpc", TestIpc },
-        { "SetRunOnStartup", SetRunOnStartup }
+        { "SetRunOnStartup", SetRunOnStartup },
+        { "GetRunOnStartup", GetRunOnStartup }
     };
 
     for (auto [ Name, Pointer ] : ValueFunctions)

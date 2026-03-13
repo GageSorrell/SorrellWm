@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+export * from "./Button";
 export * from "./Command";
 export * from "./Keyboard";
 export * from "./Panel";

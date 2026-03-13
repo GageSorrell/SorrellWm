@@ -45,7 +45,6 @@ import type { FIpcChannel, TEventCallback } from "../Shared/Event";
 import { type FLogger, GetLogger, LogFrontend } from "./Development";
 import { PoorEventSuccess, RegisterIpcCallbacks, SendIpcEvent } from "./Event";
 import { CreateBrowserWindow } from "./BrowserWindow";
-import { DefaultSettings } from "../Shared/Settings";
 import type { FDevSettings } from "./DevSettings.Types";
 import type { FInsertableWindowData } from "../Shared/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
@@ -469,26 +468,6 @@ RegisterInitializationFunction(async (): Promise<void> =>
                 };
             },
             Channel: "GetAnnotatedPanels"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"GetSettings">> =>
-            {
-                return {
-                    Data: { Settings: DefaultSettings },
-                    Error: undefined
-                };
-            },
-            Channel: "GetSettings"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"GetSetting">> =>
-            {
-                return {
-                    Data: { Setting: 0 },
-                    Error: undefined
-                };
-            },
-            Channel: "GetSetting"
         }
     ];
 

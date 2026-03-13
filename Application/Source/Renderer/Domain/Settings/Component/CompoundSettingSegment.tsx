@@ -6,7 +6,6 @@
 
 import type { CCompoundSettingSegment, PCompoundSettingSegment } from "./CompoundSettingSegment.Types";
 import {
-    type CSSProperties,
     type Context,
     type ReactNode,
     createContext,
@@ -32,11 +31,6 @@ export const UseCompoundContext = (): CCompoundSettingSegment =>
 
 export const CompoundSettingSegment = ({ children }: PCompoundSettingSegment): ReactNode =>
 {
-    const RootStyle: CSSProperties =
-    {
-
-    };
-
     const [ IsExpanded, SetIsExpanded ] = useState<boolean>(false);
 
     const OnChangeExpanded = (): void =>
@@ -55,7 +49,7 @@ export const CompoundSettingSegment = ({ children }: PCompoundSettingSegment): R
 
     return (
         <CompoundSettingSegmentContext.Provider { ...{ value } }>
-            <div style={ RootStyle }>
+            <div>
                 { children }
             </div>
         </CompoundSettingSegmentContext.Provider>

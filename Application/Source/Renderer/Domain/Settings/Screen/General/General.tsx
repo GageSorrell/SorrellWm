@@ -4,19 +4,15 @@
  * License:   MIT
  */
 
-import {
-    CompoundSettingSegmentBody,
-    CompoundSettingSegmentHeader,
-    SettingSegment } from "../Component/SettingSegment";
 import { type ReactElement, type ReactNode, useState } from "react";
-import { BooleanSettingControl } from "../Component/BooleanSettingControl";
-import { Checkbox } from "@fluentui/react-components";
-import { CompoundSettingSegment } from "../Component/CompoundSettingSegment";
-import { DropdownSettingControl } from "../Component/DropdownSettingControl";
-import { NumberSettingControl } from "../Component/NumberSettingControl";
-import { SettingSegmentContainer } from "../Component/SettingSegmentContainer";
+import { BooleanSettingControl } from "../../Component/BooleanSettingControl";
+import { DropdownSettingControl } from "../../Component/DropdownSettingControl";
+import { NumberSettingControl } from "../../Component/NumberSettingControl";
+import { SettingSegment } from "../../Component/SettingSegment";
+import { SettingSegmentContainer } from "../../Component/SettingSegmentContainer";
 import { SettingsRegular } from "@fluentui/react-icons";
-import { SettingsScreen } from "./SettingsScreen";
+import { SettingsScreen } from "../SettingsScreen";
+import { VersionUpdates } from "./VersionUpdates";
 
 export const General = (): ReactElement =>
 {
@@ -66,27 +62,7 @@ export const General = (): ReactElement =>
 
     return (
         <SettingsScreen Title="General">
-            Run on Startup
-            <Checkbox/>
-            <CompoundSettingSegment>
-                <CompoundSettingSegmentHeader
-                    Control={ <TestSelectControl /> }
-                    Icon={ SettingsRegular }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-                <CompoundSettingSegmentBody
-                    Control={ <TestControl /> }
-                    Icon={ SettingsRegular }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-                <CompoundSettingSegmentBody
-                    Control={ <TestNumberControl /> }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-            </CompoundSettingSegment>
+            <VersionUpdates />
             <SettingSegmentContainer Title="Startup Behavior">
                 <SettingSegment
                     Control={ <TestSelectControl /> }

@@ -63,7 +63,17 @@ export type FGetFloatingWindowStateErrorCode = TEventErrorCode<"">;
 
 export type FGetSettingsErrorCode = TEventErrorCode<"">;
 
+export type FGetExternalSettingStateErrorCode = TEventErrorCode<"">;
+
 export type FGetSettingErrorCode = TEventErrorCode<"">;
+
+export type FGetStoreErrorCode = TEventErrorCode<"">;
+
+export type FCheckForUpdatesErrorCode = TEventErrorCode<"">;
+
+export type FUpdateErrorCode = TEventErrorCode<"">;
+
+export type FSetStoreErrorCode = TEventErrorCode<"">;
 
 // #endregion Frontend
 // #region Backend

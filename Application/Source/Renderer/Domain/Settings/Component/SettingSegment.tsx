@@ -4,15 +4,30 @@
  * License:   MIT
  */
 
-import { Body1, Caption1, makeStyles, tokens } from "@fluentui/react-components";
-import { type CSSProperties, type MouseEventHandler, type ReactNode } from "react";
+import {
+    Body1,
+    Caption1,
+    Checkbox,
+    type CheckboxOnChangeData,
+    makeStyles,
+    tokens } from "@fluentui/react-components";
+import { type CSSProperties, type ChangeEvent, type MouseEventHandler, type ReactNode } from "react";
 import { ChevronDownRegular, type FluentIconsProps } from "@fluentui/react-icons";
-import type { FSettingSegmentStyle, PSettingSegment, PSettingSegmentBase } from "./SettingSegment.Types";
+import type {
+    FSettingSegmentStyle,
+    PSettingSegment,
+    PSettingSegmentBody,
+    PSettingSegmentHeader,
+    PSettingSegmentInternal } from "./SettingSegment.Types";
+import type { FLogger } from "Source/Shared";
 import { GetFlexStyle } from "@/Utility";
+import { GetLogger } from "@/Log";
 import { Rotate } from "@fluentui/react-motion-components-preview";
 import { UseCompoundContext } from "./CompoundSettingSegment";
 
-const UseClasses: () => Record<FSettingSegmentStyle, string> = makeStyles({
+const Log: FLogger = GetLogger("SettingSegment");
+
+const UseSettingSegmentStyles: () => Record<FSettingSegmentStyle, string> = makeStyles({
     CompoundBody:
     {
         backgroundColor: tokens.colorNeutralBackground1,
@@ -31,6 +46,7 @@ const UseClasses: () => Record<FSettingSegmentStyle, string> = makeStyles({
         transitionDuration: "120ms",
         transitionProperty: "background-color",
         transitionTimingFunction: "ease",
+        zIndex: 9999,
 
         ":hover":
         {
@@ -45,10 +61,10 @@ const UseClasses: () => Record<FSettingSegmentStyle, string> = makeStyles({
 });
 
 const SettingSegmentBase = (
-    { Control, Icon, Subtitle, Title, Type }: PSettingSegmentBase
+    { Control, Icon, Subtitle, Title, Type }: PSettingSegmentInternal
 ): ReactNode =>
 {
-    const Styles: Record<FSettingSegmentStyle, string> = UseClasses();
+    const Styles: Record<FSettingSegmentStyle, string> = UseSettingSegmentStyles();
 
     const RootStyle: CSSProperties =
     {
@@ -126,7 +142,7 @@ const SettingSegmentBase = (
     );
 };
 
-export const CompoundSettingSegmentHeader = (Props: PSettingSegment): ReactNode =>
+export const CompoundSettingSegmentHeader = (Props: PSettingSegmentHeader): ReactNode =>
 {
     return (
         <SettingSegmentBase
@@ -137,13 +153,50 @@ export const CompoundSettingSegmentHeader = (Props: PSettingSegment): ReactNode 
 };
 
 /** @TODO Finish this. */
-export const CompoundSettingSegmentBody = (Props: PSettingSegment): ReactNode =>
+export const CompoundSettingSegmentBody = (
+    { OnChangeValue, Subtitle, Title, Value }: PSettingSegmentBody
+): ReactNode =>
 {
+    const Styles: Record<FSettingSegmentStyle, string> = UseSettingSegmentStyles();
+
+    const RootStyle: CSSProperties =
+    {
+        ...GetFlexStyle("row", "flex-start", "center"),
+        borderColor: "#DFE8DC",
+        borderStyle: "solid",
+        borderWidth: 1,
+        gap: tokens.spacingHorizontalXXS,
+        padding: tokens.spacingHorizontalM,
+        paddingLeft: 42
+    };
+
+    const TitleContainerStyle: CSSProperties = GetFlexStyle("column", "flex-start", "flex-start");
+
+    const Caption: ReactNode = (typeof Subtitle === "string")
+        ? <Caption1 style={ { color: tokens.colorNeutralForeground4 } }>{ Subtitle }</Caption1>
+        : Subtitle;
+
+    const OnChange = (_Event: ChangeEvent<HTMLInputElement>, Data: CheckboxOnChangeData): void =>
+    {
+        Log(`Data.checked === ${ Data.checked }.`);
+        OnChangeValue(typeof Data.checked === "boolean" && Data.checked);
+    };
+
     return (
-        <SettingSegmentBase
-            Type="CompoundBody"
-            { ...Props }
-        />
+        <div
+            className={ Styles.CompoundBody }
+            style={ RootStyle }>
+            <Checkbox
+                checked={ Value }
+                onChange={ OnChange }
+            />
+            <div style={ TitleContainerStyle }>
+                <Body1>
+                    { Title }
+                </Body1>
+                { Caption }
+            </div>
+        </div>
     );
 };
 
