@@ -5,16 +5,16 @@
  */
 
 import { MemoryRouter, Route, Routes as RouterRoutes } from "react-router-dom";
-import { Activation } from "$/Activation";
+import { Activation } from "@/Domain/Activation";
 import { Direction } from "@/Domain/Insert/Screen/Direction";
-import { Focus } from "$/Focus";
+import { Focus } from "@/Domain/Focus";
 import { Insert } from "@/Domain/Insert";
 import { IpcNavigator } from "./IpcNavigator";
-import { Move } from "$/Move";
-import { Resize } from "$/Resize";
+import { Move } from "@/Domain/Move";
+import { Resize } from "@/Domain/Resize";
 import { Select } from "@/Domain/Insert/Screen/Select";
-import { Settings } from "$/Settings";
-import { TestWindow } from "$/Development/TestWindow";
+import { Settings } from "@/Domain/Settings";
+import { TestWindow } from "@/Domain/Development/TestWindow";
 import { Tile } from "@/Domain/Tile";
 
 export const Routes = () =>

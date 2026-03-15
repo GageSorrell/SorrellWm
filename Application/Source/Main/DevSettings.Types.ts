@@ -13,7 +13,7 @@ export type FDevSettings = Readonly<{
     {
         ShowOnLaunch:
         {
-            Enabled: true;
+            Enabled: boolean;
             Position: FBox;
         };
     };

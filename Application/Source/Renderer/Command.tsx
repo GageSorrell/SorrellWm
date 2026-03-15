@@ -119,6 +119,8 @@ export const GetKeyIdsFromAction = (Action: FAction, Keybinds: FKeybinds): TArra
             Out = (Out as TRecord<typeof Key>)[Key];
         });
 
+        Log(`Out ${ Array.isArray(Out) ? "IS" : "IS NOT" } an array, it is ${ Out }.`);
+
         return Out as TArray<FKeyId>;
     });
 };

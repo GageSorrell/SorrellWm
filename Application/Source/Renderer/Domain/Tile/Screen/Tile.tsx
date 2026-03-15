@@ -5,7 +5,7 @@
  */
 
 import { Caption1, Title1 } from "@fluentui/react-components";
-import { CommandContainer, type FCommand, GetPanelKey, Panel } from "$/Common";
+import { CommandContainer, type FCommand, GetPanelKey, Panel } from "@/Domain/Common";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";

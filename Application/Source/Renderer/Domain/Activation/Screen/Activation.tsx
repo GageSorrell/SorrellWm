@@ -4,14 +4,14 @@
  * License:   MIT
  */
 
-import { CommandContainer, type FCommand, type FSimpleCommand } from "$/Common/Component";
-import { type ReactElement, useEffect } from "react";
+import { type FC, type ReactElement, useEffect } from "react";
 import { UseNavigator, UseOnce } from "@/Utility";
-import { UseSendIpcEvent, UseSendIpcEventDeferred, UseSendIpcEventDeferredCallback } from "@/Event";
+import { UseSendIpcEvent, UseSendIpcEventDeferred } from "@/Event";
 import { Action } from "@/Action";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
+import { CommandContainer, type FCommand, type FSimpleCommand } from "@/Domain/Common/Component/Command";
 
 const Log: FLogger = GetLogger("Activation");
 
@@ -65,10 +65,10 @@ const ActivationTiled = (): ReactElement =>
         }
     ];
 
-    return <div>Test</div>;
-
     return (
-        <CommandContainer { ...{ BottomShelfCommands, Commands } } />
+        <Action>
+            <CommandContainer { ...{ BottomShelfCommands, Commands } } />
+        </Action>
     );
 };
 
@@ -80,23 +80,23 @@ const ActivationNotTiled = (): ReactElement =>
 
     // const { Data } = UseSendIpcEventStrict();
 
-    const [ SendIpcEventCallback ] = UseSendIpcEventDeferredCallback();
+    // const [ SendIpcEventCallback ] = UseSendIpcEventDeferredCallback();
 
-    const MaximizeCommand: FSimpleCommand =
-    {
-        Action: [ "Primary[0]" ],
-        Callback: SendIpcEventCallback("MaximizeFloatingWindow", undefined),
-        Description: "@TODO",
-        Name: "Maximize"
-    };
+    // const MaximizeCommand: FSimpleCommand =
+    // {
+    //     Action: [ "Primary[0]" ],
+    //     Callback: SendIpcEventCallback("MaximizeFloatingWindow", undefined),
+    //     Description: "@TODO",
+    //     Name: "Maximize"
+    // };
 
-    const RestoreCommand: FSimpleCommand =
-    {
-        Action: [ "Primary[0]" ],
-        Callback: SendIpcEventCallback("RestoreFloatingWindow", undefined),
-        Description: "@TODO",
-        Name: "Restore"
-    };
+    // const RestoreCommand: FSimpleCommand =
+    // {
+    //     Action: [ "Primary[0]" ],
+    //     Callback: SendIpcEventCallback("RestoreFloatingWindow", undefined),
+    //     Description: "@TODO",
+    //     Name: "Restore"
+    // };
 
     const Commands: TArray<FCommand> =
     [
@@ -193,6 +193,10 @@ export const Activation = (): ReactElement =>
         });
     }, [ ]);
 
+    const ActivationComponent: FC = GetIsTiled()
+        ? ActivationTiled
+        : ActivationNotTiled;
+
     /** @TODO Use Action component. */
     /** @TODO Hide "SorrellWm" if document.body.height is less than 500. */
     /** @TODO Set color of "SorrellWm" just as other elements, based upon color of underlying window. */
@@ -214,11 +218,7 @@ export const Activation = (): ReactElement =>
             } }>
                 SorrellWm
             </div>
-            {
-                GetIsTiled()
-                    ? <ActivationTiled />
-                    : <ActivationNotTiled />
-            }
+            <ActivationComponent />
         </div>
     );
 };

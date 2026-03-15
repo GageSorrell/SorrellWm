@@ -6,7 +6,7 @@
 
 import { Body1Strong, tokens } from "@fluentui/react-components";
 import { type CSSProperties, type ReactNode, useEffect } from "react";
-import { CommandContainer, type FCommand, type FCompoundCommand, type FSimpleCommand } from "$/Common";
+import { CommandContainer, type FCommand, type FCompoundCommand, type FSimpleCommand } from "@/Domain/Common";
 import type { FFocusData, FPanelFocusData, FWindowFocusData } from "../../../../Shared/Event/Focus.Types";
 import { Action } from "@/Action";
 import type { FFocusChange } from "../../../../Shared/Tree.Types";

@@ -138,7 +138,6 @@
                 "ShowOnLaunch": {
                     "properties": {
                         "Enabled": {
-                            "const": true,
                             "type": "boolean"
                         },
                         "Position": {
