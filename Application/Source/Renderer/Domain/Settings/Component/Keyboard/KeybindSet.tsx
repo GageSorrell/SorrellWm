@@ -4,31 +4,119 @@
  * License:   MIT
  */
 
-import {
-    Body1,
-    Caption1,
-    tokens } from "@fluentui/react-components";
-import { type CSSProperties, type ReactNode, useState } from "react";
-import { EditRegular, type FluentIconsProps } from "@fluentui/react-icons";
-import { type FKeyId, Key } from "@/Domain/Common";
-import type { FActionKey } from "Source/Shared/Settings";
+import { ActiveEditingMessage, UseKeybindClasses } from "./Keybind";
+import { Body1, Caption1, tokens } from "@fluentui/react-components";
+import { type CSSProperties, type ReactNode, useCallback } from "react";
+import type { FKeybindPair, PKeybindContainer, PKeybindSet } from "./KeybindSet.Types";
+import type { FActionKey } from "../../../../../Shared/Settings";
+import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
+import type { FSimpleCallback } from "Source/Shared";
+import { type FluentIconsProps } from "@fluentui/react-icons";
 import { GetFlexStyle } from "@/Utility";
-import type { PKeybind } from "./KeybindSet.Types";
-import type { PKeybindContainer } from "./KeybindDialog.Types";
-import { UseKeybindClasses } from "./Keybind";
+import { Key } from "@/Domain/Common";
+import { UseKeyboardSettings } from "../../Screen/Keyboard";
 
-export const KeybindSet = ({
-    ActionKeys,
-    Icon,
-    KeyIds,
-    Subtitle,
-    Title }: PKeybind
-): ReactNode =>
+const KeybindContainer = ({ ActionKey, Caption, KeyIds }: PKeybindContainer): ReactNode =>
 {
-    const { KeyContainerStyle } = UseKeybindClasses();
+    const { ActiveStyle, ReceptiveStyle, UnreceptiveStyle } = UseKeybindClasses();
+
+    const { EditingKeybind, RequestCancel, RequestEditKeybind } = UseKeyboardSettings();
+
+    const IsEditing: boolean = EditingKeybind === ActionKey;
+
+    const onMouseDown: FSimpleCallback = useCallback((): void =>
+    {
+        if (!IsEditing && EditingKeybind !== ActionKey && EditingKeybind !== undefined)
+        {
+            return;
+        }
+
+        if (IsEditing)
+        {
+            RequestCancel(ActionKey);
+        }
+
+        RequestEditKeybind(ActionKey);
+    }, [ ActionKey, EditingKeybind, IsEditing, RequestCancel, RequestEditKeybind ]);
+
+    const className: string = IsEditing
+        ? ActiveStyle
+        : EditingKeybind === undefined
+            ? ReceptiveStyle
+            : UnreceptiveStyle;
+
+    const Disabled: boolean = !IsEditing && EditingKeybind !== undefined;
+
+    // if (KeyIds === undefined)
+    // {
+    //     return [ ];
+    // }
+
+    // const KeyIdArray: Array<FKeyId> = Array.isArray(KeyIds)
+    //     ? KeyIds
+    //     : [ KeyIds ];
+
+    // return KeyIdArray.map((KeyId: FKeyId, InnerIndex: number): ReactNode =>
+    // {
+    // });
+
     const RootStyle: CSSProperties =
     {
+        ...GetFlexStyle("column", "flex-start", "center"),
+        gap: tokens.spacingVerticalXS
+    };
+
+    return (
+        <div style={ RootStyle }>
+            <div { ...{ className, onMouseDown } }>
+                {
+                    KeyIds !== undefined
+                        ? Array.isArray(KeyIds)
+                            ? KeyIds.map((KeyId: FKeyId, Index: number): ReactNode =>
+                            {
+                                return (
+                                    <Key
+                                        key={ `${ KeyId }-${ Index }` }
+                                        { ...{ Disabled, KeyId } }
+                                    />
+                                );
+                            })
+                            : <Key
+                                KeyId={ KeyIds }
+                                { ...{ Disabled } }
+                            />
+                        : <div style={ { minHeight: 30, minWidth: 30 } }></div>
+                }
+            </div>
+            {
+                Caption && (
+                    <Caption1 style={ { color: tokens.colorNeutralForeground2 } }>
+                        { Caption }
+                    </Caption1>
+                )
+            }
+        </div>
+    );
+};
+
+export const KeybindSet = ({
+    Icon,
+    Keybinds,
+    Subtitle,
+    Title }: PKeybindSet
+): ReactNode =>
+{
+    const InnerRootStyle: CSSProperties =
+    {
         ...GetFlexStyle("row", "flex-start", "center"),
+        flex: 1,
+        gap: tokens.spacingHorizontalM,
+        width: "100%"
+    };
+
+    const RootStyle: CSSProperties =
+    {
+        ...GetFlexStyle("column", "flex-start", "flex-start"),
         backgroundColor: tokens.colorNeutralBackground1,
         borderColor: "#DFE8DC",
         borderRadius: tokens.borderRadiusMedium,
@@ -40,12 +128,19 @@ export const KeybindSet = ({
 
     const KeybindContainerContainerStyle: CSSProperties =
     {
-        ...GetFlexStyle("row", "flex-start", "center"),
-        gap: tokens.spacingHorizontalS
+        ...GetFlexStyle("row", "flex-end", "center"),
+        flexWrap: "wrap",
+        gap: tokens.spacingHorizontalL
+    };
+
+    const CaptionStyle: CSSProperties =
+    {
+        color: tokens.colorNeutralForeground4,
+        textWrap: "nowrap"
     };
 
     const Caption: ReactNode = (typeof Subtitle === "string")
-        ? <Caption1 style={ { color: tokens.colorNeutralForeground4 } }>{ Subtitle }</Caption1>
+        ? <Caption1 style={ CaptionStyle }>{ Subtitle }</Caption1>
         : Subtitle;
 
     const IconStyle: FluentIconsProps["style"] =
@@ -53,80 +148,51 @@ export const KeybindSet = ({
         fontSize: "1.5rem"
     };
 
-    const TitleContainerStyle: CSSProperties = GetFlexStyle("column", "flex-start", "flex-start");
-
-    const FillerStyle: CSSProperties =
+    const TitleContainerStyle: CSSProperties =
     {
+        ...GetFlexStyle("column", "flex-start", "flex-start"),
         flex: 1
     };
 
-    const [ OpenDialog, SetOpenDialog ] = useState<boolean>(false);
-
-    const OnOpenChange = (NewValue: boolean): void =>
+    const ActionKeys: Array<FActionKey> = Keybinds.map(({ ActionKey }: FKeybindPair): FActionKey =>
     {
-        SetOpenDialog((_Old: boolean): boolean =>
-        {
-            return NewValue;
-        });
-    };
-
-    const KeybindContainer = (Props: PKeybindContainer): ReactNode =>
-    {
-        const { KeyId, Subtitle, Title } = Props;
-        /* eslint-disable-next-line @typescript-eslint/typedef */
-
-        const onMouseDown = (): void =>
-        {
-
-        };
-
-        return (
-            <div
-                className={ KeyContainerStyle }
-                onMouseDown={ onMouseDown }>
-                <Key KeyId={ KeyId as FKeyId } />
-                <EditRegular
-                    color={ tokens.colorNeutralForeground4 }
-                    fontSize="1rem"
-                />
-            </div>
-        );
-    };
+        return ActionKey;
+    });
 
     return (
         <div style={ RootStyle }>
-            {
-                Icon && <Icon style={ IconStyle }/>
-            }
-            <div style={ TitleContainerStyle }>
-                <Body1>
-                    { Title }
-                </Body1>
-                { Caption }
-            </div>
-            <div style={ FillerStyle }></div>
-            <div style={ KeybindContainerContainerStyle }>
+            <div style={ InnerRootStyle }>
                 {
-                    KeyIds.map((KeyId: FKeyId, Index: number): ReactNode =>
+                    Icon && <Icon style={ IconStyle }/>
+                }
+                <div style={ TitleContainerStyle }>
+                    <Body1>
+                        { Title }
+                    </Body1>
+                    { Caption }
+                </div>
+                <div style={ KeybindContainerContainerStyle }>
                     {
-                        const ActionKey: FActionKey | undefined = ActionKeys[Index];
-                        if (ActionKey !== undefined)
+                        Keybinds.map((
+                            { ActionKey, Caption, KeyIds }: FKeybindPair,
+                            Index: number
+                        ): ReactNode =>
                         {
+                            const ReactKeyPart: string = Array.isArray(KeyIds)
+                                ? KeyIds.join("-")
+                                : KeyIds || "";
+
                             return (
                                 <KeybindContainer
-                                    { ...{ ActionKey, KeyId, OnOpenChange, OpenDialog, Subtitle, Title } }
-                                    key={ `${ KeyId }-${ Index }` }
+                                    { ...{ ActionKey, Caption, KeyIds } }
+                                    key={ `${ ReactKeyPart }-${ Index }` }
                                 />
                             );
-                        }
-                        else
-                        {
-                            return undefined;
-                        }
-                    })
-                }
+                        })
+                    }
+                </div>
             </div>
-            {/* <KeybindDialog { ...KeybindDialogProps }/> */}
+            <ActiveEditingMessage { ...{ ActionKeys } }/>
         </div>
     );
 };

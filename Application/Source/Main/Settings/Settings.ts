@@ -4,9 +4,9 @@
  * License:   MIT
  */
 
-import { type BrowserWindow, type BrowserWindowConstructorOptions, type Event, app } from "electron";
+import { type BrowserWindow, type BrowserWindowConstructorOptions, type Event, app, shell } from "electron";
 import { DefaultSettings, type FSettings } from "../../Shared/Settings";
-import { Delay, type FRejectFunction, type TResolveFunction } from "Source/Shared";
+import { Delay, type FRejectFunction, type TResolveFunction } from "../../Shared";
 import type {
     FIpcBackendChannel,
     FIpcEvents,
@@ -15,17 +15,20 @@ import type {
     TRequest,
     TResponse } from "../../Shared/Event";
 import {
-    GetPoorResponse,
-    SendIpcEvent as InSendIpcEvent,
-    PoorEventSuccess,
-    RegisterIpcCallbacks
-} from "#/Event";
-import {
+    GetIsElevated,
     GetRunOnStartup,
     GetWindowByName,
     type HWindow,
     SetRunOnStartup,
     SetWindowPosition } from "@sorrellwm/windows";
+import {
+    GetPoorResponse,
+    SendIpcEvent as InSendIpcEvent,
+    PoorEventFailure,
+    PoorEventFailureSimple,
+    PoorEventSuccess,
+    RegisterIpcCallbacks
+} from "#/Event";
 import { type ProgressInfo, type UpdateCheckResult, type UpdateInfo, autoUpdater } from "electron-updater";
 import { CreateBrowserWindow } from "#/BrowserWindow";
 import type { FLogger } from "../../Shared/Log.Types";
@@ -34,6 +37,7 @@ import { GetDevSettings } from "#/DevSettings";
 import { GetLogger } from "../Development";
 import { RegisterCommonIpcCallbacks } from "#/CommonEvents";
 import { RegisterInitializationFunction } from "#/Core/Initialize";
+import { SetShouldActivate } from "#/MainWindow";
 import Settings from "electron-settings";
 import type { TIpcCallback } from "#/Event.Types";
 
@@ -71,7 +75,7 @@ const CreateSettingsWindow = async (): Promise<void> =>
         resizable: true,
         show: false,
         skipTaskbar: false,
-        title: "SorrellWm Settings",
+        title: "SorrellWM Settings",
         titleBarOverlay:
         {
             color: "#00000000"
@@ -98,6 +102,25 @@ const CreateSettingsWindow = async (): Promise<void> =>
     const IpcCallbacks: Array<TIpcCallback> =
     [
         {
+            Callback: async (InLink: unknown): ReturnType<TEventCallback<"OpenWebPage">> =>
+            {
+                const Link: string | undefined = typeof InLink === "string"
+                    ? InLink
+                    : undefined;
+
+                if (Link !== undefined)
+                {
+                    await shell.openExternal(Link);
+                    return PoorEventSuccess();
+                }
+                else
+                {
+                    return PoorEventFailureSimple();
+                }
+            },
+            Channel: "OpenWebPage"
+        },
+        {
             Callback: async (): ReturnType<TEventCallback<"ReadyForRoute">> =>
             {
                 const NavigateRequest: FNavigateRequest =
@@ -111,14 +134,42 @@ const CreateSettingsWindow = async (): Promise<void> =>
             Channel: "ReadyForRoute"
         },
         {
+            Callback: async (): ReturnType<TEventCallback<"RequestRestart">> =>
+            {
+                app.relaunch();
+                app.exit();
+
+                return {
+                    Data: undefined,
+                    Error: undefined
+                };
+            },
+            Channel: "RequestRestart"
+        },
+        {
             Callback: async (InNewSettings: unknown): ReturnType<TEventCallback<"UpdateSettings">> =>
             {
                 const NewSettings: FSettings = InNewSettings as FSettings;
                 const Success: boolean = await UpdateSettings(NewSettings);
                 return GetPoorResponse(Success);
-                /** @TODO Notify if electron-settings fails to save. */
             },
             Channel: "UpdateSettings"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"PreventActivation">> =>
+            {
+                SetShouldActivate(false);
+                return PoorEventSuccess();
+            },
+            Channel: "PreventActivation"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"AllowActivation">> =>
+            {
+                SetShouldActivate(true);
+                return PoorEventSuccess();
+            },
+            Channel: "AllowActivation"
         },
         {
             Callback: async (
@@ -145,6 +196,31 @@ const CreateSettingsWindow = async (): Promise<void> =>
                 );
             },
             Channel: "GetExternalSettingState"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetIsElevated">> =>
+            {
+                const IsElevated: boolean | undefined = GetIsElevated();
+
+                if (IsElevated !== undefined)
+                {
+                    return {
+                        Data:
+                        {
+                            IsElevated
+                        },
+                        Error: undefined
+                    };
+                }
+                else
+                {
+                    return {
+                        Data: undefined,
+                        Error: ""
+                    };
+                }
+            },
+            Channel: "GetIsElevated"
         },
         {
             Callback: async (): ReturnType<TEventCallback<"CheckForUpdates">> =>
@@ -239,6 +315,16 @@ const CreateSettingsWindow = async (): Promise<void> =>
     RegisterCommonIpcCallbacks(SettingsWindow);
     RegisterIpcCallbacks(SettingsWindow, IpcCallbacks);
 
+    SettingsWindow.on("focus", (): void =>
+    {
+        SetShouldActivate(false);
+    });
+
+    SettingsWindow.on("blur", (): void =>
+    {
+        SetShouldActivate(true);
+    });
+
     await LoadFrontend();
     if (ShowOnLaunch)
     {
@@ -250,7 +336,7 @@ const CreateSettingsWindow = async (): Promise<void> =>
             GetWindowByName("Developer Tools - http://localhost:1212/index.html");
         if (DevToolsWindow)
         {
-            SetWindowPosition(DevToolsWindow, { Height: 900, Width: 1080, X: -1080, Y: 960 });
+            SetWindowPosition(DevToolsWindow, { Height: 860, Width: 1080, X: -1080, Y: 860 });
         }
 
         const { Height, Width, X, Y } =
@@ -289,7 +375,7 @@ const SaveSettings = async (NewSettings: FSettings): Promise<boolean> =>
 {
     try
     {
-        await Settings.set("Settings", NewSettings);
+        await Settings.set("Settings", JSON.stringify(NewSettings));
         return true;
     }
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -299,22 +385,31 @@ const SaveSettings = async (NewSettings: FSettings): Promise<boolean> =>
     }
 };
 
-const OnUpdateSettings = async (NewSettings: FSettings): Promise<boolean> =>
+const OnUpdateSettings = async (OldSettings: FSettings, NewSettings: FSettings): Promise<boolean> =>
 {
-    SetRunOnStartup(NewSettings.RunOnStartup, process.execPath, () =>
+    return new Promise<boolean>((Resolve: TResolveFunction<boolean>, _Reject: FRejectFunction): void =>
     {
-        // @TODO Error handling.
+        if (OldSettings.RunOnStartup !== NewSettings.RunOnStartup)
+        {
+            SetRunOnStartup(NewSettings.RunOnStartup, process.execPath, (Success: boolean) =>
+            {
+                Resolve(Success);
+            });
+        }
+        else
+        {
+            Resolve(true);
+        }
     });
-
-    return true;
 };
 
-export const UpdateSettings = async (InSettings: FSettings): Promise<boolean> =>
+export const UpdateSettings = async (NewSettings: FSettings): Promise<boolean> =>
 {
-    const SavedSuccessful: boolean = await SaveSettings(InSettings);
+    const OldSettings: FSettings = await GetSettings();
+    const SavedSuccessful: boolean = await SaveSettings(NewSettings);
     if (SavedSuccessful)
     {
-        return await OnUpdateSettings(InSettings);
+        return await OnUpdateSettings(OldSettings, NewSettings);
     }
 
     return false;
@@ -322,17 +417,24 @@ export const UpdateSettings = async (InSettings: FSettings): Promise<boolean> =>
 
 export const GetSettings = async (): Promise<Readonly<FSettings>> =>
 {
-    const OutSettings: FSettings | null = await Settings.get("Settings") as FSettings | null;
-    return OutSettings !== null
-        ? OutSettings
+    const SettingsString: unknown = await Settings.get("Settings");
+
+    return typeof SettingsString === "string"
+        ? JSON.parse(SettingsString) as FSettings
         : DefaultSettings;
 };
 
 const InitializeSettings = async (): Promise<void> =>
 {
+    /** @TODO Validate settings file when loaded. */
+    Settings.configure({
+        numSpaces: 4,
+        prettify: true
+    });
+
     if (!Settings.hasSync("Settings"))
     {
-        await Settings.set("Settings", DefaultSettings);
+        await Settings.set("Settings", JSON.stringify(DefaultSettings));
     }
 };
 

@@ -10,7 +10,6 @@ import {
     type DependencyList,
     type Dispatch,
     type EffectCallback,
-    type MutableRefObject,
     type RefObject,
     type SetStateAction,
     useCallback,
@@ -26,12 +25,14 @@ import type {
     TUseDomRectReturnValue } from "./Hook.Types";
 import {
     type FSimpleCallback,
+    Identity,
     type TPromiseCatchFunction,
     type TPromiseThenFunction,
     ZeroBox } from "../../Shared/Utility";
-import { GetBoxFromDomRect, Identity } from "./Utility";
 import { type NavigateFunction, useNavigate } from "react-router-dom";
 import type { FBox } from "@sorrellwm/windows";
+import { GetBoxFromDomRect } from "./Utility";
+import type { THandler, TSetState } from "./Utility.Types";
 
 type FUseIndexReturnValue = Readonly<[
     Value: number,
@@ -84,7 +85,7 @@ export const UseIpc_DEPRECATED = <TChannel extends FIpcFrontendChannel>(
 ]> =>
 {
     const [ Response, SetResponse ] = useState<TResponse<TChannel> | undefined>(undefined);
-    const HasRunOnceRef: MutableRefObject<boolean> = useRef<boolean>(false);
+    const HasRunOnceRef: RefObject<boolean> = useRef<boolean>(false);
     useEffect((): void =>
     {
         if (HasRunOnceRef.current)
@@ -174,12 +175,12 @@ export const UseNavigator = (): Readonly<[ Navigate: FMakeNavigateFunction ]> =>
  * or (2) the `RefObject` returned by the hook.
  */
 export const UseDomRect = <Type extends HTMLElement = HTMLElement>(
-    ElementRef?: RefObject<Type>
+    ElementRef?: RefObject<Type | null>
 ): TUseDomRectReturnValue<Type> =>
 {
-    const DefaultElementReference: RefObject<Type> = useRef<Type>(null);
+    const DefaultElementReference: RefObject<Type | null> = useRef<Type | null>(null);
 
-    const ElementReference: RefObject<Type> = (ElementRef !== undefined)
+    const ElementReference: RefObject<Type | null> = (ElementRef !== undefined)
         ? ElementRef
         : DefaultElementReference;
 
@@ -216,6 +217,7 @@ export const UseDomRect = <Type extends HTMLElement = HTMLElement>(
     return [ Box, ElementReference ] as const;
 };
 
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
 export const UsePromise = <Type>(
     InPromise: Promise<Type>,
     InitialValue: Type,
@@ -258,7 +260,7 @@ export const UsePromise = <Type>(
 
 export const UseEffectOnce = (Callback: FSimpleCallback, DependencyArray?: DependencyList): void =>
 {
-    const Ref: MutableRefObject<boolean> = useRef<boolean>(false);
+    const Ref: RefObject<boolean> = useRef<boolean>(false);
     useEffect((): ReturnType<EffectCallback> =>
     {
         if (!Ref.current)
@@ -271,10 +273,42 @@ export const UseEffectOnce = (Callback: FSimpleCallback, DependencyArray?: Depen
 
 export const UseOnce = (Callback: FSimpleCallback): void =>
 {
-    const Ref: MutableRefObject<boolean> = useRef<boolean>(false);
+    const Ref: RefObject<boolean> = useRef<boolean>(false);
     if (!Ref.current)
     {
         Ref.current = true;
         Callback();
     }
+};
+
+export const UseWindowEffect = (Channel: keyof WindowEventMap, Callback: FSimpleCallback): void =>
+{
+    useEffect((): FSimpleCallback =>
+    {
+        window.addEventListener(Channel, Callback);
+
+        return (): void =>
+        {
+            window.removeEventListener(Channel, Callback);
+        };
+    }, [ Channel, Callback ]);
+};
+
+export const UseState = <Type>(InitialValue: Type): Readonly<[
+    Value: Type,
+    OnChangeValue: THandler<Type>,
+    SetValue: TSetState<Type>
+]> =>
+{
+    const [ Value, SetValue ] = useState<Type>(InitialValue);
+
+    const OnChangeValue: THandler<Type> = useCallback((NewValue: Type): void =>
+    {
+        SetValue((_Old: Type): Type =>
+        {
+            return NewValue;
+        });
+    }, [ SetValue ]);
+
+    return [ Value, OnChangeValue, SetValue ] as const;
 };

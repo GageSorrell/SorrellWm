@@ -1,4 +1,4 @@
-# ◱ SorrellWm
+# ◱ SorrellWM
 
 *The tiling window manager for everyone.*
 

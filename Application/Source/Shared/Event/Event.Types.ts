@@ -6,7 +6,9 @@
 
 import type {
     FActivateErrorCode,
+    FAllowActivationErrorCode,
     FBringIntoPanelErrorCode,
+    FCheckForUpdatesErrorCode,
     FGetAnnotatedPanelsErrorCode,
     FGetCurrentPanelErrorCode,
     FGetExternalSettingStateErrorCode,
@@ -15,6 +17,7 @@ import type {
     FGetFocusDataErrorCode,
     FGetIdErrorCode,
     FGetInsertableWindowDataErrorCode,
+    FGetIsElevatedErrorCode,
     FGetIsLightModeErrorCode,
     FGetMonitorFromFocusedWindowErrorCode,
     FGetPanelScreenshotsErrorCode,
@@ -29,14 +32,16 @@ import type {
     FNavigateErrorCode,
     FNotifyReadyErrorCode,
     FOnChangeFocusErrorCode,
+    FOpenWebPageErrorCode,
+    FPreventActivationErrorCode,
     FReadyForRouteErrorCode,
+    FRequestRestartErrorCode,
     FRequestTearDownErrorCode,
     FRestoreFloatingWindowErrorCode,
     FSetStoreErrorCode,
     FTearDownErrorCode,
-    FUpdateSettingsErrorCode,
-    FCheckForUpdatesErrorCode,
-    FUpdateErrorCode} from "./ErrorCodes.Types";
+    FUpdateErrorCode,
+    FUpdateSettingsErrorCode } from "./ErrorCodes.Types";
 import type { FAnnotatedPanel, FFocusChange, FPanel } from "#/Tree";
 import type { FExternalSetting, FSettings } from "../Settings";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
@@ -100,6 +105,26 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         undefined,
         FUpdateErrorCode
+    >;
+    OpenWebPage: TIpcFrontendEvent<
+        string,
+        undefined,
+        FOpenWebPageErrorCode
+    >;
+    GetIsElevated: TIpcFrontendEvent<
+        undefined,
+        { IsElevated: boolean; },
+        FGetIsElevatedErrorCode
+    >;
+    AllowActivation: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FAllowActivationErrorCode
+    >;
+    PreventActivation: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FPreventActivationErrorCode
     >;
     GetSettings: TIpcFrontendEvent<
         undefined,
@@ -185,6 +210,11 @@ export type FIpcFrontendEvents = TIpcEventsBase<{
         undefined,
         undefined,
         FRestoreFloatingWindowErrorCode
+    >;
+    RequestRestart: TIpcFrontendEvent<
+        undefined,
+        undefined,
+        FRequestRestartErrorCode
     >;
     RequestTearDown: TIpcFrontendEvent<
         undefined,

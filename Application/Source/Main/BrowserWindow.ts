@@ -13,9 +13,9 @@ import {
     type NativeImage,
     type WebPreferences,
     ipcMain } from "electron";
-import { GetIcon, GetIconPath } from "./Core";
 import type { FCreateBrowserWindowReturnType } from "./BrowserWindow.Types";
 import type { FLogger } from "../Shared/Log.Types";
+import { GetIcon } from "./Core";
 import { GetLogger } from "./Development";
 import { RegisterInitializationFunction } from "./Core/Initialize";
 
@@ -59,8 +59,6 @@ export const CreateBrowserWindow = async (
     const { webPreferences, ...Rest } = Options;
 
     const icon: NativeImage = GetIcon("Brand", "PNG");
-    Log(GetIconPath("Brand", "PNG"));
-    Log(`Is Icon Empty: ${ icon.isEmpty() }.`);
 
     const Window: BrowserWindow = new BrowserWindow({
         height: 900,

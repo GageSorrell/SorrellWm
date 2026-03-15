@@ -25,10 +25,9 @@ import type {
     TLogPrimitive,
     TLogValue } from "./LogFormat.Types";
 import type { FLogDigitSeparator, FLogQuoteStyle, FLogSettings } from "../../../Shared/Log.Types";
+import { type FTypeof, Identity } from "../../../Shared/Utility";
 import Chalk from "chalk";
-import type { FTypeof } from "../../../Shared/Utility";
 import { GetDevSettings } from "#/DevSettings";
-import { Identity } from "@/Utility";
 
 Chalk.level = 3;
 

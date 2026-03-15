@@ -5,31 +5,60 @@
  */
 
 import type {
+    FBackendChannelTagger,
+    FFrontendChannelTagger,
     FIpcFrontendChannel,
     FIpcFrontendEvents,
     FRichEvents,
     FRichFrontendEvents,
     TGetResponseFromKey,
+    TGetRichResponse,
     TGetRichResponseAsFailure,
     TGetRichResponseAsSuccess,
-    TRequest } from "../Shared/Event";
+    TRequest,
+    TRichResponseFailure,
+    TRichResponseSuccess } from "../Shared/Event";
 import type { FSimpleCallback } from "../Shared/Utility";
-import type { MutableRefObject } from "react";
+import type { TInternal } from "./Utility";
+
+export type CEvent = TInternal<{
+    Id: number | undefined;
+    TagBackend: FBackendChannelTagger;
+    TagFrontend: FFrontendChannelTagger;
+}>;
+
+export type TIpcStatePending<PendingType extends boolean> =
+{
+    IsPending: PendingType;
+};
 
 export type TIpcState<Type extends keyof FIpcFrontendEvents> =
-{
-    Data: TGetResponseFromKey<Type>["Data"] | undefined;
-    Error: TGetResponseFromKey<Type>["Error"] | undefined;
-};
+    TIpcStatePending<boolean> &
+    {
+        Data: TGetResponseFromKey<Type>["Data"] | undefined;
+        Error: TGetResponseFromKey<Type>["Error"] | undefined;
+    };
+
+export type TGetRichIpcState<ChannelType extends keyof FRichFrontendEvents> =
+    TGetRichResponse<FRichEvents[ChannelType]["Response"]> &
+    Pick<TIpcState<ChannelType>, "IsPending">;
+
+export type TGetRichIpcStateAsSuccess<ChannelType extends keyof FRichEvents> =
+    TRichResponseSuccess<NonNullable<FRichEvents[ChannelType]["Response"]["Data"]>> &
+    TIpcStatePending<false>;
+
+export type TGetRichIpcStateAsFailure<Type extends keyof FRichEvents> =
+    TRichResponseFailure<NonNullable<FRichEvents[Type]["Response"]["Error"]>> &
+    TIpcStatePending<false>;
 
 export type TIpcStateStrict<Type extends keyof FRichEvents> =
-{
-    Data: TGetRichResponseAsSuccess<Type>["Data"];
-    Error: TGetRichResponseAsFailure<Type>["Error"] | undefined;
-};
+    TIpcStatePending<boolean> &
+    {
+        Data: TGetRichResponseAsSuccess<Type>["Data"];
+        Error: TGetRichResponseAsFailure<Type>["Error"] | undefined;
+    };
 
-export type TUseSendIpcEventReturnType<Type extends keyof FIpcFrontendEvents> =
-    Readonly<TIpcState<Type>>;
+export type TUseSendIpcEventReturnType<Type extends keyof FIpcFrontendEvents> = Readonly<TIpcState<Type>>;
 
 export type FSendIpcEventCallback = <ChannelType extends FIpcFrontendChannel>(
     Channel: ChannelType,
@@ -38,11 +67,13 @@ export type FSendIpcEventCallback = <ChannelType extends FIpcFrontendChannel>(
 
 export type FSendIpcEvent = <ChannelType extends FIpcFrontendChannel>(
     Channel: ChannelType,
-    Request: TRequest<ChannelType>,
-    RemoveListenerRef?: MutableRefObject<FSimpleCallback | undefined>
+    Request: TRequest<ChannelType>
 ) => Promise<TIpcState<ChannelType>>;
 
-export type TUseSendIpcEventStrictReturnType<Type extends keyof FRichFrontendEvents> = Readonly<{
-    Data: Exclude<TIpcStateStrict<Type>["Data"], undefined>,
-    Error: TIpcStateStrict<Type>["Error"]
-}>;
+export type TUseSendIpcEventStrictReturnType<Type extends keyof FRichFrontendEvents> = Readonly<
+    TIpcStatePending<boolean> &
+    {
+        Data: Exclude<TIpcStateStrict<Type>["Data"], undefined>,
+        Error: TIpcStateStrict<Type>["Error"],
+    }
+>;

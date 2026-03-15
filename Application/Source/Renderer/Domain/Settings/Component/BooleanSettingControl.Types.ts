@@ -8,6 +8,7 @@ import type { THandler } from "@/Utility";
 
 export type PBooleanSettingControl =
 {
+    Disabled?: boolean;
     Value: boolean;
     OnChangeValue: THandler<boolean>;
 };

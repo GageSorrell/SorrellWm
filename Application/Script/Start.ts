@@ -56,6 +56,26 @@ const ModifyOutput = (Output: string): string =>
                 );
             }
         }
+        else if (Line.startsWith("[") && Line.includes(":CONSOLE:"))
+        {
+            const Level: string = Line.includes(":INFO:")
+                ? "Normal"
+                : Line.includes(":WARN")
+                    ? "Warn"
+                    : Line.includes(":ERROR:")
+                        ? "Error"
+                        : "Verbose";
+
+            const Body: string = Line.slice(Line.indexOf("] ") + 2);
+
+            return (
+                Chalk.hex("#FFFFFF").bgHex("#AAAAAA")(" ƒ ") +
+                Chalk.hex("#FFFFFF").bgGray(` ${ Level } `) +
+                Chalk.bgWhite(" Chrome Console ") +
+                " " +
+                Body
+            );
+        }
 
         const HasExcludedStatement: boolean =
             FilteredLogStatements.Statements.some((ExcludedStatement: string): boolean =>

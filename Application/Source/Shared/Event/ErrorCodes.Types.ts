@@ -75,6 +75,16 @@ export type FUpdateErrorCode = TEventErrorCode<"">;
 
 export type FSetStoreErrorCode = TEventErrorCode<"">;
 
+export type FRequestRestartErrorCode = TEventErrorCode<"">;
+
+export type FAllowActivationErrorCode = TEventErrorCode<"">;
+
+export type FPreventActivationErrorCode = TEventErrorCode<"">;
+
+export type FGetIsElevatedErrorCode = TEventErrorCode<"">;
+
+export type FOpenWebPageErrorCode = TEventErrorCode<"">;
+
 // #endregion Frontend
 // #region Backend
 

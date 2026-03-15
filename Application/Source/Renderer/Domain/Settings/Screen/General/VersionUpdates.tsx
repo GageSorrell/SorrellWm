@@ -6,19 +6,19 @@
 
 import { ArrowSyncRegular, CheckmarkCircleFilled, type FluentIconsProps } from "@fluentui/react-icons";
 import { Body1, Body1Strong, Caption1, Link, tokens } from "@fluentui/react-components";
-import { type CSSProperties, type ReactElement, type ReactNode, useState } from "react";
+import { type CSSProperties, type ReactElement, type ReactNode } from "react";
 import {
     CompoundSettingSegmentBody,
     CompoundSettingSegmentHeader } from "../../Component/SettingSegment";
-import { DefaultSettings, type FLogger, type FSettings } from "Source/Shared";
 import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Event";
-import { UseSettings, UseUpdateSetting } from "@/Settings";
 import { Button } from "@/Domain/Common";
 import { CompoundSettingSegment } from "../../Component/CompoundSettingSegment";
 import { CompoundSettingSegmentBodyContainer } from "../../Component/CompoundSettingSegmentBodyContainer";
+import { type FLogger } from "../../../../../Shared";
 import { GetFlexStyle } from "@/Utility";
 import { GetLogger } from "@/Log";
 import { UseMainStore } from "@/Store";
+import { UseSettingsState } from "@/Settings";
 
 const Log: FLogger = GetLogger("VersionUpdates");
 
@@ -90,22 +90,6 @@ const UpdateReady = (): ReactNode =>
 
 export const VersionUpdates = (): ReactNode =>
 {
-    // const [ Settings ] = UseSettings();
-
-    const [ InterimSettings, SetInterimSettings ] = useState<FSettings>(DefaultSettings);
-
-    // const [ UpdateSettings ] = UseUpdateSetting();
-    const OnChangeShowUpdateNotifications = (NewValue: boolean): void =>
-    {
-        // UpdateSettings("ShowUpdateNotifications", NewValue);
-        SetInterimSettings((Old: FSettings): FSettings =>
-        {
-            return {
-                ...Old,
-                ShowUpdateNotifications: NewValue
-            };
-        });
-    };
     const [ Store ] = UseMainStore();
 
     const UpdateIcon = (Props: FluentIconsProps): ReactElement<FluentIconsProps> =>
@@ -164,11 +148,12 @@ export const VersionUpdates = (): ReactNode =>
 
         const ReleaseNotes = (): ReactNode =>
         {
+            const [ SendIpcEventDeferredCallback ] = UseSendIpcEventDeferredCallback();
             /* eslint-disable @stylistic/max-len */
             return Store?.AppVersion !== undefined
                 ? (
                     <Link
-                        href={ `https://github.com/GageSorrell/SorrellWm/releases/tag/v${ Store?.AppVersion }` }
+                        onMouseDown={ SendIpcEventDeferredCallback("OpenWebPage", `https://github.com/GageSorrell/SorrellWm/releases/tag/v${ Store?.AppVersion }`) }
                         style={ { fontSize: 12, fontWeight: 500 } }>
                         Release notes
                     </Link>
@@ -196,6 +181,8 @@ export const VersionUpdates = (): ReactNode =>
         marginBottom: tokens.spacingVerticalXS
     };
 
+    const [ GetControlledProps ] = UseSettingsState();
+
     return (
         <>
             <div style={ RootStyle }>
@@ -210,9 +197,8 @@ export const VersionUpdates = (): ReactNode =>
                     />
                     <CompoundSettingSegmentBodyContainer>
                         <CompoundSettingSegmentBody
-                            OnChangeValue={ OnChangeShowUpdateNotifications }
+                            { ...GetControlledProps("ShowUpdateNotifications") }
                             Title="Show notifications for new updates"
-                            Value={ InterimSettings.ShowUpdateNotifications }
                         />
                     </CompoundSettingSegmentBodyContainer>
                 </CompoundSettingSegment>

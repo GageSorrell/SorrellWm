@@ -4,7 +4,6 @@
  * License:   MIT
  */
 
-// import { app, Notification } from "electron";
 import { DefaultSettings } from "../../Shared/Settings";
 import { RegisterInitializationFunction } from "#/Core/Initialize";
 import Settings from "electron-settings";
@@ -13,7 +12,7 @@ const InitializeSettings = async (): Promise<void> =>
 {
     if (!Settings.hasSync("Settings"))
     {
-        await Settings.set("Settings", DefaultSettings);
+        await Settings.set("Settings", JSON.stringify(DefaultSettings));
     }
 };
 

@@ -25,7 +25,7 @@ import {
     spawn as SpawnProcess } from "child_process";
 import { AreHandlesEqual } from "#/Utility";
 import type { FLogger } from "../../Shared/Log.Types";
-import type { FPanel } from "#/Tree/Tree.Types";
+import type { FPanel } from "../../Shared/Tree.Types";
 import { GetLogger } from "./Log";
 import { app } from "electron";
 

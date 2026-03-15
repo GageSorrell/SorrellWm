@@ -15,7 +15,7 @@ export function UnblurBackground(): void;
 export function KillOrphans(): void;
 export function InitializeBorderManager(): void;
 export function GetRunOnStartup(ExecutablePath: string, Callback: unknown): void;
-export function GetIsElevated(): boolean;
+export function GetIsElevated(): boolean | undefined;
 export function SetRunOnStartup(Enabled: boolean, ExecutablePath: string, Callback: unknown): void;
 export function GetTaskExistsAsync(): Promise<unknown>;
 export function GetScreenshot(Bounds: FBox): string;

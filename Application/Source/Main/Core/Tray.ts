@@ -14,7 +14,7 @@ const Tray: FTray = { Ref: undefined };
 
 RegisterInitializationFunction(async (): Promise<void> =>
 {
-    Tray.Ref = new ElectronTray(await GetIconPath("Tray"));
+    Tray.Ref = new ElectronTray(await GetIconPath("Brand", "PNG"));
 
     const ContextMenu: Menu = Menu.buildFromTemplate([
         {

@@ -5,4 +5,5 @@
  */
 
 export * from "./Log";
-export * from "../../Shared/Log.Types";
+export * from "./SetupPrimaryMonitor";
+export * from "./TestWindows";

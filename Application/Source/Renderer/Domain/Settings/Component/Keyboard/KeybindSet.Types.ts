@@ -4,13 +4,20 @@
  * License:   MIT
  */
 
-import type { FActionKey } from "Source/Shared/Settings";
-import type { FKeyId } from "Source/Shared/Keyboard.Types";
-import type { PSettingSegment } from "../SettingSegment.Types";
+import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
+import type { PKeybind } from "./Keybind.Types";
 
-export type PKeybind =
-    Pick<PSettingSegment, "Icon" | "Subtitle" | "Title"> &
+export type PKeybindContainer =
+    Omit<PKeybind, "KeyIds" | "Subtitle" | "Title"> &
     {
-        ActionKeys: TArray<FActionKey>;
-        KeyIds: TArray<FKeyId>;
+        Caption?: string;
+        KeyIds: FKeyId | Array<FKeyId> | undefined;
+    };
+
+export type FKeybindPair = Pick<PKeybindContainer, "ActionKey" | "Caption" | "KeyIds">;
+
+export type PKeybindSet =
+    Omit<PKeybind, "ActionKey" | "KeyIds"> &
+    {
+        Keybinds: Array<FKeybindPair>;
     };

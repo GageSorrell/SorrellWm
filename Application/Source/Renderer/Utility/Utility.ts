@@ -5,10 +5,36 @@
  */
 
 import type { CSSProperties, DependencyList } from "react";
+import type { FFlexStyle, TInternal } from "./Utility.Types";
 import type { FBox } from "@sorrellwm/windows";
-import type { FFlexStyle } from "./Utility.Types";
 
-export const Identity = <Type>(...Arguments: TArray<Type>) => Arguments;
+export const MakeInternal = <Type>(In: Type): TInternal<Type> =>
+{
+    return {
+        INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: In
+    };
+};
+
+export const GetInternal = <Type>(In: TInternal<Type>): Type =>
+{
+    return In.INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+};
+
+export const GetInternalSafe = <Type>(In: Type | TInternal<Type>): Type =>
+{
+    return IsInternal(In)
+        ? In.INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        : In;
+};
+
+export const IsInternal = <Type>(In: unknown): In is TInternal<Type> =>
+{
+    return (
+        typeof In === "object" &&
+        In !== null &&
+        "INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED" in In
+    );
+};
 
 export const AppendDependencyList = (
     InitialDependencyList: DependencyList,

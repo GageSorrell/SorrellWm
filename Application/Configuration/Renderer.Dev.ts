@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 import "webpack-dev-server";
 import * as Fs from "fs";
 import * as Path from "path";
@@ -87,8 +89,7 @@ const Configuration: Configuration =
             }
 
             const MainProcess: ChildProcess = spawn(
-                "npm",
-                Arguments,
+                `npm ${ Arguments.join(" ") }`,
                 {
                     shell: true,
                     stdio: "pipe"
@@ -225,15 +226,15 @@ const Configuration: Configuration =
                 loader: "sass-loader",
                 options:
                 {
-                    implementation: require("sass"),
-                    api: "modern"
+                    api: "modern",
+                    implementation: require("sass")
                 }
             }
         ]
     },
     {
-        test: /\.css$/i,
         exclude: /\.module\.css$/i,
+        test: /\.css$/i,
         use:
         [
             "style-loader",
@@ -241,8 +242,8 @@ const Configuration: Configuration =
         ]
     },
     {
-        test: /\.s[ac]ss$/i,
         exclude: /\.module\.s[ac]ss$/i,
+        test: /\.s[ac]ss$/i,
         use:
         [
             "style-loader",
@@ -251,8 +252,8 @@ const Configuration: Configuration =
                 loader: "sass-loader",
                 options:
                 {
-                    implementation: require("sass"),
-                    api: "modern"
+                    api: "modern",
+                    implementation: require("sass")
                 }
             }
         ]
@@ -266,7 +267,6 @@ const Configuration: Configuration =
         type: "asset/resource"
     },
     {
-        test: /\.svg$/i,
         oneOf:
         [
             {
@@ -293,7 +293,8 @@ const Configuration: Configuration =
             {
                 type: "asset/resource"
             }
-        ]
+        ],
+        test: /\.svg$/i
     }
 ]
     },
@@ -318,7 +319,6 @@ const Configuration: Configuration =
             : [
                 new DllReferencePlugin({
                     context: Paths.Intermediate,
-                    /* eslint-disable-next-line @typescript-eslint/no-require-imports */
                     manifest: require(Manifest),
                     sourceType: "var"
                 })

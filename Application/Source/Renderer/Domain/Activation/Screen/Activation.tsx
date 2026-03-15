@@ -65,6 +65,8 @@ const ActivationTiled = (): ReactElement =>
         }
     ];
 
+    return <div>Test</div>;
+
     return (
         <CommandContainer { ...{ BottomShelfCommands, Commands } } />
     );

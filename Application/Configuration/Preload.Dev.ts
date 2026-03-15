@@ -46,13 +46,13 @@ const Configuration: Configuration =
         /**
          * Create global constants which can be configured at compile time.
          *
-         * Useful for allowing different behaviour between development builds and
+         * Useful for allowing different behavior between development builds and
          * release builds
          *
          * NODE_ENV should be production so that modules do not perform certain
          * development checks
          *
-         * By default, use 'development' as NODE_ENV. This can be overriden with
+         * By default, use 'development' as NODE_ENV. This can be overridden with
          * 'staging', for example, by changing the ENV variables in the npm scripts
          */
         new EnvironmentPlugin({

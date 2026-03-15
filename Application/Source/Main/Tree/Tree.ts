@@ -35,8 +35,9 @@ import type {
     FLogTransformer,
     FPanel,
     FPanelBase,
-    FVertex } from "./Tree.Types";
-import { type FLogger, Format } from "#/Development";
+    FVertex } from "../../Shared/Tree.Types";
+import type { FLogger } from "../../Shared/Log.Types";
+import { Format } from "#/Development";
 import { GetActiveWindow } from "../MainWindow";
 import { GetMonitors } from "../Monitor";
 import { GetSettings } from "#/Settings";

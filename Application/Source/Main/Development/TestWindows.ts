@@ -5,7 +5,7 @@
  */
 
 import { BringIntoPanel, Find, IsPanel } from "#/Tree";
-import type { FPanel, FVertex } from "#/Tree/Tree.Types";
+import type { FPanel, FVertex } from "../../Shared/Tree.Types";
 import { GetNotepadHandles, GetWindowByName, type HWindow, KillNotepadInstances } from "@sorrellwm/windows";
 import { type BrowserWindow } from "electron";
 import { Sleep } from "#/Utility";

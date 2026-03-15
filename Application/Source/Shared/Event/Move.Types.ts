@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FAxis } from "../Shared.Types";
+import type { FAxis } from "../../Shared/Shared.Types";
 
 export type FTranslation =
 {

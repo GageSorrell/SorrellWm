@@ -4,9 +4,20 @@
  * License:   MIT
  */
 
-import type { FBox, FRecord } from "@sorrellwm/windows";
+import type {
+    FAnyFunction,
+    FPathRecord,
+    TFlatMapRecordTransformer,
+    TMapRecordTransformer,
+    TObjectPath,
+    TRef,
+    TTypeFromPath } from "./Utility.Types";
+import type { FBox, FRecord, TRecord } from "@sorrellwm/windows";
 import type { FRejectFunction, TResolveFunction } from "./Functional.Types";
-import type { FAnyFunction } from "./Utility.Types";
+import type { FLogger } from "../../Shared";
+import { GetLogger } from "@/Log";
+
+const Log: FLogger = GetLogger("Utility");
 
 type HMonitor = {
     Handle: number;
@@ -149,4 +160,132 @@ export const RetryUntilFulfilled = async <Type>(
     }
 
     return undefined;
+};
+
+export const SetPropertyFromPath = <
+    RecordType extends FPathRecord,
+    PathType extends TObjectPath<RecordType>
+>(
+    ObjectRef: TRef<RecordType>,
+    Path: PathType,
+    Value: TTypeFromPath<PathType, RecordType>
+): void =>
+{
+    type FProperty = TTypeFromPath<PathType, RecordType>;
+
+    const PathSplit: Array<string> = Path.split(".");
+
+    const Last: string | undefined = PathSplit.pop();
+    if (Last === undefined)
+    {
+        return;
+    }
+
+    if (PathSplit.length === 0)
+    {
+        ((ObjectRef.Ref as TRecord<typeof Path, unknown>)[Path]) = Value;
+    }
+
+    const Recurrence = (In: TRef<unknown>): TRef<unknown> | undefined =>
+    {
+        const NextPropertyNameBase: string | undefined = PathSplit.shift();
+
+        Log("NextPropertyNameBase", NextPropertyNameBase);
+
+        if (NextPropertyNameBase !== undefined)
+        {
+            const NextPropertyName: string | number = isNaN(parseInt(NextPropertyNameBase))
+                ? NextPropertyNameBase
+                : parseInt(NextPropertyNameBase);
+
+            Log("NextPropertyName", NextPropertyName);
+
+            const Out: TRef<unknown> = MakeRef<unknown>();
+            Out.Ref = (In.Ref as TRecord<string, unknown>)[NextPropertyName] as unknown;
+            return Recurrence(Out);
+        }
+        else
+        {
+            return In;
+        }
+    };
+
+    const PropertyRef: TRef<FProperty> = Recurrence(ObjectRef) as TRef<FProperty>;
+    const LastTyped: string | number = isNaN(parseInt(Last))
+        ? Last
+        : parseInt(Last);
+
+    (PropertyRef.Ref as TRecord<string, unknown>)[LastTyped] = Value;
+};
+
+export const GetPropertyFromPath = <
+    RecordType extends TRecord<string, unknown>,
+    PathType extends TObjectPath<RecordType>
+>(
+    Record: RecordType,
+    Path: PathType
+): TTypeFromPath<PathType, RecordType> =>
+{
+    const PathSplit: Array<string> = Path.split(".");
+    const Recurrence = (In: unknown, Index: number = 0): unknown =>
+    {
+        const Key: string | number | undefined = isNaN(parseInt(PathSplit[Index] || ""))
+            ? PathSplit[Index]
+            : parseInt(PathSplit[Index] || "");
+
+        if (Key !== undefined)
+        {
+            const Next: unknown = (In as TRecord<string, unknown>)[Key];
+            if (Index !== PathSplit.length - 1)
+            {
+                return Recurrence(Next, Index + 1);
+            }
+            else
+            {
+                return Next;
+            }
+        }
+        else
+        {
+            return undefined;
+        }
+    };
+
+    return Recurrence(Record) as TTypeFromPath<PathType, RecordType>;
+};
+
+export const MakeRef = <Type>(): TRef<Type> =>
+{
+    return {
+        Ref: undefined
+    } as TRef<Type>;
+};
+
+export const Identity = <Type>(...Arguments: TArray<Type>) => Arguments;
+
+export const MapRecord = <KeyType extends PropertyKey, PropertyType, ElementType>(
+    In: Record<KeyType, PropertyType>,
+    Function: TMapRecordTransformer<KeyType, PropertyType, ElementType>
+): Array<ElementType> =>
+{
+    return Object.keys(In).map((InKey: string, Index: number): ElementType =>
+    {
+        const Key: KeyType = InKey as KeyType;
+        return Function(Key, In[Key], Index);
+    });
+};
+
+export const FlatMapRecord = <KeyType extends PropertyKey, PropertyType, ElementType>(
+    In: Record<KeyType, PropertyType>,
+    Function: TFlatMapRecordTransformer<KeyType, PropertyType, ElementType>
+): Array<ElementType> =>
+{
+    return Object.keys(In).flatMap((InKey: string, Index: number): Array<ElementType> =>
+    {
+        const Key: KeyType = InKey as KeyType;
+        const Transform: ElementType | Array<ElementType> = Function(Key, In[Key], Index);
+        return Array.isArray(Transform)
+            ? Transform
+            : [ Transform ];
+    });
 };

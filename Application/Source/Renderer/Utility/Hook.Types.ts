@@ -22,4 +22,5 @@ export type FUseEffectAsyncCleanupFunction =
 
 export type FMakeNavigateFunction = (Route: string) => FSimpleCallback;
 
-export type TUseDomRectReturnValue<Type extends HTMLElement> = Readonly<[ Box: FBox, Ref: RefObject<Type> ]>;
+export type TUseDomRectReturnValue<Type extends HTMLElement> =
+    Readonly<[ Box: FBox, Ref: RefObject<Type | null> ]>;

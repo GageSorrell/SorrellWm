@@ -1,57 +1,63 @@
 {
-  "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "#/*": [
-        "./Source/Main/*"
-      ],
-      "@/*": [
-        "./Source/Renderer/*"
-      ],
-      "$/*": [
-        "./Source/Renderer/Domain/*"
-      ]
+    "compilerOptions":
+    {
+        "baseUrl": "./",
+        "paths":
+        {
+            "#/*":
+            [
+                "./Source/Main/*"
+            ],
+            "@/*":
+            [
+                "./Source/Renderer/*"
+            ],
+            "$/*":
+            [
+                "./Source/Renderer/Domain/*"
+            ]
+        },
+        "incremental": true,
+        "target": "ES2023",
+        "module": "Node16",
+        "lib":
+        [
+            "DOM",
+            "ES2023"
+        ],
+        "jsx": "react-jsx",
+        "strict": true,
+        "sourceMap": true,
+        "moduleResolution": "Node16",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "outDir": "Distribution",
+        "isolatedModules": true,
+        "noUncheckedIndexedAccess": true,
+        "allowImportingTsExtensions": true,
+        "rewriteRelativeImportExtensions": true,
+        "strictNullChecks": true
     },
-    "incremental": true,
-    "target": "ES2023",
-    "module": "Node16",
-    "lib": [
-      "DOM",
-      "ES2023"
-    ],
-    "jsx": "react-jsx",
-    "strict": true,
-    "sourceMap": true,
-    "moduleResolution": "Node16",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "outDir": "Distribution",
-    "isolatedModules": true,
-    "noUncheckedIndexedAccess": true,
-    "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true,
-    "strictNullChecks": true
-  },
     "plugins":
     [
         {
             "transform": "typia/lib/transform"
         }
     ],
-  "include": [
-    "Configuration",
-    "Source"
-  ],
-  "exclude": [
-    "Windows",
-    "Intermediate",
-    "test",
-    "node_modules",
-    "Release/Build",
-    "Release/Application/Distribution",
-    "Distribution_2_5_26"
-  ]
+    "include":
+    [
+        "Configuration",
+        "Source"
+    ],
+    "exclude":
+    [
+        "Windows",
+        "Intermediate",
+        "node_modules",
+        "Release/Build",
+        "Release/Application/Distribution"
+    ]
 }

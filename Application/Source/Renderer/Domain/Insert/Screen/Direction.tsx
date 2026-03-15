@@ -9,8 +9,8 @@
 // import { type ReactElement, useState } from "react";
 // import { Action } from "@/Action";
 // import type { FCardinalDirection } from "()/Shared.Types";
-// import type { FInsertSizingMethod } from "../../../../Shared/Event/Insert.Types";
-// import type { FSimpleCallback } from "../../../../Shared/Utility";
+// import type { FInsertSizingMethod } from "!/Event/Insert.Types";
+// import type { FSimpleCallback } from "!/Utility";
 // import { HighlightedHalf } from "../Component";
 // import { UseIpcNavigatorState } from "@/Router";
 

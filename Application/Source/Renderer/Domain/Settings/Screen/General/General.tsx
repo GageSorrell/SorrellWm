@@ -4,58 +4,45 @@
  * License:   MIT
  */
 
-import { type ReactElement, type ReactNode, useState } from "react";
+import { type ReactElement, type ReactNode } from "react";
+import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Event";
 import { BooleanSettingControl } from "../../Component/BooleanSettingControl";
-import { DropdownSettingControl } from "../../Component/DropdownSettingControl";
-import { NumberSettingControl } from "../../Component/NumberSettingControl";
+import type { FLogger } from "../../../../../Shared/Log.Types";
+import type { FSimpleCallback } from "Source/Shared";
+import { GetLogger } from "@/Log";
 import { SettingSegment } from "../../Component/SettingSegment";
 import { SettingSegmentContainer } from "../../Component/SettingSegmentContainer";
-import { SettingsRegular } from "@fluentui/react-icons";
 import { SettingsScreen } from "../SettingsScreen";
+import { TimerRegular } from "@fluentui/react-icons";
+import { UseSettingState } from "@/Settings";
 import { VersionUpdates } from "./VersionUpdates";
+
+const Log: FLogger = GetLogger("General");
 
 export const General = (): ReactElement =>
 {
-    const TestControl = (): ReactNode =>
+    const { Data, IsPending } = UseSendIpcEvent("GetIsElevated", undefined);
+
+    const LaunchOnStartupSetting = (): ReactNode =>
     {
-        const [ Value, SetValue ] = useState<boolean>(false);
-        const OnChangeValue = (State: boolean) =>
-        {
-            SetValue(State);
-        };
+        const [ Value, OnChangeValue ] = UseSettingState("RunOnStartup");
+
+        Log(`IsElevated: ${ Data?.IsElevated }; IsPending: ${ IsPending }.`);
+
+        const [ SendIpcEvent ] = UseSendIpcEventDeferredCallback();
+
+        const Disabled: boolean = !IsPending && Data !== undefined && !Data.IsElevated;
+        const DisabledMessage: string = "This setting requires Administrator privileges.";
+        const DisabledAction: FSimpleCallback = SendIpcEvent("RequestRestart", undefined);
+        const DisabledActionLabel: string = "Restart SorrellWM";
 
         return (
-            <BooleanSettingControl { ...{ OnChangeValue, Value } } />
-        );
-    };
-
-    const TestSelectControl = (): ReactNode =>
-    {
-        const [ Value, SetValue ] = useState<string>("One");
-        const OnChangeValue = (SelectedOption: string) =>
-        {
-            SetValue(SelectedOption);
-        };
-        return (
-            <DropdownSettingControl
-                OnChangeValue={ OnChangeValue }
-                Options={ [ "One", "Two", "Three" ] }
-                Value={ Value }
-            />
-        );
-    };
-
-    const TestNumberControl = (): ReactNode =>
-    {
-        const [ Value, SetValue ] = useState<number>(2);
-        const OnChangeValue = (NewValue: number): void =>
-        {
-            SetValue(NewValue);
-        };
-        return (
-            <NumberSettingControl
-                OnChangeValue={ OnChangeValue }
-                Value={ Value }
+            <SettingSegment
+                Control={ <BooleanSettingControl { ...{ Disabled, OnChangeValue, Value } } /> }
+                { ...{ Disabled, DisabledAction, DisabledActionLabel, DisabledMessage } }
+                Icon={ TimerRegular }
+                Subtitle="Launch SorrellWM automatically when you sign in."
+                Title="Run on Startup"
             />
         );
     };
@@ -64,34 +51,7 @@ export const General = (): ReactElement =>
         <SettingsScreen Title="General">
             <VersionUpdates />
             <SettingSegmentContainer Title="Startup Behavior">
-                <SettingSegment
-                    Control={ <TestSelectControl /> }
-                    Icon={ SettingsRegular }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-                <SettingSegment
-                    Control={ <TestControl /> }
-                    Icon={ SettingsRegular }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-                <SettingSegment
-                    Control={ <TestNumberControl /> }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-                <SettingSegment
-                    Control={ <TestControl /> }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
-                <SettingSegment
-                    Control={ <TestControl /> }
-                    Icon={ SettingsRegular }
-                    Subtitle="This is the subtitle."
-                    Title="Title"
-                />
+                <LaunchOnStartupSetting />
             </SettingSegmentContainer>
         </SettingsScreen>
     );

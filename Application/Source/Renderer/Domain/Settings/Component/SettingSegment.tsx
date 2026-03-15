@@ -7,12 +7,16 @@
 import {
     Body1,
     Caption1,
+    Caption1Strong,
     Checkbox,
     type CheckboxOnChangeData,
+    type CheckboxProps,
+    Link,
     makeStyles,
+    mergeClasses,
     tokens } from "@fluentui/react-components";
 import { type CSSProperties, type ChangeEvent, type MouseEventHandler, type ReactNode } from "react";
-import { ChevronDownRegular, type FluentIconsProps } from "@fluentui/react-icons";
+import { ChevronDownRegular, type FluentIconsProps, WarningFilled } from "@fluentui/react-icons";
 import type {
     FSettingSegmentStyle,
     PSettingSegment,
@@ -53,6 +57,10 @@ const UseSettingSegmentStyles: () => Record<FSettingSegmentStyle, string> = make
             backgroundColor: tokens.colorNeutralBackground1Hover
         }
     },
+    Disabled:
+    {
+        backgroundColor: tokens.colorStatusWarningBackground1
+    },
     Regular:
     {
         backgroundColor: tokens.colorNeutralBackground1,
@@ -61,10 +69,22 @@ const UseSettingSegmentStyles: () => Record<FSettingSegmentStyle, string> = make
 });
 
 const SettingSegmentBase = (
-    { Control, Icon, Subtitle, Title, Type }: PSettingSegmentInternal
+    {
+        Disabled: InDisabled,
+        DisabledAction,
+        DisabledActionLabel,
+        DisabledMessage,
+        Control,
+        Icon,
+        Subtitle,
+        Title,
+        Type
+    }: PSettingSegmentInternal
 ): ReactNode =>
 {
     const Styles: Record<FSettingSegmentStyle, string> = UseSettingSegmentStyles();
+
+    const Disabled: boolean = InDisabled !== undefined ? InDisabled : false;
 
     const RootStyle: CSSProperties =
     {
@@ -74,6 +94,20 @@ const SettingSegmentBase = (
         borderWidth: 1,
         gap: tokens.spacingHorizontalM,
         padding: tokens.spacingHorizontalM
+    };
+
+    const InnerStyle: CSSProperties =
+    {
+        ...GetFlexStyle("column", "flex-start", "flex-start"),
+        gap: tokens.spacingVerticalXS,
+        width: "100%"
+    };
+
+    const InnerRow: CSSProperties =
+    {
+        ...GetFlexStyle("row", "flex-start", "center"),
+        gap: tokens.spacingHorizontalM,
+        width: "100%"
     };
 
     const TitleContainerStyle: CSSProperties = GetFlexStyle("column", "flex-start", "flex-start");
@@ -121,23 +155,80 @@ const SettingSegmentBase = (
         }
     };
 
+    const RootClass: string = mergeClasses(Styles[Type], Disabled ? Styles.Disabled : undefined);
+
+    const DisabledNotification = (): ReactNode =>
+    {
+        const OutDisabledMessage = (): ReactNode =>
+        {
+            return typeof DisabledMessage === "string"
+                ? (
+                    <Caption1Strong color={ tokens.colorStatusWarningForeground1 }>
+                        { DisabledMessage }
+                    </Caption1Strong>
+                )
+                : DisabledMessage;
+        };
+
+        const MessageRootStyle: CSSProperties =
+        {
+            ...GetFlexStyle("row", "flex-start", "center"),
+            gap: tokens.spacingHorizontalS,
+            width: "100%"
+        };
+
+        const LinkStyle: CSSProperties =
+        {
+            fontSize: "0.75rem",
+            fontWeight: "bold"
+        };
+
+        return (
+            <div style={ MessageRootStyle }>
+                <WarningFilled
+                    color={ tokens.colorStatusWarningForeground1 }
+                    fontSize="1rem"
+                />
+                <OutDisabledMessage />
+                <div style={ { flex: 1 } }></div>
+                { DisabledActionLabel && (
+                    <Link
+                        onMouseDown={ DisabledAction }
+                        style={ LinkStyle }>
+                        { DisabledActionLabel }
+                    </Link>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div
-            className={ Styles[Type] }
+            className={ RootClass }
             onMouseDown={ OnMouseDown }
             style={ RootStyle }>
-            {
-                Icon && <Icon style={ IconStyle }/>
-            }
-            <div style={ TitleContainerStyle }>
-                <Body1>
-                    { Title }
-                </Body1>
-                { Caption }
+            <div style={ InnerStyle }>
+                <div style={ InnerRow }>
+                    {
+                        Icon && <Icon style={ IconStyle }/>
+                    }
+                    <div style={ TitleContainerStyle }>
+                        <Body1>
+                            { Title }
+                        </Body1>
+                        { Caption }
+                    </div>
+                    <div style={ FillerStyle }></div>
+                    { Control }
+                    <CompoundChevron/>
+                </div>
+                { Disabled && (
+                    <div style={ InnerRow }>
+                        { Icon && <Icon style={ { ...IconStyle, ...{ visibility: "hidden" } } } /> }
+                        <DisabledNotification />
+                    </div>
+                ) }
             </div>
-            <div style={ FillerStyle }></div>
-            { Control }
-            <CompoundChevron/>
         </div>
     );
 };
@@ -182,20 +273,25 @@ export const CompoundSettingSegmentBody = (
         OnChangeValue(typeof Data.checked === "boolean" && Data.checked);
     };
 
+    const CheckboxLabel: CheckboxProps["label"] =
+    (
+        <div style={ TitleContainerStyle }>
+            <Body1>
+                { Title }
+            </Body1>
+            { Caption }
+        </div>
+    );
+
     return (
         <div
             className={ Styles.CompoundBody }
             style={ RootStyle }>
             <Checkbox
                 checked={ Value }
+                label={ CheckboxLabel }
                 onChange={ OnChange }
             />
-            <div style={ TitleContainerStyle }>
-                <Body1>
-                    { Title }
-                </Body1>
-                { Caption }
-            </div>
         </div>
     );
 };

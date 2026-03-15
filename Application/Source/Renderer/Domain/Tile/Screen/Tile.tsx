@@ -9,7 +9,7 @@ import { CommandContainer, type FCommand, GetPanelKey, Panel } from "$/Common";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
-import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
+import type { FAnnotatedPanel } from "../../../../Shared/Tree.Types";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { GetLogger } from "@/Log";

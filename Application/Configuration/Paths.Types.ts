@@ -12,6 +12,7 @@ export type FWebpackPaths =
     | "Source"
     | "SourceMain"
     | "SourceRenderer"
+    | "SourceShared"
     | "Release"
     | "App"
     | "AppPackage"

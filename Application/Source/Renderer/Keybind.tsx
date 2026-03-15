@@ -6,9 +6,9 @@
 
 import {
     type Context,
-    type MutableRefObject,
     type PropsWithChildren,
     type ReactNode,
+    type RefObject,
     createContext,
     memo,
     useCallback,
@@ -19,9 +19,10 @@ import {
     useState
 } from "react";
 import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility/Functional.Types";
-import type { FLogger } from "../Shared/Log.Types";
+import type { FActionKey } from "Source/Shared/Settings";
+import type { FLogger } from "../Shared";
 import { GetLogger } from "./Log";
-import { Identity } from "./Utility";
+import { Identity } from "../Shared/Utility";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Keybind");
@@ -153,22 +154,44 @@ type FShortcutProvider = React.MemoExoticComponent<
     ({ children, ...Props }: PropsWithChildren<IShortcutProviderProps>) => JSX.Element
 >;
 
+export const FriendlyNames: Readonly<Record<FActionKey, string>> =
+{
+    Activate: "Activate",
+    Cancel: "Cancel",
+    "Direction.Down": "Direction (Down)",
+    "Direction.Left": "Direction (Left)",
+    "Direction.Right": "Direction (Right)",
+    "Direction.Up": "Direction (Up)",
+    "Miscellaneous.FocusList": "Focus List",
+    "Miscellaneous.FocusTextInput": "Focus Text Input",
+    "Miscellaneous.Peek": "Peek",
+    "Miscellaneous.Settings": "Open Settings",
+    "Primary[0]": "Primary Action (1)",
+    "Primary[1]": "Primary Action (2)",
+    "Primary[2]": "Primary Action (3)",
+    "Primary[3]": "Primary Action (4)",
+    "Secondary[0]": "Secondary Action (1)",
+    "Secondary[1]": "Secondary Action (2)",
+    "Secondary[2]": "Secondary Action (3)",
+    "Secondary[3]": "Secondary Action (4)"
+} as const;
+
 /* eslint-disable-next-line @stylistic/max-len */
 export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }: PropsWithChildren<IShortcutProviderProps>) =>
 {
-    const HoldDurations: MutableRefObject<Record<string, number>> = useRef<Record<string, number>>({ });
-    const HoldInterval: MutableRefObject<number | undefined> = useRef<number>();
-    const HoldListeners: MutableRefObject<ISingleShortcutListener> = useRef<ISingleShortcutListener>({ });
-    const HoldTimer: MutableRefObject<number> = useRef<number>(0);
-    const KeysDown: MutableRefObject<TArray<string>> = useRef<TArray<string>>([ ]);
-    const Listeners: MutableRefObject<IShortcutListener> = useRef<IShortcutListener>({ });
-    const PreviousKeys: MutableRefObject<TArray<string>> = useRef<TArray<string>>([ ]);
-    const SequenceListeners: MutableRefObject<ISingleShortcutListener> = useRef<ISingleShortcutListener>({ });
-    const SequenceTimer: MutableRefObject<number | undefined> = useRef<number | undefined>();
-    const Shortcuts: MutableRefObject<IShortcutProviderState> = useRef<IShortcutProviderState>([ ]);
+    const HoldDurations: RefObject<Record<string, number>> = useRef<Record<string, number>>({ });
+    const HoldInterval: RefObject<number | undefined> = useRef<number | undefined>(undefined);
+    const HoldListeners: RefObject<ISingleShortcutListener> = useRef<ISingleShortcutListener>({ });
+    const HoldTimer: RefObject<number> = useRef<number>(0);
+    const KeysDown: RefObject<TArray<string>> = useRef<TArray<string>>([ ]);
+    const Listeners: RefObject<IShortcutListener> = useRef<IShortcutListener>({ });
+    const PreviousKeys: RefObject<TArray<string>> = useRef<TArray<string>>([ ]);
+    const SequenceListeners: RefObject<ISingleShortcutListener> = useRef<ISingleShortcutListener>({ });
+    const SequenceTimer: RefObject<number | undefined> = useRef<number | undefined>(undefined);
+    const Shortcuts: RefObject<IShortcutProviderState> = useRef<IShortcutProviderState>([ ]);
 
     const [ ShortcutsState, SetShortcutsState ] = useState<IShortcutProviderState>([ ]);
-    const IsEnabled: MutableRefObject<boolean> = useRef<boolean>(true);
+    const IsEnabled: RefObject<boolean> = useRef<boolean>(true);
 
     /** Create an interval timer to check the duration of held keypresses. */
     const CreateTimer: ((Callback: FSimpleCallback) => void) =
@@ -194,9 +217,7 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
         }
     }, [ ]);
 
-    /**
-     * Handle "keydown" events and run the appropriate registered method
-     */
+    /** Handle "keydown" events and run the appropriate registered method. */
     const KeyDown: FKeyboardEventCallback = useCallback(
         (InEvent: KeyboardEvent) =>
         {

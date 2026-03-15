@@ -55,6 +55,9 @@ const Configuration: Webpack.Configuration =
             analyzerMode: process.env.ANALYZE === "true" ? "server" : "disabled",
             analyzerPort: 8888
         }),
+        // new NodePolyfillPlugin({
+        //     additionalAliases: [ "console", "fs", "path", "process", "stream", "util" ]
+        // }),
         new Webpack.DefinePlugin({
             "process.type": "\"browser\""
         })

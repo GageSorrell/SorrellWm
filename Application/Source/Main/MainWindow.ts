@@ -33,21 +33,20 @@ import {
     GetWindowTitle,
     type HMonitor,
     type HWindow,
-    SendNativeIpc,
     SetWindowPosition,
-    TestIpc,
     UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, ipcMain, screen } from "electron";
-import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "./Tree/Tree.Types";
+import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "../Shared/Tree.Types";
 import type { FFocusData, FFocusDataBase } from "../Shared/Event/Focus.Types";
 import type { FIpcChannel, TEventCallback } from "../Shared/Event";
-import { type FLogger, GetLogger, LogFrontend } from "./Development";
+import { GetLogger, LogFrontend } from "./Development";
 import { PoorEventSuccess, RegisterIpcCallbacks, SendIpcEvent } from "./Event";
 import { CreateBrowserWindow } from "./BrowserWindow";
 import type { FDevSettings } from "./DevSettings.Types";
 import type { FInsertableWindowData } from "../Shared/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
+import type { FLogger } from "../Shared/Log.Types";
 import type { FNavigateRequest } from "../Shared/Event/Navigate.Types";
 import type { FTranslation } from "../Shared/Event/Move.Types";
 import type { FVirtualKey } from "../Shared/Keyboard.Types";
@@ -58,7 +57,7 @@ import { Keyboard } from "./Keyboard";
 import { RegisterCommonIpcCallbacks } from "./CommonEvents";
 import { RegisterInitializationFunction } from "./Core/Initialize";
 import type { TIpcCallback } from "./Event.Types";
-import { Vk } from "$/Common/Component/Keyboard";
+import { Vk } from "../Shared/Keyboard";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -604,11 +603,25 @@ export const GetActiveWindow = (): HWindow | undefined =>
     return ActiveWindow;
 };
 
+/**
+ * Allows other parts of the application to tell the main window
+ * that it should not activate, even when the activation key is used.
+ */
+let ShouldActivate: boolean = true;
+
+export const SetShouldActivate = (In: boolean): void =>
+{
+    ShouldActivate = In;
+};
+
 /** Show the main window. */
 export const Activate = (): void =>
 {
-    TestIpc();
-    SendNativeIpc("Test", { Bar: "Baz" });
+    if (!ShouldActivate)
+    {
+        return;
+    }
+
     if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window" && MainWindow)
     {
         ActiveWindow = GetFocusedWindow();

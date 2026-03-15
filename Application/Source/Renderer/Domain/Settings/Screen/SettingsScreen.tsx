@@ -14,18 +14,14 @@ export const SettingsScreen = ({ children, Title }: PSettingsScreen): ReactNode 
 {
     const RootStyle: CSSProperties =
     {
-        // ...GetFlexStyle("column", "flex-start", "flex-start"),
         flex: 1,
         height: "100%",
         marginTop: 0,
-        // maxWidth: "100%",
+        maxHeight: "100%",
         minHeight: "100%",
+        overflowY: "hidden",
+        paddingBottom: 32,
         paddingTop: 0
-        // width: "100%"
-        // minWidth: "100%",
-        // visibility: Visible ? "visible" : "hidden"
-        // position: "absolute",
-        // top: 0
     };
 
     const BodyStyle: CSSProperties =
@@ -33,12 +29,9 @@ export const SettingsScreen = ({ children, Title }: PSettingsScreen): ReactNode 
         ...GetFlexStyle("column", "flex-start", "stretch"),
         gap: 16,
         height: "100%",
-        marginRight: 16,
         maxWidth: "100%",
-        minHeight: "100%"
-        // width: "100%"
-        // width: "100%"
-        // minWidth: "100%",
+        // marginBottom: Tokens.TitlebarHeight,
+        paddingRight: 16
     };
 
     return (

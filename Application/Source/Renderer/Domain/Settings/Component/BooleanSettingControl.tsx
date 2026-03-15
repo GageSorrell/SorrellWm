@@ -9,7 +9,9 @@ import { Switch, type SwitchOnChangeData } from "@fluentui/react-components";
 import { GetFlexStyle } from "@/Utility";
 import type { PBooleanSettingControl } from "./BooleanSettingControl.Types";
 
-export const BooleanSettingControl = ({ Value, OnChangeValue }: PBooleanSettingControl): ReactNode =>
+export const BooleanSettingControl = (
+    { Disabled, Value, OnChangeValue }: PBooleanSettingControl
+): ReactNode =>
 {
     const RootStyle: CSSProperties = GetFlexStyle("row", "flex-end", "center");
 
@@ -22,6 +24,7 @@ export const BooleanSettingControl = ({ Value, OnChangeValue }: PBooleanSettingC
         <div style={ RootStyle }>
             <Switch
                 checked={ Value }
+                disabled={ Disabled }
                 label={ Value ? "On" : "Off" }
                 labelPosition="before"
                 onChange={ OnChange }

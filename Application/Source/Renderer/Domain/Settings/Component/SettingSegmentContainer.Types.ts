@@ -4,12 +4,11 @@
  * License:   MIT
  */
 
-import type { PSettingSegment } from "./SettingSegment.Types";
-import type { ReactElement } from "react";
+import type { ReactNode } from "react";
 import type { TPropsWithChildren } from "@/Utility";
 
 export type PSettingSegmentContainer =
-    TPropsWithChildren<Array<ReactElement<PSettingSegment>>> &
+    TPropsWithChildren<ReactNode | Array<ReactNode>> &
     {
         Title: string;
     };

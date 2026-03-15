@@ -5,7 +5,7 @@
  */
 
 // import { type NavigateFunction, useNavigate } from "react-router-dom";
-// import type { FInsertSizingMethod } from "../../../../Shared/Event/Insert.Types";
+// import type { FInsertSizingMethod } from "!/Event/Insert.Types";
 import { type ReactElement } from "react";
 
 export const Insert = (): ReactElement =>

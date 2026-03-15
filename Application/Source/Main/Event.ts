@@ -18,10 +18,11 @@ import type {
     TPoorResponseAsFailure,
     TRequest,
     TResponse } from "../Shared/Event";
-import { type FLogger, GetLogger } from "./Development";
 import type { FRejectFunction, TResolveFunction } from "../Shared/Utility";
 import { MakeTagBackend, MakeTagFrontend } from "../Shared/Event/Event";
 import type { TIpcCallback, TPoorEventResponse } from "./Event.Types";
+import type { FLogger } from "../Shared/Log.Types";
+import { GetLogger } from "./Development";
 
 const Log: FLogger = GetLogger("Event");
 
@@ -38,8 +39,7 @@ export const RegisterIpcCallback = <ChannelType extends FIpcFrontendChannel>(
 {
     const ChannelTagged: FFrontendChannelTagged | undefined = MakeTagFrontend(BrowserWindow.id)(Channel);
 
-    /* eslint-disable-next-line @stylistic/max-len */
-    Log(`RegisterIpcCallback: ChannelTagged == ${ ChannelTagged }`);
+    // Log(`RegisterIpcCallback: ChannelTagged == ${ ChannelTagged }`);
 
     if (ChannelTagged === undefined)
     {

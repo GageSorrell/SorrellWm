@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
+import type { FAnnotatedPanel } from "../../../../../Shared/Tree.Types";
 
 export type PPanel =
     FAnnotatedPanel &

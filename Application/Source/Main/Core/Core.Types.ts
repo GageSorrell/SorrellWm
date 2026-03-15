@@ -3,6 +3,3 @@
  * Copyright: (c) 2025 Gage Sorrell
  * License:   MIT
  */
-
-export type FColor = `#${ string }`;
-export type TRef<Type> = { Ref: Type | undefined };

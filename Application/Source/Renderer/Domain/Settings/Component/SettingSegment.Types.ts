@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+import type { FSimpleCallback } from "../../../../Shared";
 import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 import type { THandler } from "@/Utility";
@@ -11,6 +12,12 @@ import type { THandler } from "@/Utility";
 export type PSettingSegment =
 {
     Control: ReactNode;
+
+    Disabled?: boolean;
+    DisabledMessage?: ReactNode;
+    DisabledActionLabel?: string;
+    DisabledAction?: FSimpleCallback;
+
     Icon?: FluentIcon;
     Subtitle: ReactNode;
     Title: ReactNode;
@@ -29,7 +36,9 @@ type FSegmentType =
     | "CompoundHeader"
     | "CompoundBody";
 
-export type FSettingSegmentStyle = FSegmentType;
+export type FSettingSegmentStyle =
+    | "Disabled"
+    | FSegmentType;
 
 export type PSettingSegmentHeader =
     Omit<PSettingSegment, "Control"> &

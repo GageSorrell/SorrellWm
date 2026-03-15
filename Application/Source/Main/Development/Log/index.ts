@@ -6,3 +6,4 @@
 
 export { GetLogger, LogFrontend } from "./Log";
 export { Format } from "./LogFormat";
+export * from "./Log.Types";

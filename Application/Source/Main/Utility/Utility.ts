@@ -4,20 +4,12 @@
  */
 
 import type { FBox } from "@sorrellwm/windows";
-import type { FLogger } from "../../Shared/Log.Types";
+import type { FLogger } from "../../Shared";
 import { promises as Fs } from "fs";
 import { GetLogger } from "#/Development";
 import type { HHandle } from "./Utility.Types";
-import type { TRef } from "#/Core";
 
 const Log: FLogger = GetLogger("Utility");
-
-export const MakeRef = <Type>(): TRef<Type> =>
-{
-    return {
-        Ref: undefined
-    } as TRef<Type>;
-};
 
 export const AreBoxesEqual = (A: FBox, B: FBox): boolean =>
 {

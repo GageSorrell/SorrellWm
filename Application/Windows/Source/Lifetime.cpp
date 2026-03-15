@@ -529,7 +529,7 @@ Napi::Value GetIsElevated(const Napi::CallbackInfo& CallbackInfo)
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &ProcessTokenHandle))
     {
-        ThrowLastError(Environment, "OpenProcessToken failed", 0);
+        std::cout << "Failed to get IsElevated at line 532." << std::endl;
         return Environment.Undefined();
     }
 
@@ -548,11 +548,13 @@ Napi::Value GetIsElevated(const Napi::CallbackInfo& CallbackInfo)
 
     if (!GetTokenInformationResult)
     {
-        ThrowLastError(Environment, "GetTokenInformation(TokenElevation) failed", 0);
+        std::cout << "Failed to get IsElevated at line 550." << std::endl;
         return Environment.Undefined();
     }
 
     bool IsElevated = (TokenElevationInformation.TokenIsElevated != 0);
+
+    std::cout << "Got IsElevated! " << IsElevated << std::endl;
 
     return Napi::Boolean::New(Environment, IsElevated);
 }
@@ -610,6 +612,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 std::cout << "Failed to create an instance of ITaskService: " << hr << std::endl;
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             //  Connect to the task service.
@@ -626,6 +629,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pService->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             //  ------------------------------------------------------
@@ -639,6 +643,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pService->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             //  If the same task exists, remove it.
@@ -655,6 +660,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pRootFolder->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             //  ------------------------------------------------------
@@ -668,6 +674,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             hr = pRegInfo->put_Author( _bstr_t(L"SorrellWm") );
@@ -679,6 +686,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             //  Create the settings for the task
@@ -692,6 +700,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             hr = pSettings->put_StartWhenAvailable(VARIANT_TRUE);
@@ -703,6 +712,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             std::cout << "put_StartWhenAvailable" << std::endl;
@@ -716,6 +726,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             std::cout << "Created ITriggerCollection*" << std::endl;
@@ -730,6 +741,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             ILogonTrigger *pLogonTrigger = NULL;
@@ -743,6 +755,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             hr = pLogonTrigger->put_Id( _bstr_t( L"Trigger1" ) );
@@ -775,6 +788,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             IActionCollection *pActionCollection = NULL;
@@ -788,6 +802,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             IPrincipal* Principal = NULL;
@@ -800,6 +815,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             hr = Principal->put_RunLevel(TASK_RUNLEVEL_HIGHEST);
@@ -811,6 +827,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             hr = pTask->put_Principal(Principal);
@@ -822,6 +839,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             //  Create the action, specifying that it is an executable action.
@@ -836,6 +854,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             IExecAction *pExecAction = NULL;
@@ -851,6 +870,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             /* Set the path of the executable. */
@@ -864,6 +884,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 CoUninitialize();
                 // return Napi::Boolean::New(Environment, false);
                 Success = false;
+                return;
             }
 
             /* Save the task in the root folder. */
@@ -885,6 +906,7 @@ void SetRunOnStartup(const Napi::CallbackInfo& CallbackInfo)
                 pTask->Release();
                 CoUninitialize();
                 Success = false;
+                return;
             }
 
             std::cout << "Success! Task successfully registered." << hr << std::endl;

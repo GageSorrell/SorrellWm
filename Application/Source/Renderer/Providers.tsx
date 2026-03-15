@@ -8,22 +8,25 @@ import type { PropsWithChildren, ReactNode } from "react";
 import { CommandsProvider } from "./Command";
 import { EventProvider } from "./Event";
 import { FluentThemeProvider } from "./Utility/Theme";
-import { Settings } from "./Settings";
+import { SettingsProvider } from "./Settings";
 import { ShortcutProvider } from "./Keybind";
+import { ToastProvider } from "./Toast";
 
 export const Providers = ({ children }: PropsWithChildren): ReactNode =>
 {
     return (
         <EventProvider>
-            <Settings>
-                <ShortcutProvider>
-                    <CommandsProvider>
-                        <FluentThemeProvider>
-                            { children }
-                        </FluentThemeProvider>
-                    </CommandsProvider>
-                </ShortcutProvider>
-            </Settings>
+            <FluentThemeProvider>
+                <ToastProvider>
+                    <SettingsProvider>
+                        <ShortcutProvider>
+                            <CommandsProvider>
+                                { children }
+                            </CommandsProvider>
+                        </ShortcutProvider>
+                    </SettingsProvider>
+                </ToastProvider>
+            </FluentThemeProvider>
         </EventProvider>
     );
 };

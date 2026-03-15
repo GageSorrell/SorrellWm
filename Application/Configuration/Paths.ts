@@ -7,7 +7,7 @@
 import * as Path from "path";
 import type { FWebpackPaths } from "./Paths.Types";
 
-const Root: string = Path.join(__dirname, "..");
+const Root: string = Path.resolve(__dirname, "..");
 const ConfigurationPath: string = Path.resolve(__dirname);
 // const DistributionPath: string = Path.join(__dirname, "../dll");
 const Source: string = Path.join(Root, "Source");
@@ -31,5 +31,6 @@ export const Paths: Record<FWebpackPaths, string> =
     Source,
     SourceMain: Path.join(Source, "Main"),
     SourceNodeModules: Path.join(Source, "node_modules"),
-    SourceRenderer: Path.join(Source, "Renderer")
+    SourceRenderer: Path.join(Source, "Renderer"),
+    SourceShared: Path.join(Source, "Shared")
 };

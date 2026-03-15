@@ -5,4 +5,4 @@
  */
 
 export * from "./Tree";
-export * from "./Tree.Types";
+export * from "../../Shared/Tree.Types";

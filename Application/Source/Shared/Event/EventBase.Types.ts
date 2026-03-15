@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FNotFunction } from "../Shared.Types";
+import type { FNotFunction } from "../../Shared/Shared.Types";
 import type { FUnknownErrorCode } from "./ErrorCodes.Types";
 
 export type FIpcEventInitiator =

@@ -5,7 +5,7 @@
  */
 
 import type { FBox } from "@sorrellwm/windows";
-import type { FLogSettings } from "../Shared/Log.Types";
+import type { FLogSettings } from "../Shared";
 
 export type FDevSettings = Readonly<{
     Log: FLogSettings;

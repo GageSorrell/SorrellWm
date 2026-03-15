@@ -6,7 +6,7 @@
 
 import { Body1, Skeleton, SkeletonItem, Title3, makeStyles, tokens } from "@fluentui/react-components";
 import { type CSSProperties, type ReactElement, useMemo } from "react";
-import type { FAnnotatedPanel } from "#/Tree/Tree.Types";
+import type { FAnnotatedPanel } from "../../../../../Shared/Tree.Types";
 import type { FLogger } from "../../../../../Shared/Log.Types";
 import { Fade } from "@fluentui/react-motion-components-preview";
 import { GetLogger } from "@/Log";

@@ -7,13 +7,14 @@
 import { type CSSProperties, type ReactNode } from "react";
 import type { FAction, FActionKey } from "../../../../../Shared/Settings";
 import type { FCommand, FCompoundCommand, FSimpleCommand } from "./Command.Types";
-import { type FKeyId, Key } from "../Keyboard";
 import { GetKeyIdsFromAction, UseCommands } from "@/Command";
 import { Title3, tokens } from "@fluentui/react-components";
 import { ExtractFromRecordArray } from "../../../../../Shared/Utility";
-import type { FLogger } from "../../../../../Shared/Log.Types";
+import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
+import type { FLogger } from "../../../../../Shared";
 import { GetFlexStyle } from "@/Utility";
 import { GetLogger } from "@/Log";
+import { Key } from "../Keyboard";
 import type { PCommandContainer } from "./CommandContainer.Types";
 import { SwitchOnCommandType } from "./Command";
 import { UseSetting } from "@/Settings";
@@ -181,6 +182,8 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
             </div>
         );
     };
+
+    Log("CommandContainer");
 
     return (
         <div style={ RootStyle }>
