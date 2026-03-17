@@ -13,10 +13,12 @@
 
 ## Development
 
-`@TODO: Put this in the Documentation.`
+Install the required packages, then clone this repo.
+
+### Required Packages
 
 | Package | Version   |
 | ---     | ---       |
-| CMake   | `^4.0.0`  |
-| NodeJS  | `20.13.1` |
-| yarn    | `stable`  |
+| CMake   | `^4.2.1`  |
+| NodeJS  | `24.14.0` |
+| Yarn    | `^4.5.3`  |
