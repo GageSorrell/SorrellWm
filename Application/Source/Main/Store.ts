@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { FStore } from "Source/Shared/Store.Types";
-import { GetDefaultStore } from "Source/Shared/Store";
+import type { FStore } from "../Shared/Store.Types";
+import { GetDefaultStore } from "../Shared/Store";
 import { RegisterInitializationFunction } from "./Core/Initialize";
 import Settings from "electron-settings";
 

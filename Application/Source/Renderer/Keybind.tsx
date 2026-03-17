@@ -19,7 +19,7 @@ import {
     useState
 } from "react";
 import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility/Functional.Types";
-import type { FActionKey } from "Source/Shared/Settings";
+import type { FActionKey } from "../Shared/Settings";
 import type { FLogger } from "../Shared";
 import { GetLogger } from "./Log";
 import { Identity } from "../Shared/Utility";

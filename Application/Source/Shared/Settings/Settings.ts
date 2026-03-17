@@ -13,22 +13,22 @@ export const DefaultSettings: FSettings =
     Keybinds:
     {
         Activate: [ "F20" ],
-        Cancel: "Backspace",
+        Cancel: [ "Backspace" ],
         Direction:
         {
             /* eslint-disable sort-keys */
-            Left: "D",
-            Up: "H",
-            Down: "T",
-            Right: "N"
+            Left: [ "D" ],
+            Up: [ "H" ],
+            Down: [ "T" ],
+            Right: [ "N" ]
             /* eslint-enable sort-keys */
         },
         Miscellaneous:
         {
-            FocusList: "`",
-            FocusTextInput: "Tab",
-            Peek: "Z",
-            Settings: "+"
+            FocusList: [ "`" ],
+            FocusTextInput: [ "Tab" ],
+            Peek: [ "Z" ],
+            Settings: [ "+" ]
         },
         Primary:
         {

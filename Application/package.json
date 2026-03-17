@@ -30,9 +30,9 @@
     "build-scripts": "npm run build-script",
     "build-win": "cd ./Windows && npm run build -- --disable-linting && cd ..",
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
-    "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Dev.Dll.ts",
-    "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Prod.ts",
-    "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Prod.ts",
+    "build:dll": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Dev.Dll.ts",
+    "build:main": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Prod.ts",
+    "build:renderer": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Renderer.Prod.ts",
     "check": "tsc --noEmit -p tsconfig.json",
     "kill-electron": "powershell -ExecutionPolicy Bypass -File ..\\Script\\KillElectronInstances\\KillElectronInstances.ps1",
     "generate-devsettings-schema": "npx typescript-json-schema ./tsconfig.JsonSchema.json FDevSettings --out DevSettings.Schema.json",
@@ -51,57 +51,24 @@
     "lint:view": "open-cli ./EslintReport.html",
     "package": "node ./Distribution/Script/Clean.js Distribution && npm run build && electron-builder build --publish never && npm run build:dll",
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir Release/Application",
-    "prestart-proper": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Dev.ts",
+    "prestart-proper": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Main.Dev.ts",
     "start-proper": "node ./Distribution/Script/CheckPortInUse.js && npm run prestart-proper && npm run start:renderer",
     "start": "npm run build-win && npm run start-electron",
     "start-electron": "node ./Distribution/Script/Start.js",
-    "start:main": "concurrently --raw -k \"cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./Configuration/Main.Dev.ts\" \"electronmon . --enable-logging\"",
-    "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Preload.Dev.ts",
-    "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./Configuration/Renderer.Dev.ts",
-    "test": "jest",
+    "start:main": "concurrently --raw -k \"cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./Configuration/Main.Dev.ts\" \"electronmon . --enable-logging\"",
+    "start:preload": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./Configuration/Preload.Dev.ts",
+    "start:renderer": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./Configuration/Renderer.Dev.ts",
     "prepare": "ts-patch install"
   },
   "browserslist": [
     "extends browserslist-config-erb"
   ],
-  "jest": {
-    "moduleDirectories": [
-      "node_modules",
-      "Release/Application/node_modules",
-      "Source"
-    ],
-    "moduleFileExtensions": [
-      "js",
-      "jsx",
-      "ts",
-      "tsx",
-      "json"
-    ],
-    "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/Script/Mock/Mock.js",
-      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
-    },
-    "setupFiles": [
-      "./Script/CheckBuildExists.ts"
-    ],
-    "testEnvironment": "jsdom",
-    "testEnvironmentOptions": {
-      "url": "http://localhost/"
-    },
-    "testPathIgnorePatterns": [
-      "Script/Distribution",
-      "Release/Application/Distribution",
-      "Distribution"
-    ],
-    "transform": {
-      "\\.(ts|tsx|js|jsx)$": "ts-jest"
-    }
-  },
   "dependencies": {
     "@electron/notarize": "^2.3.2",
     "@fluentui/react-components": "^9.73.2",
     "@fluentui/react-icons": "^2.0.321",
     "@fluentui/react-motion-components-preview": "^0.15.2",
+    "dot-prop": "^10.1.0",
     "electron-debug": "^4.1.0",
     "electron-log": "^5.4.3",
     "electron-settings": "^4.0.4",
@@ -124,7 +91,6 @@
     "@svgr/webpack": "^8.1.0",
     "@teamsupercell/typings-for-css-modules-loader": "^2.5.2",
     "@types/detect-port": "^1.3.5",
-    "@types/jest": "^29.5.5",
     "@types/node": "^24.11.0",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
@@ -152,7 +118,6 @@
     "eslint-plugin-compat": "^4.2.0",
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-import": "^2.28.1",
-    "eslint-plugin-jest": "^27.4.0",
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.33.2",
@@ -168,7 +133,6 @@
     "sass-loader": "^13.3.2",
     "style-loader": "^3.3.3",
     "terser-webpack-plugin": "^5.3.9",
-    "ts-jest": "^29.1.1",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
     "ts-patch": "^3.3.0",

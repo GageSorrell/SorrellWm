@@ -24,7 +24,6 @@ import {
 import {
     GetPoorResponse,
     SendIpcEvent as InSendIpcEvent,
-    PoorEventFailure,
     PoorEventFailureSimple,
     PoorEventSuccess,
     RegisterIpcCallbacks

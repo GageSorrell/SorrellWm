@@ -17,9 +17,7 @@ export type FKeybindActionLevel =
     | "Primary"
     | "Secondary";
 
-export type FKeySequence = TStaticArray<FKeyId, TIntegralRange<1, 4>>;
-
-export type FKeySequenceSet = Record<TIntegralRange<0, 3>, FKeySequence | undefined>;
+export type FKeySequenceSet = Record<TIntegralRange<0, 3>, Array<FKeyId>>;
 
 export type FKeybindActionMiscellaneous =
     | "Peek"
@@ -30,10 +28,10 @@ export type FKeybindActionMiscellaneous =
 export type FKeybinds =
     Record<FKeybindActionLevel, FKeySequenceSet> &
     {
-        Activate: FKeySequence;
-        Cancel: FKeyId;
-        Direction: Record<FKeybindDirection, FKeyId | undefined>;
-        Miscellaneous: Record<FKeybindActionMiscellaneous, FKeyId | undefined>;
+        Activate: Array<FKeyId>;
+        Cancel: Array<FKeyId>;
+        Direction: Record<FKeybindDirection, Array<FKeyId>>;
+        Miscellaneous: Record<FKeybindActionMiscellaneous, Array<FKeyId>>;
     };
 
 type TRecurrence<Type> = Type extends Record<PropertyKey, Record<PropertyKey, unknown>>

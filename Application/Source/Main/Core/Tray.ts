@@ -20,10 +20,14 @@ RegisterInitializationFunction(async (): Promise<void> =>
         {
             click: OpenSettings,
             label: "Settings",
-            sublabel: "Double-click",
             type: "normal"
         },
         {
+            /**
+             * @TODO Replace this with launching a window to confirm;
+             * make the appearance of this confirmation window optional
+             * via a setting.
+             */
             click: () => App.exit(),
             label: "Exit",
             type: "normal"

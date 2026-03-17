@@ -6,7 +6,7 @@
 
 import type { TClasses, TUseClasses } from "@/Utility";
 import type { FActionKey } from "../../../../../Shared/Settings";
-import type { FKeyId } from "Source/Shared/Keyboard.Types";
+import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
 import type { PSettingSegment } from "../SettingSegment.Types";
 
 type FKeybindStylesInternal =

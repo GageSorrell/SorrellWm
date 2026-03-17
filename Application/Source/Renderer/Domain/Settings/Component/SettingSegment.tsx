@@ -23,7 +23,7 @@ import type {
     PSettingSegmentBody,
     PSettingSegmentHeader,
     PSettingSegmentInternal } from "./SettingSegment.Types";
-import type { FLogger } from "Source/Shared";
+import type { FLogger } from "../../../../Shared";
 import { GetFlexStyle } from "@/Utility";
 import { GetLogger } from "@/Log";
 import { Rotate } from "@fluentui/react-motion-components-preview";

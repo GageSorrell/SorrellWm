@@ -9,13 +9,12 @@ import type {
     FPathRecord,
     TFlatMapRecordTransformer,
     TMapRecordTransformer,
-    TObjectPath,
-    TRef,
-    TTypeFromPath } from "./Utility.Types";
+    TRef } from "./Utility.Types";
 import type { FBox, FRecord, TRecord } from "@sorrellwm/windows";
 import type { FRejectFunction, TResolveFunction } from "./Functional.Types";
 import type { FLogger } from "../../Shared";
 import { GetLogger } from "@/Log";
+import type { TPath, TGetType } from "./Object.Types";
 
 const Log: FLogger = GetLogger("Utility");
 
@@ -164,14 +163,19 @@ export const RetryUntilFulfilled = async <Type>(
 
 export const SetPropertyFromPath = <
     RecordType extends FPathRecord,
-    PathType extends TObjectPath<RecordType>
+    PathType extends TPath<RecordType>
 >(
     ObjectRef: TRef<RecordType>,
     Path: PathType,
-    Value: TTypeFromPath<PathType, RecordType>
+    Value: TGetType<RecordType, PathType>
 ): void =>
 {
-    type FProperty = TTypeFromPath<PathType, RecordType>;
+    type FProperty = TGetType<RecordType, PathType>;
+
+    if (Array.isArray(Path))
+    {
+        throw new Error("SetPropertyFromPath does not support Array-based paths yet.");
+    }
 
     const PathSplit: Array<string> = Path.split(".");
 
@@ -183,7 +187,10 @@ export const SetPropertyFromPath = <
 
     if (PathSplit.length === 0)
     {
-        ((ObjectRef.Ref as TRecord<typeof Path, unknown>)[Path]) = Value;
+        if (!Array.isArray(Path))
+        {
+            ((ObjectRef.Ref as TRecord<string, unknown>)[(Path as string)]) = Value;
+        }
     }
 
     const Recurrence = (In: TRef<unknown>): TRef<unknown> | undefined =>
@@ -220,12 +227,17 @@ export const SetPropertyFromPath = <
 
 export const GetPropertyFromPath = <
     RecordType extends TRecord<string, unknown>,
-    PathType extends TObjectPath<RecordType>
+    PathType extends TPath<RecordType>
 >(
     Record: RecordType,
     Path: PathType
-): TTypeFromPath<PathType, RecordType> =>
+): TGetType<RecordType, PathType> =>
 {
+    if (Array.isArray(Path))
+    {
+        throw new Error("SetPropertyFromPath does not support Array-based paths yet.");
+    }
+
     const PathSplit: Array<string> = Path.split(".");
     const Recurrence = (In: unknown, Index: number = 0): unknown =>
     {
@@ -251,7 +263,7 @@ export const GetPropertyFromPath = <
         }
     };
 
-    return Recurrence(Record) as TTypeFromPath<PathType, RecordType>;
+    return Recurrence(Record) as TGetType<RecordType, PathType>;
 };
 
 export const MakeRef = <Type>(): TRef<Type> =>

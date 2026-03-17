@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FSimpleCallback } from "Source/Shared";
+import type { FSimpleCallback } from "../../../../Shared";
 import type { PSettingSegment } from "./SettingSegment.Types";
 import type { TPropsWithChildrenByProps } from "@/Utility";
 

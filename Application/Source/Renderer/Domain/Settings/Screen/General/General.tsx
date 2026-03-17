@@ -8,7 +8,7 @@ import { type ReactElement, type ReactNode } from "react";
 import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Event";
 import { BooleanSettingControl } from "../../Component/BooleanSettingControl";
 import type { FLogger } from "../../../../../Shared/Log.Types";
-import type { FSimpleCallback } from "Source/Shared";
+import type { FSimpleCallback } from "../../../../../Shared";
 import { GetLogger } from "@/Log";
 import { SettingSegment } from "../../Component/SettingSegment";
 import { SettingSegmentContainer } from "../../Component/SettingSegmentContainer";

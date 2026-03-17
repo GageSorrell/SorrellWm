@@ -10,7 +10,7 @@ import { type CSSProperties, type ReactNode, useCallback } from "react";
 import type { FKeybindPair, PKeybindContainer, PKeybindSet } from "./KeybindSet.Types";
 import type { FActionKey } from "../../../../../Shared/Settings";
 import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
-import type { FSimpleCallback } from "Source/Shared";
+import type { FSimpleCallback } from "../../../../../Shared";
 import { type FluentIconsProps } from "@fluentui/react-icons";
 import { GetFlexStyle } from "@/Utility";
 import { Key } from "@/Domain/Common";

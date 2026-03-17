@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { ActionKeys, type FActionKey, type FKeybinds } from "Source/Shared/Settings";
+import { ActionKeys, type FActionKey, type FKeybinds } from "../../../../Shared/Settings";
 import {
     CompassNorthwestRegular,
     EditSettingsRegular,
@@ -27,21 +27,22 @@ import {
     DefaultSettings,
     type FLogger,
     type FSimpleCallback,
-    GetPropertyFromPath,
-    type TObjectPath } from "../../../../Shared";
-import { type FSettings, UseSettings, UseUpdateSetting, UseUpdateSettings } from "@/Settings";
+    type FSettings,
+    GetPropertyFromPath } from "../../../../Shared";
+import { UseSettings, UseUpdateSetting, UseUpdateSettings } from "@/Settings";
 import { Toast, type ToastProps, ToastTitle } from "@fluentui/react-components";
 import type { CKeyboardSettings } from "./Keyboard.Types";
-import type { FKeyId } from "Source/Shared/Keyboard.Types";
+import type { FKeyId } from "../../../../Shared/Keyboard.Types";
 import type { FKeybindPair } from "../Component/Keyboard/KeybindSet.Types";
 import type { FSimpleCommand } from "@/Domain/Common";
 import { GetLogger } from "@/Log";
-import { KeyIds } from "Source/Shared/Keyboard";
+import { KeyIds } from "../../../../Shared/Keyboard";
 import { KeybindSet } from "../Component/Keyboard/KeybindSet";
 import { SettingsScreen } from "./SettingsScreen";
 import { UseCommands } from "@/Command";
 import { UseSendIpcEventDeferred } from "@/Event";
 import { UseToaster } from "@/Toast";
+import type { TPath } from "../../../../Shared/Utility/Object.Types";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Keyboard");
@@ -127,11 +128,12 @@ export const Keyboard = (): ReactElement =>
             let Out: FActionKey | undefined = undefined;
             ActionKeys.forEach((ActionKey: FActionKey): void =>
             {
-                const Path: TObjectPath<FKeybinds> =
-                    ActionKey.replaceAll("]", "").replaceAll("[", ".") as TObjectPath<FKeybinds>;
+                const Path: TPath<FKeybinds> =
+                    ActionKey.replaceAll("]", "").replaceAll("[", ".") as TPath<FKeybinds>;
 
-                const Value: FKeyId | Array<FKeyId> | undefined =
-                    GetPropertyFromPath(Settings.Keybinds, Path);
+                const Value: Array<FKeyId> =
+                    /* @ts-expect-error Depth. */
+                    (GetPropertyFromPath<typeof Path>(Settings.Keybinds, Path) as Array<FKeyId>);
 
                 if (Array.isArray(Value))
                 {
@@ -141,7 +143,8 @@ export const Keyboard = (): ReactElement =>
                         return;
                     }
                 }
-                else if (Value !== undefined && Key.toLowerCase() === Value.toLowerCase())
+                /* @ts-expect-error Path issue. */
+                else if (Value !== undefined && Key.toLowerCase() === Value[0].toLowerCase())
                 {
                     Out = ActionKey;
                     return;
@@ -319,8 +322,8 @@ export const Keyboard = (): ReactElement =>
 
                     const KeybindPathPart: string =
                         EditingKeybind.replaceAll("]", "").replaceAll("[", ".");
-                    const Path: TObjectPath<FSettings> =
-                        `Keybinds.${ KeybindPathPart }` as TObjectPath<FSettings>;
+                    const Path: TPath<FSettings> =
+                        `Keybinds.${ KeybindPathPart }` as TPath<FSettings>;
 
                     SetAttemptedKey((_Old: string): string =>
                     {
@@ -328,7 +331,7 @@ export const Keyboard = (): ReactElement =>
                     });
 
                     const Value: FKeyId | Array<FKeyId> =
-                        Array.isArray(GetPropertyFromPath(DefaultSettings, Path))
+                        Array.isArray(GetPropertyFromPath(DefaultSettings, Path as any))
                             ? [ Key ]
                             : Key;
 
@@ -337,17 +340,17 @@ export const Keyboard = (): ReactElement =>
                         const KeybindPathPart: string =
                             PreviousAction.replaceAll("]", "").replaceAll("[", ".");
 
-                        const PreviousPath: TObjectPath<FSettings> =
-                            `Keybinds.${ KeybindPathPart }` as TObjectPath<FSettings>;
+                        const PreviousPath: TPath<FSettings> =
+                            `Keybinds.${ KeybindPathPart }` as TPath<FSettings>;
 
                         UpdateSettings(
-                            { Path: PreviousPath, Value: undefined },
-                            { Path, Value: Value as FKeyId }
+                            { Path: (PreviousPath as any), Value: [ ] },
+                            { Path, Value: (Value as Array<FKeyId>) }
                         );
                     }
                     else
                     {
-                        UpdateSetting(Path, Value as FKeyId);
+                        UpdateSetting(Path as any, Value as Array<FKeyId>);
                     }
                 }
                 else

@@ -17,51 +17,50 @@ import {
     useRef,
     useState,
     useTransition } from "react";
-import { DefaultSettings, type FSettings as FAppSettings } from "../Shared/Settings";
+import { DefaultSettings } from "../Shared/Settings";
 import {
     Delay,
     GetPropertyFromPath,
     Identity,
     MakeRef,
     SetPropertyFromPath,
-    type TObjectPath,
-    type TRef,
-    type TTypeFromPath } from "../Shared/Utility";
-import type { FLogger, FSimpleCallback } from "../Shared";
+    type TRef } from "../Shared/Utility";
+import type { FLogger, FSettings, FSimpleCallback } from "../Shared";
 import type {
     FUseSettingsStateReturnType,
+    FSettingsPath,
     TControlledProps,
+    TGetSetting,
     TUseSettingStateReturnType } from "./Settings.Types";
 import { IsSuccessful, UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event";
 import type { TInternal, TSetState } from "./Utility";
-import { Toast, ToastBody, ToastTitle, ToastTrigger } from "@fluentui/react-components";
+import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
 import { Button } from "./Domain/Common";
 import { GetLogger } from "./Log";
 import type { TIpcState } from "./Event.Types";
 import { UseToaster } from "./Toast";
+import type { TPath, TGetType } from "../Shared/Utility/Object.Types";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Settings");
 
-export type FSettings = Readonly<FAppSettings>;
-
-type TUpdateFunction = <PathType extends TObjectPath<FSettings>,>(
+type TUpdateFunction = <PathType extends FSettingsPath,>(
     Path: PathType,
-    Value: TTypeFromPath<PathType, FSettings>
+    Value: TGetType<FSettings, PathType>
 ) => void;
 
-type TUpdateAction = <PathType extends TObjectPath<FSettings>,>(
+type TUpdateAction = <PathType extends FSettingsPath,>(
     Path: PathType,
-    Value: TTypeFromPath<PathType, FSettings>
+    Value: TGetType<FSettings, PathType>
 ) => Promise<void>;
 
-type TUpdateTuple<PathType extends TObjectPath<FSettings> = TObjectPath<FSettings>,> =
+type TUpdateTuple<PathType extends FSettingsPath = FSettingsPath,> =
 {
     Path: PathType;
-    Value: TTypeFromPath<PathType, FSettings>;
+    Value: TGetType<FSettings, PathType>;
 };
 
-type TUpdateManyFunction = <PathType extends TObjectPath<FSettings>,>(
+type TUpdateManyFunction = <PathType extends FSettingsPath,>(
     ...Pairs: Array<TUpdateTuple<PathType>>
 ) => void;
 
@@ -123,11 +122,11 @@ export const UseUpdateSettings = (): Readonly<[ TUpdateManyFunction ]> =>
     return [ UpdateManyFunction ] as const;
 };
 
-export const UseSettingState = <PathType extends TObjectPath<FSettings>,>(
+export const UseSettingState = <PathType extends FSettingsPath,>(
     Path: PathType
 ): TUseSettingStateReturnType<PathType> =>
 {
-    type FSetting = TTypeFromPath<PathType, FSettings>;
+    type FSetting = TGetSetting<PathType>;
     const [ Settings ] = UseSettings();
     const [ UpdateSetting ] = UseUpdateSetting();
     const Setting: FSetting = GetPropertyFromPath(Settings, Path);
@@ -143,11 +142,11 @@ export const UseSettingsState = (): FUseSettingsStateReturnType =>
 {
     const [ Settings ] = UseSettings();
     const [ UpdateSetting ] = UseUpdateSetting();
-    const GetControlledProps = <PathType extends TObjectPath<FSettings>,>(
+    const GetControlledProps = <PathType extends FSettingsPath,>(
         Path: PathType
-    ): TControlledProps<TTypeFromPath<PathType, FSettings>> =>
+    ): TControlledProps<TGetSetting<PathType>> =>
     {
-        type FControlledType = TTypeFromPath<PathType, FSettings>;
+        type FControlledType = TGetSetting<PathType>;
 
         const OnChangeValue = (NewValue: FControlledType): void =>
         {
@@ -224,13 +223,13 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     const [ DispatchFailureToast ] = UseToaster(SettingsFailureToast);
 
-    const UpdateAction: TUpdateAction = useCallback(async <PathType extends TObjectPath<FSettings>,>(
+    const UpdateAction: TUpdateAction = useCallback(async <PathType extends FSettingsPath,>(
         Path: PathType,
-        Value: TTypeFromPath<PathType, FSettings>
+        Value: TGetType<FSettings, PathType>
     ): Promise<void> =>
     {
-        const NewSettings: FAppSettings = { ...RealSettings };
-        const NewSettingsRef: TRef<FAppSettings> = MakeRef<FAppSettings>();
+        const NewSettings: FSettings = { ...RealSettings };
+        const NewSettingsRef: TRef<FSettings> = MakeRef<FSettings>();
         NewSettingsRef.Ref = NewSettings;
         SetPropertyFromPath(NewSettingsRef, Path, Value);
         SetOptimisticSettings(NewSettings);
@@ -248,7 +247,7 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
     }, [ DispatchFailureToast, RealSettings, SendIpcEvent, SetOptimisticSettings ]);
 
     const UpdateManyFunction: TUpdateManyFunction =
-        <PathType extends TObjectPath<FSettings>,>(
+        <PathType extends FSettingsPath,>(
             ...Pairs: Array<TUpdateTuple<PathType>>
         ): void =>
         {
@@ -262,9 +261,9 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
         };
 
     const UpdateFunction: TUpdateFunction =
-        <PathType extends TObjectPath<FSettings>,>(
+        <PathType extends FSettingsPath,>(
             Path: PathType,
-            Value: TTypeFromPath<PathType, FSettings>
+            Value: TGetSetting<PathType>
         ): void =>
         {
             StartTransition((): Promise<void> =>

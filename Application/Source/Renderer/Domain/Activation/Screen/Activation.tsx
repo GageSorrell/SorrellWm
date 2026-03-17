@@ -216,7 +216,7 @@ export const Activation = (): ReactElement =>
                 fontSize: 64,
                 marginBottom: 96
             } }>
-                SorrellWm
+                SorrellWM
             </div>
             <ActivationComponent />
         </div>

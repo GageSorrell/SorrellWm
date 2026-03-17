@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FStore } from "Source/Shared/Store.Types";
+import type { FStore } from "../Shared/Store.Types";
 import { UseSendIpcEvent } from "./Event";
 
 export const UseMainStore = (): Readonly<[ FStore | undefined ]> =>

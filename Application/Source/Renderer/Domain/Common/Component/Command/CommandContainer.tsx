@@ -45,7 +45,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
         {
             const GetKeyIdArrayFromCommand = (Command: FCommand): TArray<FKeyId> =>
             {
-                return SwitchOnCommandType(
+                const Out: TArray<FKeyId> = SwitchOnCommandType(
                     Command,
                     ({ Action }: FSimpleCommand): TArray<FKeyId> =>
                     {
@@ -67,11 +67,13 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                             ).flat()
                         );
 
-                        // Log(Out);
-
                         return Out;
                     }
                 );
+
+                Log("GetKeyIdArrayFromCommand: ", Out, "Commands: ", Commands);
+
+                return Out;
             };
 
             return Commands.map(GetKeyIdArrayFromCommand);
@@ -182,8 +184,6 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
             </div>
         );
     };
-
-    Log("CommandContainer");
 
     return (
         <div style={ RootStyle }>

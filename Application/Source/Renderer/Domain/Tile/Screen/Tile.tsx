@@ -5,7 +5,7 @@
  */
 
 import { Caption1, Title1 } from "@fluentui/react-components";
-import { CommandContainer, type FCommand, GetPanelKey, Panel } from "@/Domain/Common";
+import { CommandContainer, type FCommand, GetPanelKey } from "@/Domain/Common";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
@@ -13,6 +13,7 @@ import type { FAnnotatedPanel } from "../../../../Shared/Tree.Types";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { GetLogger } from "@/Log";
+import { Panel } from "@/Domain/Common/Component/Panel";
 import { UseIndex } from "@/Utility/Hook";
 
 const Log: FLogger = GetLogger("Tile");
@@ -77,13 +78,11 @@ export const Tile = (): ReactElement =>
 
     const Foo = (): void =>
     {
-        Log("Decrementing");
         DecrementSelectionIndex();
     };
 
     const Bar = (): void =>
     {
-        Log("Incrementing");
         IncrementSelectionIndex();
     };
 
@@ -115,26 +114,32 @@ export const Tile = (): ReactElement =>
 
     const Commands: TArray<FCommand> =
     [
-        {
-            Description: "@TODO",
-            Name: "Change Selection (Up / Down)",
-            SubCommands:
-            [
-                {
-                    Action: [ "Direction.Up" ],
-                    Callback: Foo
-                },
-                {
-                    Action: [ "Direction.Down" ],
-                    Callback: Bar
-                }
-            ]
-        },
+        // {
+        //     Description: "@TODO",
+        //     Name: "Change Selection (Up / Down)",
+        //     SubCommands:
+        //     [
+        //         {
+        //             Action: [ "Direction.Up" ],
+        //             Callback: Foo
+        //         },
+        //         {
+        //             Action: [ "Direction.Down" ],
+        //             Callback: Bar
+        //         }
+        //     ]
+        // },
         {
             Action: [ "Primary[0]" ],
             Callback: ConfirmSelection,
             Description: "@TODO",
             Name: "Confirm"
+        },
+        {
+            Action: [ "Primary[1]" ],
+            Callback: () => { },
+            Description: "@TODO",
+            Name: "ConfirmDuplicate"
         }
     ];
 

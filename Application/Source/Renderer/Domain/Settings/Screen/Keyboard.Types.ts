@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FActionKey } from "Source/Shared/Settings";
+import type { FActionKey } from "../../../../Shared/Settings";
 
 export type CKeyboardSettings =
 {
