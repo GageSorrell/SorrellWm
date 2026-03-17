@@ -251,6 +251,29 @@ RegisterInitializationFunction(async (): Promise<void> =>
     const IpcCallbacks: Array<TIpcCallback> =
     [
         {
+            Callback: async (InPanel: unknown): ReturnType<TEventCallback<"BringIntoPanel">> =>
+            {
+                const Panel: FAnnotatedPanel = InPanel as FAnnotatedPanel;
+                const WindowToTile: HWindow | undefined = GetActiveWindow();
+                if (WindowToTile !== undefined)
+                {
+                    BringIntoPanel(Panel, GetActiveWindow() as HWindow);
+                    return {
+                        Data: undefined,
+                        Error: undefined
+                    };
+                }
+                else
+                {
+                    return {
+                        Data: undefined,
+                        Error: ""
+                    };
+                }
+            },
+            Channel: "BringIntoPanel"
+        },
+        {
             Callback: async (): ReturnType<TEventCallback<"GetFocusData">> =>
             {
                 const CurrentPanel: FPanel | undefined = GetCurrentPanel();

@@ -336,7 +336,35 @@ export const LogFrontend = (
     ...Statements: TArray<unknown>
 ): void =>
 {
-    const StatementsUntokenized: TArray<unknown> = Statements.map(HandleFrontendTokens);
+    const Parse = (Statement: unknown): unknown =>
+    {
+        if (typeof Statement === "string")
+        {
+            try
+            {
+                const ParsedObject: unknown = JSON.parse(Statement);
+                if (typeof ParsedObject === "object")
+                {
+                    return ParsedObject;
+                }
+                else
+                {
+                    return Statement;
+                }
+            }
+            catch (_Error: unknown)
+            {
+                return Statement;
+            }
+        }
+        else
+        {
+            return Statement;
+        }
+    };
+
+    const StatementsUntokenized: TArray<unknown> = Statements.map(Parse).map(HandleFrontendTokens);
+
     LogInternal("Frontend", Category, Level, ...StatementsUntokenized);
 };
 

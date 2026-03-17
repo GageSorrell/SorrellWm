@@ -76,8 +76,6 @@ const ActivationNotTiled = (): ReactElement =>
 {
     const [ Navigate ] = UseNavigator();
 
-    Log("ActivationNotTiled.");
-
     // const { Data } = UseSendIpcEventStrict();
 
     // const [ SendIpcEventCallback ] = UseSendIpcEventDeferredCallback();

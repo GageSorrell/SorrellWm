@@ -25,13 +25,14 @@ import {
     useState } from "react";
 import type { FAction, FActionKey, FKeybinds } from "../Shared/Settings";
 import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility";
-import { Identity, type TMaybeArray } from "../Shared/Utility";
+import { GetPropertyFromPath, Identity, type TMaybeArray } from "../Shared/Utility";
 import type { FKeyId } from "../Shared/Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import type { TRecord } from "@sorrellwm/windows";
 import { UseSetting } from "./Settings";
 import { UseShortcut } from "./Keybind";
+import type { TPath } from "Source/Shared/Utility/Object.Types";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Command");
@@ -92,6 +93,19 @@ export const GetKeyIdsFromAction = (Action: FAction, Keybinds: FKeybinds): TArra
 {
     return Action.flatMap((KeybindKey: FActionKey): TArray<FKeyId> =>
     {
+        let ObjectKeyString: string = KeybindKey
+            .replaceAll("[", ".")
+            .replaceAll("]", ".");
+
+        if (ObjectKeyString.endsWith("."))
+        {
+            ObjectKeyString = ObjectKeyString.slice(0, -1);
+        }
+
+        // const Path: TPath<FKeybinds> = ObjectKeyString as TPath<FKeybinds>;
+
+        // return GetPropertyFromPath(Keybinds, Path);
+
         const ObjectKeyStrings: TArray<string> = KeybindKey
             .replaceAll("[", ".")
             .replaceAll("]", ".")
@@ -118,8 +132,6 @@ export const GetKeyIdsFromAction = (Action: FAction, Keybinds: FKeybinds): TArra
 
             Out = (Out as TRecord<typeof Key>)[Key];
         });
-
-        Log(`Out ${ Array.isArray(Out) ? "IS" : "IS NOT" } an array, it is ${ Out }, ${ typeof Out }.`);
 
         return Array.isArray(Out)
             ? Out

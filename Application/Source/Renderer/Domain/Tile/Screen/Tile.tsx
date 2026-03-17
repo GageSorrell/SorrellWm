@@ -5,7 +5,8 @@
  */
 
 import { Caption1, Title1 } from "@fluentui/react-components";
-import { CommandContainer, type FCommand, GetPanelKey } from "@/Domain/Common";
+import { GetPanelKey } from "@/Domain/Common/Component/Panel/Panel";
+import { CommandContainer, type FCommand } from "@/Domain/Common/Component/Command";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
@@ -110,38 +111,40 @@ export const Tile = (): ReactElement =>
                 />
             );
         });
-    }, [ AnnotatedPanels, SelectionIndex ]);
+    }, [ AnnotatedPanels, GetPanelKey, SelectionIndex ]);
 
-    const Commands: TArray<FCommand> =
-    [
-        // {
-        //     Description: "@TODO",
-        //     Name: "Change Selection (Up / Down)",
-        //     SubCommands:
-        //     [
-        //         {
-        //             Action: [ "Direction.Up" ],
-        //             Callback: Foo
-        //         },
-        //         {
-        //             Action: [ "Direction.Down" ],
-        //             Callback: Bar
-        //         }
-        //     ]
-        // },
-        {
-            Action: [ "Primary[0]" ],
-            Callback: ConfirmSelection,
-            Description: "@TODO",
-            Name: "Confirm"
-        },
-        {
-            Action: [ "Primary[1]" ],
-            Callback: () => { },
-            Description: "@TODO",
-            Name: "ConfirmDuplicate"
-        }
-    ];
+    const Commands: TArray<FCommand> = useMemo((): TArray<FCommand> =>
+    {
+        return [
+            {
+                Description: "@TODO",
+                Name: "Change Selection (Up / Down)",
+                SubCommands:
+                [
+                    {
+                        Action: [ "Direction.Up" ],
+                        Callback: Foo
+                    },
+                    {
+                        Action: [ "Direction.Down" ],
+                        Callback: Bar
+                    }
+                ]
+            },
+            {
+                Action: [ "Primary[0]" ],
+                Callback: ConfirmSelection,
+                Description: "@TODO",
+                Name: "Confirm"
+            },
+            {
+                Action: [ "Primary[1]" ],
+                Callback: () => { },
+                Description: "@TODO",
+                Name: "ConfirmDuplicate"
+            }
+        ];
+    }, [ Foo, Bar, ConfirmSelection ]);
 
     return (
         <Action>

@@ -60,12 +60,13 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                             return GetKeyIdsFromAction(In as FAction, Keybinds);
                         };
 
-                        const Out: TArray<FKeyId> = GetKeyIds(
-                            ExtractFromRecordArray(
-                                "Action",
-                                SubCommands
-                            ).flat()
-                        );
+                        const Out: TArray<FKeyId> = GetKeyIds(SubCommands.flatMap(C => C.Action));
+                        // const Out: TArray<FKeyId> = GetKeyIds(
+                        //     ExtractFromRecordArray(
+                        //         "Action",
+                        //         SubCommands
+                        //     ).flat()
+                        // );
 
                         return Out;
                     }
@@ -76,7 +77,11 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                 return Out;
             };
 
-            return Commands.map(GetKeyIdArrayFromCommand);
+            const Out: TArray<TArray<FKeyId>> = Commands.map(GetKeyIdArrayFromCommand);
+            Log("GetKeybindMatrix: ", Out);
+
+            // return Commands.map(GetKeyIdArrayFromCommand);
+            return Out;
         };
 
         const Rows = (): TArray<ReactNode> =>
@@ -87,7 +92,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                 minHeight: RowHeight
             };
 
-            const GetRow = (KeyIds: TArray<FKeyId>): ReactNode =>
+            const GetRow = ({ KeyIds }: { KeyIds: TArray<FKeyId>; }): ReactNode =>
             {
                 const RowStyle: CSSProperties =
                 {
@@ -97,14 +102,18 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
 
                 const Keys = (): ReactNode =>
                 {
+                    Log("Key: KeyIds == ", KeyIds);
                     return KeyIds.map((Value: FKeyId): ReactNode =>
                     {
+                        Log("KeyIds.map: Value == ", Value);
                         return <Key
                             key={ Value }
                             { ...{ KeyId: Value } }
                         />;
                     });
                 };
+
+                Log("GetRow: KeyIds.join == ", KeyIds.join());
 
                 return (
                     <div
@@ -115,7 +124,15 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                 );
             };
 
-            return GetKeybindMatrix().map(GetRow);
+            return GetKeybindMatrix().map((KeyIds: TArray<FKeyId>, Index: number): ReactNode =>
+            {
+                return (
+                    <GetRow
+                        key={ `${ KeyIds.toString() }-${ Index }` }
+                        { ...{ KeyIds } }
+                    />
+                );
+            });
         };
 
         const KeybindContainerStyle: CSSProperties =
@@ -152,7 +169,7 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
         const GetCommandTitles = (): TArray<ReactNode> =>
         {
 
-            const CommandTitle = ({ Name }: FCommand): ReactNode =>
+            const CommandTitle = ({ Name }: Pick<FCommand, "Name">): ReactNode =>
             {
                 const CommandTitleStyle: CSSProperties =
                 {
@@ -175,7 +192,15 @@ export const CommandContainer = ({ Commands }: PCommandContainer): ReactNode =>
                 );
             };
 
-            return Commands.map(CommandTitle);
+            return Commands.map(({ Name }: FCommand, Index: number): ReactNode =>
+            {
+                return (
+                    <CommandTitle
+                        key={ `${ Name }-${ Index }` }
+                        { ...{ Name } }
+                    />
+                );
+            });
         };
 
         return (
