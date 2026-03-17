@@ -1,4 +1,4 @@
-# <img src="./Application/Resource/Icon/Brand/BrandLight.png" alt="Logo" width="28" /> SorrellWM
+# <img src="./Application/Resource/Icon/Brand/BrandLight.png" alt="Logo" width="28" />&nbsp;SorrellWM
 
 *The tiling window manager for everyone.*
 
