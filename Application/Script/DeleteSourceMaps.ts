@@ -5,7 +5,7 @@
  */
 
 import * as Fs from "fs";
-import { Paths } from "../Configuration/Paths";
+import { Paths } from "../Configuration/Script";
 import path from "path";
 import { rimrafSync } from "rimraf";
 

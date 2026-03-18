@@ -644,7 +644,7 @@ export type FElectronHandler = typeof ElectronHandler;\n`;
     // re-inserted after the `import` statement.
     // ${ PreloadImportStatement }
 
-    const PreloadPath: string = Path.resolve(GetPath("Main"), "Preload.ts");
+    const PreloadPath: string = Path.resolve(GetPath("Main"), "Initialize", "Preload.ts");
 
     await Fs.promises.writeFile(PreloadPath, PreloadContents);
 

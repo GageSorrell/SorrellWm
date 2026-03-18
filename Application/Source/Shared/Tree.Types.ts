@@ -22,13 +22,21 @@ export type FVertex =
     | FCell
     | FPanel;
 
+export type FPanelDirection =
+    | "Horizontal"
+    | "Vertical"
+
+export type FPanelType =
+    | FPanelDirection
+    | "Stack";
+
 export type FPanelBase =
     FVertexBase &
     {
         Children: TArray<FVertex>;
         /** Should only be set when this is the root panel of a monitor. */
         MonitorId?: HMonitor;
-        Type: string;
+        Type: FPanelType;
     };
 
 export type FPanelHorizontal =

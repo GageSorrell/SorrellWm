@@ -9,20 +9,20 @@ import type {
     FLogFunction,
     FLogSettings,
     FLogger,
-    FLoggerInterim } from "../../../Shared/Log.Types";
+    FLoggerInterim } from "../../../Shared";
 import type { FLogHandler, FShortTimestamp } from "./Log.Types";
 import type { FLogLevel, FLogOriginInternal } from "@sorrellwm/windows";
 import { Format, FormatBase64String, FormatInline } from "./LogFormat";
 import Chalk from "chalk";
 import type { FLogValueType } from "./LogFormat.Types";
-import { GetDevSettings } from "#/DevSettings";
+import { GetDevSettings } from "#/Development/DevSettings";
 import Util from "util";
 
 Chalk.level = 3;
 
 const LogSettings: FLogSettings = GetDevSettings().Log;
 
-const FormatCategory = (Category: string): string =>
+function FormatCategory(Category: string): string
 {
     type FRgb = Record<"Red" | "Green" | "Blue", number>;
 
@@ -200,7 +200,7 @@ const FormatCategory = (Category: string): string =>
 //     return Chalk[SelectedBackground][ForegroundColor](PaddedCategory);
 // };
 
-const FormatLevel = (Level: FLogLevel): string =>
+function FormatLevel(Level: FLogLevel): string
 {
     const Colors: Record<FLogLevel, (Text: string) => string> =
     {
@@ -226,12 +226,12 @@ const DisabledCategoriesAttempted: typeof LogSettings.Category.DisabledCategorie
     Native: [ ]
 };
 
-const LogInternal = (
+function LogInternal(
     Origin: FLogOriginInternal,
     Category: string,
     Level: FLogLevel,
     ...Arguments: TArray<unknown>
-): void =>
+): void
 {
 
     if (Origin !== "Meta")
@@ -327,14 +327,14 @@ const LogInternal = (
         : process.stdout;
 
     Stream.write(GetOutStatements() + "\n");
-};
+}
 
 /** This should only be used when registering the Log event. */
-export const LogFrontend = (
+export function LogFrontend(
     Category: string,
     Level: FLogLevel,
     ...Statements: TArray<unknown>
-): void =>
+): void
 {
     const Parse = (Statement: unknown): unknown =>
     {
@@ -352,6 +352,7 @@ export const LogFrontend = (
                     return Statement;
                 }
             }
+            /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
             catch (_Error: unknown)
             {
                 return Statement;
@@ -368,7 +369,7 @@ export const LogFrontend = (
     LogInternal("Frontend", Category, Level, ...StatementsUntokenized);
 };
 
-export const GetTime = (): FShortTimestamp =>
+export function GetTime(): FShortTimestamp
 {
     const Now: Date = new Date();
 
@@ -395,7 +396,7 @@ const FrontendTokens: Readonly<Record<FLogFrontendTokens, () => string>> =
     __GetTime__: GetTime
 } as const;
 
-const HandleFrontendTokens = (Statement: unknown): unknown =>
+function HandleFrontendTokens(Statement: unknown): unknown
 {
     const IsFrontendToken = (In: unknown): In is FLogFrontendTokens =>
     {
@@ -419,7 +420,7 @@ const HandleFrontendTokens = (Statement: unknown): unknown =>
     }
 };
 
-const HandleAlwaysApplyFormat = (Statement: unknown, Statements: TArray<unknown>): unknown =>
+function HandleAlwaysApplyFormat(Statement: unknown, Statements: TArray<unknown>): unknown
 {
     if (LogSettings.Format.AlwaysApplyFormat)
     {
@@ -442,7 +443,7 @@ const HandleAlwaysApplyFormat = (Statement: unknown, Statements: TArray<unknown>
     }
 };
 
-export const HandleBase64Strings = (Statement: unknown, _Statements: TArray<unknown>): unknown =>
+export function HandleBase64Strings(Statement: unknown, _Statements: TArray<unknown>): unknown
 {
     if (typeof Statement === "string" && !LogSettings.Format.AlwaysApplyFormat)
     {
@@ -455,7 +456,7 @@ export const HandleBase64Strings = (Statement: unknown, _Statements: TArray<unkn
 };
 
 /** Use this to create a logger within a given module so that the log category is set for that module. */
-export const GetLogger = (Category: string): FLogger =>
+export function GetLogger(Category: string): FLogger
 {
     const MakeLoggerInternal = (Level: FLogLevel): FLogFunction =>
     {
@@ -532,4 +533,4 @@ export const GetLogger = (Category: string): FLogger =>
     Logger.Warn = MakeLoggerInternal("Warn");
 
     return Logger as FLogger;
-};
+}

@@ -6,7 +6,7 @@
 
 /* eslint-disable sort-keys, @typescript-eslint/no-unused-vars */
 
-import type { FLogger } from "../../../Shared/Log.Types";
+import type { FLogger } from "../../../Shared";
 import { Format } from "./LogFormat";
 import { GetLogger } from "./Log";
 

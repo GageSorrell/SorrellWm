@@ -57,9 +57,17 @@ export type TEventHasResponse<Type extends FUnknownIpcEvent> = "Data" extends ke
 //     /* eslint-enable @stylistic/indent */
 // };
 
+interface IHasResponse
+{
+    Response: unknown;
+}
+
 export type TPoorEvents<Type extends TIpcEventsBase> =
 {
-    [ Key in keyof Type as "Data" extends keyof Type[Key]["Response"] ? never : Key ]: Type[Key];
+    [ Key in keyof Type as "Data" extends keyof Extract<Type[Key], IHasResponse>["Response"]
+        ? never
+        : Key
+    ]: Type[Key];
 };
 
 export type TRichEventDecl<Type extends FUnknownIpcEvent> =
@@ -82,7 +90,7 @@ export type TPoorEvent<Type extends FUnknownIpcEvent> =
 
 type TRichEventsIntermediate<Type extends TIpcEventsBase> =
 {
-    [ Key in keyof Type ]: TRichEventDecl<Type[Key]>;
+    [ Key in keyof Type ]: TRichEventDecl<Extract<Type[Key], FUnknownIpcEvent>>;
 };
 
 export type TRichEvents<Type extends TIpcEventsBase> =

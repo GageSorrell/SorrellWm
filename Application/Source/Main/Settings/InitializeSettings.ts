@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import { DefaultSettings } from "../../Shared/Settings";
-import { RegisterInitializationFunction } from "#/Core/Initialize";
+import { DefaultSettings } from "../../Shared";
+import { RegisterInitializationFunction } from "#/Initialize/Initialize";
 import Settings from "electron-settings";
 
 const InitializeSettings = async (): Promise<void> =>
@@ -16,4 +16,4 @@ const InitializeSettings = async (): Promise<void> =>
     }
 };
 
-RegisterInitializationFunction(InitializeSettings);
+RegisterInitializationFunction("Settings", InitializeSettings);

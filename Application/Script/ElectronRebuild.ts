@@ -5,11 +5,16 @@
  */
 
 import * as Fs from "fs";
-import { Paths } from "../Configuration/Paths";
-import { dependencies } from "../Release/Application/package.json";
+import { Paths } from "../Configuration/Script";
+import { dependencies as Dependencies } from "../Release/Application/package.json";
 import { execSync } from "child_process";
 
-if (Object.keys(dependencies || {}).length > 0 && Fs.existsSync(Paths.AppNodeModules))
+const IsProjectConfigured: boolean = (
+    Object.keys(Dependencies || { }).length > 0 &&
+    Fs.existsSync(Paths.AppNodeModules)
+);
+
+if (IsProjectConfigured)
 {
     /* eslint-disable-next-line @stylistic/max-len */
     const ElectronRebuildCommand: string = "../../node_modules/.bin/electron-rebuild --force --types prod,dev,optional --module-dir .";

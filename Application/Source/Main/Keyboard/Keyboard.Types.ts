@@ -1,0 +1,17 @@
+/* File:      Keyboard.Types.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2024 Gage Sorrell
+ * License:   MIT
+ */
+
+import type { FVirtualKey } from "../../Shared";
+
+export type FActivationKeyState =
+    | "Down"
+    | "Up";
+
+export type FKeyboardEvent =
+{
+    State: FActivationKeyState;
+    VkCode: FVirtualKey;
+};

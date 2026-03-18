@@ -4,9 +4,8 @@
  * License:   MIT
  */
 
-import type { FStore } from "../Shared/Store.Types";
-import { GetDefaultStore } from "../Shared/Store";
-import { RegisterInitializationFunction } from "./Core/Initialize";
+import { type FStore, GetDefaultStore } from "../Shared";
+import { RegisterInitializationFunction } from "#/Initialize/Initialize";
 import Settings from "electron-settings";
 
 export const GetStore = async (): Promise<FStore> =>
@@ -30,4 +29,4 @@ const InitializeStore = async (): Promise<void> =>
     }
 };
 
-RegisterInitializationFunction(InitializeStore);
+RegisterInitializationFunction("Store", InitializeStore);

@@ -12,60 +12,66 @@
 // import { TDispatcher } from "./Core/Dispatcher";
 
 import type { FWinEventPayload } from "./WinEvent.Types";
-import { InitializeWinEvents } from "@sorrellwm/windows";
+import { InitializeWinEvents as InitializeWinEventsNative } from "@sorrellwm/windows";
 import { IsWindowTiled } from "./Tree";
-import { Subscribe } from "./NodeIpc";
-import { TDispatcher } from "./Core/Dispatcher";
+import { RegisterInitializationFunction } from "./Initialize/Initialize";
+import { Subscribe } from "./Event/NodeIpc";
+import { TDispatcher } from "./Event/Dispatcher";
 
 // const Log: FLogger = GetLogger("WinEvent");
 
 export const WinEvent: TDispatcher<undefined> = new TDispatcher<undefined>();
 
-InitializeWinEvents();
-
-// const WindowInitialRect: TMap<string, FBox> = new Map<string, FBox>();
-
-Subscribe("WinEvent", (...Arguments: TArray<unknown>): void =>
+async function InitializeWinEvents(): Promise<void>
 {
-    // const { Event, Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;
-    const { Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;
-    // const ResizeEvent: number = 32772;
-    // const MouseMoveEvent: number = 32779;
-    // const MoveSizeStartEvent: number = 10;
-    // const MoveSizeEndEvent: number = 11;
-    /* eslint-disable-next-line @stylistic/max-len */
-    /* (For now) prevent windows from being moved by dragging the cursor by moving tiled windows back to where they "should" be under SorrellWm. */
-    const IsWindowEvent: boolean = IdObject === 0 && Handle !== undefined && IsWindowTiled(Handle);
-    if (IsWindowEvent)
+    InitializeWinEventsNative();
+
+    // const WindowInitialRect: TMap<string, FBox> = new Map<string, FBox>();
+
+    Subscribe("WinEvent", (...Arguments: TArray<unknown>): void =>
     {
-        // @TODO Temporary.
-        return;
-        // const InitialBounds: FBox = GetWindowLocationAndSize(Handle);
-        // if (Event === MoveSizeStartEvent)
-        // {
-        //     WindowInitialRect.set(Handle.Handle, InitialBounds);
-        // }
-        // else if (Event === MoveSizeEndEvent)
-        // {
-        //     const InitialBounds: FBox | undefined = WindowInitialRect.get(Handle.Handle);
-        //     if (InitialBounds !== undefined)
-        //     {
-        //         const FinalBounds: FBox = GetWindowLocationAndSize(Handle);
-        //         const WindowWasResizedByDragging: boolean =
-        //             InitialBounds.Height === FinalBounds.Height &&
-        //             InitialBounds.Width === FinalBounds.Width;
+        // const { Event, Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;
+        const { Handle, IdObject }: FWinEventPayload = Arguments[0] as FWinEventPayload;
+        // const ResizeEvent: number = 32772;
+        // const MouseMoveEvent: number = 32779;
+        // const MoveSizeStartEvent: number = 10;
+        // const MoveSizeEndEvent: number = 11;
+        /* eslint-disable-next-line @stylistic/max-len */
+        /* (For now) prevent windows from being moved by dragging the cursor by moving tiled windows back to where they "should" be under SorrellWm. */
+        const IsWindowEvent: boolean = IdObject === 0 && Handle !== undefined && IsWindowTiled(Handle);
+        if (IsWindowEvent)
+        {
+            // @TODO Temporary.
+            return;
+            // const InitialBounds: FBox = GetWindowLocationAndSize(Handle);
+            // if (Event === MoveSizeStartEvent)
+            // {
+            //     WindowInitialRect.set(Handle.Handle, InitialBounds);
+            // }
+            // else if (Event === MoveSizeEndEvent)
+            // {
+            //     const InitialBounds: FBox | undefined = WindowInitialRect.get(Handle.Handle);
+            //     if (InitialBounds !== undefined)
+            //     {
+            //         const FinalBounds: FBox = GetWindowLocationAndSize(Handle);
+            //         const WindowWasResizedByDragging: boolean =
+            //             InitialBounds.Height === FinalBounds.Height &&
+            //             InitialBounds.Width === FinalBounds.Width;
 
-        //         if (WindowWasResizedByDragging)
-        //         {
-        //             Log("!! Window Was Resized By Dragging !!");
-        //             Publish();
-        //         }
-        //     }
-        // }
-    }
+            //         if (WindowWasResizedByDragging)
+            //         {
+            //             Log("!! Window Was Resized By Dragging !!");
+            //             Publish();
+            //         }
+            //     }
+            // }
+        }
 
-    // if (Event !== MouseMoveEvent)
-    // {
-    //     Log(`WinEvent Event value is ${ Event }.`);
-    // }
-});
+        // if (Event !== MouseMoveEvent)
+        // {
+        //     Log(`WinEvent Event value is ${ Event }.`);
+        // }
+    });
+};
+
+RegisterInitializationFunction("WinEvent", InitializeWinEvents, [ "NodeIpc" ]);

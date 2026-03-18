@@ -4,11 +4,12 @@
  * License:   MIT
  */
 
+import { RegisterInitializationFunction } from "./Initialize/Initialize";
 import { app } from "electron";
 
-const InitializeNotifications = (): void =>
+const InitializeNotifications = async (): Promise<void> =>
 {
     app.setAppUserModelId(process.execPath);
 };
 
-InitializeNotifications();
+RegisterInitializationFunction("Notification", InitializeNotifications);

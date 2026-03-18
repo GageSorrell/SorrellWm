@@ -5,7 +5,7 @@
  */
 
 import * as Fs from "fs";
-import { Paths } from "../Configuration/Paths";
+import { Paths } from "../Configuration";
 
 const { AppNodeModules, ConfigurationNodeModules, SourceNodeModules } = Paths;
 

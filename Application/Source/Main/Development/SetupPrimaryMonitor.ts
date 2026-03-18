@@ -24,8 +24,7 @@ import {
     type SpawnOptions,
     spawn as SpawnProcess } from "child_process";
 import { AreHandlesEqual } from "#/Utility";
-import type { FLogger } from "../../Shared/Log.Types";
-import type { FPanel } from "../../Shared/Tree.Types";
+import type { FLogger, FPanel } from "../../Shared";
 import { GetLogger } from "./Log";
 import { app } from "electron";
 

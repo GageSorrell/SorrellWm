@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+export * from "./DevSettings";
+export * from "./DevSettings.Types";
 export * from "./Log";
 export * from "./SetupPrimaryMonitor";
 export * from "./TestWindows";

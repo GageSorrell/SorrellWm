@@ -4,14 +4,14 @@
  * License:   MIT
  */
 
-import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { FAnnotatedPanel, FPanel } from "../Tree.Types";
-import type { TEventErrorCode } from "./ErrorCodes.Types";
+import type { FHexColor, HMonitor } from "@sorrellwm/windows";
 import type { TIpcBackendEvent, TIpcFrontendEvent } from "./EventBase.Types";
-import type { FStore } from "../Store.Types";
 import type { FExternalWindow } from "../Window/ExternalWindow.Types";
 import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
+import type { FStore } from "../Store.Types";
+import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FActivateErrorCode = TEventErrorCode<"">;
 

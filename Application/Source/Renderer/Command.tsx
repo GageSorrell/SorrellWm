@@ -25,14 +25,13 @@ import {
     useState } from "react";
 import type { FAction, FActionKey, FKeybinds } from "../Shared/Settings";
 import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility";
-import { GetPropertyFromPath, Identity, type TMaybeArray } from "../Shared/Utility";
+import { Identity, type TMaybeArray } from "../Shared/Utility";
 import type { FKeyId } from "../Shared/Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import type { TRecord } from "@sorrellwm/windows";
 import { UseSetting } from "./Settings";
 import { UseShortcut } from "./Keybind";
-import type { TPath } from "Source/Shared/Utility/Object.Types";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Command");
@@ -144,7 +143,7 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     const { RegisterShortcut, UnregisterShortcut } = UseShortcut();
 
-    const [ Keybinds ] = UseSetting("Keybinds");
+    const [ Keybinds ] = UseSetting<"Keybinds">("Keybinds");
 
     const UnregisterCommandShortcut: TSimpleFunction<FCommand> = useCallback((Command: FCommand): void =>
     {

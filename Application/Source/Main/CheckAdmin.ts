@@ -5,10 +5,9 @@
  */
 
 import { GetIsElevated } from "@sorrellwm/windows";
-import { RegisterInitializationFunction } from "./Core/Initialize";
-// import { CreateBrowserWindow } from "./BrowserWindow";
+import { RegisterInitializationFunction } from "./Initialize/Initialize";
 
-RegisterInitializationFunction(async (): Promise<void> =>
+RegisterInitializationFunction("CheckAdmin", async (): Promise<void> =>
 {
     if (!GetIsElevated())
     {

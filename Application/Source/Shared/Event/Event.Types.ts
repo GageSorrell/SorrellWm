@@ -6,6 +6,8 @@
 
 import type { TIpcEventsBase } from "./EventBase.Types";
 
+/* eslint-disable @stylistic/brace-style, @typescript-eslint/no-empty-object-type */
+
 export interface IFrontendEventRegistrar { };
 
 export type FIpcFrontendEvents = TIpcEventsBase<IFrontendEventRegistrar>;

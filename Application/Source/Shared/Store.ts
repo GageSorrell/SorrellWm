@@ -5,12 +5,13 @@
  */
 
 import type { FStore } from "./Store.Types";
-import { app } from "electron";
+// import { app } from "electron";
 
 export const GetDefaultStore = (): FStore =>
 {
     return {
-        AppVersion: app.getVersion(),
+        // AppVersion: app.getVersion(),
+        AppVersion: "@TODO",
         TimeLastCheckedUpdate: null
     };
 };

@@ -5,8 +5,9 @@
  */
 
 import { type FMonitorInfo, InitializeMonitors } from "@sorrellwm/windows";
-import { TDispatcher, type TSubscriptionHandle } from "./Core/Dispatcher";
-import { Subscribe } from "./NodeIpc";
+import { TDispatcher, type TSubscriptionHandle } from "#/Event/Dispatcher";
+import { RegisterInitializationFunction } from "#/Initialize/Initialize";
+import { Subscribe } from "#/Event/NodeIpc";
 
 const Monitors: TArray<FMonitorInfo> = [ ];
 
@@ -26,10 +27,10 @@ const OnMonitorsChanged = (...Data: TArray<unknown>): void =>
     MonitorsDispatcher.Dispatch(NewMonitors);
 };
 
-const InitializeMonitorTracking = (): void =>
+const TrackMonitors = async (): Promise<void> =>
 {
     Monitors.push(...InitializeMonitors());
     Subscribe("Monitors", OnMonitorsChanged);
 };
 
-InitializeMonitorTracking();
+RegisterInitializationFunction("Monitor", TrackMonitors, [ "NodeIpc" ]);

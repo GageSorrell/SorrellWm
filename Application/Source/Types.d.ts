@@ -6,3 +6,4 @@
 
 type TArray<ElementType> = Array<ElementType>;
 type TMap<KeyType, ValueType> = Map<KeyType, ValueType>;
+type TRecord<KeyType, PropertyType> = Record<KeyType, PropertyType>;

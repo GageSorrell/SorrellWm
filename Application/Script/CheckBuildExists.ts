@@ -7,7 +7,7 @@
 
 import * as Fs from "fs";
 import * as Path from "path";
-import { Paths } from "../Configuration/Paths";
+import { Paths } from "../Configuration";
 import chalk from "chalk";
 
 const MainPath: string = Path.join(Paths.DistributionMain, "Main.js");

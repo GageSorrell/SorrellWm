@@ -38,8 +38,13 @@
     },
     "include":
     [
-        "Configuration",
-        "Source"
+        "Configuration/Development",
+        "Source/Main/Development/DevSettings.ts",
+        "Source/Main/Development/DevSettings.Types.ts",
+        "Source/Types.d.ts",
+        "Windows/Core.d.ts",
+        "Source/Shared/Log.Types",
+        "Source/Shared/Tree.Types"
     ],
     "exclude":
     [

@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "FDummyConfiguration": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/FDummyPanel"
+                },
+                {
+                    "properties": {
+                        "Direction": {
+                            "$ref": "#/definitions/FPanelDirection"
+                        },
+                        "FloatingWindows": {
+                            "items": {
+                                "$ref": "#/definitions/FDummyFloatingWindow"
+                            },
+                            "type": "array"
+                        },
+                        "NumWindows": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                }
+            ]
+        },
+        "FDummyFloatingWindow": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Pick%3CFDummyPanel%2C%22Index%22%3E"
+                },
+                {
+                    "properties": {
+                        "NumWindows": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                }
+            ]
+        },
+        "FDummyPanel": {
+            "properties": {
+                "Direction": {
+                    "$ref": "#/definitions/FPanelDirection"
+                },
+                "Index": {
+                    "description": "For the root panel, this is the index of the monitor in which this panel should live.\nOtherwise, it is the index of this panel in its parent panel.",
+                    "type": "number"
+                },
+                "NumChildren": {
+                    "type": "number"
+                },
+                "Panels": {
+                    "items": {
+                        "$ref": "#/definitions/FDummyPanel"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "FPanelDirection": {
+            "enum": [
+                "Horizontal",
+                "Vertical"
+            ],
+            "type": "string"
+        },
+        "Pick<FDummyPanel,\"Index\">": {
+            "properties": {
+                "Index": {
+                    "description": "For the root panel, this is the index of the monitor in which this panel should live.\nOtherwise, it is the index of this panel in its parent panel.",
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "Configurations": {
+            "items": {
+                "$ref": "#/definitions/FDummyConfiguration"
+            },
+            "type": "array"
+        }
+    },
+    "type": "object"
+}
+

@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FLogger } from "../../Shared/Log.Types";
+import type { FLogger } from "../../Shared";
 import { GetLogger } from "#/Development";
 
 const TreeLogger: FLogger = GetLogger("Tree");

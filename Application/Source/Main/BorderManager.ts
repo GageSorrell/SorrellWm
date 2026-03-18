@@ -4,6 +4,6 @@
  * License:   MIT
  */
 
-import { InitializeBorderManager } from "@sorrellwm/windows";
+// import { InitializeBorderManager } from "@sorrellwm/windows";
 
-InitializeBorderManager();
+// InitializeBorderManager();

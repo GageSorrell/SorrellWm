@@ -37,27 +37,27 @@ import type { TInternal, TSetState } from "./Utility";
 import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
 import { Button } from "./Domain/Common";
 import { GetLogger } from "./Log";
+import type { TGetType, TPath } from "../Shared/Utility/Object.Types";
 import type { TIpcState } from "./Event.Types";
 import { UseToaster } from "./Toast";
-import type { TPath, TGetType } from "../Shared/Utility/Object.Types";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Settings");
 
 type TUpdateFunction = <PathType extends FSettingsPath,>(
     Path: PathType,
-    Value: TGetType<FSettings, PathType>
+    Value: TGetSetting<PathType>
 ) => void;
 
 type TUpdateAction = <PathType extends FSettingsPath,>(
     Path: PathType,
-    Value: TGetType<FSettings, PathType>
+    Value: TGetSetting<PathType>
 ) => Promise<void>;
 
 type TUpdateTuple<PathType extends FSettingsPath = FSettingsPath,> =
 {
     Path: PathType;
-    Value: TGetType<FSettings, PathType>;
+    Value: TGetSetting<PathType>;
 };
 
 type TUpdateManyFunction = <PathType extends FSettingsPath,>(
@@ -122,7 +122,7 @@ export const UseUpdateSettings = (): Readonly<[ TUpdateManyFunction ]> =>
     return [ UpdateManyFunction ] as const;
 };
 
-export const UseSettingState = <PathType extends FSettingsPath,>(
+export const UseSettingState = <PathType extends TPath<FSettings>,>(
     Path: PathType
 ): TUseSettingStateReturnType<PathType> =>
 {
@@ -225,7 +225,7 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     const UpdateAction: TUpdateAction = useCallback(async <PathType extends FSettingsPath,>(
         Path: PathType,
-        Value: TGetType<FSettings, PathType>
+        Value: TGetSetting<PathType>
     ): Promise<void> =>
     {
         const NewSettings: FSettings = { ...RealSettings };

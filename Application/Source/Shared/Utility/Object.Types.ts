@@ -19,7 +19,7 @@ type TGetRecordKeys<ObjectType> = keyof TGetRecordProperties<ObjectType>;
 
 type TMapToPath<ObjectType> =
 {
-[ Key in Extract<TGetRecordKeys<ObjectType>, string> ]: `${ Key }.${ TPathInternal<TGetRecordProperties<ObjectType>[Key]> }`;
+    [ Key in Extract<TGetRecordKeys<ObjectType>, string> ]: `${ Key }.${ TPathInternal<TGetRecordProperties<ObjectType>[Key]> }`;
 };
 
 /**
@@ -39,10 +39,39 @@ type TPathInternal<ObjectType, ParentKey extends string | undefined = undefined>
 
 export type TPath<ObjectType> = TPathInternal<ObjectType>;
 
-type FDepthStopGap = `${ string }.${ string }.${ string }`;
+type FDepthMap =
+{
+    3: 2;
+    2: 1;
+    1: 0;
+};
 
-type FDepthStopGapExclude = "__DepthStopGapExclude__";
-export type TGetType<ObjectType, PathType extends TPath<ObjectType>> = any;
+type FDepth = keyof FDepthMap | 0;
+type FValidDepth = keyof FDepthMap;
+
+type TDepthMinusOne<DepthType extends FDepth> = DepthType extends FValidDepth
+    ? FDepthMap[DepthType]
+    : 0;
+
+export type TGetType<ObjectType, PathType extends TPath<ObjectType>, DepthType extends FDepth = 3> =
+    DepthType extends FValidDepth
+        ? PathType extends `${ infer HeadType }.${ infer RemainingPathType }`
+            ? HeadType extends keyof ObjectType
+                ? RemainingPathType extends keyof ObjectType[HeadType]
+                    ? TGetType<ObjectType[HeadType], Extract<RemainingPathType, string>, TDepthMinusOne<DepthType>>
+                    : never
+                : never
+            : PathType extends keyof ObjectType
+                ? ObjectType[PathType]
+                : never
+        : PathType extends keyof ObjectType
+            ? ObjectType[PathType]
+            : never;
+
+
+// export type
+
+// export type TGetType<ObjectType, PathType extends TPath<ObjectType>> = any;
 // export type TGetType<ObjectType, PathType extends TPath<ObjectType>> =
 //     Exclude<
 //         PathType extends FDepthStopGap

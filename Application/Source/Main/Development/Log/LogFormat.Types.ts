@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { TArrayNonempty, TIntegralRange } from "../../../Shared/Utility";
+import type { TArrayNonempty, TIntegralRange } from "../../../Shared";
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 

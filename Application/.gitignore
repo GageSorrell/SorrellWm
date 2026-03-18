@@ -1,3 +1,5 @@
 .env*
-DevSettings.json
+Configuration/Development/DevSettings.json
+Configuration/Development/Dummy.*.json
+!Configuration/Development/Dummy.*.Schema.json
 EslintReport.html

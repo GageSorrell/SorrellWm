@@ -7,10 +7,10 @@
 import { CommandContainer, type FCommand, type FCompoundCommand } from "@/Domain/Common";
 import { Action } from "@/Action";
 import { useCallback, useState, type ReactElement } from "react";
-import { UseSendIpcEvent, UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
-import type { FPanelStep, FTiledMoveResult, FTranslation } from "Source/Shared/Event/Move.Types";
-import type { FSimpleCallback, TArrayNonempty } from "Source/Shared";
-import { UseIndex, UseIndexedValue } from "@/Utility";
+import { UseSendIpcEvent, UseSendIpcEventDeferred } from "@/Event";
+import type { FPanelStep, FTiledMoveResult, FTranslation } from "../../../../Shared/Event/Move.Types";
+import type { FSimpleCallback, TArrayNonempty } from "../../../../Shared";
+import { UseIndexedValue } from "@/Utility";
 
 export const Move = (): ReactElement =>
 {

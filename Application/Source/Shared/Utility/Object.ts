@@ -416,7 +416,7 @@ class SObjectClass<KeyType extends FKeyType = FKeyType, PropertyType = unknown>
 
                 const AssignProperty = ([ OutPath, Value ]: FEntry): void =>
                 {
-                    SetPropertyFromPath({ Ref: Out }, OutPath as any, Value);
+                    SetPropertyFromPath({ Ref: Out }, OutPath as any, Value as any);
                 };
 
                 Entries.forEach(AssignProperty);
