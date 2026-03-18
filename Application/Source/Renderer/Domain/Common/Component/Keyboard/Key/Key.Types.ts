@@ -10,4 +10,5 @@ export type PKey =
 {
     Disabled?: boolean;
     KeyId: FKeyId;
+    Small?: boolean;
 };

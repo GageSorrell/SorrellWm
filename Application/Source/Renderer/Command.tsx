@@ -129,7 +129,6 @@ export const GetKeyIdsFromAction = (Action: FAction, Keybinds: FKeybinds): TArra
         let Out: unknown = Keybinds;
         ObjectKeys.forEach((Key: string | number): void =>
         {
-
             Out = (Out as TRecord<typeof Key>)[Key];
         });
 

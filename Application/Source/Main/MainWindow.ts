@@ -9,16 +9,20 @@ import {
     BringIntoPanel,
     ChangeFocus,
     FinishFocus,
+    GetCellFromHandle,
     GetCurrentPanel,
     GetInterimFocusedVertex,
+    GetNextIndex,
     GetPanelScreenshot,
     GetPanels,
     GetParent,
+    GetPreviousIndex,
     IsCell,
     IsPanel,
     IsWindowTiled,
+    Publish,
     SetInterimFocusedVertexToActive
-} from "./Tree";
+} from "./Tree/Tree.Old";
 import {
     BlurBackground as BlurBackgroundNative,
     type FBox,
@@ -34,21 +38,22 @@ import {
     type HMonitor,
     type HWindow,
     SetWindowPosition,
+    type TRecord,
     UnblurBackground,
     WriteTaskbarIconToPng } from "@sorrellwm/windows";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, ipcMain, screen } from "electron";
-import type { FAnnotatedPanel, FFocusChange, FPanel, FVertex } from "../Shared/Tree.Types";
+import type { FAnnotatedPanel, FCell, FFocusChange, FPanel, FVertex } from "../Shared/Tree.Types";
 import type { FFocusData, FFocusDataBase } from "../Shared/Event/Focus.Types";
 import type { FIpcChannel, TEventCallback } from "../Shared/Event";
 import { GetLogger, LogFrontend } from "./Development";
-import { PoorEventSuccess, RegisterIpcCallbacks, SendIpcEvent } from "./Event";
+import { PoorEventFailureSimple, PoorEventSuccess, RegisterIpcCallbacks, SendIpcEvent } from "./Event";
 import { CreateBrowserWindow } from "./BrowserWindow";
 import type { FDevSettings } from "./DevSettings.Types";
 import type { FInsertableWindowData } from "../Shared/Event/Insert.Types";
 import type { FKeyboardEvent } from "./Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import type { FNavigateRequest } from "../Shared/Event/Navigate.Types";
-import type { FTranslation } from "../Shared/Event/Move.Types";
+import type { FPanelStep, FTiledMoveTransaction, FTranslation } from "../Shared/Event/Move.Types";
 import type { FVirtualKey } from "../Shared/Keyboard.Types";
 import { GetDevSettings } from "./DevSettings";
 import { GetMonitors } from "./Monitor";
@@ -58,6 +63,7 @@ import { RegisterCommonIpcCallbacks } from "./CommonEvents";
 import { RegisterInitializationFunction } from "./Core/Initialize";
 import type { TIpcCallback } from "./Event.Types";
 import { Vk } from "../Shared/Keyboard";
+import type { FSimpleCallback } from "Source/Shared";
 
 const Log: FLogger = GetLogger("MainWindow");
 
@@ -250,6 +256,134 @@ RegisterInitializationFunction(async (): Promise<void> =>
     /** @TODO Find better place for this. */
     const IpcCallbacks: Array<TIpcCallback> =
     [
+        {
+            Callback: async (InTransaction: unknown): ReturnType<TEventCallback<"MoveTiledWindow">> =>
+            {
+                /**
+                 * @TODO Figure out how to have moving tiled window sit on top of panels while selecting,
+                 * such that the option to go "Down" is available iff the active window is currently on
+                 * top of a panel.
+                 */
+                const Transaction: FTiledMoveTransaction = InTransaction as FTiledMoveTransaction;
+                const ActiveWindow: HWindow | undefined = GetActiveWindow();
+                if (ActiveWindow !== undefined)
+                {
+                    const Cell: FCell | undefined = GetCellFromHandle(ActiveWindow)
+                    if (Cell !== undefined)
+                    {
+                        const Parent: FPanel | undefined = GetParent(Cell);
+                        if (Parent !== undefined)
+                        {
+                            const CurrentIndex: number = Parent.Children.indexOf(Cell);
+                            const Actions: TRecord<FPanelStep, FSimpleCallback> =
+                            {
+                                // DownNext: (): void =>
+                                // {
+                                //     const SiblingPanel: FVertex | undefined = GetNextSibling(Cell);
+                                //     if (SiblingPanel !== undefined && IsPanel(SiblingPanel))
+                                //     {
+                                //         Parent.Children.splice(CurrentIndex, 1);
+                                //         SiblingPanel.Children.unshift(Cell);
+                                //         Publish();
+                                //     }
+                                // },
+                                // DownPrevious: (): void =>
+                                // {
+                                //     const SiblingPanel: FVertex | undefined = GetPreviousSibling(Cell);
+                                //     if (SiblingPanel !== undefined && IsPanel(SiblingPanel))
+                                //     {
+                                //         Parent.Children.splice(CurrentIndex, 1);
+                                //         SiblingPanel.Children.unshift(Cell);
+                                //         Publish();
+                                //     }
+                                // },
+                                Down: (): void =>
+                                {
+
+                                },
+                                Up: (): void =>
+                                {
+                                    const Grandparent: FPanel | undefined = GetParent(Parent);
+                                    if (Grandparent !== undefined)
+                                    {
+                                        const ParentIndex: number = Grandparent.Children.indexOf(Parent);
+                                        Grandparent.Children.splice(ParentIndex, 0, Cell);
+                                        const Index: number = Parent.Children.indexOf(Cell);
+                                        Parent.Children.splice(Index, 1);
+                                        Publish();
+                                    }
+                                },
+                                Next: (): void =>
+                                {
+                                    const NextIndex: number | undefined = GetNextIndex(Cell)
+                                    if (NextIndex !== undefined)
+                                    {
+                                        const Temporary: FVertex | undefined = Parent.Children[NextIndex];
+                                        if (Temporary !== undefined)
+                                        {
+                                            Parent.Children[NextIndex] = Cell;
+                                            Parent.Children[CurrentIndex] = Temporary;
+                                        }
+                                    }
+                                },
+                                Previous: (): void =>
+                                {
+                                    const CurrentIndex: number = Parent.Children.indexOf(Cell);
+                                    const PreviousIndex: number | undefined = GetPreviousIndex(Cell)
+                                    if (PreviousIndex !== undefined)
+                                    {
+                                        const Temporary: FVertex | undefined = Parent.Children[PreviousIndex];
+                                        if (Temporary !== undefined)
+                                        {
+                                            Parent.Children[PreviousIndex] = Cell;
+                                            Parent.Children[CurrentIndex] = Temporary;
+                                        }
+                                    }
+                                }
+                            };
+
+                            Actions[Transaction.Step]();
+                            switch (Transaction.Step)
+                            {
+                            }
+
+                            return {
+                                Data:
+                                {
+                                    IsOnPanel: false
+                                },
+                                Error: undefined
+                            };
+                        }
+                    }
+                }
+
+                return PoorEventFailureSimple();
+            },
+            Channel: "MoveTiledWindow"
+        },
+        {
+            Callback: async (): ReturnType<TEventCallback<"GetIsActiveWindowTiled">> =>
+            {
+                const WindowToTile: HWindow | undefined = GetActiveWindow();
+                if (WindowToTile !== undefined)
+                {
+                    const IsTiled: boolean = IsWindowTiled(GetFocusedWindow());
+                    return {
+                        Data: { IsTiled },
+                        Error: undefined
+                    };
+                }
+                else
+                {
+                    return {
+                        Data: undefined,
+                        Error: ""
+                    };
+                }
+            },
+            Channel: "GetIsActiveWindowTiled"
+        },
         {
             Callback: async (InPanel: unknown): ReturnType<TEventCallback<"BringIntoPanel">> =>
             {

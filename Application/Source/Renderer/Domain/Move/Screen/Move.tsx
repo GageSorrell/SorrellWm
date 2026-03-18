@@ -6,14 +6,28 @@
 
 import { CommandContainer, type FCommand, type FCompoundCommand } from "@/Domain/Common";
 import { Action } from "@/Action";
-import type { ReactElement } from "react";
-import { UseSendIpcEventDeferred } from "@/Event";
+import { useCallback, useState, type ReactElement } from "react";
+import { UseSendIpcEvent, UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
+import type { FPanelStep, FTiledMoveResult, FTranslation } from "Source/Shared/Event/Move.Types";
+import type { FSimpleCallback, TArrayNonempty } from "Source/Shared";
+import { UseIndex, UseIndexedValue } from "@/Utility";
 
 export const Move = (): ReactElement =>
 {
     const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
-    const StepSizes: TArray<number> = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ];
+    const [ MoveResult, SetMoveResult ] = useState<FTiledMoveResult>({ IsOnPanel: false });
+
+    /** @TODO Make this set of values editable as a setting. */
+    const StepSizes: TArrayNonempty<number> = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ];
+
+    const [ StepSize, StepSizeIndex, IncrementStepSize, DecrementStepSize ] = UseIndexedValue(StepSizes, { Value: 32 });
+
+    const { Data } = UseSendIpcEvent("GetIsActiveWindowTiled", undefined);
+
+    const IsTiled: boolean = Data !== undefined
+        ? Data.IsTiled
+        : false;
 
     // const ChangeMoveModeCommand: FSimpleCommand =
     // {
@@ -21,52 +35,103 @@ export const Move = (): ReactElement =>
     //     Name: ""
     // };
 
-    const MoveLeft = (): void =>
+    const TranslationLeft: FTranslation =
     {
-        SendIpcEvent("MoveFloatingWindow", { Direction: "X", Distance: -1 * 32 });
+        Direction: "X",
+        Distance: -1 * StepSize
     };
 
-    const MoveUp = (): void =>
+    const TranslationUp: FTranslation =
     {
-        SendIpcEvent("MoveFloatingWindow", { Direction: "Y", Distance: -1 * 32 });
+        Direction: "Y",
+        Distance: -1 * StepSize
     };
 
-    const MoveDown = (): void =>
+    const TranslationDown: FTranslation =
     {
-        SendIpcEvent("MoveFloatingWindow", { Direction: "Y", Distance: 32 });
+        Direction: "Y",
+        Distance: StepSize
     };
 
-    const MoveRight = (): void =>
+    const TranslationRight: FTranslation =
     {
-        SendIpcEvent("MoveFloatingWindow", { Direction: "X", Distance: 32 });
+        Direction: "X",
+        Distance: StepSize
     };
 
-    const DirectionCommands: FCompoundCommand =
+    const MakeFloatingMoveCallback = useCallback((Translation: FTranslation): FSimpleCallback =>
+    {
+        return (): void =>
+        {
+            SendIpcEvent("MoveFloatingWindow", Translation);
+        };
+    }, [ SendIpcEvent ]);
+
+    const FloatingDirectionCommands: FCompoundCommand =
     {
         Description: "@TODO",
-        Name: "Move the Window",
+        Name: "Move",
         SubCommands:
         [
             {
                 Action: [ "Direction.Left" ],
-                Callback: MoveLeft
+                Callback: MakeFloatingMoveCallback(TranslationLeft)
             },
             {
                 Action: [ "Direction.Up" ],
-                Callback: MoveUp
+                Callback: MakeFloatingMoveCallback(TranslationUp)
             },
             {
                 Action: [ "Direction.Down" ],
-                Callback: MoveDown
+                Callback: MakeFloatingMoveCallback(TranslationDown)
             },
             {
                 Action: [ "Direction.Right" ],
-                Callback: MoveRight
+                Callback: MakeFloatingMoveCallback(TranslationRight)
             }
         ]
     };
 
-    const Commands: TArray<FCommand> = [ DirectionCommands ];
+    const MakeTiledMoveCallback = (Step: FPanelStep): (() => Promise<void>) =>
+    {
+        return async (): Promise<void> =>
+        {
+            const { Data } = await SendIpcEvent("MoveTiledWindow", { Step });
+            if (Data !== undefined)
+            {
+                SetMoveResult(Data);
+            }
+        };
+    };
+
+    const TiledDirectionCommands: FCompoundCommand =
+    {
+        Description: "@TODO",
+        Name: "Move",
+        SubCommands:
+        [
+            {
+                Action: [ "Direction.Left" ],
+                Callback: MakeTiledMoveCallback("Previous")
+            },
+            {
+                Action: [ "Direction.Up" ],
+                Callback: MakeTiledMoveCallback("Up")
+            },
+            {
+                Action: [ "Direction.Down" ],
+                Callback: MakeTiledMoveCallback("Down")
+            },
+            {
+                Action: [ "Direction.Right" ],
+                Callback: MakeTiledMoveCallback("Next")
+            }
+        ]
+    };
+
+    const Commands: TArray<FCommand> = IsTiled
+        ? [ TiledDirectionCommands ]
+        : [ FloatingDirectionCommands ];
 
     return (
         <Action>

@@ -77,12 +77,14 @@ const KeybindContainer = ({ ActionKey, Caption, KeyIds }: PKeybindContainer): Re
                                 return (
                                     <Key
                                         key={ `${ KeyId }-${ Index }` }
+                                        Small
                                         { ...{ Disabled, KeyId } }
                                     />
                                 );
                             })
                             : <Key
                                 KeyId={ KeyIds }
+                                Small
                                 { ...{ Disabled } }
                             />
                         : <div style={ { minHeight: 30, minWidth: 30 } }></div>

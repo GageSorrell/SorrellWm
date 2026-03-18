@@ -27,8 +27,9 @@ const IsUnicodeCharacter = (Input: string): boolean =>
     }
 };
 
-export const Key = ({ Disabled, KeyId }: PKey): ReactElement =>
+export const Key = ({ Disabled, KeyId, Small = false }: PKey): ReactElement =>
 {
+    const BaseSideLength: number = Small ? 30 : 34;
     // const { Display, Modifier, Side } = Keys[KeyId];
     // const CornerDisplay: string | undefined = useMemo((): string | undefined =>
     // {
@@ -70,7 +71,6 @@ export const Key = ({ Disabled, KeyId }: PKey): ReactElement =>
 
     const RootStyle: CSSProperties = useMemo((): CSSProperties =>
     {
-        const BaseSideLength: number = 30;
 
         return {
             alignItems: "center",

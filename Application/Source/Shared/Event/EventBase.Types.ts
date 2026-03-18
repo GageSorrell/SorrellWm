@@ -106,10 +106,10 @@ export type FUnknownIpcEvent =
     | FUnknownRichEvent
     | FUnknownPoorEvent;
 
-export type TIpcEventsBase<Type = Record<string, FUnknownIpcEvent>> =
-    Type extends Record<string, FUnknownIpcEvent>
-        ? Type
-        : never;
+export type TIpcEventsBase<RegistrarType = unknown> =
+{
+    [ Key in keyof RegistrarType as RegistrarType[Key] extends FUnknownIpcEvent ? Key : never ]: RegistrarType[Key];
+};
 
 export type TIpcFrontendEvent<
     Request extends FNotFunction = FNotFunction,
@@ -121,8 +121,6 @@ export type TIpcFrontendEvent<
             Response,
             ErrorString
         >;
-
-export type TEventName<Events extends TIpcEventsBase> = keyof Events;
 
 export type TIpcBackendEvent<
     Request extends FNotFunction,

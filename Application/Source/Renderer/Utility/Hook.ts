@@ -22,10 +22,14 @@ import type {
     FMakeNavigateFunction,
     FUseEffectAsyncCallback,
     FUseEffectAsyncCleanupFunction,
-    TUseDomRectReturnValue } from "./Hook.Types";
+    FUseIndexReturnValue,
+    TUseDomRectReturnValue,
+    TUseIndexedArgument,
+    TUseIndexedReturnType} from "./Hook.Types";
 import {
     type FSimpleCallback,
     Identity,
+    type TArrayNonempty,
     type TPromiseCatchFunction,
     type TPromiseThenFunction,
     ZeroBox } from "../../Shared/Utility";
@@ -33,13 +37,6 @@ import { type NavigateFunction, useNavigate } from "react-router-dom";
 import type { FBox } from "@sorrellwm/windows";
 import { GetBoxFromDomRect } from "./Utility";
 import type { THandler, TSetState } from "./Utility.Types";
-
-type FUseIndexReturnValue = Readonly<[
-    Value: number,
-    Increment: () => void,
-    Decrement: () => void,
-    SetIndex: Dispatch<SetStateAction<number>>
-]>;
 
 export const UseIndex = (
     InitialValue: number = 0,
@@ -72,6 +69,98 @@ export const UseIndex = (
     };
 
     return [ Index, Increment, Decrement, SetIndex ] as const;
+};
+
+export const UseIndexedValue = <ElementType>(
+    InArray: TArrayNonempty<ElementType>,
+    InitialArgument?: TUseIndexedArgument<ElementType>
+): TUseIndexedReturnType<ElementType> =>
+{
+    InitialArgument = InitialArgument || { };
+
+    type FInitialValue =
+    {
+        InitialIndex: number;
+        InitialValue: ElementType;
+    };
+
+    const { InitialIndex, InitialValue } = ((): FInitialValue =>
+    {
+        if ("Index" in InitialArgument && "Value" in InitialArgument)
+        {
+            return {
+                InitialIndex: InitialArgument.Index,
+                InitialValue: InitialArgument.Value
+            };
+        }
+        else if ("Index" in InitialArgument)
+        {
+            const InitialValue: ElementType | undefined = InArray[InitialArgument.Index];
+            if (InitialValue !== undefined)
+            {
+                return {
+                    InitialIndex: InitialArgument.Index,
+                    InitialValue
+                };
+            }
+            else
+            {
+                throw new Error("UseIndexedValue was given an invalid InitialIndex.");
+            }
+        }
+        else if ("Value" in InitialArgument)
+        {
+            const IndexOfValue: number = InArray.indexOf(InitialArgument.Value);
+            const InitialIndex: number = IndexOfValue !== -1
+                ? IndexOfValue
+                : 0;
+
+            return {
+                InitialIndex,
+                InitialValue: InitialArgument.Value
+            };
+        }
+        else
+        {
+            return {
+                InitialIndex: 0,
+                InitialValue: InArray[0]
+            }
+        }
+    })();
+
+    const [ Index, Increment, Decrement, SetIndex ] = UseIndex(InitialIndex, 0, InArray.length - 1);
+
+    const HasMutated: RefObject<boolean> = useRef<boolean>(false);
+
+    const OutIncrement = (): void =>
+    {
+        HasMutated.current = true;
+        Increment();
+    };
+
+    const OutDecrement = (): void =>
+    {
+        HasMutated.current = true;
+        Decrement();
+    };
+
+    const OutSetIndex = (In: number | ((Old: number) => number)): void =>
+    {
+        HasMutated.current = true;
+        SetIndex(In);
+    };
+
+    const Value: ElementType | undefined = HasMutated.current
+        ? InArray[Index]
+        : InitialValue;
+
+    if (Value === undefined)
+    {
+        throw new Error(`UseIndexedValue could not get a value from its Index == ${ Index } (InArray.length == ${ InArray.length }).`);
+    }
+
+    return [ Value, Index, OutIncrement, OutDecrement, OutSetIndex ] as const;
 };
 
 /** Send an event to the backend, and get a response. */

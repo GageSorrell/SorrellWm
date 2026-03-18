@@ -4,5 +4,7 @@
  * License:   MIT
  */
 
+
+export * as Old from "./Tree.Old";
 export * from "./Tree";
 export * from "../../Shared/Tree.Types";
