@@ -4,10 +4,8 @@
  * License:   MIT
  */
 
-import { type BrowserWindow, type IpcMainEvent, ipcMain } from "electron";
+import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain, ipcRenderer } from "electron";
 import type {
-    FChannelTagged,
-    FFrontendChannelTagged,
     FIpcBackendChannel,
     FIpcFrontendChannel,
     FIpcFrontendEvents,
@@ -21,7 +19,6 @@ import type {
     TRequest,
     TResolveFunction,
     TResponse } from "../../Shared";
-import { MakeTagBackend, MakeTagFrontend } from "../../Shared";
 import type { TIpcCallback, TPoorEventResponse } from "./Event.Types";
 import { GetLogger } from "#/Development";
 
@@ -38,37 +35,40 @@ export const RegisterIpcCallback = <ChannelType extends FIpcFrontendChannel>(
     Callback: TEventCallback<ChannelType>
 ): void =>
 {
-    const ChannelTagged: FFrontendChannelTagged | undefined = MakeTagFrontend(BrowserWindow.id)(Channel);
+    // const ChannelTagged: FFrontendChannelTagged | undefined = MakeTagFrontend(BrowserWindow.id)(Channel);
 
     // Log(`RegisterIpcCallback: ChannelTagged == ${ ChannelTagged }`);
 
-    if (ChannelTagged === undefined)
-    {
-        return;
-    }
+    // if (ChannelTagged === undefined)
+    // {
+    //     return;
+    // }
 
-    if (ipcMain.eventNames().includes(ChannelTagged))
+    if (ipcMain.eventNames().includes(Channel))
     {
         /* eslint-disable-next-line @stylistic/max-len */
         Log.Warn(`Main attempted to register IPC callback for Event ${ Channel } on window with ID ${ BrowserWindow.id }, but a callback has already been registered.`);
         return;
     }
 
-    const Wrapper = async (_Event: IpcMainEvent, ...ArgumentVector: TArray<unknown>): Promise<void> =>
+    const Wrapper = async (
+        Event: IpcMainInvokeEvent,
+        ...ArgumentVector: TArray<unknown>
+    ): ReturnType<TEventCallback<ChannelType>> =>
     {
         type FRequest = FIpcFrontendEvents[ChannelType]["Request"];
         // type FResponse = FIpcFrontendEvents[T]["Response"];
         type FResponse = Awaited<ReturnType<TEventCallback<ChannelType>>>;
         const Request: FRequest = ArgumentVector[0] as FRequest;
-        const Response: FResponse = await Callback(Request) as FResponse;
+        return Callback(Request) as FResponse;
 
         /* eslint-disable-next-line @stylistic/max-len */
         // Log(`Response inside Wrapper is going to be sent to the BrowserWindow.  The Response is ${ Response }.`);
 
-        BrowserWindow.webContents.send(ChannelTagged, Response);
+        // BrowserWindow.webContents.send(ChannelTagged, Response);
     };
 
-    ipcMain.on(ChannelTagged, Wrapper);
+    ipcMain.handle(Channel, Wrapper);
 };
 
 export const RegisterIpcCallbacks = (
@@ -94,30 +94,72 @@ export const SendIpcEvent = <ChannelType extends FIpcBackendChannel>(
     return new Promise<TResponse<ChannelType>>(
         (Resolve: TResolveFunction<TResponse<ChannelType>>, Reject: FRejectFunction): void =>
         {
-            const ChannelTagged: FChannelTagged | undefined = MakeTagBackend(BrowserWindow.id)(Channel);
+            // const ChannelTagged: FChannelTagged | undefined = MakeTagBackend(BrowserWindow.id)(Channel);
 
-            Log(`SendIpcEvent: Attempting to fulfill message having channel ${ ChannelTagged }.`);
+            // Log(`SendIpcEvent: Attempting to fulfill message having channel ${ ChannelTagged }.`);
+            Log(`SendIpcEvent: Attempting to fulfill message having channel ${ Channel }.`);
 
-            if (ChannelTagged === undefined)
+            // if (ChannelTagged === undefined)
+            // {
+            //     Reject("Channel was not tagged.");
+            // }
+
+            // const ChannelTaggedSafe: FChannelTagged = ChannelTagged as FChannelTagged;
+
+            const RequestId: string = crypto.randomUUID();
+            const ResponseChannel: string = `${ RequestId }:Response`;
+
+            /**
+             * Where to pick up:
+             *   * main --> renderer --> main ==> requires `Window.webContents.send` *and* registering
+             *     a callback via `ipcMain.on` to get the reply, with custom response channel.
+             *
+             *   * renderer --> main --> renderer ==> simple: use `ipcMain.handle` (with return value)
+             *     and `ipcRenderer.invoke` with this, the Id / GetId code can be removed, and the
+             *     `UseTaggers` hook.
+             */
+            const Listener = (_Event: Electron.IpcMainEvent, Response: T): void =>
             {
-                Reject("Channel was not tagged.");
-            }
-
-            const ChannelTaggedSafe: FChannelTagged = ChannelTagged as FChannelTagged;
-
-            ipcMain.once(
-                ChannelTaggedSafe,
-                (_Event: Electron.Event, ...ArgumentVector: TArray<unknown>): void =>
+                if (Response.RequestId !== RequestId)
                 {
-                    const Response: TResponse<ChannelType> = ArgumentVector[0] as TResponse<ChannelType>;
-                    Resolve(Response);
+                    return;
                 }
-            );
 
-            Log(`SendIpcEvent: ${ ChannelTagged }.`);
+                ipcMain.removeListener(ResponseChannel, Listener);
 
-            BrowserWindow.webContents.send(ChannelTaggedSafe, Request);
-            // BrowserWindow.webContents.send(Channel, JSON.stringify(Request));
+                if (Response.Error !== undefined)
+                {
+                    Reject(new Error(Response.Error));
+                    return;
+                }
+
+                Resolve(Response.Result);
+            };
+
+            ipcMain.on(ResponseChannel, Listener);
+
+            const Request: IRendererRequest =
+            {
+                RequestId,
+                Payload
+            };
+
+            Window.webContents.send(Channel, Request);
+
+            // BrowserWindow.webContents.send(Channel, );
+            // ipcRenderer. (
+            //     Channel,
+            //     (_Event: Electron.Event, ...ArgumentVector: TArray<unknown>): void =>
+            //     {
+            //         const Response: TResponse<ChannelType> = ArgumentVector[0] as TResponse<ChannelType>;
+            //         Resolve(Response);
+            //     }
+            // );
+
+            // Log(`SendIpcEvent: ${ ChannelTagged }.`);
+
+            // BrowserWindow.webContents.send(ChannelTaggedSafe, Request);
+            // // BrowserWindow.webContents.send(Channel, JSON.stringify(Request));
         });
 };
 

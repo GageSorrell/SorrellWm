@@ -5,7 +5,6 @@
  */
 
 import { Caption1, Title1 } from "@fluentui/react-components";
-import { GetPanelKey } from "@/Domain/Common/Component/Panel/Panel";
 import { CommandContainer, type FCommand } from "@/Domain/Common/Component/Command";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
 import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
@@ -14,6 +13,7 @@ import type { FAnnotatedPanel } from "../../../../Shared/Tree.Types";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { GetLogger } from "@/Log";
+import { GetPanelKey } from "@/Domain/Common/Component/Panel/Panel";
 import { Panel } from "@/Domain/Common/Component/Panel";
 import { UseIndex } from "@/Utility/Hook";
 

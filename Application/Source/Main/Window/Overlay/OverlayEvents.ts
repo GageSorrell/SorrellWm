@@ -7,6 +7,7 @@
 import {
     AnnotatePanel,
     BringIntoPanel,
+    ChangeFocus,
     GetCellFromHandle,
     GetCurrentPanel,
     GetInterimFocusedVertex,
@@ -15,14 +16,16 @@ import {
     GetPanels,
     GetParent,
     GetPreviousIndex,
+    GetRealSize,
     IsPanel,
     IsWindowTiled,
     Publish,
     SetInterimFocusedVertexToActive } from "#/Tree/Tree";
-import { Deactivate, GetActiveWindow, SetActiveWindow } from "./OverlayWindow";
+import { BlurBackground, Deactivate, GetActiveWindow, SetActiveWindow } from "./OverlayWindow";
 import type {
     FAnnotatedPanel,
     FCell,
+    FFocusChange,
     FFocusData,
     FFocusDataBase,
     FLogger,
@@ -51,8 +54,136 @@ import { PoorEventFailureSimple, PoorEventSuccess, type TIpcCallback } from "#/E
 
 const Log: FLogger = GetLogger("OverlayEvents");
 
+const GetFocusDataEvent: Readonly<TIpcCallback> =
+{
+    Callback: async (): ReturnType<TEventCallback<"GetFocusData">> =>
+    {
+        const CurrentPanel: FPanel | undefined = GetCurrentPanel();
+        let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+        if (FocusedVertex === undefined)
+        {
+            SetInterimFocusedVertexToActive();
+            FocusedVertex = GetInterimFocusedVertex();
+        }
+
+        if (FocusedVertex === undefined)
+        {
+            /* eslint-disable-next-line @stylistic/max-len */
+            Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
+            return {
+                Data: undefined,
+                Error: "FocusedVertexUndefined"
+            };
+        }
+
+        if (CurrentPanel === undefined)
+        {
+            Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
+            return {
+                Data: undefined,
+                Error: "CurrentPanelUndefined"
+            };
+        }
+        // if (CurrentPanel === undefined || FocusedVertex === undefined)
+        // {
+        /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
+        //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
+        //     return;
+        // }
+
+        const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
+        const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
+        const CanStepUp: boolean = ParentPanel !== undefined;
+        const CanStepDown: boolean = IsPanel(FocusedVertex);
+        const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
+        const RealSize: FBox | undefined = await GetRealSize(FocusedVertex);
+
+        if (RealSize === undefined)
+        {
+            return {
+                Data: undefined,
+                Error: "UnspecifiedError"
+            };
+        }
+
+        const DataBase: FFocusDataBase =
+        {
+            CanMoveWithinPanel,
+            CanStepDown,
+            CanStepUp,
+            Direction,
+            RealSize
+        };
+
+        let Out: FFocusData | undefined = undefined;
+
+        if (IsPanel(FocusedVertex))
+        {
+            const NumVertices: number = FocusedVertex.Children.length;
+
+            Out =
+            {
+                ...DataBase,
+                NumVertices
+            };
+        }
+        else
+        {
+            const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
+
+            Out =
+            {
+                ...DataBase,
+                FocusedWindowTitle
+            };
+        }
+
+        Log("GetFocusData is sending to the frontend:", Out);
+
+        return {
+            Data: Out,
+            Error: undefined
+        };
+    },
+    Channel: "GetFocusData"
+};
+
 export const OverlayEvents: Readonly<Array<TIpcCallback>> =
 [
+    GetFocusDataEvent,
+    {
+        Callback: async (InFocusChange: unknown): ReturnType<TEventCallback<"OnChangeFocus">> =>
+        {
+            const FocusChange: FFocusChange = InFocusChange as FFocusChange;
+
+            ChangeFocus(FocusChange);
+            Deactivate();
+
+            // setTimeout((): void =>
+            // {
+            //     const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
+            //     if (InterimFocus !== undefined)
+            //     {
+            //         BlurBackground(InterimFocus.Size);
+            //     }
+            // }, 250);
+
+            const InterimFocus: FVertex | undefined = GetInterimFocusedVertex();
+            if (InterimFocus !== undefined)
+            {
+                BlurBackground(InterimFocus.Size);
+            }
+
+            // GetFocusData(_Event, ...Arguments);
+            Log("FocusChange", FocusChange);
+
+            const Response: Awaited<ReturnType<TEventCallback<"GetFocusData">>> =
+                await (GetFocusDataEvent.Callback as TEventCallback<"GetFocusData">)(undefined);
+
+            return Response;
+        },
+        Channel: "OnChangeFocus"
+    },
     {
         Callback: async (InTransaction: unknown): ReturnType<TEventCallback<"MoveTiledWindow">> =>
         {
@@ -201,88 +332,6 @@ export const OverlayEvents: Readonly<Array<TIpcCallback>> =
             }
         },
         Channel: "BringIntoPanel"
-    },
-    {
-        Callback: async (): ReturnType<TEventCallback<"GetFocusData">> =>
-        {
-            const CurrentPanel: FPanel | undefined = GetCurrentPanel();
-            let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
-            if (FocusedVertex === undefined)
-            {
-                SetInterimFocusedVertexToActive();
-                FocusedVertex = GetInterimFocusedVertex();
-            }
-
-            if (FocusedVertex === undefined)
-            {
-                /* eslint-disable-next-line @stylistic/max-len */
-                Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
-                return {
-                    Data: undefined,
-                    Error: "FocusedVertexUndefined"
-                };
-            }
-
-            if (CurrentPanel === undefined)
-            {
-                Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
-                return {
-                    Data: undefined,
-                    Error: "CurrentPanelUndefined"
-                };
-            }
-            // if (CurrentPanel === undefined || FocusedVertex === undefined)
-            // {
-            /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
-            //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
-            //     return;
-            // }
-
-            const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
-            const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
-            const CanStepUp: boolean = ParentPanel !== undefined;
-            const CanStepDown: boolean = IsPanel(FocusedVertex);
-            const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
-
-            const DataBase: FFocusDataBase =
-            {
-                CanMoveWithinPanel,
-                CanStepDown,
-                CanStepUp,
-                Direction
-            };
-
-            let Out: FFocusData | undefined = undefined;
-
-            if (IsPanel(FocusedVertex))
-            {
-                const NumVertices: number = FocusedVertex.Children.length;
-
-                Out =
-                {
-                    ...DataBase,
-                    NumVertices
-                };
-            }
-            else
-            {
-                const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
-
-                Out =
-                {
-                    ...DataBase,
-                    FocusedWindowTitle
-                };
-            }
-
-            Log("GetFocusData is sending to the frontend:", Out);
-
-            return {
-                Data: Out,
-                Error: undefined
-            };
-        },
-        Channel: "GetFocusData"
     },
     {
         Callback: async (): ReturnType<TEventCallback<"GetMonitorFromFocusedWindow">> =>

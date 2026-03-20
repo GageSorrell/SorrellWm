@@ -16,11 +16,13 @@ import type {
     TIpcState,
     TIpcStateStrict,
     TUseSendIpcEventReturnType,
+    TUseSendIpcEventStateReturnType,
     TUseSendIpcEventStrictReturnType } from "./Event.Types";
 import {
     CallMaybeAsync,
     type FRejectFunction,
     type FSimpleCallback,
+    type TPromiseCatchFunction,
     type TResolveFunction } from "../Shared/Utility";
 import {
     type Context,
@@ -33,7 +35,8 @@ import {
     useContext,
     useEffect,
     useMemo,
-    useState } from "react";
+    useState,
+    useTransition} from "react";
 import type {
     FBackendChannelTagged,
     FBackendChannelTagger,
@@ -142,31 +145,34 @@ export const UseSendIpcEventDeferred = (): Readonly<[ FSendIpcEvent ]> =>
         Request: TRequest<ChannelType>
     ): Promise<TIpcState<ChannelType>> =>
     {
-        type FResponse = TIpcState<ChannelType>;
+        // const ChannelTagged: FFrontendChannelTagged | undefined = TagFrontend(Channel);
 
-        const ChannelTagged: FFrontendChannelTagged | undefined = TagFrontend(Channel);
+        return window.electron.ipcRenderer.Invoke<ChannelType>(
+            Channel,
+            Request
+        );
 
-        return new Promise<FResponse>(
-            (Resolve: TResolveFunction<FResponse>, _Reject: FRejectFunction): void =>
-            {
-                if (ChannelTagged !== undefined)
-                {
-                    const Wrapper = (...ArgumentVector: TArray<unknown>): void =>
-                    {
-                        const Response: FResponse = {
-                            ...(ArgumentVector[0] as Omit<FResponse, "IsPending">),
-                            IsPending: false
-                        };
+        // return new Promise<FResponse>(
+        //     (Resolve: TResolveFunction<FResponse>, _Reject: FRejectFunction): void =>
+        //     {
+        //         if (ChannelTagged !== undefined)
+        //         {
+        //             const Wrapper = (...ArgumentVector: TArray<unknown>): void =>
+        //             {
+        //                 const Response: FResponse = {
+        //                     ...(ArgumentVector[0] as Omit<FResponse, "IsPending">),
+        //                     IsPending: false
+        //                 };
 
-                        Resolve(Response);
-                    };
+        //                 Resolve(Response);
+        //             };
 
-                    // Log(`UseSendIpcEventDeferred: ChannelTagged == ${ ChannelTagged }.`);
+        //             // Log(`UseSendIpcEventDeferred: ChannelTagged == ${ ChannelTagged }.`);
 
-                    window.electron.ipcRenderer.Once(ChannelTagged, Wrapper);
-                    window.electron.ipcRenderer.Send(ChannelTagged, Request);
-                }
-            });
+        //             // window.electron.ipcRenderer.Once(ChannelTagged, Wrapper);
+        //             // window.electron.ipcRenderer.Send(ChannelTagged, Request);
+        //         }
+        //     });
     }, [ TagFrontend ]);
 
     return [ SendIpcEvent ] as const;
@@ -214,6 +220,32 @@ export const UseSendIpcEvent = <ChannelType extends FIpcFrontendChannel>(
 
     const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
+    // const [ Response, SetResponse ] = useState<TIpcState<ChannelType>>(EmptyResponse);
+
+    // useEffect((): FSimpleCallback =>
+    // {
+    //     let IsCancelled: boolean = false;
+
+    //     const Wrapper = async (): Promise<void> =>
+    //     {
+    //         const Response: TIpcState<ChannelType> = await SendIpcEvent(Channel, Request);
+
+    //         if (!IsCancelled)
+    //         {
+    //             SetResponse(Response);
+    //         }
+    //     };
+
+    //     Wrapper();
+
+    //     return (): void =>
+    //     {
+    //         IsCancelled = true;
+    //     };
+    // }, [ Channel, Request, SendIpcEvent, SetResponse ]);
+
+    // return Response;
+
     const IpcEventPromise: Promise<TIpcState<ChannelType>> = useMemo(
         (): Promise<TIpcState<ChannelType>> => SendIpcEvent(Channel, Request),
         [ Channel, Request ]
@@ -225,6 +257,83 @@ export const UseSendIpcEvent = <ChannelType extends FIpcFrontendChannel>(
     );
 
     return Response;
+};
+
+export const UseSendIpcEventState = <ChannelType extends FIpcFrontendChannel>(
+    Channel: ChannelType,
+    Request: TRequest<ChannelType>
+): TUseSendIpcEventStateReturnType<ChannelType> =>
+{
+    const EmptyResponse: TIpcState<ChannelType> =
+    {
+        Data: undefined,
+        Error: undefined,
+        IsPending: true
+    };
+
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+
+    const [ MemoRequest, SetMemoRequest ] = useState<TRequest<ChannelType>>(Request);
+
+    const [ MemoTrigger, SetMemoTrigger ] = useState<boolean>(false);
+
+    const IpcEventPromise: Promise<TIpcState<ChannelType>> = useMemo(
+        (): Promise<TIpcState<ChannelType>> => SendIpcEvent(Channel, MemoRequest),
+        [ Channel, MemoRequest, MemoTrigger ]
+    );
+
+    // const [ InitialResponse ] = UsePromise<TIpcState<ChannelType>>(
+    //     IpcEventPromise,
+    //     EmptyResponse
+    // );
+    const [
+        { Data, Error, IsPending },
+        SetResponseInternal ] = useState<TIpcState<ChannelType>>(EmptyResponse);
+
+    const [ _IsTransitionPending, StartTransition ] = useTransition();
+
+    const SetResponse = (In: (() => Promise<TIpcState<ChannelType>>)): void =>
+    {
+        StartTransition(async (): Promise<void> =>
+        {
+            const NewResponse: TIpcState<ChannelType> = await In();
+            SetResponseInternal(NewResponse);
+        });
+    };
+
+    const UpdateResponse = (NewResponse: TIpcState<ChannelType>): void =>
+    {
+        SetResponseInternal((_Old: TIpcState<ChannelType>): TIpcState<ChannelType> =>
+        {
+            return NewResponse;
+        });
+    };
+
+    IpcEventPromise.then(UpdateResponse);
+
+    const Resend: ((NewRequest?: TRequest<ChannelType>) => void) =
+        useCallback((NewRequest?: TRequest<ChannelType>): void =>
+        {
+            if (NewRequest)
+            {
+                SetMemoRequest(NewRequest);
+            }
+            else
+            {
+                SetMemoTrigger((Old: boolean): boolean =>
+                {
+                    return !Old;
+                });
+            }
+        }, [ SetMemoRequest, SetMemoTrigger ]);
+
+    return {
+        Data,
+        Error,
+        IsPending,
+        Resend,
+        SetResponse
+    } as const;
 };
 
 /** `SendIpcEvent` wrapped into a hook, with the ability to specify a default value for `Data`. */

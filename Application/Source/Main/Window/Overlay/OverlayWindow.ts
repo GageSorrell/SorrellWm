@@ -12,7 +12,7 @@ import {
     GetWindowTitle,
     type HWindow,
     UnblurBackground } from "@sorrellwm/windows";
-import { type BrowserWindow, screen } from "electron";
+import { type BrowserWindow, type Rectangle, screen } from "electron";
 import { type FDevSettings, GetDevSettings, GetLogger } from "#/Development";
 import type { FLogger, FNavigateRequest, FVertex } from "../../../Shared";
 import { GetInterimFocusedVertex, IsCell, IsWindowTiled } from "#/Tree/Tree";
@@ -20,13 +20,13 @@ import { SendIpcEvent } from "#/Event";
 
 const Log: FLogger = GetLogger("OverlayWindow");
 
-let MainWindow: BrowserWindow | undefined = undefined;
+let OverlayWindow: BrowserWindow | undefined = undefined;
 
-export const GetMainWindow = (): BrowserWindow => (MainWindow as BrowserWindow);
+export const GetOverlayWindow = (): BrowserWindow => (OverlayWindow as BrowserWindow);
 
-export const InitializeMainWindow = (In: BrowserWindow): BrowserWindow =>
+export const InitializeOverlay = (In: BrowserWindow): BrowserWindow =>
 {
-    MainWindow = In;
+    OverlayWindow = In;
     return In;
 };
 
@@ -47,14 +47,21 @@ export const BlurBackground = (Bounds: FBox): void =>
 
         Log("OutBounds", OutBounds);
         BlurBackgroundNative(OutBounds, SourceHandle);
-        if (MainWindow)
+        if (OverlayWindow)
         {
-            const Foo: number = screen.getDisplayMatching(MainWindow.getBounds()).scaleFactor;
-            MainWindow.setBounds({
-                height: OutBounds.Height / Foo,
-                width: OutBounds.Width / Foo,
+            const OutBoundsRectangle: Rectangle =
+            {
+                height: OutBounds.Height,
+                width: OutBounds.Width,
                 x: OutBounds.X,
                 y: OutBounds.Y
+            };
+            const ScaleFactor: number = screen.getDisplayMatching(OutBoundsRectangle).scaleFactor;
+            OverlayWindow.setBounds({
+                height: OutBounds.Height / ScaleFactor,
+                width: OutBounds.Width / ScaleFactor,
+                x: OutBounds.X / ScaleFactor,
+                y: OutBounds.Y / ScaleFactor
             });
 
             // MainWindow.setPosition(OutBounds.X, OutBounds.Y);
@@ -78,9 +85,9 @@ export const BlurBackground = (Bounds: FBox): void =>
 export const Deactivate = (): void =>
 {
     const { x: X, y: Y } = GetLeastInvisiblePosition();
-    if (MainWindow)
+    if (OverlayWindow)
     {
-        MainWindow.setPosition(X, Y, false);
+        OverlayWindow.setPosition(X, Y, false);
         UnblurBackground();
     }
 };
@@ -146,7 +153,7 @@ export const Activate = (): void =>
         return;
     }
 
-    if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window" && MainWindow)
+    if (GetWindowTitle(GetFocusedWindow()) !== "SorrellWm Main Window" && OverlayWindow)
     {
         ActiveWindow = GetFocusedWindow();
 
@@ -159,11 +166,11 @@ export const Activate = (): void =>
 
         // MainWindow?.webContents.closeDevTools();
 
-        SendIpcEvent(MainWindow, "Navigate", NavigateRequest);
+        SendIpcEvent(OverlayWindow, "Navigate", NavigateRequest);
         BlurBackground(GetDwmWindowRect(ActiveWindow));
 
-        Log(MainWindow?.getPosition());
-        Log(MainWindow?.getSize());
+        Log(OverlayWindow?.getPosition());
+        Log(OverlayWindow?.getSize());
         // StealFocus(GetWindowByName("SorrellWm Main Window"));
     }
 };

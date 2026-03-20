@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { Activate, Deactivate, GetLeastInvisiblePosition, InitializeMainWindow } from "./OverlayWindow";
+import { Activate, Deactivate, GetLeastInvisiblePosition, InitializeOverlay } from "./OverlayWindow";
 import { type BrowserWindow, type BrowserWindowConstructorOptions } from "electron";
 import type { FLogger, FVirtualKey } from "../../../Shared";
 import { CreateBrowserWindow } from "#/Window/BrowserWindow";
@@ -44,7 +44,7 @@ async function InitializeOverlayWindow(): Promise<void>
 
     const { Window, LoadFrontend } = await CreateBrowserWindow(ConstructorOptions);
 
-    const MainWindow: BrowserWindow = InitializeMainWindow(Window);
+    const OverlayWindow: BrowserWindow = InitializeOverlay(Window);
 
     // On("GetCurrentPanel", async (_Event: Electron.Event, ..._Arguments: TArray<unknown>) =>
     // {
@@ -72,8 +72,8 @@ async function InitializeOverlayWindow(): Promise<void>
 
     /** @TODO Find better place for this. */
 
-    RegisterCommonIpcCallbacks(MainWindow);
-    RegisterIpcCallbacks(MainWindow, OverlayEvents);
+    RegisterCommonIpcCallbacks(OverlayWindow);
+    RegisterIpcCallbacks(OverlayWindow, OverlayEvents);
 
     /* eslint-disable @stylistic/max-len */
     // On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: TArray<unknown>) =>
@@ -194,7 +194,7 @@ async function InitializeOverlayWindow(): Promise<void>
     function OnKey(Event: FKeyboardEvent): void
     {
         const { State, VkCode } = Event;
-        if (MainWindow === undefined)
+        if (OverlayWindow === undefined)
         {
             return;
         }
@@ -220,7 +220,7 @@ async function InitializeOverlayWindow(): Promise<void>
         }
         else
         {
-            MainWindow.webContents.send("Keyboard", Event);
+            OverlayWindow.webContents.send("Keyboard", Event);
         }
     }
 

@@ -6,6 +6,7 @@
 /* eslint-disable */
 
 import { contextBridge, ipcRenderer } from "electron";
+import type { FIpcFrontendChannel, TEventCallback } from "../../Shared";
 
 const ElectronHandler =
 {
@@ -14,6 +15,10 @@ const ElectronHandler =
         GetId(): Promise<unknown>
         {
             return ipcRenderer.invoke("GetId");
+        },
+        Invoke<ChannelType extends FIpcFrontendChannel>(Channel: ChannelType, Payload: unknown): ReturnType<TEventCallback<ChannelType>>
+        {
+            return ipcRenderer.invoke(Channel, Payload);
         },
         On(Channel: string, Listener: ((...Arguments: Array<unknown>) => void))
         {
@@ -61,6 +66,7 @@ const ElectronHandler =
         },
         Once(Channel: string, Listener: ((...ArgumentVector: Array<unknown>) => void)): void
         {
+            ipcRenderer.removeAllListeners()
             ipcRenderer.once(
                 Channel,
                 (_Event: Electron.Event, ...ArgumentVector: Array<unknown>) => Listener(...ArgumentVector)

@@ -108,7 +108,8 @@ export type FUnknownIpcEvent =
 
 export type TIpcEventsBase<RegistrarType = unknown> =
 {
-    [ Key in keyof RegistrarType as RegistrarType[Key] extends FUnknownIpcEvent ? Key : never ]: RegistrarType[Key];
+    [ Key in keyof RegistrarType as RegistrarType[Key] extends FUnknownIpcEvent ? Key : never ]:
+    RegistrarType[Key];
 };
 
 export type TIpcFrontendEvent<

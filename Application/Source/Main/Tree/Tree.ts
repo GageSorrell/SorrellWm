@@ -51,7 +51,8 @@ const Forest: FForest = [ ];
 
 export const GetForest = (): FForest =>
 {
-    return [ ...Forest ];
+    return Forest;
+    // return [ ...Forest ];
 };
 
 const GetDepth = (Vertex: FVertex): number =>
@@ -600,6 +601,30 @@ const ComputeGapData = async (): Promise<TMap<FVertex, FBox>> =>
     });
 
     return Out;
+};
+
+export const GetRealSize = async (InVertex: FVertex): Promise<FBox | undefined> =>
+{
+    const { Gap } = await GetSettings();
+    const IsGapNonzero: boolean = Gap > 0;
+    if (IsGapNonzero)
+    {
+        const GapAdjustedSizes: TMap<FVertex, FBox> | undefined = await ComputeGapData();
+
+        const VertexGapAdjustedSize: FBox | undefined = GapAdjustedSizes.get(InVertex);
+        if (VertexGapAdjustedSize !== undefined)
+        {
+            return VertexGapAdjustedSize;
+        }
+        else
+        {
+            return undefined;
+        }
+    }
+    else
+    {
+        return InVertex.Size;
+    }
 };
 
 export const Publish = async (): Promise<void> =>

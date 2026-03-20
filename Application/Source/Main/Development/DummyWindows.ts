@@ -7,13 +7,14 @@
 import * as Path from "path";
 import { BringIntoPanel, GetForest, MakeSizesUniform, Publish } from "#/Tree/Tree";
 import type { FDummyConfiguration, FDummyConfigurationSchema, FDummyPanel } from "./DevSettings.Types";
-import { type FLogger, type FPanel } from "../../Shared";
+import { type FLogger, type FPanel, type TEventCallback } from "../../Shared";
 import { GetWindowByName, type HWindow } from "@sorrellwm/windows";
 import { CreateBrowserWindow } from "#/Window/BrowserWindow";
 import { promises as Fs } from "fs";
 import { GetDevSettings } from "./DevSettings";
 import { GetLogger } from "./Log/Log";
 import { RegisterInitializationFunction } from "#/Initialize/Initialize";
+import { RegisterIpcCallback } from "#/Event";
 
 const Log: FLogger = GetLogger("DummyWindows");
 
@@ -116,10 +117,49 @@ async function CreateDummyWindows(): Promise<void>
         return Configuration as FDummyConfigurationNode;
     };
 
-    const CreateWindow = async ({ Depth, Index }: FDummyConfigurationNode): Promise<void> =>
+    type FCreateWindowArgument = Pick<FDummyConfigurationNode, "Depth" | "Index">;
+    const CreateWindow = async ({ Depth, Index }: FCreateWindowArgument): Promise<void> =>
     {
-        const { LoadFrontend } = await CreateBrowserWindow({ title: GetChildWindowTitle({ Depth, Index }) });
-        return LoadFrontend();
+        Log(`CreateWindow was called with Depth == ${ Depth } and Index == ${ Index }.`);
+        // const { LoadFrontend, Window } =
+        const { LoadFrontend, Window } =
+            await CreateBrowserWindow({ title: GetChildWindowTitle({ Depth, Index }) });
+
+        // const Show: Promise<void> = new Promise<void>((
+        //     Resolve: TPromiseThenFunction<void>,
+        //     _Reject: FRejectFunction
+        // ): void =>
+        // {
+        //     Window.on("show", (): void =>
+        //     {
+        //         Log(`CreateWindow.Show(${ Depth }, ${ Index }) is resolved!`);
+        //         Resolve();
+        //     });
+        // });
+
+        try
+        {
+            await LoadFrontend();
+            // await Show;
+            RegisterIpcCallback(
+                Window,
+                "GetIsDummyWindow",
+                async (): ReturnType<TEventCallback<"GetIsDummyWindow">> =>
+                {
+                    return {
+                        Data:
+                        {
+                            IsDummyWindow: true
+                        },
+                        Error: undefined
+                    };
+                }
+            );
+        }
+        catch (Error: unknown)
+        {
+            Log.Error("CreateWindow: ", Error);
+        }
     };
 
     const HandleConfiguration = (Configuration: FDummyConfigurationNode): FDummyConfigurationNode =>
@@ -128,9 +168,7 @@ async function CreateDummyWindows(): Promise<void>
             Depth,
             Direction,
             FloatingWindows = [ ],
-            Index,
             NumChildren
-            // Parent
         }: FDummyConfigurationNode = Configuration;
 
         Log("HandleConfiguration Argument:", Configuration);
@@ -142,30 +180,40 @@ async function CreateDummyWindows(): Promise<void>
             return Index;
         });
 
-        if (Configuration.ParentPanel === undefined)
-        {
-            const OutParentPanel: FPanel | undefined = GetForest()[Index];
-            Log("OutParentPanel: ", OutParentPanel);
-            Log("Forest: ", GetForest());
-            Log("TIME CALLING GET FOREST", new Date().getTime());
-            Configuration.ParentPanel = GetForest()[Index];
-        }
+        // if (Configuration.ParentPanel === undefined)
+        // {
+        //     const OutParentPanel: FPanel | undefined = GetForest()[Index];
+        //     Log("OutParentPanel: ", OutParentPanel);
+        //     Log("Forest: ", GetForest());
+        //     Log("TIME CALLING GET FOREST", new Date().getTime());
+        //     Configuration.ParentPanel = GetForest()[Index];
+        // }
 
-        if (Configuration.Panel === undefined && Configuration.ParentPanel !== undefined)
+        if (Configuration.Panel === undefined)
         {
             Log("SETTING CONFIGURATION PANEL");
-            Configuration.Panel =
+            const NewPanel: FPanel | undefined = GetForest().find((Tree: FPanel): boolean =>
             {
-                Children: [ ],
-                Size: { Height: 100, Width: 100, X: 0, Y: 0 },
-                Type: Direction,
-                ZOrder: 1
-            };
+                return Tree.Size.Height === 1_380;
+            });
 
-            Configuration.ParentPanel.Children.push(Configuration.Panel);
+            if (NewPanel !== undefined)
+            {
+                Log("ULTRAWIDE MONITOR WAS FOUND");
+                Configuration.Panel = NewPanel;
+                Configuration.Panel.Type = Direction;
+            }
+            // {
+            //     Children: [ ],
+            //     Size: { Height: 100, Width: 100, X: 0, Y: 0 },
+            //     Type: Direction,
+            //     ZOrder: 1
+            // };
+
+            // Configuration.ParentPanel.Children.push(Configuration.Panel);
             // Log("HANDLE CONFIGURATION MAKE SIZES UNIFORM");
-            MakeSizesUniform(Configuration.ParentPanel);
-            Publish();
+            // MakeSizesUniform(Configuration.Panel);
+            // Publish();
         }
         else
         {
@@ -173,6 +221,7 @@ async function CreateDummyWindows(): Promise<void>
             Log(`DID NOT SET CONFIGURATION PANEL,\n\t(Configuration.Panel === undefined) == ${ Configuration.Panel }\n\t(Configuration.ParentPanel !== undefined) == ${ Configuration.ParentPanel !== undefined }`);
         }
 
+        Log(`NumChildren == ${ NumChildren }.`);
         for (let ChildIndex: number = 0; ChildIndex < NumChildren; ChildIndex++)
         {
             const IsChildPanel: boolean = PanelIndices.includes(ChildIndex);
@@ -201,8 +250,11 @@ async function CreateDummyWindows(): Promise<void>
             }
             else
             {
-                const WindowData: FChildWindowData = { Depth: Depth + 1, Index: ChildIndex };
+                const WindowData: FChildWindowData = { Depth, Index: ChildIndex };
                 const Handle: HWindow | undefined = GetChildHandle(WindowData);
+
+                /* eslint-disable-next-line @stylistic/max-len */
+                Log(`Handle at ChildIndex == ${ ChildIndex } is ${ Handle !== undefined ? "DEFINED" : "NOT DEFINED" }`);
 
                 if (Configuration.Panel !== undefined && Handle !== undefined)
                 {
@@ -236,18 +288,49 @@ async function CreateDummyWindows(): Promise<void>
             .map(AppendConfiguration)
             .map(SortChildren);
 
-    const GetCreateWindowPromise = (Configuration: FDummyConfigurationNode): Promise<void> =>
+    const GetCreateWindowPromise = (Configuration: FDummyConfigurationNode): Promise<unknown> =>
     {
-        return CreateWindow(Configuration);
+        const Out: Array<Promise<unknown>> = [ ];
+        const PanelIndices: Array<number> = Array.isArray(Configuration.Panels)
+            ? Configuration.Panels.map(({ Index }: FDummyPanel): number =>
+            {
+                return Index;
+            })
+            : [ ];
+
+        for (let ChildIndex: number = 0; ChildIndex < Configuration.NumChildren; ChildIndex++)
+        {
+            const IsChildWindow: boolean = !PanelIndices.includes(ChildIndex);
+            if (IsChildWindow)
+            {
+                const Argument: FCreateWindowArgument =
+                {
+                    Depth: Configuration.Depth,
+                    Index: ChildIndex
+                };
+
+                Out.push(CreateWindow(Argument));
+            }
+            else if (Configuration.Panels !== undefined)
+            {
+                const ChildPanel: FDummyConfigurationNode | undefined =
+                    Configuration.Panels[ChildIndex] as FDummyConfigurationNode | undefined;
+                if (ChildPanel !== undefined)
+                {
+                    Out.push(GetCreateWindowPromise(ChildPanel));
+                }
+            }
+        }
+
+        return Promise.allSettled(Out);
     };
 
-    await Promise.all(Intermediate.map(GetCreateWindowPromise));
+    await Promise.allSettled(Intermediate.map(GetCreateWindowPromise));
     const Handled: Array<FDummyConfigurationNode> =
         Intermediate.map(HandleConfiguration) as Array<FDummyConfigurationNode>;
 
     Log(Handled);
 
-    Log("VERY END");
     MakeSizesUniform(Handled[0]?.Panel as FPanel);
     await Publish();
 }

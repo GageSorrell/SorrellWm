@@ -6,6 +6,7 @@
 
 import type { PropsWithChildren, ReactNode } from "react";
 import { CommandsProvider } from "./Command";
+import { DummyWindowProvider } from "./DummyWindow";
 import { EventProvider } from "./Event";
 import { FluentThemeProvider } from "./Utility/Theme";
 import { SettingsProvider } from "./Settings";
@@ -16,17 +17,19 @@ export const Providers = ({ children }: PropsWithChildren): ReactNode =>
 {
     return (
         <EventProvider>
-            <FluentThemeProvider>
-                <ToastProvider>
-                    <SettingsProvider>
-                        <ShortcutProvider>
-                            <CommandsProvider>
-                                { children }
-                            </CommandsProvider>
-                        </ShortcutProvider>
-                    </SettingsProvider>
-                </ToastProvider>
-            </FluentThemeProvider>
+            <DummyWindowProvider>
+                <FluentThemeProvider>
+                    <ToastProvider>
+                        <SettingsProvider>
+                            <ShortcutProvider>
+                                <CommandsProvider>
+                                    { children }
+                                </CommandsProvider>
+                            </ShortcutProvider>
+                        </SettingsProvider>
+                    </ToastProvider>
+                </FluentThemeProvider>
+            </DummyWindowProvider>
         </EventProvider>
     );
 };

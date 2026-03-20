@@ -5,16 +5,24 @@
  */
 
 import { Body1Strong, tokens } from "@fluentui/react-components";
-import { type CSSProperties, type ReactNode, useEffect } from "react";
-import { CommandContainer, type FCommand, type FCompoundCommand, type FSimpleCommand } from "@/Domain/Common";
+import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, useState, useTransition } from "react";
+import {
+    CommandContainer,
+    type FCommand,
+    type FCompoundCommand,
+    type FSimpleCommand } from "@/Domain/Common/Component/Command";
 import type { FFocusData, FPanelFocusData, FWindowFocusData } from "../../../../Shared/Event/Focus.Types";
+import type { FLogger, FSimpleCallback } from "../../../../Shared";
+import { UseSendIpcEventDeferred, UseSendIpcEventState } from "@/Event";
 import { Action } from "@/Action";
 import type { FFocusChange } from "../../../../Shared/Tree.Types";
-import type { FLogger } from "../../../../Shared";
 import { GetLogger } from "@/Log";
-import { UseSendIpcEvent } from "@/Event";
+import type { TIpcState } from "@/Event.Types";
 import { WindowHeaderHorizontalRegular } from "@fluentui/react-icons";
+import { UsePromise } from "@/Utility";
+import type { ReadBookmark } from "electron";
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Focus");
 
 type PPanelFooter = Pick<FFocusData, "Direction"> & FPanelFocusData;
@@ -142,23 +150,156 @@ const Footer = (Props: PFooter): ReactNode =>
     );
 };
 
+type TRefreshablePromiseHookResult = readonly [
+    Promise<void>,
+    () => void
+];
+
+function UseRefreshablePromise(
+    CreatePromise: () => Promise<void>
+): TRefreshablePromiseHookResult
+{
+    const CreatePromiseReference: RefObject<() => Promise<void>> = useRef(CreatePromise);
+    CreatePromiseReference.current = CreatePromise;
+
+    const PromiseReference: RefObject<Promise<void> | null> = useRef<Promise<void> | null>(null);
+    const [ , ForceRender ] = useReducer(
+        (Value: number) =>
+        {
+            return Value + 1;
+        },
+        0
+    );
+
+    if (PromiseReference.current === null)
+    {
+        PromiseReference.current = CreatePromiseReference.current();
+    }
+
+    const Refresh: FSimpleCallback = useCallback((): void =>
+    {
+        PromiseReference.current = CreatePromiseReference.current();
+        ForceRender();
+    }, [ ]);
+
+    return [ PromiseReference.current, Refresh ] as const;
+}
+
 export const Focus = (): ReactNode =>
 {
-    const { Data: FocusData } = UseSendIpcEvent("GetFocusData", undefined);
+    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    // const [ FocusData, SetFocusData ] = useState<FFocusData | undefined>(undefined);
+    // const MakePromise = (): Promise<void> =>
+    // {
+    // };
+
+    const InitialIpcEventPromise: Promise<TIpcState<"GetFocusData">> = useMemo(
+        (): Promise<TIpcState<"GetFocusData">> => SendIpcEvent("GetFocusData", undefined),
+        [ SendIpcEvent ]
+    );
+
+    const [ InitialResponse ] = UsePromise<TIpcState<"GetFocusData">>(
+        InitialIpcEventPromise,
+        { Data: undefined, Error: undefined, IsPending: true }
+    );
+
+    const [ NewResponse, SetNewResponse ] =
+        useState<TIpcState<"GetFocusData">>({ Data: undefined, Error: undefined, IsPending: true });
+
+    // const MakeOnChangeFocus: ((Direction: FFocusChange) => FSimpleCallback) =
+    // const Mutex: RefObject<boolean> = useRef<boolean>(false);
+    const OnChangeFocusBase: ((Direction: FFocusChange) => void) = (Direction: FFocusChange): void =>
+    {
+        // if (Mutex.current)
+        // {
+        //     return;
+        // }
+
+        // SendIpcEvent("OnChangeFocus", Direction).then(({ Data }: TIpcState<"OnChangeFocus">): void =>
+        // {
+        //     Mutex.current = true;
+
+        //     if (Data !== undefined)
+        //     {
+        //         SetNewResponse((_Old: TIpcState<"GetFocusData">): TIpcState<"GetFocusData"> =>
+        //         {
+        //             return {
+        //                 Data,
+        //                 Error: undefined,
+        //                 IsPending: false
+        //             };
+        //         });
+
+        //         Mutex.current = false;
+        //     }
+        // });
+    };
+
+    const MakeOnChangeFocus: ((Direction: FFocusChange) => FSimpleCallback) =
+        (_Direction: FFocusChange): FSimpleCallback => (() => { });
+        // useCallback((Direction: FFocusChange): FSimpleCallback =>
+        // {
+        //     return (): void =>
+        //     {
+        //         OnChangeFocusBase(Direction);
+        //     };
+        // }, [ OnChangeFocusBase ]);
+
+    const FocusData: TIpcState<"GetFocusData">["Data"] = NewResponse.Data === undefined
+        ? InitialResponse.Data
+        : NewResponse.Data;
+
+    // const GetFocusDataRef: RefObject<boolean> = useRef<boolean>(true);
+    // const GetFocusData: FSimpleCallback = useEffectEvent((): void =>
+    // {
+    //     if (GetFocusDataRef.current)
+    //     {
+    //         GetFocusDataRef.current = false;
+    //         SendIpcEvent("GetFocusData", undefined).then(({ Data }: TIpcState<"GetFocusData">): void =>
+    //         {
+    //             if (Data !== undefined)
+    //             {
+    //                 SetFocusData(Data);
+    //             }
+    //         });
+    //     }
+    // });
+
+    // useEffect((): void =>
+    // {
+    //     GetFocusData();
+    // }, [ GetFocusData ]);
+
+    // type FMakeOnChangeFocus = (Direction: FFocusChange) => FSimpleCallback;
+    // const MakeOnChangeFocus: FMakeOnChangeFocus =
+    //     useCallback((Direction: FFocusChange): FSimpleCallback =>
+    //     {
+    //         const Action = async (): Promise<void> =>
+    //         {
+    //             const NewResponse: TIpcState<"OnChangeFocus"> =
+    //                 await SendIpcEvent("OnChangeFocus", Direction);
+
+    //             if (NewResponse.Data !== undefined)
+    //             {
+    //                 SetFocusData(NewResponse.Data);
+    //             }
+    //         };
+
+    //         return (): void =>
+    //         {
+    //             StartTransition(Action);
+    //         };
+    //     }, [ SendIpcEvent ]);
 
     const IsHorizontal: boolean = FocusData !== undefined
         ? FocusData.Direction === "Horizontal"
         : true;
 
-    const MoveFocusPrevious = (): void =>
-    {
-        ChangeFocus("Previous");
-    };
+    const MoveFocusPrevious: FSimpleCallback = MakeOnChangeFocus("Previous");
+    const MoveFocusNext: FSimpleCallback = MakeOnChangeFocus("Next");
 
-    const MoveFocusNext = (): void =>
-    {
-        ChangeFocus("Next");
-    };
+    const StepDownIntoPanel: FSimpleCallback = MakeOnChangeFocus("Down");
+    const StepUpIntoPanel: FSimpleCallback = MakeOnChangeFocus("Up");
 
     const GetPreviousDirection = (): string =>
     {
@@ -173,27 +314,6 @@ export const Focus = (): ReactNode =>
             ? "Right"
             : "Down";
     };
-
-    const StepDownIntoPanel = (): void =>
-    {
-        ChangeFocus("Down");
-    };
-
-    const StepUpIntoPanel = (): void =>
-    {
-        ChangeFocus("Up");
-    };
-
-    const ChangeFocus = (FocusChange: FFocusChange): void =>
-    {
-        // @TODO Replace with `SendIpcEvent` function.
-        window.electron.ipcRenderer.Send("OnChangeFocus", FocusChange);
-    };
-
-    useEffect((): void =>
-    {
-        Log("FocusData is", FocusData);
-    }, [ FocusData ]);
 
     const FooterRootStyle: CSSProperties =
     {

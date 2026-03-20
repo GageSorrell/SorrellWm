@@ -60,6 +60,14 @@ export type TIpcStateStrict<Type extends keyof FRichEvents> =
 
 export type TUseSendIpcEventReturnType<Type extends keyof FIpcFrontendEvents> = Readonly<TIpcState<Type>>;
 
+export type TUseSendIpcEventStateReturnType<ChannelType extends keyof FIpcFrontendEvents> = Readonly<
+    TIpcState<ChannelType> &
+    {
+        Resend: (NewRequest?: TRequest<ChannelType>) => void;
+        SetResponse: (Getter: (() => Promise<TIpcState<ChannelType>>)) => void;
+    }
+>;
+
 export type FSendIpcEventCallback = <ChannelType extends FIpcFrontendChannel>(
     Channel: ChannelType,
     Request: TRequest<ChannelType>

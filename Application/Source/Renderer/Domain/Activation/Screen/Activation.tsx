@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+import { CommandContainer, type FCommand, type FSimpleCommand } from "@/Domain/Common/Component/Command";
 import { type FC, type ReactElement, useEffect } from "react";
 import { UseNavigator, UseOnce } from "@/Utility";
 import { UseSendIpcEvent, UseSendIpcEventDeferred } from "@/Event";
@@ -11,7 +12,6 @@ import { Action } from "@/Action";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
-import { CommandContainer, type FCommand, type FSimpleCommand } from "@/Domain/Common/Component/Command";
 
 const Log: FLogger = GetLogger("Activation");
 
@@ -50,6 +50,7 @@ const ActivationTiled = (): ReactElement =>
     };
 
     const { Data: FocusData } = UseSendIpcEvent("GetFocusData", undefined);
+
     if (FocusData?.CanMoveWithinPanel || FocusData?.CanStepDown || FocusData?.CanStepUp)
     {
         Commands.unshift(FocusCommand);
@@ -173,12 +174,12 @@ export const Activation = (): ReactElement =>
             : true;
     };
 
-    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    // const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
-    UseOnce((): void =>
-    {
-        SendIpcEvent("NotifyReady", undefined);
-    });
+    // UseOnce((): void =>
+    // {
+    //     SendIpcEvent("NotifyReady", undefined);
+    // });
 
     useEffect((): void =>
     {

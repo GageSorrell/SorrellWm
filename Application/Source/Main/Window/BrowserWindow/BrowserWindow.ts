@@ -9,15 +9,12 @@ import {
     app as App,
     BrowserWindow,
     type BrowserWindowConstructorOptions,
-    type IpcMainInvokeEvent,
     type NativeImage,
-    type WebPreferences,
-    ipcMain } from "electron";
+    type WebPreferences } from "electron";
 import type { FCreateBrowserWindowReturnType } from "./BrowserWindow.Types";
 import type { FLogger } from "../../../Shared";
 import { GetIcon } from "../../Miscellaneous";
 import { GetLogger } from "../../Development";
-import { RegisterInitializationFunction } from "#/Initialize/Initialize";
 
 const Log: FLogger = GetLogger("BrowserWindow");
 
@@ -99,23 +96,23 @@ export const CreateBrowserWindow = async (
     };
 };
 
-const InitializeBrowserWindow = async (): Promise<void> =>
-{
-    ipcMain.handle("GetId", (Event: IpcMainInvokeEvent): number | undefined =>
-    {
-        Log("Received GetId call from the renderer.");
-        const Window: BrowserWindow | null = BrowserWindow.fromWebContents(Event.sender);
-        if (Window === null)
-        {
-            Log.Error("No BrowserWindow found for sender.");
-            return undefined;
-        }
-        else
-        {
-            Log(`Received GetId call from the renderer: Id is ${ Window.id }.`);
-            return Window.id;
-        }
-    });
-};
+// const InitializeBrowserWindow = async (): Promise<void> =>
+// {
+//     ipcMain.handle("GetId", (Event: IpcMainInvokeEvent): number | undefined =>
+//     {
+//         Log("Received GetId call from the renderer.");
+//         const Window: BrowserWindow | null = BrowserWindow.fromWebContents(Event.sender);
+//         if (Window === null)
+//         {
+//             Log.Error("No BrowserWindow found for sender.");
+//             return undefined;
+//         }
+//         else
+//         {
+//             Log(`Received GetId call from the renderer: Id is ${ Window.id }.`);
+//             return Window.id;
+//         }
+//     });
+// };
 
-RegisterInitializationFunction("BrowserWindow", InitializeBrowserWindow);
+// RegisterInitializationFunction("BrowserWindow", InitializeBrowserWindow);

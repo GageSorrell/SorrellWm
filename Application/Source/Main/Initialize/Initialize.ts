@@ -4,9 +4,9 @@
  * License:   MIT
  */
 
-import { app as App } from "electron";
 import type { FInitializer, FInitializers } from "./Initialize.Types";
 import type { FLogger, FRejectFunction, TPromiseThenFunction } from "../../Shared";
+import { app as App } from "electron";
 import { GetLogger } from "#/Development/Log/Log";
 
 const InitializationFunctions: FInitializers = { };
@@ -22,9 +22,9 @@ export async function RegisterInitializationFunction(
     DependencyArray: Array<string> = [ ]
 ): Promise<void>
 {
-    // const Log: FLogger = GetLogger("Initialize");
-    // Log(`Going to register initializer with name ${ Name }.`);
-    process.stdout.write(`Going to register initializer with name ${ Name }.\n`);
+    const Log: FLogger = GetLogger("Initialize");
+    Log(`Going to register initializer with name ${ Name }.`);
+    // process.stdout.write(`Going to register initializer with name ${ Name }.\n`);
     await App.whenReady();
 
     if (!LoggedAppReady)

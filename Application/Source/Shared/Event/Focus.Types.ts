@@ -6,6 +6,7 @@
  *            do not otherwise have a good place to go.
  */
 
+import type { FBox } from "@sorrellwm/windows";
 import type { FFocusChange } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 import type { TIpcFrontendEvent } from "./EventBase.Types";
@@ -26,6 +27,7 @@ export type FFocusDataBase =
     CanStepUp: boolean;
     CanStepDown: boolean;
     Direction: "Horizontal" | "Vertical";
+    RealSize: FBox;
 };
 
 export type FFocusData =
@@ -35,7 +37,9 @@ export type FFocusData =
         | FPanelFocusData
     );
 
-export type FOnChangeFocusErrorCode = TEventErrorCode<"">;
+export type FOnChangeFocusErrorCode =
+    | FGetFocusDataErrorCode
+    | TEventErrorCode<"">;
 
 export type FGetFocusDataErrorCode = TEventErrorCode<
     | "CurrentPanelUndefined"
@@ -53,7 +57,7 @@ declare module "./Event.Types"
         >;
         OnChangeFocus: TIpcFrontendEvent<
             FFocusChange,
-            undefined,
+            FFocusData,
             FOnChangeFocusErrorCode
         >;
     }

@@ -8,6 +8,8 @@ import type { FBox, HMonitor, HWindow } from "@sorrellwm/windows";
 
 export type FVertexBase =
 {
+    /** @TODO Add `GapSize` or `GridSize` (if you add `GridSize`, make `Size` be the "GapSize"). */
+    // GapSize: FBox;
     Size: FBox;
     ZOrder: number;
 };
