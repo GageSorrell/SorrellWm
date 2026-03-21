@@ -16,7 +16,7 @@ import type {
     TRichResponseDecl,
     TRichResponseFailure,
     TRichResponseSuccess } from "./EventBase.Types";
-import type { FUnknownErrorCode } from "./ErrorCodes.Types";
+import type { FUnknownErrorCode } from "../ErrorCodes.Types";
 
 export type FIpcBackendChannel = keyof FIpcBackendEvents;
 
@@ -216,21 +216,3 @@ export type FSingleRichFrontendEvents = Pick<FRichFrontendEvents, FSingleRichFro
 
 export type TGetSingleRichResponseData<Type extends FSingleRichFrontendChannels> =
     TGetValueOfSinglePropertyRecord<FSingleRichFrontendEvents[Type]["Response"]["Data"]>;
-
-type TChannelTaggedBase<ChannelType extends string = string> = `${ number }-${ ChannelType }`;
-
-export type TBackendChannelTagged<ChannelType extends FIpcBackendChannel> = TChannelTaggedBase<ChannelType>;
-export type TFrontendChannelTagged<ChannelType extends FIpcFrontendChannel> = TChannelTaggedBase<ChannelType>;
-export type TChannelTagged<ChannelType extends FIpcChannel> =
-    ChannelType extends FIpcBackendChannel
-        ? TBackendChannelTagged<ChannelType>
-        : ChannelType extends FIpcFrontendChannel
-            ? TFrontendChannelTagged<ChannelType>
-            : never;
-
-export type FBackendChannelTagged = TBackendChannelTagged<FIpcBackendChannel>;
-export type FFrontendChannelTagged = TFrontendChannelTagged<FIpcFrontendChannel>;
-export type FChannelTagged = TChannelTagged<FIpcChannel>;
-
-export type FBackendChannelTagger = (Channel: FIpcBackendChannel) => FBackendChannelTagged | undefined;
-export type FFrontendChannelTagger = (Channel: FIpcFrontendChannel) => FFrontendChannelTagged | undefined;

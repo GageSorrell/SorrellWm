@@ -17,7 +17,6 @@ import {
     useRef,
     useState,
     useTransition } from "react";
-import { DefaultSettings } from "../Shared/Settings";
 import {
     Delay,
     GetPropertyFromPath,
@@ -27,18 +26,21 @@ import {
     type TRef } from "../Shared/Utility";
 import type { FLogger, FSettings, FSimpleCallback } from "../Shared";
 import type {
-    FUseSettingsStateReturnType,
     FSettingsPath,
+    FUseSettingsStateReturnType,
     TControlledProps,
     TGetSetting,
     TUseSettingStateReturnType } from "./Settings.Types";
-import { IsSuccessful, UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event";
+// import { IsSuccessful, UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event.tsx.old";
+import { IsEventSuccess, type TSendEventDeferredReturnType } from "@sorrellwm/event";
 import type { TInternal, TSetState } from "./Utility";
 import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
+import { UseSendEvent, UseSendEventDeferred } from "./EventNew";
 import { Button } from "./Domain/Common";
+import { DefaultSettings } from "../Shared/Settings";
 import { GetLogger } from "./Log";
-import type { TGetType, TPath } from "../Shared/Utility/Object.Types";
-import type { TIpcState } from "./Event.Types";
+import type { IFrontendEventRegistrar } from "../Shared/Event/Event.Types";
+import type { TPath } from "../Shared/Utility/Object.Types";
 import { UseToaster } from "./Toast";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -166,7 +168,7 @@ export const UseSettingsState = (): FUseSettingsStateReturnType =>
 
 const UseInitializeSettings = (SetRealSettings: TSetState<FSettings>): void =>
 {
-    const { Data, IsPending: IsGetSettingsPending } = UseSendIpcEvent("GetSettings", undefined);
+    const { Data, IsPending: IsGetSettingsPending } = UseSendEvent("GetSettings");
     const Pending: RefObject<boolean> = useRef<boolean>(true);
     if (Pending.current && !IsGetSettingsPending)
     {
@@ -186,11 +188,11 @@ const UseInitializeSettings = (SetRealSettings: TSetState<FSettings>): void =>
 
 const SettingsFailureToast = (): ReactNode =>
 {
-    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    const [ SendIpcEvent ] = UseSendEventDeferred();
 
     const onMouseDown: FSimpleCallback = useCallback((): void =>
     {
-        SendIpcEvent("RequestRestart", undefined);
+        SendIpcEvent("RequestRestart");
     }, [ SendIpcEvent ]);
 
     const RequestRestartButton: ReactNode =
@@ -219,7 +221,7 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
 
     UseInitializeSettings(SetRealSettings);
 
-    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    const [ SendEvent ] = UseSendEventDeferred();
 
     const [ DispatchFailureToast ] = UseToaster(SettingsFailureToast);
 
@@ -233,8 +235,10 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
         NewSettingsRef.Ref = NewSettings;
         SetPropertyFromPath(NewSettingsRef, Path, Value);
         SetOptimisticSettings(NewSettings);
-        const Result: TIpcState<"UpdateSettings"> = await SendIpcEvent("UpdateSettings", NewSettings);
-        if (IsSuccessful(Result))
+        const Result: TSendEventDeferredReturnType<"UpdateSettings", IFrontendEventRegistrar> =
+            await SendEvent("UpdateSettings", NewSettings);
+
+        if (IsEventSuccess(Result))
         {
             SetRealSettings(NewSettings);
         }
@@ -244,7 +248,7 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
             SetOptimisticSettings(RealSettings);
             DispatchFailureToast({ intent: "error" });
         }
-    }, [ DispatchFailureToast, RealSettings, SendIpcEvent, SetOptimisticSettings ]);
+    }, [ DispatchFailureToast, RealSettings, SendEvent, SetOptimisticSettings ]);
 
     const UpdateManyFunction: TUpdateManyFunction =
         <PathType extends FSettingsPath,>(

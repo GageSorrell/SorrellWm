@@ -20,10 +20,7 @@ import type {
     TUseSendIpcEventStrictReturnType } from "./Event.Types";
 import {
     CallMaybeAsync,
-    type FRejectFunction,
-    type FSimpleCallback,
-    type TPromiseCatchFunction,
-    type TResolveFunction } from "../Shared/Utility";
+    type FSimpleCallback } from "../Shared/Utility";
 import {
     type Context,
     type DependencyList,
@@ -51,7 +48,7 @@ import type {
     TGetDefaultRichResponseData,
     TGetResponse,
     TRequest } from "../Shared/Event";
-import { MakeTagBackend, MakeTagFrontend } from "../Shared/Event/Event";
+import { MakeTagBackend, MakeTagFrontend } from "../Shared/Event/Old/Event";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "./Log";
 

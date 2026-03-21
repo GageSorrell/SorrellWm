@@ -4,9 +4,9 @@
  * License:   MIT
  */
 
+import type { FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { FAnnotatedPanel } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
-import type { TIpcFrontendEvent } from "./EventBase.Types";
 
 export type FBringIntoPanelErrorCode = TEventErrorCode<"">;
 
@@ -14,9 +14,9 @@ declare module "./Event.Types"
 {
     interface IFrontendEventRegistrar
     {
-        BringIntoPanel: TIpcFrontendEvent<
+        BringIntoPanel: TEventDecl<
             FAnnotatedPanel,
-            undefined,
+            FResponseDeclNone,
             FBringIntoPanelErrorCode
         >;
     }

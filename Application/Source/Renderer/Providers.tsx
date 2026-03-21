@@ -7,16 +7,16 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { CommandsProvider } from "./Command";
 import { DummyWindowProvider } from "./DummyWindow";
-import { EventProvider } from "./Event";
 import { FluentThemeProvider } from "./Utility/Theme";
 import { SettingsProvider } from "./Settings";
 import { ShortcutProvider } from "./Keybind";
+import { SorrellWmEventProvider } from "./EventNew";
 import { ToastProvider } from "./Toast";
 
 export const Providers = ({ children }: PropsWithChildren): ReactNode =>
 {
     return (
-        <EventProvider>
+        <SorrellWmEventProvider>
             <DummyWindowProvider>
                 <FluentThemeProvider>
                     <ToastProvider>
@@ -30,6 +30,6 @@ export const Providers = ({ children }: PropsWithChildren): ReactNode =>
                     </ToastProvider>
                 </FluentThemeProvider>
             </DummyWindowProvider>
-        </EventProvider>
+        </SorrellWmEventProvider>
     );
 };

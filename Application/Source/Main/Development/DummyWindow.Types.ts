@@ -4,16 +4,17 @@
  * License:   MIT
  */
 
+import type { FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { TIpcFrontendEvent } from "Source/Shared";
 
 declare module "../../Shared/Event/Event.Types.ts"
 {
     interface IFrontendEventRegistrar
     {
-        GetIsDummyWindow: TIpcFrontendEvent<
-            undefined,
-            { IsDummyWindow: boolean; },
-            ""
+        GetIsDummyWindow: TEventDecl<
+            FResponseDeclNone,
+            boolean,
+            "UnspecifiedError"
         >;
     }
 }

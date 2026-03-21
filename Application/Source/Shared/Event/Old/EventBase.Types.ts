@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { FNotFunction } from "../../Shared/Shared.Types";
-import type { FUnknownErrorCode } from "./ErrorCodes.Types";
+import type { FNotFunction } from "../../Shared.Types";
+import type { FUnknownErrorCode } from "../ErrorCodes.Types";
 
 export type FIpcEventInitiator =
     | "Backend"
@@ -112,6 +112,7 @@ export type TIpcEventsBase<RegistrarType = unknown> =
     RegistrarType[Key];
 };
 
+/** @deprecated Use `TEventDecl` from `@sorrellwm/event`. */
 export type TIpcFrontendEvent<
     Request extends FNotFunction = FNotFunction,
     Response extends FResponseData = FResponseData,
@@ -123,6 +124,7 @@ export type TIpcFrontendEvent<
             ErrorString
         >;
 
+/** @deprecated Use `TEventDecl` from `@sorrellwm/event`. */
 export type TIpcBackendEvent<
     Request extends FNotFunction,
     Response extends FResponseData,

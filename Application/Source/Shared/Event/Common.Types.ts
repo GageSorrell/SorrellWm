@@ -6,7 +6,7 @@
 
 import type { FAnnotatedPanel, FPanel } from "../Tree.Types";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
-import type { TIpcBackendEvent, TIpcFrontendEvent } from "./EventBase.Types";
+import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { FExternalWindow } from "../Window/ExternalWindow.Types";
 import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
@@ -71,148 +71,148 @@ declare module "./Event.Types"
 {
     interface IFrontendEventRegistrar
     {
-        GetId: TIpcFrontendEvent<
-            undefined,
+        GetId: TEventDecl<
+            FRequestDeclNone,
             { Id: number | undefined; },
             FGetIdErrorCode
         >;
-        GetMonitorFromFocusedWindow: TIpcFrontendEvent<
-            undefined,
+        GetMonitorFromFocusedWindow: TEventDecl<
+            FRequestDeclNone,
             { Monitor: HMonitor; },
             FGetMonitorFromFocusedWindowErrorCode
         >;
-        GetAnnotatedPanels: TIpcFrontendEvent<
-            undefined,
+        GetAnnotatedPanels: TEventDecl<
+            FRequestDeclNone,
             { AnnotatedPanels: TArray<FAnnotatedPanel> },
             FGetAnnotatedPanelsErrorCode
         >;
-        GetCurrentPanel: TIpcFrontendEvent<
-            undefined,
+        GetCurrentPanel: TEventDecl<
+            FRequestDeclNone,
             FPanel,
             FGetCurrentPanelErrorCode
         >;
-        GetIsActiveWindowTiled: TIpcFrontendEvent<
-            undefined,
-            { IsTiled: boolean; },
+        GetIsActiveWindowTiled: TEventDecl<
+            FRequestDeclNone,
+            boolean,
             FGetCurrentPanelErrorCode
         >;
-        GetIsLightMode: TIpcFrontendEvent<
-            undefined,
-            { IsLightMode: boolean; },
+        GetIsLightMode: TEventDecl<
+            FRequestDeclNone,
+            boolean,
             FGetIsLightModeErrorCode
         >;
-        Update: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        Update: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FUpdateErrorCode
         >;
-        OpenWebPage: TIpcFrontendEvent<
+        OpenWebPage: TEventDecl<
             string,
-            undefined,
+            FResponseDeclNone,
             FOpenWebPageErrorCode
         >;
-        GetIsElevated: TIpcFrontendEvent<
-            undefined,
+        GetIsElevated: TEventDecl<
+            FRequestDeclNone,
             { IsElevated: boolean; },
             FGetIsElevatedErrorCode
         >;
-        AllowActivation: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        AllowActivation: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FAllowActivationErrorCode
         >;
-        PreventActivation: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        PreventActivation: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FPreventActivationErrorCode
         >;
-        GetStore: TIpcFrontendEvent<
-            undefined,
+        GetStore: TEventDecl<
+            FRequestDeclNone,
             FStore,
             FGetStoreErrorCode
         >;
-        SetStore: TIpcFrontendEvent<
+        SetStore: TEventDecl<
             FStore,
-            undefined,
+            FResponseDeclNone,
             FSetStoreErrorCode
         >;
-        GetThemeColor: TIpcFrontendEvent<
-            undefined,
-            { ThemeColor: FHexColor; },
+        GetThemeColor: TEventDecl<
+            FRequestDeclNone,
+            FHexColor,
             FGetThemeColorErrorCode
         >;
-        GetPanelScreenshots: TIpcFrontendEvent<
-            undefined,
-            { Screenshots: TArray<string>; },
+        GetPanelScreenshots: TEventDecl<
+            FRequestDeclNone,
+            TArray<string>,
             FGetPanelScreenshotsErrorCode
         >;
-        GetExternalWindowState: TIpcFrontendEvent<
-            undefined,
+        GetExternalWindowState: TEventDecl<
+            FRequestDeclNone,
             FExternalWindow,
             FGetExternalWindowStateErrorCode
         >;
-        GetFloatingWindowState: TIpcFrontendEvent<
-            undefined,
+        GetFloatingWindowState: TEventDecl<
+            FRequestDeclNone,
             FFloatingWindow,
             FGetFloatingWindowStateErrorCode
         >;
-        GetInsertableWindowData: TIpcFrontendEvent<
-            undefined,
+        GetInsertableWindowData: TEventDecl<
+            FRequestDeclNone,
             { InsertableWindowData: TArray<FInsertableWindowData> },
             FGetInsertableWindowDataErrorCode
         >;
-        Log: TIpcFrontendEvent<
+        Log: TEventDecl<
             TArray<unknown>,
-            undefined,
+            FResponseDeclNone,
             FLogErrorCode
         >;
-        MaximizeFloatingWindow: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        MaximizeFloatingWindow: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FMaximizeFloatingWindowErrorCode
         >;
-        MinimizeFloatingWindow: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        MinimizeFloatingWindow: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FMinimizeFloatingWindowErrorCode
         >;
-        NotifyReady: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        NotifyReady: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FNotifyReadyErrorCode
         >;
-        ReadyForRoute: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        ReadyForRoute: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FReadyForRouteErrorCode
         >;
-        RestoreFloatingWindow: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        RestoreFloatingWindow: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FRestoreFloatingWindowErrorCode
         >;
-        RequestRestart: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        RequestRestart: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FRequestRestartErrorCode
         >;
-        RequestTearDown: TIpcFrontendEvent<
-            undefined,
-            undefined,
+        RequestTearDown: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FRequestTearDownErrorCode
         >;
     }
 
     interface IBackendEventRegistrar
     {
-        Activate: TIpcBackendEvent<
+        Activate: TEventDecl<
             boolean,
-            undefined,
+            FResponseDeclNone,
             FActivateErrorCode
         >;
-        TearDown: TIpcBackendEvent<
-            undefined,
-            undefined,
+        TearDown: TEventDecl<
+            FRequestDeclNone,
+            FResponseDeclNone,
             FTearDownErrorCode
         >;
     }

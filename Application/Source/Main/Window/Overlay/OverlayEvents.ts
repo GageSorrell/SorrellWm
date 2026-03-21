@@ -51,101 +51,96 @@ import {
     SetWindowPosition } from "@sorrellwm/windows";
 import { GetDevSettings, GetLogger, LogFrontend } from "#/Development";
 import { PoorEventFailureSimple, PoorEventSuccess, type TIpcCallback } from "#/Event";
+import type { IFrontendEventRegistrar } from "../../../Shared/Event/Event.Types";
+import type { TAwaitedCallback, TCallback, TCallbackReturnType } from "node_modules/@sorrellwm/event/Distribution/Internal";
 
 const Log: FLogger = GetLogger("OverlayEvents");
 
-const GetFocusDataEvent: Readonly<TIpcCallback> =
+type FGetFocusDataReturnType = Awaited<ReturnType<TCallback<"GetFocusData", IFrontendEventRegistrar>>>;
+const GetFocusData = async (): Promise<TAwaitedCallback<"GetFocusData", IFrontendEventRegistrar>> =>
 {
-    Callback: async (): ReturnType<TEventCallback<"GetFocusData">> =>
+    const CurrentPanel: FPanel | undefined = GetCurrentPanel();
+    let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
+    if (FocusedVertex === undefined)
     {
-        const CurrentPanel: FPanel | undefined = GetCurrentPanel();
-        let FocusedVertex: FVertex | undefined = GetInterimFocusedVertex();
-        if (FocusedVertex === undefined)
-        {
-            SetInterimFocusedVertexToActive();
-            FocusedVertex = GetInterimFocusedVertex();
-        }
+        SetInterimFocusedVertexToActive();
+        FocusedVertex = GetInterimFocusedVertex();
+    }
 
-        if (FocusedVertex === undefined)
-        {
-            /* eslint-disable-next-line @stylistic/max-len */
-            Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
-            return {
-                Data: undefined,
-                Error: "FocusedVertexUndefined"
-            };
-        }
-
-        if (CurrentPanel === undefined)
-        {
-            Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
-            return {
-                Data: undefined,
-                Error: "CurrentPanelUndefined"
-            };
-        }
-        // if (CurrentPanel === undefined || FocusedVertex === undefined)
-        // {
-        /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
-        //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
-        //     return;
-        // }
-
-        const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
-        const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
-        const CanStepUp: boolean = ParentPanel !== undefined;
-        const CanStepDown: boolean = IsPanel(FocusedVertex);
-        const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
-        const RealSize: FBox | undefined = await GetRealSize(FocusedVertex);
-
-        if (RealSize === undefined)
-        {
-            return {
-                Data: undefined,
-                Error: "UnspecifiedError"
-            };
-        }
-
-        const DataBase: FFocusDataBase =
-        {
-            CanMoveWithinPanel,
-            CanStepDown,
-            CanStepUp,
-            Direction,
-            RealSize
-        };
-
-        let Out: FFocusData | undefined = undefined;
-
-        if (IsPanel(FocusedVertex))
-        {
-            const NumVertices: number = FocusedVertex.Children.length;
-
-            Out =
-            {
-                ...DataBase,
-                NumVertices
-            };
-        }
-        else
-        {
-            const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
-
-            Out =
-            {
-                ...DataBase,
-                FocusedWindowTitle
-            };
-        }
-
-        Log("GetFocusData is sending to the frontend:", Out);
-
+    if (FocusedVertex === undefined)
+    {
+        /* eslint-disable-next-line @stylistic/max-len */
+        Log.Warn("GetFocusData cannot continue because FocusedVertex was undefined and could not be set.");
         return {
-            Data: Out,
-            Error: undefined
+            Error: "FocusedVertexUndefined"
         };
-    },
-    Channel: "GetFocusData"
+    }
+
+    if (CurrentPanel === undefined)
+    {
+        Log.Warn("GetFocusData cannot continue because CurrentPanel is undefined.");
+        return {
+            Error: "CurrentPanelUndefined"
+        };
+    }
+    // if (CurrentPanel === undefined || FocusedVertex === undefined)
+    // {
+    /* eslint-disable-next-line @stylistic/max-len, @stylistic/max-len */
+    //     Log("GetFocusData is returning without sending data because CurrentPanel or FocusedVertex is undefined.");
+    //     return;
+    // }
+
+    const Direction: "Horizontal" | "Vertical" = CurrentPanel.Type;
+    const ParentPanel: FPanel | undefined = GetParent(CurrentPanel);
+    const CanStepUp: boolean = ParentPanel !== undefined;
+    const CanStepDown: boolean = IsPanel(FocusedVertex);
+    const CanMoveWithinPanel: boolean = CurrentPanel.Children.length > 1;
+    const RealSize: FBox | undefined = await GetRealSize(FocusedVertex);
+
+    if (RealSize === undefined)
+    {
+        return {
+            Error: "UnspecifiedError"
+        };
+    }
+
+    const DataBase: FFocusDataBase =
+    {
+        CanMoveWithinPanel,
+        CanStepDown,
+        CanStepUp,
+        Direction,
+        RealSize
+    };
+
+    let Out: FFocusData | undefined = undefined;
+
+    if (IsPanel(FocusedVertex))
+    {
+        const NumVertices: number = FocusedVertex.Children.length;
+
+        Out =
+        {
+            ...DataBase,
+            NumVertices
+        };
+    }
+    else
+    {
+        const FocusedWindowTitle: string = GetWindowTitle(FocusedVertex.Handle);
+
+        Out =
+        {
+            ...DataBase,
+            FocusedWindowTitle
+        };
+    }
+
+    Log("GetFocusData is sending to the frontend:", Out);
+
+    return {
+        Data: Out
+    };
 };
 
 export const OverlayEvents: Readonly<Array<TIpcCallback>> =
@@ -457,7 +452,7 @@ export const OverlayEvents: Readonly<Array<TIpcCallback>> =
                 }) as TArray<string>;
 
             return {
-                Data: { Screenshots },
+                Data: Screenshots,
                 Error: undefined
             };
         },

@@ -4,10 +4,10 @@
  * License:   MIT
  */
 
+import type { FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { FAxis } from "../../Shared/Shared.Types";
-import type { TEventErrorCode } from "./ErrorCodes.Types";
-import type { TIpcFrontendEvent } from "./EventBase.Types";
 import type { FFocusDataBase } from "./Focus.Types";
+import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FTranslation =
 {
@@ -35,16 +35,16 @@ export type FTiledMoveResult =
 
 export type FMoveFloatingWindowErrorCode = TEventErrorCode<"">;
 
-declare module "./Event.Types"
+declare module "./Old/Event.Types"
 {
     interface IFrontendEventRegistrar
     {
-        MoveFloatingWindow: TIpcFrontendEvent<
+        MoveFloatingWindow: TEventDecl<
             FTranslation,
-            undefined,
+            FResponseDeclNone,
             FMoveFloatingWindowErrorCode
         >;
-        MoveTiledWindow: TIpcFrontendEvent<
+        MoveTiledWindow: TEventDecl<
             FTiledMoveTransaction,
             FTiledMoveResult,
             FMoveFloatingWindowErrorCode

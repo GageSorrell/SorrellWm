@@ -4,11 +4,6 @@
  * License:   MIT
  */
 
-export * from "./Event";
-export * from "./Event.Types";
-export * from "./EventBase.Types";
-export * from "./EventUtility.Types";
-
 export * from "./Common.Types";
 export * from "./Focus.Types";
 export * from "./Insert.Types";

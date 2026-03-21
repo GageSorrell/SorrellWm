@@ -4,14 +4,8 @@
  * License:   MIT
  */
 
-import type { TIpcEventsBase } from "./EventBase.Types";
-
-/* eslint-disable @stylistic/brace-style, @typescript-eslint/no-empty-object-type */
-
-export interface IFrontendEventRegistrar { };
-
-export type FIpcFrontendEvents = TIpcEventsBase<IFrontendEventRegistrar>;
+/* eslint-disable @typescript-eslint/no-empty-object-type, @stylistic/brace-style */
 
 export interface IBackendEventRegistrar { };
 
-export type FIpcBackendEvents = TIpcEventsBase<IBackendEventRegistrar>;
+export interface IFrontendEventRegistrar { };

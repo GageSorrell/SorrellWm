@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
+import type { FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
-import type { TIpcBackendEvent } from "./EventBase.Types";
 
 export type FNavigateRequest =
 {
@@ -19,9 +19,9 @@ declare module "./Event.Types"
 {
     interface IBackendEventRegistrar
     {
-        Navigate: TIpcBackendEvent<
+        Navigate: TEventDecl<
             FNavigateRequest,
-            undefined,
+            FResponseDeclNone,
             FNavigateErrorCode
         >;
 

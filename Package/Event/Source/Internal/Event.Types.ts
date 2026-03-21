@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { TIsSerializable } from "./Serializable.Types";
-import type { TIsValid } from "./Utility.Types";
+import type { TIsSerializable } from "./Serializable.Types.ts";
+import type { TIsValid } from "./Utility.Types.ts";
 
 export type TAreArgumentsSerializable<
     RequestDeclType,

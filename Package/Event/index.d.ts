@@ -1,8 +1,7 @@
-/* File:      index.ts
+/* File:      index.d.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-export * from "./Event.Base.Types";
-export * from "./Event.Types";
+export type * from "./Distribution/index.d.ts";

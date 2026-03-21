@@ -6,10 +6,10 @@
  *            do not otherwise have a good place to go.
  */
 
+import type { FRequestDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { FBox } from "@sorrellwm/windows";
 import type { FFocusChange } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
-import type { TIpcFrontendEvent } from "./EventBase.Types";
 
 export type FWindowFocusData =
 {
@@ -50,12 +50,12 @@ declare module "./Event.Types"
 {
     interface IFrontendEventRegistrar
     {
-        GetFocusData: TIpcFrontendEvent<
-            undefined,
+        GetFocusData: TEventDecl<
+            FRequestDeclNone,
             FFocusData,
             FGetFocusDataErrorCode
         >;
-        OnChangeFocus: TIpcFrontendEvent<
+        OnChangeFocus: TEventDecl<
             FFocusChange,
             FFocusData,
             FOnChangeFocusErrorCode

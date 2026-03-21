@@ -11,10 +11,10 @@ import {
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
 import { type CSSProperties, type PropsWithChildren, type ReactNode, useMemo } from "react";
-import { UseSendIpcEvent, UseSendIpcEventStrict } from "@/Event";
 import type { FHexColor } from "@sorrellwm/windows";
 import type { FLogger } from "../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
+import { UseSendEvent } from "@/EventNew";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -23,33 +23,18 @@ const Log: FLogger = GetLogger("Theme");
 export const UseThemeColor = (): Readonly<[ FHexColor ]> =>
 {
     const DefaultThemeColor: FHexColor = "#0078D4";
-    const { Data } = UseSendIpcEventStrict(
-        "GetThemeColor",
-        undefined,
-        { ThemeColor: DefaultThemeColor }
-    );
+    const { Data: ThemeColor } = UseSendEvent("GetThemeColor");
 
-    Log(`ThemeColor is ${ Data.ThemeColor }.`);
+    Log(`ThemeColor is ${ ThemeColor }.`);
 
-    if (Data !== undefined)
-    {
-        return [ Data.ThemeColor ] as const;
-    }
-    else
-    {
-        return [ DefaultThemeColor ] as const;
-    }
+    return [ ThemeColor || DefaultThemeColor ] as const;
 };
 
 const UseIsLightMode = (): Readonly<[ boolean ]> =>
 {
-    const { Data } = UseSendIpcEvent("GetIsLightMode", undefined);
+    const { Data: IsLightMode } = UseSendEvent("GetIsLightMode", undefined, true);
 
-    const IsLightMode: boolean = Data !== undefined
-        ? Data.IsLightMode
-        : true;
-
-    return [ IsLightMode ] as const;
+    return [ IsLightMode || false ] as const;
 };
 
 const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>

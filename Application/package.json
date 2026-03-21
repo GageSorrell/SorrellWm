@@ -73,6 +73,7 @@
     "@fluentui/react-components": "^9.73.2",
     "@fluentui/react-icons": "^2.0.321",
     "@fluentui/react-motion-components-preview": "^0.15.2",
+    "@sorrellwm/event": "file:../Package/Event",
     "dot-prop": "^10.1.0",
     "electron-debug": "^4.1.0",
     "electron-log": "^5.4.3",

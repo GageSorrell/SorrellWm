@@ -12,7 +12,8 @@ import {
     useEffect,
     useRef,
     useState} from "react";
-import { UseSendIpcEventDeferred } from "./Event";
+import { UseSendEventDeferred } from "./EventNew";
+// import { UseSendIpcEventDeferred } from "./Event";
 
 const DummyWindow = (): ReactNode =>
 {
@@ -95,7 +96,9 @@ const RandomBetween = (Minimum: number, Maximum: number): number =>
 
 export const DummyWindowProvider = ({ children }: PropsWithChildren): ReactNode =>
 {
-    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    // const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    const [ SendIpcEvent ] = UseSendEventDeferred();
+
     const [ IsDummyWindow, SetIsDummyWindow ] = useState<boolean>(false);
 
     useEffect((): void =>

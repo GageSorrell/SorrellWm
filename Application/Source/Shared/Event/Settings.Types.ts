@@ -5,8 +5,8 @@
  */
 
 import type { FExternalSetting, FSettings } from "../Settings";
+import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
-import type { TIpcFrontendEvent } from "./EventBase.Types";
 
 export type FUpdateStatus =
 {
@@ -23,29 +23,29 @@ declare module "./Event.Types"
 {
     interface IFrontendEventRegistrar
     {
-        GetExternalSettingState: TIpcFrontendEvent<
+        GetExternalSettingState: TEventDecl<
             FExternalSetting,
-            { Setting: FSettings[FExternalSetting] },
+            FSettings[FExternalSetting],
             FGetExternalSettingStateErrorCode
         >;
-        GetSetting: TIpcFrontendEvent<
+        GetSetting: TEventDecl<
             keyof FSettings,
-            { Setting: FSettings[keyof FSettings] },
+            FSettings[keyof FSettings],
             FGetSettingErrorCode
         >;
-        GetSettings: TIpcFrontendEvent<
-            undefined,
+        GetSettings: TEventDecl<
+            FRequestDeclNone,
             FSettings,
             FGetSettingsErrorCode
         >;
-        CheckForUpdates: TIpcFrontendEvent<
-            undefined,
+        CheckForUpdates: TEventDecl<
+            FRequestDeclNone,
             FUpdateStatus,
             FCheckForUpdatesErrorCode
         >;
-        UpdateSettings: TIpcFrontendEvent<
+        UpdateSettings: TEventDecl<
             FSettings,
-            undefined,
+            FResponseDeclNone,
             FUpdateSettingsErrorCode
         >;
     }

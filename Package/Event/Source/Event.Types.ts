@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { TAreArgumentsSerializable } from "./Internal/Event.Types";
+import type { TAreArgumentsSerializable } from "./Internal/Event.Types.ts";
 
 export type FResponseDeclNone = "ResponseDeclNone";
 export type FRequestDeclNone = "RequestDeclNone";
