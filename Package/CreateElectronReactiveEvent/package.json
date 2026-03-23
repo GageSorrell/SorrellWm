@@ -1,0 +1,30 @@
+{
+    "bin": "node ./Distribution/index.js",
+    "name": "create-electron-reactive-event",
+    "version": "1.0.0",
+    "description": "Helper package to integrate electron-reactive-event in your Electron- and React-based app.",
+    "keywords": [
+        "electron",
+        "react",
+        "reactive",
+        "init",
+        "cli",
+        "event",
+        "react-hooks"
+    ],
+    "homepage": "https://github.com/GageSorrell/SorrellWm",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "author": "Gage Sorrell <gage@sorrell.sh>",
+    "type": "module",
+    "main": "Distribution/index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    }
+}

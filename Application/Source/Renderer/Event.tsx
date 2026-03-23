@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { EventProvider, type FIpcRendererFunctions, MakeEventHooks } from "@sorrellwm/event";
+import { EventProvider, type FIpcRendererFunctions, MakeEventHooks } from "electron-reactive-event";
 import type { IBackendEventRegistrar, IFrontendEventRegistrar } from "Source/Shared/Event/Event.Types";
 import type { PropsWithChildren, ReactNode } from "react";
 

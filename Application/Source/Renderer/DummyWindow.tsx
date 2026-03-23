@@ -12,7 +12,7 @@ import {
     useEffect,
     useRef,
     useState} from "react";
-import { UseSendEventDeferred } from "./EventNew";
+import { UseSendEventDeferred } from "./Event";
 // import { UseSendIpcEventDeferred } from "./Event";
 
 const DummyWindow = (): ReactNode =>

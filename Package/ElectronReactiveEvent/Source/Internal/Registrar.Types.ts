@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { TIsEventDecl } from "./Event.Types.ts";
+import type { TIsEventDecl } from "./Event.Types.js";
 
 export type TChannel<
     EventRegistrarType extends Record<KeyType, unknown>,

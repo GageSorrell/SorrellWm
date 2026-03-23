@@ -27,7 +27,7 @@ import type {
     TSendEventDeferredBase,
     TSendEventDeferredReturnType,
     TUseSendEventDeferred,
-    TUseSendEventReturnType } from "./Factory.Types.ts";
+    TUseSendEventReturnType } from "./Factory.Types.js";
 import type {
     FRendererResponseInternal,
     FResponseInternal,
@@ -39,9 +39,9 @@ import type {
     TUseRegisterCallbackDeferred,
     TUseRegisterCallbacksDeferred,
     TUseUnregisterCallbackDeferred,
-    TUseUnregisterCallbacksDeferred } from "./Internal/index.ts";
+    TUseUnregisterCallbacksDeferred } from "./Internal/index.js";
 import type { IpcRendererEvent, ipcRenderer } from "electron";
-import { GetResponseChannel } from "./Factory.ts";
+import { GetResponseChannel } from "./Factory.js";
 
 /** @TODO Investigate dependency arrays. */
 /* eslint-disable react-hooks/exhaustive-deps */

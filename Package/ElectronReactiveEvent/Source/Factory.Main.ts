@@ -13,9 +13,9 @@ import type {
     TChannelsNoRequest,
     TChannelsWithRequest,
     TRequest,
-    TResponse } from "./Internal/index.ts";
-import type { TCallbackRecord, TMainEventFactoryReturnType } from "./Factory.Types.ts";
-import { GetResponseChannel } from "./Factory.ts";
+    TResponse } from "./Internal/index.js";
+import type { TCallbackRecord, TMainEventFactoryReturnType } from "./Factory.Types.js";
+import { GetResponseChannel } from "./Factory.js";
 
 export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarType>(
 ): TMainEventFactoryReturnType<MainEventRegistrarType, RendererEventRegistrarType> =>

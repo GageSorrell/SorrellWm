@@ -35,7 +35,7 @@ import type {
 import { IsEventSuccess, type TSendEventDeferredReturnType } from "@sorrellwm/event";
 import type { TInternal, TSetState } from "./Utility";
 import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
-import { UseSendEvent, UseSendEventDeferred } from "./EventNew";
+import { UseSendEvent, UseSendEventDeferred } from "./Event";
 import { Button } from "./Domain/Common";
 import { DefaultSettings } from "../Shared/Settings";
 import { GetLogger } from "./Log";

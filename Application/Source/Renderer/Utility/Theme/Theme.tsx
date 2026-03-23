@@ -14,7 +14,7 @@ import { type CSSProperties, type PropsWithChildren, type ReactNode, useMemo } f
 import type { FHexColor } from "@sorrellwm/windows";
 import type { FLogger } from "../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
-import { UseSendEvent } from "@/EventNew";
+import { UseSendEvent } from "@/Event";
 import { getBrandTokensFromPalette } from "./FluentThemeDesigner";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */

@@ -140,6 +140,7 @@ const GetFocusData = async (): Promise<TAwaitedCallback<"GetFocusData", IFronten
 
     return {
         Data: Out
+
     };
 };
 

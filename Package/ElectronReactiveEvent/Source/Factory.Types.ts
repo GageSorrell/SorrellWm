@@ -21,9 +21,9 @@ import type {
     TUseRegisterCallbackDeferred,
     TUseRegisterCallbacksDeferred,
     TUseUnregisterCallbackDeferred,
-    TUseUnregisterCallbacksDeferred} from "./Internal/index.ts";
+    TUseUnregisterCallbacksDeferred} from "./Internal/index.js";
 import type { PropsWithChildren, ReactNode } from "react";
-import type { FResponseDeclNone } from "./Event.Types.ts";
+import type { FResponseDeclNone } from "./Event.Types.js";
 import type { ipcRenderer } from "electron";
 
 /** Use this to define your event callbacks as a record. */

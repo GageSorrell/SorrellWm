@@ -8,12 +8,12 @@ import type {
     FErrorMessageDeclTypeKey,
     FErrorPayloadDeclTypeKey,
     FRequestDeclTypeKey,
-    FResponseDeclTypeKey } from "./Event.Types.ts";
-import type { FRequestDeclNone, FResponseDeclNone } from "../Event.Types.ts";
+    FResponseDeclTypeKey } from "./Event.Types.js";
+import type { FRequestDeclNone, FResponseDeclNone } from "../Event.Types.js";
 import type { BrowserWindow } from "electron";
-import type { TCallbackRecord } from "../Factory.Types.ts";
-import type { TChannel } from "./Registrar.Types.ts";
-import type { TIsValid } from "./Utility.Types.ts";
+import type { TCallbackRecord } from "../Factory.Types.js";
+import type { TChannel } from "./Registrar.Types.js";
+import type { TIsValid } from "./Utility.Types.js";
 
 type TEventErrorBase<ChannelType extends keyof EventRegistrarType, EventRegistrarType> =
     FErrorMessageDeclTypeKey extends keyof EventRegistrarType[ChannelType]
