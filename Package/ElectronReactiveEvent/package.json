@@ -7,21 +7,25 @@
     "type": "module",
     "main": "./Distribution/index.js",
     "types": "./Distribution/index.d.ts",
-    "exports": {
+    "exports":
+    {
         ".": "./Distribution/index.js"
     },
-    "scripts": {
+    "scripts":
+    {
         "build": "tsc -p tsconfig.json",
         "clean": "rimraf ./Distribution",
         "prepublishOnly": "npm run build",
         "init": "npm run build && node ./Distribution/Initialize.js"
     },
-    "devDependencies": {
+    "devDependencies":
+    {
         "@types/react": "^19.2.14",
         "rimraf": "^6.1.3",
         "typescript": "^5.9.3"
     },
-    "dependencies": {
+    "dependencies":
+    {
         "electron": "^41.0.3",
         "react": "^19.2.4"
     }

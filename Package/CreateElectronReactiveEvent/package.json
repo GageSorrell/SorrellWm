@@ -23,8 +23,5 @@
     "license": "MIT",
     "author": "Gage Sorrell <gage@sorrell.sh>",
     "type": "module",
-    "main": "Distribution/index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    }
+    "main": "./Distribution/index.js"
 }
