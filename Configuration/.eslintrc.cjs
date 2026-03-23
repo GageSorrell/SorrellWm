@@ -5,8 +5,7 @@
  */
 
 /* eslint-disable-next-line no-undef */
-module.exports =
-{
+module.exports = {
     extends:
     [
         "eslint:recommended",
@@ -30,7 +29,6 @@ module.exports =
     },
     plugins:
     [
-        "header",
         "react",
         "react-hooks",
         "@typescript-eslint",
@@ -41,7 +39,7 @@ module.exports =
         "@stylistic/array-bracket-spacing": [ "error", "always" ],
         "@stylistic/arrow-parens": [ "error", "always" ],
         "@stylistic/arrow-spacing": [ "error", { after: true, before: true } ],
-        "@stylistic/brace-style": [ "error", "allman", { allowSingleLine: false } ],
+        "@stylistic/brace-style": [ "error", "allman", { allowSingleLine: true } ],
         "@stylistic/comma-dangle": [ "error", "never" ],
         "@stylistic/comma-spacing": [ "error", { after: true, before: false } ],
         "@stylistic/dot-location": [ "error", "property" ],
@@ -116,12 +114,6 @@ module.exports =
                 variableDeclaration: true,
                 variableDeclarationIgnoreFunction: true
             }
-        ],
-        "brace-style":
-        [
-            "error",
-            "allman",
-            { allowSingleLine: true }
         ],
         curly: [ "error", "all" ],
         "no-console": [ "error" ],

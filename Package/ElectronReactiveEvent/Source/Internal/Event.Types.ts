@@ -4,43 +4,45 @@
  * License:   MIT
  */
 
-import type { TIsSerializable } from "./Serializable.Types.js";
-import type { TIsValid } from "./Utility.Types.js";
+/* eslint-disable @typescript-eslint/naming-convention */
 
-export type TAreArgumentsSerializable<
+import type { EmptyEventParameter } from "../index.js";
+import type { IsSerializable } from "./index.js";
+
+export type AreArgumentsSerializable<
     RequestDeclType,
     ResponseDeclType,
     ErrorMessageDeclType,
-    ErrorPayloadDeclType = never
+    ErrorPayloadDeclType = EmptyEventParameter
 > =
-    TIsValid<ErrorPayloadDeclType> extends true
+    ErrorPayloadDeclType extends [ never ]
         ? (
-            | TIsSerializable<RequestDeclType>
-            | TIsSerializable<ResponseDeclType>
-            | TIsSerializable<ErrorMessageDeclType>
-            | TIsSerializable<ErrorPayloadDeclType>
+            | IsSerializable<RequestDeclType>
+            | IsSerializable<ResponseDeclType>
+            | IsSerializable<ErrorMessageDeclType>
         )
         : (
-            | TIsSerializable<RequestDeclType>
-            | TIsSerializable<ResponseDeclType>
-            | TIsSerializable<ErrorMessageDeclType>
+            | IsSerializable<RequestDeclType>
+            | IsSerializable<ResponseDeclType>
+            | IsSerializable<ErrorMessageDeclType>
+            | IsSerializable<ErrorPayloadDeclType>
         );
 
-export type FRequestDeclTypeKey = "RequestDeclType";
-export type FResponseDeclTypeKey = "ResponseDeclType";
-export type FErrorMessageDeclTypeKey = "ErrorMessageDeclType";
-export type FErrorPayloadDeclTypeKey = "ErrorPayloadDeclType";
+export type RequestDeclKey = "RequestDeclType";
+export type ResponseDeclKey = "ResponseDeclType";
+export type ErrorMessageDeclKey = "ErrorMessageDeclType";
+export type ErrorPayloadDeclKey = "ErrorPayloadDeclType";
 
-export type TIsEventDecl<Type> =
-    FRequestDeclTypeKey extends keyof Type
-        ? FResponseDeclTypeKey extends keyof Type
-            ? FErrorMessageDeclTypeKey extends keyof Type
-                ? FErrorPayloadDeclTypeKey extends keyof Type
-                    ? TAreArgumentsSerializable<
-                        Type[FRequestDeclTypeKey],
-                        Type[FResponseDeclTypeKey],
-                        Type[FErrorMessageDeclTypeKey],
-                        Type[FErrorPayloadDeclTypeKey]
+export type IsEventDecl<Type> =
+    RequestDeclKey extends keyof Type
+        ? ResponseDeclKey extends keyof Type
+            ? ErrorMessageDeclKey extends keyof Type
+                ? ErrorPayloadDeclKey extends keyof Type
+                    ? AreArgumentsSerializable<
+                        Type[RequestDeclKey],
+                        Type[ResponseDeclKey],
+                        Type[ErrorMessageDeclKey],
+                        Type[ErrorPayloadDeclKey]
                     > extends true
                         ? true
                         : false

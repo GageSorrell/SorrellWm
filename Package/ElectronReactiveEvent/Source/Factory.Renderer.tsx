@@ -4,6 +4,32 @@
  * License:   MIT
  */
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
+import type {
+    Callback,
+    CallbackRecord,
+    EventContext,
+    EventHooks,
+    NoRequestChannel,
+    PEventProvider,
+    ReactiveEventPreloadData,
+    RendererResponse,
+    Request,
+    RequestChannel,
+    SendEventDeferred,
+    SendEventDeferredBase,
+    SendEventDeferredReturn,
+    UseEventCallbackDeferred,
+    UseEventCallbacksDeferred,
+    UseSendEventDeferred,
+    UseSendEventReturn,
+    UseUnregisterCallbackDeferred,
+    UseUnregisterCallbacksDeferred } from "./index.js";
+import type {
+    Channel,
+    RendererResponseInternal,
+    ResponseInternal } from "./Internal/index.js";
 import {
     type Context,
     type ReactNode,
@@ -16,32 +42,8 @@ import {
     useMemo,
     useRef,
     useState } from "react";
-import type {
-    FGetPreload,
-    PEventProvider,
-    TCallbackRecord,
-    TEventContext,
-    TEventHooks,
-    TRendererEventResponse,
-    TSendEventDeferred,
-    TSendEventDeferredBase,
-    TSendEventDeferredReturnType,
-    TUseSendEventDeferred,
-    TUseSendEventReturnType } from "./Factory.Types.js";
-import type {
-    FRendererResponseInternal,
-    FResponseInternal,
-    TCallback,
-    TChannel,
-    TChannelsNoRequest,
-    TChannelsWithRequest,
-    TRequest,
-    TUseRegisterCallbackDeferred,
-    TUseRegisterCallbacksDeferred,
-    TUseUnregisterCallbackDeferred,
-    TUseUnregisterCallbacksDeferred } from "./Internal/index.js";
 import type { IpcRendererEvent, ipcRenderer } from "electron";
-import { GetResponseChannel } from "./Factory.js";
+import { GetResponseChannel } from "./index.js";
 
 /** @TODO Investigate dependency arrays. */
 /* eslint-disable react-hooks/exhaustive-deps */
@@ -50,7 +52,7 @@ const ResponsePromiseCache: Map<string, Promise<unknown>> = new Map<string, Prom
 
 let FactoryContext: unknown | undefined = undefined;
 
-function GetCacheKey<ChannelType extends keyof EventRegistrarType, EventRegistrarType>(
+function GetCacheKey<ChannelType extends keyof Registrar, Registrar>(
     Channel: ChannelType,
     Request: unknown
 ): string
@@ -58,7 +60,7 @@ function GetCacheKey<ChannelType extends keyof EventRegistrarType, EventRegistra
     return JSON.stringify([ Channel, Request ]);
 }
 
-export class FEventProviderError extends Error
+export class EventProviderError extends Error
 {
     public constructor()
     {
@@ -67,7 +69,7 @@ export class FEventProviderError extends Error
     }
 }
 
-export class FEventHookError extends Error
+export class EventHookError extends Error
 {
     public constructor(HookName: string)
     {
@@ -77,18 +79,18 @@ export class FEventHookError extends Error
 }
 
 /** Call this once, and export its result a module, to use in components. */
-export function MakeEventHooks<MainEventRegistrarType, RendererEventRegistrarType>(
-): TEventHooks<MainEventRegistrarType, RendererEventRegistrarType>
+export function MakeEventHooks<MainRegistrar, RendererRegistrar>(
+): EventHooks<MainRegistrar, RendererRegistrar>
 {
-    type FEventContext = TEventContext<MainEventRegistrarType, RendererEventRegistrarType>;
+    type ThisEventContext = EventContext<MainRegistrar, RendererRegistrar>;
 
-    function WrapHook<HookNameType extends keyof FEventContext>(
+    function WrapHook<HookNameType extends keyof ThisEventContext>(
         HookName: HookNameType,
         ...ArgumentVector: Array<unknown>
     ): unknown
     {
-        const EventContext: FEventContext =
-            useContext<FEventContext>(FactoryContext as Context<FEventContext>);
+        const EventContext: ThisEventContext =
+            useContext<ThisEventContext>(FactoryContext as Context<ThisEventContext>);
 
         if (EventContext !== undefined)
         {
@@ -104,146 +106,146 @@ export function MakeEventHooks<MainEventRegistrarType, RendererEventRegistrarTyp
             }
             else
             {
-                throw new FEventHookError("UseSendEvent");
+                throw new EventHookError("UseSendEvent");
             }
         }
 
-        throw new FEventProviderError();
+        throw new EventProviderError();
     }
 
-    function UseSendEvent<ChannelType extends TChannelsWithRequest<RendererEventRegistrarType>>(
+    function useSendEvent<ChannelType extends RequestChannel<RendererRegistrar>>(
         Channel: ChannelType,
-        Request: TRequest<typeof Channel, RendererEventRegistrarType>,
+        Request: Request<typeof Channel, RendererRegistrar>,
         Suspend?: boolean
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>;
-    function UseSendEvent<ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
+    ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
+    function useSendEvent<ChannelType extends NoRequestChannel<RendererRegistrar>>(
         Channel: ChannelType
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>;
-    function UseSendEvent<ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
+    ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
+    function useSendEvent<ChannelType extends NoRequestChannel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: undefined,
         Suspend: boolean
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>;
-    function UseSendEvent<ChannelType extends keyof RendererEventRegistrarType>(
+    ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
+    function useSendEvent<ChannelType extends keyof RendererRegistrar>(
         Channel: ChannelType,
-        Request?: TRequest<typeof Channel, RendererEventRegistrarType>,
+        Request?: Request<typeof Channel, RendererRegistrar>,
         Suspend?: boolean
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>
+    ): UseSendEventReturn<typeof Channel, RendererRegistrar>
     {
         return WrapHook(
-            "UseSendEvent",
-            Channel as unknown as TChannelsNoRequest<RendererEventRegistrarType>,
+            "useSendEvent",
+            Channel as unknown as NoRequestChannel<RendererRegistrar>,
             Request as undefined,
             Suspend as boolean
-        ) as unknown as TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>;
+        ) as unknown as UseSendEventReturn<ChannelType, RendererRegistrar>;
     }
 
-    function UseSendEventDeferred(): ReturnType<TUseSendEventDeferred<RendererEventRegistrarType>>
+    function useSendEventDeferred(): ReturnType<UseSendEventDeferred<RendererRegistrar>>
     {
-        type FReturnType = ReturnType<TUseSendEventDeferred<RendererEventRegistrarType>>;
-        return WrapHook("UseSendEventDeferred") as FReturnType;
+        type ThisReturnType = ReturnType<UseSendEventDeferred<RendererRegistrar>>;
+        return WrapHook("useSendEventDeferred") as ThisReturnType;
     }
 
-    function UseRegisterCallback<ChannelType extends keyof MainEventRegistrarType>(
+    function useEventCallback<ChannelType extends keyof MainRegistrar>(
         Channel: ChannelType,
-        Callback: TCallback<ChannelType, MainEventRegistrarType>
+        Callback: Callback<ChannelType, MainRegistrar>
     ): void
     {
-        WrapHook("UseRegisterCallback", Channel, Callback);
+        WrapHook("useEventCallback", Channel, Callback);
     }
 
-    function UseRegisterCallbacks<ChannelType extends TChannel<MainEventRegistrarType>>(
-        Record: TCallbackRecord<ChannelType, MainEventRegistrarType>
+    function useEventCallbacks<ChannelType extends Channel<MainRegistrar>>(
+        Record: CallbackRecord<ChannelType, MainRegistrar>
     ): void
     {
-        WrapHook("UseRegisterCallbacks", Record);
+        WrapHook("useEventCallbacks", Record);
     }
 
-    type FUseRegisterCallbackDeferredReturnType =
-        ReturnType<TUseRegisterCallbackDeferred<MainEventRegistrarType>>;
-    function UseRegisterCallbackDeferred(): FUseRegisterCallbackDeferredReturnType
+    type ThisUseCallbackDeferredReturnType =
+        ReturnType<UseEventCallbackDeferred<MainRegistrar>>;
+    function useEventCallbackDeferred(): ThisUseCallbackDeferredReturnType
     {
-        return WrapHook("UseRegisterCallbackDeferred") as FUseRegisterCallbackDeferredReturnType;
+        return WrapHook("useEventCallbackDeferred") as ThisUseCallbackDeferredReturnType;
     }
 
-    type FUseRegisterCallbacksDeferredReturnType =
-        ReturnType<TUseRegisterCallbacksDeferred<MainEventRegistrarType>>;
-    function UseRegisterCallbacksDeferred(): FUseRegisterCallbacksDeferredReturnType
+    type ThisUseCallbacksDeferredReturnType =
+        ReturnType<UseEventCallbacksDeferred<MainRegistrar>>;
+    function useEventCallbacksDeferred(): ThisUseCallbacksDeferredReturnType
     {
-        return WrapHook("UseRegisterCallbacksDeferred") as FUseRegisterCallbacksDeferredReturnType;
+        return WrapHook("useEventCallbacksDeferred") as ThisUseCallbacksDeferredReturnType;
     }
 
-    type FUseUnregisterCallbacksDeferredReturnType =
-        ReturnType<TUseUnregisterCallbacksDeferred<MainEventRegistrarType>>;
-    function UseUnregisterCallbacksDeferred(): FUseUnregisterCallbacksDeferredReturnType
+    type ThisUseUnregisterCallbacksDeferredReturnType =
+        ReturnType<UseUnregisterCallbacksDeferred<MainRegistrar>>;
+    function useUnregisterCallbacksDeferred(): ThisUseUnregisterCallbacksDeferredReturnType
     {
-        return WrapHook("UseUnregisterCallbacksDeferred") as FUseUnregisterCallbacksDeferredReturnType;
+        return WrapHook("useUnregisterCallbacksDeferred") as ThisUseUnregisterCallbacksDeferredReturnType;
     }
 
-    type FUseUnregisterCallbackDeferredReturnType =
-        ReturnType<TUseUnregisterCallbackDeferred<MainEventRegistrarType>>;
-    function UseUnregisterCallbackDeferred(): FUseUnregisterCallbackDeferredReturnType
+    type ThisUseUnregisterCallbackDeferredReturnType =
+        ReturnType<UseUnregisterCallbackDeferred<MainRegistrar>>;
+    function useUnregisterCallbackDeferred(): ThisUseUnregisterCallbackDeferredReturnType
     {
-        return WrapHook("UseUnregisterCallbackDeferred") as FUseUnregisterCallbackDeferredReturnType;
+        return WrapHook("useUnregisterCallbackDeferred") as ThisUseUnregisterCallbackDeferredReturnType;
     }
 
     return {
-        UseRegisterCallback,
-        UseRegisterCallbackDeferred,
-        UseRegisterCallbacks,
-        UseRegisterCallbacksDeferred,
-        UseSendEvent,
-        UseSendEventDeferred,
-        UseUnregisterCallbackDeferred,
-        UseUnregisterCallbacksDeferred
+        useEventCallback,
+        useEventCallbackDeferred,
+        useEventCallbacks,
+        useEventCallbacksDeferred,
+        useSendEvent,
+        useSendEventDeferred,
+        useUnregisterCallbackDeferred,
+        useUnregisterCallbacksDeferred
     } as const;
 };
 
-export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType>(
+export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
     { children, value }: PEventProvider
 ): ReactNode =>
 {
     const {
-        Invoke,
-        Off,
-        On,
-        Once,
-        Send
+        invoke,
+        off,
+        on,
+        once,
+        send
     }  = value;
 
-    function GetOrCreateResponsePromise<ChannelType extends keyof RendererEventRegistrarType>(
+    function GetOrCreateResponsePromise<ChannelType extends keyof RendererRegistrar>(
         Channel: ChannelType,
         Request: unknown
-    ): Promise<FResponseInternal>
+    ): Promise<ResponseInternal>
     {
-        const CacheKey: string = GetCacheKey<ChannelType, RendererEventRegistrarType>(Channel, Request);
+        const CacheKey: string = GetCacheKey<ChannelType, RendererRegistrar>(Channel, Request);
 
         const ExistingPromise: Promise<unknown> | undefined = ResponsePromiseCache.get(CacheKey);
 
         if (ExistingPromise !== undefined)
         {
-            return ExistingPromise as Promise<FResponseInternal>;
+            return ExistingPromise as Promise<ResponseInternal>;
         }
 
-        const ResponsePromise: Promise<FResponseInternal> = Invoke(Channel as string, Request);
+        const ResponsePromise: Promise<ResponseInternal> = invoke(Channel as string, Request);
 
         ResponsePromiseCache.set(CacheKey, ResponsePromise);
 
         return ResponsePromise;
     }
 
-    function UseSendEventSuspends<ChannelType extends keyof RendererEventRegistrarType>(
+    function UseSendEventSuspends<ChannelType extends keyof RendererRegistrar>(
         Channel: ChannelType,
-        Request: undefined | TRequest<ChannelType, RendererEventRegistrarType>
-    ): FRendererResponseInternal
+        Request: Request<ChannelType, RendererRegistrar> | undefined
+    ): RendererResponseInternal
     {
-        const InitialResponse: FResponseInternal = use(
-            GetOrCreateResponsePromise<keyof RendererEventRegistrarType>(
-                Channel as keyof RendererEventRegistrarType, Request
+        const InitialResponse: ResponseInternal = use(
+            GetOrCreateResponsePromise<keyof RendererRegistrar>(
+                Channel as keyof RendererRegistrar, Request
             )
         );
 
-        const [ Response ] = useState<FResponseInternal>(InitialResponse);
+        const [ Response ] = useState<ResponseInternal>(InitialResponse);
 
         return {
             ...Response,
@@ -251,12 +253,12 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
         };
     }
 
-    function UseSendEventNoSuspend<ChannelType extends Extract<keyof RendererEventRegistrarType, string>>(
+    function UseSendEventNoSuspend<ChannelType extends Extract<keyof RendererRegistrar, string>>(
         Channel: ChannelType,
-        Request: undefined | TRequest<ChannelType, RendererEventRegistrarType>
-    ): FRendererResponseInternal
+        Request: undefined | Request<ChannelType, RendererRegistrar>
+    ): RendererResponseInternal
     {
-        const EmptyResponse: FRendererResponseInternal = useMemo((): FRendererResponseInternal =>
+        const EmptyResponse: RendererResponseInternal = useMemo((): RendererResponseInternal =>
         {
             return {
                 Data: undefined,
@@ -265,7 +267,7 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             };
         }, [ ]);
 
-        const [ Response, SetResponse ] = useState<FRendererResponseInternal>(EmptyResponse);
+        const [ Response, SetResponse ] = useState<RendererResponseInternal>(EmptyResponse);
 
         useEffect((): (() => void) =>
         {
@@ -275,7 +277,7 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
 
             (async (): Promise<void> =>
             {
-                const NextResponse: FResponseInternal = await Invoke(Channel, Request);
+                const NextResponse: ResponseInternal = await invoke(Channel, Request);
 
                 if (!IsIgnored)
                 {
@@ -295,51 +297,51 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
         return Response;
     }
 
-    function UseSendEvent<ChannelType extends TChannelsWithRequest<RendererEventRegistrarType>>(
+    function useSendEvent<ChannelType extends RequestChannel<RendererRegistrar>>(
         Channel: ChannelType,
-        Request: TRequest<ChannelType, RendererEventRegistrarType>,
+        Request: Request<ChannelType, RendererRegistrar>,
         Suspend?: boolean
-    ): TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>;
-    function UseSendEvent<ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
+    ): UseSendEventReturn<ChannelType, RendererRegistrar>;
+    function useSendEvent<ChannelType extends NoRequestChannel<RendererRegistrar>>(
         Channel: ChannelType
-    ): TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>;
-    function UseSendEvent<ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
+    ): UseSendEventReturn<ChannelType, RendererRegistrar>;
+    function useSendEvent<ChannelType extends NoRequestChannel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: undefined,
         Suspend: boolean
-    ): TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>;
-    function UseSendEvent<ChannelType extends Extract<keyof RendererEventRegistrarType, string>>(
+    ): UseSendEventReturn<ChannelType, RendererRegistrar>;
+    function useSendEvent<ChannelType extends Extract<keyof RendererRegistrar, string>>(
         Channel: ChannelType,
-        Request?: TRequest<ChannelType, RendererEventRegistrarType>,
+        Request?: Request<ChannelType, RendererRegistrar>,
         Suspend?: boolean
-    ): TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>
+    ): UseSendEventReturn<ChannelType, RendererRegistrar>
     {
-        const Initial: FRendererResponseInternal = Suspend
+        const Initial: RendererResponseInternal = Suspend
             ? UseSendEventSuspends(Channel, Request)
             : UseSendEventNoSuspend(Channel, Request);
 
-        const [ SendEventDeferred ] = UseSendEventDeferred();
+        const [ SendEventDeferred ] = useSendEventDeferred();
 
-        const [ ResendValue, SetResendValue ] = useState<FRendererResponseInternal | undefined>(undefined);
+        const [ ResendValue, SetResendValue ] = useState<RendererResponseInternal | undefined>(undefined);
 
-        type FResendEvent = (NewRequest?: typeof Request) => Promise<void>;
-        const ResendEvent: FResendEvent = useCallback(async (NewRequest?: typeof Request): Promise<void> =>
+        type ThisResendEvent = (NewRequest?: typeof Request) => Promise<void>;
+        const ResendEvent: ThisResendEvent = useCallback(async (NewRequest?: typeof Request): Promise<void> =>
         {
             const OutRequest: typeof Request = NewRequest === undefined
                 ? Request
                 : NewRequest;
 
-            const OutResponse: FRendererResponseInternal = ((OutRequest === undefined)
+            const OutResponse: RendererResponseInternal = ((OutRequest === undefined)
                 ? await SendEventDeferred(
-                    Channel as unknown as TChannelsNoRequest<RendererEventRegistrarType>
+                    Channel as unknown as NoRequestChannel<RendererRegistrar>
                 )
                 : await SendEventDeferred(
-                    Channel as unknown as TChannelsWithRequest<RendererEventRegistrarType>,
-                    OutRequest as TRequest<TChannelsWithRequest<RendererEventRegistrarType>,
-                        RendererEventRegistrarType>
-                )) as unknown as FRendererResponseInternal;
+                    Channel as unknown as RequestChannel<RendererRegistrar>,
+                    OutRequest as Request<RequestChannel<RendererRegistrar>,
+                        RendererRegistrar>
+                )) as unknown as RendererResponseInternal;
 
-            SetResendValue(OutResponse as unknown as FRendererResponseInternal);
+            SetResendValue(OutResponse as unknown as RendererResponseInternal);
         }, [ Request, SendEventDeferred ]);
 
         if (ResendValue === undefined)
@@ -347,14 +349,14 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             return {
                 ...Initial,
                 ResendEvent
-            } as unknown as TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>;
+            } as unknown as UseSendEventReturn<ChannelType, RendererRegistrar>;
         }
         else
         {
             return {
                 ...ResendValue,
                 ResendEvent
-            } as unknown as TUseSendEventReturnType<ChannelType, RendererEventRegistrarType>;
+            } as unknown as UseSendEventReturn<ChannelType, RendererRegistrar>;
         }
     }
 
@@ -365,7 +367,7 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
         return ErrorInstance;
     };
 
-    function UseSendEventDeferred(): ReturnType<TUseSendEventDeferred<RendererEventRegistrarType>>
+    function useSendEventDeferred(): ReturnType<UseSendEventDeferred<RendererRegistrar>>
     {
         const IsMountedReference: RefObject<boolean> = useRef<boolean>(false);
 
@@ -379,45 +381,45 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             };
         }, [ ]);
 
-        type FSendEventReturnType = ReturnType<TSendEventDeferred<RendererEventRegistrarType>>;
-        const SendEvent: TSendEventDeferredBase<RendererEventRegistrarType> = useCallback(
-            async <ChannelType extends TChannelsWithRequest<RendererEventRegistrarType>>(
+        type SendEventReturnType = ReturnType<SendEventDeferred<RendererRegistrar>>;
+        const SendEvent: SendEventDeferredBase<RendererRegistrar> = useCallback(
+            async <ChannelType extends RequestChannel<RendererRegistrar>>(
                 Channel: ChannelType,
-                Request?: TRequest<ChannelType, RendererEventRegistrarType>
-            ): FSendEventReturnType =>
+                Request?: Request<typeof Channel, RendererRegistrar>
+            ): SendEventReturnType =>
             {
                 if (!IsMountedReference.current)
                 {
-                    throw CreateAbortError();
+                    throw CreateAbortError() as unknown as SendEventReturnType;
                 }
 
-                const Response: FResponseInternal = await Invoke(Channel, Request);
+                const Response: ResponseInternal = await invoke(Channel, Request);
 
                 if (!IsMountedReference.current)
                 {
-                    throw CreateAbortError();
+                    throw CreateAbortError() as unknown as SendEventReturnType;
                 }
 
-                return Response as unknown as FSendEventReturnType;
-            }, [ Invoke ]);
+                return Response as unknown as SendEventReturnType;
+            }, [ invoke ]);
 
         return [ SendEvent ] as const;
     }
 
-    type FCallbackPair =
-    {
-        Original: Parameters<typeof On>[1];
-        Wrapper: Parameters<typeof On>[1];
-    };
+    type CallbackPair =
+        {
+            Original: Parameters<typeof on>[1];
+            Wrapper: Parameters<typeof on>[1];
+        };
 
-    type FRegisteredCallbackMap = Map<string, Set<FCallbackPair>>;
+    type RegisteredCallbackMap = Map<string, Set<CallbackPair>>;
 
-    const RegisteredCallbacksReference: RefObject<FRegisteredCallbackMap> =
-        useRef<FRegisteredCallbackMap>(new Map<string, Set<FCallbackPair>>());
+    const RegisteredCallbacksReference: RefObject<RegisteredCallbackMap> =
+        useRef<RegisteredCallbackMap>(new Map<string, Set<CallbackPair>>());
 
     useEffect((): (() => void) =>
     {
-        const Ref: FRegisteredCallbackMap = RegisteredCallbacksReference.current;
+        const Ref: RegisteredCallbackMap = RegisteredCallbacksReference.current;
 
         return (): void =>
         {
@@ -425,39 +427,39 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             {
                 for (const { Wrapper } of CallbackSet)
                 {
-                    Off(Channel, Wrapper);
+                    off(Channel, Wrapper);
                 }
             }
 
             Ref.clear();
         };
-    }, [ Off ]);
+    }, [ off ]);
 
-    type FRegisterCallback = <ChannelType extends keyof MainEventRegistrarType>(
+    type RegisterCallback = <ChannelType extends keyof MainRegistrar>(
         Channel: ChannelType,
-        Callback: TCallback<ChannelType, MainEventRegistrarType>
+        Callback: Callback<ChannelType, MainRegistrar>
     ) => void;
 
-    const RegisterCallback: FRegisterCallback = useCallback(
-        <ChannelType extends keyof MainEventRegistrarType>(
+    const RegisterCallback: RegisterCallback = useCallback(
+        <ChannelType extends keyof MainRegistrar>(
             Channel: ChannelType,
-            Callback: TCallback<ChannelType, MainEventRegistrarType>
+            Callback: Callback<ChannelType, MainRegistrar>
         ): void =>
         {
             const ChannelCast: string = Channel as string;
-            const CallbackCast: Parameters<typeof On>[1] = Callback as Parameters<typeof On>[1];
+            const CallbackCast: Parameters<typeof on>[1] = Callback as Parameters<typeof on>[1];
 
-            let ExistingCallbacks: Set<FCallbackPair> | undefined =
+            let ExistingCallbacks: Set<CallbackPair> | undefined =
                 RegisteredCallbacksReference.current.get(ChannelCast);
 
             if (ExistingCallbacks === undefined)
             {
-                RegisteredCallbacksReference.current.set(ChannelCast, new Set<FCallbackPair>());
+                RegisteredCallbacksReference.current.set(ChannelCast, new Set<CallbackPair>());
                 ExistingCallbacks = RegisteredCallbacksReference.current.get(ChannelCast);
             }
 
             const AlreadyExists: boolean = Array.from(ExistingCallbacks || [ ]).some((
-                { Original }: FCallbackPair
+                { Original }: CallbackPair
             ): boolean =>
             {
                 return Original === Callback;
@@ -468,36 +470,36 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
                 return;
             }
 
-            const Wrapper: FCallbackPair["Wrapper"] = async (
+            const Wrapper: CallbackPair["Wrapper"] = async (
                 _Event: IpcRendererEvent,
                 Request: unknown
             ): Promise<void> =>
             {
-                type FResponse = Awaited<ReturnType<TCallback<ChannelType, MainEventRegistrarType>>>;
-                const Response: FResponse =
-                    await Callback(Request as TRequest<ChannelType, MainEventRegistrarType>) as FResponse;
+                type Response = Awaited<ReturnType<Callback<ChannelType, MainRegistrar>>>;
+                const Response: Response =
+                    await Callback(Request as Request<ChannelType, MainRegistrar>) as Response;
 
-                Send(GetResponseChannel(String(Channel)), Response);
+                send(GetResponseChannel(String(Channel)), Response);
             };
 
-            On(ChannelCast, Wrapper);
+            on(ChannelCast, Wrapper);
 
             RegisteredCallbacksReference.current.get(ChannelCast)?.add({ Original: CallbackCast, Wrapper });
-        }, [ On ]);
+        }, [ on ]);
 
-    type FRegisterCallbacks = <ChannelType extends keyof MainEventRegistrarType>(
-        Record: TCallbackRecord<ChannelType, MainEventRegistrarType>
+    type RegisterCallbacks = <ChannelType extends keyof MainRegistrar>(
+        Record: CallbackRecord<ChannelType, MainRegistrar>
     ) => void;
-    const RegisterCallbacks: FRegisterCallbacks = useCallback(
-        <ChannelType extends keyof MainEventRegistrarType>(
-            Record: TCallbackRecord<ChannelType, MainEventRegistrarType>
+    const RegisterCallbacks: RegisterCallbacks = useCallback(
+        <ChannelType extends keyof MainRegistrar>(
+            Record: CallbackRecord<ChannelType, MainRegistrar>
         ): void =>
         {
             const RegisterEntry = ([ InChannel, InCallback ]: [ string, unknown ]): void =>
             {
                 const Channel: ChannelType = InChannel as ChannelType;
-                const Callback: TCallback<typeof Channel, MainEventRegistrarType> =
-                    InCallback as TCallback<typeof Channel, MainEventRegistrarType>;
+                const Callback: Callback<typeof Channel, MainRegistrar> =
+                    InCallback as Callback<typeof Channel, MainRegistrar>;
 
                 RegisterCallback(Channel, Callback);
             };
@@ -505,25 +507,25 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             Object.entries(Record).forEach(RegisterEntry);
         }, [ RegisterCallback ]);
 
-    type FUnregisterCallback = <ChannelType extends keyof MainEventRegistrarType>(
+    type ThisUnregisterCallback = <ChannelType extends keyof MainRegistrar>(
         Channel: ChannelType,
-        Callback: TCallback<ChannelType, MainEventRegistrarType>
+        Callback: Callback<ChannelType, MainRegistrar>
     ) => void;
-    const UnregisterCallback: FUnregisterCallback = useCallback(
-        <ChannelType extends keyof MainEventRegistrarType>(
+    const UnregisterCallback: ThisUnregisterCallback = useCallback(
+        <ChannelType extends keyof MainRegistrar>(
             Channel: ChannelType,
-            Callback: TCallback<ChannelType, MainEventRegistrarType>
+            Callback: Callback<ChannelType, MainRegistrar>
         ): void =>
         {
             const ResponseChannel: string = GetResponseChannel(Channel as string);
-            const CallbackCast: Parameters<typeof Off>[1] = Callback as Parameters<typeof Off>[1];
+            const CallbackCast: Parameters<typeof off>[1] = Callback as Parameters<typeof off>[1];
 
-            const ExistingCallbacks: Set<FCallbackPair> | undefined =
+            const ExistingCallbacks: Set<CallbackPair> | undefined =
                 RegisteredCallbacksReference.current.get(ResponseChannel);
 
             const ShouldExitEarly: boolean = (
                 ExistingCallbacks === undefined ||
-                Array.from(ExistingCallbacks).some(({ Original }: FCallbackPair): boolean =>
+                Array.from(ExistingCallbacks).some(({ Original }: CallbackPair): boolean =>
                 {
                     return Original === Callback;
                 })
@@ -534,11 +536,11 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
                 return;
             }
 
-            Off(ResponseChannel, CallbackCast);
+            off(ResponseChannel, CallbackCast);
 
-            const NewCallbacks: Set<FCallbackPair> =
-                new Set<FCallbackPair>(Array.from(ExistingCallbacks || [ ])
-                    .filter(({ Original }: FCallbackPair): boolean =>
+            const NewCallbacks: Set<CallbackPair> =
+                new Set<CallbackPair>(Array.from(ExistingCallbacks || [ ])
+                    .filter(({ Original }: CallbackPair): boolean =>
                     {
                         return Original !== CallbackCast;
                     }));
@@ -549,21 +551,21 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             {
                 RegisteredCallbacksReference.current.delete(ResponseChannel);
             }
-        }, [ Off ]);
+        }, [ off ]);
 
-    type FUnregisterCallbacks = <ChannelType extends keyof MainEventRegistrarType>(
-        Record: TCallbackRecord<ChannelType, MainEventRegistrarType>
+    type ThisUnregisterCallbacks = <ChannelType extends keyof MainRegistrar>(
+        Record: CallbackRecord<ChannelType, MainRegistrar>
     ) => void;
-    const UnregisterCallbacks: FUnregisterCallbacks = useCallback(
-        <ChannelType extends keyof MainEventRegistrarType>(
-            Record: TCallbackRecord<ChannelType, MainEventRegistrarType>
+    const UnregisterCallbacks: ThisUnregisterCallbacks = useCallback(
+        <ChannelType extends keyof MainRegistrar>(
+            Record: CallbackRecord<ChannelType, MainRegistrar>
         ): void =>
         {
             const UnregisterEntry = ([ InChannel, InCallback ]: [ string, unknown ]): void =>
             {
                 const Channel: ChannelType = InChannel as ChannelType;
-                const Callback: TCallback<typeof Channel, MainEventRegistrarType> =
-                    InCallback as TCallback<typeof Channel, MainEventRegistrarType>;
+                const Callback: Callback<typeof Channel, MainRegistrar> =
+                    InCallback as Callback<typeof Channel, MainRegistrar>;
 
                 UnregisterCallback(Channel, Callback);
             };
@@ -571,37 +573,37 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
             Object.entries(Record).forEach(UnregisterEntry);
         }, [ UnregisterCallback ]);
 
-    type FUseRegisterCallbackDeferred = TUseRegisterCallbackDeferred<MainEventRegistrarType>;
-    const UseRegisterCallbackDeferred: FUseRegisterCallbackDeferred =
-        (): ReturnType<FUseRegisterCallbackDeferred> =>
+    type ThisUseEventCallbackDeferred = UseEventCallbackDeferred<MainRegistrar>;
+    const useEventCallbackDeferred: ThisUseEventCallbackDeferred =
+        (): ReturnType<UseEventCallbackDeferred<MainRegistrar>> =>
         {
             return [ RegisterCallback ] as const;
         };
 
-    type FUseRegisterCallbacksDeferred = TUseRegisterCallbacksDeferred<MainEventRegistrarType>;
-    const UseRegisterCallbacksDeferred: FUseRegisterCallbacksDeferred =
-        (): ReturnType<FUseRegisterCallbacksDeferred> =>
+    type ThisUseEventCallbacksDeferred = UseEventCallbacksDeferred<MainRegistrar>;
+    const useEventCallbacksDeferred: ThisUseEventCallbacksDeferred =
+        (): ReturnType<ThisUseEventCallbacksDeferred> =>
         {
             return [ RegisterCallbacks ] as const;
         };
 
-    type FUseUnregisterCallbacksDeferred = TUseUnregisterCallbacksDeferred<MainEventRegistrarType>;
-    const UseUnregisterCallbacksDeferred: FUseUnregisterCallbacksDeferred =
-        (): ReturnType<FUseUnregisterCallbacksDeferred> =>
+    type ThisUseUnregisterCallbacksDeferred = UseUnregisterCallbacksDeferred<MainRegistrar>;
+    const useUnregisterCallbacksDeferred: ThisUseUnregisterCallbacksDeferred =
+        (): ReturnType<ThisUseUnregisterCallbacksDeferred> =>
         {
             return [ UnregisterCallbacks ] as const;
         };
 
-    type FUseUnregisterCallbackDeferred = TUseUnregisterCallbackDeferred<MainEventRegistrarType>;
-    const UseUnregisterCallbackDeferred: FUseUnregisterCallbackDeferred =
-        (): ReturnType<FUseUnregisterCallbackDeferred> =>
+    type ThisUseUnregisterCallbackDeferred = UseUnregisterCallbackDeferred<MainRegistrar>;
+    const useUnregisterCallbackDeferred: ThisUseUnregisterCallbackDeferred =
+        (): ReturnType<ThisUseUnregisterCallbackDeferred> =>
         {
             return [ UnregisterCallback ] as const;
         };
 
-    const UseRegisterCallback = <ChannelType extends keyof MainEventRegistrarType>(
+    const useEventCallback = <ChannelType extends keyof MainRegistrar>(
         Channel: ChannelType,
-        Callback: TCallback<ChannelType, MainEventRegistrarType>
+        Callback: Callback<ChannelType, MainRegistrar>
     ): void =>
     {
         useEffect((): (() => void) =>
@@ -614,8 +616,8 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
         }, [ RegisterCallback ]);
     };
 
-    const UseRegisterCallbacks = <ChannelType extends keyof MainEventRegistrarType>(
-        Record: TCallbackRecord<ChannelType, MainEventRegistrarType>
+    const useEventCallbacks = <ChannelType extends keyof MainRegistrar>(
+        Record: CallbackRecord<ChannelType, MainRegistrar>
     ): void =>
     {
         useEffect((): (() => void) =>
@@ -628,25 +630,25 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
         }, [ RegisterCallback ]);
     };
 
-    type FEventContext = TEventContext<MainEventRegistrarType, RendererEventRegistrarType>;
-    const OutValue: FEventContext =
-    {
-        UseRegisterCallback,
-        UseRegisterCallbackDeferred,
-        UseRegisterCallbacks,
-        UseRegisterCallbacksDeferred,
-        UseSendEvent,
-        UseSendEventDeferred,
-        UseUnregisterCallbackDeferred,
-        UseUnregisterCallbacksDeferred
-    };
+    type ThisEventContext = EventContext<MainRegistrar, RendererRegistrar>;
+    const OutValue: ThisEventContext =
+        {
+            useEventCallback,
+            useEventCallbackDeferred,
+            useEventCallbacks,
+            useEventCallbacksDeferred,
+            useSendEvent,
+            useSendEventDeferred,
+            useUnregisterCallbackDeferred,
+            useUnregisterCallbacksDeferred
+        };
 
     const IsContextValid: boolean = (
-        Invoke !== undefined &&
-        Off !== undefined &&
-        On !== undefined &&
-        Once !== undefined &&
-        Send !== undefined
+        invoke !== undefined &&
+        off !== undefined &&
+        on !== undefined &&
+        once !== undefined &&
+        send !== undefined
     );
 
     if (!IsContextValid)
@@ -654,9 +656,9 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
         throw new Error("At least one of the IpcRendererFunctions is undefined.");
     }
 
-    FactoryContext = createContext<FEventContext>(OutValue);
+    FactoryContext = createContext<ThisEventContext>(OutValue);
 
-    const FactoryContextCast: Context<FEventContext> = FactoryContext as Context<FEventContext>;
+    const FactoryContextCast: Context<ThisEventContext> = FactoryContext as Context<ThisEventContext>;
 
     return (
         <FactoryContextCast.Provider value={ OutValue }>
@@ -665,9 +667,9 @@ export const EventProvider = <MainEventRegistrarType, RendererEventRegistrarType
     );
 };
 
-export const GetPreload = (IpcRenderer: typeof ipcRenderer): FGetPreload =>
+export const GetPreload = (IpcRenderer: typeof ipcRenderer): ReactiveEventPreloadData =>
 {
-    const Invoke: typeof IpcRenderer.invoke = (
+    const invoke: typeof IpcRenderer.invoke = (
         Channel: string,
         ...ArgumentVector: Array<unknown>
     ): Promise<unknown> =>
@@ -675,7 +677,7 @@ export const GetPreload = (IpcRenderer: typeof ipcRenderer): FGetPreload =>
         return IpcRenderer.invoke(Channel, ...ArgumentVector);
     };
 
-    const On: typeof IpcRenderer.on = (
+    const on: typeof IpcRenderer.on = (
         Channel: string,
         Callback: ((Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>) => void)
     ): typeof IpcRenderer =>
@@ -683,7 +685,7 @@ export const GetPreload = (IpcRenderer: typeof ipcRenderer): FGetPreload =>
         return IpcRenderer.on(Channel, Callback);
     };
 
-    const Once: typeof IpcRenderer.once = (
+    const once: typeof IpcRenderer.once = (
         Channel: string,
         Callback: ((Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>) => void)
     ): typeof IpcRenderer =>
@@ -691,7 +693,7 @@ export const GetPreload = (IpcRenderer: typeof ipcRenderer): FGetPreload =>
         return IpcRenderer.once(Channel, Callback);
     };
 
-    const Off: typeof IpcRenderer.off = (
+    const off: typeof IpcRenderer.off = (
         Channel: string,
         Callback: ((Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>) => void)
     ): typeof IpcRenderer =>
@@ -699,7 +701,7 @@ export const GetPreload = (IpcRenderer: typeof ipcRenderer): FGetPreload =>
         return IpcRenderer.off(Channel, Callback);
     };
 
-    const Send: typeof IpcRenderer.send = (
+    const send: typeof IpcRenderer.send = (
         Channel: string,
         ...ArgumentVector: Array<unknown>
     ): void =>
@@ -708,33 +710,33 @@ export const GetPreload = (IpcRenderer: typeof ipcRenderer): FGetPreload =>
     };
 
     return {
-        EventPreload:
+        electronReactiveEvent:
         {
-            Invoke,
-            Off,
-            On,
-            Once,
-            Send
+            invoke,
+            off,
+            on,
+            once,
+            send
         }
     };
 };
 
 export function IsEventSuccess<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType>(
-    { Error, IsPending }: TRendererEventResponse<ChannelType, RendererEventRegistrarType>
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar>(
+    { Error, IsPending }: RendererResponse<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventSuccess<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType>(
-    { Error }: TSendEventDeferredReturnType<ChannelType, RendererEventRegistrarType>
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar>(
+    { Error }: SendEventDeferredReturn<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventSuccess<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType>(
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar>(
     Response: (
-        | TRendererEventResponse<ChannelType, RendererEventRegistrarType>
-        | TSendEventDeferredReturnType<ChannelType, RendererEventRegistrarType>
+        | RendererResponse<ChannelType, RendererRegistrar>
+        | SendEventDeferredReturn<ChannelType, RendererRegistrar>
     )
 ): boolean
 {
@@ -744,22 +746,21 @@ export function IsEventSuccess<
 }
 
 export function IsEventFailure<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType>(
-    Response: TRendererEventResponse<ChannelType, RendererEventRegistrarType>
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar>(
+    Response: RendererResponse<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventFailure<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType>(
-    Response: TSendEventDeferredReturnType<ChannelType, RendererEventRegistrarType>
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar>(
+    Response: SendEventDeferredReturn<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventFailure<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType>(
-    Response: (
-        | TRendererEventResponse<ChannelType, RendererEventRegistrarType>
-        | TSendEventDeferredReturnType<ChannelType, RendererEventRegistrarType>
-    )
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar>(
+    Response:
+        | RendererResponse<ChannelType, RendererRegistrar>
+        | SendEventDeferredReturn<ChannelType, RendererRegistrar>
 ): boolean
 {
     return !IsEventSuccess(Response);

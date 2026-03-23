@@ -23,5 +23,12 @@
     "license": "MIT",
     "author": "Gage Sorrell <gage@sorrell.sh>",
     "type": "module",
-    "main": "./Distribution/index.js"
+    "main": "./Distribution/index.js",
+    "devDependencies": {
+        "@eslint/js": "^9.39.4",
+        "@typescript-eslint/eslint-plugin": "^8.57.1",
+        "eslint": "^9.39.4",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1"
+    }
 }

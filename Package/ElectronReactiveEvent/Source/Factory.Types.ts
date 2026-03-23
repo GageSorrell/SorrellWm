@@ -4,53 +4,130 @@
  * License:   MIT
  */
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import type {
-    FResponseDeclTypeKey,
-    TCallback,
-    TChannelsNoRequest,
-    TChannelsWithRequest,
-    TEventDeclHasResponseType,
-    TEventError,
-    TRegisterCallback,
-    TRegisterCallbacks,
-    TRequest,
-    TResponse,
-    TSendEvent,
-    TUnregisterCallback,
-    TUnregisterCallbacks,
-    TUseRegisterCallbackDeferred,
-    TUseRegisterCallbacksDeferred,
-    TUseUnregisterCallbackDeferred,
-    TUseUnregisterCallbacksDeferred} from "./Internal/index.js";
+    DeclHasResponseType,
+    ErrorPayloadDeclKey,
+    RequestDeclKey,
+    ResponseDeclKey,
+    Values } from "./Internal/index.js";
+import type {
+    EmptyEventParameter,
+    Error,
+    RegisterCallback,
+    RegisterCallbacks,
+    Request,
+    Response,
+    Send,
+    UnregisterCallback,
+    UnregisterCallbacks,
+    UseEventCallbackDeferred,
+    UseEventCallbacksDeferred,
+    UseUnregisterCallbackDeferred,
+    UseUnregisterCallbacksDeferred } from "./index.js";
 import type { PropsWithChildren, ReactNode } from "react";
-import type { FResponseDeclNone } from "./Event.Types.js";
-import type { ipcRenderer } from "electron";
+import type { BrowserWindow } from "electron/main";
+import type { ipcRenderer } from "electron/renderer";
+
+export type CallbackErrorReturn<
+    ChannelType extends keyof Registrar,
+    Registrar
+> =
+    ErrorPayloadDeclKey extends keyof Registrar[ChannelType]
+        ? ErrorPayloadDeclKey extends keyof Registrar[ChannelType]
+            ? [ Registrar[ChannelType][ErrorPayloadDeclKey] ] extends [ never ]
+                ? Promise<{
+                    Error: string;
+                }>
+                : Promise<{
+                    Error:
+                    {
+                        Message: string;
+                        Payload: Registrar[ChannelType][ErrorPayloadDeclKey];
+                    }
+                }>
+            : never
+        : never;
+
+export type CallbackSuccessReturn<ChannelType extends keyof Registrar, Registrar> =
+    DeclHasResponseType<ChannelType, Registrar> extends true
+        ? ResponseDeclKey extends keyof Registrar[ChannelType]
+            ? Promise<{
+                Data: Response<ChannelType, Registrar>;
+            }>
+            : Promise<never>
+        : Promise<void>;
+
+export type CallbackReturn<ChannelType extends keyof Registrar, Registrar> =
+    | CallbackSuccessReturn<ChannelType, Registrar>
+    | CallbackErrorReturn<ChannelType, Registrar>;
+
+export type AwaitedCallback<ChannelType extends keyof Registrar, Registrar> =
+    Awaited<CallbackReturn<ChannelType, Registrar>>;
+
+export type Callback<ChannelType extends keyof Registrar, Registrar> =
+    RequestDeclKey extends keyof Registrar[ChannelType]
+        ? EmptyEventParameter extends Registrar[ChannelType][RequestDeclKey]
+            ? () => CallbackReturn<ChannelType, Registrar>
+            : (
+                (Request: Request<ChannelType, Registrar>) =>
+                CallbackReturn<ChannelType, Registrar>
+            )
+        : never;
+
+type ChannelsWithRequestHelper<Registrar> =
+    {
+        [ Key in keyof Registrar ]:
+        RequestDeclKey extends keyof Registrar[Key]
+            ? EmptyEventParameter extends Registrar[Key][RequestDeclKey]
+                ? undefined
+                : Key
+            : never
+    };
+
+/** @Summary Channels whose event declarations specify a request type. */
+export type RequestChannel<Registrar> = Extract<Values<ChannelsWithRequestHelper<Registrar>>, string>;
+
+/** @Summary Channels whose event declarations do *not* specify a request type. */
+export type NoRequestChannel<Registrar> =
+    Extract<
+        Exclude<keyof Registrar, ChannelsWithRequestHelper<Registrar>>,
+        string
+    >;
+
+export type SendEventReturn<
+    ChannelType extends RequestChannel<Registrar> | NoRequestChannel<Registrar>,
+    WindowType extends BrowserWindow | Array<BrowserWindow>,
+    Registrar
+> =
+    WindowType extends Array<BrowserWindow>
+        ? Array<Response<ChannelType, Registrar>>
+        : Response<ChannelType, Registrar>;
 
 /** Use this to define your event callbacks as a record. */
-export type TCallbackRecord<ChannelType extends keyof EventRegistrarType, EventRegistrarType> =
-{
-    [ Key in ChannelType ]: TCallback<Key, EventRegistrarType>;
-};
+export type CallbackRecord<ChannelType extends keyof Registrar, Registrar> =
+    {
+        [ Key in ChannelType ]: Callback<Key, Registrar>;
+    };
 
-export type TMainEventFactoryReturnType<FirstEventRegistrarType, SecondEventRegistrarType> =
-{
-    RegisterCallback: TRegisterCallback<SecondEventRegistrarType>;
-    RegisterCallbacks: TRegisterCallbacks<SecondEventRegistrarType>;
-    UnregisterCallback: TUnregisterCallback<SecondEventRegistrarType>;
-    UnregisterCallbacks: TUnregisterCallbacks<SecondEventRegistrarType>;
-    UnregisterAll: () => void;
-    SendEvent: TSendEvent<FirstEventRegistrarType>;
-};
+export type MainEventFactoryReturn<MainRegistrar, RendererRegistrar> =
+    {
+        registerCallback: RegisterCallback<RendererRegistrar>;
+        registerCallbacks: RegisterCallbacks<RendererRegistrar>;
+        send: Send<MainRegistrar>;
+        unregisterCallback: UnregisterCallback<RendererRegistrar>;
+        unregisterCallbacks: UnregisterCallbacks<RendererRegistrar>;
+        unregisterAll: () => void;
+    };
 
-/**
- * The result returned from `UseSendEvent` or `SendEventDeferred`.
- */
-export type TRendererEventResponse<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType
+/** @Summary The result returned from `UseSendEvent` or `SendEventDeferred`. */
+export type RendererResponse<
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar
 > =
-    TEventDeclHasResponseType<ChannelType, RendererEventRegistrarType> extends true
-        ? FResponseDeclTypeKey extends keyof RendererEventRegistrarType[ChannelType]
+    DeclHasResponseType<ChannelType, RendererRegistrar> extends true
+        ? ResponseDeclKey extends keyof RendererRegistrar[ChannelType]
             ? (
                 | Readonly<{
                     Data: undefined;
@@ -58,13 +135,13 @@ export type TRendererEventResponse<
                     IsPending: true;
                 }>
                 | Readonly<{
-                    Data: TResponse<ChannelType, RendererEventRegistrarType>;
+                    Data: Response<ChannelType, RendererRegistrar>;
                     Error: undefined;
                     IsPending: false;
                 }>
                 | Readonly<{
                     Data: undefined;
-                    Error: TEventError<ChannelType, RendererEventRegistrarType>;
+                    Error: Error<ChannelType, RendererRegistrar>;
                     IsPending: false;
                 }>
             )
@@ -75,135 +152,136 @@ export type TRendererEventResponse<
                 IsPending: true;
             }>
             | Readonly<{
-                Error: TEventError<ChannelType, RendererEventRegistrarType>;
+                Error: Error<ChannelType, RendererRegistrar>;
                 IsPending: false;
             }>
         );
 
-export type TUseSendEventReturnType<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType
+export type UseSendEventReturn<
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar
 > =
-    FResponseDeclTypeKey extends keyof RendererEventRegistrarType[ChannelType]
-        ? FResponseDeclNone extends RendererEventRegistrarType[ChannelType][FResponseDeclTypeKey]
+    ResponseDeclKey extends keyof RendererRegistrar[ChannelType]
+        ? EmptyEventParameter extends RendererRegistrar[ChannelType][ResponseDeclKey]
             ? (
-                TRendererEventResponse<ChannelType, RendererEventRegistrarType> &
+                RendererResponse<ChannelType, RendererRegistrar> &
                 {
                     ResendEvent: (
-                        Request?: TRequest<ChannelType, RendererEventRegistrarType>
+                        Request?: Request<ChannelType, RendererRegistrar>
                     ) => Promise<void>;
                 }
             )
             : (
-                TRendererEventResponse<ChannelType, RendererEventRegistrarType> &
+                RendererResponse<ChannelType, RendererRegistrar> &
                 {
                     ResendEvent: () => Promise<void>;
                 }
             )
         : never;
 
-export type TUseSendEvent<RendererEventRegistrarType> =
-{
-    <ChannelType extends TChannelsWithRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType,
-        Request: TRequest<typeof Channel, RendererEventRegistrarType>,
-        Suspend?: boolean
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>;
+export type UseSendEvent<RendererRegistrar> =
+    {
+        <ChannelType extends RequestChannel<RendererRegistrar>>(
+            Channel: ChannelType,
+            Request: Request<typeof Channel, RendererRegistrar>,
+            Suspend?: boolean
+        ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
 
-    <ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>;
+        <ChannelType extends NoRequestChannel<RendererRegistrar>>(
+            Channel: ChannelType
+        ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
 
-    <ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType,
-        Request: undefined,
-        Suspend: boolean
-    ): TUseSendEventReturnType<typeof Channel, RendererEventRegistrarType>;
-};
+        <ChannelType extends NoRequestChannel<RendererRegistrar>>(
+            Channel: ChannelType,
+            Request: undefined,
+            Suspend: boolean
+        ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
+    };
 
-export type TSendEventDeferredReturnType<
-    ChannelType extends keyof RendererEventRegistrarType,
-    RendererEventRegistrarType
+export type SendEventDeferredReturn<
+    ChannelType extends keyof RendererRegistrar,
+    RendererRegistrar
 > =
-    Omit<TRendererEventResponse<ChannelType, RendererEventRegistrarType>, "IsPending">;
+    Omit<RendererResponse<ChannelType, RendererRegistrar>, "IsPending">;
 
-export type TSendEventDeferred<RendererEventRegistrarType> =
-{
-    <ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType
-    ): Promise<TSendEventDeferredReturnType<ChannelType, RendererEventRegistrarType>>;
+export type SendEventDeferred<RendererRegistrar> =
+    {
+        <ChannelType extends NoRequestChannel<RendererRegistrar>>(
+            Channel: ChannelType
+        ): Promise<SendEventDeferredReturn<ChannelType, RendererRegistrar>>;
 
-    <ChannelType extends TChannelsWithRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType,
-        Request: TRequest<ChannelType, RendererEventRegistrarType>
-    ): Promise<TSendEventDeferredReturnType<ChannelType, RendererEventRegistrarType>>;
-};
+        <ChannelType extends RequestChannel<RendererRegistrar>>(
+            Channel: ChannelType,
+            Request: Request<ChannelType, RendererRegistrar>
+        ): Promise<SendEventDeferredReturn<ChannelType, RendererRegistrar>>;
+    };
 
-export type TUseSendEventDeferred<RendererEventRegistrarType> = () => Readonly<[
-    SendEvent: TSendEventDeferred<RendererEventRegistrarType>
+export type UseSendEventDeferred<RendererRegistrar> = () => Readonly<[
+    SendEvent: SendEventDeferred<RendererRegistrar>
 ]>;
 
-export type FEventProvider = ({ children }: PropsWithChildren) => ReactNode;
+export type EventProvider = ({ children }: PropsWithChildren) => ReactNode;
 
-export type TEventContext<MainEventRegistrarType, RendererEventRegistrarType> =
-Partial<{
+export type EventContext<MainRegistrar, RendererRegistrar> =
+    Partial<{
     /** Send an event when the component mounts. */
-    UseSendEvent: TUseSendEvent<RendererEventRegistrarType>;
+        useSendEvent: UseSendEvent<RendererRegistrar>;
 
-    /** The returned callback returns `undefined` if a re-render is triggered before it fulfills. */
-    UseSendEventDeferred: TUseSendEventDeferred<RendererEventRegistrarType>;
+        /** The returned callback returns `undefined` if a re-render is triggered before it fulfills. */
+        useSendEventDeferred: UseSendEventDeferred<RendererRegistrar>;
 
-    UseRegisterCallback: TRegisterCallback<MainEventRegistrarType>;
+        useEventCallback: RegisterCallback<MainRegistrar>;
 
-    UseRegisterCallbackDeferred: TUseRegisterCallbackDeferred<MainEventRegistrarType>;
+        useEventCallbackDeferred: UseEventCallbackDeferred<MainRegistrar>;
 
-    UseRegisterCallbacks: TRegisterCallbacks<MainEventRegistrarType>;
+        useEventCallbacks: RegisterCallbacks<MainRegistrar>;
 
-    UseRegisterCallbacksDeferred: TUseRegisterCallbacksDeferred<MainEventRegistrarType>;
+        useEventCallbacksDeferred: UseEventCallbacksDeferred<MainRegistrar>;
 
-    UseUnregisterCallbackDeferred: TUseUnregisterCallbackDeferred<MainEventRegistrarType>;
+        useUnregisterCallbackDeferred: UseUnregisterCallbackDeferred<MainRegistrar>;
 
-    UseUnregisterCallbacksDeferred: TUseUnregisterCallbacksDeferred<MainEventRegistrarType>;
-}>;
+        useUnregisterCallbacksDeferred: UseUnregisterCallbacksDeferred<MainRegistrar>;
+    }>;
 
-export type FEventContext = TEventContext<Record<string, unknown>, Record<string, unknown>>;
+export type EventContextUnknown = EventContext<Record<string, unknown>, Record<string, unknown>>;
 
-export type FIpcRendererFunctions =
-{
-    Invoke: typeof ipcRenderer.invoke;
-    On: typeof ipcRenderer.on;
-    Off: typeof ipcRenderer.off;
-    Once: typeof ipcRenderer.once;
-    Send: typeof ipcRenderer.send;
-};
+export type IpcRendererFunctions =
+    Pick<
+        typeof ipcRenderer,
+        | "invoke"
+        | "on"
+        | "off"
+        | "once"
+        | "send"
+    >;
 
 export type CEventProvider =
-{
-    IpcRendererFunctions: FIpcRendererFunctions;
-};
+    {
+        RendererFunctions: IpcRendererFunctions;
+    };
 
 export type PEventProvider =
     PropsWithChildren &
     {
-        value: FIpcRendererFunctions;
+        value: IpcRendererFunctions;
     };
 
-export type TEventHooks<MainEventRegistrarType, RendererEventRegistrarType> =
-    Readonly<Required<TEventContext<MainEventRegistrarType, RendererEventRegistrarType>>>;
+export type EventHooks<MainRegistrar, RendererRegistrar> =
+    Readonly<Required<EventContext<MainRegistrar, RendererRegistrar>>>;
 
-export type FGetPreload =
-{
-    EventPreload: FIpcRendererFunctions;
-};
+export type ReactiveEventPreloadData =
+    {
+        electronReactiveEvent: IpcRendererFunctions;
+    };
 
-export type TSendEventDeferredBase<RendererEventRegistrarType> =
-{
-    <ChannelType extends TChannelsNoRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType
-    ): ReturnType<TSendEventDeferred<RendererEventRegistrarType>>;
+export type SendEventDeferredBase<RendererRegistrar> =
+    {
+        <ChannelType extends NoRequestChannel<RendererRegistrar>>(
+            Channel: ChannelType
+        ): ReturnType<SendEventDeferred<RendererRegistrar>>;
 
-    <ChannelType extends TChannelsWithRequest<RendererEventRegistrarType>>(
-        Channel: ChannelType,
-        Request: TRequest<ChannelType, RendererEventRegistrarType>
-    ): ReturnType<TSendEventDeferred<RendererEventRegistrarType>>;
-};
+        <ChannelType extends RequestChannel<RendererRegistrar>>(
+            Channel: ChannelType,
+            Request: Request<typeof Channel, RendererRegistrar>
+        ): ReturnType<SendEventDeferred<RendererRegistrar>>;
+    };

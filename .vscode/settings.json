@@ -3,16 +3,16 @@
     {
         "editor.defaultFormatter": "xaver.clang-format",
     },
-  	"eslint.enable": true,
+    "cSpell.enabledFileTypes": {
+        "*": true,
+        "json": false
+    },
+    "eslint.enable": true,
     "eslint.nodePath": "node_modules",
 	"eslint.options":
 	{
 		"overrideConfigFile": "./Configuration/.eslintrc.cjs"
 	},
-    "cSpell.enabledFileTypes": {
-        "*": true,
-        "json": false
-    },
     "eslint.useFlatConfig": false,
   	"eslint.workingDirectories":
 	[

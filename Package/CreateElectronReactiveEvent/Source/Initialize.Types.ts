@@ -23,7 +23,7 @@ export type FOutput =
     };
 
 export type FArguments =
-{
-    Action: FInitAction;
-    Output: FOutput;
-};
+    {
+        Action: FInitAction;
+        Output: FOutput;
+    };

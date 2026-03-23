@@ -4,9 +4,10 @@
  * License:   MIT
  */
 
-export * from "./Error.Types.js";
+export * from "./Decl.Types.js";
 export * from "./Event.Types.js";
 export * from "./Factory.js";
 export * from "./Factory.Main.js";
 export * from "./Factory.Renderer.js";
 export * from "./Factory.Types.js";
+export * from "./Function.Types.js";

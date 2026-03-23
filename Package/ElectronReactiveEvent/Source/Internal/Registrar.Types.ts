@@ -4,27 +4,30 @@
  * License:   MIT
  */
 
-import type { TIsEventDecl } from "./Event.Types.js";
+/* eslint-disable @typescript-eslint/naming-convention */
 
-export type TChannel<
-    EventRegistrarType extends Record<KeyType, unknown>,
-    KeyType extends string = Extract<keyof EventRegistrarType, string>
-> = keyof EventRegistrarType extends string
-    ? keyof EventRegistrarType
+import type { IsEventDecl } from "./Event.Types.js";
+import type { Values } from "./Utility.Types.js";
+
+export type Channel<
+    Registrar extends Record<KeyType, unknown>,
+    KeyType extends string = Extract<keyof Registrar, string>
+> = keyof Registrar extends string
+    ? keyof Registrar
     : never;
 
 /** Map a registrar interface to its naturally-corresponding `Record` type. */
-export type TRegistrarDecls<EventRegistrarType> =
-    TIsRegistrar<EventRegistrarType> extends true
+export type RegistrarDecls<Registrar> =
+    IsRegistrar<Registrar> extends true
         ? {
-            [ Key in keyof EventRegistrarType as Extract<keyof EventRegistrarType, string> ]:
-            EventRegistrarType[Key];
+            [ Key in keyof Registrar as Extract<keyof Registrar, string> ]:
+            Registrar[Key];
         }
         : never;
 
-export type TIsRegistrar<EventRegistrarType> =
-    keyof EventRegistrarType extends string
-        ? TIsEventDecl<EventRegistrarType[keyof EventRegistrarType]> extends true
+export type IsRegistrar<Registrar> =
+    keyof Registrar extends string
+        ? IsEventDecl<Values<Registrar>> extends true
             ? true
             : false
         : false;

@@ -4,16 +4,16 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-unsafe-function-type */
 
-type FSerializablePrimitive =
+type SerializablePrimitive =
     | string
     | number
     | boolean
     | null
     | undefined;
 
-type TIsEqual<LeftType, RightType> =
+type IsEqual<LeftType, RightType> =
     (
         (<Type>() => Type extends LeftType ? 1 : 2) extends
         (<Type>() => Type extends RightType ? 1 : 2)
@@ -26,54 +26,54 @@ type TIsEqual<LeftType, RightType> =
             : false
     );
 
-type TIncludes<TupleType extends ReadonlyArray<unknown>, ItemType> =
+type Includes<TupleType extends ReadonlyArray<unknown>, ItemType> =
     TupleType extends readonly [infer HeadType, ...infer TailType]
-        ? TIsEqual<HeadType, ItemType> extends true
+        ? IsEqual<HeadType, ItemType> extends true
             ? true
-            : TIncludes<TailType, ItemType>
+            : Includes<TailType, ItemType>
         : false;
 
-type TMaxDepth = 20;
+type MaxDepth = 20;
 
-type TSerializableMemberFlag<
+type SerializableMemberFlag<
     Type,
     SeenType extends ReadonlyArray<unknown> = readonly [],
     DepthType extends ReadonlyArray<unknown> = readonly []
 > =
-    DepthType["length"] extends TMaxDepth
+    DepthType["length"] extends MaxDepth
         ? false
-        : Type extends Function | symbol
+        :Type extends Function | symbol
             ? false
-            : Type extends FSerializablePrimitive
+            :Type extends SerializablePrimitive
                 ? true
-                : Type extends ReadonlyArray<infer ElementType>
-                    ? TIncludes<SeenType, Type> extends true
+                :Type extends ReadonlyArray<infer ElementType>
+                    ? Includes<SeenType, Type> extends true
                         ? false
-                        : TIsSerializable<
+                        : IsSerializable<
                             ElementType,
                             [ ...SeenType, Type ],
                             [ ...DepthType, unknown ]
                         >
-                    : Type extends object
-                        ? TIsSerializableObject<
+                    :Type extends object
+                        ? IsSerializableObject<
                             Type,
                             SeenType,
                             DepthType
                         >
                         : false;
 
-type TIsSerializableObject<
+type IsSerializableObject<
     ObjectType extends object,
     SeenType extends ReadonlyArray<unknown> = readonly [],
     DepthType extends ReadonlyArray<unknown> = readonly []
 > =
     [ Extract<keyof ObjectType, symbol> ] extends [ never ]
-        ? TIncludes<SeenType, ObjectType> extends true
+        ? Includes<SeenType, ObjectType> extends true
             ? false
             : Extract<
                 {
-                    [Key in keyof ObjectType]-?:
-                    TIsSerializable<
+                    [ Key in keyof ObjectType ]-?:
+                    IsSerializable<
                         ObjectType[Key],
                         [ ...SeenType, ObjectType ],
                         [ ...DepthType, unknown ]
@@ -85,20 +85,20 @@ type TIsSerializableObject<
                 : false
         : false;
 
-export type TIsSerializable<
+export type IsSerializable<
     Type,
-    SeenType extends ReadonlyArray<unknown> = readonly [],
-    DepthType extends ReadonlyArray<unknown> = readonly []
+    SeenType extends ReadonlyArray<unknown> = ReadonlyArray<unknown>,
+    DepthType extends ReadonlyArray<unknown> = ReadonlyArray<unknown>
 > =
     Extract<
-        TSerializableMemberFlag<Type, SeenType, DepthType>,
+        SerializableMemberFlag<Type, SeenType, DepthType>,
         false
     > extends never
         ? true
         : false;
 
 /** @Note There do exist edge-case types that are *not* serializable, yet are not detected by this type. */
-export type TSerializable<Type> =
-    TIsSerializable<Type> extends true
+export type Serializable<Type> =
+    IsSerializable<Type> extends true
         ? Type
         : never;

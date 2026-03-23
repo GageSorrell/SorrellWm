@@ -49,7 +49,7 @@ const configuration = {
      * Use `module` from `webpack.config.renderer.dev.js`
      */
     /* eslint-disable-next-line @typescript-eslint/no-require-imports */
-    module: require("./webpack.config.renderer.dev").default.module,
+    module: require("./webpack.config.renderer.dev.js").default.module,
     output: {
         filename: "[name].dev.dll.js",
         library: {

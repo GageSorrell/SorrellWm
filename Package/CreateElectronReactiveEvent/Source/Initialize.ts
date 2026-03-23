@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/naming-convention, no-console */
 
 import type { FArguments } from "./Initialize.Types.js";
 

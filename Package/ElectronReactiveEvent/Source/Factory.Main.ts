@@ -4,80 +4,82 @@
  * License:   MIT
  */
 
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-unsafe-function-type */
+
 import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain } from "electron";
 import type {
-    FResponseInternal,
-    TCallback,
-    TCallbackReturnType,
-    TChannel,
-    TChannelsNoRequest,
-    TChannelsWithRequest,
-    TRequest,
-    TResponse } from "./Internal/index.js";
-import type { TCallbackRecord, TMainEventFactoryReturnType } from "./Factory.Types.js";
-import { GetResponseChannel } from "./Factory.js";
+    Callback,
+    CallbackRecord,
+    CallbackReturn,
+    MainEventFactoryReturn,
+    NoRequestChannel,
+    Request,
+    RequestChannel,
+    Response } from "./index.js";
+import type { Channel, ResponseInternal } from "./Internal/index.js";
+import { GetResponseChannel } from "./index.js";
 
-export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarType>(
-): TMainEventFactoryReturnType<MainEventRegistrarType, RendererEventRegistrarType> =>
+export const GetMainFunctions = <MainRegistrar, RendererRegistrar>(
+): MainEventFactoryReturn<MainRegistrar, RendererRegistrar> =>
 {
-    type FStoredCallback =
-    {
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
-        Original: Function;
-        Wrapper: Parameters<typeof ipcMain.handle>[1];
-    };
+    type CallbackWrapper = Parameters<typeof ipcMain.handle>[1];
+    type StoredCallback =
+        {
+            Original: Function;
+            Wrapper: CallbackWrapper
+        };
 
-    const Callbacks: Map<string, Array<FStoredCallback>> = new Map<string, Array<FStoredCallback>>();
+    const Callbacks: Map<string, Array<StoredCallback>> = new Map<string, Array<StoredCallback>>();
 
-    type FSendEventChannelType =
-        | TChannelsWithRequest<MainEventRegistrarType>
-        | TChannelsNoRequest<MainEventRegistrarType>;
+    type SendEventChannel =
+        | RequestChannel<MainRegistrar>
+        | NoRequestChannel<MainRegistrar>;
 
-    type TSendEventReturnType<
-        ChannelType extends FSendEventChannelType,
+    type SendEventReturn<
+        ChannelType extends SendEventChannel,
         WindowType extends BrowserWindow | Array<BrowserWindow>
     > =
         WindowType extends Array<BrowserWindow>
-            ? Array<TResponse<ChannelType, MainEventRegistrarType>>
-            : TResponse<ChannelType, MainEventRegistrarType>;
+            ? Array<Response<ChannelType, MainRegistrar>>
+            : Response<ChannelType, MainRegistrar>;
 
-    async function SendEvent<ChannelType extends TChannelsWithRequest<MainEventRegistrarType>,
+    async function SendEvent<ChannelType extends RequestChannel<MainRegistrar>,
         WindowType extends BrowserWindow | Array<BrowserWindow>
     >(
         Channel: ChannelType,
-        Request: TRequest<typeof Channel, MainEventRegistrarType>,
+        Request: Request<typeof Channel, MainRegistrar>,
         BrowserWindows: WindowType
-    ): Promise<TSendEventReturnType<ChannelType, WindowType>>;
-    async function SendEvent<ChannelType extends TChannelsNoRequest<MainEventRegistrarType>,
+    ): Promise<SendEventReturn<ChannelType, WindowType>>;
+    async function SendEvent<ChannelType extends NoRequestChannel<MainRegistrar>,
         WindowType extends BrowserWindow | Array<BrowserWindow>
     >(
         Channel: ChannelType,
         BrowserWindows: WindowType
-    ): Promise<TSendEventReturnType<ChannelType, WindowType>>;
-    async function SendEvent<ChannelType extends FSendEventChannelType,
+    ): Promise<SendEventReturn<ChannelType, WindowType>>;
+    async function SendEvent<ChannelType extends SendEventChannel,
         WindowType extends BrowserWindow | Array<BrowserWindow>
     >(
         Channel: ChannelType,
-        RequestBrowserWindows: WindowType | TRequest<typeof Channel, MainEventRegistrarType>,
+        RequestBrowserWindows: WindowType | Request<typeof Channel, MainRegistrar>,
         InBrowserWindows?: WindowType
-    ): Promise<TSendEventReturnType<ChannelType, WindowType>>
+    ): Promise<SendEventReturn<ChannelType, WindowType>>
     {
-        type FRequest = [ TRequest<typeof Channel, MainEventRegistrarType> ] extends [ never ]
+        type ThisRequest = [ Request<typeof Channel, MainRegistrar> ] extends [ never ]
             ? undefined
-            : TRequest<typeof Channel, MainEventRegistrarType>;
+            : Request<typeof Channel, MainRegistrar>;
 
-        type FArguments =
-        {
-            BrowserWindows: Array<BrowserWindow>;
-            Request: FRequest;
-        };
+        type Arguments =
+            {
+                BrowserWindows: Array<BrowserWindow>;
+                Request: ThisRequest;
+            };
 
-        const GetOverloadedArguments = (): FArguments =>
+        const GetOverloadedArguments = (): Arguments =>
         {
             if (InBrowserWindows === undefined)
             {
-                const Request: FRequest = undefined as FRequest;
-                const BrowserWindows: FArguments["BrowserWindows"] =
+                const Request: ThisRequest = undefined as ThisRequest;
+                const BrowserWindows: Arguments["BrowserWindows"] =
                     Array.isArray(RequestBrowserWindows)
                         ? RequestBrowserWindows
                         : [ RequestBrowserWindows as BrowserWindow ];
@@ -92,26 +94,26 @@ export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarT
                     BrowserWindows: Array.isArray(InBrowserWindows)
                         ? InBrowserWindows
                         : [ InBrowserWindows ],
-                    Request: RequestBrowserWindows as FArguments["Request"]
+                    Request: RequestBrowserWindows as Arguments["Request"]
                 };
             }
         };
 
         const { BrowserWindows, Request } = GetOverloadedArguments();
 
-        type FBrowserResponse = TResponse<ChannelType, MainEventRegistrarType>;
+        type BrowserResponse = Response<ChannelType, MainRegistrar>;
         const SendBrowserEvent = async (
             InBrowserWindow: BrowserWindow
-        ): Promise<FBrowserResponse> =>
+        ): Promise<BrowserResponse> =>
         {
-            return new Promise<FBrowserResponse>((
-                Resolve: ((Value: FBrowserResponse) => void),
+            return new Promise<BrowserResponse>((
+                Resolve: ((Value: BrowserResponse) => void),
                 _Reject: ((_: unknown) => void)
             ): void =>
             {
                 const OnResponse = async (Response: unknown): Promise<void> =>
                 {
-                    Resolve(Response as FBrowserResponse);
+                    Resolve(Response as BrowserResponse);
                 };
 
                 ipcMain.on(GetResponseChannel(Channel), OnResponse);
@@ -119,26 +121,26 @@ export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarT
             });
         };
 
-        const Results: Array<FBrowserResponse> = await Promise.all(BrowserWindows.map(SendBrowserEvent));
+        const Results: Array<BrowserResponse> = await Promise.all(BrowserWindows.map(SendBrowserEvent));
         const Out: unknown = Results.length === 1
             ? Results[0]
             : Results;
 
-        return Out as TSendEventReturnType<ChannelType, WindowType>;
+        return Out as SendEventReturn<ChannelType, WindowType>;
     }
 
-    function RegisterCallback<ChannelType extends TChannel<RendererEventRegistrarType>>(
+    function registerCallback<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
-        Callback: TCallback<typeof Channel, RendererEventRegistrarType>
+        Callback: Callback<typeof Channel, RendererRegistrar>
     ): void
     {
         ipcMain.removeHandler(Channel);
 
-        type FWrapperReturnType = Awaited<TCallbackReturnType<ChannelType, RendererEventRegistrarType>>;
-        const Wrapper = async (_Event: IpcMainInvokeEvent, Request: unknown): Promise<FResponseInternal> =>
+        type WrapperReturnType = Awaited<CallbackReturn<ChannelType, RendererRegistrar>>;
+        const Wrapper = async (_Event: IpcMainInvokeEvent, Request: unknown): Promise<ResponseInternal> =>
         {
-            const Response: FWrapperReturnType =
-                await Callback(Request as TRequest<typeof Channel, RendererEventRegistrarType>);
+            const Response: WrapperReturnType =
+                await Callback(Request as Request<typeof Channel, RendererRegistrar>);
             if (Response !== undefined)
             {
                 return "Data" in Response
@@ -168,7 +170,7 @@ export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarT
         ipcMain.handle(Channel, Wrapper);
     }
 
-    function UnregisterCallback<ChannelType extends TChannel<RendererEventRegistrarType>>(
+    function unregisterCallback<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType
     ): void
     {
@@ -176,9 +178,9 @@ export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarT
     }
 
     return {
-        RegisterCallback,
-        RegisterCallbacks: <ChannelType extends TChannel<RendererEventRegistrarType>>(
-            Record: TCallbackRecord<ChannelType, RendererEventRegistrarType>
+        registerCallback,
+        registerCallbacks: <ChannelType extends Channel<RendererRegistrar>>(
+            Record: CallbackRecord<ChannelType, RendererRegistrar>
         ): void =>
         {
             if (Callbacks === undefined)
@@ -189,29 +191,26 @@ export const GetMainFunctions = <MainEventRegistrarType, RendererEventRegistrarT
             Object.entries(Record).forEach(([ InChannel, InCallback ]: [ string, unknown ]): void =>
             {
                 const Channel: ChannelType = InChannel as ChannelType;
-                const Callback: TCallback<ChannelType, RendererEventRegistrarType> =
-                    InCallback as TCallback<ChannelType, RendererEventRegistrarType>;
+                const Callback: Callback<ChannelType, RendererRegistrar> =
+                    InCallback as Callback<ChannelType, RendererRegistrar>;
 
-                RegisterCallback(Channel, Callback);
+                registerCallback(Channel, Callback);
             });
         },
-        SendEvent,
-        UnregisterAll: (): void =>
+        send: SendEvent,
+        unregisterAll: (): void =>
         {
             ipcMain.removeAllListeners();
         },
-        UnregisterCallback,
-        UnregisterCallbacks: <ChannelType extends TChannel<RendererEventRegistrarType>>(
-            Record: TCallbackRecord<ChannelType, RendererEventRegistrarType>
+        unregisterCallback: unregisterCallback,
+        unregisterCallbacks: <ChannelType extends Channel<RendererRegistrar>>(
+            Record: CallbackRecord<ChannelType, RendererRegistrar>
         ): void =>
         {
             const UnregisterEntry = ([ InChannel /* , InCallback */ ]: [ string, unknown ]): void =>
             {
                 const Channel: ChannelType = InChannel as ChannelType;
-                // const Callback: TCallback<typeof Channel, RendererEventRegistrarType> =
-                //     InCallback as TCallback<typeof Channel, RendererEventRegistrarType>;
-
-                UnregisterCallback(Channel);
+                unregisterCallback(Channel);
             };
 
             Object.entries(Record).forEach(UnregisterEntry);
