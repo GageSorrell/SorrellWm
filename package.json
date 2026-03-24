@@ -13,8 +13,8 @@
   "type": "module",
   "workspaces": [
     "./Package/**/*",
-    "!./Package/ElectronReactiveEvent",
     "!./Package/ElectronReactiveEventCli",
+    "!./Package/ElectronReactiveEvent",
     "./Documentation",
     "./Script/Build",
     "./Script/CleanRepo"

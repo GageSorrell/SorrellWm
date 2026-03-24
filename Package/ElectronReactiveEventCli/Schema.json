@@ -1,0 +1,101 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+        "files": {
+            "description": "The glob(s) of path(s) to modules containing your event declarations.\nIf this property is not specified, then every `.ts` file in the project\n(outside of `node_modules`) will be read by the CLI.",
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "main": {
+            "description": "The `name` of the interface that holds your `main` event declarations.",
+            "properties": {
+                "name": {
+                    "description": "The name of the interface type.",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "The path of the module that contains the interface type.",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ownership": {
+            "anyOf": [
+                {
+                    "properties": {
+                        "strategy": {
+                            "const": "jsdoc",
+                            "description": "The presence of a JSDoc comment containing `@MainEventDecl`\nor `@RendererEventDecl` will be used to determine ownership\nas `main` or the `renderer` respectively.\n\nYou may specify custom comment tags by adding `mainTag` and\n`rendererTag` properties in the `ownership` object.",
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                {
+                    "properties": {
+                        "mainTag": {
+                            "description": "The `@`-prefixed tag that identifies event declarations as being\nowned by `main`.",
+                            "pattern": "^@.*$",
+                            "type": "string"
+                        },
+                        "rendererTag": {
+                            "description": "The `@`-prefixed tag that identifies event declarations as being\nowned by the `renderer`.",
+                            "pattern": "^@.*$",
+                            "type": "string"
+                        },
+                        "strategy": {
+                            "const": "jsdoc",
+                            "description": "The presence of a JSDoc comment containing `mainTag`/`rendererTag`\nwill be used to determine ownership.",
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                {
+                    "properties": {
+                        "mainGlob": {
+                            "description": "The glob(s) specifying where modules containing `main` events reside.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "rendererGlob": {
+                            "description": "The glob(s) specifying where modules containing `renderer` events reside.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "strategy": {
+                            "const": "globs",
+                            "description": "The event declarations found in modules found in the `mainGlob` will\nbe identified as being owned my `main`, and likewise owned by the\n`renderer` if found in the `rendererGlob`.\n\nIf any module containing an event declaration is found under *both*\nglobs, then the CLI will fail and exit with an error message.\n\nNote that any module matching one of the globs must also match the\n`files` glob(s).",
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                }
+            ],
+            "description": "How the CLI will determine the ownership of each event declaration."
+        },
+        "renderer": {
+            "description": "The `name` of the interface that holds your `renderer` event declarations.",
+            "properties": {
+                "name": {
+                    "description": "The name of the interface type.",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "The path of the module that contains the interface type.",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "type": "object"
+}
+

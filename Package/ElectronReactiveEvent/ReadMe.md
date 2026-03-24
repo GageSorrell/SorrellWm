@@ -23,13 +23,10 @@ The options for the `init` command are available [here](./Documentation/Init.md)
 Exposing functions via `preload` is kept flexible and allows for customization, *i.e.*, limiting the functionality that is exposed to the renderer.
 
 // @TODO API Changes:
-//     `EventReturnType` type
-//     `useInvoke` and `invoke` functions for React
 //     Update function names to match Electron's IPC function names more closely
 //     Add Event parameter to `EventCallback` (this might mean having to define
 //     different types for main/renderer)
 //     Add options to initialization functions that allow for specifying behavior
-//     wrt non-serializable objects.
 // @TODO For this package:
 //     The tasks above
 //     Write documentation

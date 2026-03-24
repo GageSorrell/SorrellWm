@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import type { EmptyEventParameter } from "./index.js";
-import type { Values } from "./Internal/index.js";
+import type { RequestDeclKey, Values } from "./Internal/index.js";
 
 type EquipEventDeclWithName<Registrar> =
     {
@@ -37,4 +37,24 @@ export type NoResponseChannel<Registrar> =
     Extract<
         RegistrarWithNames<Registrar>,
         IEventDeclNoResponse
+    >;
+
+type ChannelsWithRequestHelper<Registrar> =
+    {
+        [ Key in keyof Registrar ]:
+        RequestDeclKey extends keyof Registrar[Key]
+            ? EmptyEventParameter extends Registrar[Key][RequestDeclKey]
+                ? undefined
+                : Key
+            : never
+    };
+
+/** @Summary Channels whose event declarations specify a request type. */
+export type RequestChannel<Registrar> = Extract<Values<ChannelsWithRequestHelper<Registrar>>, string>;
+
+/** @Summary Channels whose event declarations do *not* specify a request type. */
+export type NoRequestChannel<Registrar> =
+    Extract<
+        Exclude<keyof Registrar, ChannelsWithRequestHelper<Registrar>>,
+        string
     >;

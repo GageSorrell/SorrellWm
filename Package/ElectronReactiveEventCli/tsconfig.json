@@ -17,6 +17,7 @@
 
         "jsx": "react-jsx",
 
+        "types": [ "node" ],
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,
@@ -36,7 +37,7 @@
     "include":
     [
         "Source/**/*"
-, "eslint.config.mjs.old"    ],
+, "eslint.config.mjs.old", "../CreateElectronReactiveEvent/Initialize.Types.ts", "../CreateElectronReactiveEvent/Initialize.ts"    ],
     "exclude":
     [
         "Distribution",

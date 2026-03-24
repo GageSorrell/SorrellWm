@@ -8,7 +8,6 @@
 
 import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain } from "electron";
 import type {
-    Callback,
     CallbackRecord,
     CallbackReturn,
     MainEventFactoryReturn,
@@ -17,9 +16,9 @@ import type {
     RequestChannel,
     Response } from "./index.js";
 import type { Channel, ResponseInternal } from "./Internal/index.js";
-import { GetResponseChannel } from "./index.js";
+import { type Callback, GetResponseChannel } from "./index.js";
 
-export const GetMainFunctions = <MainRegistrar, RendererRegistrar>(
+export const GetMainReactiveEventFunctions = <MainRegistrar, RendererRegistrar>(
 ): MainEventFactoryReturn<MainRegistrar, RendererRegistrar> =>
 {
     type CallbackWrapper = Parameters<typeof ipcMain.handle>[1];

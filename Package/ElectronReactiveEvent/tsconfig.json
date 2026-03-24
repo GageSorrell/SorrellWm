@@ -36,7 +36,7 @@
     "include":
     [
         "Source/**/*"
-, "eslint.config.mjs.old"    ],
+, "eslint.config.mjs.old", "../CreateElectronReactiveEvent/Initialize.Types.ts", "../CreateElectronReactiveEvent/Initialize.ts"    ],
     "exclude":
     [
         "Distribution",

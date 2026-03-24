@@ -1,35 +1,10 @@
-/* File:      Factory.Renderer.ts
+/* File:      Provider.tsx
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
-import type {
-    Callback,
-    CallbackRecord,
-    EventContext,
-    EventHooks,
-    NoRequestChannel,
-    PEventProvider,
-    ReactiveEventPreloadData,
-    RendererResponse,
-    Request,
-    RequestChannel,
-    SendEventDeferred,
-    SendEventDeferredBase,
-    SendEventDeferredReturn,
-    UseEventCallbackDeferred,
-    UseEventCallbacksDeferred,
-    UseSendEventDeferred,
-    UseSendEventReturn,
-    UseUnregisterCallbackDeferred,
-    UseUnregisterCallbacksDeferred } from "./index.js";
-import type {
-    Channel,
-    RendererResponseInternal,
-    ResponseInternal } from "./Internal/index.js";
+import type { IpcRendererEvent } from "electron";
 import {
     type Context,
     type ReactNode,
@@ -37,20 +12,33 @@ import {
     createContext,
     use,
     useCallback,
-    useContext,
     useEffect,
-    useMemo,
     useRef,
-    useState } from "react";
-import type { IpcRendererEvent, ipcRenderer } from "electron";
+    useState,
+    useMemo } from "react";
+import type {
+    Callback,
+    CallbackRecord,
+    EventContext,
+    EventProviderProps,
+    Request,
+    IpcRendererFunctions,
+    NoRequestChannel,
+    RequestChannel,
+    SendEventDeferred,
+    SendEventDeferredBase,
+    UseEventCallbackDeferred,
+    UseEventCallbacksDeferred,
+    UseSendEventDeferred,
+    UseSendEventReturn,
+    UseUnregisterCallbackDeferred,
+    UseUnregisterCallbacksDeferred } from "./index.js";
+import type { ResponseInternal, RendererResponseInternal } from "./Internal/index.js";
 import { GetResponseChannel } from "./index.js";
 
-/** @TODO Investigate dependency arrays. */
-/* eslint-disable react-hooks/exhaustive-deps */
+export const FactoryContextRef: { Ref: unknown | undefined; } = { Ref: undefined };
 
 const ResponsePromiseCache: Map<string, Promise<unknown>> = new Map<string, Promise<unknown>>();
-
-let FactoryContext: unknown | undefined = undefined;
 
 function GetCacheKey<ChannelType extends keyof Registrar, Registrar>(
     Channel: ChannelType,
@@ -60,158 +48,142 @@ function GetCacheKey<ChannelType extends keyof Registrar, Registrar>(
     return JSON.stringify([ Channel, Request ]);
 }
 
-export class EventProviderError extends Error
+const GetRendererFunctionsFromValue = (
+    { failSilently, value }: Omit<EventProviderProps, "children">,
+    Out: Partial<IpcRendererFunctions>
+): boolean =>
 {
-    public constructor()
+    const IsValid = (In: unknown): In is IpcRendererFunctions =>
     {
-        super("EventContext was undefined.  Ensure that your app contains an <EventProvider>.");
-        this.name = "EventProviderError";
-    }
-}
+        return (
+            typeof In === "object" &&
+            In !== null &&
+            "invoke" in In &&
+            "off" in In &&
+            "on" in In &&
+            "once" in In &&
+            "send" in In &&
+            typeof In.invoke === "function" &&
+            typeof In.off === "function" &&
+            typeof In.on === "function" &&
+            typeof In.once === "function" &&
+            typeof In.send === "function"
+        );
+    };
 
-export class EventHookError extends Error
-{
-    public constructor(HookName: string)
+    if (typeof value !== "string")
     {
-        super(`The ${ HookName } hook was undefined in the EventContext.`);
-        this.name = "EventHookError";
-    }
-}
-
-/** Call this once, and export its result a module, to use in components. */
-export function MakeEventHooks<MainRegistrar, RendererRegistrar>(
-): EventHooks<MainRegistrar, RendererRegistrar>
-{
-    type ThisEventContext = EventContext<MainRegistrar, RendererRegistrar>;
-
-    function WrapHook<HookNameType extends keyof ThisEventContext>(
-        HookName: HookNameType,
-        ...ArgumentVector: Array<unknown>
-    ): unknown
-    {
-        const EventContext: ThisEventContext =
-            useContext<ThisEventContext>(FactoryContext as Context<ThisEventContext>);
-
-        if (EventContext !== undefined)
+        if (IsValid(value))
         {
-            if (EventContext[HookName] !== undefined)
-            {
-                /* TypeScript is unconvinced that an overload is satisfied *
-                 * when passing the optional arguments, so the arguments   *
-                 * and return value are both cast here.                    */
-                /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
-                return (EventContext[HookName] as Function)(
-                    ...(ArgumentVector as Array<unknown>)
-                ) as unknown;
-            }
-            else
-            {
-                throw new EventHookError("UseSendEvent");
-            }
+            Out.invoke = value.invoke;
+            Out.off = value.off;
+            Out.on = value.on;
+            Out.once = value.once;
+            Out.send = value.send;
+            return true;
         }
+        else if (!failSilently)
+        {
+            throw new Error("\`<ReactiveEventProvider>\` was given an invalid \`value\`.");
+        }
+        else
+        {
+            const Identity = <ArgumentVectorType extends Array<unknown>, ReturnValueType>(
+                ...ArgumentVector: ArgumentVectorType
+            ): ReturnValueType => ArgumentVector as unknown as ReturnValueType;
 
-        throw new EventProviderError();
+            Out.invoke = Identity;
+            Out.off = Identity;
+            Out.on = Identity;
+            Out.once = Identity;
+            Out.send = Identity;
+            return false;
+        }
     }
 
-    function useSendEvent<ChannelType extends RequestChannel<RendererRegistrar>>(
-        Channel: ChannelType,
-        Request: Request<typeof Channel, RendererRegistrar>,
-        Suspend?: boolean
-    ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
-    function useSendEvent<ChannelType extends NoRequestChannel<RendererRegistrar>>(
-        Channel: ChannelType
-    ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
-    function useSendEvent<ChannelType extends NoRequestChannel<RendererRegistrar>>(
-        Channel: ChannelType,
-        Request: undefined,
-        Suspend: boolean
-    ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
-    function useSendEvent<ChannelType extends keyof RendererRegistrar>(
-        Channel: ChannelType,
-        Request?: Request<typeof Channel, RendererRegistrar>,
-        Suspend?: boolean
-    ): UseSendEventReturn<typeof Channel, RendererRegistrar>
+    const PathSplit: Array<string> = value.split(".")
+    /* Remove the `window` part of the path. */
+    PathSplit.shift();
+
+    let OutObject: unknown = window;
+    const AccessProperty = (Property: string, Index: number): void =>
     {
-        return WrapHook(
-            "useSendEvent",
-            Channel as unknown as NoRequestChannel<RendererRegistrar>,
-            Request as undefined,
-            Suspend as boolean
-        ) as unknown as UseSendEventReturn<ChannelType, RendererRegistrar>;
-    }
+        class ReactiveEventProviderPreloadError extends Error
+        {
+            public constructor(GetMessageEnd: ((LastValidSubpath: string) => string))
+            {
+                const LastValidSubpath: string = "window." + PathSplit.slice(0, Index).join(".");
+                const ErrorMessageBase: string =
+                    `<ReactiveEventProvider> was given the object path ${ value } to access the necessary \`ipcRenderer\` functions, but `;
+                super(ErrorMessageBase + GetMessageEnd(LastValidSubpath));
+            }
 
-    function useSendEventDeferred(): ReturnType<UseSendEventDeferred<RendererRegistrar>>
+        }
+        if (typeof OutObject !== "object")
+        {
+            throw new ReactiveEventProviderPreloadError((LastValidSubpath: string): string =>
+            {
+                return `\`${ LastValidSubpath }\` was not an object.`;
+            });
+        }
+        else if (OutObject === null)
+        {
+            throw new ReactiveEventProviderPreloadError((LastValidSubpath: string): string =>
+            {
+                return `\`${ LastValidSubpath }\` was \`null\`.`;
+            });
+        }
+        else if (!(Property in OutObject))
+        {
+            throw new ReactiveEventProviderPreloadError((LastValidSubpath: string): string =>
+            {
+                return `property \`${ Property }\` was not found in \`${ LastValidSubpath }\`.`;
+            });
+        }
+        else
+        {
+            OutObject = (OutObject as Record<typeof Property, unknown>)[Property];
+        }
+    };
+
+    PathSplit.forEach(AccessProperty);
+
+    if (IsValid(OutObject))
     {
-        type ThisReturnType = ReturnType<UseSendEventDeferred<RendererRegistrar>>;
-        return WrapHook("useSendEventDeferred") as ThisReturnType;
+        Out.invoke = OutObject.invoke;
+        Out.off = OutObject.off;
+        Out.on = OutObject.on;
+        Out.once = OutObject.once;
+        Out.send = OutObject.send;
+        return true;
     }
-
-    function useEventCallback<ChannelType extends keyof MainRegistrar>(
-        Channel: ChannelType,
-        Callback: Callback<ChannelType, MainRegistrar>
-    ): void
+    else if (!failSilently)
     {
-        WrapHook("useEventCallback", Channel, Callback);
+        throw new Error(`The object path \`window.${ PathSplit }\` points to a value that exists, but it was not the expected set of ipcRenderer functions.`);
     }
 
-    function useEventCallbacks<ChannelType extends Channel<MainRegistrar>>(
-        Record: CallbackRecord<ChannelType, MainRegistrar>
-    ): void
-    {
-        WrapHook("useEventCallbacks", Record);
-    }
-
-    type ThisUseCallbackDeferredReturnType =
-        ReturnType<UseEventCallbackDeferred<MainRegistrar>>;
-    function useEventCallbackDeferred(): ThisUseCallbackDeferredReturnType
-    {
-        return WrapHook("useEventCallbackDeferred") as ThisUseCallbackDeferredReturnType;
-    }
-
-    type ThisUseCallbacksDeferredReturnType =
-        ReturnType<UseEventCallbacksDeferred<MainRegistrar>>;
-    function useEventCallbacksDeferred(): ThisUseCallbacksDeferredReturnType
-    {
-        return WrapHook("useEventCallbacksDeferred") as ThisUseCallbacksDeferredReturnType;
-    }
-
-    type ThisUseUnregisterCallbacksDeferredReturnType =
-        ReturnType<UseUnregisterCallbacksDeferred<MainRegistrar>>;
-    function useUnregisterCallbacksDeferred(): ThisUseUnregisterCallbacksDeferredReturnType
-    {
-        return WrapHook("useUnregisterCallbacksDeferred") as ThisUseUnregisterCallbacksDeferredReturnType;
-    }
-
-    type ThisUseUnregisterCallbackDeferredReturnType =
-        ReturnType<UseUnregisterCallbackDeferred<MainRegistrar>>;
-    function useUnregisterCallbackDeferred(): ThisUseUnregisterCallbackDeferredReturnType
-    {
-        return WrapHook("useUnregisterCallbackDeferred") as ThisUseUnregisterCallbackDeferredReturnType;
-    }
-
-    return {
-        useEventCallback,
-        useEventCallbackDeferred,
-        useEventCallbacks,
-        useEventCallbacksDeferred,
-        useSendEvent,
-        useSendEventDeferred,
-        useUnregisterCallbackDeferred,
-        useUnregisterCallbacksDeferred
-    } as const;
+    return false;
 };
 
+/**
+ * The main provider for `electron-reactive-event`.  You likely want to wrap this with your own
+ * provider in which you provide a `value` containing the `ipcRenderer` functions that you exposed
+ * via `exposeInMainWorld`.
+ */
 export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
-    { children, value }: PEventProvider
+    { children, failSilently = false, value }: EventProviderProps
 ): ReactNode =>
 {
+    const InRendererFunctions: Partial<IpcRendererFunctions> = { };
+    const AreRendererFunctionsValid: boolean = GetRendererFunctionsFromValue({ failSilently, value }, InRendererFunctions);
+
     const {
         invoke,
         off,
         on,
         once,
         send
-    }  = value;
+    }: IpcRendererFunctions = InRendererFunctions as IpcRendererFunctions;
 
     function GetOrCreateResponsePromise<ChannelType extends keyof RendererRegistrar>(
         Channel: ChannelType,
@@ -656,112 +628,20 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
         throw new Error("At least one of the IpcRendererFunctions is undefined.");
     }
 
-    FactoryContext = createContext<ThisEventContext>(OutValue);
+    FactoryContextRef.Ref = createContext<ThisEventContext>(OutValue);
 
-    const FactoryContextCast: Context<ThisEventContext> = FactoryContext as Context<ThisEventContext>;
+    const FactoryContextCast: Context<ThisEventContext> = FactoryContextRef.Ref as Context<ThisEventContext>;
 
-    return (
-        <FactoryContextCast.Provider value={ OutValue }>
-            { children }
-        </FactoryContextCast.Provider>
-    );
+    if (!AreRendererFunctionsValid && failSilently)
+    {
+        return children;
+    }
+    else
+    {
+        return (
+            <FactoryContextCast.Provider value={ OutValue }>
+                { children }
+            </FactoryContextCast.Provider>
+        );
+    }
 };
-
-export const GetPreload = (IpcRenderer: typeof ipcRenderer): ReactiveEventPreloadData =>
-{
-    const invoke: typeof IpcRenderer.invoke = (
-        Channel: string,
-        ...ArgumentVector: Array<unknown>
-    ): Promise<unknown> =>
-    {
-        return IpcRenderer.invoke(Channel, ...ArgumentVector);
-    };
-
-    const on: typeof IpcRenderer.on = (
-        Channel: string,
-        Callback: ((Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>) => void)
-    ): typeof IpcRenderer =>
-    {
-        return IpcRenderer.on(Channel, Callback);
-    };
-
-    const once: typeof IpcRenderer.once = (
-        Channel: string,
-        Callback: ((Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>) => void)
-    ): typeof IpcRenderer =>
-    {
-        return IpcRenderer.once(Channel, Callback);
-    };
-
-    const off: typeof IpcRenderer.off = (
-        Channel: string,
-        Callback: ((Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>) => void)
-    ): typeof IpcRenderer =>
-    {
-        return IpcRenderer.off(Channel, Callback);
-    };
-
-    const send: typeof IpcRenderer.send = (
-        Channel: string,
-        ...ArgumentVector: Array<unknown>
-    ): void =>
-    {
-        IpcRenderer.send(Channel, ...ArgumentVector);
-    };
-
-    return {
-        electronReactiveEvent:
-        {
-            invoke,
-            off,
-            on,
-            once,
-            send
-        }
-    };
-};
-
-export function IsEventSuccess<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
-    { Error, IsPending }: RendererResponse<ChannelType, RendererRegistrar>
-): boolean;
-export function IsEventSuccess<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
-    { Error }: SendEventDeferredReturn<ChannelType, RendererRegistrar>
-): boolean;
-export function IsEventSuccess<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
-    Response: (
-        | RendererResponse<ChannelType, RendererRegistrar>
-        | SendEventDeferredReturn<ChannelType, RendererRegistrar>
-    )
-): boolean
-{
-    return ("IsPending" in Response)
-        ? !Response.IsPending && Response.Error === undefined
-        : Response.Error === undefined;
-}
-
-export function IsEventFailure<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
-    Response: RendererResponse<ChannelType, RendererRegistrar>
-): boolean;
-export function IsEventFailure<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
-    Response: SendEventDeferredReturn<ChannelType, RendererRegistrar>
-): boolean;
-export function IsEventFailure<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
-    Response:
-        | RendererResponse<ChannelType, RendererRegistrar>
-        | SendEventDeferredReturn<ChannelType, RendererRegistrar>
-): boolean
-{
-    return !IsEventSuccess(Response);
-}

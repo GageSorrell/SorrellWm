@@ -4,7 +4,6 @@
  * License:   MIT
  */
 
-import * as Path from "path";
 import { type Configuration, EnvironmentPlugin, LoaderOptionsPlugin } from "webpack";
 import { BaseConfiguration } from "./Base";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
