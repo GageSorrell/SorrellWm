@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+export * from "./Callback.Types.js";
 export * from "./Event.Types.js";
 export * from "./Factory.Types.js";
 export * from "./Registrar.Types.js";

@@ -8,7 +8,7 @@ import type { PropsWithChildren, ReactNode } from "react";
 import type {
     EmptyEventParameter,
     NoRequestChannel,
-    RegisterCallback,
+    MainRegisterCallback,
     RegisterCallbacks,
     RendererResponse,
     Request,
@@ -16,13 +16,17 @@ import type {
     UseEventCallbackDeferred,
     UseEventCallbacksDeferred,
     UseUnregisterCallbackDeferred,
-    UseUnregisterCallbacksDeferred } from "./index.js";
-import type { IpcRendererFunctions } from "./Preload.Types.js";
-import type { ResponseDeclKey } from "./Internal/index.js";
+    UseUnregisterCallbacksDeferred,
+    RendererRegisterCallback} from "./index.js";
+import type { IRegistrarBase, ResponseDeclKey } from "./Internal/index.js";
+import type { IMainRegistrarBase, IRendererRegistrarBase } from "./Registrar.Types.js";
 
 export type EventProvider = ({ children }: PropsWithChildren) => ReactNode;
 
-export type EventContext<MainRegistrar, RendererRegistrar> =
+export type EventContext<
+    MainRegistrar extends IMainRegistrarBase,
+    RendererRegistrar extends IRendererRegistrarBase
+> =
     Partial<{
     /** Send an event when the component mounts. */
         useSendEvent: UseSendEvent<RendererRegistrar>;
@@ -30,11 +34,11 @@ export type EventContext<MainRegistrar, RendererRegistrar> =
         /** The returned callback returns `undefined` if a re-render is triggered before it fulfills. */
         useSendEventDeferred: UseSendEventDeferred<RendererRegistrar>;
 
-        useEventCallback: RegisterCallback<MainRegistrar>;
+        useEventCallback: RendererRegisterCallback<MainRegistrar>;
 
         useEventCallbackDeferred: UseEventCallbackDeferred<MainRegistrar>;
 
-        useEventCallbacks: RegisterCallbacks<MainRegistrar>;
+        useEventCallbacks: RegisterCallbacks<"Renderer", MainRegistrar>;
 
         useEventCallbacksDeferred: UseEventCallbacksDeferred<MainRegistrar>;
 
@@ -43,60 +47,12 @@ export type EventContext<MainRegistrar, RendererRegistrar> =
         useUnregisterCallbacksDeferred: UseUnregisterCallbacksDeferred<MainRegistrar>;
     }>;
 
-export type EventContextUnknown = EventContext<Record<string, unknown>, Record<string, unknown>>;
+export type EventContextUnknown = EventContext<IMainRegistrarBase, IRendererRegistrarBase>;
 
-export type EventProviderProps =
-    PropsWithChildren &
-    (
-        | {
-            /**
-            * If the ipcRenderer functions are not exposed yet and `failSilently === true`,
-            * then the provider will just return the `children` passed to it.  This is intended
-            * for preload scripts that call `exposeInMainWorld` from an asynchronous function.
-            *
-            * Otherwise, if `failSilently === false` or `failSilently === undefined`, an error
-            * will be thrown if the ipcRenderer functions are not found.
-            */
-            failSilently?: true;
-
-            /**
-             * Specify the ipcRenderer functions for `<ReactiveEventProvider>` as either
-             * (1) an object containing the functions (exposed via `preload`), or (2) a
-             * string that represents the path to the object containing the exposed functions.
-             * Depending upon your `preload` setup, option (2) would likely resemble
-             * `"window.electron.electronReactiveEvent"`.
-             */
-            value:
-                | `window.${ string }`
-                | IpcRendererFunctions
-                | undefined;
-        }
-        | {
-            /**
-            * If the ipcRenderer functions are not exposed yet and `failSilently === true`,
-            * then the provider will just return the `children` passed to it.  This is intended
-            * for preload scripts that call `exposeInMainWorld` from an asynchronous function.
-            *
-            * Otherwise, if `failSilently === false` or `failSilently === undefined`, an error
-            * will be thrown if the ipcRenderer functions are not found.
-            */
-            failSilently?: false;
-
-            /**
-             * Specify the ipcRenderer functions for `<ReactiveEventProvider>` as either
-             * (1) an object containing the functions (exposed via `preload`), or (2) a
-             * string that represents the path to the object containing the exposed functions.
-             * Depending upon your `preload` setup, option (2) would likely resemble
-             * `"window.electron.electronReactiveEvent"`.
-             */
-            value:
-                | `window.${ string }`
-                | IpcRendererFunctions;
-        }
-    );
-
-export type EventHooks<MainRegistrar, RendererRegistrar> =
+export type EventHooks<MainRegistrar extends IMainRegistrarBase, RendererRegistrar extends IRendererRegistrarBase> =
     Readonly<Required<EventContext<MainRegistrar, RendererRegistrar>>>;
+
+export type ReactiveEventProviderComponent = ({ children }: PropsWithChildren) => ReactNode;
 
 export type UseSendEventReturn<
     ChannelType extends keyof RendererRegistrar,

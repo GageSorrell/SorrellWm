@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
+/** @Todo Allow for customization of return value by setting a value. */
 export function GetResponseChannel(Channel: string): string
 {
     return `${ Channel }__Response`;

@@ -10,7 +10,10 @@ import {
     type CallbackRecord,
     type EventContext,
     type EventHooks,
+    type IMainRegistrarBase,
+    type IRendererRegistrarBase,
     type NoRequestChannel,
+    type RendererCallback,
     type Request,
     type RequestChannel,
     type UseEventCallbackDeferred,
@@ -41,7 +44,7 @@ export class EventProviderError extends Error
 }
 
 /** Call this once, and export its result a module, to use in components. */
-export function MakeEventHooks<MainRegistrar, RendererRegistrar>(
+export function MakeEventHooks<MainRegistrar extends IMainRegistrarBase, RendererRegistrar extends IRendererRegistrarBase>(
 ): EventHooks<MainRegistrar, RendererRegistrar>
 {
     type ThisEventContext = EventContext<MainRegistrar, RendererRegistrar>;
@@ -110,14 +113,14 @@ export function MakeEventHooks<MainRegistrar, RendererRegistrar>(
 
     function useEventCallback<ChannelType extends keyof MainRegistrar>(
         Channel: ChannelType,
-        Callback: Callback<ChannelType, MainRegistrar>
+        Callback: RendererCallback<ChannelType, MainRegistrar>
     ): void
     {
         WrapHook("useEventCallback", Channel, Callback);
     }
 
     function useEventCallbacks<ChannelType extends Channel<MainRegistrar>>(
-        Record: CallbackRecord<ChannelType, MainRegistrar>
+        Record: CallbackRecord<ChannelType, "Renderer", MainRegistrar>
     ): void
     {
         WrapHook("useEventCallbacks", Record);

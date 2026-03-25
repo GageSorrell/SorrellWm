@@ -16,5 +16,6 @@ export * from "./Preload.js";
 export * from "./Preload.Types.js";
 export * from "./Provider.js";
 export * from "./Provider.Types.js";
+export * from "./Registrar.Types.js";
 export * from "./Utility.js";
 export * from "./Utility.Renderer.js";

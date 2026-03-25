@@ -7,6 +7,7 @@
 import type { IpcRendererEvent } from "electron";
 import {
     type Context,
+    type PropsWithChildren,
     type ReactNode,
     type RefObject,
     createContext,
@@ -17,11 +18,11 @@ import {
     useState,
     useMemo } from "react";
 import type {
-    Callback,
     CallbackRecord,
     EventContext,
-    EventProviderProps,
     Request,
+    IMainRegistrarBase,
+    IRendererRegistrarBase,
     IpcRendererFunctions,
     NoRequestChannel,
     RequestChannel,
@@ -32,9 +33,15 @@ import type {
     UseSendEventDeferred,
     UseSendEventReturn,
     UseUnregisterCallbackDeferred,
-    UseUnregisterCallbacksDeferred } from "./index.js";
-import type { ResponseInternal, RendererResponseInternal } from "./Internal/index.js";
-import { GetResponseChannel } from "./index.js";
+    UseUnregisterCallbacksDeferred,
+    ReactiveEventProviderComponent,
+    RendererCallback } from "./index.js";
+import type {
+    Channel,
+    ResponseInternal,
+    RendererResponseInternal,
+    RendererCallbackInternal,
+    RendererCallbackArgumentInternal } from "./Internal/index.js";
 
 export const FactoryContextRef: { Ref: unknown | undefined; } = { Ref: undefined };
 
@@ -48,134 +55,40 @@ function GetCacheKey<ChannelType extends keyof Registrar, Registrar>(
     return JSON.stringify([ Channel, Request ]);
 }
 
-const GetRendererFunctionsFromValue = (
-    { failSilently, value }: Omit<EventProviderProps, "children">,
-    Out: Partial<IpcRendererFunctions>
-): boolean =>
-{
-    const IsValid = (In: unknown): In is IpcRendererFunctions =>
-    {
-        return (
-            typeof In === "object" &&
-            In !== null &&
-            "invoke" in In &&
-            "off" in In &&
-            "on" in In &&
-            "once" in In &&
-            "send" in In &&
-            typeof In.invoke === "function" &&
-            typeof In.off === "function" &&
-            typeof In.on === "function" &&
-            typeof In.once === "function" &&
-            typeof In.send === "function"
-        );
-    };
-
-    if (typeof value !== "string")
-    {
-        if (IsValid(value))
-        {
-            Out.invoke = value.invoke;
-            Out.off = value.off;
-            Out.on = value.on;
-            Out.once = value.once;
-            Out.send = value.send;
-            return true;
-        }
-        else if (!failSilently)
-        {
-            throw new Error("\`<ReactiveEventProvider>\` was given an invalid \`value\`.");
-        }
-        else
-        {
-            const Identity = <ArgumentVectorType extends Array<unknown>, ReturnValueType>(
-                ...ArgumentVector: ArgumentVectorType
-            ): ReturnValueType => ArgumentVector as unknown as ReturnValueType;
-
-            Out.invoke = Identity;
-            Out.off = Identity;
-            Out.on = Identity;
-            Out.once = Identity;
-            Out.send = Identity;
-            return false;
-        }
-    }
-
-    const PathSplit: Array<string> = value.split(".")
-    /* Remove the `window` part of the path. */
-    PathSplit.shift();
-
-    let OutObject: unknown = window;
-    const AccessProperty = (Property: string, Index: number): void =>
-    {
-        class ReactiveEventProviderPreloadError extends Error
-        {
-            public constructor(GetMessageEnd: ((LastValidSubpath: string) => string))
-            {
-                const LastValidSubpath: string = "window." + PathSplit.slice(0, Index).join(".");
-                const ErrorMessageBase: string =
-                    `<ReactiveEventProvider> was given the object path ${ value } to access the necessary \`ipcRenderer\` functions, but `;
-                super(ErrorMessageBase + GetMessageEnd(LastValidSubpath));
-            }
-
-        }
-        if (typeof OutObject !== "object")
-        {
-            throw new ReactiveEventProviderPreloadError((LastValidSubpath: string): string =>
-            {
-                return `\`${ LastValidSubpath }\` was not an object.`;
-            });
-        }
-        else if (OutObject === null)
-        {
-            throw new ReactiveEventProviderPreloadError((LastValidSubpath: string): string =>
-            {
-                return `\`${ LastValidSubpath }\` was \`null\`.`;
-            });
-        }
-        else if (!(Property in OutObject))
-        {
-            throw new ReactiveEventProviderPreloadError((LastValidSubpath: string): string =>
-            {
-                return `property \`${ Property }\` was not found in \`${ LastValidSubpath }\`.`;
-            });
-        }
-        else
-        {
-            OutObject = (OutObject as Record<typeof Property, unknown>)[Property];
-        }
-    };
-
-    PathSplit.forEach(AccessProperty);
-
-    if (IsValid(OutObject))
-    {
-        Out.invoke = OutObject.invoke;
-        Out.off = OutObject.off;
-        Out.on = OutObject.on;
-        Out.once = OutObject.once;
-        Out.send = OutObject.send;
-        return true;
-    }
-    else if (!failSilently)
-    {
-        throw new Error(`The object path \`window.${ PathSplit }\` points to a value that exists, but it was not the expected set of ipcRenderer functions.`);
-    }
-
-    return false;
-};
-
 /**
  * The main provider for `electron-reactive-event`.  You likely want to wrap this with your own
  * provider in which you provide a `value` containing the `ipcRenderer` functions that you exposed
  * via `exposeInMainWorld`.
  */
-export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
-    { children, failSilently = false, value }: EventProviderProps
-): ReactNode =>
+export const GetReactiveEventProvider = <
+    MainRegistrar extends IMainRegistrarBase,
+    RendererRegistrar extends IRendererRegistrarBase
+>(): ReactiveEventProviderComponent =>
 {
-    const InRendererFunctions: Partial<IpcRendererFunctions> = { };
-    const AreRendererFunctionsValid: boolean = GetRendererFunctionsFromValue({ failSilently, value }, InRendererFunctions);
+    if (!("electronReactiveEvent" in window))
+    {
+        throw new Error("electronReactiveEvent was not exposed to the renderer.  Check that you are running `preloadElectronReactiveEvent()` in your `preload` script.");
+    }
+    else if (window.electronReactiveEvent && typeof window.electronReactiveEvent === "object")
+    {
+        const IsValid: boolean = (
+            "invoke" in window.electronReactiveEvent &&
+            "off" in window.electronReactiveEvent &&
+            "on" in window.electronReactiveEvent &&
+            "once" in window.electronReactiveEvent &&
+            "send" in window.electronReactiveEvent &&
+            typeof "invoke" === "function" &&
+            typeof "off" === "function" &&
+            typeof "on" === "function" &&
+            typeof "once" === "function" &&
+            typeof "send" === "function"
+        );
+
+        if (!IsValid)
+        {
+            throw new Error("One or more functions provided by `preloadElectronReactiveEvent()` were not valid.  Check that the functions you provided are valid.");
+        }
+    }
 
     const {
         invoke,
@@ -183,7 +96,10 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
         on,
         once,
         send
-    }: IpcRendererFunctions = InRendererFunctions as IpcRendererFunctions;
+    }: IpcRendererFunctions = window.electronReactiveEvent as IpcRendererFunctions;
+
+    type ThisCallbackRecord<ChannelType extends Channel<MainRegistrar>> =
+        CallbackRecord<ChannelType, "Renderer", MainRegistrar>;
 
     function GetOrCreateResponsePromise<ChannelType extends keyof RendererRegistrar>(
         Channel: ChannelType,
@@ -378,172 +294,244 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
         return [ SendEvent ] as const;
     }
 
+    type CallbackWrapper = Parameters<typeof on>[1];
+    type CallbackOriginal<ChannelType extends Channel<MainRegistrar> = Channel<MainRegistrar>> =
+        RendererCallbackInternal<ChannelType, MainRegistrar>;
+
     type CallbackPair =
         {
-            Original: Parameters<typeof on>[1];
-            Wrapper: Parameters<typeof on>[1];
+            Original: CallbackOriginal;
+            Wrapper: CallbackWrapper;
         };
 
-    type RegisteredCallbackMap = Map<string, Set<CallbackPair>>;
+    // type RegisteredCallbackMap = Map<string, Set<CallbackPair>>;
 
-    const RegisteredCallbacksReference: RefObject<RegisteredCallbackMap> =
-        useRef<RegisteredCallbackMap>(new Map<string, Set<CallbackPair>>());
+    // const RegisteredCallbacksReference: RefObject<RegisteredCallbackMap> =
+    //     useRef<RegisteredCallbackMap>(new Map<string, Set<CallbackPair>>());
 
-    useEffect((): (() => void) =>
+    // useEffect((): (() => void) =>
+    // {
+    //     const Ref: RegisteredCallbackMap = RegisteredCallbacksReference.current;
+
+    //     return (): void =>
+    //     {
+    //         for (const [ Channel, CallbackSet ] of Ref.entries())
+    //         {
+    //             for (const { Wrapper } of CallbackSet)
+    //             {
+    //                 off(Channel, Wrapper);
+    //             }
+    //         }
+
+    //         Ref.clear();
+    //     };
+    // }, [ off ]);
+
+    type StoredRendererCallbackRecord =
+        Partial<{
+            [ Key in Channel<MainRegistrar> ]: Array<RendererCallbackInternal<Key, MainRegistrar>>;
+        }>;
+
+    const [ EventCallbacks, SetEventCallbacks ] = useState<StoredRendererCallbackRecord>({ });
+
+    const RegisterCallback = <ChannelType extends Channel<MainRegistrar>>(
+        Channel: ChannelType,
+        Callback: RendererCallback<typeof Channel, MainRegistrar>
+    ): void =>
     {
-        const Ref: RegisteredCallbackMap = RegisteredCallbacksReference.current;
-
-        return (): void =>
+        SetEventCallbacks((Old: StoredRendererCallbackRecord): StoredRendererCallbackRecord =>
         {
-            for (const [ Channel, CallbackSet ] of Ref.entries())
+            const CallbackCast: RendererCallbackInternal<typeof Channel, MainRegistrar> =
+                Callback as RendererCallbackInternal<typeof Channel, MainRegistrar>;
+
+            if (Channel in Old && Array.isArray(Old[Channel]))
             {
-                for (const { Wrapper } of CallbackSet)
+                if (Old[Channel].includes(CallbackCast))
                 {
-                    off(Channel, Wrapper);
+                    return Old;
+                }
+                else
+                {
+                    const New: StoredRendererCallbackRecord = structuredClone(Old);
+                    if (!(Channel in New) || !Array.isArray(New[Channel]))
+                    {
+                        New[Channel] = [ ];
+                    }
+
+                    New[Channel].push(CallbackCast);
+
+                    return New;
                 }
             }
+            else
+            {
+                const New: StoredRendererCallbackRecord = structuredClone(Old);
+                New[Channel] = [ ];
 
-            Ref.clear();
+                New[Channel].push(CallbackCast);
+
+                return New;
+            }
+        });
+    };
+
+            // const ChannelCast: string = Channel as string;
+            // const CallbackCast: CallbackOriginal =
+            //     Callback as unknown as CallbackOriginal;
+
+            // let ExistingCallbacks: Set<CallbackPair> | undefined =
+            //     RegisteredCallbacksReference.current.get(ChannelCast);
+
+            // if (ExistingCallbacks === undefined)
+            // {
+            //     RegisteredCallbacksReference.current.set(ChannelCast, new Set<CallbackPair>());
+            //     ExistingCallbacks = RegisteredCallbacksReference.current.get(ChannelCast);
+            // }
+
+            // const AlreadyExists: boolean = Array.from(ExistingCallbacks || [ ]).some((
+            //     { Original }: CallbackPair
+            // ): boolean =>
+            // {
+            //     return Original === CallbackCast;
+            // });
+
+            // if (AlreadyExists)
+            // {
+            //     return;
+            // }
+
+            // const Wrapper: CallbackPair["Wrapper"] = async (
+            //     Event: IpcRendererEvent,
+            //     Request: unknown
+            // ): Promise<void> =>
+            // {
+            //     type ThisArgument = RendererCallbackArgumentInternal<ChannelType, MainRegistrar>;
+            //     const Argument: ThisArgument =
+            //     {
+            //         Event,
+            //         Request: Request as Request<ChannelType, MainRegistrar>
+            //     };
+
+            //     type Response = Awaited<ReturnType<RendererCallback<ChannelType, MainRegistrar>>>;
+            //     type ThisCallback = RendererCallbackInternal<typeof Channel, MainRegistrar>;
+            //     const CallbackCastWrapper: ThisCallback = Callback as ThisCallback;
+            //     const Response: Response =
+            //         await CallbackCastWrapper(Argument) as Response;
+
+            //     send(GetResponseChannel(String(Channel)), Response);
+            // };
+
+            // on(ChannelCast, Wrapper);
+
+            // RegisteredCallbacksReference.current.get(ChannelCast)?.add({ Original: CallbackCast, Wrapper });
+        // }, [ on ]);
+
+    type ThisRegisterCallbacks = <ChannelType extends Channel<MainRegistrar>>(
+        Record: ThisCallbackRecord<ChannelType>
+    ) => void;
+
+    const RegisterCallbacks: ThisRegisterCallbacks = <ChannelType extends Channel<MainRegistrar>>(
+        Record: ThisCallbackRecord<ChannelType>
+    ): void =>
+    {
+        const RegisterEntry = ([ InChannel, InCallback ]: [ string, unknown ]): void =>
+        {
+            const Channel: ChannelType = InChannel as ChannelType;
+            const Callback: RendererCallback<typeof Channel, MainRegistrar> =
+                InCallback as RendererCallback<typeof Channel, MainRegistrar>;
+
+            RegisterCallback(Channel, Callback);
         };
-    }, [ off ]);
 
-    type RegisterCallback = <ChannelType extends keyof MainRegistrar>(
+        Object.entries(Record).forEach(RegisterEntry);
+    };
+
+    const UnregisterCallback = <ChannelType extends keyof MainRegistrar>(
         Channel: ChannelType,
-        Callback: Callback<ChannelType, MainRegistrar>
-    ) => void;
-
-    const RegisterCallback: RegisterCallback = useCallback(
-        <ChannelType extends keyof MainRegistrar>(
-            Channel: ChannelType,
-            Callback: Callback<ChannelType, MainRegistrar>
-        ): void =>
+        Callback: RendererCallback<typeof Channel, MainRegistrar>
+    ): void =>
+    {
+        SetEventCallbacks((Old: StoredRendererCallbackRecord): StoredRendererCallbackRecord =>
         {
-            const ChannelCast: string = Channel as string;
-            const CallbackCast: Parameters<typeof on>[1] = Callback as Parameters<typeof on>[1];
-
-            let ExistingCallbacks: Set<CallbackPair> | undefined =
-                RegisteredCallbacksReference.current.get(ChannelCast);
-
-            if (ExistingCallbacks === undefined)
+            if (Channel in Old && Array.isArray(Old[Channel]))
             {
-                RegisteredCallbacksReference.current.set(ChannelCast, new Set<CallbackPair>());
-                ExistingCallbacks = RegisteredCallbacksReference.current.get(ChannelCast);
-            }
+                const CallbackCast: RendererCallbackInternal<typeof Channel, MainRegistrar> =
+                    Callback as RendererCallbackInternal<typeof Channel, MainRegistrar>;
 
-            const AlreadyExists: boolean = Array.from(ExistingCallbacks || [ ]).some((
-                { Original }: CallbackPair
-            ): boolean =>
-            {
-                return Original === Callback;
-            });
+                const Index: number = Old[Channel].indexOf(CallbackCast);
 
-            if (AlreadyExists)
-            {
-                return;
-            }
-
-            const Wrapper: CallbackPair["Wrapper"] = async (
-                _Event: IpcRendererEvent,
-                Request: unknown
-            ): Promise<void> =>
-            {
-                type Response = Awaited<ReturnType<Callback<ChannelType, MainRegistrar>>>;
-                const Response: Response =
-                    await Callback(Request as Request<ChannelType, MainRegistrar>) as Response;
-
-                send(GetResponseChannel(String(Channel)), Response);
-            };
-
-            on(ChannelCast, Wrapper);
-
-            RegisteredCallbacksReference.current.get(ChannelCast)?.add({ Original: CallbackCast, Wrapper });
-        }, [ on ]);
-
-    type RegisterCallbacks = <ChannelType extends keyof MainRegistrar>(
-        Record: CallbackRecord<ChannelType, MainRegistrar>
-    ) => void;
-    const RegisterCallbacks: RegisterCallbacks = useCallback(
-        <ChannelType extends keyof MainRegistrar>(
-            Record: CallbackRecord<ChannelType, MainRegistrar>
-        ): void =>
-        {
-            const RegisterEntry = ([ InChannel, InCallback ]: [ string, unknown ]): void =>
-            {
-                const Channel: ChannelType = InChannel as ChannelType;
-                const Callback: Callback<typeof Channel, MainRegistrar> =
-                    InCallback as Callback<typeof Channel, MainRegistrar>;
-
-                RegisterCallback(Channel, Callback);
-            };
-
-            Object.entries(Record).forEach(RegisterEntry);
-        }, [ RegisterCallback ]);
-
-    type ThisUnregisterCallback = <ChannelType extends keyof MainRegistrar>(
-        Channel: ChannelType,
-        Callback: Callback<ChannelType, MainRegistrar>
-    ) => void;
-    const UnregisterCallback: ThisUnregisterCallback = useCallback(
-        <ChannelType extends keyof MainRegistrar>(
-            Channel: ChannelType,
-            Callback: Callback<ChannelType, MainRegistrar>
-        ): void =>
-        {
-            const ResponseChannel: string = GetResponseChannel(Channel as string);
-            const CallbackCast: Parameters<typeof off>[1] = Callback as Parameters<typeof off>[1];
-
-            const ExistingCallbacks: Set<CallbackPair> | undefined =
-                RegisteredCallbacksReference.current.get(ResponseChannel);
-
-            const ShouldExitEarly: boolean = (
-                ExistingCallbacks === undefined ||
-                Array.from(ExistingCallbacks).some(({ Original }: CallbackPair): boolean =>
+                const New: StoredRendererCallbackRecord = structuredClone(Old);
+                if (Channel in New && Array.isArray(New[Channel]))
                 {
-                    return Original === Callback;
-                })
-            );
-
-            if (ShouldExitEarly)
-            {
-                return;
+                    New[Channel].splice(Index, 1);
+                    return New;
+                }
+                else
+                {
+                    return Old;
+                }
             }
-
-            off(ResponseChannel, CallbackCast);
-
-            const NewCallbacks: Set<CallbackPair> =
-                new Set<CallbackPair>(Array.from(ExistingCallbacks || [ ])
-                    .filter(({ Original }: CallbackPair): boolean =>
-                    {
-                        return Original !== CallbackCast;
-                    }));
-
-            RegisteredCallbacksReference.current.set(ResponseChannel, NewCallbacks);
-
-            if (NewCallbacks.size === 0)
+            else
             {
-                RegisteredCallbacksReference.current.delete(ResponseChannel);
+                return Old;
             }
-        }, [ off ]);
+        });
+    };
+            // const ResponseChannel: string = GetResponseChannel(Channel as string);
+            // const CallbackCast: CallbackOriginal = Callback as unknown as CallbackOriginal;
 
-    type ThisUnregisterCallbacks = <ChannelType extends keyof MainRegistrar>(
-        Record: CallbackRecord<ChannelType, MainRegistrar>
+            // const ExistingCallbacks: Set<CallbackPair> | undefined =
+            //     RegisteredCallbacksReference.current.get(ResponseChannel);
+
+            // const ShouldExitEarly: boolean = (
+            //     ExistingCallbacks === undefined ||
+            //     Array.from(ExistingCallbacks).some(({ Original }: CallbackPair): boolean =>
+            //     {
+            //         return Original === CallbackCast;
+            //     })
+            // );
+
+            // if (ShouldExitEarly)
+            // {
+            //     return;
+            // }
+
+            // off(ResponseChannel, );
+
+            // const NewCallbacks: Set<CallbackPair> =
+            //     new Set<CallbackPair>(Array.from(ExistingCallbacks || [ ])
+            //         .filter(({ Original }: CallbackPair): boolean =>
+            //         {
+            //             return Original !== CallbackCast;
+            //         }));
+
+            // RegisteredCallbacksReference.current.set(ResponseChannel, NewCallbacks);
+
+            // if (NewCallbacks.size === 0)
+            // {
+            //     RegisteredCallbacksReference.current.delete(ResponseChannel);
+            // }
+        // }, [ EventCallbacks ]);
+        // }, [ off ]);
+
+    type ThisUnregisterCallbacks = <ChannelType extends Channel<MainRegistrar>>(
+        Record: ThisCallbackRecord<ChannelType>
     ) => void;
-    const UnregisterCallbacks: ThisUnregisterCallbacks = useCallback(
-        <ChannelType extends keyof MainRegistrar>(
-            Record: CallbackRecord<ChannelType, MainRegistrar>
-        ): void =>
+    const UnregisterCallbacks: ThisUnregisterCallbacks = <ChannelType extends Channel<MainRegistrar>>(
+        Record: ThisCallbackRecord<ChannelType>
+    ): void =>
+    {
+        const UnregisterEntry = ([ InChannel, InCallback ]: [ string, unknown ]): void =>
         {
-            const UnregisterEntry = ([ InChannel, InCallback ]: [ string, unknown ]): void =>
-            {
-                const Channel: ChannelType = InChannel as ChannelType;
-                const Callback: Callback<typeof Channel, MainRegistrar> =
-                    InCallback as Callback<typeof Channel, MainRegistrar>;
+            const Channel: ChannelType = InChannel as ChannelType;
+            const Callback: RendererCallback<typeof Channel, MainRegistrar> =
+                InCallback as RendererCallback<typeof Channel, MainRegistrar>;
 
-                UnregisterCallback(Channel, Callback);
-            };
+            UnregisterCallback(Channel, Callback);
+        };
 
-            Object.entries(Record).forEach(UnregisterEntry);
-        }, [ UnregisterCallback ]);
+        Object.entries(Record).forEach(UnregisterEntry);
+    };
 
     type ThisUseEventCallbackDeferred = UseEventCallbackDeferred<MainRegistrar>;
     const useEventCallbackDeferred: ThisUseEventCallbackDeferred =
@@ -573,9 +561,71 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
             return [ UnregisterCallback ] as const;
         };
 
-    const useEventCallback = <ChannelType extends keyof MainRegistrar>(
+    const UpdateRegisteredCallbacks = (): (() => void) =>
+    {
+        type OnCallbackPart = Parameters<typeof on>[1];
+        type OnCallbackEntry = [ Channel<MainRegistrar>, OnCallbackPart ];
+        type Callbacks = Array<OnCallbackEntry>;
+        type ThisCallback = RendererCallbackInternal<Channel<MainRegistrar>, MainRegistrar>;
+        type ThisCallbackArgument = RendererCallbackArgumentInternal<Channel<MainRegistrar>, MainRegistrar>;
+        type ThisCallCallback = ((Callback: ThisCallback) => void);
+
+        const GetCallbackArgument = (Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>): ThisCallbackArgument =>
+        {
+            return {
+                Event,
+                Request: ArgumentVector[0] as Request<Channel<MainRegistrar>, MainRegistrar>
+            };
+        };
+
+        const MakeCallCallback = (Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>): ThisCallCallback =>
+        {
+            return (Callback: ThisCallback): void =>
+            {
+                Callback(GetCallbackArgument(Event, ...ArgumentVector));
+            };
+        };
+
+        const GetCallbackPart = ([ InChannel, InCallbackArray ]: [ string, unknown ]): OnCallbackEntry =>
+        {
+            const Channel: Channel<MainRegistrar> = InChannel as Channel<MainRegistrar>;
+            type ThisCallbackArray = Array<RendererCallbackInternal<Channel<MainRegistrar>, MainRegistrar>>;
+            const CallbackArray: ThisCallbackArray = InCallbackArray as ThisCallbackArray;
+
+            const OutCallback: OnCallbackPart = (Event: IpcRendererEvent, ...ArgumentVector: Array<unknown>): void =>
+            {
+                const CallCallback: ThisCallCallback = MakeCallCallback(Event, ...ArgumentVector);
+                CallbackArray.forEach(CallCallback);
+            };
+
+            return [ Channel, OutCallback ];
+        };
+
+        const CallbackParts: Callbacks = Object.entries(EventCallbacks).map(GetCallbackPart);
+
+        const RegisterArray = ([ Channel, Callback ]: OnCallbackEntry): void =>
+        {
+            on(Channel, Callback);
+        };
+
+        CallbackParts.forEach(RegisterArray);
+
+        return (): void =>
+        {
+            const UnregisterArray = ([ Channel, Callback ]: OnCallbackEntry): void =>
+            {
+                off(Channel, Callback);
+            };
+
+            CallbackParts.forEach(UnregisterArray);
+        };
+    };
+
+    useEffect(UpdateRegisteredCallbacks, [ EventCallbacks ]);
+
+    const useEventCallback = <ChannelType extends Channel<MainRegistrar>>(
         Channel: ChannelType,
-        Callback: Callback<ChannelType, MainRegistrar>
+        Callback: RendererCallback<ChannelType, MainRegistrar>
     ): void =>
     {
         useEffect((): (() => void) =>
@@ -585,11 +635,18 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
             {
                 UnregisterCallback(Channel, Callback);
             };
-        }, [ RegisterCallback ]);
+        }, [ ]);
     };
 
-    const useEventCallbacks = <ChannelType extends keyof MainRegistrar>(
-        Record: CallbackRecord<ChannelType, MainRegistrar>
+    // @TODO Where to pick back up:
+    //
+    // Create `Development` directory with directory
+    // `ElectronReactiveEventTest` which contains an
+    // ERB-based app that experiments with using all
+    // features of `ElectronReactiveEvent`.
+
+    const useEventCallbacks = <ChannelType extends Channel<MainRegistrar>>(
+        Record: ThisCallbackRecord<ChannelType>
     ): void =>
     {
         useEffect((): (() => void) =>
@@ -599,11 +656,11 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
             {
                 UnregisterCallbacks(Record);
             };
-        }, [ RegisterCallback ]);
+        }, [ ]);
     };
 
     type ThisEventContext = EventContext<MainRegistrar, RendererRegistrar>;
-    const OutValue: ThisEventContext =
+    const value: ThisEventContext =
         {
             useEventCallback,
             useEventCallbackDeferred,
@@ -628,20 +685,16 @@ export const ReactiveEventProvider = <MainRegistrar, RendererRegistrar>(
         throw new Error("At least one of the IpcRendererFunctions is undefined.");
     }
 
-    FactoryContextRef.Ref = createContext<ThisEventContext>(OutValue);
+    FactoryContextRef.Ref = createContext<ThisEventContext>(value);
 
     const FactoryContextCast: Context<ThisEventContext> = FactoryContextRef.Ref as Context<ThisEventContext>;
 
-    if (!AreRendererFunctionsValid && failSilently)
-    {
-        return children;
-    }
-    else
+    return ({ children }: PropsWithChildren): ReactNode =>
     {
         return (
-            <FactoryContextCast.Provider value={ OutValue }>
+            <FactoryContextCast.Provider { ...{ value } }>
                 { children }
             </FactoryContextCast.Provider>
         );
-    }
+    };
 };

@@ -53,7 +53,7 @@ const ElectronHandler =
                 {
                     return "[ Function ]";
                 }
-                else // typeof In extends string | number | null | undefined | boolean;
+                else // In extends string | number | null | undefined | boolean;
                 {
                     return In;
                 }

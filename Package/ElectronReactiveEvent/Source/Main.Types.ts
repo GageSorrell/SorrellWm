@@ -7,13 +7,14 @@
 import type { BrowserWindow } from "electron/main";
 import type {
     NoRequestChannel,
-    RegisterCallback,
+    MainRegisterCallback,
     RegisterCallbacks,
     Request,
     RequestChannel,
     Response,
     UnregisterCallback,
     UnregisterCallbacks } from "./index.js";
+import type { IMainRegistrarBase, IRendererRegistrarBase } from "./Registrar.Types.js";
 
 export type SendEventReturn<
     ChannelType extends RequestChannel<Registrar> | NoRequestChannel<Registrar>,
@@ -42,12 +43,12 @@ export type Send<Registrar> =
         ): Promise<SendEventReturn<ChannelType, WindowType, Registrar>>;
     };
 
-export type MainEventFactoryReturn<MainRegistrar, RendererRegistrar> =
+export type MainEventFactoryReturn<MainRegistrar extends IMainRegistrarBase, RendererRegistrar extends IRendererRegistrarBase> =
     {
-        registerCallback: RegisterCallback<RendererRegistrar>;
-        registerCallbacks: RegisterCallbacks<RendererRegistrar>;
+        registerCallback: MainRegisterCallback<RendererRegistrar>;
+        registerCallbacks: RegisterCallbacks<"Main", RendererRegistrar>;
         send: Send<MainRegistrar>;
         unregisterCallback: UnregisterCallback<RendererRegistrar>;
-        unregisterCallbacks: UnregisterCallbacks<RendererRegistrar>;
+        unregisterCallbacks: UnregisterCallbacks<"Main", RendererRegistrar>;
         unregisterAll: () => void;
     };

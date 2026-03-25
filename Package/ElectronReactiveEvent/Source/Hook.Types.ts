@@ -4,28 +4,29 @@
  * License:   MIT
  */
 
-import type { Callback, CallbackRecord, RegisterCallback, RegisterCallbacks } from "./index.js";
-import type { Channel } from "./Internal/index.js";
+import type { CallbackRecord, RegisterCallbacks, RendererCallback, RendererRegisterCallback } from "./index.js";
+import type { Channel, IRegistrarBase, RegistrarOwner } from "./Internal/index.js";
+import type { IMainRegistrarBase } from "./Registrar.Types.js";
 
-export type UseEventCallbackDeferred<Registrar> =
-    () => Readonly<[ RegisterCallback<Registrar> ]>;
+export type UseEventCallbackDeferred<MainRegistrar extends IMainRegistrarBase> =
+    () => Readonly<[ RendererRegisterCallback<MainRegistrar> ]>;
 
-export type UseEventCallbacksDeferred<Registrar> =
-    () => Readonly<[ RegisterCallbacks<Registrar> ]>;
+export type UseEventCallbacksDeferred<MainRegistrar extends IMainRegistrarBase> =
+    () => Readonly<[ RegisterCallbacks<"Renderer", MainRegistrar> ]>;
 
 export type UseUnregisterCallbackDeferred<MainRegistrar> =
     () => Readonly<[ UnregisterCallback: UnregisterCallback<MainRegistrar> ]>;
 
-export type UseUnregisterCallbacksDeferred<MainRegistrar> =
-    () => Readonly<[ UnregisterCallbacks: UnregisterCallbacks<MainRegistrar> ]>;
+export type UseUnregisterCallbacksDeferred<MainRegistrar extends IMainRegistrarBase> =
+    () => Readonly<[ UnregisterCallbacks: UnregisterCallbacks<"Renderer", MainRegistrar> ]>;
 
 export type UnregisterCallback<Registrar> =
     <ChannelType extends Channel<Registrar>>(
         Channel: ChannelType,
-        Callback: Callback<ChannelType, Registrar>
+        Callback: RendererCallback<ChannelType, Registrar>
     ) => void;
 
-export type UnregisterCallbacks<Registrar> =
+export type UnregisterCallbacks<Owner extends RegistrarOwner, Registrar extends IRegistrarBase> =
     <ChannelType extends Channel<Registrar>>(
-        Record: CallbackRecord<ChannelType, Registrar>
+        Record: CallbackRecord<ChannelType, Owner, Registrar>
     ) => void;

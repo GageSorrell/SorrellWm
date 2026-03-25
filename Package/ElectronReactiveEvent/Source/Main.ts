@@ -10,15 +10,18 @@ import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain } from "electron";
 import type {
     CallbackRecord,
     CallbackReturn,
+    MainCallback,
     MainEventFactoryReturn,
     NoRequestChannel,
+    MainRegisterCallback,
     Request,
     RequestChannel,
     Response } from "./index.js";
-import type { Channel, ResponseInternal } from "./Internal/index.js";
-import { type Callback, GetResponseChannel } from "./index.js";
+import type { Channel, MainCallbackArgumentInternal, MainCallbackInternal, ResponseInternal } from "./Internal/index.js";
+import { type MainCallback as Callback, GetResponseChannel } from "./index.js";
+import type { IMainRegistrarBase, IRendererRegistrarBase } from "./Registrar.Types.js";
 
-export const GetMainReactiveEventFunctions = <MainRegistrar, RendererRegistrar>(
+export const GetMainReactiveEventFunctions = <MainRegistrar extends IMainRegistrarBase, RendererRegistrar extends IRendererRegistrarBase>(
 ): MainEventFactoryReturn<MainRegistrar, RendererRegistrar> =>
 {
     type CallbackWrapper = Parameters<typeof ipcMain.handle>[1];
@@ -130,16 +133,27 @@ export const GetMainReactiveEventFunctions = <MainRegistrar, RendererRegistrar>(
 
     function registerCallback<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
-        Callback: Callback<typeof Channel, RendererRegistrar>
+        Callback: MainCallback<typeof Channel, RendererRegistrar>
     ): void
     {
         ipcMain.removeHandler(Channel);
 
         type WrapperReturnType = Awaited<CallbackReturn<ChannelType, RendererRegistrar>>;
-        const Wrapper = async (_Event: IpcMainInvokeEvent, Request: unknown): Promise<ResponseInternal> =>
+        const Wrapper = async (Event: IpcMainInvokeEvent, InRequest: unknown): Promise<ResponseInternal> =>
         {
-            const Response: WrapperReturnType =
-                await Callback(Request as Request<typeof Channel, RendererRegistrar>);
+            type ThisCallbackArgument = MainCallbackArgumentInternal<typeof Channel, RendererRegistrar>;
+            type ThisRequest = Request<typeof Channel, RendererRegistrar>;
+            const Request: ThisRequest = InRequest as ThisRequest;
+            const CallbackArgument: ThisCallbackArgument =
+            {
+                Event,
+                Request
+            };
+
+            const CallbackCast: MainCallbackInternal<typeof Channel, RendererRegistrar> =
+                Callback as MainCallbackInternal<typeof Channel, RendererRegistrar>;
+
+            const Response: WrapperReturnType = await CallbackCast(CallbackArgument);
             if (Response !== undefined)
             {
                 return "Data" in Response
@@ -176,10 +190,22 @@ export const GetMainReactiveEventFunctions = <MainRegistrar, RendererRegistrar>(
         ipcMain.removeHandler(Channel);
     }
 
+    type FOne = MainRegisterCallback<RendererRegistrar>;
+    type FTwo = typeof registerCallback;
+    type FThree = FOne & FTwo;
+    // function FooRegister: RegisterCallback<RendererRegistrar> = <ChannelType extends Channel<RendererRegistrar>>(
+    function FooRegister<ChannelType extends Channel<RendererRegistrar>>(
+        Channel: ChannelType,
+        Callback: MainCallback<ChannelType, RendererRegistrar>
+    ): void
+    {
+
+    };
+
     return {
         registerCallback,
         registerCallbacks: <ChannelType extends Channel<RendererRegistrar>>(
-            Record: CallbackRecord<ChannelType, RendererRegistrar>
+            Record: CallbackRecord<ChannelType, "Main", RendererRegistrar>
         ): void =>
         {
             if (Callbacks === undefined)
@@ -203,7 +229,7 @@ export const GetMainReactiveEventFunctions = <MainRegistrar, RendererRegistrar>(
         },
         unregisterCallback: unregisterCallback,
         unregisterCallbacks: <ChannelType extends Channel<RendererRegistrar>>(
-            Record: CallbackRecord<ChannelType, RendererRegistrar>
+            Record: CallbackRecord<ChannelType, "Main", RendererRegistrar>
         ): void =>
         {
             const UnregisterEntry = ([ InChannel /* , InCallback */ ]: [ string, unknown ]): void =>

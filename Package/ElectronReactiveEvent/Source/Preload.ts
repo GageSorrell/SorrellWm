@@ -5,7 +5,7 @@
  */
 
 import { contextBridge, ipcRenderer } from "electron/renderer";
-import type { IpcRendererFunctions, ReactiveEventPreloadData } from "./index.js";
+import type { IpcRendererFunctions } from "./index.js";
 
 /**
  * Exposes the necessary `ipcRenderer` functions to the `renderer`.
@@ -26,26 +26,3 @@ export function preloadElectronReactiveEvent(ipcRendererFunctions?: IpcRendererF
 
     contextBridge.exposeInMainWorld("electronReactiveEvent", ipcRendererFunctions);
 }
-
-/** @deprecated Use `PreloadElectronReactiveEvent`. */
-export const GetReactivePreloadData = (): ReactiveEventPreloadData =>
-{
-    const {
-        invoke,
-        off,
-        on,
-        once,
-        send
-    }: ReactiveEventPreloadData["electronReactiveEvent"] = ipcRenderer;
-
-    return {
-        electronReactiveEvent:
-        {
-            invoke,
-            off,
-            on,
-            once,
-            send
-        }
-    };
-};

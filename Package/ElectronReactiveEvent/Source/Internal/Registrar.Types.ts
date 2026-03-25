@@ -31,3 +31,12 @@ export type IsRegistrar<Registrar> =
             ? true
             : false
         : false;
+
+export type RegistrarOwner =
+    | "Main"
+    | "Renderer";
+
+export interface IRegistrarBase
+{
+    Owner: RegistrarOwner;
+}
