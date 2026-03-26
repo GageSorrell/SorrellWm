@@ -5,5 +5,6 @@
  */
 
 export * from "./Functional.Types.js";
+export * from "./Npm.js";
 export * from "./Promise.js";
 export * from "./Promise.Types.js";

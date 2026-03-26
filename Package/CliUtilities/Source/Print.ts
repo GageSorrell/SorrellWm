@@ -6,8 +6,16 @@
  *            to the user with consistent and aesthetic formatting.
  */
 
+import Chalk from "chalk";
+
+export function Code(Message: string): string
+{
+    return Chalk.reset(Chalk.redBright.bgHex("#B8BABC")(Message));
+}
+
 export function Format(Message: string): string
 {
+    // @TODO
     return Message;
 }
 

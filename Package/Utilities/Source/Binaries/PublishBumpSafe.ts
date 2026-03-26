@@ -7,8 +7,9 @@
 /* eslint-disable no-console */
 
 import { type ChildProcess, spawn } from "child_process";
-import { join } from "path";
+import { GetPackageRootDirectory } from "../Npm.js";
 import { readFile } from "fs/promises";
+import { resolve } from "path";
 
 type FPackageJson =
     {
@@ -83,7 +84,7 @@ async function RunCommand(
 
 async function ReadLocalPackageJson(): Promise<Required<FPackageJson>>
 {
-    const PackageJsonPath: string = join(process.cwd(), "package.json");
+    const PackageJsonPath: string = resolve(await GetPackageRootDirectory(), "package.json");
     const PackageJsonText: string = await readFile(PackageJsonPath, "utf8");
     const PackageJson: FPackageJson = JSON.parse(PackageJsonText) as FPackageJson;
 

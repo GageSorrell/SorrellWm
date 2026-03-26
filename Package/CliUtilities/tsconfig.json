@@ -1,5 +1,6 @@
 {
-    "compilerOptions": {
+    "compilerOptions":
+    {
         "rootDir": "./Source",
         "outDir": "./Distribution",
         "module": "nodenext",
@@ -23,12 +24,11 @@
         "noPropertyAccessFromIndexSignature": true,
         "strict": true,
         "jsx": "react-jsx",
-        "verbatimModuleSyntax": true,
         "isolatedModules": true,
         "noUncheckedSideEffectImports": true,
         "moduleDetection": "force",
         "skipLibCheck": true
     },
-    "include": [ "Source" ],
-    "exclude": [ "node_modules" ]
+    "include": [ "Source/**/*.ts", "Source/**/*.tsx" ],
+    "exclude": [ "node_modules", "Distribution" ]
 }

@@ -8,251 +8,217 @@
 
 /* eslint-disable no-console */
 
-import { Command, InvalidArgumentError } from "commander";
-import type {
-    FCommandName,
-    FOutputType,
-    IGenerationRequest,
-    IOptions } from "./Initialize.Types.js";
-import { dirname, resolve } from "path";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import clipboard from "clipboardy";
+import { Command } from "commander";
+import { type FCommandName } from "./index.js";
 
-const Program: Command = new Command();
-
-ConfigureProgram(Program);
-
-async function Main(): Promise<void>
+async function ConfigureProgram(_ProgramInstance: Command): Promise<void>
 {
-    const UserArguments: ReadonlyArray<string> = process.argv.slice(2);
-    const NormalizedUserArguments: Array<string> = NormalizeUserArguments(UserArguments);
+    // ProgramInstance
+    //     .name("create-electron-reactive-event")
+    //     .description("Generate boilerplate for Electron + React integrations.")
+    //     .showHelpAfterError()
+    //     .helpOption("-h, --help", "Display help information")
+    //     .helpCommand("help [command]", "Display help for command");
 
-    await Program.parseAsync(
-        NormalizedUserArguments,
-        {
-            from: "user"
-        }
-    );
+    // ProgramInstance.addCommand(await GetSetupCommand());
+    // ProgramInstance.addCommand(await GetRegisterCommand());
 }
 
-function MakeRegisterCommand(): Command
-{
-    const RegisterCommand: Command = new Command("setup");
+// function CreateCommand(
+//     CommandName: FCommandName
+// ): Command
+// {
+//     const CommandInstance: Command = new Command(CommandName);
 
-    // RegisterCommand.
+//     CommandInstance
+//         .description(GetCommandDescription(CommandName))
+//         .requiredOption(
+//             "-o, --output <Output Type>",
+//             "Output type: console | clipboard | file",
+//             ParseOutputType
+//         )
+//         .argument(
+//             "[ OutputPath ]",
+//             "Required when output type is \"file\""
+//         )
+//         .action(
+//             async (
+//                 OutputPathRaw: string | undefined,
+//                 OptionsRaw: IOptions,
+//                 ActionCommand: Command
+//             ): Promise<void> =>
+//             {
+//                 const Request: IGenerationRequest = BuildGenerationRequest(
+//                     CommandName,
+//                     OptionsRaw,
+//                     OutputPathRaw,
+//                     ActionCommand
+//                 );
 
-    return RegisterCommand;
-}
+//                 const GeneratedContent: string = BuildGeneratedContent(CommandName);
 
-function ConfigureProgram(ProgramInstance: Command): void
-{
-    ProgramInstance
-        .name("create-electron-reactive-event")
-        .description("Generate boilerplate for Electron + React integrations.")
-        .showHelpAfterError()
-        .helpOption("-h, --help", "Display help information")
-        .helpCommand("help [command]", "Display help for command");
+//                 await EmitGeneratedContent(Request, GeneratedContent);
+//             }
+//         );
 
-    ProgramInstance.addCommand(MakeSetupCommand());
-    ProgramInstance.addCommand(MakeRegisterCommand());
-}
+//     return CommandInstance;
+// }
 
-function CreateCommand(
-    CommandName: FCommandName
-): Command
-{
-    const CommandInstance: Command = new Command(CommandName);
+// function GetCommandDescription(CommandName: FCommandName): string
+// {
+//     switch (CommandName)
+//     {
+//         case "preload":
+//         {
+//             return "Generate preload boilerplate.";
+//         }
 
-    CommandInstance
-        .description(GetCommandDescription(CommandName))
-        .requiredOption(
-            "-o, --output <Output Type>",
-            "Output type: console | clipboard | file",
-            ParseOutputType
-        )
-        .argument(
-            "[ OutputPath ]",
-            "Required when output type is \"file\""
-        )
-        .action(
-            async (
-                OutputPathRaw: string | undefined,
-                OptionsRaw: IOptions,
-                ActionCommand: Command
-            ): Promise<void> =>
-            {
-                const Request: IGenerationRequest = BuildGenerationRequest(
-                    CommandName,
-                    OptionsRaw,
-                    OutputPathRaw,
-                    ActionCommand
-                );
+//         case "provider":
+//         {
+//             return "Generate provider boilerplate.";
+//         }
+//     }
+// }
 
-                const GeneratedContent: string = BuildGeneratedContent(CommandName);
+// function ParseOutputType(
+//     OutputTypeRaw: string
+// ): FOutputType
+// {
+//     switch (OutputTypeRaw)
+//     {
+//         case "console":
+//         case "clipboard":
+//         case "file":
+//         {
+//             return OutputTypeRaw;
+//         }
 
-                await EmitGeneratedContent(Request, GeneratedContent);
-            }
-        );
+//         default:
+//         {
+//             throw new InvalidArgumentError(
+//                 "Output type must be exactly one of \"console\", \"clipboard\", or \"file\"."
+//             );
+//         }
+//     }
+// }
 
-    return CommandInstance;
-}
+// function BuildGenerationRequest(
+//     CommandName: FCommandName,
+//     Options: IOptions,
+//     OutputPathRaw: string | undefined,
+//     ActionCommand: Command
+// ): IGenerationRequest
+// {
+//     if (Options.Output === "file")
+//     {
+//         if (OutputPathRaw === undefined)
+//         {
+//             ActionCommand.error(
+//                 "When --output file is used, you must also provide an output path immediately afterward."
+//             );
+//         }
 
-function GetCommandDescription(CommandName: FCommandName): string
-{
-    switch (CommandName)
-    {
-        case "preload":
-        {
-            return "Generate preload boilerplate.";
-        }
+//         const OutputPath: string = resolve(OutputPathRaw);
+//         const OutputPathExists: boolean = existsSync(OutputPath);
 
-        case "provider":
-        {
-            return "Generate provider boilerplate.";
-        }
-    }
-}
+//         return {
+//             CommandName,
+//             OutputType: Options.Output,
+//             OutputPath,
+//             OutputPathExists
+//         };
+//     }
 
-function ParseOutputType(
-    OutputTypeRaw: string
-): FOutputType
-{
-    switch (OutputTypeRaw)
-    {
-        case "console":
-        case "clipboard":
-        case "file":
-        {
-            return OutputTypeRaw;
-        }
+//     if (OutputPathRaw !== undefined)
+//     {
+//         ActionCommand.error(
+//             "An output path may only be provided when --output file is used."
+//         );
+//     }
 
-        default:
-        {
-            throw new InvalidArgumentError(
-                "Output type must be exactly one of \"console\", \"clipboard\", or \"file\"."
-            );
-        }
-    }
-}
+//     return {
+//         CommandName,
+//         OutputType: Options.Output,
+//         OutputPath: undefined,
+//         OutputPathExists: false
+//     };
+// }
 
-function BuildGenerationRequest(
-    CommandName: FCommandName,
-    Options: IOptions,
-    OutputPathRaw: string | undefined,
-    ActionCommand: Command
-): IGenerationRequest
-{
-    if (Options.Output === "file")
-    {
-        if (OutputPathRaw === undefined)
-        {
-            ActionCommand.error(
-                "When --output file is used, you must also provide an output path immediately afterward."
-            );
-        }
-
-        const OutputPath: string = resolve(OutputPathRaw);
-        const OutputPathExists: boolean = existsSync(OutputPath);
-
-        return {
-            CommandName,
-            OutputType: Options.Output,
-            OutputPath,
-            OutputPathExists
-        };
-    }
-
-    if (OutputPathRaw !== undefined)
-    {
-        ActionCommand.error(
-            "An output path may only be provided when --output file is used."
-        );
-    }
-
-    return {
-        CommandName,
-        OutputType: Options.Output,
-        OutputPath: undefined,
-        OutputPathExists: false
-    };
-}
-
-function BuildGeneratedContent(CommandName: FCommandName): string
-{
-    return "";
-};
+// function BuildGeneratedContent(CommandName: FCommandName): string
+// {
+//     return "";
+// };
 
 // async function MakeConfig(): Promise<string>
 // {
 //     const Root: string = await GetRootDirectory();
-
-
+//
 // }
 
-async function EmitGeneratedContent(Request: IGenerationRequest, GeneratedContent: string): Promise<void>
-{
-    switch (Request.OutputType)
-    {
-        case "console":
-        {
-            console.log(GeneratedContent);
-            return;
-        }
+// async function EmitGeneratedContent(Request: IGenerationRequest, GeneratedContent: string): Promise<void>
+// {
+//     switch (Request.OutputType)
+//     {
+//         case "console":
+//         {
+//             console.log(GeneratedContent);
+//             return;
+//         }
 
-        case "clipboard":
-        {
-            clipboard.write(GeneratedContent);
-            console.log("Output has been written to the clipboard.");
-            return;
-        }
+//         case "clipboard":
+//         {
+//             clipboard.write(GeneratedContent);
+//             console.log("Output has been written to the clipboard.");
+//             return;
+//         }
 
-        case "file":
-        {
-            await EmitFileOutput(Request, GeneratedContent);
-            return;
-        }
-    }
-}
+//         case "file":
+//         {
+//             await EmitFileOutput(Request, GeneratedContent);
+//             return;
+//         }
+//     }
+// }
 
-async function EmitFileOutput(Request: IGenerationRequest, GeneratedContent: string): Promise<void>
-{
-    if (Request.OutputPath === undefined)
-    {
-        throw new Error("OutputPath was unexpectedly undefined.");
-    }
+// async function EmitFileOutput(Request: IGenerationRequest, GeneratedContent: string): Promise<void>
+// {
+//     if (Request.OutputPath === undefined)
+//     {
+//         throw new Error("OutputPath was unexpectedly undefined.");
+//     }
 
-    mkdirSync(dirname(Request.OutputPath), { recursive: true });
+//     mkdirSync(dirname(Request.OutputPath), { recursive: true });
 
-    if (Request.OutputPathExists === true)
-    {
-        const ExistingContent: string = readFileSync(
-            Request.OutputPath,
-            "utf8"
-        );
+//     if (Request.OutputPathExists === true)
+//     {
+//         const ExistingContent: string = readFileSync(
+//             Request.OutputPath,
+//             "utf8"
+//         );
 
-        const UpdatedContent: string = MergeWithExistingFile(ExistingContent, GeneratedContent);
+//         const UpdatedContent: string = MergeWithExistingFile(ExistingContent, GeneratedContent);
 
-        writeFileSync(Request.OutputPath, UpdatedContent, "utf8");
+//         writeFileSync(Request.OutputPath, UpdatedContent, "utf8");
 
-        console.log(`Updated existing file: "${ Request.OutputPath }"`);
-    }
-    else
-    {
-        writeFileSync(Request.OutputPath, GeneratedContent, "utf8");
+//         console.log(`Updated existing file: "${ Request.OutputPath }"`);
+//     }
+//     else
+//     {
+//         writeFileSync(Request.OutputPath, GeneratedContent, "utf8");
 
-        console.log(`Created new file: "${ Request.OutputPath }"`);
-    }
-}
+//         console.log(`Created new file: "${ Request.OutputPath }"`);
+//     }
+// }
 
-function MergeWithExistingFile(ExistingContent: string, GeneratedContent: string): string
-{
-    return [
-        ExistingContent,
-        "",
-        GeneratedContent,
-        ""
-    ].join("\n");
-}
+// function MergeWithExistingFile(ExistingContent: string, GeneratedContent: string): string
+// {
+//     return [
+//         ExistingContent,
+//         "",
+//         GeneratedContent,
+//         ""
+//     ].join("\n");
+// }
 
 function NormalizeUserArguments(UserArguments: ReadonlyArray<string>): Array<string>
 {
@@ -261,7 +227,7 @@ function NormalizeUserArguments(UserArguments: ReadonlyArray<string>): Array<str
     let IsExpectingOutputValue: boolean = false;
     let IsExpectingOutputPath: boolean = false;
 
-    for (let Index: number = 0; Index < UserArguments.length; Index += 1)
+    for (let Index: number = 0; Index < UserArguments.length; Index++)
     {
         const UserArgument: string | undefined = UserArguments[Index];
 
@@ -381,7 +347,7 @@ function ShouldTreatAsHelpCommand(UserArguments: ReadonlyArray<string>, Index: n
     const IsAskingForCommandDescription: boolean = (
         UserArguments.length === 2 &&
         Index === 1 &&
-        IsGeneratorCommandName(UserArguments[0] || "")
+        IsCommandName(UserArguments[0] || "")
     );
 
     if (IsAskingForCommandDescription)
@@ -392,9 +358,28 @@ function ShouldTreatAsHelpCommand(UserArguments: ReadonlyArray<string>, Index: n
     return false;
 }
 
-function IsGeneratorCommandName(Value: string): Value is FCommandName
+function IsCommandName(Value: string): Value is FCommandName
 {
     return [ "setup", "register" ].includes(Value);
+}
+
+async function Main(): Promise<void>
+{
+    const Program: Command = new Command();
+    ConfigureProgram(Program);
+
+    const UserArguments: ReadonlyArray<string> = process.argv;
+    const NormalizedUserArguments: Array<string> = NormalizeUserArguments(UserArguments);
+
+    console.log("UserArguments:\n", JSON.stringify(UserArguments, null, 4));
+    console.log("NormalizedUserArguments:\n", JSON.stringify(NormalizedUserArguments, null, 4));
+
+    await Program.parseAsync(
+        NormalizedUserArguments,
+        {
+            from: "user"
+        }
+    );
 }
 
 Main();

@@ -13,15 +13,13 @@
     "scripts": {
         "build": "tsc -p tsconfig.json",
         "clean": "rimraf ./Distribution",
-        "prepublishOnly": "npm run build",
-        "init": "npm run build && node ./Distribution/Initialize.js"
+        "prepublishOnly": "npm run build"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.4",
         "@stylistic/eslint-plugin": "^5.10.0",
         "@types/react": "^19.2.14",
         "@typescript-eslint/eslint-plugin": "^8.57.1",
-        "@typescript/native-preview": "^7.0.0-dev.20260326.1",
         "eslint": "^9.39.4",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.0.1",

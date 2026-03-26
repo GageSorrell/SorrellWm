@@ -28,6 +28,6 @@
         "moduleDetection": "force",
         "skipLibCheck": true
     },
-    "include": [ "Source" ],
-    "exclude": [ "node_modules" ]
+    "include": [ "Source/**/*.ts", "Source/**/*.tsx" ],
+    "exclude": [ "node_modules", "Distribution" ]
 }

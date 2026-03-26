@@ -1,4 +1,4 @@
-/* File:      Utility.ts
+/* File:      Npm.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
@@ -9,7 +9,7 @@ import { basename, dirname, extname, join } from "path";
 import { constants as FsConstants } from "fs";
 import Process from "process";
 
-export async function GetRootDirectory(): Promise<string>
+export async function GetPackageRootDirectory(): Promise<string>
 {
     let CurrentDirectory: string = await realpath(Process.cwd());
 

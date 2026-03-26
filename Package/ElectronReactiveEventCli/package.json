@@ -1,7 +1,10 @@
 {
-    "bin": "node ./Distribution/index.js",
+    "bin": {
+        "register": "./Distribution/Register.js",
+        "setup": "./Distribution/Setup.js"
+    },
     "name": "electron-reactive-event-cli",
-    "version": "1.0.0",
+    "version": "1.0.30",
     "description": "Helper package to integrate electron-reactive-event in your Electron- and React-based app.",
     "keywords": [
         "electron",
@@ -12,10 +15,7 @@
         "event",
         "react-hooks"
     ],
-    "files": [
-        "./Schema.json"
-    ],
-    "homepage": "https://github.com/GageSorrell/SorrellWm",
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Package/ElectronReactiveEventCli",
     "bugs": {
         "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
@@ -27,23 +27,30 @@
     "author": "Gage Sorrell <gage@sorrell.sh>",
     "type": "module",
     "main": "./Distribution/index.js",
+    "types": "./Distribution/index.d.ts",
+    "files": [
+        "./package.json",
+        "./Distribution/**/*"
+    ],
     "scripts": {
-        "build": "tsc -p tsconfig.json",
+        "build": "tsgo -p tsconfig.json",
         "build-schema": "npx typescript-json-schema ./tsconfig.json FCliConfig --out ./Schema.json"
     },
     "devDependencies": {
         "@types/node": "^25.5.0",
         "@typescript/native-preview": "^7.0.0-dev.20260326.1",
-        "typescript": "^5.9.3",
         "typescript-json-schema": "^0.67.1"
     },
     "dependencies": {
         "@inquirer/prompts": "^8.3.2",
-        "@sorrell/cli-utilities": "file:../CliUtilities",
+        "@sorrell/cli-utilities": "^1.0.10",
+        "@sorrell/utilities": "^1.0.18",
         "chalk": "^5.6.2",
         "cli-table3": "^0.6.5",
         "clipboardy": "^5.3.1",
         "commander": "^14.0.3",
-        "ora": "^9.3.0"
+        "inquirer-file-selector": "^1.0.1",
+        "ora": "^9.3.0",
+        "typescript": "^6.0.2"
     }
 }
