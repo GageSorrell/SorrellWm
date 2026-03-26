@@ -1,5 +1,5 @@
 {
-  "name": "Build",
+  "name": "build",
   "packageManager": "yarn@4.5.3",
   "version": "0.0.1",
   "type": "module",

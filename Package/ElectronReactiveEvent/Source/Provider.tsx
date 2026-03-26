@@ -41,13 +41,14 @@ import type {
     ResponseInternal,
     RendererResponseInternal,
     RendererCallbackInternal,
-    RendererCallbackArgumentInternal } from "./Internal/index.js";
+    RendererCallbackArgumentInternal,
+    IRegistrarBase} from "./Internal/index.js";
 
 export const FactoryContextRef: { Ref: unknown | undefined; } = { Ref: undefined };
 
 const ResponsePromiseCache: Map<string, Promise<unknown>> = new Map<string, Promise<unknown>>();
 
-function GetCacheKey<ChannelType extends keyof Registrar, Registrar>(
+function GetCacheKey<ChannelType extends Channel<Registrar>, Registrar extends IRegistrarBase>(
     Channel: ChannelType,
     Request: unknown
 ): string
@@ -101,7 +102,7 @@ export const GetReactiveEventProvider = <
     type ThisCallbackRecord<ChannelType extends Channel<MainRegistrar>> =
         CallbackRecord<ChannelType, "Renderer", MainRegistrar>;
 
-    function GetOrCreateResponsePromise<ChannelType extends keyof RendererRegistrar>(
+    function GetOrCreateResponsePromise<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: unknown
     ): Promise<ResponseInternal>
@@ -122,14 +123,14 @@ export const GetReactiveEventProvider = <
         return ResponsePromise;
     }
 
-    function UseSendEventSuspends<ChannelType extends keyof RendererRegistrar>(
+    function UseSendEventSuspends<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: Request<ChannelType, RendererRegistrar> | undefined
     ): RendererResponseInternal
     {
         const InitialResponse: ResponseInternal = use(
-            GetOrCreateResponsePromise<keyof RendererRegistrar>(
-                Channel as keyof RendererRegistrar, Request
+            GetOrCreateResponsePromise<Channel<RendererRegistrar>>(
+                Channel as Channel<RendererRegistrar>, Request
             )
         );
 
@@ -141,7 +142,7 @@ export const GetReactiveEventProvider = <
         };
     }
 
-    function UseSendEventNoSuspend<ChannelType extends Extract<keyof RendererRegistrar, string>>(
+    function UseSendEventNoSuspend<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: undefined | Request<ChannelType, RendererRegistrar>
     ): RendererResponseInternal
@@ -198,7 +199,7 @@ export const GetReactiveEventProvider = <
         Request: undefined,
         Suspend: boolean
     ): UseSendEventReturn<ChannelType, RendererRegistrar>;
-    function useSendEvent<ChannelType extends Extract<keyof RendererRegistrar, string>>(
+    function useSendEvent<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request?: Request<ChannelType, RendererRegistrar>,
         Suspend?: boolean
@@ -446,7 +447,7 @@ export const GetReactiveEventProvider = <
         Object.entries(Record).forEach(RegisterEntry);
     };
 
-    const UnregisterCallback = <ChannelType extends keyof MainRegistrar>(
+    const UnregisterCallback = <ChannelType extends Channel<MainRegistrar>>(
         Channel: ChannelType,
         Callback: RendererCallback<typeof Channel, MainRegistrar>
     ): void =>

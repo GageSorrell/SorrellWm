@@ -72,17 +72,6 @@ export type TArrayNonempty<Type = unknown> = [ Type, ...TArray<Type> ];
 export type TMatrix<Type> = TArray<TArray<Type>>;
 export type TSafeMatrix<Type> = TArrayNonempty<TArrayNonempty<Type>>;
 
-export type TExtractFunction<Type> =
-    Type extends { (...Arguments: infer ArgumentVectorType): infer ReturnType }
-        ? (...Arguments: ArgumentVectorType) => ReturnType
-        : never;
-
-export type TPromiseThenFunction<ParameterType = unknown, ReturnType = unknown> =
-    (Value: ParameterType) => ReturnType;
-
-export type TPromiseCatchFunction<Type = unknown> =
-    Parameters<TExtractFunction<Promise<Type>["catch"]>>[0];
-
 export type FPathKey = number | string;
 export type FPathRecord = Record<FPathKey, unknown>;
 

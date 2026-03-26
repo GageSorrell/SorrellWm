@@ -91,7 +91,7 @@ export function MakeEventHooks<MainRegistrar extends IMainRegistrarBase, Rendere
         Request: undefined,
         Suspend: boolean
     ): UseSendEventReturn<typeof Channel, RendererRegistrar>;
-    function useSendEvent<ChannelType extends keyof RendererRegistrar>(
+    function useSendEvent<ChannelType extends Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request?: Request<typeof Channel, RendererRegistrar>,
         Suspend?: boolean
@@ -111,7 +111,7 @@ export function MakeEventHooks<MainRegistrar extends IMainRegistrarBase, Rendere
         return WrapHook("useSendEventDeferred") as ThisReturnType;
     }
 
-    function useEventCallback<ChannelType extends keyof MainRegistrar>(
+    function useEventCallback<ChannelType extends Channel<MainRegistrar>>(
         Channel: ChannelType,
         Callback: RendererCallback<ChannelType, MainRegistrar>
     ): void

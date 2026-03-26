@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
+import type { FResponseDeclNone, TEventDecl } from "electron-reactive-event";
 import type { FAxis } from "../../Shared/Shared.Types";
 import type { FFocusDataBase } from "./Focus.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";

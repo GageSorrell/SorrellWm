@@ -7,11 +7,11 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 import type { FIpcFrontendChannel, TEventCallback } from "../../Shared";
-import { GetPreload } from "@sorrellwm/event";
+// import { GetPreload } from "electron-reactive-event";
 
 const ElectronHandler =
 {
-    ...GetPreload(ipcRenderer),
+    // ...GetPreload(ipcRenderer),
     ipcRenderer:
     {
         GetId(): Promise<unknown>

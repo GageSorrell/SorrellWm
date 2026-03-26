@@ -6,7 +6,7 @@
 
 import type { FAnnotatedPanel, FPanel } from "../Tree.Types";
 import type { FHexColor, HMonitor } from "@sorrellwm/windows";
-import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
+import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "electron-reactive-event";
 import type { FExternalWindow } from "../Window/ExternalWindow.Types";
 import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FInsertableWindowData } from "./Insert.Types";

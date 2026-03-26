@@ -1,39 +1,42 @@
 {
-  "name": "sorrell-wm-monorepo",
-  "description": "The tiling window manager for everyone.",
-  "keywords": [
-    "electron",
-    "macos",
-    "windows-11",
-    "window-manager",
-    "wm",
-    "fluent-ui"
-  ],
-  "packageManager": "yarn@4.5.3",
-  "type": "module",
-  "workspaces": [
-    "./Package/**/*",
-    "!./Package/ElectronReactiveEventCli",
-    "!./Package/ElectronReactiveEvent",
-    "./Documentation",
-    "./Script/Build",
-    "./Script/CleanRepo"
-  ],
-  "scripts": {
-    "build": "cd ./Script/Build && npm run build && npm run start",
-    "setup": "yarn run set-up",
-    "set-up": "cd ./Package/ScriptUtility && yarn run build && cd ../../Script/Build && yarn run build && cd ../../Script/CleanRepo && yarn run build && cd ../../Application/Windows && npm link && cd .. && npm link --save @sorrellwm/windows && echo \"The build tool has been built and the repo's Win32 package has been linked via npm to the app.\""
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@stylistic/eslint-plugin": "^5.10.0",
-    "@types/node": "^25.0.3",
-    "eslint": "^9.39.4",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.2",
-    "typescript-eslint": "^8.57.2"
-  },
-  "private": true
+    "name": "sorrell-wm-monorepo",
+    "description": "The tiling window manager for everyone.",
+    "keywords": [
+        "electron",
+        "macos",
+        "windows-11",
+        "window-manager",
+        "wm",
+        "fluent-ui"
+    ],
+    "packageManager": "yarn@4.13.0",
+    "type": "module",
+    "workspaces": [
+        "./Package/**/*",
+        "!./Package/CliUtilities",
+        "!./Package/Utilities",
+        "!./Development/**/*",
+        "!./Package/ElectronReactiveEventCli",
+        "!./Package/ElectronReactiveEvent",
+        "./Documentation",
+        "./Script/Build",
+        "./Script/CleanRepo"
+    ],
+    "scripts": {
+        "build": "cd ./Script/Build && npm run build && npm run start",
+        "setup": "yarn run set-up",
+        "set-up": "cd ./Package/ScriptUtility && yarn run build && cd ../../Script/Build && yarn run build && cd ../../Script/CleanRepo && yarn run build && cd ../../Application/Windows && npm link && cd .. && npm link --save @sorrellwm/windows && echo \"The build tool has been built and the repo's Win32 package has been linked via npm to the app.\""
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.4",
+        "@stylistic/eslint-plugin": "^5.10.0",
+        "@types/node": "^25.0.3",
+        "eslint": "^9.39.4",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "ts-node": "^10.9.2",
+        "typescript": "^6.0.2",
+        "typescript-eslint": "^8.57.2"
+    },
+    "private": true
 }

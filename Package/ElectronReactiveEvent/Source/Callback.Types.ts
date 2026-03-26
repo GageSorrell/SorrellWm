@@ -4,8 +4,7 @@
  * License:   MIT
  */
 
-import type { IpcMainEvent, IpcMainInvokeEvent } from "electron/main";
-import type { EmptyEventParameter, Error, Request, Response } from "./index.js";
+import type { EmptyEventParameter, Error, IRendererRegistrarBase, Response } from "./index.js";
 import type {
     Channel,
     DeclHasResponseType,
@@ -17,8 +16,6 @@ import type {
     CallbackArgumentRequestPart,
     IRegistrarBase,
     RegistrarOwner} from "./Internal/index.js";
-import type { IpcRendererEvent } from "electron/renderer";
-import type { IRendererRegistrarBase } from "./Registrar.Types.js";
 
 export type CallbackErrorReturn<
     ChannelType extends keyof Registrar,
@@ -40,7 +37,10 @@ export type CallbackErrorReturn<
             : never
         : never;
 
-export type CallbackSuccessReturn<ChannelType extends keyof Registrar, Registrar> =
+export type CallbackSuccessReturn<
+    ChannelType extends Channel<Registrar>,
+    Registrar extends IRegistrarBase
+> =
     DeclHasResponseType<ChannelType, Registrar> extends true
         ? ResponseDeclKey extends keyof Registrar[ChannelType]
             ? Promise<{
@@ -49,11 +49,17 @@ export type CallbackSuccessReturn<ChannelType extends keyof Registrar, Registrar
             : Promise<never>
         : Promise<void>;
 
-export type CallbackReturn<ChannelType extends keyof Registrar, Registrar> =
+export type CallbackReturn<
+    ChannelType extends Channel<Registrar>,
+    Registrar extends IRegistrarBase
+> =
     | CallbackSuccessReturn<ChannelType, Registrar>
     | CallbackErrorReturn<ChannelType, Registrar>;
 
-export type AwaitedCallback<ChannelType extends keyof Registrar, Registrar> =
+export type AwaitedCallback<
+    ChannelType extends Channel<Registrar>,
+    Registrar extends IRegistrarBase
+> =
     Awaited<CallbackReturn<ChannelType, Registrar>>;
 
 // export type Callback<ChannelType extends keyof Registrar, Registrar> =
@@ -91,9 +97,9 @@ export type RendererCallbackArgument<ChannelType extends keyof Registrar, Regist
                 RendererCallbackArgumentBase &
                 CallbackArgumentRequestPart<ChannelType, Registrar>
             )
-        : never;
+        : RendererCallbackArgumentBase;
 
-export type MainCallbackArgument<ChannelType extends keyof Registrar, Registrar> =
+export type MainCallbackArgument<ChannelType extends Channel<Registrar>, Registrar extends IRegistrarBase> =
     RequestDeclKey extends keyof Registrar[ChannelType]
         ? EmptyEventParameter extends Registrar[ChannelType][RequestDeclKey]
             ? MainCallbackArgumentBase
@@ -101,20 +107,23 @@ export type MainCallbackArgument<ChannelType extends keyof Registrar, Registrar>
                 MainCallbackArgumentBase &
                 CallbackArgumentRequestPart<ChannelType, Registrar>
             )
-        : never;
+        : MainCallbackArgumentBase;
 
 /** `MainCallback`s live under `main`, *i.e.*, they receive `renderer` events. */
-export type MainCallback<ChannelType extends keyof Registrar, Registrar> =
+export type MainCallback<ChannelType extends Channel<Registrar>, Registrar extends IRegistrarBase> =
     (Argument: MainCallbackArgument<ChannelType, Registrar>)
         => CallbackReturn<ChannelType, Registrar>;
 
 /** `RendererCallback`s live under the `renderer`, *i.e.*, they receive `main` events. */
-export type RendererCallback<ChannelType extends keyof Registrar, Registrar> =
+export type RendererCallback<
+    ChannelType extends Channel<Registrar>,
+    Registrar extends IRegistrarBase
+> =
     (Argument: RendererCallbackArgument<ChannelType, Registrar>)
         => CallbackReturn<ChannelType, Registrar>;
 
 export type Callback<
-    ChannelType extends keyof Registrar,
+    ChannelType extends Channel<Registrar>,
     Owner extends RegistrarOwner,
     Registrar extends IRegistrarBase
 > =
@@ -124,7 +133,7 @@ export type Callback<
 
 /** Use this to define your event callbacks as a record. */
 export type CallbackRecord<
-    ChannelType extends keyof Registrar,
+    ChannelType extends Channel<Registrar>,
     Owner extends RegistrarOwner,
     Registrar extends IRegistrarBase
 > =
@@ -153,8 +162,8 @@ export type RegisterCallbacks<Owner extends RegistrarOwner, Registrar extends IR
 
 /** @Summary The result returned from `UseSendEvent` or `SendEventDeferred`. */
 export type RendererResponse<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
 > =
     DeclHasResponseType<ChannelType, RendererRegistrar> extends true
         ? ResponseDeclKey extends keyof RendererRegistrar[ChannelType]

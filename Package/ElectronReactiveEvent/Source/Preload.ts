@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import { contextBridge, ipcRenderer } from "electron/renderer";
+import { contextBridge, ipcRenderer } from "electron";
 import type { IpcRendererFunctions } from "./index.js";
 
 /**

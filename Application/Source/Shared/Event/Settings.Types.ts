@@ -5,7 +5,7 @@
  */
 
 import type { FExternalSetting, FSettings } from "../Settings";
-import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
+import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "electron-reactive-event";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FUpdateStatus =

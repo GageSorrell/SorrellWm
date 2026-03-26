@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FResponseDeclNone, TEventDecl } from "@sorrellwm/event";
+import type { FResponseDeclNone, TEventDecl } from "electron-reactive-event";
 import type { TIpcFrontendEvent } from "Source/Shared";
 
 declare module "../../Shared/Event/Event.Types.ts"

@@ -112,7 +112,7 @@ export type TIpcEventsBase<RegistrarType = unknown> =
     RegistrarType[Key];
 };
 
-/** @deprecated Use `TEventDecl` from `@sorrellwm/event`. */
+/** @deprecated Use `TEventDecl` from `electron-reactive-event`. */
 export type TIpcFrontendEvent<
     Request extends FNotFunction = FNotFunction,
     Response extends FResponseData = FResponseData,
@@ -124,7 +124,7 @@ export type TIpcFrontendEvent<
             ErrorString
         >;
 
-/** @deprecated Use `TEventDecl` from `@sorrellwm/event`. */
+/** @deprecated Use `TEventDecl` from `electron-reactive-event`. */
 export type TIpcBackendEvent<
     Request extends FNotFunction,
     Response extends FResponseData,

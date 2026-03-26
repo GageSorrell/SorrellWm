@@ -7,8 +7,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import type {
+    Channel,
     ErrorMessageDeclKey,
     ErrorPayloadDeclKey,
+    IRegistrarBase,
     IsValid,
     RequestDeclKey,
     ResponseDeclKey } from "./Internal/index.js";
@@ -18,7 +20,7 @@ import type { EmptyEventParameter } from "./index.js";
  * This is the type that the developer will return in their callbacks.
  * It varies from the type that is sent via IPC.
  */
-export type Response<ChannelType extends keyof Registrar, Registrar> =
+export type Response<ChannelType extends Channel<Registrar>, Registrar extends IRegistrarBase> =
     ResponseDeclKey extends keyof Registrar[ChannelType]
         ? Registrar[ChannelType][ResponseDeclKey]
         : never;

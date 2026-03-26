@@ -52,7 +52,7 @@ import {
 import { GetDevSettings, GetLogger, LogFrontend } from "#/Development";
 import { PoorEventFailureSimple, PoorEventSuccess, type TIpcCallback } from "#/Event";
 import type { IFrontendEventRegistrar } from "../../../Shared/Event/Event.Types";
-import type { TAwaitedCallback, TCallback, TCallbackReturnType } from "node_modules/@sorrellwm/event/Distribution/Internal";
+import type { TAwaitedCallback, TCallback, TCallbackReturnType } from "node_modules/electron-reactive-event/Distribution/Internal";
 
 const Log: FLogger = GetLogger("OverlayEvents");
 

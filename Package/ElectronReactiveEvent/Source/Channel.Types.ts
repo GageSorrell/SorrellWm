@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import type { EmptyEventParameter } from "./index.js";
-import type { RequestDeclKey, Values } from "./Internal/index.js";
+import type { Channel, IRegistrarBase, RequestDeclKey, Values } from "./Internal/index.js";
 
 type EquipEventDeclWithName<Registrar> =
     {
@@ -50,11 +50,15 @@ type ChannelsWithRequestHelper<Registrar> =
     };
 
 /** @Summary Channels whose event declarations specify a request type. */
-export type RequestChannel<Registrar> = Extract<Values<ChannelsWithRequestHelper<Registrar>>, string>;
+export type RequestChannel<Registrar extends IRegistrarBase> =
+    Extract<
+        Channel<Registrar>,
+        Values<ChannelsWithRequestHelper<Registrar>>
+    >;
 
 /** @Summary Channels whose event declarations do *not* specify a request type. */
-export type NoRequestChannel<Registrar> =
+export type NoRequestChannel<Registrar extends IRegistrarBase> =
     Extract<
-        Exclude<keyof Registrar, ChannelsWithRequestHelper<Registrar>>,
-        string
+        Channel<Registrar>,
+        ChannelsWithRequestHelper<Registrar>
     >;

@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { BrowserWindow } from "electron/main";
+import type { BrowserWindow } from "electron";
 import type {
     NoRequestChannel,
     MainRegisterCallback,
@@ -15,17 +15,18 @@ import type {
     UnregisterCallback,
     UnregisterCallbacks } from "./index.js";
 import type { IMainRegistrarBase, IRendererRegistrarBase } from "./Registrar.Types.js";
+import type { Channel, IRegistrarBase } from "./Internal/Registrar.Types.js";
 
 export type SendEventReturn<
-    ChannelType extends RequestChannel<Registrar> | NoRequestChannel<Registrar>,
+    ChannelType extends Extract<RequestChannel<Registrar> | NoRequestChannel<Registrar>, Channel<Registrar>>,
     WindowType extends BrowserWindow | Array<BrowserWindow>,
-    Registrar
+    Registrar extends IRegistrarBase
 > =
     WindowType extends Array<BrowserWindow>
         ? Array<Response<ChannelType, Registrar>>
         : Response<ChannelType, Registrar>;
 
-export type Send<Registrar> =
+export type Send<Registrar extends IRegistrarBase> =
     {
         <ChannelType extends RequestChannel<Registrar>,
             WindowType extends BrowserWindow | Array<BrowserWindow>

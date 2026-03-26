@@ -8,7 +8,6 @@ import type { PropsWithChildren, ReactNode } from "react";
 import type {
     EmptyEventParameter,
     NoRequestChannel,
-    MainRegisterCallback,
     RegisterCallbacks,
     RendererResponse,
     Request,
@@ -18,8 +17,8 @@ import type {
     UseUnregisterCallbackDeferred,
     UseUnregisterCallbacksDeferred,
     RendererRegisterCallback} from "./index.js";
-import type { IRegistrarBase, ResponseDeclKey } from "./Internal/index.js";
 import type { IMainRegistrarBase, IRendererRegistrarBase } from "./Registrar.Types.js";
+import type { Channel, ResponseDeclKey } from "./Internal/index.js";
 
 export type EventProvider = ({ children }: PropsWithChildren) => ReactNode;
 
@@ -55,8 +54,8 @@ export type EventHooks<MainRegistrar extends IMainRegistrarBase, RendererRegistr
 export type ReactiveEventProviderComponent = ({ children }: PropsWithChildren) => ReactNode;
 
 export type UseSendEventReturn<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
 > =
     ResponseDeclKey extends keyof RendererRegistrar[ChannelType]
         ? EmptyEventParameter extends RendererRegistrar[ChannelType][ResponseDeclKey]
@@ -76,7 +75,7 @@ export type UseSendEventReturn<
             )
         : never;
 
-export type UseSendEvent<RendererRegistrar> =
+export type UseSendEvent<RendererRegistrar extends IRendererRegistrarBase> =
     {
         <ChannelType extends RequestChannel<RendererRegistrar>>(
             Channel: ChannelType,
@@ -96,12 +95,12 @@ export type UseSendEvent<RendererRegistrar> =
     };
 
 export type SendEventDeferredReturn<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
 > =
     Omit<RendererResponse<ChannelType, RendererRegistrar>, "IsPending">;
 
-export type SendEventDeferred<RendererRegistrar> =
+export type SendEventDeferred<RendererRegistrar extends IRendererRegistrarBase> =
     {
         <ChannelType extends NoRequestChannel<RendererRegistrar>>(
             Channel: ChannelType
@@ -113,11 +112,11 @@ export type SendEventDeferred<RendererRegistrar> =
         ): Promise<SendEventDeferredReturn<ChannelType, RendererRegistrar>>;
     };
 
-export type UseSendEventDeferred<RendererRegistrar> = () => Readonly<[
+export type UseSendEventDeferred<RendererRegistrar extends IRendererRegistrarBase> = () => Readonly<[
     SendEvent: SendEventDeferred<RendererRegistrar>
 ]>;
 
-export type SendEventDeferredBase<RendererRegistrar> =
+export type SendEventDeferredBase<RendererRegistrar extends IRendererRegistrarBase> =
     {
         <ChannelType extends NoRequestChannel<RendererRegistrar>>(
             Channel: ChannelType

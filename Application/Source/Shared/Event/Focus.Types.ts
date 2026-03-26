@@ -6,7 +6,7 @@
  *            do not otherwise have a good place to go.
  */
 
-import type { FRequestDeclNone, TEventDecl } from "@sorrellwm/event";
+import type { FRequestDeclNone, TEventDecl } from "electron-reactive-event";
 import type { FBox } from "@sorrellwm/windows";
 import type { FFocusChange } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";

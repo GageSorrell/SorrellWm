@@ -9,12 +9,11 @@
 import type { IsEventDecl } from "./Event.Types.js";
 import type { Values } from "./Utility.Types.js";
 
-export type Channel<
-    Registrar extends Record<KeyType, unknown>,
-    KeyType extends string = Extract<keyof Registrar, string>
-> = keyof Registrar extends string
-    ? keyof Registrar
-    : never;
+export type Channel<Registrar extends IRegistrarBase> =
+    Exclude<
+        keyof Registrar,
+        "Owner" | symbol | number
+    >;
 
 /** Map a registrar interface to its naturally-corresponding `Record` type. */
 export type RegistrarDecls<Registrar> =

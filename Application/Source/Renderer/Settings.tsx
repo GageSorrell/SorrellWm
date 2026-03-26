@@ -32,7 +32,7 @@ import type {
     TGetSetting,
     TUseSettingStateReturnType } from "./Settings.Types";
 // import { IsSuccessful, UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event.tsx.old";
-import { IsEventSuccess, type TSendEventDeferredReturnType } from "@sorrellwm/event";
+import { IsEventSuccess, type TSendEventDeferredReturnType } from "electron-reactive-event";
 import type { TInternal, TSetState } from "./Utility";
 import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
 import { UseSendEvent, UseSendEventDeferred } from "./Event";

@@ -4,21 +4,25 @@
  * License:   MIT
  */
 
-import type { RendererResponse, SendEventDeferredReturn } from "./index.js";
+import type { IRendererRegistrarBase, RendererResponse, SendEventDeferredReturn } from "./index.js";
+import type { Channel } from "./Internal/index.js";
 
 export function IsEventSuccess<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
+>(
     { Error, IsPending }: RendererResponse<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventSuccess<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
+>(
     { Error }: SendEventDeferredReturn<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventSuccess<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
+>(
     Response: (
         | RendererResponse<ChannelType, RendererRegistrar>
         | SendEventDeferredReturn<ChannelType, RendererRegistrar>
@@ -31,18 +35,21 @@ export function IsEventSuccess<
 }
 
 export function IsEventFailure<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
+>(
     Response: RendererResponse<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventFailure<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
+>(
     Response: SendEventDeferredReturn<ChannelType, RendererRegistrar>
 ): boolean;
 export function IsEventFailure<
-    ChannelType extends keyof RendererRegistrar,
-    RendererRegistrar>(
+    ChannelType extends Channel<RendererRegistrar>,
+    RendererRegistrar extends IRendererRegistrarBase
+>(
     Response:
         | RendererResponse<ChannelType, RendererRegistrar>
         | SendEventDeferredReturn<ChannelType, RendererRegistrar>

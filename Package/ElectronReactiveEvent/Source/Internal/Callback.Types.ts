@@ -6,7 +6,7 @@
 
 import type { IpcMainInvokeEvent, IpcRendererEvent } from "electron";
 import type { Callback, MainCallback, RendererCallback, Request } from "../index.js";
-import type { RequestDeclKey } from "./index.js";
+import type { Channel, IRegistrarBase, RequestDeclKey } from "./index.js";
 
 export type MainCallbackArgumentBase =
 {
@@ -55,10 +55,10 @@ export type MainCallbackArgumentInternal<ChannelType extends keyof Registrar, Re
     MainCallbackArgumentBase &
     CallbackArgumentRequestPart<ChannelType, Registrar>;
 
-export type MainCallbackInternal<ChannelType extends keyof Registrar, Registrar> =
+export type MainCallbackInternal<ChannelType extends Channel<Registrar>, Registrar extends IRegistrarBase> =
     (Argument: MainCallbackArgumentInternal<ChannelType, Registrar>)
         => ReturnType<MainCallback<ChannelType, Registrar>>;
 
-export type RendererCallbackInternal<ChannelType extends keyof Registrar, Registrar> =
+export type RendererCallbackInternal<ChannelType extends Channel<Registrar>, Registrar extends IRegistrarBase> =
     (Argument: RendererCallbackArgumentInternal<ChannelType, Registrar>)
         => ReturnType<RendererCallback<ChannelType, Registrar>>;

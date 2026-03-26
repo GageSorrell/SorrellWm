@@ -14,13 +14,13 @@ export type UseEventCallbackDeferred<MainRegistrar extends IMainRegistrarBase> =
 export type UseEventCallbacksDeferred<MainRegistrar extends IMainRegistrarBase> =
     () => Readonly<[ RegisterCallbacks<"Renderer", MainRegistrar> ]>;
 
-export type UseUnregisterCallbackDeferred<MainRegistrar> =
+export type UseUnregisterCallbackDeferred<MainRegistrar extends IMainRegistrarBase> =
     () => Readonly<[ UnregisterCallback: UnregisterCallback<MainRegistrar> ]>;
 
 export type UseUnregisterCallbacksDeferred<MainRegistrar extends IMainRegistrarBase> =
     () => Readonly<[ UnregisterCallbacks: UnregisterCallbacks<"Renderer", MainRegistrar> ]>;
 
-export type UnregisterCallback<Registrar> =
+export type UnregisterCallback<Registrar extends IRegistrarBase> =
     <ChannelType extends Channel<Registrar>>(
         Channel: ChannelType,
         Callback: RendererCallback<ChannelType, Registrar>

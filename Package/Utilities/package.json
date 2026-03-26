@@ -1,0 +1,41 @@
+{
+  "name": "@sorrell/utilities",
+  "version": "1.0.10",
+  "private": false,
+  "description": "Various TypeScript utilities.",
+  "keywords": [
+    "cli",
+    "utility",
+    "utilities",
+    "typescript",
+    "ts",
+    "inquirer",
+    "ora",
+    "commander"
+  ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Utilities",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "publish-bump-safe": "Distribution/Binaries/PublishBumpSafe.js"
+  },
+  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "type": "module",
+  "main": "./Distribution/index.js",
+  "scripts": {
+    "build": "tsgo -p tsconfig.json",
+    "no-prepublishOnly": "tsgo -p tsconfig.json",
+    "publish-bump-safe": "node ./Distribution/Binaries/PublishBumpSafe.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260326.1"
+  },
+  "dependencies": {}
+}

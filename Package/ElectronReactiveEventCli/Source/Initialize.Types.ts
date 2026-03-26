@@ -9,6 +9,11 @@ export type FOutputType =
     | "clipboard"
     | "file";
 
+export type FSetupOptions =
+    {
+        interactive: boolean;
+    };
+
 export type FCommandName =
     | "preload"
     | "provider";

@@ -9,16 +9,18 @@
 /* eslint-disable no-console */
 
 import { Command, InvalidArgumentError } from "commander";
+import type {
+    FCommandName,
+    FOutputType,
+    IGenerationRequest,
+    IOptions } from "./Initialize.Types.js";
 import { dirname, resolve } from "path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import type { FCommandName, FOutputType, IGenerationRequest, IOptions } from "./Initialize.Types.js";
 import clipboard from "clipboardy";
 
 const Program: Command = new Command();
 
 ConfigureProgram(Program);
-
-void Main();
 
 async function Main(): Promise<void>
 {
@@ -33,6 +35,15 @@ async function Main(): Promise<void>
     );
 }
 
+function MakeRegisterCommand(): Command
+{
+    const RegisterCommand: Command = new Command("setup");
+
+    // RegisterCommand.
+
+    return RegisterCommand;
+}
+
 function ConfigureProgram(ProgramInstance: Command): void
 {
     ProgramInstance
@@ -42,11 +53,11 @@ function ConfigureProgram(ProgramInstance: Command): void
         .helpOption("-h, --help", "Display help information")
         .helpCommand("help [command]", "Display help for command");
 
-    ProgramInstance.addCommand(CreateGenerateCommand("preload"));
-    ProgramInstance.addCommand(CreateGenerateCommand("provider"));
+    ProgramInstance.addCommand(MakeSetupCommand());
+    ProgramInstance.addCommand(MakeRegisterCommand());
 }
 
-function CreateGenerateCommand(
+function CreateCommand(
     CommandName: FCommandName
 ): Command
 {
@@ -168,34 +179,15 @@ function BuildGenerationRequest(
 
 function BuildGeneratedContent(CommandName: FCommandName): string
 {
-    switch (CommandName)
-    {
-        case "provider":
-        {
-            return `import { type EventProviderProps, ReactiveEventProvider } from "electron-reactive-event";
-import type { PropsWithChildren, ReactNode } from "react";
-
-export const MyReactiveEventProvider = ({ children }: PropsWithChildren): ReactNode =>
-{
-    /* Option 1: Provide a string-encoded path to the exposed \`ipcRenderer\` functions. */
-    const value: NonNullable<EventProviderProps["value"]> = "window.electron.electronReactiveEvent";
-
-    /* Option 2: If you expose the necessary \`ipcRenderer\` functions in a more *
-     * advanced workflow, and need custom logic to fetch them, then do so here.  */
-    // const value: EventProviderProps["value"] =
-
-    /* Add the \`failSilently\` prop if you do not call \`exposeInMainWorld\` synchronously *
-     * and want this component to be a no-op until the functions become available.          */
-    return (
-            <ReactiveEventProvider { ...{ value } }>
-                { children }
-            </ReactiveEventProvider>
-    )
+    return "";
 };
-`;
-        }
-    }
-}
+
+// async function MakeConfig(): Promise<string>
+// {
+//     const Root: string = await GetRootDirectory();
+
+
+// }
 
 async function EmitGeneratedContent(Request: IGenerationRequest, GeneratedContent: string): Promise<void>
 {
@@ -292,7 +284,14 @@ function NormalizeUserArguments(UserArguments: ReadonlyArray<string>): Array<str
             continue;
         }
 
-        if (UserArgument === "?" || UserArgument === "/?" || UserArgument === "/h" || UserArgument === "/help")
+        const IsHelpArgument: boolean = (
+            UserArgument === "?" ||
+            UserArgument === "/?" ||
+            UserArgument === "/h" ||
+            UserArgument === "/help"
+        );
+
+        if (IsHelpArgument)
         {
             NormalizedUserArguments.push("--help");
             continue;
@@ -395,5 +394,7 @@ function ShouldTreatAsHelpCommand(UserArguments: ReadonlyArray<string>, Index: n
 
 function IsGeneratorCommandName(Value: string): Value is FCommandName
 {
-    return [ "preload", "provider" ].includes(Value);
+    return [ "setup", "register" ].includes(Value);
 }
+
+Main();

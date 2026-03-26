@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { ipcRenderer } from "electron/renderer";
+import type { ipcRenderer } from "electron";
 
 export type IpcRendererFunctions =
     Pick<
