@@ -1,0 +1,49 @@
+{
+  "name": "ora-spinner-demo",
+  "private": false,
+  "version": "1.0.0",
+  "description": "View all Ora spinners simultaneously.",
+  "keywords": [
+    "ora",
+    "spinner",
+    "demo",
+    "demonstration",
+    "showcase",
+    "typescript",
+    "ts",
+    "cli"
+  ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm#readme",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "type": "module",
+  "files": [
+    "./Distribution/**/*",
+    "./Source/**/*",
+    "./ReadMe.md",
+    "./package.json",
+    "tsconfig.json"
+  ],
+  "main": "Distribution/index.js",
+  "types": "Distribution/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "demo": "node ./Distribution/index.js",
+    "start": "npm run build && npm run demo"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "cli-spinners": "^3.4.0",
+    "ora": "^9.3.0"
+  }
+}

@@ -4,4 +4,8 @@
  * License:   MIT
  */
 
+export * from "./Confirm.js";
+export * from "./Confirm.Types.js";
+export * from "./FileSelector.js";
+export * from "./FileSelector.Types.js";
 export * from "./Print.js";

@@ -6,11 +6,13 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type { AreArgumentsSerializable } from "./Internal/index.js";
+import type { AreArgumentsSerializable, RegistrarOwner } from "./Internal/index.js";
 
 export type EmptyEventParameter = [ never ];
 
 export type EventDecl<
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    OwnerType extends RegistrarOwner,
     RequestDeclType,
     ResponseDeclType,
     ErrorMessageDeclType,

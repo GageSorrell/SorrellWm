@@ -6,14 +6,14 @@
 
 import type { TExtractFunction } from "./index.js";
 
-export type TResult<DataType, ErrorType = unknown> =
+export type TTryResult<DataType> =
     | {
         Data: DataType;
         Error: undefined;
     }
     | {
         Data: undefined;
-        Error: ErrorType;
+        Error: unknown | undefined;
     };
 
 export type TPromiseThenFunction<ParameterType = unknown, ReturnType = unknown> =

@@ -31,12 +31,4 @@ export type FCliConfig =
 
         /** Where the module containing the `declare module` blocks will be written. */
         outPath: string;
-
-        /**
-         * The glob(s) of path(s) to modules containing your event declarations.
-         *
-         * If this property is not specified, then the paths given in the
-         * `include` property of your package's `tsconfig.json` will be used.
-         */
-        files?: Array<string>;
     };

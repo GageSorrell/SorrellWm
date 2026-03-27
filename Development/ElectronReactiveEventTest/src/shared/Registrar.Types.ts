@@ -4,7 +4,11 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventDecl, IMainRegistrarBase, IRendererRegistrarBase } from "electron-reactive-event";
+import type {
+    EmptyEventParameter,
+    EventDecl,
+    IMainRegistrarBase,
+    IRendererRegistrarBase } from "electron-reactive-event";
 
 export interface IMainRegistrar extends IMainRegistrarBase
 {

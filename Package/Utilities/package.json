@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.0.18",
+    "version": "1.1.6",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -23,15 +23,22 @@
     },
     "author": "Gage Sorrell <gage@sorrell.sh>",
     "type": "module",
-    "main": "./Distribution/index.js",
-    "types": "./Distribution/index.d.ts",
+    "files": [
+        "./Distribution/**/*",
+        "./Source/**/*",
+        "./ReadMe.md",
+        "./package.json",
+        "tsconfig.json"
+    ],
+    "main": "Distribution/index.js",
+    "types": "Distribution/index.d.ts",
     "scripts": {
-        "build": "tsgo -p tsconfig.json",
-        "publish-bump-safe": "node ./Distribution/Binaries/PublishBumpSafe.js"
+        "build": "tsc -p ./tsconfig.json",
+        "publish-bump-safe": "node ./Distribution/Binaries/PublishBumpSafe.js",
+        "ora": "node ./Distribution/Temp.js"
     },
     "devDependencies": {
         "@types/node": "^25.5.0",
-        "@typescript/native-preview": "^7.0.0-dev.20260326.1"
-    },
-    "dependencies": {}
+        "typescript": "^6.0.2"
+    }
 }

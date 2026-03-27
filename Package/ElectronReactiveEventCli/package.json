@@ -1,10 +1,10 @@
 {
     "bin": {
-        "register": "./Distribution/Register.js",
-        "setup": "./Distribution/Setup.js"
+        "register": "./Distribution/Register/RegisterCommandBin.js",
+        "setup": "./Distribution/Setup/SetupCommand.js"
     },
     "name": "electron-reactive-event-cli",
-    "version": "1.0.30",
+    "version": "1.0.61",
     "description": "Helper package to integrate electron-reactive-event in your Electron- and React-based app.",
     "keywords": [
         "electron",
@@ -43,14 +43,14 @@
     },
     "dependencies": {
         "@inquirer/prompts": "^8.3.2",
-        "@sorrell/cli-utilities": "^1.0.10",
-        "@sorrell/utilities": "^1.0.18",
+        "@sorrell/cli-utilities": "^1.0.21",
+        "@sorrell/utilities": "^1.1.6",
         "chalk": "^5.6.2",
         "cli-table3": "^0.6.5",
         "clipboardy": "^5.3.1",
         "commander": "^14.0.3",
-        "inquirer-file-selector": "^1.0.1",
         "ora": "^9.3.0",
+        "package-json-type": "^1.1.2",
         "typescript": "^6.0.2"
     }
 }

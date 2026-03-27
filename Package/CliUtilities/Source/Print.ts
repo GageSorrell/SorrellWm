@@ -10,7 +10,7 @@ import Chalk from "chalk";
 
 export function Code(Message: string): string
 {
-    return Chalk.reset(Chalk.redBright.bgHex("#B8BABC")(Message));
+    return Chalk.reset(Chalk.red(Message));
 }
 
 export function Format(Message: string): string

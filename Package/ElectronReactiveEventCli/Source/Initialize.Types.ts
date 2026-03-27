@@ -4,30 +4,7 @@
  * License:   MIT
  */
 
-export type FOutputType =
-    | "console"
-    | "clipboard"
-    | "file";
-
 export type FSetupOptions =
     {
         interactive: boolean;
     };
-
-export type FCommandName =
-    | "preload"
-    | "provider";
-
-export interface IOptions
-{
-    Output: FOutputType;
-}
-
-export interface IGenerationRequest
-{
-    CommandName: FCommandName;
-    OutputType: FOutputType;
-    OutputPath: string | undefined;
-    OutputPathExists: boolean;
-}
-

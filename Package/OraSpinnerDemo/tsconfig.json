@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "rootDir": "./Source",
+        "outDir": "./Distribution",
+        "module": "nodenext",
+        "target": "esnext",
+        "lib": [
+            "esnext"
+        ],
+        "types": [ "node" ],
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        "noEmit": false,
+        "noUncheckedIndexedAccess": false,
+        "exactOptionalPropertyTypes": false,
+        "noImplicitReturns": false,
+        "noImplicitOverride": false,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noFallthroughCasesInSwitch": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "strict": false,
+        "jsx": "react-jsx",
+        "isolatedModules": true,
+        "noUncheckedSideEffectImports": true,
+        "moduleDetection": "force",
+        "skipLibCheck": true
+    },
+    "exclude": [ "node_modules", "Distribution" ]
+}

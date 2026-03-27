@@ -7,12 +7,11 @@
         "lib": [
             "esnext"
         ],
-        "types": [
-            "node"
-        ],
+        "types": [ "node" ],
         "sourceMap": true,
         "declaration": true,
         "declarationMap": true,
+        "noEmit": false,
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         "noImplicitReturns": true,
@@ -28,6 +27,5 @@
         "moduleDetection": "force",
         "skipLibCheck": true
     },
-    "include": [ "Source/**/*.ts", "Source/**/*.tsx" ],
     "exclude": [ "node_modules", "Distribution" ]
 }

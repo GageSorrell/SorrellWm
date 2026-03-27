@@ -4,6 +4,7 @@
  * License:   MIT
  */
 
-export type TAsyncSource<DataType> =
+export type TTrySource<DataType> =
     | Promise<DataType>
+    | (() => DataType)
     | (() => Promise<DataType>);

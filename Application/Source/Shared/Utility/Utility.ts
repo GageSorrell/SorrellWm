@@ -273,8 +273,6 @@ export const MakeRef = <Type>(): TRef<Type> =>
     } as TRef<Type>;
 };
 
-export const Identity = <Type>(...Arguments: TArray<Type>) => Arguments;
-
 export const MapRecord = <KeyType extends PropertyKey, PropertyType, ElementType>(
     In: Record<KeyType, PropertyType>,
     Function: TMapRecordTransformer<KeyType, PropertyType, ElementType>
