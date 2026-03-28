@@ -1,5 +1,5 @@
 {
-    "name": "ScriptUtility",
+    "name": "script-utility",
     "version": "1.0.0",
     "main": "./Distribution/index.js",
     "type": "module",

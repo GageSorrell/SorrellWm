@@ -4,6 +4,8 @@
 
 **Purpose.**&ensp;@TODO
 
+[TOC]
+
 ## `main` Events
 
 `send` allows you to send events much like the `ipcMain.send` function.

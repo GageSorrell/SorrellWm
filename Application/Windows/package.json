@@ -1,5 +1,5 @@
 {
-  "name": "@sorrellwm/windows",
+  "name": "@sorrellwm/win-32",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

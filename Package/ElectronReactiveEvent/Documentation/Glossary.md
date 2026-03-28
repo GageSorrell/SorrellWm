@@ -4,6 +4,8 @@
 
 **Purpose.**&ensp;This article contains common definitions used throughout this documentation.
 
+[TOC]
+
 ## Event Declaration
 
 The *type* used to an event's shape is an **event declaration**.

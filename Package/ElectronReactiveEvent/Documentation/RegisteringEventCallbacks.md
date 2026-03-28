@@ -4,6 +4,8 @@
 
 **Purpose.**&ensp;@TODO
 
+[TOC]
+
 ## `main` Events
 
 Callbacks for `main` events exist under the `renderer`.

@@ -4,6 +4,8 @@
 
 **Purpose.**&ensp;This article describes what event declarations are, and what considerations should be made when defining them.
 
+[TOC]
+
 ## Basic Shape
 
 Each event declaration contains up to four properties,

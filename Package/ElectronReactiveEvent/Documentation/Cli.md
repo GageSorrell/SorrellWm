@@ -6,6 +6,8 @@
 Using this package is optional, but it will write all the basic boilerplate code needed to set up your project to use `electron-reactive-event`.
 An additional command is provided to help register your event types as you define events throughout the development of your project.
 
+[TOC]
+
 For a thorough explanation of *what* boilerplate is needed, *why* it is needed, and *how* you can customize it, see [the Setup article](./Setup.md).
 
 > [!NOTE] *"Why is (almost) every feature exposed via a factory function, and not exported directly?"*
