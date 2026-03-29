@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Serializable](../index.md) / IsSerializable
 
-# Type Alias: IsSerializable\<Type, SeenType, DepthType\>
+# Type: IsSerializable
 
 ```ts
 type IsSerializable<Type, SeenType, DepthType> = Extract<SerializableMemberFlag<Type, SeenType, DepthType>, false> extends never ? true : false;

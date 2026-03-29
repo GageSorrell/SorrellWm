@@ -9,8 +9,8 @@
 import type {
     Callback,
     Channel,
-    EmptyEventParameter,
     Event } from "../../index.js";
+import type { EmptyEventParameter } from "../../Decl.Types.js";
 import type { Internal } from "../../Internal/index.js";
 import type { Provider } from "../index.js";
 import type { Response } from "../Renderer.Types.js";
@@ -97,7 +97,7 @@ export namespace Send
             : never;
 
     /**
-     *
+     * @TODO Finish writing this comment.
      * @typeParam RendererRegistrar - The [registrar](/articles/glossary.html#registrar) that holds your
      * @returns
      */

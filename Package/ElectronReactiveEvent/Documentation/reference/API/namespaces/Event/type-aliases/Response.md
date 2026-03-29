@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Event](../index.md) / Response
 
-# Type Alias: Response\<ChannelType, Registrar\>
+# Type: Response
 
 ```ts
 type Response<ChannelType, Registrar> = ResponseDeclKey extends keyof Registrar[ChannelType] ? Registrar[ChannelType][ResponseDeclKey] : never;

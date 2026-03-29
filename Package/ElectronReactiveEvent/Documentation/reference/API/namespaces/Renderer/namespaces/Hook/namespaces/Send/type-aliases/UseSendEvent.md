@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Send](../index.md) / UseSendEvent
 
-# Type Alias: UseSendEvent()\<RendererRegistrar\>
+# Type: UseSendEvent()
 
 ```ts
 type UseSendEvent<RendererRegistrar> = {
@@ -105,5 +105,9 @@ Suspend): UseSendEventReturn<ChannelType, RendererRegistrar>;
 ### Returns
 
 [`UseSendEventReturn`](UseSendEventReturn.md)\<`ChannelType`, `RendererRegistrar`\>
+
+## TODO
+
+Finish writing this comment.
 
 ## Returns

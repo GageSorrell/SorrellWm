@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [RegisterFunction](../index.md) / Main
 
-# Type Alias: Main()\<Registrar\>
+# Type: Main()
 
 ```ts
 type Main<Registrar> = <ChannelType>(Channel, Callback) => void;

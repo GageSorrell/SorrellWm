@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Internal](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / Main
 
-# Type Alias: Main\<ChannelType, Registrar\>
+# Type: Main
 
 ```ts
 type Main<ChannelType, Registrar> = Main & RequestPart<ChannelType, Registrar>;

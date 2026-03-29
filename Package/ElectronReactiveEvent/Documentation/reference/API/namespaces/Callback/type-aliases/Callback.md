@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / Callback
 
-# Type Alias: Callback\<ChannelType, Registrar\>
+# Type: Callback
 
 ```ts
 type Callback<ChannelType, Registrar> = Registrar extends IRendererRegistrarBase ? Main<ChannelType, Registrar> : Registrar extends IMainRegistrarBase ? Renderer<ChannelType, Registrar> : never;

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Send](../index.md) / UseSendEventDeferred
 
-# Type Alias: UseSendEventDeferred()\<RendererRegistrar\>
+# Type: UseSendEventDeferred()
 
 ```ts
 type UseSendEventDeferred<RendererRegistrar> = () => Readonly<[SendEventDeferred<RendererRegistrar>]>;

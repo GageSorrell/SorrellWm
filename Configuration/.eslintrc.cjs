@@ -15,7 +15,8 @@ module.exports = {
     [
         "**/Distribution/*",
         "**/Intermediate/*",
-        "**/webpack.*.js"
+        "**/webpack.*.js",
+        "!**/.vitepress/*"
     ],
     overrides:
     [
@@ -197,7 +198,7 @@ module.exports = {
             /* See https://github.com/benmosher/eslint-plugin-import/issues/1396#issuecomment-575727774 for line below */
             node:
             {
-                extensions: [ ".js", ".jsx", ".ts", ".tsx" ],
+                extensions: [ ".js", ".jsx", ".ts", ".tsx", ".mts" ],
                 moduleDirectory: [ "Application/node_modules", "Application/src/" ]
             },
             typescript: { }

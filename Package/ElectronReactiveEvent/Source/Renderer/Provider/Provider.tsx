@@ -312,7 +312,7 @@ export const GetReactiveEventProvider = <
         SetEventCallbacks((Old: StoredRendererCallbackRecord): StoredRendererCallbackRecord =>
         {
             const CallbackCast: Internal.Callback.Renderer<typeof Channel, MainRegistrar> =
-                Callback as Internal.Callback.Renderer<typeof Channel, MainRegistrar>;
+                Callback as unknown as Internal.Callback.Renderer<typeof Channel, MainRegistrar>;
 
             if (Channel in Old && Array.isArray(Old[Channel]))
             {
@@ -375,7 +375,7 @@ export const GetReactiveEventProvider = <
             if (Channel in Old && Array.isArray(Old[Channel]))
             {
                 const CallbackCast: Internal.Callback.Renderer<typeof Channel, MainRegistrar> =
-                    Callback as Internal.Callback.Renderer<typeof Channel, MainRegistrar>;
+                    Callback as unknown as Internal.Callback.Renderer<typeof Channel, MainRegistrar>;
 
                 const Index: number = Old[Channel].indexOf(CallbackCast);
 

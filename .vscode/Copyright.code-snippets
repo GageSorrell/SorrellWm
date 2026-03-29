@@ -13,5 +13,20 @@
         ],
         "description": "Inserts license information.",
         "scope": "javascript,typescript,javascriptreact,typescriptreact,cpp"
+    },
+    "File Header (Vue)":
+    {
+        "prefix": "CopyrightHeader",
+        "body":
+        [
+            "<!-- File:      $TM_FILENAME",
+	        "     Author:    Gage Sorrell <gage@sorrell.sh>",
+            "     Copyright: (c) 2026 Gage Sorrell",
+	        "     License:   MIT",
+            "-->",
+            "\n"
+        ],
+        "description": "Inserts license information.",
+        "scope": "vue"
     }
 }

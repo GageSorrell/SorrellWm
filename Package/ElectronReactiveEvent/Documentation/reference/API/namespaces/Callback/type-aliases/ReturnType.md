@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / ReturnType
 
-# Type Alias: ReturnType\<ChannelType, Registrar\>
+# Type: ReturnType
 
 ```ts
 type ReturnType<ChannelType, Registrar> = Registrar extends IMainRegistrarBase ? AwaitedReturnType<ChannelType, Registrar> : Registrar extends IRendererRegistrarBase ? Promise<AwaitedReturnType<ChannelType, Registrar>> : never;

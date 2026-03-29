@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [ReturnType](../index.md) / Error
 
-# Type Alias: Error\<ChannelType, Registrar\>
+# Type: Error
 
 ```ts
 type Error<ChannelType, Registrar> = ErrorPayloadDeclKey extends keyof Registrar[ChannelType] ? Registrar[ChannelType][ErrorPayloadDeclKey] extends EmptyEventParameter ? ErrorSimple<ChannelType, Registrar> : ErrorRich<ChannelType, Registrar> : never;

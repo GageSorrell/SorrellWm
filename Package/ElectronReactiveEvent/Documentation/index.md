@@ -3,11 +3,11 @@
 layout: home
 
 hero:
-  name: "electron-reactive-event"
+  name: "Electron Reactive Event"
   tagline: "Type-safe Electron IPC functions, including modern React hooks."
   image:
-    src: "./logo.png"
-    alt: "electron-reactive-event Logo"
+    src: "./hero.png"
+    alt: "Electron Reactive Event Logo, Hero-Sized."
   actions:
     - theme: brand
       text: Read the Docs
@@ -17,16 +17,35 @@ hero:
       link: "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/ElectronReactiveEvent"
 
 features:
-  - title: "Type-safe Event Handling"
-    icon: "🦺"
+  - title: "Type-safe event handling"
+    # icon: "🦺"
     details: "Everything is typed: callbacks, request arguments, response values, and errors.  Define your event types, and everything in <code>electron-reactive-event</code> will follow."
-  - title: "Modern React Hooks"
-    icon: "🪝"
+  - title: "Modern React hooks"
+    # icon: "🪝"
     details: "Hooks use modern React features like <code>use</code> and transitions.  All functionality is wrapped with common hook idioms, including <code>Deferred</code> variants for most hooks."
   - title: "Familiar API"
-    icon: "🧘"
-    details: "The functions to send and receive functions are nearly identical to the IPC functions in <code>electron</code>, with added type-safety across the entire API surface."
-  - title: "Optional, Simple CLI"
-    icon: "⛏️"
-    details: "Register your event declarations as a part of your build step.  Simpler projects can register their event declarations manually with ease.  Opt-in by installing the CLI and running the interactive setup wizard."
+    # icon: "🧘"
+    details: "The functions to send and receive functions are nearly identical to the IPC functions in <code>electron</code>, with added type-safety across the entire API surface.<div class=\"card-footer-container\"><div style=\"min-height: 1px; flex: 1\"></div><div class=\"card-footer-links\"><a href=\"/articles/glossary.html\">Read the setup guide&nbsp;<span class=\"FluentIcon\">&#xE76C;</span></a><br style=\"min-height: 100%\"/></div></div>"
+  - title: "Optional, simple CLI"
+    # icon: "⛏️"
+    details: "Register your event declarations as a part of your build step.  Simpler projects can register their event declarations manually with ease.  Opt-in by installing the CLI and running the interactive setup wizard.<div class=\"card-footer-container\"><div style=\"min-height: 1px; flex: 1\"></div><div class=\"card-footer-links\"><a href=\"/articles/glossary.html\">Read the setup guide&nbsp;<span class=\"FluentIcon\">&#xE76C;</span></a><br style=\"min-height: 100%\"/><a href=\"/articles/glossary.html\"><a href=\"/articles/glossary.html\">Browse the CLI documentation&nbsp;<span class=\"FluentIcon\">&#xE76C;</span></a></div></div>"
 ---
+<script setup lang="ts">
+import { ref } from "vue";
+import VPLocalSearchBox from "vitepress/dist/client/theme-default/components/VPLocalSearchBox.vue";
+
+const ShowSearch = ref(false);
+
+function OpenBuiltInSearch(Query: string): void
+{
+    sessionStorage.setItem("vitepress:local-search-filter", Query);
+    ShowSearch.value = true;
+}
+
+function OnSearchLinkClick(Event: MouseEvent): void
+{
+    Event.preventDefault();
+    OpenBuiltInSearch("#Function");
+}
+</script>
+

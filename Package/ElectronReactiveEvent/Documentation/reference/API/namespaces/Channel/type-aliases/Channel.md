@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Channel](../index.md) / Channel
 
-# Type Alias: Channel\<Registrar\>
+# Type: Channel
 
 ```ts
 type Channel<Registrar> = Exclude<keyof Registrar, "Owner" | symbol | number>;

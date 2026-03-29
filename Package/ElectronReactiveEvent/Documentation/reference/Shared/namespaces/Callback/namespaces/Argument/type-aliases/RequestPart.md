@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Shared](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / RequestPart
 
-# Type Alias: RequestPart\<ChannelType, Registrar\>
+# Type: RequestPart
 
 ```ts
 type RequestPart<ChannelType, Registrar> = object;

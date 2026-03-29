@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Event](../index.md) / ErrorMessage
 
-# Type Alias: ErrorMessage\<ChannelType, Registrar\>
+# Type: ErrorMessage
 
 ```ts
 type ErrorMessage<ChannelType, Registrar> = ErrorMessageDeclKey extends keyof Registrar[ChannelType] ? Registrar[ChannelType][ErrorMessageDeclKey] : never;

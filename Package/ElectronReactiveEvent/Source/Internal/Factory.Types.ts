@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
 import type { RequestDeclKey, ResponseDeclKey } from "./Event.Types.js";
-import type { EmptyEventParameter } from "../index.js";
+import type { EmptyEventParameter } from "../Decl.Types.js";
 
 export namespace Response
 {

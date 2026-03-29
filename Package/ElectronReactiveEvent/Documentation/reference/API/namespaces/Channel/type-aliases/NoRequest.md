@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Channel](../index.md) / NoRequest
 
-# Type Alias: NoRequest\<Registrar\>
+# Type: NoRequest
 
 ```ts
 type NoRequest<Registrar> = Extract<Channel<Registrar>, WithRequestHelper<Registrar>>;

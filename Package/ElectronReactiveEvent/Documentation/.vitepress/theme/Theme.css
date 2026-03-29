@@ -262,7 +262,7 @@
 
 :root {
   --vp-font-family-base:
-    '"Segoe UI", Inter', -apple-system, BlinkMacSystemFont, sans-serif, 'Apple Color Emoji',
+    "Segoe UI", Inter, -apple-system, BlinkMacSystemFont, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --vp-font-family-mono:
     ui-monospace, 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono',
@@ -551,8 +551,12 @@
  * -------------------------------------------------------------------------- */
 
 :root {
-  --vp-home-hero-name-color: var(--vp-c-brand-1);
-  --vp-home-hero-name-background: transparent;
+  /* --vp-home-hero-name-color: var(--vp-c-brand-1); */
+  /* --vp-home-hero-name-background: transparent; */
+
+  /* Colors are lifted from Microsoft's Windows API website. */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #0078D4, #B84DC6);
 
   --vp-home-hero-image-background-image: none;
   --vp-home-hero-image-filter: none;
@@ -608,6 +612,198 @@
 
 /* The hero page's `name` frontmatter property. */
 span.name.clip {
-    font-size: 2.75rem;
+    font-size: 2.5rem;
+    font-weight: 600;
     text-wrap: nowrap;
+    background: -webkit-linear-gradient(120deg, #0078D4, #B84DC6) !important;
+    background-clip: text !important;
+    color: transparent !important;
+    text-shadow: none !important;
+    -webkit-text-fill-color: unset !important;
+}
+
+/* The `tagline` of the hero page. */
+p.tagline {
+    color: var(--vp-) !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+}
+
+div.icon {
+    user-select: none;
+}
+
+div.VPLink.no-icon.VPFeature {
+    background-color: var(--vp-c-bg) !important;
+    border-radius: 2px !important;
+    outline-color: rgb(22, 22, 22) !important;
+    box-shadow: 0 1.6px 3.6px 0 #00000021,0 .3px .9px 0 #0000001C !important;
+}
+
+.card-footer-container {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    gap: 24px !important;
+}
+
+.card-footer-links {
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: flex-start !important;
+}
+
+div.item.grid-4 {
+    min-height: 360px !important;
+}
+div.VPLink.no-icon.VPFeature article {
+    gap: 16px !important;
+    padding: 16px !important;
+}
+
+div.VPFeature,
+div.VPFeature * {
+    color: var(--vp-c-text-1) !important;
+}
+
+
+
+div.VPFeature p {
+    font-weight: normal !important;
+}
+
+div.VPFeature h2 {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+}
+
+/* Site-wide footer. */
+footer.VPFooter {
+    background-color: rgb(232, 230, 223) !important;
+    border: none !important;
+}
+
+p.copyright {
+    color: #000000 !important;
+    font-family: "Segoe UI", Inter !important;
+    font-weight: normal !important;
+}
+
+a.title span, span.name.clip {
+  background: -webkit-linear-gradient(120deg, #0078D4, #B84DC6) !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+.FluentIcon
+{
+    font-family: "Segoe Fluent Icons" !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+    vertical-align: -0.1em !important;
+    margin-right: 0.35em !important;
+}
+
+.FluentIconSmall
+{
+    font-family: "Segoe Fluent Icons" !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+    vertical-align: -0.1em !important;
+    margin-right: 0.35em !important;
+    font-size: 0.75em !important;
+}
+
+div.action a.brand {
+    border: 1px solid #0000 !important;
+    background-color: rgb(15, 108, 189) !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+    min-height: 2.25rem !important;
+    vertical-align: top !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 0.25rem !important;
+    border-width: 1px !important;
+    padding-inline: 0.75em !important;
+    padding-block: calc(0.375em - 1px) !important;
+    /* :  !important; */
+    /* :  !important; */
+    /* :  !important; */
+}
+
+div.action a.alt:not(header a) {
+    border: 1px solid #0000 !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+    min-height: 2.25rem !important;
+    vertical-align: top !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 0.25rem !important;
+    border-width: 1px !important;
+    padding-inline: 0.75em !important;
+    padding-block: calc(0.375em - 1px) !important;
+}
+
+div.action a.brand:hover:not(header a) {
+    background-color: rgb(17, 94, 163) !important;
+}
+
+a:not(div.action a, header a) {
+    text-size-adjust: 100% !important;
+    text-rendering: optimizeLegibility !important;
+    font-family: "Segoe UI", "Segoe UI Variable Text",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif !important;
+    line-height: 160% !important;
+    list-style: none !important;
+    background-color: #0000 !important;
+    cursor: pointer !important;
+    word-wrap: break-word !important;
+    text-decoration: none !important;
+    outline: 0 !important;
+    box-sizing: inherit !important;
+    outline-color: var(--vp-c-border) !important;
+    color: rgb(15, 108, 189) !important;
+    font-size: .875rem!important;
+    font-weight: 600!important;
+    text-wrap: pretty !important;
+    font-size: 1rem !important;
+}
+
+a:not(div.action a, header a):hover {
+    color: var(--vp-c-indigo-1) !important;
+    text-decoration: underline !important;
+    text-decoration-style: solid !important;
+    text-decoration-thickness: auto !important;
+}
+
+a span.FluentIcon, a span.FluentIconSmall {
+    text-size-adjust: 100% !important;
+    text-rendering: optimizeLegibility !important;
+    line-height: 160% !important;
+    list-style: none !important;
+    background-color: #0000 !important;
+    cursor: pointer !important;
+    word-wrap: break-word !important;
+    text-decoration: none !important;
+    outline: 0 !important;
+    box-sizing: inherit !important;
+    outline-color: var(--vp-c-border) !important;
+    color: rgb(15, 108, 189) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    text-wrap: pretty !important;
+    font-size: 1rem !important;
+}
+
+a:not(div.action a, header a):hover {
+    color: var(--vp-c-indigo-1) !important;
+    text-decoration: underline !important;
+    text-decoration-style: solid !important;
+    text-decoration-thickness: auto !important;
 }

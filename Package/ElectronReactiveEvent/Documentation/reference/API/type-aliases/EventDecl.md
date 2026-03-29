@@ -1,6 +1,6 @@
 [electron-reactive-event](../../index.md) / [API](../index.md) / EventDecl
 
-# Type Alias: EventDecl\<OwnerType, RequestDeclType, ResponseDeclType, ErrorMessageDeclType, ErrorPayloadDeclType\>
+# Type: EventDecl
 
 ```ts
 type EventDecl<OwnerType, RequestDeclType, ResponseDeclType, ErrorMessageDeclType, ErrorPayloadDeclType> = AreArgumentsSerializable<RequestDeclType, ResponseDeclType, ErrorMessageDeclType, ErrorPayloadDeclType> extends true ? object : never;

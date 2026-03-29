@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Main](../index.md) / FactoryReturnType
 
-# Type Alias: FactoryReturnType\<MainRegistrar, RendererRegistrar\>
+# Type: FactoryReturnType
 
 ```ts
 type FactoryReturnType<MainRegistrar, RendererRegistrar> = object;

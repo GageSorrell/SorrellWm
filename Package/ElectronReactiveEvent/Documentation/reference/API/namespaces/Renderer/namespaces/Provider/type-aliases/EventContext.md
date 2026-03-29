@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Provider](../index.md) / EventContext
 
-# Type Alias: EventContext\<MainRegistrar, RendererRegistrar\>
+# Type: EventContext
 
 ```ts
 type EventContext<MainRegistrar, RendererRegistrar> = Partial<{

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Channel](../index.md) / Response
 
-# Type Alias: Response\<Registrar\>
+# Type: Response
 
 ```ts
 type Response<Registrar> = Exclude<RegistrarWithNames<Registrar>, IEventDeclNoResponse>;

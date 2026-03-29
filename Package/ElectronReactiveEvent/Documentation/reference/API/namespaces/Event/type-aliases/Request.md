@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Event](../index.md) / Request
 
-# Type Alias: Request\<ChannelType, Registrar\>
+# Type: Request
 
 ```ts
 type Request<ChannelType, Registrar> = ChannelType extends keyof Registrar ? RequestDeclKey extends keyof Registrar[ChannelType] ? EmptyEventParameter extends Registrar[ChannelType][RequestDeclKey] ? never : Registrar[ChannelType][RequestDeclKey] : never : never;

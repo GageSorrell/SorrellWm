@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Send](../index.md) / UseSendEventReturn
 
-# Type Alias: UseSendEventReturn\<ChannelType, RendererRegistrar\>
+# Type: UseSendEventReturn
 
 ```ts
 type UseSendEventReturn<ChannelType, RendererRegistrar> = ResponseDeclKey extends keyof RendererRegistrar[ChannelType] ? EmptyEventParameter extends RendererRegistrar[ChannelType][ResponseDeclKey] ? Response<ChannelType, RendererRegistrar> & object : Response<ChannelType, RendererRegistrar> & object : never;

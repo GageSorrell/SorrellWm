@@ -4,7 +4,15 @@
  * License:   MIT
  */
 
-import DefaultTheme from 'vitepress/theme-without-fonts'
 import "./Theme.css"
 
-export default DefaultTheme
+import type { Theme } from "vitepress";
+import DefaultTheme from "vitepress/theme-without-fonts"
+import FluentIcon from "../../Component/FluentIcon.vue";
+
+export default {
+extends: DefaultTheme,
+  enhanceApp({ app }) {
+        app.component("FluentIcon", FluentIcon)
+  }
+} satisfies Theme

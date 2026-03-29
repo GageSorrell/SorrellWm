@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Serializable](../index.md) / Serializable
 
-# Type Alias: Serializable\<Type\>
+# Type: Serializable
 
 ```ts
 type Serializable<Type> = IsSerializable<Type> extends true ? Type : never;

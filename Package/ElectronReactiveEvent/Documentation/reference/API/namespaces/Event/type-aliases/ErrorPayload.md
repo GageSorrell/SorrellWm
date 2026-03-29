@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Event](../index.md) / ErrorPayload
 
-# Type Alias: ErrorPayload\<ChannelType, Registrar\>
+# Type: ErrorPayload
 
 ```ts
 type ErrorPayload<ChannelType, Registrar> = ErrorPayloadDeclKey extends keyof Registrar[ChannelType] ? Registrar[ChannelType][ErrorPayloadDeclKey] : never;

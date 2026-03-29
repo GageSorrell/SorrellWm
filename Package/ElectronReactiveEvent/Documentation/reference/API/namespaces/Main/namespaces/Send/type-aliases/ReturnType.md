@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Main](../../../index.md) / [Send](../index.md) / ReturnType
 
-# Type Alias: ReturnType\<ChannelType, WindowType, Registrar\>
+# Type: ReturnType
 
 ```ts
 type ReturnType<ChannelType, WindowType, Registrar> = WindowType extends BrowserWindow[] ? Response<ChannelType, Registrar>[] : Response<ChannelType, Registrar>;

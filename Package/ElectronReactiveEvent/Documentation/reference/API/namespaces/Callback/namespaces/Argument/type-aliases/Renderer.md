@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / Renderer
 
-# Type Alias: Renderer\<ChannelType, Registrar\>
+# Type: Renderer
 
 ```ts
 type Renderer<ChannelType, Registrar> = RequestDeclKey extends keyof Registrar[ChannelType] ? EmptyEventParameter extends Registrar[ChannelType][RequestDeclKey] ? Base<Registrar> : Base<Registrar> & RequestPart<ChannelType, Registrar> : Base<Registrar>;

@@ -6,7 +6,8 @@
 
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
-import type { Channel, EmptyEventParameter } from "./index.js";
+import type { Channel } from "./index.js";
+import type { EmptyEventParameter } from "./Decl.Types.js";
 import type { Internal } from "./Internal/index.js";
 
 /**

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Utility](../index.md) / Values
 
-# Type Alias: Values\<RecordLike\>
+# Type: Values
 
 ```ts
 type Values<RecordLike> = RecordLike[keyof RecordLike];

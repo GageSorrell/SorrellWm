@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / Record
 
-# Type Alias: Record\<ChannelType, Registrar\>
+# Type: Record
 
 ```ts
 type Record<ChannelType, Registrar> = { [Key in ChannelType]: Registrar extends IMainRegistrarBase ? Renderer<Key, Registrar> : Registrar extends IRendererRegistrarBase ? Main<Key, Registrar> : never };

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../../../index.md) / [API](../../../../../../../../../index.md) / [Renderer](../../../../../../../index.md) / [Provider](../../../../../index.md) / [Send](../../../index.md) / [Deferred](../index.md) / ReturnType
 
-# Type Alias: ReturnType\<ChannelType, RendererRegistrar\>
+# Type: ReturnType
 
 ```ts
 type ReturnType<ChannelType, RendererRegistrar> = Omit<Response<ChannelType, RendererRegistrar>, "IsPending">;

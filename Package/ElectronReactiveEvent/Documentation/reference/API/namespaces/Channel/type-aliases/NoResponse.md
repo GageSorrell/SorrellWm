@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Channel](../index.md) / NoResponse
 
-# Type Alias: NoResponse\<Registrar\>
+# Type: NoResponse
 
 ```ts
 type NoResponse<Registrar> = Extract<RegistrarWithNames<Registrar>, IEventDeclNoResponse>;

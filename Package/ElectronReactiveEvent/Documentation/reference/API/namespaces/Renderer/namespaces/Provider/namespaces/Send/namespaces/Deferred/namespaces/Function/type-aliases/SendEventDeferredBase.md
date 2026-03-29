@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../../../../../index.md) / [API](../../../../../../../../../../../index.md) / [Renderer](../../../../../../../../../index.md) / [Provider](../../../../../../../index.md) / [Send](../../../../../index.md) / [Deferred](../../../index.md) / [Function](../index.md) / SendEventDeferredBase
 
-# Type Alias: SendEventDeferredBase()\<RendererRegistrar\>
+# Type: SendEventDeferredBase()
 
 ```ts
 type SendEventDeferredBase<RendererRegistrar> = {

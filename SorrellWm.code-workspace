@@ -141,6 +141,7 @@
 			"lpsz",
 			"LPWSTR",
 			"maximizable",
+			"minisearch",
 			"mspaint",
 			"MSVC",
 			"Napi",

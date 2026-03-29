@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Register](../index.md) / UseEventCallbackDeferred
 
-# Type Alias: UseEventCallbackDeferred()\<MainRegistrar\>
+# Type: UseEventCallbackDeferred()
 
 ```ts
 type UseEventCallbackDeferred<MainRegistrar> = () => Readonly<[Renderer<MainRegistrar>]>;

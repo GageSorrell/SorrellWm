@@ -4,24 +4,17 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
-/**
- * @TODO Write this comment, noting that it is one of the few modules
- * that isn't wrapped in a namespace.
- *
- * @module
- */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
 import type { Internal } from "./Internal/index.js";
 import type { Shared } from "./Shared/index.js";
 
 /**
- * Use this type in [event declarations](/articles/glossary.html#event-declarations)
- * to specify that a type parameter is unused.  This can be used for any type parameter
- * in {@link EventDecl} but the {@link EventDecl.ErrorMessageDeclType} parameter (which `extends string`).
+ * @groupDescription Event Declarations
+ * This module contains the two types that you will use most often: {@link EventDecl}
+ * for defining event declarations, and {@link EmptyEventParameter} for omitting
+ * properties from your event declarations.
  */
-export type EmptyEventParameter = [ never ];
 
 /**
  * Define event declarations with this type.
@@ -32,6 +25,8 @@ export type EmptyEventParameter = [ never ];
  * @typeParam ResponseDeclType -
  * @typeParam ErrorMessageDeclType -
  * @typeParam ErrorPayloadDeclType -
+ *
+ * @group Event Declarations
  */
 export type EventDecl<
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -54,3 +49,12 @@ export type EventDecl<
             ErrorPayloadDeclType: ErrorPayloadDeclType;
         }
         : never;
+
+/**
+ * Use this type in [event declarations](/articles/glossary.html#event-declarations)
+ * to specify that a type parameter is unused.  This can be used for any type parameter
+ * in {@link EventDecl} but the {@link EventDecl.ErrorMessageDeclType} parameter (which `extends string`).
+ *
+ * @group Event Declarations
+ */
+export type EmptyEventParameter = [ never ];

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Shared](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / Base
 
-# Type Alias: Base\<Registrar\>
+# Type: Base
 
 ```ts
 type Base<Registrar> = Registrar extends IMainRegistrarBase ? Main : Renderer;

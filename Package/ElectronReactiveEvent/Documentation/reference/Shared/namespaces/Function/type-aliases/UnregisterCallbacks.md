@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Shared](../../../index.md) / [Function](../index.md) / UnregisterCallbacks
 
-# Type Alias: UnregisterCallbacks\<Registrar\>
+# Type: UnregisterCallbacks
 
 ```ts
 type UnregisterCallbacks<Registrar> = ByRecord<Registrar>;

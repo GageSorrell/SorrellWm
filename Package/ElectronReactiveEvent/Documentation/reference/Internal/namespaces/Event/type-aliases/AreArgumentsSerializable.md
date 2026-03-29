@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Event](../index.md) / AreArgumentsSerializable
 
-# Type Alias: AreArgumentsSerializable\<RequestDeclType, ResponseDeclType, ErrorMessageDeclType, ErrorPayloadDeclType\>
+# Type: AreArgumentsSerializable
 
 ```ts
 type AreArgumentsSerializable<RequestDeclType, ResponseDeclType, ErrorMessageDeclType, ErrorPayloadDeclType> = ErrorPayloadDeclType extends [never] ? 

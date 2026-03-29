@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Internal](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / Renderer
 
-# Type Alias: Renderer\<ChannelType, Registrar\>
+# Type: Renderer
 
 ```ts
 type Renderer<ChannelType, Registrar> = Renderer & RequestPart<ChannelType, Registrar>;

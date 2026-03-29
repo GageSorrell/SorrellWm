@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Register](../index.md) / UnregisterRendererCallbacks
 
-# Type Alias: UnregisterRendererCallbacks\<Registrar\>
+# Type: UnregisterRendererCallbacks
 
 ```ts
 type UnregisterRendererCallbacks<Registrar> = ByRecord<Registrar>;

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Channel](../index.md) / Request
 
-# Type Alias: Request\<Registrar\>
+# Type: Request
 
 ```ts
 type Request<Registrar> = Extract<Channel<Registrar>, Values<WithRequestHelper<Registrar>>>;

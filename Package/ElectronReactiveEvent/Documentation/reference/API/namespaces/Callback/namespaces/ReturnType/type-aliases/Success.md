@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [ReturnType](../index.md) / Success
 
-# Type Alias: Success\<ChannelType, Registrar\>
+# Type: Success
 
 ```ts
 type Success<ChannelType, Registrar> = ResponseDeclKey extends keyof Registrar[ChannelType] ? Registrar[ChannelType][ResponseDeclKey] extends EmptyEventParameter ? void : Response<ChannelType, Registrar> : never;

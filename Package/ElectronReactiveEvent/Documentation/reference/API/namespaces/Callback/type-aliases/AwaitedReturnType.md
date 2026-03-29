@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / AwaitedReturnType
 
-# Type Alias: AwaitedReturnType\<ChannelType, Registrar\>
+# Type: AwaitedReturnType
 
 ```ts
 type AwaitedReturnType<ChannelType, Registrar> = 

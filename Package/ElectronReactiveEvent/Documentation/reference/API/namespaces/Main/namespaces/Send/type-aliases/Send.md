@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Main](../../../index.md) / [Send](../index.md) / Send
 
-# Type Alias: Send()\<Registrar\>
+# Type: Send()
 
 ```ts
 type Send<Registrar> = {

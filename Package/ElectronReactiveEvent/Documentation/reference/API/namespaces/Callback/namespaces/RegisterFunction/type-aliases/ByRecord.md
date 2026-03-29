@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [RegisterFunction](../index.md) / ByRecord
 
-# Type Alias: ByRecord\<OuterRegistrar, OuterChannelType\>
+# Type: ByRecord
 
 ```ts
 type ByRecord<OuterRegistrar, OuterChannelType> = 

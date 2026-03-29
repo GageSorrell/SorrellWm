@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / Main
 
-# Type Alias: Main\<ChannelType, Registrar\>
+# Type: Main
 
 ```ts
 type Main<ChannelType, Registrar> = RequestDeclKey extends keyof Registrar[ChannelType] ? EmptyEventParameter extends Registrar[ChannelType][RequestDeclKey] ? Main : Main & RequestPart<ChannelType, Registrar> : Main;

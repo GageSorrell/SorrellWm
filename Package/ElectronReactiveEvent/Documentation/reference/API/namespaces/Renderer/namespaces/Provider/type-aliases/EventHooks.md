@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Provider](../index.md) / EventHooks
 
-# Type Alias: EventHooks\<MainRegistrar, RendererRegistrar\>
+# Type: EventHooks
 
 ```ts
 type EventHooks<MainRegistrar, RendererRegistrar> = Readonly<Required<EventContext<MainRegistrar, RendererRegistrar>>>;

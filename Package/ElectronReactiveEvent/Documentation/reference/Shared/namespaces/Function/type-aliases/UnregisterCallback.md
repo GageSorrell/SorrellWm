@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Shared](../../../index.md) / [Function](../index.md) / UnregisterCallback
 
-# Type Alias: UnregisterCallback()\<Registrar\>
+# Type: UnregisterCallback()
 
 ```ts
 type UnregisterCallback<Registrar> = <ChannelType>(Channel, Callback) => void;

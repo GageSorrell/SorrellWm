@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Register](../index.md) / UseUnregisterCallbacksDeferred
 
-# Type Alias: UseUnregisterCallbacksDeferred()\<MainRegistrar\>
+# Type: UseUnregisterCallbacksDeferred()
 
 ```ts
 type UseUnregisterCallbacksDeferred<MainRegistrar> = () => Readonly<[UnregisterRendererCallbacks<MainRegistrar>]>;

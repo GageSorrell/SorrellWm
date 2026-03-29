@@ -4,8 +4,9 @@
  * License:   MIT
  */
 
-import type { Callback, Channel, EmptyEventParameter, Event } from "../index.js";
+import type { Callback, Channel, Event } from "../index.js";
 import type { BrowserWindow } from "electron";
+import type { EmptyEventParameter } from "../Decl.Types.js";
 import type { Internal } from "../Internal/index.js";
 import type { Shared } from "../Shared/index.js";
 
