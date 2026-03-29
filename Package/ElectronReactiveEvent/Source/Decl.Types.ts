@@ -6,19 +6,42 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type { AreArgumentsSerializable, RegistrarOwner } from "./Internal/index.js";
+/**
+ * @TODO Write this comment, noting that it is one of the few modules
+ * that isn't wrapped in a namespace.
+ *
+ * @module
+ */
 
+import type { Internal } from "./Internal/index.js";
+import type { Shared } from "./Shared/index.js";
+
+/**
+ * Use this type in [event declarations](/articles/glossary.html#event-declarations)
+ * to specify that a type parameter is unused.  This can be used for any type parameter
+ * in {@link EventDecl} but the {@link EventDecl.ErrorMessageDeclType} parameter (which `extends string`).
+ */
 export type EmptyEventParameter = [ never ];
 
+/**
+ * Define event declarations with this type.
+ * This is the type that you will likely use the most.
+ *
+ * @typeParam OwnerType -
+ * @typeParam RequestDeclType -
+ * @typeParam ResponseDeclType -
+ * @typeParam ErrorMessageDeclType -
+ * @typeParam ErrorPayloadDeclType -
+ */
 export type EventDecl<
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    OwnerType extends RegistrarOwner,
+    OwnerType extends Shared.Registrar.Owner,
     RequestDeclType,
     ResponseDeclType,
-    ErrorMessageDeclType,
+    ErrorMessageDeclType extends string = string,
     ErrorPayloadDeclType = EmptyEventParameter
 > =
-    AreArgumentsSerializable<
+    Internal.Event.AreArgumentsSerializable<
         RequestDeclType,
         ResponseDeclType,
         ErrorMessageDeclType,

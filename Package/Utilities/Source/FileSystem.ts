@@ -107,7 +107,7 @@ export async function GetSafeNewPath(InPath: string): Promise<string>
  *                    file extension.
  * @returns Whether a file of the given `FileName` can be created in `DirectoryPath`.
  *
- * @note This *does* attempt to create a file at the desired path.  The file is
+ * @remarks This *does* attempt to create a file at the desired path.  The file is
  *       temporary iff `!PersistNewFile`, and is never created when this function
  *       returns `false`.
  */

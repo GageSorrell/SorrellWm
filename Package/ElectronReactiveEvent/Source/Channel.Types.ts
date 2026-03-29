@@ -4,61 +4,69 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import type { EmptyEventParameter } from "./index.js";
-import type { Channel, IRegistrarBase, RequestDeclKey, Values } from "./Internal/index.js";
+import type { Internal } from "./Internal/index.js";
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
 type EquipEventDeclWithName<Registrar> =
     {
         [ Key in keyof Registrar as Extract<Key, string> ]:
-        Values<Registrar> &
+        Internal.Utility.Values<Registrar> &
         {
             Name: Extract<Key, string>;
         }
     };
 
-type RegistrarWithNames<Registrar> = Values<EquipEventDeclWithName<Registrar>>;
+type RegistrarWithNames<Registrar> = Internal.Utility.Values<EquipEventDeclWithName<Registrar>>;
 
 interface IEventDeclNoResponse
 {
     ResponseDeclType: EmptyEventParameter;
 }
 
-/** @Summary Channels whose event declarations define a response type. */
-export type ResponseChannel<Registrar> =
+/** Channels whose event declarations define a response type. */
+export type Response<Registrar> =
     Exclude<
         RegistrarWithNames<Registrar>,
         IEventDeclNoResponse
     >;
 
-/** @Summary Channels whose event declarations do *not* define a response type. */
-export type NoResponseChannel<Registrar> =
+/** Channels whose event declarations do *not* define a response type. */
+export type NoResponse<Registrar> =
     Extract<
         RegistrarWithNames<Registrar>,
         IEventDeclNoResponse
     >;
 
-type ChannelsWithRequestHelper<Registrar> =
+type WithRequestHelper<Registrar> =
     {
         [ Key in keyof Registrar ]:
-        RequestDeclKey extends keyof Registrar[Key]
-            ? EmptyEventParameter extends Registrar[Key][RequestDeclKey]
+        Internal.Event.RequestDeclKey extends keyof Registrar[Key]
+            ? EmptyEventParameter extends Registrar[Key][Internal.Event.RequestDeclKey]
                 ? undefined
                 : Key
             : never
     };
 
-/** @Summary Channels whose event declarations specify a request type. */
-export type RequestChannel<Registrar extends IRegistrarBase> =
+/** Channels whose event declarations specify a request type. */
+export type Request<Registrar extends Internal.Registrar.IRegistrarBase> =
     Extract<
         Channel<Registrar>,
-        Values<ChannelsWithRequestHelper<Registrar>>
+        Internal.Utility.Values<WithRequestHelper<Registrar>>
     >;
 
-/** @Summary Channels whose event declarations do *not* specify a request type. */
-export type NoRequestChannel<Registrar extends IRegistrarBase> =
+/** Channels whose event declarations do *not* specify a request type. */
+export type NoRequest<Registrar extends Internal.Registrar.IRegistrarBase> =
     Extract<
         Channel<Registrar>,
-        ChannelsWithRequestHelper<Registrar>
+        WithRequestHelper<Registrar>
     >;
+
+/** A channel is the (`string`) key of an event declaration property in a registrar. */
+export type Channel<Registrar extends Internal.Registrar.IRegistrarBase> =
+    Exclude<
+        keyof Registrar,
+        "Owner" | symbol | number
+    >;
+

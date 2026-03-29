@@ -264,5 +264,6 @@
       ".erb/dll/**"
     ],
     "logLevel": "quiet"
-  }
+  },
+  "private": true
 }

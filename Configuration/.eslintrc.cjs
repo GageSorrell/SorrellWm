@@ -17,6 +17,35 @@ module.exports = {
         "**/Intermediate/*",
         "**/webpack.*.js"
     ],
+    overrides:
+    [
+        {
+            files:
+            [
+                "Package/ElectronReactiveEvent/Source/**/*.ts",
+                "Package/ElectronReactiveEvent/Source/**/*.tsx"
+            ],
+            rules:
+            {
+                "jsdoc/check-param-names": "error",
+                "jsdoc/require-hyphen-before-param-description": [ "error", "always" ],
+                "jsdoc/require-jsdoc": [ "error", {
+                    contexts:
+                    [
+                        "ExportNamedDeclaration > TSTypeAliasDeclaration",
+                        "ExportNamedDeclaration > TSInterfaceDeclaration",
+                        "ExportNamedDeclaration > TSEnumDeclaration",
+                        "ExportNamedDeclaration > VariableDeclaration",
+                        "ExportNamedDeclaration > FunctionDeclaration",
+                        "ExportNamedDeclaration > ClassDeclaration"
+                    ]
+                } ],
+                "jsdoc/require-param": "error",
+                "jsdoc/require-param-description": "error",
+                "tsdoc/syntax": "error"
+            }
+        }
+    ],
     parser: "@typescript-eslint/parser",
     parserOptions:
     {
@@ -32,7 +61,9 @@ module.exports = {
         "react",
         "react-hooks",
         "@typescript-eslint",
-        "@stylistic"
+        "@stylistic",
+        "jsdoc",
+        "tsdoc"
     ],
     rules:
     {
@@ -116,6 +147,7 @@ module.exports = {
             }
         ],
         curly: [ "error", "all" ],
+
         "no-console": [ "error" ],
         "no-multiple-empty-lines": [ "error", { max: 1, maxBOF: 0, maxEOF: 1 } ],
         "quote-props": [ "error", "as-needed" ],
@@ -169,6 +201,10 @@ module.exports = {
                 moduleDirectory: [ "Application/node_modules", "Application/src/" ]
             },
             typescript: { }
+        },
+        jsdoc:
+        {
+            mode: "typescript"
         }
     }
 };

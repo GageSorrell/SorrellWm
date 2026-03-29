@@ -14,7 +14,7 @@ export function IsLetters(In: string): boolean
 }
 
 /**
- * @note *(This is an alias for `IsOnlyLetters`).*
+ * @remarks *(This is an alias for `IsOnlyLetters`).*
  *
  * @param In - The string that you wish to test.
  * @returns Whether the given string contains *only* (Latin alphabet) letters.

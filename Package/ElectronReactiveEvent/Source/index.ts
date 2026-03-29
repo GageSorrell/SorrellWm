@@ -4,18 +4,19 @@
  * License:   MIT
  */
 
-export * from "./Callback.Types.js";
-export * from "./Channel.Types.js";
-export * from "./Decl.Types.js";
-export * from "./Event.Types.js";
-export * from "./Hook.js";
-export * from "./Hook.Types.js";
-export * from "./Main.js";
-export * from "./Main.Types.js";
-export * from "./Preload.js";
-export * from "./Preload.Types.js";
-export * from "./Provider.js";
-export * from "./Provider.Types.js";
-export * from "./Registrar.Types.js";
-export * from "./Utility.js";
-export * from "./Utility.Renderer.js";
+/**
+ * The exports of the package.
+ * Most of your time reading the documentation will likely be spent here.
+ *
+ * @module API
+ */
+
+export * as Callback from "./Callback/index.js";
+export * as Channel from "./Channel.Types.js";
+export * as Event from "./Event.Types.js";
+export * as Main from "./Main/index.js";
+export * as Renderer from "./Renderer/index.js";
+export * as Utility from "./Utility.js";
+
+/** Since these will be imported most frequently, they are not wrapped with a named export. */
+export type { EmptyEventParameter, EventDecl } from "./Decl.Types.js";

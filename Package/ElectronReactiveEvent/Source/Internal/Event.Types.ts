@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import type { EmptyEventParameter } from "../index.js";
-import type { IsSerializable } from "./index.js";
+import type { IsSerializable } from "./Serializable.Types.js";
 
 export type AreArgumentsSerializable<
     RequestDeclType,

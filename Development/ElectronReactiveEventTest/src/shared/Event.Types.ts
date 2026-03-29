@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventDecl } from "electron-reactive-event";
+import type { EmptyEventParameter, EventDecl } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
 
 export type GetData = EventDecl<"Main", EmptyEventParameter, number, "GetNah">;
 

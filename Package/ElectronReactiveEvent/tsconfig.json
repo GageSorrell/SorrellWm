@@ -39,6 +39,7 @@
     "exclude":
     [
         "Distribution",
+        "Documentation",
         "node_modules"
     ]
 }

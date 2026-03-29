@@ -260,7 +260,7 @@ export const TileAllWindows = (): void =>
     });
 };
 
-/** @note This is not a completely thorough type-check function. */
+/** @remarks This is not a completely thorough type-check function. */
 export const IsVertex = (In: unknown): In is FVertex =>
 {
     return (

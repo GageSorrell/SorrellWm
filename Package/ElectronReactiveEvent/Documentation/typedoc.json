@@ -1,0 +1,37 @@
+{
+    "entryPoints": [
+        "../Source/Internal/index.inner.ts",
+        "../Source/Shared/index.inner.ts",
+        "../Source/index.ts"
+    ],
+    "out": "./reference",
+    "plugin": [
+        "typedoc-plugin-markdown",
+        "typedoc-vitepress-theme"
+    ],
+    "readme": "none",
+    "indexFormat": "table",
+    "useCodeBlocks": true,
+    "disableSources": true,
+    "tsconfig": "../tsconfig.json",
+    "validation": {
+        "notDocumented": true
+    },
+    "requiredToBeDocumented": [
+        "Namespace",
+        "Enum",
+        "EnumMember",
+        "Variable",
+        "Function",
+        "Class",
+        "Interface",
+        "Property",
+        "Method",
+        "Accessor",
+        "TypeAlias"
+    ],
+    "treatValidationWarningsAsErrors": false
+    // @TODO Enable this once you believe that all
+    // documentation has been written.
+    // "treatValidationWarningsAsErrors": true
+}

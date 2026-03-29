@@ -1,5 +1,6 @@
 {
   "name": "@sorrellwm/win-32",
+  "private": true,
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

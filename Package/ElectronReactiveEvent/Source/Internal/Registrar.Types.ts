@@ -4,16 +4,16 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
 import type { IsEventDecl } from "./Event.Types.js";
+import type { Shared } from "../Shared/index.js";
 import type { Values } from "./Utility.Types.js";
 
-export type Channel<Registrar extends IRegistrarBase> =
-    Exclude<
-        keyof Registrar,
-        "Owner" | symbol | number
-    >;
+export interface IRegistrarBase
+{
+    Owner: Shared.Registrar.Owner;
+}
 
 /** Map a registrar interface to its naturally-corresponding `Record` type. */
 export type RegistrarDecls<Registrar> =
@@ -31,11 +31,5 @@ export type IsRegistrar<Registrar> =
             : false
         : false;
 
-export type RegistrarOwner =
-    | "Main"
-    | "Renderer";
-
-export interface IRegistrarBase
-{
-    Owner: RegistrarOwner;
-}
+export type RendererOwnerKey = "Renderer";
+export type MainOwnerKey = "Main";

@@ -97,7 +97,7 @@ export type IsSerializable<
         ? true
         : false;
 
-/** @Note There do exist edge-case types that are *not* serializable, yet are not detected by this type. */
+/** @remarks There do exist edge-case types that are *not* serializable, yet are not detected by this type. */
 export type Serializable<Type> =
     IsSerializable<Type> extends true
         ? Type

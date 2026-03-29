@@ -14,7 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { GetMainReactiveEventFunctions, type MainCallbackArgument } from "electron-reactive-event";
+import { GetMainReactiveEventFunctions, type MainCallbackArgument } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
 import type { IMainRegistrar, IRendererRegistrar } from "../shared/Registrar.Types";
 
 class AppUpdater {

@@ -1,7 +1,7 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { preloadElectronReactiveEvent } from "electron-reactive-event";
+import { preloadElectronReactiveEvent } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
 
 export type Channels = 'ipc-example';
 

@@ -8,7 +8,7 @@ import type {
     EmptyEventParameter,
     EventDecl,
     IMainRegistrarBase,
-    IRendererRegistrarBase } from "electron-reactive-event";
+    IRendererRegistrarBase } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
 
 export interface IMainRegistrar extends IMainRegistrarBase
 {

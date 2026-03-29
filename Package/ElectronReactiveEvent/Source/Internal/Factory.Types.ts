@@ -4,23 +4,26 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
-import type { RequestDeclKey, ResponseDeclKey } from "./index.js";
+import type { RequestDeclKey, ResponseDeclKey } from "./Event.Types.js";
 import type { EmptyEventParameter } from "../index.js";
 
-export type ResponseInternal =
-    {
-        Data?: unknown;
-        Error: unknown;
-    };
+export namespace Response
+{
+    export type Main =
+        {
+            Data?: unknown;
+            Error: unknown;
+        };
 
-export type RendererResponseInternal =
-    {
-        Data?: unknown;
-        Error: unknown;
-        IsPending: boolean;
-    };
+    export type Renderer =
+        {
+            Data?: unknown;
+            Error: unknown;
+            IsPending: boolean;
+        };
+}
 
 export type DeclHasResponseType<ChannelType extends keyof Registrar, Registrar> =
     ResponseDeclKey extends keyof Registrar[ChannelType]
