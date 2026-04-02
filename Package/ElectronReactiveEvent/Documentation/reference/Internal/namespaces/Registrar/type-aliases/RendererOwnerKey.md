@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Registrar](../index.md) / RendererOwnerKey
 
-# Type Alias: RendererOwnerKey
+# RendererOwnerKey Type
 
 ```ts
 type RendererOwnerKey = "Renderer";

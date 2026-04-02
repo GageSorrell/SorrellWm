@@ -1,9 +1,13 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / ReturnType
 
-# Type: ReturnType
+# ReturnType Type
 
 ```ts
-type ReturnType<ChannelType, Registrar> = Registrar extends IMainRegistrarBase ? AwaitedReturnType<ChannelType, Registrar> : Registrar extends IRendererRegistrarBase ? Promise<AwaitedReturnType<ChannelType, Registrar>> : never;
+type ReturnType<ChannelType, Registrar> = Registrar extends IMainRegistrarBase
+	? AwaitedReturnType<ChannelType, Registrar>
+	: Registrar extends IRendererRegistrarBase
+		? Promise<AwaitedReturnType<ChannelType, Registrar>>
+		: never;
 ```
 
 This is the type that a `Callback` function must return.
@@ -17,7 +21,7 @@ exactly one of,
     * nothing at all (`void`).
 
 The last case should occur precisely when your event completes successfully,
-and its event declaration has no response type (*i.e.*, `EmptyEventParameter`).
+and its event declaration has no response type (_i.e._, `EmptyEventParameter`).
 
 `electron-reactive-event` takes the values returned by your callbacks,
 and coverts them into the uniform shape for the receiver.
@@ -26,8 +30,8 @@ and coverts them into the uniform shape for the receiver.
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ### Registrar
 
-`Registrar` *extends* [`IRegistrarBase`](../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
+`Registrar` _extends_ [`IRegistrarBase`](../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)

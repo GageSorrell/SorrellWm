@@ -9,6 +9,7 @@ import type { PropsWithChildren, ReactNode } from "react";
 import type { Hook } from "../index.js";
 import type { Response } from "../Renderer.Types.js";
 import type { Shared } from "../../Shared/index.js";
+import type { FactoryReturnType } from "../../Main/Main.Types.js";
 
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
@@ -31,7 +32,7 @@ export type EventContext<
 
         useEventCallbackDeferred: Hook.Register.UseEventCallbackDeferred<MainRegistrar>;
 
-        useEventCallbacks: Callback.RegisterFunction.ByRecord<MainRegistrar>;
+        useEventCallbacks: FactoryReturnType<MainRegistrar, RendererRegistrar>["registerCallbacks"];
 
         useEventCallbacksDeferred: Hook.Register.UseEventCallbacksDeferred<MainRegistrar>;
 

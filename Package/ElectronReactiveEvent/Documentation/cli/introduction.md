@@ -1,16 +1,54 @@
-# `electron-reactive-event-cli`
+---
+prev: false
+---
+[electron-reactive-event](/docs) / [CLI](./index.md) / Introduction
 
-**Purpose.**&ensp;This article describes the helper package `electron-reactive-event-cli`.
-Using this package is optional, but it will write all the basic boilerplate code needed to set up your project to use `electron-reactive-event`.
-An additional command is provided to help register your event types as you define events throughout the development of your project.
+# Introduction to the CLI
 
-For a thorough explanation of *what* boilerplate is needed, *why* it is needed, and *how* you can customize it, see [the Setup article](./Setup.md).
-
-::: tip "Why is (almost) every feature exposed via a factory function, and not exported directly?"
-This is done to make type definitions less intrusive: you provide to these factory functions your `IMainRegistrar` and `IRendererRegistrar` types, and all returned functions will be type-aware for your app's events.
+::: tip Purpose
+This article describes the helper package `electron-reactive-event-cli`.
+Using this package is optional, and automates writing boilerplate code needed to register your [event declarations](../articles/glossary.md#event-declaration) with your [registrar interfaces](../articles/glossary.md#registrar).
 :::
 
-## Commands
+<div class="CustomTocContainer">
+<p class="CustomTocTitle">In this article</p>
+
+[[toc]]
+
+</div>
+
+## Motivation
+
+It is expected that most developers will want their event declarations to live alongside logic corresponding to these events, *i.e.*, *not* in a single module that pulls in types from modules scattered throughout their codebase.
+
+Event declarations are grouped by registrar interfaces, and these registrar interfaces are what the developer passes to the factories provided by this package.
+
+The issue presented by the above is that defining event declarations should be *decentralized* (in most cases), but a *central* definition (*i.e.*, registrar interfaces) is required for `electron-reactive-event` to ingest them.
+
+Fortunately, TypeScript allows for interfaces to be extended via [module augmentation <FluentIcon Icon="ExternalLink" />](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation).
+This feature allows for the registrar interfaces in your project to be supplemented with your event declarations, regardless of where they are in your project.
+
+However, `declare module` blocks are lengthy, and are tedious to write for *every* module in which an event declaration is defined.
+
+To address this, a CLI package `electron-reactive-event-cli` was created, which writes these `declare module` blocks for you.
+They are written to a single module, which can exist anywhere in your project that is recognized by your project's [TSConfig's `include` property&nbsp;<FluentIcon Small Icon="ExternalLink"/>](https://www.typescriptlang.org/tsconfig/#include).
+
+## Getting Started
+
+Follow the steps in the [Project Setup](./project-setup.md) article to perform the minimum setup needed to run the interactive wizard provided by the `setup` command.
+
+If your project already uses `electron-reactive-event`, then you have likely done everything in the [Project Setup](./project-setup.md) article.
+If this is the case, then you may skip ahead to the [`setup` Command](./setup.md) article.
+
+The interactive wizard provided by the `setup` command will notify you if a prerequisite step has not been completed.
+
+## References
+
+[TypeScript: Documentation - Declaration Merging <FluentIcon Icon="ExternalLink" />](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation)
+
+[TypeScript: TSConfig Reference - Docs on every TSConfig option § Include - `include`&nbsp;<FluentIcon Small Icon="ExternalLink"/>](https://www.typescriptlang.org/tsconfig/#include)
+
+<!-- ## Commands
 
 There are three commands: one for `setup`, one to `register` event declarations as you create them throughout development, and a `help` command.
 
@@ -59,4 +97,4 @@ If this is the case for your project, add the `--silent` flag to the script in y
 
 ::: info
 If you do not use this script as a part of your build process, then this argument can always be left unspecified.
-:::
+::: -->

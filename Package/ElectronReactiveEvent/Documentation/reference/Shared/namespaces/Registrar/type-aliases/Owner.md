@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Shared](../../../index.md) / [Registrar](../index.md) / Owner
 
-# Type Alias: Owner
+# Owner Type
 
 ```ts
 type Owner = "Main" | "Renderer";

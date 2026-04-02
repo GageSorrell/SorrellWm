@@ -1,20 +1,22 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Callback](../index.md) / Main
 
-# Type: Main()
+# Main() Type
 
 ```ts
-type Main<ChannelType, Registrar> = (Argument) => ReturnType<ChannelType, Registrar>;
+type Main<ChannelType, Registrar> = (
+	Argument,
+) => ReturnType<ChannelType, Registrar>;
 ```
 
 ## Type Parameters
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../../../API/namespaces/Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../../../API/namespaces/Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ### Registrar
 
-`Registrar` *extends* [`IRegistrarBase`](../../Registrar/interfaces/IRegistrarBase.md)
+`Registrar` _extends_ [`IRegistrarBase`](../../Registrar/interfaces/IRegistrarBase.md)
 
 ## Parameters
 

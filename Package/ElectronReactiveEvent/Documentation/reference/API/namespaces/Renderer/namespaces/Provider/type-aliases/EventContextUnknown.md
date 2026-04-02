@@ -1,7 +1,10 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Provider](../index.md) / EventContextUnknown
 
-# Type Alias: EventContextUnknown
+# EventContextUnknown Type
 
 ```ts
-type EventContextUnknown = EventContext<IMainRegistrarBase, IRendererRegistrarBase>;
+type EventContextUnknown = EventContext<
+	IMainRegistrarBase,
+	IRendererRegistrarBase
+>;
 ```

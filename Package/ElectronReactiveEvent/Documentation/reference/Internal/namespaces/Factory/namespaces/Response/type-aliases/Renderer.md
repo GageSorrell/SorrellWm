@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Internal](../../../../../index.md) / [Factory](../../../index.md) / [Response](../index.md) / Renderer
 
-# Type Alias: Renderer
+# Renderer Type
 
 ```ts
 type Renderer = object;
@@ -14,7 +14,7 @@ type Renderer = object;
 optional Data: unknown;
 ```
 
-***
+---
 
 ### Error
 
@@ -22,7 +22,7 @@ optional Data: unknown;
 Error: unknown;
 ```
 
-***
+---
 
 ### IsPending
 

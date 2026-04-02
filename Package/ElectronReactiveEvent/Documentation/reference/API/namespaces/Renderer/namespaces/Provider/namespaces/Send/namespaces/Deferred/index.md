@@ -4,12 +4,12 @@
 
 ## Namespaces
 
-| Namespace | Description |
-| ------ | ------ |
-| [Function](namespaces/Function/index.md) | - |
+| Namespace                                | Description |
+| ---------------------------------------- | ----------- |
+| [Function](namespaces/Function/index.md) | -           |
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [ReturnType](type-aliases/ReturnType.md) | - |
+| Type Alias                               | Description |
+| ---------------------------------------- | ----------- |
+| [ReturnType](type-aliases/ReturnType.md) | -           |

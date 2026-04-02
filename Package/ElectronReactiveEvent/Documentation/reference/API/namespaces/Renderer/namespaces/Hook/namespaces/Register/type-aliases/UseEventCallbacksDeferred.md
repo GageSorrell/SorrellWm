@@ -1,9 +1,11 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Register](../index.md) / UseEventCallbacksDeferred
 
-# Type: UseEventCallbacksDeferred()
+# UseEventCallbacksDeferred() Type
 
 ```ts
-type UseEventCallbacksDeferred<MainRegistrar> = () => Readonly<[ByRecord<MainRegistrar>]>;
+type UseEventCallbacksDeferred<MainRegistrar> = () => Readonly<
+	[Callback.RegisterFunction.ByRecord<MainRegistrar>]
+>;
 ```
 
 The deferred form of UseEventCallbacks.
@@ -12,10 +14,10 @@ The deferred form of UseEventCallbacks.
 
 ### MainRegistrar
 
-`MainRegistrar` *extends* [`IMainRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`MainRegistrar` _extends_ [`IMainRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 ## Returns
 
-`Readonly`\<\[[`ByRecord`](../../../../../../Callback/namespaces/RegisterFunction/type-aliases/ByRecord.md)\<`MainRegistrar`\>\]\>
+`Readonly`\<\[`Callback.RegisterFunction.ByRecord`\<`MainRegistrar`\>\]\>
 
 A function equivalent to [Main.FactoryReturnType.registerCallbacks](../../../../../../Main/type-aliases/FactoryReturnType.md#registercallbacks).

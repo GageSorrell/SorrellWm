@@ -13,11 +13,21 @@ import { GetResponseChannel } from "../Utility.js";
 import type { Internal } from "../Internal/index.js";
 import type { Shared } from "../Shared/index.js";
 
-export const GetMainReactiveEventFunctions = <
+/**
+ * Get the IPC functions for sending and receiving events to/from the `renderer`.
+ * The returned functions are typed to your registrar interfaces.
+ *
+ * @see {@link FactoryReturnType} for the function types returned by this function.
+ *
+ * @typeParam MainRegistrar - The event registrar for your `main` events.
+ * @typeParam RendererRegistrar - The event registrar for your `renderer` events.
+ *
+ * @returns The IPC functions typed to your event registrars.
+ */
+export function getMainIpc<
     MainRegistrar extends Shared.Registrar.IMainRegistrarBase,
     RendererRegistrar extends Shared.Registrar.IRendererRegistrarBase
->(
-): Main.FactoryReturnType<MainRegistrar, RendererRegistrar> =>
+>(): Main.FactoryReturnType<MainRegistrar, RendererRegistrar>
 {
     type CallbackWrapper = Parameters<typeof ipcMain.handle>[1];
     type StoredCallback =
@@ -53,6 +63,7 @@ export const GetMainReactiveEventFunctions = <
         Channel: ChannelType,
         BrowserWindows: WindowType
     ): Promise<SendEventReturn<ChannelType, WindowType>>;
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     async function SendEvent<ChannelType extends SendEventChannel,
         WindowType extends BrowserWindow | Array<BrowserWindow>
     >(
@@ -126,6 +137,7 @@ export const GetMainReactiveEventFunctions = <
         return Out as SendEventReturn<ChannelType, WindowType>;
     }
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function registerCallback<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Callback: Callback.Main<typeof Channel, RendererRegistrar>
@@ -183,6 +195,7 @@ export const GetMainReactiveEventFunctions = <
         ipcMain.handle(Channel, Wrapper);
     }
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function unregisterCallback<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType
     ): void
@@ -193,7 +206,7 @@ export const GetMainReactiveEventFunctions = <
     return {
         registerCallback,
         registerCallbacks: <ChannelType extends Channel.Channel<RendererRegistrar>>(
-            Record: Callback.Record<ChannelType, RendererRegistrar>
+            Record: Callback.EventRecord<ChannelType, RendererRegistrar>
         ): void =>
         {
             if (Callbacks === undefined)
@@ -217,7 +230,7 @@ export const GetMainReactiveEventFunctions = <
         },
         unregisterCallback: unregisterCallback,
         unregisterCallbacks: <ChannelType extends Channel.Channel<RendererRegistrar>>(
-            Record: Callback.Record<ChannelType, RendererRegistrar>
+            Record: Callback.EventRecord<ChannelType, RendererRegistrar>
         ): void =>
         {
             const UnregisterEntry = ([ InChannel /* , InCallback */ ]: [ string, unknown ]): void =>

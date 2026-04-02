@@ -1,19 +1,19 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / AwaitedReturnType
 
-# Type: AwaitedReturnType
+# AwaitedReturnType Type
 
 ```ts
-type AwaitedReturnType<ChannelType, Registrar> = 
-  | Success<ChannelType, Registrar>
-| Error<ChannelType, Registrar>;
+type AwaitedReturnType<ChannelType, Registrar> =
+	| Success<ChannelType, Registrar>
+	| Error<ChannelType, Registrar>;
 ```
 
 ## Type Parameters
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ### Registrar
 
-`Registrar` *extends* [`IRegistrarBase`](../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
+`Registrar` _extends_ [`IRegistrarBase`](../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)

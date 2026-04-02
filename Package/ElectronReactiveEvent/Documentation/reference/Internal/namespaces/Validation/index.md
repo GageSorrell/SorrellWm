@@ -4,9 +4,9 @@
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [IsNever](type-aliases/IsNever.md) | - |
-| [IsNotNever](type-aliases/IsNotNever.md) | - |
-| [IsPropertyValid](type-aliases/IsPropertyValid.md) | - |
-| [IsValid](type-aliases/IsValid.md) | - |
+| Type Alias                                         | Description |
+| -------------------------------------------------- | ----------- |
+| [IsNever](type-aliases/IsNever.md)                 | -           |
+| [IsNotNever](type-aliases/IsNotNever.md)           | -           |
+| [IsPropertyValid](type-aliases/IsPropertyValid.md) | -           |
+| [IsValid](type-aliases/IsValid.md)                 | -           |

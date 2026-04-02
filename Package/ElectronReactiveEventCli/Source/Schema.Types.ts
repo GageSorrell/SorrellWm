@@ -2,13 +2,17 @@
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
- * Comment:   This module defines the `Schema` type, from which the JSON schema
+ * Comment:   This module defines the `CliConfig` type, from which the JSON schema
  *            is created for the JSON file that may be provided to the
  *            `register` command.
  */
 
-export type FCliConfig =
+/* eslint-disable @typescript-eslint/naming-convention */
+
+export type CliConfig =
     {
+        "$schema": string;
+
         /** The `name` of the interface that holds your `main` event declarations. */
         main:
         {

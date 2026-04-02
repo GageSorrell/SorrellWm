@@ -1,11 +1,32 @@
 [electron-reactive-event](../../../../../../../../../../../../index.md) / [API](../../../../../../../../../../../index.md) / [Renderer](../../../../../../../../../index.md) / [Provider](../../../../../../../index.md) / [Send](../../../../../index.md) / [Deferred](../../../index.md) / [Function](../index.md) / SendEventDeferredBase
 
-# Type: SendEventDeferredBase()
+# SendEventDeferredBase() Type
 
 ```ts
 type SendEventDeferredBase<RendererRegistrar> = {
-<ChannelType>  (Channel): Promise<ReturnType<Extract<Exclude<keyof RendererRegistrar, number | symbol | "Owner">, Values<WithRequestHelper<RendererRegistrar>>>, RendererRegistrar>>;
-<ChannelType>  (Channel, Event): Promise<ReturnType<Extract<Exclude<keyof RendererRegistrar, number | symbol | "Owner">, Values<WithRequestHelper<RendererRegistrar>>>, RendererRegistrar>>;
+	<ChannelType>(
+		Channel,
+	): Promise<
+		ReturnType<
+			Extract<
+				Exclude<keyof RendererRegistrar, number | symbol | "Owner">,
+				Values<WithRequestHelper<RendererRegistrar>>
+			>,
+			RendererRegistrar
+		>
+	>;
+	<ChannelType>(
+		Channel,
+		Event,
+	): Promise<
+		ReturnType<
+			Extract<
+				Exclude<keyof RendererRegistrar, number | symbol | "Owner">,
+				Values<WithRequestHelper<RendererRegistrar>>
+			>,
+			RendererRegistrar
+		>
+	>;
 };
 ```
 
@@ -13,7 +34,7 @@ type SendEventDeferredBase<RendererRegistrar> = {
 
 ### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ## Call Signature
 
@@ -25,7 +46,7 @@ type SendEventDeferredBase<RendererRegistrar> = {
 
 #### ChannelType
 
-`ChannelType` *extends* `WithRequestHelper`\<`RendererRegistrar`\> & `string`
+`ChannelType` _extends_ `WithRequestHelper`\<`RendererRegistrar`\> & `string`
 
 ### Parameters
 
@@ -47,7 +68,7 @@ type SendEventDeferredBase<RendererRegistrar> = {
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 ### Parameters
 

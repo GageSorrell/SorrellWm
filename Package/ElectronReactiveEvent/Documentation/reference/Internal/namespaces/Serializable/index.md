@@ -4,7 +4,7 @@
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [IsSerializable](type-aliases/IsSerializable.md) | - |
-| [Serializable](type-aliases/Serializable.md) | - |
+| Type Alias                                       | Description |
+| ------------------------------------------------ | ----------- |
+| [IsSerializable](type-aliases/IsSerializable.md) | -           |
+| [Serializable](type-aliases/Serializable.md)     | -           |

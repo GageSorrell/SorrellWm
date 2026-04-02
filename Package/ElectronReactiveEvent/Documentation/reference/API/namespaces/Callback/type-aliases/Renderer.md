@@ -1,22 +1,24 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Callback](../index.md) / Renderer
 
-# Type: Renderer()
+# Renderer() Type
 
 ```ts
-type Renderer<ChannelType, Registrar> = (Argument) => ReturnType<ChannelType, Registrar>;
+type Renderer<ChannelType, Registrar> = (
+	Argument,
+) => ReturnType<ChannelType, Registrar>;
 ```
 
-`RendererCallback`s live under the `renderer`, *i.e.*, they receive `main` events.
+`RendererCallback`s live under the `renderer`, _i.e._, they receive `main` events.
 
 ## Type Parameters
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ### Registrar
 
-`Registrar` *extends* [`IMainRegistrarBase`](../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`Registrar` _extends_ [`IMainRegistrarBase`](../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 ## Parameters
 

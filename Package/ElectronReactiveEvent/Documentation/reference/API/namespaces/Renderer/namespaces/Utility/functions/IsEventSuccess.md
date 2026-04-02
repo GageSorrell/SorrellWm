@@ -1,22 +1,24 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Utility](../index.md) / IsEventSuccess
 
-# Function: IsEventSuccess()
+# IsEventSuccess() Function
 
 ## Call Signature
 
 ```ts
-function IsEventSuccess<ChannelType, RendererRegistrar>(__namedParameters): boolean;
+function IsEventSuccess<ChannelType, RendererRegistrar>(
+	__namedParameters,
+): boolean;
 ```
 
 ### Type Parameters
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 #### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ### Parameters
 
@@ -31,18 +33,20 @@ function IsEventSuccess<ChannelType, RendererRegistrar>(__namedParameters): bool
 ## Call Signature
 
 ```ts
-function IsEventSuccess<ChannelType, RendererRegistrar>(__namedParameters): boolean;
+function IsEventSuccess<ChannelType, RendererRegistrar>(
+	__namedParameters,
+): boolean;
 ```
 
 ### Type Parameters
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 #### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ### Parameters
 

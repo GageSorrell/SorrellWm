@@ -1,16 +1,23 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Event](../index.md) / AreArgumentsSerializable
 
-# Type: AreArgumentsSerializable
+# AreArgumentsSerializable Type
 
 ```ts
-type AreArgumentsSerializable<RequestDeclType, ResponseDeclType, ErrorMessageDeclType, ErrorPayloadDeclType> = ErrorPayloadDeclType extends [never] ? 
-  | IsSerializable<RequestDeclType>
-  | IsSerializable<ResponseDeclType>
-  | IsSerializable<ErrorMessageDeclType> : 
-  | IsSerializable<RequestDeclType>
-  | IsSerializable<ResponseDeclType>
-  | IsSerializable<ErrorMessageDeclType>
-| IsSerializable<ErrorPayloadDeclType>;
+type AreArgumentsSerializable<
+	RequestDeclType,
+	ResponseDeclType,
+	ErrorMessageDeclType,
+	ErrorPayloadDeclType,
+> = ErrorPayloadDeclType extends [never]
+	?
+			| IsSerializable<RequestDeclType>
+			| IsSerializable<ResponseDeclType>
+			| IsSerializable<ErrorMessageDeclType>
+	:
+			| IsSerializable<RequestDeclType>
+			| IsSerializable<ResponseDeclType>
+			| IsSerializable<ErrorMessageDeclType>
+			| IsSerializable<ErrorPayloadDeclType>;
 ```
 
 ## Type Parameters

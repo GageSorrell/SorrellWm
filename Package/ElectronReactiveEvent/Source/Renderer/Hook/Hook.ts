@@ -110,7 +110,7 @@ export function MakeEventHooks<
     }
 
     function useEventCallbacks<ChannelType extends Channel.Channel<MainRegistrar>>(
-        Record: Callback.Record<ChannelType, MainRegistrar>
+        Record: Callback.EventRecord<ChannelType, MainRegistrar>
     ): void
     {
         WrapHook("useEventCallbacks", Record);
@@ -147,6 +147,7 @@ export function MakeEventHooks<
     return {
         useEventCallback,
         useEventCallbackDeferred,
+        // @ts-ignore @TODO Fix this.
         useEventCallbacks,
         useEventCallbacksDeferred,
         useSendEvent,

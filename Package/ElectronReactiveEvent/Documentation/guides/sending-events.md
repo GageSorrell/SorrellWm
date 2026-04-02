@@ -1,6 +1,20 @@
+---
+next: false
+---
+[electron-reactive-event](/docs) / [Guides](./) / Sending Events
+
 # Sending Events
 
-**Purpose.**&ensp;@TODO
+::: tip Purpose
+@TODO
+:::
+
+<div class="CustomTocContainer">
+<p class="CustomTocTitle">In this article</p>
+
+[[toc]]
+
+</div>
 
 ## `main` Events
 

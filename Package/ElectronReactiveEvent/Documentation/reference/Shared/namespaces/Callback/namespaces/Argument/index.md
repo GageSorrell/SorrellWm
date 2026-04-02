@@ -4,13 +4,13 @@
 
 ## Namespaces
 
-| Namespace | Description |
-| ------ | ------ |
-| [Base](namespaces/Base/index.md) | - |
+| Namespace                        | Description |
+| -------------------------------- | ----------- |
+| [Base](namespaces/Base/index.md) | -           |
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [Base](type-aliases/Base.md) | - |
-| [RequestPart](type-aliases/RequestPart.md) | - |
+| Type Alias                                 | Description |
+| ------------------------------------------ | ----------- |
+| [Base](type-aliases/Base.md)               | -           |
+| [RequestPart](type-aliases/RequestPart.md) | -           |

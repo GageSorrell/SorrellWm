@@ -4,7 +4,7 @@
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [Main](type-aliases/Main.md) | - |
-| [Renderer](type-aliases/Renderer.md) | - |
+| Type Alias                           | Description |
+| ------------------------------------ | ----------- |
+| [Main](type-aliases/Main.md)         | -           |
+| [Renderer](type-aliases/Renderer.md) | -           |

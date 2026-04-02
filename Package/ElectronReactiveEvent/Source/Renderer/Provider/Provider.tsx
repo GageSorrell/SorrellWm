@@ -87,7 +87,7 @@ export const GetReactiveEventProvider = <
     }: Preload.IpcRendererFunctions = window.electronReactiveEvent as Preload.IpcRendererFunctions;
 
     type ThisCallbackRecord<ChannelType extends Channel.Channel<MainRegistrar>> =
-        Callback.Record<ChannelType, MainRegistrar>;
+        Callback.EventRecord<ChannelType, MainRegistrar>;
 
     function GetOrCreateResponsePromise<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType,
@@ -554,6 +554,7 @@ export const GetReactiveEventProvider = <
         {
             useEventCallback,
             useEventCallbackDeferred,
+            /* @ts-expect-error @TODO Update types used in this definition. */
             useEventCallbacks,
             useEventCallbacksDeferred,
             useSendEvent,

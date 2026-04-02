@@ -1,11 +1,14 @@
 [electron-reactive-event](../../../../../../../../../../../../index.md) / [API](../../../../../../../../../../../index.md) / [Renderer](../../../../../../../../../index.md) / [Provider](../../../../../../../index.md) / [Send](../../../../../index.md) / [Deferred](../../../index.md) / [Function](../index.md) / SendEventDeferred
 
-# Type: SendEventDeferred()
+# SendEventDeferred() Type
 
 ```ts
 type SendEventDeferred<RendererRegistrar> = {
-<ChannelType>  (Channel): Promise<ReturnType<ChannelType, RendererRegistrar>>;
-<ChannelType>  (Channel, Event): Promise<ReturnType<ChannelType, RendererRegistrar>>;
+	<ChannelType>(Channel): Promise<ReturnType<ChannelType, RendererRegistrar>>;
+	<ChannelType>(
+		Channel,
+		Event,
+	): Promise<ReturnType<ChannelType, RendererRegistrar>>;
 };
 ```
 
@@ -13,7 +16,7 @@ type SendEventDeferred<RendererRegistrar> = {
 
 ### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ## Call Signature
 
@@ -25,7 +28,7 @@ type SendEventDeferred<RendererRegistrar> = {
 
 #### ChannelType
 
-`ChannelType` *extends* `WithRequestHelper`\<`RendererRegistrar`\> & `string`
+`ChannelType` _extends_ `WithRequestHelper`\<`RendererRegistrar`\> & `string`
 
 ### Parameters
 
@@ -47,7 +50,7 @@ type SendEventDeferred<RendererRegistrar> = {
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 ### Parameters
 

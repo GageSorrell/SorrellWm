@@ -4,8 +4,10 @@
  * License:   MIT
  */
 
+import type { Shared } from ".";
 import type { Callback, Channel } from "..";
 import type { Internal } from "../Internal";
+import type { FactoryReturnType } from "../Main";
 
 export type UnregisterCallback<Registrar extends Internal.Registrar.IRegistrarBase> =
     <ChannelType extends Channel.Channel<Registrar>>(
@@ -13,5 +15,5 @@ export type UnregisterCallback<Registrar extends Internal.Registrar.IRegistrarBa
         Callback: Callback.Callback<ChannelType, Registrar>
     ) => void;
 
-export type UnregisterCallbacks<Registrar extends Internal.Registrar.IRegistrarBase> =
-    Callback.RegisterFunction.ByRecord<Registrar>;
+export type UnregisterCallbacks<Registrar extends Shared.Registrar.IRendererRegistrarBase> =
+    FactoryReturnType<Shared.Registrar.IMainRegistrarBase, Registrar>["registerCallbacks"];

@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Internal](../../../../../index.md) / [Factory](../../../index.md) / [Response](../index.md) / Main
 
-# Type Alias: Main
+# Main Type
 
 ```ts
 type Main = object;
@@ -14,7 +14,7 @@ type Main = object;
 optional Data: unknown;
 ```
 
-***
+---
 
 ### Error
 

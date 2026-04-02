@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Shared](../../../index.md) / [Function](../index.md) / UnregisterCallback
 
-# Type: UnregisterCallback()
+# UnregisterCallback() Type
 
 ```ts
 type UnregisterCallback<Registrar> = <ChannelType>(Channel, Callback) => void;
@@ -10,13 +10,13 @@ type UnregisterCallback<Registrar> = <ChannelType>(Channel, Callback) => void;
 
 ### Registrar
 
-`Registrar` *extends* [`IRegistrarBase`](../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
+`Registrar` _extends_ [`IRegistrarBase`](../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
 
 ## Type Parameters
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../../../API/namespaces/Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../../../API/namespaces/Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ## Parameters
 

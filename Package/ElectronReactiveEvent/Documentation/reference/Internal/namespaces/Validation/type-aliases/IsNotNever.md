@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Validation](../index.md) / IsNotNever
 
-# Type: IsNotNever
+# IsNotNever Type
 
 ```ts
 type IsNotNever<Type> = IsNever<Type> extends true ? false : true;

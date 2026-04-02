@@ -4,7 +4,7 @@
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [ArrayNonempty](type-aliases/ArrayNonempty.md) | - |
-| [Values](type-aliases/Values.md) | - |
+| Type Alias                                     | Description |
+| ---------------------------------------------- | ----------- |
+| [ArrayNonempty](type-aliases/ArrayNonempty.md) | -           |
+| [Values](type-aliases/Values.md)               | -           |

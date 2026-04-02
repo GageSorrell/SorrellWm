@@ -2,15 +2,17 @@
 
 # Registrar
 
+Types used for working with registrar interfaces.
+
 ## Interfaces
 
-| Interface | Description |
-| ------ | ------ |
-| [IMainRegistrarBase](interfaces/IMainRegistrarBase.md) | - |
-| [IRendererRegistrarBase](interfaces/IRendererRegistrarBase.md) | - |
+| Interface                                                      | Description |
+| -------------------------------------------------------------- | ----------- |
+| [IMainRegistrarBase](interfaces/IMainRegistrarBase.md)         | -           |
+| [IRendererRegistrarBase](interfaces/IRendererRegistrarBase.md) | -           |
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
+| Type Alias                     | Description                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------- |
 | [Owner](type-aliases/Owner.md) | The `Owner` of an event declaration is the from whom a given event is sent. |

@@ -4,7 +4,6 @@
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [ReturnType](type-aliases/ReturnType.md) | - |
-| [Send](type-aliases/Send.md) | - |
+| Type Alias                               | Description                                                      |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| [ReturnType](type-aliases/ReturnType.md) | The type returned by the `renderer` from the Send.Send function. |

@@ -2,9 +2,11 @@
 
 # Function
 
+Types of functions, their arguments, and return values.
+
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [UnregisterCallback](type-aliases/UnregisterCallback.md) | - |
-| [UnregisterCallbacks](type-aliases/UnregisterCallbacks.md) | - |
+| Type Alias                                                 | Description |
+| ---------------------------------------------------------- | ----------- |
+| [UnregisterCallback](type-aliases/UnregisterCallback.md)   | -           |
+| [UnregisterCallbacks](type-aliases/UnregisterCallbacks.md) | -           |

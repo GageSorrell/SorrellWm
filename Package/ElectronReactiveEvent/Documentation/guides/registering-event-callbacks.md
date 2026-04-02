@@ -1,6 +1,17 @@
+[electron-reactive-event](/docs) / [Guides](./) / Registering Event Callbacks
+
 # Registering Event Callbacks
 
-**Purpose.**&ensp;@TODO
+::: tip Purpose
+@TODO
+:::
+
+<div class="CustomTocContainer">
+<p class="CustomTocTitle">In this article</p>
+
+[[toc]]
+
+</div>
 
 ## `main` Events
 

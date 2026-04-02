@@ -5,85 +5,85 @@
  */
 
 import { defineConfig } from "vitepress";
-import typedocSidebar from "../reference/typedoc-sidebar.json";
 import FluentIcon from "../Component/FluentIcon.vue";
 import type * as minisearch from "minisearch";
+import { sidebar } from "./Sidebar";
+import { withTwoslash } from 'vitepress-plugin-shiki-twoslash'
+import {
+    groupIconMdPlugin,
+    groupIconVitePlugin
+} from "vitepress-plugin-group-icons";
+import {
+    transformerMetaWordHighlight,
+    transformerNotationWordHighlight } from "@shikijs/transformers";
 
-// https://vitepress.dev/reference/site-config
-export default defineConfig({
-    title: "Electron Reactive Event",
+export default withTwoslash(defineConfig({
     description: "Type-safe Electron IPC functions, including modern React hooks.",
+    title: "Electron Reactive Event",
+
     head:
     [
-        ['link', { rel: 'icon', href: '/logo.png' }]
+        ["link", { rel: "icon", href: "/logo.png" }]
     ],
-    themeConfig: {
+    lastUpdated: true,
+    markdown:
+    {
+        codeTransformers:
+        [
+            transformerMetaWordHighlight(),
+            transformerNotationWordHighlight()
+        ],
+        config(MarkdownIt)
+        {
+            MarkdownIt.use(groupIconMdPlugin);
+        },
+        toc: {
+            level: [2, 3, 4],
+            containerTag: "nav",
+            containerClass: "CustomToc",
+            listTag: "ul",
+            listClass: "CustomTocList",
+            itemClass: "CustomTocItem",
+            linkClass: "CustomTocLink",
+            shouldAllowNested: false
+        }
+    },
+    themeConfig:
+    {
         footer:
         {
-            copyright: "<span class=\"FluentIcon\" aria-hidden=\"true\">&#xF2B7;</span> &copy; 2026 Gage Sorrell.  Released under the <a ref=\"https://github.com/GageSorrell/SorrellWm/blob/Master/Package/ElectronReactiveEvent/License.md\">MIT License.&nbsp;<span class=\"FluentIconSmall\" aria-hidden=\"true\">&#xE8A7</span></a>"
+            copyright: "&copy; 2026 Gage Sorrell.  Released under the <a style=\"font-size: 14px !important;\" ref=\"https://github.com/GageSorrell/SorrellWm/blob/Master/Package/ElectronReactiveEvent/License.md\">MIT License&nbsp;<span class=\"FluentIconSmall\" aria-hidden=\"true\">&#xE8A7</span></a>.  Planet logo is owned by Microsoft."
         },
-        nav: [{ text: "Home", link: "/" }],
         logo: "./logo.png",
-        search: {
-            provider: 'local',
+        outline:
+        {
+            label: "In this article",
+            level: [ 2, 3 ],
         },
-        sidebar: [
+        search: {
+            provider: "local",
+        },
+        nav:
+        [
             {
-                text: "Articles",
-                items:
-                [
-                    {
-                        text: "Introduction",
-                        link: "/articles/introduction"
-                    },
-                    {
-                        text: "Glossary",
-                        link: "/articles/glossary"
-                    },
-                    {
-                        text: "Project Setup",
-                        link: "/articles/project-setup"
-                    },
-                    {
-                        text: "Declaring Events",
-                        link: "/articles/declaring-events"
-                    },
-                    {
-                        text: "Registering Event Callbacks",
-                        link: "/articles/registering-event-callbacks"
-                    },
-                    {
-                        text: "Sending Events",
-                        link: "/articles/sending-events"
-                    }
-                ]
+                text: "Documentation",
+                link: "/articles/introduction"
             },
             {
-                "CLI Articles",
-                items:
-                [
-                    {
-                        text: "Introduction",
-                        link: "articles/cli/introduction"
-                    },
-                    // @TODO
-                    //
-                    // WHERE TO PICK BACK UP:
-                    //
-                    // Write articles for the CLI.
-                    // *Don't* create typedoc docs for the CLI.
-                    // Instead, create articles for the CLI, including
-                    // an article that shows the JSON schema for the
-                    // config file.
-                ]
-            },
-            {
-                text: "Reference",
-                items: typedocSidebar,
+                text: "Contact",
+                link: "/contact"
             }
         ],
+        sidebar,
         socialLinks: [
         { icon: "github", link: "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/ElectronReactiveEvent" },
         ],
     },
-});
+    vite:
+    {
+        plugins:
+        [
+            groupIconVitePlugin()
+        ]
+    }
+}));

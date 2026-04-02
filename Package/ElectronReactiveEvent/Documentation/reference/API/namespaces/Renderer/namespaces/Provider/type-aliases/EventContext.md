@@ -1,17 +1,20 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Provider](../index.md) / EventContext
 
-# Type: EventContext
+# EventContext Type
 
 ```ts
 type EventContext<MainRegistrar, RendererRegistrar> = Partial<{
-  useEventCallback: Renderer<MainRegistrar>;
-  useEventCallbackDeferred: UseEventCallbackDeferred<MainRegistrar>;
-  useEventCallbacks: ByRecord<MainRegistrar>;
-  useEventCallbacksDeferred: UseEventCallbacksDeferred<MainRegistrar>;
-  useSendEvent: UseSendEvent<RendererRegistrar>;
-  useSendEventDeferred: UseSendEventDeferred<RendererRegistrar>;
-  useUnregisterCallbackDeferred: UseUnregisterCallbackDeferred<MainRegistrar>;
-  useUnregisterCallbacksDeferred: UseUnregisterCallbacksDeferred<MainRegistrar>;
+	useEventCallback: Renderer<MainRegistrar>;
+	useEventCallbackDeferred: UseEventCallbackDeferred<MainRegistrar>;
+	useEventCallbacks: FactoryReturnType<
+		MainRegistrar,
+		RendererRegistrar
+	>["registerCallbacks"];
+	useEventCallbacksDeferred: UseEventCallbacksDeferred<MainRegistrar>;
+	useSendEvent: UseSendEvent<RendererRegistrar>;
+	useSendEventDeferred: UseSendEventDeferred<RendererRegistrar>;
+	useUnregisterCallbackDeferred: UseUnregisterCallbackDeferred<MainRegistrar>;
+	useUnregisterCallbacksDeferred: UseUnregisterCallbacksDeferred<MainRegistrar>;
 }>;
 ```
 
@@ -19,8 +22,8 @@ type EventContext<MainRegistrar, RendererRegistrar> = Partial<{
 
 ### MainRegistrar
 
-`MainRegistrar` *extends* [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`MainRegistrar` _extends_ [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 ### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)

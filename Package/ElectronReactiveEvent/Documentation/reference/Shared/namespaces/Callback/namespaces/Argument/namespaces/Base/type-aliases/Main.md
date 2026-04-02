@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../../../index.md) / [Shared](../../../../../../../index.md) / [Callback](../../../../../index.md) / [Argument](../../../index.md) / [Base](../index.md) / Main
 
-# Type Alias: Main
+# Main Type
 
 ```ts
 type Main = object;

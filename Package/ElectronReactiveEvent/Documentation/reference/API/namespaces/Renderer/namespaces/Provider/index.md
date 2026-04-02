@@ -4,28 +4,28 @@
 
 ## Namespaces
 
-| Namespace | Description |
-| ------ | ------ |
-| [Send](namespaces/Send/index.md) | - |
+| Namespace                        | Description |
+| -------------------------------- | ----------- |
+| [Send](namespaces/Send/index.md) | -           |
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [EventContext](type-aliases/EventContext.md) | - |
-| [EventContextUnknown](type-aliases/EventContextUnknown.md) | - |
-| [EventHooks](type-aliases/EventHooks.md) | - |
-| [EventProvider](type-aliases/EventProvider.md) | - |
-| [ReactiveEventProviderComponent](type-aliases/ReactiveEventProviderComponent.md) | - |
+| Type Alias                                                                       | Description |
+| -------------------------------------------------------------------------------- | ----------- |
+| [EventContext](type-aliases/EventContext.md)                                     | -           |
+| [EventContextUnknown](type-aliases/EventContextUnknown.md)                       | -           |
+| [EventHooks](type-aliases/EventHooks.md)                                         | -           |
+| [EventProvider](type-aliases/EventProvider.md)                                   | -           |
+| [ReactiveEventProviderComponent](type-aliases/ReactiveEventProviderComponent.md) | -           |
 
 ## Variables
 
-| Variable | Description |
-| ------ | ------ |
-| [FactoryContextRef](variables/FactoryContextRef.md) | - |
+| Variable                                            | Description |
+| --------------------------------------------------- | ----------- |
+| [FactoryContextRef](variables/FactoryContextRef.md) | -           |
 
 ## Functions
 
-| Function | Description |
-| ------ | ------ |
+| Function                                                          | Description                                                                                                                                                                                                          |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [GetReactiveEventProvider](functions/GetReactiveEventProvider.md) | The main provider for `electron-reactive-event`. You likely want to wrap this with your own provider in which you provide a `value` containing the `ipcRenderer` functions that you exposed via `exposeInMainWorld`. |

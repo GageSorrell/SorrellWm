@@ -1,9 +1,11 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Register](../index.md) / UseUnregisterCallbackDeferred
 
-# Type: UseUnregisterCallbackDeferred()
+# UseUnregisterCallbackDeferred() Type
 
 ```ts
-type UseUnregisterCallbackDeferred<MainRegistrar> = () => Readonly<[UnregisterCallback<MainRegistrar>]>;
+type UseUnregisterCallbackDeferred<MainRegistrar> = () => Readonly<
+	[UnregisterCallback<MainRegistrar>]
+>;
 ```
 
 Unregister callbacks that were registered via [UseEventCallbackDeferred](UseEventCallbackDeferred.md).
@@ -12,7 +14,7 @@ Unregister callbacks that were registered via [UseEventCallbackDeferred](UseEven
 
 ### MainRegistrar
 
-`MainRegistrar` *extends* [`IMainRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`MainRegistrar` _extends_ [`IMainRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 ## Returns
 
@@ -23,5 +25,5 @@ A function equivalent to [Main.FactoryReturnType.unregisterCallback](../../../..
 ## Remarks
 
 Callbacks that were registered via UseEventCallback or UseEventCallbacks
-are unregistered for you when the containing component unmounts.  That is, you do *not*
+are unregistered for you when the containing component unmounts. That is, you do _not_
 need to unregister such events with this function (nor with [UseUnregisterCallbacksDeferred](UseUnregisterCallbacksDeferred.md)).

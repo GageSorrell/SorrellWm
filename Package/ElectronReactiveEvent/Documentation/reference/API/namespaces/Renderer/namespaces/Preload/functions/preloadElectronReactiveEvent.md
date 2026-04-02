@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Preload](../index.md) / preloadElectronReactiveEvent
 
-# Function: preloadElectronReactiveEvent()
+# preloadElectronReactiveEvent() Function
 
 ```ts
 function preloadElectronReactiveEvent(ipcRendererFunctions?): void;
@@ -14,7 +14,7 @@ Exposes the necessary `ipcRenderer` functions to the `renderer`.
 
 [`IpcRendererFunctions`](../type-aliases/IpcRendererFunctions.md)
 
-*(Optional)* Provide wrappers for the necessary `ipcRenderer` functions.
+_(Optional)_ Provide wrappers for the necessary `ipcRenderer` functions.
 
 ## Returns
 

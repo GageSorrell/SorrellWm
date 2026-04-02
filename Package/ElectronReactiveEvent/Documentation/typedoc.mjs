@@ -19,8 +19,11 @@ const Options =
             "../Source/Shared/index.inner.ts",
             "../Source/index.ts"
         ],
+        favicon: "./public/logo.png",
+        formatWithPrettier: true,
         indexFormat: "table",
-        navigation: {
+        navigation:
+        {
             includeGroups: true
         },
         out: "./reference",
@@ -28,27 +31,32 @@ const Options =
         {
             member: (Arguments) =>
             {
-                if (Arguments.kind === "Type Alias")
+                const Type = Arguments.kind === "Type Alias"
+                    ? "Type"
+                    : Arguments.kind;
+
+                const Keyword = Arguments.keyword
+                    ? ` (${ Arguments.keyword })`
+                    : "";
+
+                const GetNameWithoutTypeParameters = () =>
                 {
                     const GenericIndex = Arguments.name.indexOf("\\<");
-                    if (GenericIndex > 0)
-                    {
-                        const Name = Arguments.name.slice(0, GenericIndex);
-                        return `Type: ${ Name }`;
-                    }
+                    return (GenericIndex > 0)
+                        ? Arguments.name.slice(0, GenericIndex)
+                        : Arguments.name;
+                };
 
-                }
+                const Name = GetNameWithoutTypeParameters();
 
-                return (
-                    `${ Arguments.keyword ? `${ Arguments.keyword } ` : "" }` +
-                    `${ Arguments.kind }: ${ Arguments.name }`
-                );
+                return `${ Name } ${ Type }${ Keyword }`;
             }
         },
         plugin: [
             "typedoc-plugin-markdown",
             "typedoc-vitepress-theme"
         ],
+        prettierConfigFile: "./.prettierrc",
         readme: "none",
         requiredToBeDocumented: [
             "Namespace",

@@ -1,6 +1,17 @@
+[electron-reactive-event](/docs) / [Guides](./) / Declaring Events
+
 # Declaring Events
 
-**Purpose.**&ensp;This article describes what event declarations are, and what considerations should be made when defining them.
+::: tip Purpose
+This article describes what event declarations are, and what considerations should be made when defining them.
+:::
+
+<div class="CustomTocContainer">
+<p class="CustomTocTitle">In this article</p>
+
+[[toc]]
+
+</div>
 
 ## Basic Shape
 

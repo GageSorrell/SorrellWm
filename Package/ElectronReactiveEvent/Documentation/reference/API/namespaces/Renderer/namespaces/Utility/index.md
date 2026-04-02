@@ -4,7 +4,7 @@
 
 ## Functions
 
-| Function | Description |
-| ------ | ------ |
-| [IsEventFailure](functions/IsEventFailure.md) | - |
-| [IsEventSuccess](functions/IsEventSuccess.md) | - |
+| Function                                      | Description |
+| --------------------------------------------- | ----------- |
+| [IsEventFailure](functions/IsEventFailure.md) | -           |
+| [IsEventSuccess](functions/IsEventSuccess.md) | -           |

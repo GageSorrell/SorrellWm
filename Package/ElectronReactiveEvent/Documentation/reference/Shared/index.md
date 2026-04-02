@@ -7,8 +7,8 @@ so that importing the `index.js` module gives a single object `Shared`.
 
 ## Namespaces
 
-| Namespace | Description |
-| ------ | ------ |
-| [Callback](namespaces/Callback/index.md) | - |
-| [Function](namespaces/Function/index.md) | - |
-| [Registrar](namespaces/Registrar/index.md) | - |
+| Namespace                                  | Description                                                   |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| [Callback](namespaces/Callback/index.md)   | Types for callbacks, used internally and in the exported API. |
+| [Function](namespaces/Function/index.md)   | Types of functions, their arguments, and return values.       |
+| [Registrar](namespaces/Registrar/index.md) | Types used for working with registrar interfaces.             |

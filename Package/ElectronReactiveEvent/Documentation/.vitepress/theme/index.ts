@@ -7,12 +7,19 @@
 import "./Theme.css"
 
 import type { Theme } from "vitepress";
-import DefaultTheme from "vitepress/theme-without-fonts"
+import DefaultTheme from "vitepress/theme-without-fonts";
 import FluentIcon from "../../Component/FluentIcon.vue";
+import Layout from "../../Component/Layout.vue";
+import "virtual:group-icons.css";
+import "vitepress-plugin-shiki-twoslash/styles.css";
 
-export default {
-extends: DefaultTheme,
-  enhanceApp({ app }) {
+const OutTheme: Theme = {
+    enhanceApp({ app })
+    {
         app.component("FluentIcon", FluentIcon)
-  }
+    },
+    extends: DefaultTheme,
+    Layout
 } satisfies Theme
+
+export default OutTheme;

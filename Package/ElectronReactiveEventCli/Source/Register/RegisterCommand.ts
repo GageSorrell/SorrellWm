@@ -8,7 +8,7 @@
 
 /* eslint-disable no-console */
 
-import { DefaultConfigFileName, type FCliConfig } from "../index.js";
+import { DefaultConfigFileName, type CliConfig } from "../index.js";
 import type {
     FEventDeclarationMatch,
     FEventDeclaringModule,
@@ -24,7 +24,7 @@ import { Code } from "@sorrell/cli-utilities";
 import type { IPackageJson } from "package-json-type";
 import TypeScript from "typescript";
 
-async function GetConfigFromContents(Contents: string): Promise<FCliConfig>
+async function GetConfigFromContents(Contents: string): Promise<CliConfig>
 {
     try
     {
@@ -50,7 +50,7 @@ async function GetConfigFromContents(Contents: string): Promise<FCliConfig>
                                         {
                                             if (typeof ParsedJson.outPath === "string")
                                             {
-                                                return ParsedJson as FCliConfig;
+                                                return ParsedJson as CliConfig;
                                             }
                                             else
                                             {
@@ -396,7 +396,7 @@ async function FindExportedEventDeclTypes(): Promise<Array<FEventDeclaringModule
     return [ ...MatchesByPath.values() ];
 }
 
-async function GetCliConfig(): Promise<FCliConfig>
+async function GetCliConfig(): Promise<CliConfig>
 {
     return GetConfigFromContents(await GetConfigContents());
 }
@@ -598,7 +598,7 @@ function GetGeneratedEventRegistrarModuleText(
 
 async function WriteGeneratedEventRegistrarModule(
     EventDeclarationMatches: ReadonlyArray<FEventDeclarationMatch>,
-    CliConfig: FCliConfig
+    CliConfig: CliConfig
 ): Promise<void>
 {
     const MainRegistrar: FRegistrarDefinition = CliConfig.main;
@@ -622,7 +622,7 @@ async function WriteGeneratedEventRegistrarModule(
 
 export async function Register(): Promise<void>
 {
-    const { Data: CliConfig } = await OraTask<FCliConfig>(
+    const { Data: CliConfig } = await OraTask<CliConfig>(
         GetCliConfig,
         "Loading your config file..."
     );

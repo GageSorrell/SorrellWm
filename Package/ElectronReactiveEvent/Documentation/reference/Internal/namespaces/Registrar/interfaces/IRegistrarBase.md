@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Registrar](../index.md) / IRegistrarBase
 
-# Interface: IRegistrarBase
+# IRegistrarBase Interface
 
 ## Extended by
 

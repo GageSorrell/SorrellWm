@@ -1,12 +1,15 @@
 [electron-reactive-event](../../../../index.md) / [API](../../../index.md) / [Channel](../index.md) / NoResponse
 
-# Type: NoResponse
+# NoResponse Type
 
 ```ts
-type NoResponse<Registrar> = Extract<RegistrarWithNames<Registrar>, IEventDeclNoResponse>;
+type NoResponse<Registrar> = Extract<
+	RegistrarWithNames<Registrar>,
+	IEventDeclNoResponse
+>;
 ```
 
-Channels whose event declarations do *not* define a response type.
+Channels whose event declarations do _not_ define a response type.
 
 ## Type Parameters
 

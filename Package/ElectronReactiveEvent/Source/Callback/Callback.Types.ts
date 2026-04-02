@@ -150,7 +150,7 @@ export type Renderer<
  * @typeParam ChannelType - The desired channel of the given {@link Registrar}.
  * @typeParam Registrar - The registrar interface that holds the desired event declaration.
  */
-export type Record<
+export type EventRecord<
     ChannelType extends Channel.Channel<Registrar>,
     Registrar extends Internal.Registrar.IRegistrarBase
 > =
@@ -165,19 +165,6 @@ export type Record<
 /** Functions that are responsible for registering callbacks. */
 export namespace RegisterFunction
 {
-    /**
-     * Register a given `main` callback function for a given channel.
-     *
-     * @typeParam Registrar - The registrar interface that holds the desired event declaration.
-     * @param Channel - The channel of the event declaration corresponding to the given `Callback`.
-     * @param Callback - The callback function that will be called when an event of channel `Channel`
-     * is received from the `renderer`.
-     */
-    export type Main<Registrar extends Shared.Registrar.IRendererRegistrarBase> =
-        <ChannelType extends Channel.Channel<Registrar>>(
-            Channel: ChannelType,
-            Callback: Callback.Main<ChannelType, Registrar>
-        ) => void;
 
     /**
      * Register a given `renderer` callback function for a given channel.
@@ -192,18 +179,6 @@ export namespace RegisterFunction
             Channel: ChannelType,
             Callback: Callback.Renderer<ChannelType, Registrar>
         ) => void;
-
-    /** {@inheritDoc Main.FactoryReturnType.registerCallbacks} */
-    export type ByRecord<
-        OuterRegistrar extends Internal.Registrar.IRegistrarBase = Internal.Registrar.IRegistrarBase,
-        OuterChannelType extends Channel.Channel<OuterRegistrar> = Channel.Channel<OuterRegistrar>
-    > =
-        | (<ChannelType extends OuterChannelType, Registrar extends OuterRegistrar>(
-            Record: Record<ChannelType, Registrar>) => void)
-        | (<ChannelType extends OuterChannelType>(
-            Record: Record<ChannelType, OuterRegistrar>) => void)
-        | (<ChannelType extends OuterChannelType>(
-            Record: Record<ChannelType, OuterRegistrar>) => void);
 }
 
 /**

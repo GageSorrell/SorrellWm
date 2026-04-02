@@ -11,6 +11,11 @@
  * @module Shared
  */
 
+/** Types for callbacks, used internally and in the exported API. */
 export type * as Callback from "./Callback.Types.js";
+
+/** Types of functions, their arguments, and return values. */
 export type * as Function from "./Function.Types.js";
+
+/** Types used for working with registrar interfaces. */
 export type * as Registrar from "./Registrar.Types.js";

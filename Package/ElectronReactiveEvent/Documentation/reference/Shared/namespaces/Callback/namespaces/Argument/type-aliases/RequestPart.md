@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Shared](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / RequestPart
 
-# Type: RequestPart
+# RequestPart Type
 
 ```ts
 type RequestPart<ChannelType, Registrar> = object;
@@ -10,11 +10,11 @@ type RequestPart<ChannelType, Registrar> = object;
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../../../../../API/namespaces/Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../../../../../API/namespaces/Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ### Registrar
 
-`Registrar` *extends* [`IRegistrarBase`](../../../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
+`Registrar` _extends_ [`IRegistrarBase`](../../../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
 
 ## Properties
 

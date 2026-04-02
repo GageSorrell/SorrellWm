@@ -1,9 +1,15 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Serializable](../index.md) / IsSerializable
 
-# Type: IsSerializable
+# IsSerializable Type
 
 ```ts
-type IsSerializable<Type, SeenType, DepthType> = Extract<SerializableMemberFlag<Type, SeenType, DepthType>, false> extends never ? true : false;
+type IsSerializable<Type, SeenType, DepthType> =
+	Extract<
+		SerializableMemberFlag<Type, SeenType, DepthType>,
+		false
+	> extends never
+		? true
+		: false;
 ```
 
 ## Type Parameters
@@ -14,8 +20,8 @@ type IsSerializable<Type, SeenType, DepthType> = Extract<SerializableMemberFlag<
 
 ### SeenType
 
-`SeenType` *extends* `ReadonlyArray`\<`unknown`\> = `ReadonlyArray`\<`unknown`\>
+`SeenType` _extends_ `ReadonlyArray`\<`unknown`\> = `ReadonlyArray`\<`unknown`\>
 
 ### DepthType
 
-`DepthType` *extends* `ReadonlyArray`\<`unknown`\> = `ReadonlyArray`\<`unknown`\>
+`DepthType` _extends_ `ReadonlyArray`\<`unknown`\> = `ReadonlyArray`\<`unknown`\>

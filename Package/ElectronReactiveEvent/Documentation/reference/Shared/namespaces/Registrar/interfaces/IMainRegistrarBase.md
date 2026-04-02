@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Shared](../../../index.md) / [Registrar](../index.md) / IMainRegistrarBase
 
-# Interface: IMainRegistrarBase
+# IMainRegistrarBase Interface
 
 ## Extends
 

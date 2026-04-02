@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Validation](../index.md) / IsValid
 
-# Type: IsValid
+# IsValid Type
 
 ```ts
 type IsValid<Type> = IsNotNever<Type>;

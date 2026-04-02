@@ -10,7 +10,7 @@
 
 import { Code, Confirm } from "@sorrell/cli-utilities";
 import { DefaultConfigFileName, RunCommand } from "../index.js";
-import type { FCliConfig, FSetupOptions } from "../index.js";
+import type { CliConfig, FSetupOptions } from "../index.js";
 import {
     type FPackageJson,
     type FRegistrarDefinition,
@@ -28,7 +28,7 @@ import { Command } from "commander";
 import type { IPackageJson } from "package-json-type";
 import { Register } from "../Register/RegisterCommand.js";
 
-function GetEmptyCliConfig(): FCliConfig
+function GetEmptyCliConfig(): CliConfig
 {
     return {
         main:
@@ -45,7 +45,7 @@ function GetEmptyCliConfig(): FCliConfig
     };
 }
 
-async function WriteCliConfig(FileName: string, CliConfig: FCliConfig): Promise<void>
+async function WriteCliConfig(FileName: string, CliConfig: CliConfig): Promise<void>
 {
     const Ora: IOra = ora({
         spinner: "point",
@@ -261,7 +261,7 @@ async function SetupInteractive(this: Command): Promise<void>
     const ConfigFileName: string = await SelectConfigName(ConfigDirectoryPath);
 
     const OraWriteConfig: IOra = ora({ text: `Writing ${ Code(ConfigFileName) }...` }).start();
-    const Config: FCliConfig =
+    const Config: CliConfig =
         {
             main:
             {

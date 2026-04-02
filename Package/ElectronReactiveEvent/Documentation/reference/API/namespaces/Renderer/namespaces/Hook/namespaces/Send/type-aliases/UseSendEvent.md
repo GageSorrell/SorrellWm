@@ -1,12 +1,20 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Send](../index.md) / UseSendEvent
 
-# Type: UseSendEvent()
+# UseSendEvent() Type
 
 ```ts
 type UseSendEvent<RendererRegistrar> = {
-<ChannelType>  (Channel, Event, Suspend?): UseSendEventReturn<ChannelType, RendererRegistrar>;
-<ChannelType>  (Channel): UseSendEventReturn<ChannelType, RendererRegistrar>;
-<ChannelType>  (Channel, Event, Suspend): UseSendEventReturn<ChannelType, RendererRegistrar>;
+	<ChannelType>(
+		Channel,
+		Event,
+		Suspend?,
+	): UseSendEventReturn<ChannelType, RendererRegistrar>;
+	<ChannelType>(Channel): UseSendEventReturn<ChannelType, RendererRegistrar>;
+	<ChannelType>(
+		Channel,
+		Event,
+		Suspend,
+	): UseSendEventReturn<ChannelType, RendererRegistrar>;
 };
 ```
 
@@ -14,7 +22,7 @@ type UseSendEvent<RendererRegistrar> = {
 
 ### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 The [registrar](/articles/glossary.html#registrar) that holds your
 
@@ -22,8 +30,8 @@ The [registrar](/articles/glossary.html#registrar) that holds your
 
 ```ts
 <ChannelType>(
-   Channel, 
-   Event, 
+   Channel,
+   Event,
 Suspend?): UseSendEventReturn<ChannelType, RendererRegistrar>;
 ```
 
@@ -31,7 +39,7 @@ Suspend?): UseSendEventReturn<ChannelType, RendererRegistrar>;
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 ### Parameters
 
@@ -61,7 +69,7 @@ Suspend?): UseSendEventReturn<ChannelType, RendererRegistrar>;
 
 #### ChannelType
 
-`ChannelType` *extends* `WithRequestHelper`\<`RendererRegistrar`\> & `string`
+`ChannelType` _extends_ `WithRequestHelper`\<`RendererRegistrar`\> & `string`
 
 ### Parameters
 
@@ -77,8 +85,8 @@ Suspend?): UseSendEventReturn<ChannelType, RendererRegistrar>;
 
 ```ts
 <ChannelType>(
-   Channel, 
-   Event, 
+   Channel,
+   Event,
 Suspend): UseSendEventReturn<ChannelType, RendererRegistrar>;
 ```
 
@@ -86,7 +94,7 @@ Suspend): UseSendEventReturn<ChannelType, RendererRegistrar>;
 
 #### ChannelType
 
-`ChannelType` *extends* `WithRequestHelper`\<`RendererRegistrar`\> & `string`
+`ChannelType` _extends_ `WithRequestHelper`\<`RendererRegistrar`\> & `string`
 
 ### Parameters
 

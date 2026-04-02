@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Provider](../index.md) / EventProvider
 
-# Type Alias: EventProvider()
+# EventProvider() Type
 
 ```ts
 type EventProvider = ({ children }) => ReactNode;

@@ -20,7 +20,7 @@ import type { Shared } from "./Shared/index.js";
  * Define event declarations with this type.
  * This is the type that you will likely use the most.
  *
- * @typeParam OwnerType -
+ * @typeParam OwnerType - @TODO
  * @typeParam RequestDeclType -
  * @typeParam ResponseDeclType -
  * @typeParam ErrorMessageDeclType -

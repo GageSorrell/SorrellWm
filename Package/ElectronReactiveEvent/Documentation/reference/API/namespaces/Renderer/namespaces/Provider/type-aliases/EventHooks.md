@@ -1,17 +1,19 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Provider](../index.md) / EventHooks
 
-# Type: EventHooks
+# EventHooks Type
 
 ```ts
-type EventHooks<MainRegistrar, RendererRegistrar> = Readonly<Required<EventContext<MainRegistrar, RendererRegistrar>>>;
+type EventHooks<MainRegistrar, RendererRegistrar> = Readonly<
+	Required<EventContext<MainRegistrar, RendererRegistrar>>
+>;
 ```
 
 ## Type Parameters
 
 ### MainRegistrar
 
-`MainRegistrar` *extends* [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`MainRegistrar` _extends_ [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 ### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)

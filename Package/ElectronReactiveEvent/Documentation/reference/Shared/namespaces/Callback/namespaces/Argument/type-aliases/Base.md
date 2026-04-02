@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [Shared](../../../../../index.md) / [Callback](../../../index.md) / [Argument](../index.md) / Base
 
-# Type: Base
+# Base Type
 
 ```ts
 type Base<Registrar> = Registrar extends IMainRegistrarBase ? Main : Renderer;
@@ -10,4 +10,4 @@ type Base<Registrar> = Registrar extends IMainRegistrarBase ? Main : Renderer;
 
 ### Registrar
 
-`Registrar` *extends* [`IRegistrarBase`](../../../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)
+`Registrar` _extends_ [`IRegistrarBase`](../../../../../../Internal/namespaces/Registrar/interfaces/IRegistrarBase.md)

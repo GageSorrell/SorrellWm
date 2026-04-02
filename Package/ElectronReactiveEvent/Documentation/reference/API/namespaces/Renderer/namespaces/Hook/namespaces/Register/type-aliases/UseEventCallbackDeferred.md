@@ -1,9 +1,11 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Register](../index.md) / UseEventCallbackDeferred
 
-# Type: UseEventCallbackDeferred()
+# UseEventCallbackDeferred() Type
 
 ```ts
-type UseEventCallbackDeferred<MainRegistrar> = () => Readonly<[Renderer<MainRegistrar>]>;
+type UseEventCallbackDeferred<MainRegistrar> = () => Readonly<
+	[Renderer<MainRegistrar>]
+>;
 ```
 
 The deferred form of UseEventCallback.
@@ -12,7 +14,7 @@ The deferred form of UseEventCallback.
 
 ### MainRegistrar
 
-`MainRegistrar` *extends* [`IMainRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`MainRegistrar` _extends_ [`IMainRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 ## Returns
 

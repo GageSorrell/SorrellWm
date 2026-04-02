@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Utility](../index.md) / IsEventFailure
 
-# Function: IsEventFailure()
+# IsEventFailure() Function
 
 ## Call Signature
 
@@ -12,11 +12,11 @@ function IsEventFailure<ChannelType, RendererRegistrar>(Response): boolean;
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 #### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ### Parameters
 
@@ -38,11 +38,11 @@ function IsEventFailure<ChannelType, RendererRegistrar>(Response): boolean;
 
 #### ChannelType
 
-`ChannelType` *extends* `string`
+`ChannelType` _extends_ `string`
 
 #### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ### Parameters
 

@@ -1,6 +1,20 @@
+---
+next: false
+---
+[electron-reactive-event](/docs) / [Articles](./) / Glossary
+
 # Glossary
 
-**Purpose.**&ensp;This article contains common definitions used throughout this documentation.
+::: tip Purpose
+This article contains common definitions used throughout this documentation.
+:::
+
+<div class="CustomTocContainer">
+<p class="CustomTocTitle">In this article</p>
+
+[[toc]]
+
+</div>
 
 ## Event Declaration
 
@@ -20,7 +34,7 @@ Given an event declaration, an **event** (of that declaration) is the collection
 
 An interface that contains event declarations.
 A project using `electron-reactive-event` must define at least two registrars: one for `main` event declarations, and one for `renderer` event declarations.
-These interfaces must extend [`IMainRegistrarBase`](/reference/) or [`IRendererRegistrarBase`]() respectively.
+These interfaces must extend [`IMainRegistrarBase`](../reference/Shared/namespaces/Registrar/interfaces/IMainRegistrarBase) or [`IRendererRegistrarBase`](../reference/Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase) respectively.
 
 ## Ownership
 

@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { FCliConfig } from "../Schema.Types.js";
+import type { CliConfig } from "../Schema.Types.js";
 
 export type FEventOwner =
     | "Main"
@@ -19,7 +19,7 @@ export type FEventDeclaringModule =
         Path: string;
     };
 
-export type FRegistrarDefinition = FCliConfig["main"];
+export type FRegistrarDefinition = CliConfig["main"];
 
 export type FEventDeclarationMatch = Readonly<{
     Path: string;

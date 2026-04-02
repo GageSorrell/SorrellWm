@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Callback](../../../index.md) / [RegisterFunction](../index.md) / Renderer
 
-# Type: Renderer()
+# Renderer() Type
 
 ```ts
 type Renderer<Registrar> = <ChannelType>(Channel, Callback) => void;
@@ -12,7 +12,7 @@ Register a given `renderer` callback function for a given channel.
 
 ### Registrar
 
-`Registrar` *extends* [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
+`Registrar` _extends_ [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
 The registrar interface that holds the desired event declaration.
 
@@ -20,7 +20,7 @@ The registrar interface that holds the desired event declaration.
 
 ### ChannelType
 
-`ChannelType` *extends* [`Channel`](../../../../Channel/type-aliases/Channel.md)\<`Registrar`\>
+`ChannelType` _extends_ [`Channel`](../../../../Channel/type-aliases/Channel.md)\<`Registrar`\>
 
 ## Parameters
 

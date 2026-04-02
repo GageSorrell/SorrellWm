@@ -6,8 +6,8 @@ Definitions for hooks (and functions returned by hooks) that send `renderer` eve
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [UseSendEvent](type-aliases/UseSendEvent.md) | - |
-| [UseSendEventDeferred](type-aliases/UseSendEventDeferred.md) | - |
-| [UseSendEventReturn](type-aliases/UseSendEventReturn.md) | UseUnregisterCallbacksDeferred |
+| Type Alias                                                   | Description                    |
+| ------------------------------------------------------------ | ------------------------------ |
+| [UseSendEvent](type-aliases/UseSendEvent.md)                 | -                              |
+| [UseSendEventDeferred](type-aliases/UseSendEventDeferred.md) | -                              |
+| [UseSendEventReturn](type-aliases/UseSendEventReturn.md)     | UseUnregisterCallbacksDeferred |

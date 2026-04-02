@@ -1,16 +1,18 @@
 [electron-reactive-event](../../../../../../../../index.md) / [API](../../../../../../../index.md) / [Renderer](../../../../../index.md) / [Hook](../../../index.md) / [Send](../index.md) / UseSendEventDeferred
 
-# Type: UseSendEventDeferred()
+# UseSendEventDeferred() Type
 
 ```ts
-type UseSendEventDeferred<RendererRegistrar> = () => Readonly<[SendEventDeferred<RendererRegistrar>]>;
+type UseSendEventDeferred<RendererRegistrar> = () => Readonly<
+	[SendEventDeferred<RendererRegistrar>]
+>;
 ```
 
 ## Type Parameters
 
 ### RendererRegistrar
 
-`RendererRegistrar` *extends* [`IRendererRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+`RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
 ## Returns
 

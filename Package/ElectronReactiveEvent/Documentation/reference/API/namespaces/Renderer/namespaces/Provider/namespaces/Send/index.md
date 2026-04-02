@@ -4,6 +4,6 @@
 
 ## Namespaces
 
-| Namespace | Description |
-| ------ | ------ |
-| [Deferred](namespaces/Deferred/index.md) | - |
+| Namespace                                | Description |
+| ---------------------------------------- | ----------- |
+| [Deferred](namespaces/Deferred/index.md) | -           |

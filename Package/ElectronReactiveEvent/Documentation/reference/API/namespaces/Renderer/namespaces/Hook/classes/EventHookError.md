@@ -1,6 +1,6 @@
 [electron-reactive-event](../../../../../../index.md) / [API](../../../../../index.md) / [Renderer](../../../index.md) / [Hook](../index.md) / EventHookError
 
-# Class: EventHookError
+# EventHookError Class
 
 ## Extends
 
@@ -27,7 +27,7 @@ new EventHookError(HookName): EventHookError;
 #### Overrides
 
 ```ts
-Error.constructor
+Error.constructor;
 ```
 
 ## Properties
@@ -41,10 +41,10 @@ optional cause: unknown;
 #### Inherited from
 
 ```ts
-Error.cause
+Error.cause;
 ```
 
-***
+---
 
 ### message
 
@@ -55,10 +55,10 @@ message: string;
 #### Inherited from
 
 ```ts
-Error.message
+Error.message;
 ```
 
-***
+---
 
 ### name
 
@@ -69,10 +69,10 @@ name: string;
 #### Inherited from
 
 ```ts
-Error.name
+Error.name;
 ```
 
-***
+---
 
 ### stack?
 
@@ -83,10 +83,10 @@ optional stack: string;
 #### Inherited from
 
 ```ts
-Error.stack
+Error.stack;
 ```
 
-***
+---
 
 ### stackTraceLimit
 
@@ -107,7 +107,7 @@ not capture any frames.
 #### Inherited from
 
 ```ts
-Error.stackTraceLimit
+Error.stackTraceLimit;
 ```
 
 ## Methods
@@ -125,7 +125,7 @@ a string representing the location in the code at which
 ```js
 const myObject = {};
 Error.captureStackTrace(myObject);
-myObject.stack;  // Similar to `new Error().stack`
+myObject.stack; // Similar to `new Error().stack`
 ```
 
 The first line of the trace will be prefixed with
@@ -140,23 +140,23 @@ details of error generation from the user. For instance:
 
 ```js
 function a() {
-  b();
+	b();
 }
 
 function b() {
-  c();
+	c();
 }
 
 function c() {
-  // Create an error without stack trace to avoid calculating the stack trace twice.
-  const { stackTraceLimit } = Error;
-  Error.stackTraceLimit = 0;
-  const error = new Error();
-  Error.stackTraceLimit = stackTraceLimit;
+	// Create an error without stack trace to avoid calculating the stack trace twice.
+	const { stackTraceLimit } = Error;
+	Error.stackTraceLimit = 0;
+	const error = new Error();
+	Error.stackTraceLimit = stackTraceLimit;
 
-  // Capture the stack trace above function b
-  Error.captureStackTrace(error, b); // Neither function c, nor b is included in the stack trace
-  throw error;
+	// Capture the stack trace above function b
+	Error.captureStackTrace(error, b); // Neither function c, nor b is included in the stack trace
+	throw error;
 }
 
 a();
@@ -179,10 +179,10 @@ a();
 #### Inherited from
 
 ```ts
-Error.captureStackTrace
+Error.captureStackTrace;
 ```
 
-***
+---
 
 ### prepareStackTrace()
 
@@ -211,5 +211,5 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 #### Inherited from
 
 ```ts
-Error.prepareStackTrace
+Error.prepareStackTrace;
 ```

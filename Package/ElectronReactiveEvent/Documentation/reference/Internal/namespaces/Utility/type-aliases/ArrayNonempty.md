@@ -1,9 +1,11 @@
 [electron-reactive-event](../../../../index.md) / [Internal](../../../index.md) / [Utility](../index.md) / ArrayNonempty
 
-# Type: ArrayNonempty
+# ArrayNonempty Type
 
 ```ts
-type ArrayNonempty<ElementType> = [ElementType] | [ElementType, ...ElementType[]];
+type ArrayNonempty<ElementType> =
+	| [ElementType]
+	| [ElementType, ...ElementType[]];
 ```
 
 ## Type Parameters

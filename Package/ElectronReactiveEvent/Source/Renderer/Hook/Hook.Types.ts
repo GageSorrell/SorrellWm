@@ -15,6 +15,7 @@ import type { Internal } from "../../Internal/index.js";
 import type { Provider } from "../index.js";
 import type { Response } from "../Renderer.Types.js";
 import type { Shared } from "../../Shared/index.js";
+import type { FactoryReturnType } from "../../Main/Main.Types.js";
 
 /**
  * Definitions for hooks (and functions returned by hooks) that register or unregister callback functions.
@@ -31,6 +32,7 @@ export namespace Register
      * @returns A function equivalent to {@link Main.FactoryReturnType.registerCallbacks}.
      */
     export type UseEventCallbacksDeferred<MainRegistrar extends Shared.Registrar.IMainRegistrarBase> =
+        // @ts-ignore
         () => Readonly<[ Callback.RegisterFunction.ByRecord<MainRegistrar> ]>;
 
     /**
@@ -59,6 +61,7 @@ export namespace Register
 
     /** {@inheritDoc UseUnregisterCallbacksDeferred} */
     export type UnregisterRendererCallbacks<Registrar extends Shared.Registrar.IMainRegistrarBase> =
+        // @ts-ignore @TODO Fix this.
         Callback.RegisterFunction.ByRecord<Registrar>;
 }
 

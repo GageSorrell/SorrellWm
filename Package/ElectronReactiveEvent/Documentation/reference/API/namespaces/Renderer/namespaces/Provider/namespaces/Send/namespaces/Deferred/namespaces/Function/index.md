@@ -4,7 +4,7 @@
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [SendEventDeferred](type-aliases/SendEventDeferred.md) | - |
-| [SendEventDeferredBase](type-aliases/SendEventDeferredBase.md) | - |
+| Type Alias                                                     | Description |
+| -------------------------------------------------------------- | ----------- |
+| [SendEventDeferred](type-aliases/SendEventDeferred.md)         | -           |
+| [SendEventDeferredBase](type-aliases/SendEventDeferredBase.md) | -           |
