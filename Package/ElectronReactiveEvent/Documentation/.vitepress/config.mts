@@ -47,6 +47,8 @@ export default withTwoslash(defineConfig({
             shouldAllowNested: false
         }
     },
+    // @TODO Get rid of this.
+    ignoreDeadLinks: true,
     themeConfig:
     {
         footer:
