@@ -19,7 +19,7 @@ This article contains common definitions used throughout this documentation.
 ## Event Declaration
 
 The *type* used to define an event's shape is an **event declaration**.
-All event declarations are defined using the generic type [`EventDecl`](/reference/API/type-aliases/EventDecl.html).
+All event declarations are defined using the generic type [`EventDecl`](/1.0.0/reference/API/type-aliases/EventDecl).
 
 ## Event
 

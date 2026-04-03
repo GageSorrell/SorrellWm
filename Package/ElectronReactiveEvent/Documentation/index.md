@@ -10,10 +10,10 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guides/getting-started
+      link: /1.0.0/guides/getting-started
     - theme: alt
-      text: Browse the Documentation
-      link: /articles/introduction
+      text: Learn More
+      link: /1.0.0/articles/introduction
 
 features:
   - title: "Type-safe event handling"

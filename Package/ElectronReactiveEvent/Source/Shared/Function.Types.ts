@@ -4,10 +4,10 @@
  * License:   MIT
  */
 
-import type { Shared } from ".";
 import type { Callback, Channel } from "..";
-import type { Internal } from "../Internal";
 import type { FactoryReturnType } from "../Main";
+import type { Internal } from "../Internal";
+import type { Shared } from ".";
 
 export type UnregisterCallback<Registrar extends Internal.Registrar.IRegistrarBase> =
     <ChannelType extends Channel.Channel<Registrar>>(

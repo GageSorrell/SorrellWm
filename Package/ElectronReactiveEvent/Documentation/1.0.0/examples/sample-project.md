@@ -23,7 +23,7 @@ This project was used throughout development, and showcases each feature&mdash;t
 ## How to Run the Sample
 
 The sample project is hosted in the [SorrellWm](https://wm.sorrell.sh) monorepo (as are `electron-reactive-event` and `electron-reactive-event-cli`).
-This monorepo structure precludes tools like `degit` as an easy way to download the sample project.
+This monorepo structure precludes the use of tools like `degit` as an easy way to download the sample project.
 
 ### Download via the CLI
 
@@ -45,7 +45,7 @@ npm run start
 
 <div class="TipContainer">
 
-::: info <FluentIcon Icon="Lightbulb"/>  Tip:&ensp;The `--run` flag.
+::: info <FluentIcon Icon="Lightbulb"/> Tip:&ensp;The `--run` flag.
 Run the above CLI command with the `--run` flag to download the project *and* run the above three commands.
 
 That is, use
@@ -55,6 +55,8 @@ npx electron-reactive-event-cli download-sample --run
 ```
 for a fully automated process.
 :::
+
+</div>
 
 ### Download Manually
 
@@ -72,5 +74,3 @@ cd SorrellWm/Development/ElectronReactiveEventSample
 npm install
 npm run start
 ```
-
-</div>

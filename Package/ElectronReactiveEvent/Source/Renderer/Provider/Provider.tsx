@@ -26,10 +26,12 @@ import type { Shared } from "../../Shared/index.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
+/* eslint-disable-next-line jsdoc/require-jsdoc */
 export const FactoryContextRef: { Ref: unknown | undefined; } = { Ref: undefined };
 
 const ResponsePromiseCache: Map<string, Promise<unknown>> = new Map<string, Promise<unknown>>();
 
+/* eslint-disable-next-line jsdoc/require-jsdoc */
 function GetCacheKey<
     ChannelType extends Channel.Channel<Registrar>,
     Registrar extends Internal.Registrar.IRegistrarBase
@@ -45,11 +47,16 @@ function GetCacheKey<
  * The main provider for `electron-reactive-event`.  You likely want to wrap this with your own
  * provider in which you provide a `value` containing the `ipcRenderer` functions that you exposed
  * via `exposeInMainWorld`.
+ *
+ * @typeParam MainRegistrar - The `main` registrar type.
+ * @typeParam RendererRegistrar - The `renderer` registrar type.
+ *
+ * @returns The provider that wraps your React app.
  */
-export const GetReactiveEventProvider = <
+export function GetReactiveEventProvider<
     MainRegistrar extends Shared.Registrar.IMainRegistrarBase,
     RendererRegistrar extends Shared.Registrar.IRendererRegistrarBase
->(): ReactiveEventProviderComponent =>
+>(): ReactiveEventProviderComponent
 {
     if (!("electronReactiveEvent" in window))
     {
@@ -89,6 +96,7 @@ export const GetReactiveEventProvider = <
     type ThisCallbackRecord<ChannelType extends Channel.Channel<MainRegistrar>> =
         Callback.EventRecord<ChannelType, MainRegistrar>;
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function GetOrCreateResponsePromise<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: unknown
@@ -111,6 +119,7 @@ export const GetReactiveEventProvider = <
         return ResponsePromise;
     }
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function UseSendEventSuspends<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: Event.Request<ChannelType, RendererRegistrar> | undefined
@@ -130,6 +139,7 @@ export const GetReactiveEventProvider = <
         };
     }
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function UseSendEventNoSuspend<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request: undefined | Event.Request<ChannelType, RendererRegistrar>
@@ -188,6 +198,7 @@ export const GetReactiveEventProvider = <
         Request: undefined,
         Suspend: boolean
     ): Hook.Send.UseSendEventReturn<ChannelType, RendererRegistrar>;
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function useSendEvent<ChannelType extends Channel.Channel<RendererRegistrar>>(
         Channel: ChannelType,
         Request?: Event.Request<ChannelType, RendererRegistrar>,
@@ -247,6 +258,7 @@ export const GetReactiveEventProvider = <
         return ErrorInstance;
     };
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     function useSendEventDeferred(): ReturnType<Hook.Send.UseSendEventDeferred<RendererRegistrar>>
     {
         const IsMountedReference: RefObject<boolean> = useRef<boolean>(false);

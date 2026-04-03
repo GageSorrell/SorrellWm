@@ -19,10 +19,16 @@ via `exposeInMainWorld`.
 
 `MainRegistrar` _extends_ [`IMainRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IMainRegistrarBase.md)
 
+The `main` registrar type.
+
 ### RendererRegistrar
 
 `RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
 
+The `renderer` registrar type.
+
 ## Returns
 
 [`ReactiveEventProviderComponent`](../type-aliases/ReactiveEventProviderComponent.md)
+
+The provider that wraps your React app.

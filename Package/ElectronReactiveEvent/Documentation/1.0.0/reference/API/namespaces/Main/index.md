@@ -20,7 +20,7 @@ types only need to be given once.
 | Type Alias                                             | Description                                                 |
 | ------------------------------------------------------ | ----------------------------------------------------------- |
 | [FactoryReturnType](type-aliases/FactoryReturnType.md) | The type returned by [getMainIpc](functions/getMainIpc.md). |
-| [Response](type-aliases/Response.md)                   | -                                                           |
+| [Response](type-aliases/Response.md)                   | The type received by `main` callbacks.                      |
 
 ## Functions
 

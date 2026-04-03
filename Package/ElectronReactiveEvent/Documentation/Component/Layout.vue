@@ -2,12 +2,16 @@
 import DefaultTheme from "vitepress/theme-without-fonts"
 import HeroLayout from "./HeroLayout.md";
 import NotFound from "./NotFound.vue";
+import PageLoadHook from "./PageLoadHook.vue";
 
 const { Layout } = DefaultTheme;
 </script>
 
 <template>
     <Layout>
+        <template #layout-top>
+            <PageLoadHook />
+        </template>
         <template #home-hero-actions-after>
             <HeroLayout class="HeroSnippet"/>
         </template>

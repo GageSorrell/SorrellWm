@@ -18,6 +18,9 @@ type EventContext<MainRegistrar, RendererRegistrar> = Partial<{
 }>;
 ```
 
+The context used by the [ReactiveEventProviderComponent](ReactiveEventProviderComponent.md).
+This type is analogous to [FactoryReturnType](../../../../Main/type-aliases/FactoryReturnType.md).
+
 ## Type Parameters
 
 ### MainRegistrar
@@ -27,3 +30,7 @@ type EventContext<MainRegistrar, RendererRegistrar> = Partial<{
 ### RendererRegistrar
 
 `RendererRegistrar` _extends_ [`IRendererRegistrarBase`](../../../../../../Shared/namespaces/Registrar/interfaces/IRendererRegistrarBase.md)
+
+## Todo
+
+Consider moving this to the `Internal` namespace.

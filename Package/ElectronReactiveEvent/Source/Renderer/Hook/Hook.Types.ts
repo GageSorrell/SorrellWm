@@ -15,7 +15,6 @@ import type { Internal } from "../../Internal/index.js";
 import type { Provider } from "../index.js";
 import type { Response } from "../Renderer.Types.js";
 import type { Shared } from "../../Shared/index.js";
-import type { FactoryReturnType } from "../../Main/Main.Types.js";
 
 /**
  * Definitions for hooks (and functions returned by hooks) that register or unregister callback functions.

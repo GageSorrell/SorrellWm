@@ -3,10 +3,10 @@
 # MakeEventHooks() Function
 
 ```ts
-function MakeEventHooks<MainRegistrar, RendererRegistrar>(): EventHooks<
+function MakeEventHooks<
 	MainRegistrar,
-	RendererRegistrar
->;
+	RendererRegistrar,
+>(): Provider.EventHooks<MainRegistrar, RendererRegistrar>;
 ```
 
 Call this once, and export its result a module, to use in components.
@@ -23,4 +23,4 @@ Call this once, and export its result a module, to use in components.
 
 ## Returns
 
-[`EventHooks`](../../Provider/type-aliases/EventHooks.md)\<`MainRegistrar`, `RendererRegistrar`\>
+`Provider.EventHooks`\<`MainRegistrar`, `RendererRegistrar`\>

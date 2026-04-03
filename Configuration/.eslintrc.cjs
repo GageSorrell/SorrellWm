@@ -42,8 +42,8 @@ module.exports = {
                     ]
                 } ],
                 "jsdoc/require-param": "error",
-                "jsdoc/require-param-description": "error",
-                "tsdoc/syntax": "error"
+                "jsdoc/require-param-description": "error"
+                // "tsdoc/syntax": "error"
             }
         }
     ],

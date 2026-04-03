@@ -8,6 +8,12 @@ type FactoryReturnType<MainRegistrar, RendererRegistrar> = object;
 
 The type returned by [getMainIpc](../functions/getMainIpc.md).
 
+## Remarks
+
+This (and the [getMainIpc](../functions/getMainIpc.md) function) exist as a convenience to pass along
+your registrar types. By wrapping the IPC functions with this factory function, your registrar
+types do not need to be passed with each function call.
+
 ## Type Parameters
 
 ### MainRegistrar
@@ -32,6 +38,9 @@ send: {
 <ChannelType, WindowType>  (Channel, BrowserWindows): Promise<ReturnType<ChannelType, MainRegistrar, WindowType>>;
 };
 ```
+
+Send an event to the `renderer`. Signatures vary based on whether the given
+event declaration has a `RequestType`.
 
 #### Call Signature
 
@@ -134,25 +143,11 @@ in the order in which the `BrowserWindow`s were given.
 unregisterAll: () => void;
 ```
 
+Unregister all callbacks.
+
 #### Returns
 
 `void`
-
----
-
-### unregisterCallback
-
-```ts
-unregisterCallback: UnregisterCallback<RendererRegistrar>;
-```
-
----
-
-### unregisterCallbacks
-
-```ts
-unregisterCallbacks: UnregisterCallbacks<RendererRegistrar>;
-```
 
 ## Methods
 
@@ -200,6 +195,83 @@ registerCallbacks<ChannelType>(Record): void;
 ```
 
 Register multiple callbacks for a given set of event declarations.
+The keys are taken to be the `ChannelType`s, and the respective values are the
+callbacks that will be registered for their respective `ChannelType`s.
+
+#### Type Parameters
+
+##### ChannelType
+
+`ChannelType` _extends_ `string`
+
+The desired channels of the given `RendererRegistrar`.
+
+#### Parameters
+
+##### Record
+
+[`EventRecord`](../../Callback/type-aliases/EventRecord.md)\<`ChannelType`, `RendererRegistrar`\>
+
+The record mapping of channel
+
+#### Returns
+
+`void`
+
+#### Note
+
+This is one of the few functions in which `ChannelType` is expected to be
+a _union_ of multiple string literals.
+
+---
+
+### unregisterCallback()
+
+```ts
+unregisterCallback<ChannelType>(Channel, Callback): void;
+```
+
+Unregisters a given callback for all `BrowserWindow`s for which the callback was registered.
+
+#### Type Parameters
+
+##### ChannelType
+
+`ChannelType` _extends_ `string`
+
+The desired channel of the given Registrar.
+
+#### Parameters
+
+##### Channel
+
+`ChannelType`
+
+The channel of the event.
+
+##### Callback
+
+[`Callback`](../../Callback/type-aliases/Callback.md)\<`ChannelType`, `RendererRegistrar`\>
+
+The callback to be unregistered.
+
+#### Returns
+
+`void`
+
+The response(s) of the given
+[\`BrowserWindow(s)\`](https://www.electronjs.org/docs/latest/api/browser-window),
+in the order in which the `BrowserWindow`s were given.
+
+---
+
+### unregisterCallbacks()
+
+```ts
+unregisterCallbacks<ChannelType>(Record): void;
+```
+
+Unregister multiple callbacks for a given set of event declarations.
 The keys are taken to be the `ChannelType`s, and the respective values are the
 callbacks that will be registered for their respective `ChannelType`s.
 

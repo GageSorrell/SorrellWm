@@ -1560,3 +1560,44 @@ h1 a.header-anchor {
     top: unset !important;
     margin-bottom: -8px !important;
 }
+
+input.search-input {
+    font-family: var(--vp-font-family-base) !important;
+}
+
+.VPLocalNavOutlineDropdown span.menu-text {
+    font-weight: 400;
+    color: var(--vp-c-text-1);
+}
+
+div.VPLocalNavOutlineDropdown div.header {
+    padding: 0.5em 0;
+}
+
+div.VPLocalNavOutlineDropdown div.header a {
+    font-weight: 400;
+}
+
+div.VPLocalNavOutlineDropdown ul.VPDocOutlineItem.nested li {
+    padding: 0.25em 0;
+}
+
+/* Style the "Select a Version" menu item in the version selector dropdown *
+ * to look like a descriptive heading, not a button.                       */
+
+.HeaderDropdownLabel {
+    color: var(--vp-c-text-1) !important;
+    cursor: default;
+    pointer-events: none !important;
+}
+
+.HeaderDropdownLabel:hover {
+    background: none !important;
+    /* cursor: default; */
+    color: var(--vp-c-text-1) !important;
+}
+
+.VersionDropdownLabel {
+    text-align: right !important;
+}
+

@@ -6,17 +6,21 @@
 
 import type { Callback, Channel, Event } from "../../index.js";
 import type { PropsWithChildren, ReactNode } from "react";
+import type { FactoryReturnType } from "../../Main/Main.Types.js";
 import type { Hook } from "../index.js";
 import type { Response } from "../Renderer.Types.js";
 import type { Shared } from "../../Shared/index.js";
-import type { FactoryReturnType } from "../../Main/Main.Types.js";
 
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
-export type EventProvider = ({ children }: PropsWithChildren) => ReactNode;
-
 type RealReturnType<Type extends (...ArgumentVector: Array<unknown>) => unknown> = ReturnType<Type>;
 
+/**
+ * The context used by the {@link ReactiveEventProviderComponent}.
+ * This type is analogous to {@link FactoryReturnType}.
+ *
+ * @todo Consider moving this to the `Internal` namespace.
+ */
 export type EventContext<
     MainRegistrar extends Shared.Registrar.IMainRegistrarBase,
     RendererRegistrar extends Shared.Registrar.IRendererRegistrarBase
@@ -41,9 +45,16 @@ export type EventContext<
         useUnregisterCallbacksDeferred: Hook.Register.UseUnregisterCallbacksDeferred<MainRegistrar>;
     }>;
 
-export type EventContextUnknown =
-    EventContext<Shared.Registrar.IMainRegistrarBase, Shared.Registrar.IRendererRegistrarBase>;
+// type EventContextUnknown_DEPRECATED =
+//     EventContext<Shared.Registrar.IMainRegistrarBase, Shared.Registrar.IRendererRegistrarBase>;
 
+/**
+ * The hooks returned by the provider.
+ * @private
+ *
+ * @typeParam MainRegistrar - The `main` registrar type.
+ * @typeParam RendererRegistrar - The `renderer` registrar type.
+ */
 export type EventHooks<
     MainRegistrar extends Shared.Registrar.IMainRegistrarBase,
     RendererRegistrar extends Shared.Registrar.IRendererRegistrarBase

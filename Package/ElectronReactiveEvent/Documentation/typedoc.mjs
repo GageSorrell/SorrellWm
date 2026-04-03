@@ -26,7 +26,8 @@ const Options =
         {
             includeGroups: true
         },
-        out: "./reference",
+        // @note Upon each release, this must be manually updated to the latest version.
+        out: "./1.0.0/reference",
         pageTitleTemplates:
         {
             member: (Arguments) =>

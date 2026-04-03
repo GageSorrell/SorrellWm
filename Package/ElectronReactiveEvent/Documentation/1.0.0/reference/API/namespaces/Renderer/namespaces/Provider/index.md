@@ -10,13 +10,10 @@
 
 ## Type Aliases
 
-| Type Alias                                                                       | Description |
-| -------------------------------------------------------------------------------- | ----------- |
-| [EventContext](type-aliases/EventContext.md)                                     | -           |
-| [EventContextUnknown](type-aliases/EventContextUnknown.md)                       | -           |
-| [EventHooks](type-aliases/EventHooks.md)                                         | -           |
-| [EventProvider](type-aliases/EventProvider.md)                                   | -           |
-| [ReactiveEventProviderComponent](type-aliases/ReactiveEventProviderComponent.md) | -           |
+| Type Alias                                                                       | Description                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [EventContext](type-aliases/EventContext.md)                                     | The context used by the [ReactiveEventProviderComponent](type-aliases/ReactiveEventProviderComponent.md). This type is analogous to [FactoryReturnType](../../../Main/type-aliases/FactoryReturnType.md). |
+| [ReactiveEventProviderComponent](type-aliases/ReactiveEventProviderComponent.md) | -                                                                                                                                                                                                         |
 
 ## Variables
 

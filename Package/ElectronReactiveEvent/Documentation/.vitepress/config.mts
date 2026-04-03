@@ -5,8 +5,6 @@
  */
 
 import { defineConfig } from "vitepress";
-import FluentIcon from "../Component/FluentIcon.vue";
-import type * as minisearch from "minisearch";
 import { sidebar } from "./Sidebar";
 import { withTwoslash } from 'vitepress-plugin-shiki-twoslash'
 import {
@@ -21,6 +19,7 @@ export default withTwoslash(defineConfig({
     description: "Type-safe Electron IPC functions, including modern React hooks.",
     title: "Electron Reactive Event",
 
+    cleanUrls: true,
     head:
     [
         ["link", { rel: "icon", href: "/logo.png" }]
@@ -60,14 +59,55 @@ export default withTwoslash(defineConfig({
             label: "In this article",
             level: [ 2, 3 ],
         },
-        search: {
-            provider: "local",
+        search:
+        {
+            provider: "local"
         },
         nav:
         [
             {
                 text: "Documentation",
-                link: "/articles/introduction"
+                items:
+                [
+                    {
+                        text: "Articles",
+                        link: "/1.0.0/articles"
+                    },
+                    {
+                        text: "Guides",
+                        link: "/1.0.0/guides"
+                    },
+                    {
+                        text: "Examples",
+                        link: "/1.0.0/examples"
+                    },
+                    {
+                        text: "CLI",
+                        link: "/1.0.0/cli"
+                    },
+                    {
+                        text: "Reference",
+                        link: "/1.0.0/reference"
+                    },
+                    {
+                        text: "Index",
+                        link: "/1.0.0/docs"
+                    }
+                ]
+            },
+            {
+                text: "v1.0.0",
+                items:
+                [
+                    {
+                        text: "Select a version",
+                        link: "#"
+                    },
+                    {
+                        text: "1.0.0",
+                        link: "/1.0.0/articles/introduction"
+                    }
+                ]
             },
             {
                 text: "Contact",
