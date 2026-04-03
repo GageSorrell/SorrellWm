@@ -4,4 +4,4 @@
  * License:   MIT
  */
 
-export * from "./Main/index.js";
+export * as Internal from "./index.inner.js";

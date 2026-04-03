@@ -1,245 +1,665 @@
-/* File:      Factory.Main.ts
+/* File:      Main.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-unsafe-function-type */
+// @TODO TEMPORARY.
+/* eslint-disable jsdoc/require-jsdoc */
 
-import type * as Main from "./Main.Types.js";
-import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain } from "electron";
-import type { Callback, Channel, Event } from "../index.js";
-import { GetResponseChannel } from "../Utility.js";
-import type { Internal } from "../Internal/index.js";
-import type { Shared } from "../Shared/index.js";
+import { type IpcMain, type IpcMainEvent, type IpcMainInvokeEvent, ipcMain } from "electron";
+import type { Callback } from "./Callback.Types";
+import type { Channel } from "../Channel.Types";
+import type { PackageKeys } from "../Internal";
 
-/**
- * Get the IPC functions for sending and receiving events to/from the `renderer`.
- * The returned functions are typed to your registrar interfaces.
- *
- * @see {@link FactoryReturnType} for the function types returned by this function.
- *
- * @typeParam MainRegistrar - The event registrar for your `main` events.
- * @typeParam RendererRegistrar - The event registrar for your `renderer` events.
- *
- * @returns The IPC functions typed to your event registrars.
- */
-export function getMainIpc<
-    MainRegistrar extends Shared.Registrar.IMainRegistrarBase,
-    RendererRegistrar extends Shared.Registrar.IRendererRegistrarBase
->(): Main.FactoryReturnType<MainRegistrar, RendererRegistrar>
+type MainChannelOuter<PackageKey extends PackageKeys> = Channel.Any<PackageKey, "Main">;
+
+export type IpcMainOnListener = (
+    Event: IpcMainEvent,
+    ...Arguments: Array<unknown>
+) => void;
+
+export type IpcMainHandleListener = (
+    Event: IpcMainInvokeEvent,
+    ...Arguments: Array<unknown>
+) => unknown;
+
+type HandleRegistration<PackageKey extends PackageKeys> =
+    {
+        Key: string;
+        Callback: Callback<PackageKey, IpcMainInvokeEvent, MainChannelOuter<PackageKey>>;
+    };
+
+export type ReactiveIpcMainOptions =
+    {
+        allowMultipleCallbacksPerChannel?: boolean;
+        throwOnCollision?: boolean;
+    };
+
+type MainCallbackOuter<
+    PackageKey extends PackageKeys,
+    ChannelType extends MainChannelOuter<PackageKey>
+> = Callback<PackageKey, IpcMainEvent, ChannelType>;
+
+type MainInvokeCallback<
+    PackageKey extends PackageKeys,
+    ChannelType extends MainChannelOuter<PackageKey>
+> = Callback<PackageKey, IpcMainInvokeEvent, ChannelType>;
+
+export type ReactiveIpcMainFunctionsWithKeys<PackageKey extends PackageKeys> =
+    {
+        RegisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string,
+            Callback: MainCallbackOuter<PackageKey, typeof Channel>
+        ): void;
+
+        UnregisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string
+        ): void;
+
+        IsOnListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string
+        ): boolean;
+
+        RegisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string,
+            Callback: MainInvokeCallback<PackageKey, typeof Channel>
+        ): void;
+
+        UnregisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string
+        ): void;
+
+        IsHandleListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string
+        ): boolean;
+    };
+
+export type ReactiveIpcMainFunctionsNoKeys<PackageKey extends PackageKeys> =
+    {
+        RegisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Callback: MainCallbackOuter<PackageKey, typeof Channel>
+        ): void;
+
+        UnregisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType
+        ): void;
+
+        IsOnListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType
+        ): boolean;
+
+        RegisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Callback: MainInvokeCallback<PackageKey, typeof Channel>
+        ): void;
+
+        UnregisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType
+        ): void;
+
+        IsHandleListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType
+        ): boolean;
+    };
+
+export type ReactiveIpcMainFunctionsSafe<PackageKey extends PackageKeys> =
+    ReactiveIpcMainFunctionsWithKeys<PackageKey> &
+    {
+        RegisterOnListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string,
+            Callback: MainCallbackOuter<PackageKey, typeof Channel>
+        ): void;
+
+        RegisterHandleListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Key: string,
+            Callback: MainInvokeCallback<PackageKey, typeof Channel>
+        ): void;
+    };
+
+export type ReactiveIpcMainFunctionsNoKeysSafe<PackageKey extends PackageKeys> =
+    ReactiveIpcMainFunctionsNoKeys<PackageKey> &
+    {
+        RegisterOnListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Callback: MainCallbackOuter<PackageKey, typeof Channel>
+        ): void;
+
+        RegisterHandleListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
+            Channel: ChannelType,
+            Callback: MainInvokeCallback<PackageKey, typeof Channel>
+        ): void;
+    };
+
+function IsIpcMainInstance(Value: unknown): Value is IpcMain
 {
-    type CallbackWrapper = Parameters<typeof ipcMain.handle>[1];
-    type StoredCallback =
-        {
-            Original: Function;
-            Wrapper: CallbackWrapper
-        };
-
-    const Callbacks: Map<string, Array<StoredCallback>> = new Map<string, Array<StoredCallback>>();
-
-    type SendEventChannel =
-        | Channel.Request<MainRegistrar>
-        | Channel.NoRequest<MainRegistrar>;
-
-    type SendEventReturn<
-        ChannelType extends SendEventChannel,
-        WindowType extends BrowserWindow | Array<BrowserWindow>
-    > =
-        WindowType extends Array<BrowserWindow>
-            ? Array<Event.Response<ChannelType, MainRegistrar>>
-            : Event.Response<ChannelType, MainRegistrar>;
-
-    async function SendEvent<ChannelType extends Channel.Request<MainRegistrar>,
-        WindowType extends BrowserWindow | Array<BrowserWindow>
-    >(
-        Channel: ChannelType,
-        Request: Event.Request<typeof Channel, MainRegistrar>,
-        BrowserWindows: WindowType
-    ): Promise<SendEventReturn<ChannelType, WindowType>>;
-    async function SendEvent<ChannelType extends Channel.NoRequest<MainRegistrar>,
-        WindowType extends BrowserWindow | Array<BrowserWindow>
-    >(
-        Channel: ChannelType,
-        BrowserWindows: WindowType
-    ): Promise<SendEventReturn<ChannelType, WindowType>>;
-    /* eslint-disable-next-line jsdoc/require-jsdoc */
-    async function SendEvent<ChannelType extends SendEventChannel,
-        WindowType extends BrowserWindow | Array<BrowserWindow>
-    >(
-        Channel: ChannelType,
-        RequestBrowserWindows: WindowType | Event.Request<typeof Channel, MainRegistrar>,
-        InBrowserWindows?: WindowType
-    ): Promise<SendEventReturn<ChannelType, WindowType>>
+    if (typeof Value !== "object" || Value === null)
     {
-        type ThisRequest = [ Event.Request<typeof Channel, MainRegistrar> ] extends [ never ]
-            ? undefined
-            : Event.Request<typeof Channel, MainRegistrar>;
-
-        type Arguments =
-            {
-                BrowserWindows: Array<BrowserWindow>;
-                Request: ThisRequest;
-            };
-
-        const GetOverloadedArguments = (): Arguments =>
-        {
-            if (InBrowserWindows === undefined)
-            {
-                const Request: ThisRequest = undefined as ThisRequest;
-                const BrowserWindows: Arguments["BrowserWindows"] =
-                    Array.isArray(RequestBrowserWindows)
-                        ? RequestBrowserWindows
-                        : [ RequestBrowserWindows as BrowserWindow ];
-                return {
-                    BrowserWindows,
-                    Request
-                };
-            }
-            else
-            {
-                return {
-                    BrowserWindows: Array.isArray(InBrowserWindows)
-                        ? InBrowserWindows
-                        : [ InBrowserWindows ],
-                    Request: RequestBrowserWindows as Arguments["Request"]
-                };
-            }
-        };
-
-        const { BrowserWindows, Request } = GetOverloadedArguments();
-
-        type BrowserResponse = Event.Response<ChannelType, MainRegistrar>;
-        const SendBrowserEvent = async (
-            InBrowserWindow: BrowserWindow
-        ): Promise<BrowserResponse> =>
-        {
-            return new Promise<BrowserResponse>((
-                Resolve: ((Value: BrowserResponse) => void),
-                _Reject: ((_: unknown) => void)
-            ): void =>
-            {
-                const OnResponse = async (Response: unknown): Promise<void> =>
-                {
-                    Resolve(Response as BrowserResponse);
-                };
-
-                ipcMain.on(GetResponseChannel(Channel), OnResponse);
-                InBrowserWindow.webContents.send(Channel, Request);
-            });
-        };
-
-        const Results: Array<BrowserResponse> = await Promise.all(BrowserWindows.map(SendBrowserEvent));
-        const Out: unknown = Results.length === 1
-            ? Results[0]
-            : Results;
-
-        return Out as SendEventReturn<ChannelType, WindowType>;
+        return false;
     }
 
-    /* eslint-disable-next-line jsdoc/require-jsdoc */
-    function registerCallback<ChannelType extends Channel.Channel<RendererRegistrar>>(
+    const Candidate: Partial<IpcMain> = Value as Partial<IpcMain>;
+
+    return (
+        typeof Candidate.on === "function" &&
+        typeof Candidate.off === "function" &&
+        typeof Candidate.handle === "function" &&
+        typeof Candidate.removeHandler === "function"
+    );
+}
+
+type GetReactiveIpcMainReturnType<
+    PackageKey extends PackageKeys,
+    Options extends ReactiveIpcMainOptions | undefined,
+    OverloadedArgument extends ReactiveIpcMainOptions | undefined | IpcMain = undefined
+> =
+    OverloadedArgument extends ReactiveIpcMainOptions
+        ? GetReactiveIpcMainReturnType<PackageKey, Exclude<OverloadedArgument, IpcMain>>
+        : Options extends object
+            ? "allowMultipleCallbacksPerChannel" extends keyof Options
+                ? Options["allowMultipleCallbacksPerChannel"] extends true
+                    ? "throwOnCollision" extends keyof Options
+                        ? Options["throwOnCollision"] extends true
+                            ? ReactiveIpcMainFunctionsSafe<PackageKey>
+                            : ReactiveIpcMainFunctionsWithKeys<PackageKey>
+                        : ReactiveIpcMainFunctionsWithKeys<PackageKey>
+                    : ReactiveIpcMainFunctionsNoKeys<PackageKey>
+                : "throwOnCollision" extends keyof Options
+                    ? Options["throwOnCollision"] extends true
+                        ? ReactiveIpcMainFunctionsNoKeysSafe<PackageKey>
+                        : ReactiveIpcMainFunctionsNoKeys<PackageKey>
+                    : ReactiveIpcMainFunctionsNoKeys<PackageKey>
+            : ReactiveIpcMainFunctionsNoKeys<PackageKey>;
+
+// type OverloadedReturn<PackageKey extends PackageKeys> =
+//     | ReactiveIpcMainFunctionsWithKeys<PackageKey>
+//     | ReactiveIpcMainFunctionsSafe<PackageKey>;
+
+// // ): ReactiveIpcMainFunctionsNoKeys<PackageKey>;
+// export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+//     Options: ReactiveIpcMainOptions & { throwOnCollision?: false | undefined }
+// ): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
+// // ): ReactiveIpcMainFunctionsWithKeys<PackageKey>;
+// export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+//     Options: ReactiveIpcMainOptions & { throwOnCollision: true }
+// ): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
+// // ): ReactiveIpcMainFunctionsSafe<PackageKey>;
+
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    Options?: ReactiveIpcMainOptions
+): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    IpcMainInstance: IpcMain,
+    Options?: ReactiveIpcMainOptions
+): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    IpcMainOrOptions?: IpcMain | ReactiveIpcMainOptions,
+    Options?: ReactiveIpcMainOptions
+): GetReactiveIpcMainReturnType<PackageKey, typeof Options, typeof IpcMainOrOptions>
+{
+    type MainChannel = MainChannelOuter<PackageKey>;
+    type MainCallback<ChannelType extends MainChannel> = MainCallbackOuter<PackageKey, ChannelType>;
+    type InvokeCallback<ChannelType extends MainChannel> =
+        Callback<PackageKey, IpcMainInvokeEvent, ChannelType>;
+    type MainCallbackUnknown = MainCallback<MainChannel>;
+
+    const EmptyKey: "EmptyKey" = "EmptyKey" as const;
+
+    let IpcMainInstance: IpcMain = ipcMain;
+    let ResolvedOptions: ReactiveIpcMainOptions | undefined = Options;
+
+    if (IsIpcMainInstance(IpcMainOrOptions))
+    {
+        IpcMainInstance = IpcMainOrOptions;
+    }
+    else if (IpcMainOrOptions !== undefined)
+    {
+        ResolvedOptions = IpcMainOrOptions;
+    }
+
+    const AllowMultipleCallbacksPerChannel: boolean = (
+        ResolvedOptions !== undefined &&
+        "allowMultipleCallbacksPerChannel" in ResolvedOptions &&
+        ResolvedOptions.allowMultipleCallbacksPerChannel === true
+    );
+
+    const ThrowOnCollision: boolean = (
+        ResolvedOptions !== undefined &&
+        "throwOnCollision" in ResolvedOptions &&
+        ResolvedOptions.throwOnCollision === true
+    );
+
+    type CallbacksByChannel =
+        Partial<{
+            [ Key in MainChannel ]: Partial<Record<string, MainCallbackOuter<PackageKey, Key>>>;
+        }>;
+
+    type DispatchersByChannel =
+        Partial<{
+            [ Key in MainChannel ]:
+                | MainCallbackUnknown
+                | IpcMainOnListener;
+        }>;
+
+    const OnCallbacksByChannel: CallbacksByChannel = { };
+
+    const OnDispatchersByChannel: DispatchersByChannel = { };
+
+    type HandleRegistrationRecord = Record<string, HandleRegistration<PackageKey>>;
+    const HandleRegistrationsByChannel: HandleRegistrationRecord = { };
+
+    type HandleDispatchersByChannel =
+        Partial<{
+            [ Key in MainChannel ]: IpcMainHandleListener;
+        }>;
+
+    const HandleDispatchersByChannel: HandleDispatchersByChannel = { };
+
+    function ThrowOnListenerCollisionError<ChannelType extends MainChannel>(
         Channel: ChannelType,
-        Callback: Callback.Main<typeof Channel, RendererRegistrar>
-    ): void
+        Key: string
+    ): never
     {
-        ipcMain.removeHandler(Channel);
+        // @TODO Replace with custom error class.
+        /* eslint-disable-next-line @stylistic/max-len */
+        throw new Error(`An ipcMain.on callback is already registered for channel "${ Channel }" and key "${ Key }".`);
+    }
 
-        type WrapperReturnType = Main.Response<typeof Channel, RendererRegistrar>;
+    function ThrowHandleListenerCollisionError<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        ExistingKey: string,
+        IncomingKey: string
+    ): never
+    {
+        // @TODO Replace with custom error class.
+        /* eslint-disable-next-line @stylistic/max-len */
+        throw new Error(`An ipcMain.handle callback is already registered for channel "${ Channel }". Existing key: "${ ExistingKey }". Incoming key: "${ IncomingKey }".`);
+    }
 
-        const Wrapper = async (Event: IpcMainInvokeEvent, InRequest: unknown): Promise<WrapperReturnType> =>
+    function EnsureOnDispatcher<ChannelType extends MainChannel>(Channel: ChannelType): void
+    {
+        if (OnDispatchersByChannel[Channel] !== undefined)
         {
-            type ThisCallbackArgument = Internal.Callback.Argument.Main<typeof Channel, RendererRegistrar>;
-            type ThisRequest = Event.Request<typeof Channel, RendererRegistrar>;
-            const Request: ThisRequest = InRequest as ThisRequest;
-            const CallbackArgument: ThisCallbackArgument =
-                {
-                    Event,
-                    Request
-                };
+            return;
+        }
 
-            const CallbackCast: Internal.Callback.Main<typeof Channel, RendererRegistrar> =
-                Callback as Internal.Callback.Main<typeof Channel, RendererRegistrar>;
-
-            type ThisResponse = Callback.ReturnType<typeof Channel, RendererRegistrar>;
-            type ThisResponseError = Callback.ReturnType.Error<typeof Channel, RendererRegistrar>;
-            const Response: ThisResponse =
-                await CallbackCast(CallbackArgument) as ThisResponse;
-
-            const IsResponseError = (In: unknown): In is ThisResponseError =>
-            {
-                return (
-                    typeof Response === "object" &&
-                    Response !== null &&
-                    "Error" in Response &&
-                    typeof Response.Error === "object"
-                );
-            };
-
-            if (IsResponseError(Response))
-            {
-                return {
-                    Data: undefined,
-                    Error: (Response as Callback.ReturnType.Error<typeof Channel, RendererRegistrar>)
-                } as WrapperReturnType;
-            }
-            else
-            {
-                return {
-                    Data: Response,
-                    Error: undefined
-                } as WrapperReturnType;
-            }
-        };
-
-        ipcMain.handle(Channel, Wrapper);
-    }
-
-    /* eslint-disable-next-line jsdoc/require-jsdoc */
-    function unregisterCallback<ChannelType extends Channel.Channel<RendererRegistrar>>(
-        Channel: ChannelType
-    ): void
-    {
-        ipcMain.removeHandler(Channel);
-    }
-
-    return {
-        registerCallback,
-        registerCallbacks: <ChannelType extends Channel.Channel<RendererRegistrar>>(
-            Record: Callback.EventRecord<ChannelType, RendererRegistrar>
+        const Dispatcher: IpcMainOnListener = (
+            Event: IpcMainEvent,
+            ...Arguments: Array<unknown>
         ): void =>
         {
-            if (Callbacks === undefined)
+            const CallbacksForChannel: DispatchersByChannel | undefined =
+                OnCallbacksByChannel[Channel];
+
+            if (CallbacksForChannel === undefined)
             {
                 return;
             }
 
-            Object.entries(Record).forEach(([ InChannel, InCallback ]: [ string, unknown ]): void =>
+            for (const Callback of Object.values(CallbacksForChannel))
             {
-                const Channel: ChannelType = InChannel as ChannelType;
-                const Callback: Callback.Main<typeof Channel, RendererRegistrar> =
-                    InCallback as Callback.Main<typeof Channel, RendererRegistrar>;
+                (Callback as IpcMainOnListener)(Event, ...Arguments);
+            }
+        };
 
-                registerCallback(Channel, Callback);
-            });
-        },
-        send: SendEvent,
-        unregisterAll: (): void =>
+        OnDispatchersByChannel[Channel] = Dispatcher;
+
+        IpcMainInstance.on(Channel, Dispatcher);
+    }
+
+    function RemoveOnDispatcherIfUnused<ChannelType extends MainChannel>(Channel: ChannelType): void
+    {
+        const CallbacksForChannel: DispatchersByChannel | undefined =
+            OnCallbacksByChannel[Channel];
+
+        if (
+            CallbacksForChannel !== undefined &&
+            Object.keys(CallbacksForChannel).length > 0
+        )
         {
-            ipcMain.removeAllListeners();
-        },
-        unregisterCallback: unregisterCallback,
-        unregisterCallbacks: <ChannelType extends Channel.Channel<RendererRegistrar>>(
-            Record: Callback.EventRecord<ChannelType, RendererRegistrar>
-        ): void =>
+            return;
+        }
+
+        type ThisDispatcher = typeof OnDispatchersByChannel[typeof Channel];
+        const Dispatcher: ThisDispatcher | undefined = OnDispatchersByChannel[Channel];
+
+        if (Dispatcher !== undefined)
         {
-            const UnregisterEntry = ([ InChannel /* , InCallback */ ]: [ string, unknown ]): void =>
+            IpcMainInstance.off(Channel, Dispatcher as IpcMainOnListener);
+            delete OnDispatchersByChannel[Channel];
+        }
+
+        delete OnCallbacksByChannel[Channel];
+    }
+
+    function EnsureHandleDispatcher<ChannelType extends MainChannel>(Channel: ChannelType): void
+    {
+        if (HandleDispatchersByChannel[Channel] !== undefined)
+        {
+            return;
+        }
+
+        const Dispatcher: IpcMainHandleListener = async (
+            Event: IpcMainInvokeEvent,
+            ...Arguments: Array<unknown>
+        ): Promise<unknown> =>
+        {
+            const Registration: HandleRegistration<PackageKey> | undefined =
+                HandleRegistrationsByChannel[Channel];
+
+            if (Registration === undefined)
             {
-                const Channel: ChannelType = InChannel as ChannelType;
-                unregisterCallback(Channel);
+                throw new Error(`No handler is registered for channel "${ Channel }".`);
+            }
+
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
+            return await (Registration.Callback as Function)(Event, ...Arguments);
+        };
+
+        HandleDispatchersByChannel[Channel] = Dispatcher;
+
+        IpcMainInstance.handle(Channel, Dispatcher);
+    }
+
+    function RemoveHandleDispatcherIfUnused<ChannelType extends MainChannel>(Channel: ChannelType): void
+    {
+        const Registration: HandleRegistration<PackageKey> | undefined =
+            HandleRegistrationsByChannel[Channel];
+
+        if (Registration !== undefined)
+        {
+            return;
+        }
+
+        if (HandleDispatchersByChannel[Channel] !== undefined)
+        {
+            IpcMainInstance.removeHandler(Channel);
+            delete HandleDispatchersByChannel[Channel];
+        }
+    }
+
+    function IsOnListenerRegistered<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string
+    ): boolean
+    {
+        return OnCallbacksByChannel[Channel]?.[Key] !== undefined;
+    }
+
+    function IsOnListenerRegisteredNoKeys<ChannelType extends MainChannel>(
+        Channel: ChannelType
+    ): boolean
+    {
+        return IsOnListenerRegistered(Channel, EmptyKey);
+    }
+
+    function IsHandleListenerRegistered<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string
+    ): boolean
+    {
+        const Registration: HandleRegistration<PackageKey> | undefined =
+            HandleRegistrationsByChannel[Channel];
+
+        if (Registration === undefined)
+        {
+            return false;
+        }
+
+        return Registration.Key === Key;
+    }
+
+    function IsHandleListenerRegisteredNoKeys<ChannelType extends MainChannel>(
+        Channel: ChannelType
+    ): boolean
+    {
+        return IsHandleListenerRegistered(Channel, EmptyKey);
+    }
+
+    function RegisterOnListener<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        const HasCollision: boolean = IsOnListenerRegistered(Channel, Key);
+
+        if (HasCollision && ThrowOnCollision)
+        {
+            ThrowOnListenerCollisionError(Channel, Key);
+        }
+
+        if (OnCallbacksByChannel[Channel] === undefined)
+        {
+            OnCallbacksByChannel[Channel] = { };
+        }
+
+        EnsureOnDispatcher(Channel);
+
+        OnCallbacksByChannel[Channel][Key] = Callback;
+    }
+
+    function RegisterOnListenerNoKeys<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        RegisterOnListener(Channel, EmptyKey, Callback);
+    }
+
+    function RegisterOnListenerSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        if (IsOnListenerRegistered(Channel, Key))
+        {
+            return;
+        }
+
+        RegisterOnListener(Channel, Key, Callback);
+    }
+
+    function RegisterOnListenerNoKeysSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        RegisterOnListenerSafe(Channel, EmptyKey, Callback);
+    }
+
+    function UnregisterOnListener<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string
+    ): void
+    {
+        const CallbacksForChannel: DispatchersByChannel | undefined =
+            OnCallbacksByChannel[Channel];
+
+        if (CallbacksForChannel === undefined)
+        {
+            return;
+        }
+
+        if ((CallbacksForChannel as Record<typeof Key, unknown>)[Key] === undefined)
+        {
+            return;
+        }
+
+        delete (CallbacksForChannel as Record<typeof Key, unknown>)[Key];
+
+        RemoveOnDispatcherIfUnused(Channel);
+    }
+
+    function UnregisterOnListenerNoKeys<ChannelType extends MainChannel>(
+        Channel: ChannelType
+    ): void
+    {
+        UnregisterOnListener(Channel, EmptyKey);
+    }
+
+    function RegisterHandleListener<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        const ExistingRegistration: HandleRegistration<PackageKey> | undefined =
+            HandleRegistrationsByChannel[Channel];
+
+        if (ExistingRegistration !== undefined && ThrowOnCollision)
+        {
+            ThrowHandleListenerCollisionError(
+                Channel,
+                ExistingRegistration.Key,
+                Key
+            );
+        }
+
+        HandleRegistrationsByChannel[Channel] =
+            {
+                Callback,
+                Key
             };
 
-            Object.entries(Record).forEach(UnregisterEntry);
+        EnsureHandleDispatcher(Channel);
+    }
+
+    function RegisterHandleListenerNoKeys<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        RegisterHandleListener(Channel, EmptyKey, Callback);
+    }
+
+    function RegisterHandleListenerSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        if (HandleRegistrationsByChannel[Channel] !== undefined)
+        {
+            return;
         }
-    };
-};
+
+        RegisterHandleListener(Channel, Key, Callback);
+    }
+
+    function RegisterHandleListenerNoKeysSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        RegisterHandleListenerSafe(Channel, EmptyKey, Callback);
+    }
+
+    function UnregisterHandleListener<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string
+    ): void
+    {
+        const ExistingRegistration: HandleRegistration<PackageKey> | undefined =
+            HandleRegistrationsByChannel[Channel];
+
+        if (ExistingRegistration === undefined)
+        {
+            return;
+        }
+
+        if (ExistingRegistration.Key !== Key)
+        {
+            return;
+        }
+
+        delete HandleRegistrationsByChannel[Channel];
+
+        RemoveHandleDispatcherIfUnused(Channel);
+    }
+
+    function UnregisterHandleListenerNoKeys<ChannelType extends MainChannel>(
+        Channel: ChannelType
+    ): void
+    {
+        UnregisterHandleListener(Channel, EmptyKey);
+    }
+
+    if (AllowMultipleCallbacksPerChannel)
+    {
+        if (ThrowOnCollision)
+        {
+            return {
+                /* @ts-expect-error Foo. */
+                IsHandleListenerRegistered,
+                /* @ts-expect-error Foo. */
+                IsOnListenerRegistered,
+                /* @ts-expect-error Foo. */
+                RegisterHandleListener,
+                RegisterHandleListenerSafe,
+                /* @ts-expect-error Foo. */
+                RegisterOnListener,
+                RegisterOnListenerSafe,
+                /* @ts-expect-error Foo. */
+                UnregisterHandleListener,
+                /* @ts-expect-error Foo. */
+                UnregisterOnListener
+            };
+        }
+        else
+        {
+            return {
+                /* @ts-expect-error Foo. */
+                IsHandleListenerRegistered,
+                /* @ts-expect-error Foo. */
+                IsOnListenerRegistered,
+                /* @ts-expect-error Foo. */
+                RegisterHandleListener,
+                /* @ts-expect-error Foo. */
+                RegisterOnListener,
+                /* @ts-expect-error Foo. */
+                UnregisterHandleListener,
+                /* @ts-expect-error Foo. */
+                UnregisterOnListener
+            };
+        }
+    }
+    else
+    {
+        if (ThrowOnCollision)
+        {
+            return {
+                IsHandleListenerRegistered: IsHandleListenerRegisteredNoKeys,
+                IsOnListenerRegistered: IsOnListenerRegisteredNoKeys,
+                RegisterHandleListener: RegisterHandleListenerNoKeys,
+                /* @ts-expect-error Foo. */
+                RegisterHandleListenerSafe: RegisterHandleListenerNoKeysSafe,
+                RegisterOnListener: RegisterOnListenerNoKeys,
+                RegisterOnListenerSafe: RegisterOnListenerNoKeysSafe,
+                UnregisterHandleListener: UnregisterHandleListenerNoKeys,
+                UnregisterOnListener: UnregisterOnListenerNoKeys
+            };
+        }
+        else
+        {
+            return {
+                IsHandleListenerRegistered: IsHandleListenerRegisteredNoKeys,
+                IsOnListenerRegistered: IsOnListenerRegisteredNoKeys,
+                RegisterHandleListener: RegisterHandleListenerNoKeys,
+                RegisterOnListener: RegisterOnListenerNoKeys,
+                UnregisterHandleListener: UnregisterHandleListenerNoKeys,
+                UnregisterOnListener: UnregisterOnListenerNoKeys
+            };
+        }
+    }
+}

@@ -4,13 +4,11 @@
  * License:   MIT
  */
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 export type Values<RecordLike> = RecordLike[keyof RecordLike];
 
 export type ArrayNonempty<ElementType> =
     | [ ElementType ]
     | [ ElementType, ...Array<ElementType> ];
 
-/* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
-export type Serializable<Type> = Type extends symbol | Function | Symbol
-    ? never
-    : Type;

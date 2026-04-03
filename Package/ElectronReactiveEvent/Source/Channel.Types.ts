@@ -4,69 +4,114 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter } from "./index.js";
-import type { Internal } from "./Internal/index.js";
+import type { EmptyEventParameter, EventOwner } from "./Decl.Types.js";
+import type {
+    FilterByOwner,
+    PackageKeys,
+    Registrar,
+    RequestKey,
+    ResponseKey,
+    Values } from "./Internal/index.js";
 
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
-type EquipEventDeclWithName<Registrar> =
+type WithRequestHelper<PackageKey extends PackageKeys> =
     {
-        [ Key in keyof Registrar as Extract<Key, string> ]:
-        Internal.Utility.Values<Registrar> &
-        {
-            Name: Extract<Key, string>;
-        }
-    };
-
-type RegistrarWithNames<Registrar> = Internal.Utility.Values<EquipEventDeclWithName<Registrar>>;
-
-interface IEventDeclNoResponse
-{
-    ResponseDeclType: EmptyEventParameter;
-}
-
-/** Channels whose event declarations define a response type. */
-export type Response<Registrar> =
-    Exclude<
-        RegistrarWithNames<Registrar>,
-        IEventDeclNoResponse
-    >;
-
-/** Channels whose event declarations do *not* define a response type. */
-export type NoResponse<Registrar> =
-    Extract<
-        RegistrarWithNames<Registrar>,
-        IEventDeclNoResponse
-    >;
-
-type WithRequestHelper<Registrar> =
-    {
-        [ Key in keyof Registrar ]:
-        Internal.Event.RequestDeclKey extends keyof Registrar[Key]
-            ? EmptyEventParameter extends Registrar[Key][Internal.Event.RequestDeclKey]
+        [ Key in keyof Registrar[PackageKey] ]:
+        RequestKey extends keyof Registrar[PackageKey][Key]
+            ? EmptyEventParameter extends Registrar[PackageKey][Key][RequestKey]
                 ? undefined
                 : Key
             : never
     };
 
-/** Channels whose event declarations specify a request type. */
-export type Request<Registrar extends Internal.Registrar.IRegistrarBase> =
-    Extract<
-        Channel<Registrar>,
-        Internal.Utility.Values<WithRequestHelper<Registrar>>
-    >;
+type WithResponseHelper<PackageKey extends PackageKeys> =
+    {
+        [ Key in keyof Registrar[PackageKey] ]:
+        ResponseKey extends keyof Registrar[PackageKey][Key]
+            ? EmptyEventParameter extends Registrar[PackageKey][Key][ResponseKey]
+                ? undefined
+                : Key
+            : never
+    };
 
-/** Channels whose event declarations do *not* specify a request type. */
-export type NoRequest<Registrar extends Internal.Registrar.IRegistrarBase> =
-    Extract<
-        Channel<Registrar>,
-        WithRequestHelper<Registrar>
-    >;
+export namespace Channel
+{
+    /** Channels whose event declarations define a response type. */
+    export type Response<
+        PackageKey extends PackageKeys,
+        Owner extends EventOwner
+    > =
+        Extract<
+            Any<PackageKey, Owner>,
+            Values<WithResponseHelper<PackageKey>>
+        >;
 
-/** A channel is the (`string`) key of an event declaration property in a registrar. */
-export type Channel<Registrar extends Internal.Registrar.IRegistrarBase> =
-    Exclude<
-        keyof Registrar,
-        "Owner" | symbol | number
-    >;
+    /** Channels whose event declarations do *not* define a response type. */
+    export type NoResponse<
+        PackageKey extends PackageKeys,
+        Owner extends EventOwner
+    > =
+        Exclude<
+            Any<PackageKey, Owner>,
+            Values<WithResponseHelper<PackageKey>>
+        >;
 
+    /**
+     * Channels whose event declarations specify a request type.
+     *
+     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
+     * This string type does not need to literally match the `name` property of your `package.json`, but
+     * it is recommended to do so.
+     */
+    export type Request<
+        PackageKey extends PackageKeys,
+        Owner extends EventOwner
+    > =
+        Extract<
+            Any<PackageKey, Owner>,
+            Values<WithRequestHelper<PackageKey>>
+        >;
+
+    /**
+     * Channels whose event declarations do *not* specify a request type.
+     *
+     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
+     * This string type does not need to literally match the `name` property of your `package.json`, but
+     * it is recommended to do so.
+     */
+    export type NoRequest<
+        PackageKey extends PackageKeys,
+        Owner extends EventOwner
+    > =
+        Extract<
+            Any<PackageKey, Owner>,
+            WithRequestHelper<PackageKey>
+        >;
+
+    /**
+     * A channel is the (`string`) key of an event declaration property in a registrar,
+     * namespaced to your package.
+     *
+     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
+     * This string type does not need to literally match the `name` property of your `package.json`, but
+     * it is recommended to do so.
+     */
+    export type Any<
+        PackageKey extends PackageKeys,
+        Owner extends EventOwner
+    > =
+        Extract<
+            Exclude<
+                keyof FilterByOwner<PackageKey, Owner>,
+                number | symbol>,
+            string
+        >;
+
+    /**
+     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
+     * This string type does not need to literally match the `name` property of your `package.json`, but
+     * it is recommended to do so.
+     */
+    export type SimpleError<PackageKey extends PackageKeys> = Registrar[PackageKey];
+}

@@ -4,4 +4,7 @@
  * License:   MIT
  */
 
-export * as Internal from "./index.inner.js";
+export * from "./Decl.Types";
+export * from "./Error.Types";
+export * from "./Registrar.Types";
+export * from "./Utility.Types";

@@ -32,7 +32,10 @@
         "skipLibCheck": true,
         "noEmitOnError": true
     },
-    "include": [ "Source/**/*" ],
+    "include":
+    [
+        "Source/**/*"
+, "eslint.config.mjs.old", "../CreateElectronReactiveEvent/Initialize.Types.ts", "../CreateElectronReactiveEvent/Initialize.ts"    ],
     "exclude":
     [
         "Distribution",

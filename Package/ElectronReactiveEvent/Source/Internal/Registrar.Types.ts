@@ -4,32 +4,55 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
+// @Todo TEMPORARY.
+import type { EmptyEventParameter, EventDecl, MainOwner, RendererOwner } from "../Decl.Types";
+import type { EventOwner } from "../Decl.Types";
+import type { OwnerKey } from "./Decl.Types";
 
-import type { IsEventDecl } from "./Event.Types.js";
-import type { Shared } from "../Shared/index.js";
-import type { Values } from "./Utility.Types.js";
+// @TODO TEMPORARY.
+// export interface Registrar { }
 
-export interface IRegistrarBase
+export interface Registrar
 {
-    Owner: Shared.Registrar.Owner;
+    Pickij:
+    {
+        GetLitFam: EventDecl<"Main", number, EmptyEventParameter, string>;
+    }
 }
 
-/** Map a registrar interface to its naturally-corresponding `Record` type. */
-export type RegistrarDecls<Registrar> =
-    IsRegistrar<Registrar> extends true
-        ? {
-            [ Key in keyof Registrar as Extract<keyof Registrar, string> ]:
-            Registrar[Key];
-        }
-        : never;
+export type PackageKeys = Extract<keyof Registrar, string>;
 
-export type IsRegistrar<Registrar> =
-    keyof Registrar extends string
-        ? IsEventDecl<Values<Registrar>> extends true
-            ? true
-            : false
-        : false;
+type EventNamesHelper<PackageKey extends PackageKeys> =
+    {
+        [ EventName in keyof Registrar[PackageKey] as Extract<EventName, string> ]: EventName;
+    };
 
-export type RendererOwnerKey = "Renderer";
-export type MainOwnerKey = "Main";
+type EventNames<PackageKey extends PackageKeys> = Extract<keyof EventNamesHelper<PackageKey>, string>;
+
+type FilterByOwnerHelper<
+    PackageKey extends PackageKeys,
+    Owner extends EventOwner
+> =
+    {
+        [ EventName in EventNames<PackageKey> ]: OwnerKey extends keyof Registrar[PackageKey][EventName]
+            ? Registrar[PackageKey][EventName][OwnerKey] extends Owner
+                ? true
+                : false
+            : never;
+    };
+
+export type FilterByOwner<
+    PackageKey extends PackageKeys,
+    Owner extends EventOwner
+> =
+    {
+        [ EventName in keyof FilterByOwnerHelper<PackageKey, Owner> as
+        FilterByOwnerHelper<PackageKey, Owner>[
+            Extract<EventName, keyof FilterByOwnerHelper<PackageKey, Owner>>
+        ] extends true ? EventName : never
+        ]: Registrar[PackageKey][EventName];
+    };
+
+export type MainRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, MainOwner>;
+
+export type RendererRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, RendererOwner>;

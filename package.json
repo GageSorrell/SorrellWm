@@ -21,7 +21,8 @@
         "!./Package/ElectronReactiveEvent/**/*",
         "!./Package/ElectronReactiveEvent",
         "!./Package/ElectronReactiveEventCli/**/*",
-        "./Documentation",
+        "!./Documentation",
+        "!./Documentation/**/*",
         "./Script/Build",
         "./Script/CleanRepo"
     ],
