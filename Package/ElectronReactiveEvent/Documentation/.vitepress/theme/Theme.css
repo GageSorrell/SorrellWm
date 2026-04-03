@@ -700,7 +700,7 @@ footer.VPFooter {
 
 p.copyright {
     color: var(--vp-c-text-1) !important;
-    font-family: "Segoe UI", Inter !important;
+    font-family: "Segoe UI", "Inter" !important;
     font-weight: normal !important;
 }
 
@@ -767,7 +767,7 @@ div.action a.brand:hover:not(header a) {
 a:not(div.action a, header a) {
     text-size-adjust: 100% !important;
     text-rendering: optimizeLegibility !important;
-    font-family: "Segoe UI", "Segoe UI Variable Text",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif !important;
+    font-family: "Segoe UI", "Segoe UI Variable Text", "Inter", -apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif !important;
     line-height: 160% !important;
     list-style: none !important;
     background-color: #0000 !important;
@@ -822,7 +822,7 @@ a:not(div.action a, header a):hover {
 }
 
 span.vp-code-block-title-text {
-    font-family: "Segoe UI" !important;
+    font-family: "Segoe UI", "Inter" !important;
     font-weight: 600 !important;
     color: var(--vp-c-text-1) !important;
 }
@@ -834,7 +834,7 @@ span.vp-code-block-title-text::before {
 }
 
 main.main p {
-    font-family: "Segoe UI" !important;
+    font-family: "Segoe UI", "Inter" !important;
 }
 
 html {
