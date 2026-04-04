@@ -9,9 +9,9 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { BrowserWindow, IpcMain, IpcMainEvent, IpcMainInvokeEvent } from "electron";
-import { EmptyRequestParameter, GetSendResponseChannel } from "../Callback/Callback.js";
+import { EmptyRequestParameter, GetInvokeResponseChannel } from "../Callback/Callback.js";
 import type { EmptyRequestParameterType, Request } from "../Callback/Callback.Types.js";
-import type { MainCallback, MainSendResponse } from "./Callback.Types.js";
+import type { MainCallback as MainCallbackBase, MainInvokeResponse } from "./Callback.Types.js";
 import type { MainOwner, RendererOwner } from "../Decl.Types.js";
 import type { Channel } from "../Channel.Types.js";
 import type { PackageKeys } from "../Internal/index.js";
@@ -23,12 +23,12 @@ type RendererChannelOuter<PackageKey extends PackageKeys> = Channel.Any<PackageK
 type MainCallbackOuter<
     PackageKey extends PackageKeys,
     ChannelType extends RendererChannelOuter<PackageKey>
-> = MainCallback<PackageKey, IpcMainEvent, ChannelType>;
+> = MainCallbackBase<PackageKey, IpcMainEvent, ChannelType>;
 
 type MainInvokeCallback<
     PackageKey extends PackageKeys,
     ChannelType extends RendererChannelOuter<PackageKey>
-> = MainCallback<PackageKey, IpcMainInvokeEvent, ChannelType>;
+> = MainCallbackBase<PackageKey, IpcMainInvokeEvent, ChannelType>;
 
 type IpcMainOnListener = (
     Event: IpcMainEvent,
@@ -44,7 +44,7 @@ type HandleRegistration<PackageKey extends PackageKeys> =
     {
         Key: string;
         Once: boolean;
-        Callback: MainCallback<PackageKey, IpcMainInvokeEvent, RendererChannelOuter<PackageKey>>;
+        Callback: MainCallbackBase<PackageKey, IpcMainInvokeEvent, RendererChannelOuter<PackageKey>>;
     };
 
 type ListenerRegistration<
@@ -54,7 +54,7 @@ type ListenerRegistration<
     {
         Once: boolean;
         Callback:
-            | MainCallback<PackageKey, IpcMainEvent, ChannelType>
+            | MainCallbackBase<PackageKey, IpcMainEvent, ChannelType>
             | IpcMainOnListener;
     };
 
@@ -234,18 +234,18 @@ export type ReactiveIpcMainOptions =
     | ReactiveIpcMainOptionsNotKeyed
     | ReactiveIpcMainOptionsNotKeyedSafe;
 
-export type Send<PackageKey extends PackageKeys> =
+export type Invoke<PackageKey extends PackageKeys> =
     {
         <ChannelType extends Channel.NoRequest<PackageKey, MainOwner>>(
             browserWindows: BrowserWindow | Array<BrowserWindow>,
             channel: ChannelType
-        ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+        ): Promise<MainInvokeResponse<PackageKey, ChannelType, typeof browserWindows>>;
 
         <ChannelType extends Channel.Request<PackageKey, MainOwner>>(
             browserWindows: BrowserWindow | Array<BrowserWindow>,
             channel: ChannelType,
             request: Request<PackageKey, MainOwner, ChannelType>
-        ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+        ): Promise<MainInvokeResponse<PackageKey, ChannelType, typeof browserWindows>>;
     };
 
 export namespace Keyed
@@ -322,7 +322,7 @@ export namespace Keyed
             hasListener: HasListener<PackageKey>;
             hasHandler: HasHandler<PackageKey>;
 
-            send: Send<PackageKey>;
+            send: Invoke<PackageKey>;
         };
 
     export type AddListenerSafe<PackageKey extends PackageKeys> = On<PackageKey>;
@@ -412,7 +412,7 @@ export namespace NotKeyed
             hasListener: HasListener<PackageKey>;
             hasHandler: HasHandler<PackageKey>;
 
-            send: Send<PackageKey>;
+            send: Invoke<PackageKey>;
         };
 
     export type AddListenerSafe<PackageKey extends PackageKeys> = On<PackageKey>;
@@ -491,7 +491,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
     type MainChannel = RendererChannelOuter<PackageKey>;
     type MainCallback<ChannelType extends MainChannel> = MainCallbackOuter<PackageKey, ChannelType>;
     type InvokeCallback<ChannelType extends MainChannel> =
-        MainCallback<PackageKey, IpcMainInvokeEvent, ChannelType>;
+        MainCallbackBase<PackageKey, IpcMainInvokeEvent, ChannelType>;
 
     const EmptyKey: "EmptyKey" = "EmptyKey" as const;
 
@@ -1024,21 +1024,21 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
     async function send<ChannelType extends Channel.NoRequest<PackageKey, MainOwner>>(
         browserWindows: BrowserWindow | Array<BrowserWindow>,
         channel: ChannelType
-    ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+    ): Promise<MainInvokeResponse<PackageKey, ChannelType, typeof browserWindows>>;
     async function send<ChannelType extends Channel.Request<PackageKey, MainOwner>>(
         browserWindows: BrowserWindow | Array<BrowserWindow>,
         channel: ChannelType,
         request: Request<PackageKey, MainOwner, typeof channel>
-    ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+    ): Promise<MainInvokeResponse<PackageKey, ChannelType, typeof browserWindows>>;
     async function send<ChannelType extends MainChannel>(
         browserWindows: BrowserWindow | Array<BrowserWindow>,
         channel: ChannelType,
         request:
             | RequestOverloadSafe<PackageKey, MainOwner, typeof channel>
             | EmptyRequestParameterType = EmptyRequestParameter
-    ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>
+    ): Promise<MainInvokeResponse<PackageKey, ChannelType, typeof browserWindows>>
     {
-        type ThisReturnType = MainSendResponse<PackageKey, ChannelType, typeof browserWindows>;
+        type ThisReturnType = MainInvokeResponse<PackageKey, ChannelType, typeof browserWindows>;
         type ThisReturnTypeElement = ThisReturnType extends Array<infer ElementType>
             ? ElementType
             : ThisReturnType;
@@ -1051,7 +1051,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
             ? [ ]
             : [ request ];
 
-        const SendToBrowserWindow = (BrowserWindow: BrowserWindow): Promise<ThisReturnTypeElement> =>
+        const InvokeToBrowserWindow = (BrowserWindow: BrowserWindow): Promise<ThisReturnTypeElement> =>
         {
             type ResolveFunction = (Value: ThisReturnTypeElement) => void;
             type RejectFunction = (...ArgumentVector: Array<unknown>) => void;
@@ -1061,7 +1061,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
             ): void =>
             {
                 IpcMainInstance.on(
-                    GetSendResponseChannel(channel),
+                    GetInvokeResponseChannel(channel),
                     (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): void =>
                     {
                         Resolve(ArgumentVector[0] as ThisReturnTypeElement);
@@ -1079,14 +1079,14 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
                 // @TODO Error handling.
             }
 
-            const SendPromises: Array<Promise<ThisReturnTypeElement>> =
-                BrowserWindows.map(SendToBrowserWindow);
+            const InvokePromises: Array<Promise<ThisReturnTypeElement>> =
+                BrowserWindows.map(InvokeToBrowserWindow);
 
-            return Promise.all(SendPromises) as Promise<ThisReturnType>;
+            return Promise.all(InvokePromises) as Promise<ThisReturnType>;
         }
         else
         {
-            return SendToBrowserWindow(browserWindows) as Promise<ThisReturnType>;
+            return InvokeToBrowserWindow(browserWindows) as Promise<ThisReturnType>;
         }
     }
 

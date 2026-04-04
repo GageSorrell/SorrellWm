@@ -19,7 +19,7 @@ type WithRequestHelper<PackageKey extends PackageKeys> =
     {
         [ Key in keyof Registrar[PackageKey] ]:
         RequestKey extends keyof Registrar[PackageKey][Key]
-            ? EmptyEventParameter extends Registrar[PackageKey][Key][RequestKey]
+            ? Registrar[PackageKey][Key][RequestKey] extends EmptyEventParameter
                 ? undefined
                 : Key
             : never
@@ -29,7 +29,7 @@ type WithResponseHelper<PackageKey extends PackageKeys> =
     {
         [ Key in keyof Registrar[PackageKey] ]:
         ResponseKey extends keyof Registrar[PackageKey][Key]
-            ? EmptyEventParameter extends Registrar[PackageKey][Key][ResponseKey]
+            ? Registrar[PackageKey][Key][ResponseKey] extends EmptyEventParameter
                 ? undefined
                 : Key
             : never
@@ -42,10 +42,14 @@ export namespace Channel
         PackageKey extends PackageKeys,
         Owner extends EventOwner
     > =
-        Extract<
+        Exclude<
             Any<PackageKey, Owner>,
-            Values<WithResponseHelper<PackageKey>>
+            NoResponse<PackageKey, Owner>
         >;
+//         Extract<
+//             Any<PackageKey, Owner>,
+//             Values<WithResponseHelper<PackageKey>>
+//         >;
 
     /** Channels whose event declarations do *not* define a response type. */
     export type NoResponse<
@@ -54,7 +58,7 @@ export namespace Channel
     > =
         Exclude<
             Any<PackageKey, Owner>,
-            Values<WithResponseHelper<PackageKey>>
+            Extract<Values<WithResponseHelper<PackageKey>>, string>
         >;
 
     /**
@@ -70,7 +74,7 @@ export namespace Channel
     > =
         Extract<
             Any<PackageKey, Owner>,
-            Values<WithRequestHelper<PackageKey>>
+            Extract<Values<WithRequestHelper<PackageKey>>, string>
         >;
 
     /**
@@ -84,9 +88,9 @@ export namespace Channel
         PackageKey extends PackageKeys,
         Owner extends EventOwner
     > =
-        Extract<
+        Exclude<
             Any<PackageKey, Owner>,
-            WithRequestHelper<PackageKey>
+            Extract<Values<WithRequestHelper<PackageKey>>, string>
         >;
 
     /**

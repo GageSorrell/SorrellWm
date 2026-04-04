@@ -5,163 +5,42 @@
  */
 
 import type {
-    DeferredHookReturnType,
-    DeferredResponse,
-    InvokeEventDeferred,
-    NotKeyed,
-    RendererCallback,
-    Request,
-    Response } from "./Hook.Types.js";
-import { type EffectCallback, type RefObject, useEffect, useRef } from "react";
-import type { MainOwner, RendererOwner } from "../Decl.Types.js";
-import type { PackageKeys, SimpleCallback } from "../Internal";
-import type { Channel } from "../Channel.Types.js";
-import { EmptyRequestParameter } from "../Callback/Callback.js";
-import { ipcRenderer } from "electron/renderer";
-import type { EmptyRequestParameterType } from "../Callback/Callback.Types.js";
+    UseInvoke,
+    UseInvokeDeferred,
+    UseOffEventDeferred,
+    UseOnceEvent,
+    UseOnceEventDeferred,
+    UseOnEvent,
+    UseOnEventDeferred,
+    UseSendEvent,
+    UseSendEventDeferred} from "./Hook.Internal.Types";
+import {
+    useInvoke,
+    useInvokeDeferred,
+    useOnceEvent,
+    useOnceEventDeferred,
+    useOnEvent,
+    useOnEventDeferred,
+    useSendEvent,
+    useSendEventDeferred } from "./Hook.Internal";
+import type { PackageKeys } from "../Internal";
+import type { ReactiveEventHooks } from "./Hook.Types";
 
-export function getReactiveEventHooks<PackageKey extends PackageKeys>(): NotKeyed.Hooks<PackageKey>
+/* eslint-disable @typescript-eslint/typedef, jsdoc/require-jsdoc */
+
+export function getReactiveEventHooks<PackageKey extends PackageKeys>(): ReactiveEventHooks<PackageKey>
 {
-    type MainChannel = Channel.Any<PackageKey, MainOwner>;
-    type RendererChannel = Channel.Any<PackageKey, RendererOwner>;
-
-    function OnEventDeferred<ChannelType extends MainChannel>(
-        channel: ChannelType,
-        callback: RendererCallback<PackageKey, typeof channel>
-    ): void
-    {
-        ipcRenderer.on(channel, callback);
-    }
-
-    function OffEventDeferred<ChannelType extends MainChannel>(
-        channel: ChannelType
-    ): void
-    {
-        ipcRenderer.removeAllListeners(channel);
-    }
-
-    function UseDeferredInEffect(
-        OnMount: SimpleCallback,
-        OnUnmount?: SimpleCallback
-    )
-    {
-        useEffect((): ReturnType<EffectCallback> =>
-        {
-            OnMount();
-
-            if (OnUnmount !== undefined)
-            {
-                return OnUnmount;
-            }
-        });
-    }
-
-    function useOnEvent<ChannelType extends MainChannel>(
-        channel: ChannelType,
-        callback: RendererCallback<PackageKey, typeof channel>
-    ): void
-    {
-        function OnMount(): void
-        {
-            OnEventDeferred(channel, callback);
-        }
-
-        function OnUnmount(): void
-        {
-            OffEventDeferred(channel);
-        }
-
-        UseDeferredInEffect(OnMount, OnUnmount);
-    }
-
-    function OnceEventDeferred<ChannelType extends MainChannel>(
-        channel: ChannelType,
-        callback: RendererCallback<PackageKey, typeof channel>
-    ): void
-    {
-        ipcRenderer.once(channel, callback);
-    }
-
-    function useOnceEventDeferred(): DeferredHookReturnType<NotKeyed.OnceEventDeferred<PackageKey>>
-    {
-        return [ OnceEventDeferred ] as const;
-    }
-
-    function useOnceEvent<ChannelType extends MainChannel>(
-        channel: ChannelType,
-        callback: RendererCallback<PackageKey, typeof channel>
-    ): void
-    {
-        OnceEventDeferred(channel, callback);
-    }
-
-    function useOnEventDeferred(): DeferredHookReturnType<NotKeyed.OnEventDeferred<PackageKey>>
-    {
-        return [ OnEventDeferred ] as const;
-    }
-
-    function useOffEventDeferred(): DeferredHookReturnType<NotKeyed.OffEventDeferred<PackageKey>>
-    {
-        return [ OffEventDeferred ] as const;
-    }
-
-    async function InvokeEventDeferred<
-        ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>
-    >(
-        channel: ChannelType
-    ): Promise<DeferredResponse<PackageKey, typeof channel>>;
-    async function InvokeEventDeferred<
-        ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-        channel: ChannelType,
-        request: Request<PackageKey, typeof channel>
-    ): Promise<DeferredResponse<PackageKey, typeof channel>>;
-    async function InvokeEventDeferred<
-        ChannelType extends Channel.Any<PackageKey, RendererOwner>>(
-        channel: ChannelType,
-        request:
-            | Request<PackageKey, typeof channel>
-            | EmptyRequestParameterType = EmptyRequestParameter
-    ): Promise<DeferredResponse<PackageKey, typeof channel>>
-    {
-        if (request !== EmptyRequestParameter)
-        {
-            return ipcRenderer.invoke(channel, request);
-        }
-        else
-        {
-            return ipcRenderer.invoke(channel);
-        }
-    }
-
-    function useInvokeEventDeferred(): DeferredHookReturnType<InvokeEventDeferred<PackageKey>>
-    {
-        return [ InvokeEventDeferred ] as const;
-    }
-
-    function useInvokeEvent<
-        ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
-        channel: ChannelType,
-        suspends?: boolean
-    ): Response<PackageKey, typeof channel>
-    {
-        type InvokeReturnType = ReturnType<typeof InvokeEventDeferred>;
-        const PromiseRef: RefObject<InvokeReturnType> =
-            useRef<InvokeReturnType>(InvokeEventDeferred(channel, request));
-
-        useEffect((): void =>
-        {
-
-            InvokeEventDeferred();
-        });
-    }
-
     return {
-        useInvokeEvent,
-        useInvokeEventDeferred,
-        useOffEventDeferred,
-        useOnEvent,
-        useOnEventDeferred,
-        useOnceEvent,
-        useOnceEventDeferred
-    };
+        useInvoke: useInvoke as UseInvoke<PackageKey>,
+        useInvokeDeferred: useInvokeDeferred as UseInvokeDeferred<PackageKey>,
+        useOffEventDeferred: useOnEventDeferred as UseOffEventDeferred<PackageKey>,
+        useOnEvent: useOnEvent as UseOnEvent<PackageKey>,
+        useOnEventDeferred: useOnEventDeferred as UseOnEventDeferred<PackageKey>,
+        useOnceEvent: useOnceEvent as UseOnceEvent<PackageKey>,
+        useOnceEventDeferred: useOnceEventDeferred as UseOnceEventDeferred<PackageKey>,
+        useSendEvent: useSendEvent as UseSendEvent<PackageKey>,
+        useSendEventDeferred: useSendEventDeferred as UseSendEventDeferred<PackageKey>,
+        useSendSync: useSendSyncEvent as UseSendSyncEvent<PackageKey>,
+        useSendSyncDeferred: useSendSyncEventDeferred as UseSendSyncEventDeferred<PackageKey>
+    } as const;
 }

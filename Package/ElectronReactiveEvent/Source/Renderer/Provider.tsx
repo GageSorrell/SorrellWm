@@ -4,44 +4,17 @@
  * License:   MIT
  */
 
-import type { PropsWithChildren, ReactNode } from "react";
-import type { PackageKeys } from "../Internal";
-import type { Keyed, NotKeyed, ReactiveEventHookOptions, ReactiveEventHooks } from "./Hook.Types";
+import type { ReactNode } from "react";
+import { ReactiveEventInternalContext } from "./Provider.Internal.js";
+import type { ReactiveEventProviderProps } from "./Provider.Types.js";
 
-function getReactiveEventHooksKeyed<PackageKey extends PackageKeys>(): Keyed.Hooks<PackageKey>
-{
-    function useAddListener<>
-    return {
-        useAddListener
-    };
-}
-
-function getReactiveEventHooksNotKeyed<PackageKey extends PackageKeys>(): NotKeyed.Hooks<PackageKey>
-{
-
-}
-
-export function getReactiveEventHooks<PackageKey extends PackageKeys>(
-    Options?: ReactiveEventHookOptions
-): ReactiveEventHooks<PackageKey, typeof Options>
-{
-    if (typeof Options === "object" &&
-        Options !== null &&
-        ("allowMultipleCallbacksPerChannel" in Options) &&
-        Options.allowMultipleCallbacksPerChannel === true
-    )
-    {
-        return getReactiveEventHooksKeyed<PackageKey>();
-    }
-    else
-    {
-        return getReactiveEventHooksNotKeyed<PackageKey>();
-    }
-}
-
-export function ReactiveEventProvider({ children }: PropsWithChildren): ReactNode
+export function ReactiveEventProvider(
+    { children, value }: ReactiveEventProviderProps
+): ReactNode
 {
     return (
-
+        <ReactiveEventInternalContext.Provider { ...{ value } }>
+            { children }
+        </ReactiveEventInternalContext.Provider>
     );
 }

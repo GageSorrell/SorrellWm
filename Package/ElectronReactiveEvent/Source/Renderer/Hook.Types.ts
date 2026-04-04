@@ -4,37 +4,33 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-namespace, @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable jsdoc/require-jsdoc */
 
 import type {
     Callback,
-    SendResponse as DeferredResponseBase,
-    SendResponseFailure as ResponseFailureBase,
-    SendResponseSuccess as SendResponseSuccessBase } from "../Callback/Callback.Types.js";
-import type { MainOwner, RendererOwner } from "../Decl.Types.js";
-import type { Channel } from "../Channel.Types.js";
-import type { IpcRenderer } from "electron/renderer";
+    InvokeResponse as DeferredResponseBase,
+    ResponseData as ResponseDataBase,
+    InvokeResponseFailure as ResponseFailureBase,
+    InvokeResponseSuccessBase as ResponseSuccessBase } from "../Callback/Callback.Types.js";
+import type {
+    MainChannel,
+    RendererChannel,
+    UseInvoke,
+    UseInvokeDeferred,
+    UseOffEventDeferred,
+    UseOnceEvent,
+    UseOnceEventDeferred,
+    UseOnEvent,
+    UseOnEventDeferred,
+    UseSendEvent,
+    UseSendEventDeferred,
+    UseSendSync,
+    UseSendSyncDeferred} from "./Hook.Internal.Types.js";
+import type { MainOwner, RendererOwner } from "../Decl.Types";
+import type { Channel } from "../Channel.Types";
 import type { IpcRendererEvent } from "electron";
 import type { PackageKeys } from "../Internal/index.js";
 import type { Request as RequestBase } from "../Callback/Callback.Types.js";
-
-export type DeferredResponse<
-    PackageKey extends PackageKeys,
-    ChannelType extends RendererChannel<PackageKey>
-> = DeferredResponseBase<PackageKey, RendererOwner, ChannelType>;
-
-export type DeferredHookReturnType<DeferredFunctionType extends Function> =
-    Readonly<[ DeferredFunction: DeferredFunctionType ]>;
-
-export type DeferredHook<DeferredFunctionType extends Function> =
-    {
-        (): DeferredHookReturnType<DeferredFunctionType>;
-    };
-
-export type RendererCallback<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Any<PackageKey, RendererOwner>
-> = Callback<PackageKey, MainOwner, IpcRendererEvent, ChannelType>;
 
 type CompletedResponsePart =
     {
@@ -50,9 +46,14 @@ export type ResponseSuccess<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Any<PackageKey, RendererOwner>
 > = (
-    SendResponseSuccessBase<PackageKey, RendererOwner, ChannelType> &
+    ResponseSuccessBase<PackageKey, RendererOwner, ChannelType> &
     CompletedResponsePart
 );
+
+export type ResponseErrorProp<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Any<PackageKey, RendererOwner>
+> = ResponseFailureBase<PackageKey, RendererOwner, ChannelType>["Error"];
 
 export type ResponseFailure<
     PackageKey extends PackageKeys,
@@ -72,7 +73,7 @@ export type ResponseIncomplete =
     ResponseIndeterminate &
     IncompleteResponsePart;
 
-export type Response<
+export type MainResponse<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Any<PackageKey, RendererOwner>
 > =
@@ -80,508 +81,114 @@ export type Response<
     | ResponseFailure<PackageKey, ChannelType>
     | ResponseIncomplete;
 
-export type Request<
+export type MainResponseDeferred<
     PackageKey extends PackageKeys,
-    ChannelType extends RendererChannel<PackageKey>
+    ChannelType extends Channel.Any<PackageKey, RendererOwner>
+> = Omit<MainResponse<PackageKey, ChannelType>, "IsPending">;
+
+export type RendererRequest<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Request<PackageKey, RendererOwner>
 > =
     RequestBase<PackageKey, RendererOwner, ChannelType>;
 
-export type UsePostMessage<PackageKey extends PackageKeys> =
+export type MainRequest<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Request<PackageKey, MainOwner>
+> =
+    RequestBase<PackageKey, MainOwner, ChannelType>;
+
+export type PendingInvokeState = Readonly<{
+    Data: undefined;
+    Error: undefined;
+    IsPending: true;
+}>;
+
+type ResponseData<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannel<PackageKey>
+> = ResponseDataBase<PackageKey, RendererOwner, ChannelType>;
+
+export type SuccessfulInvokeState<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannel<PackageKey>
+> = Readonly<{
+    Data: ResponseData<PackageKey, ChannelType>;
+    Error: undefined;
+    IsPending: false;
+}>;
+
+export type FailedInvokeState<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannel<PackageKey>
+> = Readonly<{
+    Data: undefined;
+    Error: ResponseFailure<PackageKey, ChannelType>;
+    IsPending: false;
+}>;
+
+export type SettledInvokeState<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannel<PackageKey>
+> =
+    | SuccessfulInvokeState<PackageKey, ChannelType>
+    | FailedInvokeState<PackageKey, ChannelType>;
+
+export type InvokeState<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannel<PackageKey>
+> =
+    | PendingInvokeState
+    | SettledInvokeState<PackageKey, ChannelType>;
+
+export type UseInvokeOptions =
+    Partial<{
+        suspends: boolean;
+    }>;
+
+export type UseSendSyncOptions = UseInvokeOptions;
+
+export type InvokeDeferred<PackageKey extends PackageKeys> =
     {
-        <ChannelType extends Channel.Request<PackageKey, RendererOwner>, MessageType>(
+        <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
             channel: ChannelType,
-            message: MessageType,
-            transfer?: Array<MessagePort>
+            request: RendererRequest<PackageKey, ChannelType>
+        ): Promise<MainResponse<PackageKey, ChannelType>>;
+
+        <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
+            channel: ChannelType
+        ): Promise<MainResponse<PackageKey, ChannelType>>;
+    };
+
+export type OnEventDeferred<PackageKey extends PackageKeys> =
+    {
+        <ChannelType extends MainChannel<PackageKey>>(
+            channel: ChannelType,
+            listener: Callback<PackageKey, MainOwner, IpcRendererEvent, typeof channel>
         ): void;
     };
 
-export type PostMessageDeferred<PackageKey extends PackageKeys> = UsePostMessage<PackageKey>;
+export type OnceEventDeferred<PackageKey extends PackageKeys> = OnEventDeferred<PackageKey>;
 
-export type UsePostMessageDeferred<PackageKey extends PackageKeys> =
-    DeferredHook<PostMessageDeferred<PackageKey>>;
-
-export type UseInvokeEvent<PackageKey extends PackageKeys> =
+export type OffEventDeferred<PackageKey extends PackageKeys> =
     {
-        <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
+        <ChannelType extends MainChannel<PackageKey>>(
             channel: ChannelType,
-            suspends?: boolean
-        ): Response<PackageKey, typeof channel>;
-
-        <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-            channel: ChannelType,
-            request: Request<PackageKey, typeof channel>,
-            suspends?: boolean
-        ): Response<PackageKey, typeof channel>;
+            listener: Callback<PackageKey, MainOwner, IpcRendererEvent, typeof channel>
+        ): void;
     };
 
-export type InvokeEventDeferred<PackageKey extends PackageKeys> =
-    {
-        <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
-            channel: ChannelType
-        ): Promise<DeferredResponse<PackageKey, typeof channel>>;
-
-        <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-            channel: ChannelType,
-            request: Request<PackageKey, typeof channel>
-        ): Promise<DeferredResponse<PackageKey, typeof channel>>;
-    };
-
-export type UseInvokeEventDeferred<PackageKey extends PackageKeys> =
-    DeferredHook<InvokeEventDeferred<PackageKey>>;
-
-export namespace Keyed
-{
-    export type UseSend<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                key: string,
-                suspends?: boolean
-            ): Response<PackageKey, typeof channel>;
-
-            <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                key: string,
-                request: Request<PackageKey, typeof channel>,
-                suspends?: boolean
-            ): Response<PackageKey, typeof channel>;
-        };
-
-    export type SendDeferred<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                key: string
-            ): DeferredResponse<PackageKey, typeof channel>;
-
-            <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                key: string,
-                request: Request<PackageKey, typeof channel>
-            ): DeferredResponse<PackageKey, typeof channel>;
-        };
-
-    export type UseSendDeferred<PackageKey extends PackageKeys> = DeferredHook<SendDeferred<PackageKey>>;
-
-    export type UseOnEvent<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.Any<PackageKey, MainOwner>>(
-                channel: ChannelType,
-                key: string,
-                callback: RendererCallback<PackageKey, typeof channel>
-            ): void;
-        };
-
-    export type OnEventDeferred<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
-
-    export type UseOnEventDeferred<PackageKey extends PackageKeys> = DeferredHook<OnEventDeferred<PackageKey>>;
-
-    export type UseOnceEvent<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
-
-    export type OnceEventDeferred<PackageKey extends PackageKeys> = UseOnceEvent<PackageKey>;
-
-    export type UseOnceEventDeferred<PackageKey extends PackageKeys> = DeferredHook<OnceEventDeferred<PackageKey>>;
-
-    export type OffEventDeferred<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.Any<PackageKey, MainOwner>>(
-                channel: ChannelType,
-                key: string
-            ): void;
-        };
-
-    export type UseOffEventDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<OffEventDeferred<PackageKey>>;
-
-    export type UseAddListener<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
-
-    export type AddListenerDeferred<PackageKey extends PackageKeys> = OnEventDeferred<PackageKey>;
-
-    export type UseAddListenerDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<AddListenerDeferred<PackageKey>>;
-
-    export type RemoveListenerDeferred<PackageKey extends PackageKeys> = OffEventDeferred<PackageKey>;
-
-    export type UseRemoveListenerDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<RemoveListenerDeferred<PackageKey>>;
-
-    export type RemoveListenerDeferred<PackageKey extends PackageKeys> = UseOffEvent<PackageKey>;
-
-    export type UseRemoveListenerDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<RemoveListenerDeferred<PackageKey>>;
-
-    export type UseRemoveAllListeners<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.Any<PackageKey, MainOwner>>(
-                channel?: ChannelType
-            ): void;
-        };
-
-    export type RemoveAllListenersDeferred<PackageKey extends PackageKeys> =
-        UseRemoveAllListeners<PackageKey>;
-
-    export type UseRemoveAllListenersDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<RemoveAllListenersDeferred<PackageKey>>;
-
-    type RegularHooks<PackageKey extends PackageKeys> =
-        {
-            useSend: UseSend<PackageKey>;
-            useOnEvent: UseOnEvent<PackageKey>;
-            useOnceEvent: UseOnceEvent<PackageKey>;
-            useAddListener: UseAddListener<PackageKey>;
-            useRemoveAllListeners: UseRemoveAllListeners<PackageKey>;
-            useInvokeEvent: UseInvokeEvent<PackageKey>;
-            usePostMessage: UsePostMessage<PackageKey>;
-        };
-
-    type DeferredHooks<PackageKey extends PackageKeys> =
-        {
-            useSendDeferred: UseSendDeferred<PackageKey>;
-            useOnEventDeferred: UseOnEventDeferred<PackageKey>;
-            useOnceEventDeferred: UseOnceEventDeferred<PackageKey>;
-            useOffEventDeferred: UseOffEventDeferred<PackageKey>;
-            useAddListenerDeferred: UseAddListenerDeferred<PackageKey>;
-            useRemoveListenerDeferred: UseRemoveListenerDeferred<PackageKey>;
-            useRemoveAllListenersDeferred: UseRemoveAllListenersDeferred<PackageKey>;
-            useInvokeEventDeferred: UseInvokeEventDeferred<PackageKey>;
-            usePostMessage: UsePostMessageDeferred<PackageKey>;
-        };
-
-    export type Hooks<PackageKey extends PackageKeys> =
-        | RegularHooks<PackageKey>
-        | DeferredHooks<PackageKey>;
-}
-
-export namespace NotKeyed
-{
-    export type UseSend<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                suspends?: boolean
-            ): Response<PackageKey, typeof channel>;
-
-            <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                request: Request<PackageKey, typeof channel>,
-                suspends?: boolean
-            ): Response<PackageKey, typeof channel>;
-        };
-
-    export type SendDeferred<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
-                channel: ChannelType
-            ): DeferredResponse<PackageKey, typeof channel>;
-
-            <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
-                channel: ChannelType,
-                request: Request<PackageKey, typeof channel>
-            ): DeferredResponse<PackageKey, typeof channel>;
-        };
-
-    export type UseSendDeferred<PackageKey extends PackageKeys> = DeferredHook<SendDeferred<PackageKey>>;
-
-    export type UseOnEvent<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.Any<PackageKey, MainOwner>>(
-                channel: ChannelType,
-                callback: RendererCallback<PackageKey, typeof channel>
-            ): void;
-        };
-
-    export type OnEventDeferred<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
-
-    export type UseOnEventDeferred<PackageKey extends PackageKeys> = DeferredHook<OnEventDeferred<PackageKey>>;
-
-    export type UseOnceEvent<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
-
-    export type OnceEventDeferred<PackageKey extends PackageKeys> = UseOnceEvent<PackageKey>;
-
-    export type UseOnceEventDeferred<PackageKey extends PackageKeys> = DeferredHook<OnceEventDeferred<PackageKey>>;
-
-    export type OffEventDeferred<PackageKey extends PackageKeys> =
-        {
-            <ChannelType extends Channel.Any<PackageKey, MainOwner>>(
-                channel: ChannelType
-            ): void;
-        };
-
-    export type UseOffEventDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<OffEventDeferred<PackageKey>>;
-
-    export type UseAddListener<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
-
-    export type AddListenerDeferred<PackageKey extends PackageKeys> = OnEventDeferred<PackageKey>;
-
-    export type UseAddListenerDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<AddListenerDeferred<PackageKey>>;
-
-    export type RemoveListenerDeferred<PackageKey extends PackageKeys> = OffEventDeferred<PackageKey>;
-
-    export type UseRemoveListenerDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<RemoveListenerDeferred<PackageKey>>;
-
-    export type RemoveListenerDeferred<PackageKey extends PackageKeys> = UseOffEvent<PackageKey>;
-
-    export type UseRemoveListenerDeferred<PackageKey extends PackageKeys> =
-        DeferredHook<RemoveListenerDeferred<PackageKey>>;
-
-    export type UseRemoveAllListeners =
-        {
-            (): void;
-        };
-
-    export type RemoveAllListenersDeferred =
-        UseRemoveAllListeners;
-
-    export type UseRemoveAllListenersDeferred =
-        DeferredHook<RemoveAllListenersDeferred>;
-
-    type RegularHooks<PackageKey extends PackageKeys> =
-        {
-            useSend: UseSend<PackageKey>;
-            useOnEvent: UseOnEvent<PackageKey>;
-            useOnceEvent: UseOnceEvent<PackageKey>;
-            useAddListener: UseAddListener<PackageKey>;
-            useRemoveAllListeners: UseRemoveAllListeners;
-            useInvokeEvent: UseInvokeEvent<PackageKey>;
-            usePostMessage: UsePostMessage<PackageKey>;
-        };
-
-    type DeferredHooks<PackageKey extends PackageKeys> =
-        {
-            useSendDeferred: UseSendDeferred<PackageKey>;
-            useOnEventDeferred: UseOnEventDeferred<PackageKey>;
-            useOnceEventDeferred: UseOnceEventDeferred<PackageKey>;
-            useOffEventDeferred: UseOffEventDeferred<PackageKey>;
-            useAddListenerDeferred: UseAddListenerDeferred<PackageKey>;
-            useRemoveListenerDeferred: UseRemoveListenerDeferred<PackageKey>;
-            useRemoveAllListenersDeferred: UseRemoveAllListenersDeferred;
-            useInvokeEventDeferred: UseInvokeEventDeferred<PackageKey>;
-            usePostMessage: UsePostMessageDeferred<PackageKey>;
-        };
-
-    export type Hooks<PackageKey extends PackageKeys> =
-        | RegularHooks<PackageKey>
-        | DeferredHooks<PackageKey>;
-}
-
-// type ReactiveEventHookOptionsKeyedSafe =
-//     {
-//         /**
-//          * The default behavior allows at most one callback per channel to be registered
-//          * at any given point in time.  Specifying this property and setting it to `true`
-//          * will extend the functions to register callbacks to also accept a `Key: string`
-//          * argument, which is used for identifying callback functions.
-//          *
-//          * @default `false`
-//          */
-//         allowMultipleCallbacksPerChannel: true;
-//         ipcRenderer?: IpcRenderer;
-//         /**
-//          * If set to `true`, then if a callback is attempted to be registered for a given
-//          * `Channel` and `Key` for which another callback is already registered, then an
-//          * error will be thrown.
-//          *
-//          * In addition to the functions that are already returned for registering callbacks,
-//          * if this option is set to `true`, then additional `*Safe` functions will also be returned.
-//          * These `*Safe` functions are no-ops in the case of attempting to register a callback
-//          * for a `Channel` and `Key` for which a callback is already registered.
-//          *
-//          * @default `false`
-//          */
-//         throwOnCollision: true;
-//     };
-
-// type ReactiveEventHookOptionsNotKeyedSafe =
-//     | {
-//         /**
-//          * The default behavior allows at most one callback per channel to be registered
-//          * at any given point in time.  Specifying this property and setting it to `true`
-//          * will extend the functions to register callbacks to also accept a `Key: string`
-//          * argument, which is used for identifying callback functions.
-//          *
-//          * @default `false`
-//          */
-//         allowMultipleCallbacksPerChannel: false;
-//         ipcRenderer?: IpcRenderer;
-//         /**
-//          * If set to `true`, then if a callback is attempted to be registered for a given
-//          * `Channel` and `Key` for which another callback is already registered, then an
-//          * error will be thrown.
-//          *
-//          * In addition to the functions that are already returned for registering callbacks,
-//          * if this option is set to `true`, then additional `*Safe` functions will also be returned.
-//          * These `*Safe` functions are no-ops in the case of attempting to register a callback
-//          * for a `Channel` and `Key` for which a callback is already registered.
-//          *
-//          * @default `false`
-//          */
-//         throwOnCollision: true;
-//     }
-//     | {
-//         ipcRenderer?: IpcRenderer;
-//         /**
-//          * If set to `true`, then if a callback is attempted to be registered for a given
-//          * `Channel` and `Key` for which another callback is already registered, then an
-//          * error will be thrown.
-//          *
-//          * In addition to the functions that are already returned for registering callbacks,
-//          * if this option is set to `true`, then additional `*Safe` functions will also be returned.
-//          * These `*Safe` functions are no-ops in the case of attempting to register a callback
-//          * for a `Channel` and `Key` for which a callback is already registered.
-//          *
-//          * @default `false`
-//          */
-//         throwOnCollision: true;
-//     };
-
-type ReactiveEventHookOptionsKeyed =
-    | {
-        /**
-         * The default behavior allows at most one callback per channel to be registered
-         * at any given point in time.  Specifying this property and setting it to `true`
-         * will extend the functions to register callbacks to also accept a `Key: string`
-         * argument, which is used for identifying callback functions.
-         *
-         * @default `false`
-         */
-        allowMultipleCallbacksPerChannel: true;
-        ipcRenderer?: IpcRenderer;
-        /**
-         * If set to `true`, then if a callback is attempted to be registered for a given
-         * `Channel` and `Key` for which another callback is already registered, then an
-         * error will be thrown.
-         *
-         * In addition to the functions that are already returned for registering callbacks,
-         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
-         * These `*Safe` functions are no-ops in the case of attempting to register a callback
-         * for a `Channel` and `Key` for which a callback is already registered.
-         *
-         * @default `false`
-         */
-        throwOnCollision: false;
-    }
-    | {
-        /**
-         * The default behavior allows at most one callback per channel to be registered
-         * at any given point in time.  Specifying this property and setting it to `true`
-         * will extend the functions to register callbacks to also accept a `Key: string`
-         * argument, which is used for identifying callback functions.
-         *
-         * @default `false`
-         */
-        allowMultipleCallbacksPerChannel: true;
-        ipcRenderer?: IpcRenderer;
-    };
-
-type ReactiveEventHookOptionsNotKeyed =
-    | {
-        /**
-         * The default behavior allows at most one callback per channel to be registered
-         * at any given point in time.  Specifying this property and setting it to `true`
-         * will extend the functions to register callbacks to also accept a `Key: string`
-         * argument, which is used for identifying callback functions.
-         *
-         * @default `false`
-         */
-        allowMultipleCallbacksPerChannel: false;
-
-        /** The custom `IpcRenderer` instance, if you are using one. */
-        ipcRenderer?: IpcRenderer;
-
-        /**
-         * If set to `true`, then if a callback is attempted to be registered for a given
-         * `Channel` and `Key` for which another callback is already registered, then an
-         * error will be thrown.
-         *
-         * In addition to the functions that are already returned for registering callbacks,
-         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
-         * These `*Safe` functions are no-ops in the case of attempting to register a callback
-         * for a `Channel` and `Key` for which a callback is already registered.
-         *
-         * @default `false`
-         */
-        throwOnCollision: false;
-    }
-    | {
-        ipcRenderer?: IpcRenderer;
-        /**
-         * If set to `true`, then if a callback is attempted to be registered for a given
-         * `Channel` and `Key` for which another callback is already registered, then an
-         * error will be thrown.
-         *
-         * In addition to the functions that are already returned for registering callbacks,
-         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
-         * These `*Safe` functions are no-ops in the case of attempting to register a callback
-         * for a `Channel` and `Key` for which a callback is already registered.
-         *
-         * @default `false`
-         */
-        throwOnCollision: false;
-    }
-    | {
-        /**
-         * The default behavior allows at most one callback per channel to be registered
-         * at any given point in time.  Specifying this property and setting it to `true`
-         * will extend the functions to register callbacks to also accept a `Key: string`
-         * argument, which is used for identifying callback functions.
-         *
-         * @default `false`
-         */
-        allowMultipleCallbacksPerChannel: false;
-        ipcRenderer?: IpcRenderer;
-    }
-    | {
-        ipcRenderer?: IpcRenderer;
-    };
-
-export type ReactiveEventHookOptions =
-    | ReactiveEventHookOptionsKeyed
-    | ReactiveEventHookOptionsNotKeyed;
-//    | ReactiveEventHookOptionsKeyedSafe
-//    | ReactiveEventHookOptionsNotKeyedSafe;
-
-type DeferredHookName<HookName extends string> = `${ HookName }Deferred`;
-
-type BaseHookNamesDeferrable =
-    | "useSend"
-    | "useOnEvent"
-    | "useOnceEvent"
-    | "useAddListener"
-    | "useInvokeEvent"
-    | "usePostMessage"
-    | "useRemoveListener";
-
-type BaseHookNamesOnlyDeferred =
-    | "useOffEvent"
-    | "useRemoveAllListeners";
-
-// type BaseHookNames =
-//     | BaseHookNamesDeferrable
-//     | BaseHookNamesOnlyDeferred;
-
-export type MainChannel<PackageKey extends PackageKeys> = Channel.Any<PackageKey, MainOwner>;
-export type RendererChannel<PackageKey extends PackageKeys> = Channel.Any<PackageKey, RendererOwner>;
-
-export type ReactiveEventHooks<
-    PackageKey extends PackageKeys,
-    OptionsType extends ReactiveEventHookOptions | undefined
-> = OptionsType extends undefined
-    ? NotKeyed.Hooks<PackageKey>
-    : OptionsType extends ReactiveEventHookOptionsKeyed
-        ? Keyed.Hooks<PackageKey>
-        : OptionsType extends ReactiveEventHookOptionsNotKeyed
-            ? NotKeyed.Hooks<PackageKey>
-            : never;
-// export type ReactiveEventHooks<
-//     PackageKey extends PackageKeys,
-//     OptionsType extends ReactiveEventHookOptions
-// > = OptionsType extends ReactiveEventHookOptionsKeyed
-//     ? Keyed.Hooks<PackageKey>
-//     : OptionsType extends ReactiveEventHookOptionsKeyedSafe
-//         ? Keyed.HooksSafe<PackageKey>
-//         : OptionsType extends ReactiveEventHookOptionsNotKeyed
-//             ? NotKeyed.Hooks<PackageKey>
-//             : NotKeyed.HooksSafe<PackageKey>;
+export type ReactiveEventHooks<PackageKey extends PackageKeys> =
+    Readonly<{
+        useInvoke: UseInvoke<PackageKey>;
+        useInvokeDeferred: UseInvokeDeferred<PackageKey>;
+        useOnEvent: UseOnEvent<PackageKey>;
+        useOnEventDeferred: UseOnEventDeferred<PackageKey>;
+        useOffEventDeferred: UseOffEventDeferred<PackageKey>;
+        useSendEvent: UseSendEvent<PackageKey>;
+        useSendEventDeferred: UseSendEventDeferred<PackageKey>;
+        useSendSync: UseSendSync<PackageKey>;
+        useSendSyncDeferred: UseSendSyncDeferred<PackageKey>;
+        useOnceEvent: UseOnceEvent<PackageKey>;
+        useOnceEventDeferred: UseOnceEventDeferred<PackageKey>;
+    }>;

@@ -36,12 +36,8 @@ export type Response<
 export type Request<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, OwnerType>
-> = RequestKey extends keyof FilterByOwner<PackageKey, OwnerType>
-    ? RendererRegistrar<PackageKey>[ChannelType][RequestKey] extends EmptyEventParameter
-        ? never
-        : RendererRegistrar<PackageKey>[ChannelType][RequestKey]
-    : never;
+    ChannelType extends Channel.Request<PackageKey, OwnerType>
+> = FilterByOwner<PackageKey, OwnerType>[ChannelType][RequestKey];
 
 export type Callback<
     PackageKey extends PackageKeys,
@@ -100,7 +96,7 @@ export type ResponseError<
     ChannelType extends Channel.Any<PackageKey, OwnerType>
 > = ReactiveEventError<PackageKey, OwnerType, ChannelType>;
 
-export type SendResponseSuccess<
+export type InvokeResponseSuccessBase<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
     ChannelType extends Channel.Any<PackageKey, OwnerType>
@@ -110,7 +106,7 @@ export type SendResponseSuccess<
         Error: undefined;
     }>;
 
-export type SendResponseFailure<
+export type InvokeResponseFailure<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
     ChannelType extends Channel.Any<PackageKey, OwnerType>
@@ -120,14 +116,18 @@ export type SendResponseFailure<
         Error: ResponseError<PackageKey, OwnerType, ChannelType>;
     }>;
 
-export type SendResponse<
+export type InvokeResponse<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
     ChannelType extends Channel.Any<PackageKey, OwnerType>
 > =
-    | SendResponseSuccess<PackageKey, OwnerType, ChannelType>
-    | SendResponseFailure<PackageKey, OwnerType, ChannelType>;
+    | InvokeResponseSuccessBase<PackageKey, OwnerType, ChannelType>
+    | InvokeResponseFailure<PackageKey, OwnerType, ChannelType>;
 
 export type EmptyRequestParameterType = Readonly<{
     EmptyEventParameter: "EmptyRequestParameter"
 }>;
+
+export type SafeRequest<RequestType> =
+    | RequestType
+    | EmptyRequestParameterType;

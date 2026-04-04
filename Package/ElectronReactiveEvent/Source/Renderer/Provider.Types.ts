@@ -4,11 +4,12 @@
  * License:   MIT
  */
 
-import type { Keyed } from "./Hook.Types.js";
 import type { PackageKeys } from "../Internal";
+import type { PropsWithChildren } from "react";
 
-/**
- * Currently, the context is used only for the keyed hooks.
- */
-export type ReactiveEventContext<PackageKey extends PackageKeys> =
-    Keyed.Hooks<PackageKeys>;
+export type ReactiveEventContext =
+    {
+        PackageKey: PackageKeys;
+    };
+
+export type ReactiveEventProviderProps = PropsWithChildren<{ value: ReactiveEventContext; }>;

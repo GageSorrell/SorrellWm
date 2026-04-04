@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { Callback as CallbackBase, EventTypesFromOwner, SendResponse } from "../Callback/index.js";
+import type { Callback as CallbackBase, EventTypesFromOwner, InvokeResponse } from "../Callback/index.js";
 import type { MainOwner, RendererOwner } from "../Decl.Types.js";
 import type { BrowserWindow } from "electron";
 import type { Channel } from "../Channel.Types";
@@ -21,11 +21,11 @@ export type MainCallback<
     ChannelType extends Channel.Any<PackageKey, RendererOwner>
 > = CallbackBase<PackageKey, RendererOwner, EventType, ChannelType>;
 
-export type MainSendResponse<
+export type MainInvokeResponse<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Any<PackageKey, MainOwner>,
     BrowserWindowsArgumentType extends BrowserWindow | Array<BrowserWindow>
 > = BrowserWindowsArgumentType extends Array<BrowserWindow>
-    ? Array<SendResponse<PackageKey, MainOwner, ChannelType>>
-    : SendResponse<PackageKey, MainOwner, ChannelType>;
+    ? Array<InvokeResponse<PackageKey, MainOwner, ChannelType>>
+    : InvokeResponse<PackageKey, MainOwner, ChannelType>;
 

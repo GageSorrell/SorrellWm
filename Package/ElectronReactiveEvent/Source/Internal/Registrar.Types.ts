@@ -16,8 +16,9 @@ export interface Registrar
 {
     Pickij:
     {
-        ShowLitFam: EventDecl<"Main", number, EmptyEventParameter, string>;
         GetLitFam: EventDecl<"Renderer", boolean, EmptyEventParameter, string>;
+        BingBong: EventDecl<"Renderer", EmptyEventParameter, EmptyEventParameter, string>;
+        ShowLitFam: EventDecl<"Main", number, EmptyEventParameter, string>;
     }
 }
 
