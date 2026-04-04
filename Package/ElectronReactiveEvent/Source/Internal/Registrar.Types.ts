@@ -16,11 +16,12 @@ export interface Registrar
 {
     Pickij:
     {
-        GetLitFam: EventDecl<"Main", number, EmptyEventParameter, string>;
+        ShowLitFam: EventDecl<"Main", number, EmptyEventParameter, string>;
+        GetLitFam: EventDecl<"Renderer", boolean, EmptyEventParameter, string>;
     }
 }
 
-export type PackageKeys = Extract<keyof Registrar, string>;
+export type PackageKeys = Exclude<keyof Registrar, number | symbol>;
 
 type EventNamesHelper<PackageKey extends PackageKeys> =
     {

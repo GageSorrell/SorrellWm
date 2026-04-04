@@ -101,11 +101,9 @@ export namespace Channel
         PackageKey extends PackageKeys,
         Owner extends EventOwner
     > =
-        Extract<
-            Exclude<
-                keyof FilterByOwner<PackageKey, Owner>,
-                number | symbol>,
-            string
+        Exclude<
+            keyof FilterByOwner<PackageKey, Owner>,
+            number | symbol
         >;
 
     /**

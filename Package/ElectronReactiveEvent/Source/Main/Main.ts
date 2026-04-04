@@ -4,22 +4,38 @@
  * License:   MIT
  */
 
-// @TODO TEMPORARY.
+/* eslint-disable @typescript-eslint/no-namespace */
+
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { type IpcMain, type IpcMainEvent, type IpcMainInvokeEvent, ipcMain } from "electron";
-import type { Callback } from "./Callback.Types";
-import type { Channel } from "../Channel.Types";
-import type { PackageKeys } from "../Internal";
+import type { BrowserWindow, IpcMain, IpcMainEvent, IpcMainInvokeEvent } from "electron";
+import { EmptyRequestParameter, GetSendResponseChannel } from "../Callback/Callback.js";
+import type { EmptyRequestParameterType, Request } from "../Callback/Callback.Types.js";
+import type { MainCallback, MainSendResponse } from "./Callback.Types.js";
+import type { MainOwner, RendererOwner } from "../Decl.Types.js";
+import type { Channel } from "../Channel.Types.js";
+import type { PackageKeys } from "../Internal/index.js";
+import type { RequestOverloadSafe } from "../Callback/Internal.Types.js";
+import { ipcMain } from "electron";
 
-type MainChannelOuter<PackageKey extends PackageKeys> = Channel.Any<PackageKey, "Main">;
+type RendererChannelOuter<PackageKey extends PackageKeys> = Channel.Any<PackageKey, RendererOwner>;
 
-export type IpcMainOnListener = (
+type MainCallbackOuter<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannelOuter<PackageKey>
+> = MainCallback<PackageKey, IpcMainEvent, ChannelType>;
+
+type MainInvokeCallback<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannelOuter<PackageKey>
+> = MainCallback<PackageKey, IpcMainInvokeEvent, ChannelType>;
+
+type IpcMainOnListener = (
     Event: IpcMainEvent,
     ...Arguments: Array<unknown>
 ) => void;
 
-export type IpcMainHandleListener = (
+type IpcMainHandleListener = (
     Event: IpcMainInvokeEvent,
     ...Arguments: Array<unknown>
 ) => unknown;
@@ -27,227 +43,474 @@ export type IpcMainHandleListener = (
 type HandleRegistration<PackageKey extends PackageKeys> =
     {
         Key: string;
-        Callback: Callback<PackageKey, IpcMainInvokeEvent, MainChannelOuter<PackageKey>>;
+        Once: boolean;
+        Callback: MainCallback<PackageKey, IpcMainInvokeEvent, RendererChannelOuter<PackageKey>>;
+    };
+
+type ListenerRegistration<
+    PackageKey extends PackageKeys,
+    ChannelType extends RendererChannelOuter<PackageKey>
+> =
+    {
+        Once: boolean;
+        Callback:
+            | MainCallback<PackageKey, IpcMainEvent, ChannelType>
+            | IpcMainOnListener;
+    };
+
+type ReactiveIpcMainOptionsKeyedSafe =
+    {
+        /**
+         * The default behavior allows at most one callback per channel to be registered
+         * at any given point in time.  Specifying this property and setting it to `true`
+         * will extend the functions to register callbacks to also accept a `Key: string`
+         * argument, which is used for identifying callback functions.
+         *
+         * @default `false`
+         */
+        allowMultipleCallbacksPerChannel: true;
+        ipcMain?: IpcMain;
+        /**
+         * If set to `true`, then if a callback is attempted to be registered for a given
+         * `Channel` and `Key` for which another callback is already registered, then an
+         * error will be thrown.
+         *
+         * In addition to the functions that are already returned for registering callbacks,
+         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
+         * These `*Safe` functions are no-ops in the case of attempting to register a callback
+         * for a `Channel` and `Key` for which a callback is already registered.
+         *
+         * @default `false`
+         */
+        throwOnCollision: true;
+    };
+
+type ReactiveIpcMainOptionsNotKeyedSafe =
+    | {
+        /**
+         * The default behavior allows at most one callback per channel to be registered
+         * at any given point in time.  Specifying this property and setting it to `true`
+         * will extend the functions to register callbacks to also accept a `Key: string`
+         * argument, which is used for identifying callback functions.
+         *
+         * @default `false`
+         */
+        allowMultipleCallbacksPerChannel: false;
+        ipcMain?: IpcMain;
+        /**
+         * If set to `true`, then if a callback is attempted to be registered for a given
+         * `Channel` and `Key` for which another callback is already registered, then an
+         * error will be thrown.
+         *
+         * In addition to the functions that are already returned for registering callbacks,
+         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
+         * These `*Safe` functions are no-ops in the case of attempting to register a callback
+         * for a `Channel` and `Key` for which a callback is already registered.
+         *
+         * @default `false`
+         */
+        throwOnCollision: true;
+    }
+    | {
+        ipcMain?: IpcMain;
+        /**
+         * If set to `true`, then if a callback is attempted to be registered for a given
+         * `Channel` and `Key` for which another callback is already registered, then an
+         * error will be thrown.
+         *
+         * In addition to the functions that are already returned for registering callbacks,
+         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
+         * These `*Safe` functions are no-ops in the case of attempting to register a callback
+         * for a `Channel` and `Key` for which a callback is already registered.
+         *
+         * @default `false`
+         */
+        throwOnCollision: true;
+    };
+
+type ReactiveIpcMainOptionsKeyed =
+    | {
+        /**
+         * The default behavior allows at most one callback per channel to be registered
+         * at any given point in time.  Specifying this property and setting it to `true`
+         * will extend the functions to register callbacks to also accept a `Key: string`
+         * argument, which is used for identifying callback functions.
+         *
+         * @default `false`
+         */
+        allowMultipleCallbacksPerChannel: true;
+        ipcMain?: IpcMain;
+        /**
+         * If set to `true`, then if a callback is attempted to be registered for a given
+         * `Channel` and `Key` for which another callback is already registered, then an
+         * error will be thrown.
+         *
+         * In addition to the functions that are already returned for registering callbacks,
+         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
+         * These `*Safe` functions are no-ops in the case of attempting to register a callback
+         * for a `Channel` and `Key` for which a callback is already registered.
+         *
+         * @default `false`
+         */
+        throwOnCollision: false;
+    }
+    | {
+        /**
+         * The default behavior allows at most one callback per channel to be registered
+         * at any given point in time.  Specifying this property and setting it to `true`
+         * will extend the functions to register callbacks to also accept a `Key: string`
+         * argument, which is used for identifying callback functions.
+         *
+         * @default `false`
+         */
+        allowMultipleCallbacksPerChannel: true;
+        ipcMain?: IpcMain;
+    };
+
+type ReactiveIpcMainOptionsNotKeyed =
+    | {
+        /**
+         * The default behavior allows at most one callback per channel to be registered
+         * at any given point in time.  Specifying this property and setting it to `true`
+         * will extend the functions to register callbacks to also accept a `Key: string`
+         * argument, which is used for identifying callback functions.
+         *
+         * @default `false`
+         */
+        allowMultipleCallbacksPerChannel: false;
+
+        /** The custom `IpcMain` instance, if you are using one. */
+        ipcMain?: IpcMain;
+
+        /**
+         * If set to `true`, then if a callback is attempted to be registered for a given
+         * `Channel` and `Key` for which another callback is already registered, then an
+         * error will be thrown.
+         *
+         * In addition to the functions that are already returned for registering callbacks,
+         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
+         * These `*Safe` functions are no-ops in the case of attempting to register a callback
+         * for a `Channel` and `Key` for which a callback is already registered.
+         *
+         * @default `false`
+         */
+        throwOnCollision: false;
+    }
+    | {
+        ipcMain?: IpcMain;
+        /**
+         * If set to `true`, then if a callback is attempted to be registered for a given
+         * `Channel` and `Key` for which another callback is already registered, then an
+         * error will be thrown.
+         *
+         * In addition to the functions that are already returned for registering callbacks,
+         * if this option is set to `true`, then additional `*Safe` functions will also be returned.
+         * These `*Safe` functions are no-ops in the case of attempting to register a callback
+         * for a `Channel` and `Key` for which a callback is already registered.
+         *
+         * @default `false`
+         */
+        throwOnCollision: false;
+    }
+    | {
+        /**
+         * The default behavior allows at most one callback per channel to be registered
+         * at any given point in time.  Specifying this property and setting it to `true`
+         * will extend the functions to register callbacks to also accept a `Key: string`
+         * argument, which is used for identifying callback functions.
+         *
+         * @default `false`
+         */
+        allowMultipleCallbacksPerChannel: false;
+        ipcMain?: IpcMain;
+    }
+    | {
+        ipcMain?: IpcMain;
     };
 
 export type ReactiveIpcMainOptions =
+    | ReactiveIpcMainOptionsKeyed
+    | ReactiveIpcMainOptionsKeyedSafe
+    | ReactiveIpcMainOptionsNotKeyed
+    | ReactiveIpcMainOptionsNotKeyedSafe;
+
+export type Send<PackageKey extends PackageKeys> =
     {
-        allowMultipleCallbacksPerChannel?: boolean;
-        throwOnCollision?: boolean;
+        <ChannelType extends Channel.NoRequest<PackageKey, MainOwner>>(
+            browserWindows: BrowserWindow | Array<BrowserWindow>,
+            channel: ChannelType
+        ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+
+        <ChannelType extends Channel.Request<PackageKey, MainOwner>>(
+            browserWindows: BrowserWindow | Array<BrowserWindow>,
+            channel: ChannelType,
+            request: Request<PackageKey, MainOwner, ChannelType>
+        ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
     };
 
-type MainCallbackOuter<
-    PackageKey extends PackageKeys,
-    ChannelType extends MainChannelOuter<PackageKey>
-> = Callback<PackageKey, IpcMainEvent, ChannelType>;
-
-type MainInvokeCallback<
-    PackageKey extends PackageKeys,
-    ChannelType extends MainChannelOuter<PackageKey>
-> = Callback<PackageKey, IpcMainInvokeEvent, ChannelType>;
-
-export type ReactiveIpcMainFunctionsWithKeys<PackageKey extends PackageKeys> =
-    {
-        RegisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string,
-            Callback: MainCallbackOuter<PackageKey, typeof Channel>
-        ): void;
-
-        UnregisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string
-        ): void;
-
-        IsOnListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string
-        ): boolean;
-
-        RegisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string,
-            Callback: MainInvokeCallback<PackageKey, typeof Channel>
-        ): void;
-
-        UnregisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string
-        ): void;
-
-        IsHandleListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string
-        ): boolean;
-    };
-
-export type ReactiveIpcMainFunctionsNoKeys<PackageKey extends PackageKeys> =
-    {
-        RegisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Callback: MainCallbackOuter<PackageKey, typeof Channel>
-        ): void;
-
-        UnregisterOnListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType
-        ): void;
-
-        IsOnListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType
-        ): boolean;
-
-        RegisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Callback: MainInvokeCallback<PackageKey, typeof Channel>
-        ): void;
-
-        UnregisterHandleListener<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType
-        ): void;
-
-        IsHandleListenerRegistered<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType
-        ): boolean;
-    };
-
-export type ReactiveIpcMainFunctionsSafe<PackageKey extends PackageKeys> =
-    ReactiveIpcMainFunctionsWithKeys<PackageKey> &
-    {
-        RegisterOnListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string,
-            Callback: MainCallbackOuter<PackageKey, typeof Channel>
-        ): void;
-
-        RegisterHandleListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Key: string,
-            Callback: MainInvokeCallback<PackageKey, typeof Channel>
-        ): void;
-    };
-
-export type ReactiveIpcMainFunctionsNoKeysSafe<PackageKey extends PackageKeys> =
-    ReactiveIpcMainFunctionsNoKeys<PackageKey> &
-    {
-        RegisterOnListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Callback: MainCallbackOuter<PackageKey, typeof Channel>
-        ): void;
-
-        RegisterHandleListenerSafe<ChannelType extends MainChannelOuter<PackageKey>>(
-            Channel: ChannelType,
-            Callback: MainInvokeCallback<PackageKey, typeof Channel>
-        ): void;
-    };
-
-function IsIpcMainInstance(Value: unknown): Value is IpcMain
+export namespace Keyed
 {
-    if (typeof Value !== "object" || Value === null)
-    {
-        return false;
-    }
+    export type On<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Key: string,
+                Callback: MainCallbackOuter<PackageKey, typeof Channel>
+            ): void;
+        };
 
-    const Candidate: Partial<IpcMain> = Value as Partial<IpcMain>;
+    export type Off<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Key: string
+            ): void;
+        };
 
-    return (
-        typeof Candidate.on === "function" &&
-        typeof Candidate.off === "function" &&
-        typeof Candidate.handle === "function" &&
-        typeof Candidate.removeHandler === "function"
-    );
+    export type HasListener<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Key?: string
+            ): boolean;
+        };
+
+    export type HasHandler<PackageKey extends PackageKeys> = HasListener<PackageKey>;
+
+    export type Once<PackageKey extends PackageKeys> = On<PackageKey>;
+
+    export type Handle<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Key: string,
+                Callback: MainInvokeCallback<PackageKey, typeof Channel>
+            ): void;
+        };
+
+    export type HandleOnce<PackageKey extends PackageKeys> = Handle<PackageKey>;
+
+    export type RemoveHandler<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Key: string
+            ): void;
+        };
+
+    export type RemoveAllListeners<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                channel?: ChannelType
+            ): void;
+        };
+
+    export type ReactiveIpcMainFunctions<PackageKey extends PackageKeys> =
+        {
+            handle: Handle<PackageKey>;
+            handleOnce: HandleOnce<PackageKey>;
+            removeHandler: RemoveHandler<PackageKey>;
+
+            addListener: On<PackageKey>;
+            removeListener: Off<PackageKey>;
+            removeAllListeners: RemoveAllListeners<PackageKey>;
+
+            off: Off<PackageKey>;
+            on: On<PackageKey>;
+            once: Once<PackageKey>;
+
+            hasListener: HasListener<PackageKey>;
+            hasHandler: HasHandler<PackageKey>;
+
+            send: Send<PackageKey>;
+        };
+
+    export type AddListenerSafe<PackageKey extends PackageKeys> = On<PackageKey>;
+    export type OnSafe<PackageKey extends PackageKeys> = On<PackageKey>;
+    export type HandleSafe<PackageKey extends PackageKeys> = Handle<PackageKey>;
+    export type HandleOnceSafe<PackageKey extends PackageKeys> = Handle<PackageKey>;
+
+    export type SafePart<PackageKey extends PackageKeys> =
+        {
+            addListenerSafe: AddListenerSafe<PackageKey>;
+            onSafe: OnSafe<PackageKey>;
+            handleSafe: HandleSafe<PackageKey>;
+            handleOnceSafe: HandleSafe<PackageKey>;
+        };
+
+    export type ReactiveIpcMainFunctionsSafe<PackageKey extends PackageKeys> =
+        ReactiveIpcMainFunctions<PackageKey> &
+        SafePart<PackageKey>;
 }
 
-type GetReactiveIpcMainReturnType<
-    PackageKey extends PackageKeys,
-    Options extends ReactiveIpcMainOptions | undefined,
-    OverloadedArgument extends ReactiveIpcMainOptions | undefined | IpcMain = undefined
-> =
-    OverloadedArgument extends ReactiveIpcMainOptions
-        ? GetReactiveIpcMainReturnType<PackageKey, Exclude<OverloadedArgument, IpcMain>>
-        : Options extends object
-            ? "allowMultipleCallbacksPerChannel" extends keyof Options
-                ? Options["allowMultipleCallbacksPerChannel"] extends true
-                    ? "throwOnCollision" extends keyof Options
-                        ? Options["throwOnCollision"] extends true
-                            ? ReactiveIpcMainFunctionsSafe<PackageKey>
-                            : ReactiveIpcMainFunctionsWithKeys<PackageKey>
-                        : ReactiveIpcMainFunctionsWithKeys<PackageKey>
-                    : ReactiveIpcMainFunctionsNoKeys<PackageKey>
-                : "throwOnCollision" extends keyof Options
-                    ? Options["throwOnCollision"] extends true
-                        ? ReactiveIpcMainFunctionsNoKeysSafe<PackageKey>
-                        : ReactiveIpcMainFunctionsNoKeys<PackageKey>
-                    : ReactiveIpcMainFunctionsNoKeys<PackageKey>
-            : ReactiveIpcMainFunctionsNoKeys<PackageKey>;
-
-// type OverloadedReturn<PackageKey extends PackageKeys> =
-//     | ReactiveIpcMainFunctionsWithKeys<PackageKey>
-//     | ReactiveIpcMainFunctionsSafe<PackageKey>;
-
-// // ): ReactiveIpcMainFunctionsNoKeys<PackageKey>;
-// export function getReactiveIpcMain<PackageKey extends PackageKeys>(
-//     Options: ReactiveIpcMainOptions & { throwOnCollision?: false | undefined }
-// ): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
-// // ): ReactiveIpcMainFunctionsWithKeys<PackageKey>;
-// export function getReactiveIpcMain<PackageKey extends PackageKeys>(
-//     Options: ReactiveIpcMainOptions & { throwOnCollision: true }
-// ): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
-// // ): ReactiveIpcMainFunctionsSafe<PackageKey>;
-
-export function getReactiveIpcMain<PackageKey extends PackageKeys>(
-    Options?: ReactiveIpcMainOptions
-): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
-export function getReactiveIpcMain<PackageKey extends PackageKeys>(
-    IpcMainInstance: IpcMain,
-    Options?: ReactiveIpcMainOptions
-): GetReactiveIpcMainReturnType<PackageKey, typeof Options>;
-export function getReactiveIpcMain<PackageKey extends PackageKeys>(
-    IpcMainOrOptions?: IpcMain | ReactiveIpcMainOptions,
-    Options?: ReactiveIpcMainOptions
-): GetReactiveIpcMainReturnType<PackageKey, typeof Options, typeof IpcMainOrOptions>
+export namespace NotKeyed
 {
-    type MainChannel = MainChannelOuter<PackageKey>;
+    export type On<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Callback: MainCallbackOuter<PackageKey, typeof Channel>
+            ): void;
+        };
+
+    export type Off<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+            ): void;
+        };
+
+    export type HasListener<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType
+            ): boolean;
+        };
+
+    export type HasHandler<PackageKey extends PackageKeys> = HasListener<PackageKey>;
+
+    export type Once<PackageKey extends PackageKeys> = On<PackageKey>;
+
+    export type Handle<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType,
+                Callback: MainInvokeCallback<PackageKey, typeof Channel>
+            ): void;
+        };
+
+    export type HandleOnce<PackageKey extends PackageKeys> = Handle<PackageKey>;
+
+    export type RemoveHandler<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel: ChannelType
+            ): void;
+        };
+
+    export type RemoveAllListeners<PackageKey extends PackageKeys> =
+        {
+            <ChannelType extends RendererChannelOuter<PackageKey>>(
+                Channel?: ChannelType
+            ): void;
+        };
+
+    export type ReactiveIpcMainFunctions<PackageKey extends PackageKeys> =
+        {
+            handle: Handle<PackageKey>;
+            handleOnce: HandleOnce<PackageKey>;
+            removeHandler: RemoveHandler<PackageKey>;
+
+            addListener: On<PackageKey>;
+            removeListener: Off<PackageKey>;
+            removeAllListeners: RemoveAllListeners<PackageKey>;
+
+            off: Off<PackageKey>;
+            on: On<PackageKey>;
+            once: Once<PackageKey>;
+
+            hasListener: HasListener<PackageKey>;
+            hasHandler: HasHandler<PackageKey>;
+
+            send: Send<PackageKey>;
+        };
+
+    export type AddListenerSafe<PackageKey extends PackageKeys> = On<PackageKey>;
+    export type OnSafe<PackageKey extends PackageKeys> = On<PackageKey>;
+    export type HandleSafe<PackageKey extends PackageKeys> = Handle<PackageKey>;
+    export type HandleOnceSafe<PackageKey extends PackageKeys> = Handle<PackageKey>;
+
+    export type SafePart<PackageKey extends PackageKeys> =
+        {
+            addListenerSafe: AddListenerSafe<PackageKey>;
+            onSafe: OnSafe<PackageKey>;
+            handleSafe: HandleSafe<PackageKey>;
+            handleOnceSafe: HandleSafe<PackageKey>;
+        };
+
+    export type ReactiveIpcMainFunctionsSafe<PackageKey extends PackageKeys> =
+        ReactiveIpcMainFunctions<PackageKey> &
+        SafePart<PackageKey>;
+}
+
+function TryGetCustomIpcMain(Options: ReactiveIpcMainOptions | undefined): IpcMain
+{
+    if (typeof Options === "object" && Options !== null && "ipcMain" in Options)
+    {
+        const Candidate: Partial<IpcMain> = Options.ipcMain as Partial<IpcMain>;
+
+        const LikelyMatches: boolean = (
+            typeof Candidate.on === "function" &&
+            typeof Candidate.off === "function" &&
+            typeof Candidate.handle === "function" &&
+            typeof Candidate.removeHandler === "function"
+        );
+
+        return LikelyMatches
+            ? Candidate as IpcMain
+            : ipcMain;
+    }
+
+    return ipcMain;
+}
+
+type ReactiveIpcMainFunctions<
+    PackageKey extends PackageKeys,
+    OptionsType extends ReactiveIpcMainOptions | undefined
+> =
+    OptionsType extends undefined
+        ? NotKeyed.ReactiveIpcMainFunctions<PackageKey>
+        : OptionsType extends ReactiveIpcMainOptionsKeyed
+            ? Keyed.ReactiveIpcMainFunctions<PackageKey>
+            : OptionsType extends ReactiveIpcMainOptionsKeyedSafe
+                ? Keyed.ReactiveIpcMainFunctionsSafe<PackageKey>
+                : OptionsType extends ReactiveIpcMainOptionsNotKeyed
+                    ? NotKeyed.ReactiveIpcMainFunctions<PackageKey>
+                    : OptionsType extends ReactiveIpcMainOptionsNotKeyedSafe
+                        ? NotKeyed.ReactiveIpcMainFunctionsSafe<PackageKey>
+                        : never;
+
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+): NotKeyed.ReactiveIpcMainFunctions<PackageKey>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    Options: ReactiveIpcMainOptionsNotKeyed
+): NotKeyed.ReactiveIpcMainFunctions<PackageKey>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    Options: ReactiveIpcMainOptionsNotKeyedSafe
+): NotKeyed.ReactiveIpcMainFunctionsSafe<PackageKey>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    Options: ReactiveIpcMainOptionsKeyedSafe
+): Keyed.ReactiveIpcMainFunctionsSafe<PackageKey>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    Options: ReactiveIpcMainOptionsKeyed
+): Keyed.ReactiveIpcMainFunctions<PackageKey>;
+export function getReactiveIpcMain<PackageKey extends PackageKeys>(
+    Options?: ReactiveIpcMainOptions
+): ReactiveIpcMainFunctions<PackageKey, typeof Options>
+{
+    type MainChannel = RendererChannelOuter<PackageKey>;
     type MainCallback<ChannelType extends MainChannel> = MainCallbackOuter<PackageKey, ChannelType>;
     type InvokeCallback<ChannelType extends MainChannel> =
-        Callback<PackageKey, IpcMainInvokeEvent, ChannelType>;
-    type MainCallbackUnknown = MainCallback<MainChannel>;
+        MainCallback<PackageKey, IpcMainInvokeEvent, ChannelType>;
 
     const EmptyKey: "EmptyKey" = "EmptyKey" as const;
 
-    let IpcMainInstance: IpcMain = ipcMain;
-    let ResolvedOptions: ReactiveIpcMainOptions | undefined = Options;
-
-    if (IsIpcMainInstance(IpcMainOrOptions))
-    {
-        IpcMainInstance = IpcMainOrOptions;
-    }
-    else if (IpcMainOrOptions !== undefined)
-    {
-        ResolvedOptions = IpcMainOrOptions;
-    }
-
-    const AllowMultipleCallbacksPerChannel: boolean = (
-        ResolvedOptions !== undefined &&
-        "allowMultipleCallbacksPerChannel" in ResolvedOptions &&
-        ResolvedOptions.allowMultipleCallbacksPerChannel === true
-    );
+    const IpcMainInstance: IpcMain = TryGetCustomIpcMain(Options);
 
     const ThrowOnCollision: boolean = (
-        ResolvedOptions !== undefined &&
-        "throwOnCollision" in ResolvedOptions &&
-        ResolvedOptions.throwOnCollision === true
+        Options !== undefined &&
+        "throwOnCollision" in Options &&
+        Options.throwOnCollision === true
     );
 
     type CallbacksByChannel =
         Partial<{
-            [ Key in MainChannel ]: Partial<Record<string, MainCallbackOuter<PackageKey, Key>>>;
+            [ Key in MainChannel ]: Partial<Record<string, ListenerRegistration<PackageKey, Key>>>;
         }>;
 
     type DispatchersByChannel =
         Partial<{
-            [ Key in MainChannel ]:
-                | MainCallbackUnknown
-                | IpcMainOnListener;
+            [ Key in MainChannel ]: ListenerRegistration<PackageKey, Key>;
         }>;
 
     const OnCallbacksByChannel: CallbacksByChannel = { };
@@ -311,7 +574,11 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
             }
         };
 
-        OnDispatchersByChannel[Channel] = Dispatcher;
+        OnDispatchersByChannel[Channel] =
+            {
+                Callback: Dispatcher,
+                Once: false
+            };
 
         IpcMainInstance.on(Channel, Dispatcher);
     }
@@ -334,7 +601,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
 
         if (Dispatcher !== undefined)
         {
-            IpcMainInstance.off(Channel, Dispatcher as IpcMainOnListener);
+            IpcMainInstance.off(Channel, Dispatcher.Callback as IpcMainOnListener);
             delete OnDispatchersByChannel[Channel];
         }
 
@@ -387,7 +654,21 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
         }
     }
 
-    function IsOnListenerRegistered<ChannelType extends MainChannel>(
+    // handle: Handle<PackageKey>;
+    // handleOnce: HandleOnce<PackageKey>;
+    // removeHandler: RemoveHandler<PackageKey>;
+
+    // addListener: On<PackageKey>;
+    // removeListener: Off<PackageKey>;
+    // removeAllListeners: RemoveAllListeners<PackageKey>;
+
+    // off: Off<PackageKey>;
+    // on: On<PackageKey>;
+    // once: Once<PackageKey>;
+
+    // hasListener: HasListener<PackageKey>;
+
+    function hasListenerKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string
     ): boolean
@@ -395,14 +676,14 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
         return OnCallbacksByChannel[Channel]?.[Key] !== undefined;
     }
 
-    function IsOnListenerRegisteredNoKeys<ChannelType extends MainChannel>(
+    function hasListenerNotKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType
     ): boolean
     {
-        return IsOnListenerRegistered(Channel, EmptyKey);
+        return hasListenerKeyed(Channel, EmptyKey);
     }
 
-    function IsHandleListenerRegistered<ChannelType extends MainChannel>(
+    function hasHandlerKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string
     ): boolean
@@ -418,20 +699,21 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
         return Registration.Key === Key;
     }
 
-    function IsHandleListenerRegisteredNoKeys<ChannelType extends MainChannel>(
+    function hasHandlerNotKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType
     ): boolean
     {
-        return IsHandleListenerRegistered(Channel, EmptyKey);
+        return hasHandlerKeyed(Channel, EmptyKey);
     }
 
-    function RegisterOnListener<ChannelType extends MainChannel>(
+    function onKeyedBase<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string,
-        Callback: MainCallback<typeof Channel>
+        Callback: MainCallback<typeof Channel>,
+        Once: boolean
     ): void
     {
-        const HasCollision: boolean = IsOnListenerRegistered(Channel, Key);
+        const HasCollision: boolean = hasListenerKeyed(Channel, Key);
 
         if (HasCollision && ThrowOnCollision)
         {
@@ -445,73 +727,163 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
 
         EnsureOnDispatcher(Channel);
 
-        OnCallbacksByChannel[Channel][Key] = Callback;
+        OnCallbacksByChannel[Channel][Key] =
+            {
+                Callback,
+                Once
+            };
     }
 
-    function RegisterOnListenerNoKeys<ChannelType extends MainChannel>(
-        Channel: ChannelType,
-        Callback: MainCallback<typeof Channel>
-    ): void
-    {
-        RegisterOnListener(Channel, EmptyKey, Callback);
-    }
-
-    function RegisterOnListenerSafe<ChannelType extends MainChannel>(
+    function onceKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string,
         Callback: MainCallback<typeof Channel>
     ): void
     {
-        if (IsOnListenerRegistered(Channel, Key))
-        {
-            return;
-        }
-
-        RegisterOnListener(Channel, Key, Callback);
+        onKeyedBase(Channel, Key, Callback, true);
     }
 
-    function RegisterOnListenerNoKeysSafe<ChannelType extends MainChannel>(
+    function onceNotKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Callback: MainCallback<typeof Channel>
     ): void
     {
-        RegisterOnListenerSafe(Channel, EmptyKey, Callback);
+        onceKeyed(Channel, EmptyKey, Callback);
     }
 
-    function UnregisterOnListener<ChannelType extends MainChannel>(
+    function onceKeyedSafe<ChannelType extends MainChannel>(
         Channel: ChannelType,
-        Key: string
+        Key: string,
+        Callback: MainCallback<typeof Channel>
     ): void
     {
-        const CallbacksForChannel: DispatchersByChannel | undefined =
-            OnCallbacksByChannel[Channel];
-
-        if (CallbacksForChannel === undefined)
+        if (hasListenerKeyed(Channel, Key))
         {
             return;
         }
 
-        if ((CallbacksForChannel as Record<typeof Key, unknown>)[Key] === undefined)
+        onceKeyed(Channel, EmptyKey, Callback);
+    }
+
+    function onceNotKeyedSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        onceKeyedSafe(Channel, EmptyKey, Callback);
+    }
+
+    function onKeyed<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        onKeyedBase(Channel, Key, Callback, false);
+    }
+
+    function onNotKeyed<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        onKeyed(Channel, EmptyKey, Callback);
+    }
+
+    function onKeyedSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        if (hasListenerKeyed(Channel, Key))
         {
             return;
         }
 
-        delete (CallbacksForChannel as Record<typeof Key, unknown>)[Key];
+        onKeyed(Channel, Key, Callback);
+    }
+
+    function onNotKeyedSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: MainCallback<typeof Channel>
+    ): void
+    {
+        onKeyedSafe(Channel, EmptyKey, Callback);
+    }
+
+    function offBase<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key?: string
+    ): void
+    {
+        const DeleteKey = (InKey: string): void =>
+        {
+            const CallbacksForChannel: DispatchersByChannel | undefined =
+                OnCallbacksByChannel[Channel];
+
+            if (CallbacksForChannel === undefined)
+            {
+                return;
+            }
+
+            if ((CallbacksForChannel as Record<typeof InKey, unknown>)[InKey] === undefined)
+            {
+                return;
+            }
+
+            delete (CallbacksForChannel as Record<typeof InKey, unknown>)[InKey];
+        };
+
+        if (Key !== undefined)
+        {
+            DeleteKey(Key);
+        }
+        else if (OnCallbacksByChannel[Channel] !== undefined)
+        {
+            const Keys: Array<string> = Object.keys(OnCallbacksByChannel[Channel]);
+            Keys.forEach(DeleteKey);
+        }
 
         RemoveOnDispatcherIfUnused(Channel);
     }
 
-    function UnregisterOnListenerNoKeys<ChannelType extends MainChannel>(
+    function offKeyed<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string
+    ): void
+    {
+        offBase(Channel, Key);
+    }
+
+    function removeAllListeners<ChannelType extends MainChannel>(
+        Channel?: ChannelType
+    ): void
+    {
+        if (Channel !== undefined)
+        {
+            offBase(Channel);
+        }
+        else
+        {
+            const Channels: Array<string> = Object.keys(OnCallbacksByChannel);
+            const OffBase = (Channel: string): void => offBase(Channel as MainChannel);
+            Channels.forEach(OffBase);
+        }
+    }
+
+    function offNotKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType
     ): void
     {
-        UnregisterOnListener(Channel, EmptyKey);
+        offKeyed(Channel, EmptyKey);
     }
 
-    function RegisterHandleListener<ChannelType extends MainChannel>(
+    function handleKeyedBase<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string,
-        Callback: InvokeCallback<typeof Channel>
+        Callback: InvokeCallback<typeof Channel>,
+        Once: boolean
     ): void
     {
         const ExistingRegistration: HandleRegistration<PackageKey> | undefined =
@@ -529,21 +901,40 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
         HandleRegistrationsByChannel[Channel] =
             {
                 Callback,
-                Key
+                Key,
+                Once
             };
 
         EnsureHandleDispatcher(Channel);
     }
 
-    function RegisterHandleListenerNoKeys<ChannelType extends MainChannel>(
+    function handleKeyed<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        handleKeyedBase(Channel, Key, Callback, false);
+    }
+
+    function handleOnceKeyed<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        handleKeyedBase(Channel, Key, Callback, true);
+    }
+
+    function handleOnceNotKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Callback: InvokeCallback<typeof Channel>
     ): void
     {
-        RegisterHandleListener(Channel, EmptyKey, Callback);
+        handleKeyedBase(Channel, EmptyKey, Callback, true);
     }
 
-    function RegisterHandleListenerSafe<ChannelType extends MainChannel>(
+    function handleOnceKeyedSafe<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string,
         Callback: InvokeCallback<typeof Channel>
@@ -554,18 +945,53 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
             return;
         }
 
-        RegisterHandleListener(Channel, Key, Callback);
+        handleKeyedBase(Channel, Key, Callback, true);
     }
 
-    function RegisterHandleListenerNoKeysSafe<ChannelType extends MainChannel>(
+    function handleOnceNotKeyedSafe<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Callback: InvokeCallback<typeof Channel>
     ): void
     {
-        RegisterHandleListenerSafe(Channel, EmptyKey, Callback);
+        if (HandleRegistrationsByChannel[Channel] !== undefined)
+        {
+            return;
+        }
+
+        handleKeyedBase(Channel, EmptyKey, Callback, true);
     }
 
-    function UnregisterHandleListener<ChannelType extends MainChannel>(
+    function handleNotKeyed<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        handleKeyed(Channel, EmptyKey, Callback);
+    }
+
+    function handleKeyedSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Key: string,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        if (HandleRegistrationsByChannel[Channel] !== undefined)
+        {
+            return;
+        }
+
+        handleKeyed(Channel, Key, Callback);
+    }
+
+    function handleNotKeyedSafe<ChannelType extends MainChannel>(
+        Channel: ChannelType,
+        Callback: InvokeCallback<typeof Channel>
+    ): void
+    {
+        handleKeyedSafe(Channel, EmptyKey, Callback);
+    }
+
+    function removeHandlerKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType,
         Key: string
     ): void
@@ -588,78 +1014,228 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
         RemoveHandleDispatcherIfUnused(Channel);
     }
 
-    function UnregisterHandleListenerNoKeys<ChannelType extends MainChannel>(
+    function removeHandlerNotKeyed<ChannelType extends MainChannel>(
         Channel: ChannelType
     ): void
     {
-        UnregisterHandleListener(Channel, EmptyKey);
+        removeHandlerKeyed(Channel, EmptyKey);
     }
 
-    if (AllowMultipleCallbacksPerChannel)
+    async function send<ChannelType extends Channel.NoRequest<PackageKey, MainOwner>>(
+        browserWindows: BrowserWindow | Array<BrowserWindow>,
+        channel: ChannelType
+    ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+    async function send<ChannelType extends Channel.Request<PackageKey, MainOwner>>(
+        browserWindows: BrowserWindow | Array<BrowserWindow>,
+        channel: ChannelType,
+        request: Request<PackageKey, MainOwner, typeof channel>
+    ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>;
+    async function send<ChannelType extends MainChannel>(
+        browserWindows: BrowserWindow | Array<BrowserWindow>,
+        channel: ChannelType,
+        request:
+            | RequestOverloadSafe<PackageKey, MainOwner, typeof channel>
+            | EmptyRequestParameterType = EmptyRequestParameter
+    ): Promise<MainSendResponse<PackageKey, ChannelType, typeof browserWindows>>
     {
-        if (ThrowOnCollision)
+        type ThisReturnType = MainSendResponse<PackageKey, ChannelType, typeof browserWindows>;
+        type ThisReturnTypeElement = ThisReturnType extends Array<infer ElementType>
+            ? ElementType
+            : ThisReturnType;
+
+        const BrowserWindows: Array<BrowserWindow> = Array.isArray(browserWindows)
+            ? browserWindows
+            : [ browserWindows ];
+
+        const ArgumentVector: Array<unknown> = request === EmptyRequestParameter
+            ? [ ]
+            : [ request ];
+
+        const SendToBrowserWindow = (BrowserWindow: BrowserWindow): Promise<ThisReturnTypeElement> =>
         {
-            return {
-                /* @ts-expect-error Foo. */
-                IsHandleListenerRegistered,
-                /* @ts-expect-error Foo. */
-                IsOnListenerRegistered,
-                /* @ts-expect-error Foo. */
-                RegisterHandleListener,
-                RegisterHandleListenerSafe,
-                /* @ts-expect-error Foo. */
-                RegisterOnListener,
-                RegisterOnListenerSafe,
-                /* @ts-expect-error Foo. */
-                UnregisterHandleListener,
-                /* @ts-expect-error Foo. */
-                UnregisterOnListener
-            };
+            type ResolveFunction = (Value: ThisReturnTypeElement) => void;
+            type RejectFunction = (...ArgumentVector: Array<unknown>) => void;
+            return new Promise<ThisReturnTypeElement>((
+                Resolve: ResolveFunction,
+                _Reject: RejectFunction
+            ): void =>
+            {
+                IpcMainInstance.on(
+                    GetSendResponseChannel(channel),
+                    (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): void =>
+                    {
+                        Resolve(ArgumentVector[0] as ThisReturnTypeElement);
+                    }
+                );
+
+                BrowserWindow.webContents.send(channel, ...ArgumentVector);
+            });
+        };
+
+        if (Array.isArray(browserWindows))
+        {
+            if (browserWindows.length === 0)
+            {
+                // @TODO Error handling.
+            }
+
+            const SendPromises: Array<Promise<ThisReturnTypeElement>> =
+                BrowserWindows.map(SendToBrowserWindow);
+
+            return Promise.all(SendPromises) as Promise<ThisReturnType>;
         }
         else
         {
-            return {
-                /* @ts-expect-error Foo. */
-                IsHandleListenerRegistered,
-                /* @ts-expect-error Foo. */
-                IsOnListenerRegistered,
-                /* @ts-expect-error Foo. */
-                RegisterHandleListener,
-                /* @ts-expect-error Foo. */
-                RegisterOnListener,
-                /* @ts-expect-error Foo. */
-                UnregisterHandleListener,
-                /* @ts-expect-error Foo. */
-                UnregisterOnListener
-            };
+            return SendToBrowserWindow(browserWindows) as Promise<ThisReturnType>;
         }
+    }
+
+    if (Options === undefined)
+    {
+        const Out: NotKeyed.ReactiveIpcMainFunctions<PackageKey> =
+            {
+            } as NotKeyed.ReactiveIpcMainFunctions<PackageKey>;
+
+        return Out;
+    }
+    if (AreOptionsKeyed(Options))
+    {
+        const Out: Keyed.ReactiveIpcMainFunctions<PackageKey> =
+            {
+                addListener: onKeyed,
+                handle: handleKeyed,
+                handleOnce: handleOnceKeyed,
+                hasHandler: hasHandlerKeyed,
+                hasListener: hasListenerKeyed,
+                off: offKeyed,
+                on: onKeyed,
+                once: onceKeyed,
+                removeAllListeners,
+                removeHandler: removeHandlerKeyed,
+                removeListener: offKeyed
+            } as Keyed.ReactiveIpcMainFunctions<PackageKey>;
+
+        return Out;
+    }
+    else if (AreOptionsKeyedSafe(Options))
+    {
+        const Out: Keyed.ReactiveIpcMainFunctionsSafe<PackageKey> =
+            {
+                addListener: onKeyed,
+                addListenerSafe: onKeyedSafe,
+                handle: handleKeyedSafe,
+                handleOnce: handleOnceKeyedSafe,
+                handleOnceSafe: handleOnceKeyedSafe,
+                handleSafe: handleKeyedSafe,
+                hasHandler: hasHandlerKeyed,
+                hasListener: hasListenerKeyed,
+                off: offKeyed,
+                on: onKeyed,
+                onSafe: onKeyedSafe,
+                once: onceKeyed,
+                onceSafe: onceKeyedSafe,
+                removeAllListeners,
+                removeHandler: removeHandlerKeyed,
+                removeListener: offKeyed,
+                send
+            } as Keyed.ReactiveIpcMainFunctionsSafe<PackageKey>;
+
+        return Out;
+    }
+    else if (AreOptionsNotKeyed(Options))
+    {
+        const Out: NotKeyed.ReactiveIpcMainFunctions<PackageKey> =
+            {
+                addListener: onNotKeyed,
+                handle: handleNotKeyed,
+                handleOnce: handleOnceNotKeyed,
+                hasHandler: hasHandlerNotKeyed,
+                hasListener: hasListenerNotKeyed,
+                off: offNotKeyed,
+                on: onNotKeyed,
+                once: onceNotKeyed,
+                removeAllListeners,
+                removeHandler: removeHandlerNotKeyed,
+                removeListener: offNotKeyed
+            } as NotKeyed.ReactiveIpcMainFunctions<PackageKey>;
+
+        return Out;
+    }
+    else if (AreOptionsNotKeyedSafe(Options))
+    {
+        const Out: NotKeyed.ReactiveIpcMainFunctionsSafe<PackageKey> =
+            {
+                addListener: onNotKeyed,
+                addListenerSafe: onNotKeyedSafe,
+                handle: handleNotKeyed,
+                handleOnce: handleOnceNotKeyed,
+                handleOnceSafe: handleOnceNotKeyedSafe,
+                handleSafe: handleNotKeyedSafe,
+                hasHandler: hasHandlerNotKeyed,
+                hasListener: hasListenerNotKeyed,
+                off: offNotKeyed,
+                on: onNotKeyed,
+                onSafe: onNotKeyedSafe,
+                once: onceNotKeyed,
+                onceSafe: onceNotKeyedSafe,
+                removeAllListeners,
+                removeHandler: removeHandlerNotKeyed,
+                removeListener: offNotKeyed,
+                send
+            } as NotKeyed.ReactiveIpcMainFunctionsSafe<PackageKey>;
+
+        return Out;
     }
     else
     {
-        if (ThrowOnCollision)
-        {
-            return {
-                IsHandleListenerRegistered: IsHandleListenerRegisteredNoKeys,
-                IsOnListenerRegistered: IsOnListenerRegisteredNoKeys,
-                RegisterHandleListener: RegisterHandleListenerNoKeys,
-                /* @ts-expect-error Foo. */
-                RegisterHandleListenerSafe: RegisterHandleListenerNoKeysSafe,
-                RegisterOnListener: RegisterOnListenerNoKeys,
-                RegisterOnListenerSafe: RegisterOnListenerNoKeysSafe,
-                UnregisterHandleListener: UnregisterHandleListenerNoKeys,
-                UnregisterOnListener: UnregisterOnListenerNoKeys
-            };
-        }
-        else
-        {
-            return {
-                IsHandleListenerRegistered: IsHandleListenerRegisteredNoKeys,
-                IsOnListenerRegistered: IsOnListenerRegisteredNoKeys,
-                RegisterHandleListener: RegisterHandleListenerNoKeys,
-                RegisterOnListener: RegisterOnListenerNoKeys,
-                UnregisterHandleListener: UnregisterHandleListenerNoKeys,
-                UnregisterOnListener: UnregisterOnListenerNoKeys
-            };
-        }
+        throw new Error("oh no.");
     }
+}
+
+function IsKeyed(In: ReactiveIpcMainOptions | undefined): boolean
+{
+    return (
+        typeof In === "object" &&
+        In !== null &&
+        "allowMultipleCallbacksPerChannel" in In &&
+        In.allowMultipleCallbacksPerChannel === true
+    );
+}
+
+function IsSafe(In: ReactiveIpcMainOptions | undefined): boolean
+{
+    return (
+        typeof In === "object" &&
+        In !== null &&
+        "throwOnCollision" in In &&
+        In.throwOnCollision === true
+    );
+}
+
+function AreOptionsKeyed(
+    In: ReactiveIpcMainOptions | undefined
+): In is ReactiveIpcMainOptionsKeyed
+{
+    return IsKeyed(In) && !IsSafe(In);
+}
+
+function AreOptionsKeyedSafe(
+    In: ReactiveIpcMainOptions | undefined
+): In is ReactiveIpcMainOptionsKeyedSafe
+{
+    return IsKeyed(In) && IsSafe(In);
+}
+
+function AreOptionsNotKeyed(
+    In: ReactiveIpcMainOptions | undefined
+): In is ReactiveIpcMainOptionsNotKeyed
+{
+    return !IsKeyed(In) && !IsSafe(In);
+}
+
+function AreOptionsNotKeyedSafe(
+    In: ReactiveIpcMainOptions | undefined
+): In is ReactiveIpcMainOptionsNotKeyedSafe
+{
+    return !IsKeyed(In) && IsSafe(In);
 }

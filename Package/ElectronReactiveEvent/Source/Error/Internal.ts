@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EventOwner } from "../Decl.Types";
+import type { EventOwner } from "../Decl.Types.js";
 
 export class ReactiveEventInternalError extends Error
 {
