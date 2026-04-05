@@ -95,7 +95,17 @@ export type UseSendEventDeferred<PackageKey extends PackageKeys> =
         (): Readonly<[ sendEventDeferred: SendEventDeferred<PackageKey> ]>;
     };
 
-export type UseSendSync<PackageKey extends PackageKeys> = UseInvokeDeferred<PackageKey>;
+export type UseSendSync<PackageKey extends PackageKeys> =
+    {
+        <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
+            channel: ChannelType
+        ): MainResponse<PackageKey, ChannelType>;
+
+        <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
+            channel: ChannelType,
+            request: RendererRequest<PackageKey, ChannelType>
+        ): MainResponse<PackageKey, ChannelType>;
+    };
 
 export type SendSyncDeferred<PackageKey extends PackageKeys> =
     {

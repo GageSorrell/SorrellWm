@@ -8,21 +8,25 @@ import type {
     UseInvoke,
     UseInvokeDeferred,
     UseOffEventDeferred,
-    UseOnceEvent,
-    UseOnceEventDeferred,
     UseOnEvent,
     UseOnEventDeferred,
+    UseOnceEvent,
+    UseOnceEventDeferred,
     UseSendEvent,
-    UseSendEventDeferred} from "./Hook.Internal.Types";
+    UseSendEventDeferred,
+    UseSendSync,
+    UseSendSyncDeferred } from "./Hook.Internal.Types";
 import {
     useInvoke,
     useInvokeDeferred,
-    useOnceEvent,
-    useOnceEventDeferred,
     useOnEvent,
     useOnEventDeferred,
+    useOnceEvent,
+    useOnceEventDeferred,
     useSendEvent,
-    useSendEventDeferred } from "./Hook.Internal";
+    useSendEventDeferred,
+    useSendSync,
+    useSendSyncDeferred } from "./Hook.Internal";
 import type { PackageKeys } from "../Internal";
 import type { ReactiveEventHooks } from "./Hook.Types";
 
@@ -40,7 +44,7 @@ export function getReactiveEventHooks<PackageKey extends PackageKeys>(): Reactiv
         useOnceEventDeferred: useOnceEventDeferred as UseOnceEventDeferred<PackageKey>,
         useSendEvent: useSendEvent as UseSendEvent<PackageKey>,
         useSendEventDeferred: useSendEventDeferred as UseSendEventDeferred<PackageKey>,
-        useSendSync: useSendSyncEvent as UseSendSyncEvent<PackageKey>,
-        useSendSyncDeferred: useSendSyncEventDeferred as UseSendSyncEventDeferred<PackageKey>
+        useSendSync: useSendSync as UseSendSync<PackageKey>,
+        useSendSyncDeferred: useSendSyncDeferred as UseSendSyncDeferred<PackageKey>
     } as const;
 }

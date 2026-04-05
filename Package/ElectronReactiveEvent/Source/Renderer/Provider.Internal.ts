@@ -5,8 +5,8 @@
  */
 
 import { type Context, createContext } from "react";
-import type { ReactiveEventContext } from "./Hook.Internal.Types";
 import type { PackageKeys } from "../Internal";
+import type { ReactiveEventContext } from "./Provider.Types";
 
 const EmptyReactiveEventInternalContext: ReactiveEventContext =
     {

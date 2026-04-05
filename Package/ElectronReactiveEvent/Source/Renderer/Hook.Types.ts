@@ -8,7 +8,6 @@
 
 import type {
     Callback,
-    InvokeResponse as DeferredResponseBase,
     ResponseData as ResponseDataBase,
     InvokeResponseFailure as ResponseFailureBase,
     InvokeResponseSuccessBase as ResponseSuccessBase } from "../Callback/Callback.Types.js";
@@ -18,10 +17,10 @@ import type {
     UseInvoke,
     UseInvokeDeferred,
     UseOffEventDeferred,
-    UseOnceEvent,
-    UseOnceEventDeferred,
     UseOnEvent,
     UseOnEventDeferred,
+    UseOnceEvent,
+    UseOnceEventDeferred,
     UseSendEvent,
     UseSendEventDeferred,
     UseSendSync,

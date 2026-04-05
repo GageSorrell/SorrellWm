@@ -8,7 +8,7 @@ import type { ChannelSuspenseCacheMap, SuspenseCacheMap } from "./SuspenseCacheM
 import type { MainResponse, RendererRequest } from "./Hook.Types";
 import type { PackageKeys } from "../Internal";
 import type { RendererChannel } from "./Hook.Internal.Types";
-import type { EmptyRequestParameterType, SafeRequest } from "../Callback";
+import type { SafeRequest } from "../Callback";
 
 export type InnerChannelSuspenseCacheMap<
     PackageKey extends PackageKeys,
@@ -18,7 +18,7 @@ export type InnerChannelSuspenseCacheMap<
 export type InnerSuspenseCacheMap<
     PackageKey extends PackageKeys,
     OuterChannelType extends RendererChannel<PackageKey> = RendererChannel<PackageKey>> =
-    Map<OuterChannelType, ChannelSuspenseCacheMap<PackageKey, OuterChannelType>>
+    Map<OuterChannelType, ChannelSuspenseCacheMap<PackageKey, OuterChannelType>>;
 
 export type InnerGlobalSuspenseCacheMap<PackageKey extends PackageKeys> =
     Map<PackageKey, SuspenseCacheMap<PackageKey, RendererChannel<PackageKey>>>;

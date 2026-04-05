@@ -9,7 +9,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { BrowserWindow, IpcMain, IpcMainEvent, IpcMainInvokeEvent } from "electron";
-import { EmptyRequestParameter, GetInvokeResponseChannel } from "../Callback/Callback.js";
+import { EmptyRequestParameter, GetSendResponseChannel } from "../Callback/Callback.js";
 import type { EmptyRequestParameterType, Request } from "../Callback/Callback.Types.js";
 import type { MainCallback as MainCallbackBase, MainInvokeResponse } from "./Callback.Types.js";
 import type { MainOwner, RendererOwner } from "../Decl.Types.js";
@@ -1021,6 +1021,10 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
         removeHandlerKeyed(Channel, EmptyKey);
     }
 
+    /**
+     * @TODO Remove the use of `GetSendResponseChannel` and associated
+     * "invoke/handler-reverse" behavior.
+     */
     async function send<ChannelType extends Channel.NoRequest<PackageKey, MainOwner>>(
         browserWindows: BrowserWindow | Array<BrowserWindow>,
         channel: ChannelType
@@ -1061,7 +1065,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
             ): void =>
             {
                 IpcMainInstance.on(
-                    GetInvokeResponseChannel(channel),
+                    GetSendResponseChannel(channel),
                     (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): void =>
                     {
                         Resolve(ArgumentVector[0] as ThisReturnTypeElement);

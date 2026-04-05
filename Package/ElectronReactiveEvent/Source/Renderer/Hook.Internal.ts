@@ -71,14 +71,6 @@ async function InvokeAndNormalize<
 
 function GetCachedSuspenseInvokePromise<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Request<PackageKey, RendererOwner>
->(
-    PackageKey: PackageKey,
-    Channel: ChannelType,
-    Request: SafeRequest<RendererRequest<PackageKey, typeof Channel>>
-): Promise<MainResponse<PackageKey, ChannelType>>;
-function GetCachedSuspenseInvokePromise<
-    PackageKey extends PackageKeys,
     ChannelType extends RendererChannel<PackageKey>
 >(
     PackageKey: PackageKey,
@@ -383,24 +375,11 @@ export function useSendSync<
 
     useEffect((): ReturnType<EffectCallback> =>
     {
-        let IsCancelled: boolean = false;
+        const ArgumentVector: Array<unknown> = Request === EmptyRequestParameter
+            ? [ ]
+            : [ Request ];
 
-        SetState(PendingInvokeStateValue);
-
-        SendSyncAndNormalize<PackageKey, typeof Channel>(Channel, Request).then(
-            (Response: MainResponse<PackageKey, typeof Channel>): void =>
-            {
-                if (!IsCancelled)
-                {
-                    SetState(Response);
-                }
-            }
-        );
-
-        return (): void =>
-        {
-            IsCancelled = true;
-        };
+        SetState(ipcRenderer.sendSync(Channel, ...ArgumentVector));
     }, [ Channel, Request ]);
 
     return State;
