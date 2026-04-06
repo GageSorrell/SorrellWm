@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { Channel } from "./Channel.Types.js";
+import type { Channel } from "./Channel/Channel.Types.js";
 import type { EventOwner } from "./Decl.Types.js";
 import type { PackageKeys } from "./Internal/index.js";
 import type { ReactiveEventError } from "./Internal/Error.Types.js";

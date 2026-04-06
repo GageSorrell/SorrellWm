@@ -127,6 +127,7 @@
 			"HWNDPREV",
 			"IDOK",
 			"INITDIAstd::cout",
+			"injective",
 			"Insertable",
 			"Invokable",
 			"iomanip",

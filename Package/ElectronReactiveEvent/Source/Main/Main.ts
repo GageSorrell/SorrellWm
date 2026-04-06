@@ -9,14 +9,18 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { BrowserWindow, IpcMain, IpcMainEvent, IpcMainInvokeEvent } from "electron";
-import { EmptyRequestParameter, GetSendResponseChannel } from "../Callback/Callback.js";
-import type { EmptyRequestParameterType, Request } from "../Callback/Callback.Types.js";
+import { EmptyRequestParameter, GetInternalResponseChannel } from "../Callback/Callback.js";
+import type { EmptyRequestParameterType, Request } from "../Callback/Callback.Types.ts.old";
 import type { MainCallback as MainCallbackBase, MainInvokeResponse } from "./Callback.Types.js";
 import type { MainOwner, RendererOwner } from "../Decl.Types.js";
-import type { Channel } from "../Channel.Types.js";
+import type { Channel } from "../Channel/Channel.Types.js";
 import type { PackageKeys } from "../Internal/index.js";
 import type { RequestOverloadSafe } from "../Callback/Internal.Types.js";
 import { ipcMain } from "electron";
+
+ipcMain.on("Foo", (Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): unknown =>
+{
+});
 
 type RendererChannelOuter<PackageKey extends PackageKeys> = Channel.Any<PackageKey, RendererOwner>;
 
@@ -1065,7 +1069,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(
             ): void =>
             {
                 IpcMainInstance.on(
-                    GetSendResponseChannel(channel),
+                    GetInternalResponseChannel(channel),
                     (_Event: IpcMainEvent, ...ArgumentVector: Array<unknown>): void =>
                     {
                         Resolve(ArgumentVector[0] as ThisReturnTypeElement);

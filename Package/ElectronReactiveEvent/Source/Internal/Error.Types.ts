@@ -5,16 +5,15 @@
  */
 
 import type { ErrorKey, PackageKeys, Registrar } from "./index.js";
-import type { EventErrorUnknownAdvancedDecl, EventOwner } from "../Decl.Types.js";
-import type { Channel } from "../Channel.Types.js";
+import type { EventErrorUnknownAdvancedDecl, RendererOwner } from "../Decl.Types.js";
+import type { Channel } from "../Channel/Channel.Types.js";
 
 /**
  * "Homogenize" the ErrorDecl property of the event declaration.
  */
 export type ReactiveEventError<
     PackageKey extends PackageKeys,
-    Owner extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, Owner>> =
+    ChannelType extends Channel.Any<PackageKey, RendererOwner>> =
     Registrar[PackageKey][ChannelType][ErrorKey] extends string
         ? {
             Message: Registrar[PackageKey][ChannelType][ErrorKey];

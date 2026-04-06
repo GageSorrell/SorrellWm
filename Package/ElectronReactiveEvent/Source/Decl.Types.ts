@@ -6,9 +6,14 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
+/* eslint-disable jsdoc/require-jsdoc */
+
 import type { EventErrorAdvancedDeclParameter } from "./Internal/Decl.Types.js";
 
-export type EmptyEventParameter = [ never ];
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+const EmptyEventParameterValue: unique symbol = Symbol("EmptyEventParameterValue");
+
+export type EmptyEventParameter = typeof EmptyEventParameterValue;
 
 type EventDeclOptions =
     {
@@ -33,9 +38,13 @@ type EventDeclOptions =
 //         PayloadType: PayloadType;
 //     };
 
-export type MainOwner = "Main";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+const MainOwnerValue: unique symbol = Symbol("MainOwnerValue");
+const RendererOwnerValue: unique symbol = Symbol("RendererOwnerValue");
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
-export type RendererOwner = "Renderer";
+export type MainOwner = typeof MainOwnerValue;
+export type RendererOwner = typeof RendererOwnerValue;
 
 export type EventOwner =
     | MainOwner
@@ -56,36 +65,33 @@ export type EventErrorUnknownAdvancedDecl =
         Payload: unknown;
     };
 
-// /**
-//  * @remarks Unless you are event declarations with advanced patterns, you likely do not
-//  * want to use this type directly: use {@link EventErrorSimpleDecl} or {@link EventErrorAdvancedDecl} instead.
-//  *
-//  * @typeParam MessageType - The string union of possible error messages (keys).
-//  * @typeParam PayloadType - The type of the payload attached to a {@link ReactiveEventError}, if one is used.
-//  */
-// export type EventErrorDecl<
-//     MessageType extends string = string,
-//     PayloadType = EmptyEventParameter
-// > =
-//     | EventErrorSimpleDecl<MessageType, PayloadType>
-//     | EventErrorAdvancedDecl<{ MessageType: MessageType; PayloadType: PayloadType; }, MessageType>;
+export type EventErrorTuple<
+    MessageType extends string = string,
+    PayloadType = unknown
+> = [ MessageType, PayloadType ];
+
+export type EventErrorRecord<
+    MessageType extends string = string,
+    PayloadType = unknown
+> =
+    {
+        Message: MessageType;
+        Payload: PayloadType;
+    };
 
 export type EventErrorDecl<
     MessageType extends string = string,
     PayloadType = unknown
 > =
     | MessageType
-    | [ MessageType, PayloadType ]
-    | {
-        Message: MessageType;
-        Payload: PayloadType;
-    };
+    | EventErrorTuple<MessageType, PayloadType>
+    | EventErrorRecord<MessageType, PayloadType>;
 
 export type EventDecl<
     OwnerType extends EventOwner,
     RequestType = EmptyEventParameter,
     ResponseType = EmptyEventParameter,
-    ErrorType extends EventErrorDecl = EventErrorDecl,
+    ErrorType extends EventErrorDecl | EmptyEventParameter = EmptyEventParameter,
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     Options extends EventDeclOptions | EmptyEventParameter = EmptyEventParameter
 > =

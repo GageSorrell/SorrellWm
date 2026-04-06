@@ -40,3 +40,10 @@ export type Serializable<Type> = Type extends symbol | Function | Symbol
     : Type;
 
 export type SimpleCallback = () => void;
+
+export type RecordEntry<
+    RecordType extends Record<KeyType, ValueType>,
+    KeyTypeInner extends keyof RecordType = keyof RecordType,
+    KeyType extends PropertyKey = PropertyKey,
+    ValueType = unknown
+> = [ Key: KeyTypeInner, Value: RecordType[KeyTypeInner] ];

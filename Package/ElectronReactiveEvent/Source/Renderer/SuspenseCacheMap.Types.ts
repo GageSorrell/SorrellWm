@@ -5,10 +5,12 @@
  */
 
 import type { ChannelSuspenseCacheMap, SuspenseCacheMap } from "./SuspenseCacheMap";
-import type { MainResponse, RendererRequest } from "./Hook.Types";
+import type { MainResponse, RendererRequest } from "./Hook.Types.ts.old";
 import type { PackageKeys } from "../Internal";
-import type { RendererChannel } from "./Hook.Internal.Types";
+import type { RendererChannel } from "./Hook.Internal.Types.ts.old";
 import type { SafeRequest } from "../Callback";
+import type { Channel } from "../Channel";
+import type { RendererOwner } from "../Decl.Types";
 
 export type InnerChannelSuspenseCacheMap<
     PackageKey extends PackageKeys,
@@ -25,7 +27,9 @@ export type InnerGlobalSuspenseCacheMap<PackageKey extends PackageKeys> =
 
 export type InvokeAndNormalizeFunction =
     {
-        <PackageKey extends PackageKeys, ChannelType extends RendererChannel<PackageKey>>(
+        <PackageKey extends PackageKeys,
+            ChannelType extends Channel.Invokable.Any<PackageKey, RendererOwner>
+        >(
             Channel: ChannelType,
             Request: SafeRequest<RendererRequest<PackageKey, ChannelType>>
         ): Promise<MainResponse<PackageKey, ChannelType>>;

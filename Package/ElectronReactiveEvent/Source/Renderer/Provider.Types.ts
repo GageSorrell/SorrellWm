@@ -6,10 +6,18 @@
 
 import type { PackageKeys } from "../Internal";
 import type { PropsWithChildren } from "react";
+import type { ipcRenderer } from "electron/renderer";
 
 export type ReactiveEventContext =
     {
-        PackageKey: PackageKeys;
+        ipcRendererFunctions: Partial<Pick<typeof ipcRenderer,
+            | "invoke"
+            | "send"
+            | "sendSync"
+            | "off"
+            | "on"
+            | "once">>;
+        packageKey: PackageKeys;
     };
 
 export type ReactiveEventProviderProps = PropsWithChildren<{ value: ReactiveEventContext; }>;

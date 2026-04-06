@@ -6,8 +6,8 @@
 
 // @Todo TEMPORARY.
 import type { EmptyEventParameter, EventDecl, MainOwner, RendererOwner } from "../Decl.Types";
+import type { ErrorKey, OwnerKey, ResponseKey } from "./Decl.Types";
 import type { EventOwner } from "../Decl.Types";
-import type { OwnerKey } from "./Decl.Types";
 
 // @TODO TEMPORARY.
 // export interface Registrar { }
@@ -16,28 +16,28 @@ export interface Registrar
 {
     Pickij:
     {
-        GetLitFam: EventDecl<"Renderer", boolean, EmptyEventParameter, string>;
-        BingBong: EventDecl<"Renderer", EmptyEventParameter, EmptyEventParameter, string>;
-        ShowLitFam: EventDecl<"Main", number, EmptyEventParameter, string>;
+        GetLitFam: EventDecl<RendererOwner, boolean, EmptyEventParameter, string>;
+        BingBong: EventDecl<RendererOwner, EmptyEventParameter, EmptyEventParameter, [ string, number ]>;
+        ShowLitFam: EventDecl<MainOwner, number, EmptyEventParameter, string>;
     }
 }
 
 export type PackageKeys = Exclude<keyof Registrar, number | symbol>;
 
-type EventNamesHelper<PackageKey extends PackageKeys> =
+type ChannelsHelper<PackageKey extends PackageKeys> =
     {
-        [ EventName in keyof Registrar[PackageKey] as Extract<EventName, string> ]: EventName;
+        [ ChannelType in keyof Registrar[PackageKey] as Extract<ChannelType, string> ]: ChannelType;
     };
 
-type EventNames<PackageKey extends PackageKeys> = Extract<keyof EventNamesHelper<PackageKey>, string>;
+type Channels<PackageKey extends PackageKeys> = Extract<keyof ChannelsHelper<PackageKey>, string>;
 
 type FilterByOwnerHelper<
     PackageKey extends PackageKeys,
     Owner extends EventOwner
 > =
     {
-        [ EventName in EventNames<PackageKey> ]: OwnerKey extends keyof Registrar[PackageKey][EventName]
-            ? Registrar[PackageKey][EventName][OwnerKey] extends Owner
+        [ ChannelType in Channels<PackageKey> ]: OwnerKey extends keyof Registrar[PackageKey][ChannelType]
+            ? Registrar[PackageKey][ChannelType][OwnerKey] extends Owner
                 ? true
                 : false
             : never;
@@ -48,13 +48,47 @@ export type FilterByOwner<
     Owner extends EventOwner
 > =
     {
-        [ EventName in keyof FilterByOwnerHelper<PackageKey, Owner> as
+        [ ChannelType in keyof FilterByOwnerHelper<PackageKey, Owner> as
         FilterByOwnerHelper<PackageKey, Owner>[
-            Extract<EventName, keyof FilterByOwnerHelper<PackageKey, Owner>>
-        ] extends true ? EventName : never
-        ]: Registrar[PackageKey][EventName];
+            Extract<ChannelType, keyof FilterByOwnerHelper<PackageKey, Owner>>
+        ] extends true ? ChannelType : never
+        ]: Registrar[PackageKey][ChannelType];
     };
 
 export type MainRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, MainOwner>;
 
 export type RendererRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, RendererOwner>;
+
+type InvokableEventsHelper<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner
+> =
+    {
+        [ ChannelType in keyof FilterByOwner<PackageKey, OwnerType> ]:
+        ResponseKey extends keyof Registrar[PackageKey][ChannelType]
+            ? ErrorKey extends keyof Registrar[PackageKey][ChannelType]
+                ? Registrar[PackageKey][ChannelType][ResponseKey] extends EmptyEventParameter
+                    ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
+                        ? false
+                        : true
+                    : true
+                : never
+            : never;
+    };
+
+export type InvokableEvents<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner = EventOwner
+> =
+    {
+        [ ChannelType in keyof InvokableEventsHelper<PackageKey, OwnerType> as
+        InvokableEventsHelper<PackageKey, OwnerType>[
+            Extract<ChannelType, keyof InvokableEventsHelper<PackageKey, OwnerType>>
+        ] extends true ? ChannelType : never
+        ]: Registrar[PackageKey][ChannelType];
+    };
+
+export type SentEvents<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner = EventOwner
+> = Exclude<FilterByOwner<PackageKey, OwnerType>, InvokableEvents<PackageKey, OwnerType>>;

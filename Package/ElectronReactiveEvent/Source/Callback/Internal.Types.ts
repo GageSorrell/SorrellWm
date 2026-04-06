@@ -6,7 +6,7 @@
 
 import type { EmptyEventParameter, EventOwner } from "../Decl.Types.js";
 import type { FilterByOwner, PackageKeys, RendererRegistrar, RequestKey } from "../Internal/index.js";
-import type { Channel } from "../Channel.Types.js";
+import type { Channel } from "../Channel/Channel.Types.js";
 
 export type RequestOverloadSafe<
     PackageKey extends PackageKeys,

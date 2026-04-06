@@ -6,19 +6,22 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
+import type { Callback, EventRecordStrict, EventTypesFromOwner } from "../Callback";
+import type { EmptyEventParameter, MainOwner, RendererOwner } from "../Decl.Types";
 import type {
-    InvokeDeferred,
+    InvokeEventDeferred,
     MainResponse,
     OffEventDeferred,
+    OffEventsDeferred,
     OnEventDeferred,
+    OnEventsDeferred,
     OnceEventDeferred,
+    OnceEventsDeferred,
     RendererRequest,
-    UseInvokeOptions } from "./Hook.Types";
-import type { MainOwner, RendererOwner } from "../Decl.Types";
-import type { Callback } from "../Callback";
-import type { Channel } from "../Channel.Types";
+    UseInvokeOptions } from "./Hook.Types.ts.old";
+import type { PackageKeys, Registrar, ResponseKey } from "../Internal";
+import type { Channel } from "../Channel/Channel.Types";
 import type { IpcRendererEvent } from "electron/renderer";
-import type { PackageKeys } from "../Internal";
 
 export type RendererChannel<PackageKey extends PackageKeys> =
     Channel.Any<PackageKey, RendererOwner>;
@@ -32,23 +35,23 @@ export type MainChannelRequest<PackageKey extends PackageKeys> =
 export type MainChannelNoRequest<PackageKey extends PackageKeys> =
     Channel.NoRequest<PackageKey, MainOwner>;
 
-export type UseInvoke<PackageKey extends PackageKeys> =
+export type UseInvokeEvent<PackageKey extends PackageKeys> =
     {
-        <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Invokable.NoRequest<PackageKey, RendererOwner>>(
             channel: ChannelType,
             options?: UseInvokeOptions | undefined
         ): MainResponse<PackageKey, ChannelType>;
 
-        <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Invokable.Request<PackageKey, RendererOwner>>(
             channel: ChannelType,
             request: RendererRequest<PackageKey, ChannelType>,
             options?: UseInvokeOptions
         ): MainResponse<PackageKey, ChannelType>;
     };
 
-export type UseInvokeDeferred<PackageKey extends PackageKeys> =
+export type UseInvokeEventDeferred<PackageKey extends PackageKeys> =
     {
-        (): Readonly<[ invokeDeferred: InvokeDeferred<PackageKey> ]>;
+        (): Readonly<[ invokeEventDeferred: InvokeEventDeferred<PackageKey> ]>;
     };
 
 export type UseOnEvent<PackageKey extends PackageKeys> =
@@ -64,6 +67,27 @@ export type UseOnEventDeferred<PackageKey extends PackageKeys> =
         (): Readonly<[ onEventDeferred: OnEventDeferred<PackageKey> ]>;
     };
 
+export type UseOnceEvents<PackageKey extends PackageKeys> = UseOnEvents<PackageKey>;
+
+export type UseOnceEventsDeferred<PackageKey extends PackageKeys> =
+    {
+        (): Readonly<[ onceEventsDeferred: OnceEventsDeferred<PackageKey> ]>;
+    };
+
+export type UseOnEvents<PackageKey extends PackageKeys> =
+    {
+        <ChannelType extends MainChannel<PackageKey>,
+            EventType extends EventTypesFromOwner<MainOwner>
+        >(
+            events: EventRecordStrict<PackageKey, ChannelType, MainOwner, EventType>
+        ): void;
+    };
+
+export type UseOnEventsDeferred<PackageKey extends PackageKeys> =
+    {
+        (): Readonly<[ onEventsDeferred: OnEventsDeferred<PackageKey> ]>;
+    };
+
 export type UseOnceEvent<PackageKey extends PackageKeys> = UseOnEvent<PackageKey>;
 
 export type UseOnceEventDeferred<PackageKey extends PackageKeys> =
@@ -75,6 +99,20 @@ export type UseOffEventDeferred<PackageKey extends PackageKeys> =
     {
         (): Readonly<[ offEventDeferred: OffEventDeferred<PackageKey> ]>;
     };
+
+export type UseOffEventsDeferred<PackageKey extends PackageKeys> =
+    {
+        (): Readonly<[ offEventsDeferred: OffEventsDeferred<PackageKey> ]>;
+    };
+
+export type SendEventReturnType<
+    PackageKey extends PackageKeys,
+    ChannelType extends MainChannel<PackageKey>
+> = ResponseKey extends keyof Registrar[PackageKey][ChannelType]
+    ? Registrar[PackageKey][ChannelType][ResponseKey] extends EmptyEventParameter
+        ? void
+        : MainResponse<PackageKey, ChannelType>
+    : never;
 
 export type UseSendEvent<PackageKey extends PackageKeys> =
     {

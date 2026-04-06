@@ -8,28 +8,34 @@
 
 import type {
     Callback,
+    EventRecord,
     ResponseData as ResponseDataBase,
     InvokeResponseFailure as ResponseFailureBase,
-    InvokeResponseSuccessBase as ResponseSuccessBase } from "../Callback/Callback.Types.js";
+    InvokeResponseSuccessBase as ResponseSuccessBase } from "../Callback/Callback.Types.ts.old";
 import type {
     MainChannel,
     RendererChannel,
-    UseInvoke,
-    UseInvokeDeferred,
+    UseInvokeEvent as UseInvokeEvent,
+    UseInvokeEventDeferred as UseInvokeEventDeferred,
     UseOffEventDeferred,
+    UseOffEventsDeferred,
     UseOnEvent,
     UseOnEventDeferred,
+    UseOnEvents,
+    UseOnEventsDeferred,
     UseOnceEvent,
     UseOnceEventDeferred,
+    UseOnceEvents,
+    UseOnceEventsDeferred,
     UseSendEvent,
     UseSendEventDeferred,
     UseSendSync,
-    UseSendSyncDeferred} from "./Hook.Internal.Types.js";
-import type { MainOwner, RendererOwner } from "../Decl.Types";
-import type { Channel } from "../Channel.Types";
+    UseSendSyncDeferred} from "./Hook.Internal.Types.ts.old";
+import type { MainOwner, RendererOwner } from "../Decl.Types.js";
+import type { Channel } from "../Channel/Channel.Types.js";
 import type { IpcRendererEvent } from "electron";
 import type { PackageKeys } from "../Internal/index.js";
-import type { Request as RequestBase } from "../Callback/Callback.Types.js";
+import type { Request as RequestBase } from "../Callback/Callback.Types.ts.old";
 
 type CompletedResponsePart =
     {
@@ -74,7 +80,7 @@ export type ResponseIncomplete =
 
 export type MainResponse<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Any<PackageKey, RendererOwner>
+    ChannelType extends Channel.Invokable.Any<PackageKey, RendererOwner>
 > =
     | ResponseSuccess<PackageKey, ChannelType>
     | ResponseFailure<PackageKey, ChannelType>
@@ -147,14 +153,14 @@ export type UseInvokeOptions =
 
 export type UseSendSyncOptions = UseInvokeOptions;
 
-export type InvokeDeferred<PackageKey extends PackageKeys> =
+export type InvokeEventDeferred<PackageKey extends PackageKeys> =
     {
-        <ChannelType extends Channel.Request<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Invokable.Request<PackageKey, RendererOwner>>(
             channel: ChannelType,
             request: RendererRequest<PackageKey, ChannelType>
         ): Promise<MainResponse<PackageKey, ChannelType>>;
 
-        <ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Invokable.NoRequest<PackageKey, RendererOwner>>(
             channel: ChannelType
         ): Promise<MainResponse<PackageKey, ChannelType>>;
     };
@@ -164,10 +170,19 @@ export type OnEventDeferred<PackageKey extends PackageKeys> =
         <ChannelType extends MainChannel<PackageKey>>(
             channel: ChannelType,
             listener: Callback<PackageKey, MainOwner, IpcRendererEvent, typeof channel>
-        ): void;
+        ): typeof listener;
+    };
+
+export type OnEventsDeferred<PackageKey extends PackageKeys> =
+    {
+        <ChannelType extends MainChannel<PackageKey>>(
+            events: EventRecord<PackageKey, ChannelType, MainOwner, IpcRendererEvent>
+        ): typeof events;
     };
 
 export type OnceEventDeferred<PackageKey extends PackageKeys> = OnEventDeferred<PackageKey>;
+
+export type OnceEventsDeferred<PackageKey extends PackageKeys> = OnEventsDeferred<PackageKey>;
 
 export type OffEventDeferred<PackageKey extends PackageKeys> =
     {
@@ -176,18 +191,31 @@ export type OffEventDeferred<PackageKey extends PackageKeys> =
             listener: Callback<PackageKey, MainOwner, IpcRendererEvent, typeof channel>
         ): void;
     };
+;
+
+export type OffEventsDeferred<PackageKey extends PackageKeys> =
+    {
+        <ChannelType extends MainChannel<PackageKey>>(
+            events: EventRecord<PackageKey, ChannelType, MainOwner, IpcRendererEvent>
+        ): void;
+    };
 
 export type ReactiveEventHooks<PackageKey extends PackageKeys> =
     Readonly<{
-        useInvoke: UseInvoke<PackageKey>;
-        useInvokeDeferred: UseInvokeDeferred<PackageKey>;
+        useInvokeEvent: UseInvokeEvent<PackageKey>;
+        useInvokeEventDeferred: UseInvokeEventDeferred<PackageKey>;
         useOnEvent: UseOnEvent<PackageKey>;
         useOnEventDeferred: UseOnEventDeferred<PackageKey>;
+        useOnEvents: UseOnEvents<PackageKey>;
+        useOnEventsDeferred: UseOnEventsDeferred<PackageKey>;
+        useOnceEvent: UseOnceEvent<PackageKey>;
+        useOnceEventDeferred: UseOnceEventDeferred<PackageKey>;
+        useOnceEvents: UseOnceEvents<PackageKey>;
+        useOnceEventsDeferred: UseOnceEventsDeferred<PackageKey>;
         useOffEventDeferred: UseOffEventDeferred<PackageKey>;
+        useOffEventsDeferred: UseOffEventsDeferred<PackageKey>;
         useSendEvent: UseSendEvent<PackageKey>;
         useSendEventDeferred: UseSendEventDeferred<PackageKey>;
         useSendSync: UseSendSync<PackageKey>;
         useSendSyncDeferred: UseSendSyncDeferred<PackageKey>;
-        useOnceEvent: UseOnceEvent<PackageKey>;
-        useOnceEventDeferred: UseOnceEventDeferred<PackageKey>;
     }>;

@@ -14,7 +14,7 @@ import type {
     RequestKey,
     ResponseKey } from "../Internal";
 import type { IpcMainEvent, IpcMainInvokeEvent, IpcRendererEvent } from "electron";
-import type { Channel } from "../Channel.Types";
+import type { Channel } from "../Channel/Channel.Types";
 
 export type EventTypesFromOwner<OwnerType extends EventOwner> =
     OwnerType extends MainOwner
@@ -100,21 +100,39 @@ export type InvokeResponseSuccessBase<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
     ChannelType extends Channel.Any<PackageKey, OwnerType>
-> =
-    Readonly<{
-        Data: ResponseData<PackageKey, OwnerType, ChannelType>;
-        Error: undefined;
-    }>;
+> = ResponseKey extends keyof Registrar[PackageKey][ChannelType]
+    ? Registrar[PackageKey][ChannelType][ResponseKey] extends EmptyEventParameter
+        ? Readonly<{ Error: undefined; }>
+        : (
+            Readonly<{
+                Data: ResponseData<PackageKey, OwnerType, ChannelType>;
+                Error: undefined;
+            }>
+        )
+    : never;
+
+type InvokeResponseErrorBase<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner,
+    ChannelType extends Channel.Any<PackageKey, OwnerType>
+> = Readonly<{
+    Error: ResponseError<PackageKey, OwnerType, ChannelType>;
+}>;
 
 export type InvokeResponseFailure<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
     ChannelType extends Channel.Any<PackageKey, OwnerType>
-> =
-    Readonly<{
-        Data: undefined;
-        Error: ResponseError<PackageKey, OwnerType, ChannelType>;
-    }>;
+> = ResponseKey extends keyof Registrar[PackageKey][ChannelType]
+    ? Registrar[PackageKey][ChannelType][ResponseKey] extends EmptyEventParameter
+        ? InvokeResponseErrorBase<PackageKey, OwnerType, ChannelType>
+        : (
+            InvokeResponseErrorBase<PackageKey, OwnerType, ChannelType> &
+            Readonly<{
+                Data: undefined;
+            }>
+        )
+    : never;
 
 export type InvokeResponse<
     PackageKey extends PackageKeys,
@@ -131,3 +149,28 @@ export type EmptyRequestParameterType = Readonly<{
 export type SafeRequest<RequestType> =
     | RequestType
     | EmptyRequestParameterType;
+
+export type EventRecord<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Any<PackageKey, OwnerType>,
+    OwnerType extends EventOwner,
+    EventType extends EventTypesFromOwner<OwnerType> = EventTypesFromOwner<OwnerType>
+> =
+    {
+        [ Channel in ChannelType ]:
+        Callback<
+            PackageKey,
+            OwnerType,
+            EventType,
+            ChannelType
+        >;
+    };
+
+export type EventRecordEntry<
+    EventRecordType extends EventRecord<PackageKey, ChannelType, OwnerType, EventType>,
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Any<PackageKey, OwnerType>,
+    OwnerType extends EventOwner,
+    EventType extends EventTypesFromOwner<OwnerType> = EventTypesFromOwner<OwnerType>,
+    KeyType extends Extract<keyof EventRecordType, string> = Extract<keyof EventRecordType, string>
+> = [ KeyType, EventRecordType[KeyType] ];

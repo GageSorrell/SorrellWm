@@ -7,7 +7,7 @@
 import type { Callback as CallbackBase, EventTypesFromOwner, InvokeResponse } from "../Callback/index.js";
 import type { MainOwner, RendererOwner } from "../Decl.Types.js";
 import type { BrowserWindow } from "electron";
-import type { Channel } from "../Channel.Types";
+import type { Channel } from "../Channel/Channel.Types.js";
 import type { PackageKeys } from "../Internal/index.js";
 
 /**

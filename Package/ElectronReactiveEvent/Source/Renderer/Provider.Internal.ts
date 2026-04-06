@@ -7,11 +7,28 @@
 import { type Context, createContext } from "react";
 import type { PackageKeys } from "../Internal";
 import type { ReactiveEventContext } from "./Provider.Types";
+import type { ReactiveEventContextInternal } from "./Provider.Internal.Types";
+import { ipcRenderer } from "electron";
 
-const EmptyReactiveEventInternalContext: ReactiveEventContext =
+const EmptyReactiveEventContext: ReactiveEventContext =
     {
-        PackageKey: "" as PackageKeys
+        ipcRendererFunctions:
+        {
+            invoke: ipcRenderer.invoke,
+            off: ipcRenderer.off,
+            on: ipcRenderer.on,
+            once: ipcRenderer.once,
+            send: ipcRenderer.send,
+            sendSync: ipcRenderer.sendSync
+        },
+        packageKey: "" as PackageKeys
     };
 
-export const ReactiveEventInternalContext: Context<ReactiveEventContext> =
-    createContext<ReactiveEventContext>(EmptyReactiveEventInternalContext);
+const EmptyReactiveEventContextInternal: ReactiveEventContextInternal =
+    {
+        ...EmptyReactiveEventContext,
+        PutCachedPromise: (_Channel: string, _Request: unknown) => Promise.resolve<unknown>(undefined)
+    };
+
+export const ReactiveEventInternalContext: Context<ReactiveEventContextInternal> =
+    createContext<ReactiveEventContextInternal>(EmptyReactiveEventContextInternal);

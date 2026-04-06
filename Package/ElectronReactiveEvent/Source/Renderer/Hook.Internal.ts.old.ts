@@ -6,31 +6,33 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { Callback, SafeRequest } from "../Callback";
+import type { Callback, EventRecordStrict, EventRecordEntry, SafeRequest } from "../Callback";
 import { type EffectCallback, use, useContext, useEffect, useState } from "react";
 import type {
-    InvokeDeferred,
+    InvokeEventDeferred,
     MainResponse,
     OffEventDeferred,
+    OffEventsDeferred,
     OnEventDeferred,
+    OnEventsDeferred,
     OnceEventDeferred,
     PendingInvokeState,
     RendererRequest,
     ResponseErrorProp,
-    UseInvokeOptions } from "./Hook.Types";
+    UseInvokeOptions } from "./Hook.Types.ts.old";
 import { type IpcRendererEvent, ipcRenderer } from "electron/renderer";
 import type {
     MainChannel,
     RendererChannel,
     SendEventDeferred,
-    SendSyncDeferred } from "./Hook.Internal.Types";
+    SendSyncDeferred } from "./Hook.Internal.Types.ts.old";
 import type { MainOwner, RendererOwner } from "../Decl.Types";
-import type { Channel } from "../Channel.Types";
+import type { Channel } from "../Channel/Channel.Types";
 import { EmptyRequestParameter } from "../Callback/Callback";
 import { GlobalSuspenseCacheMap } from "./SuspenseCacheMap";
 import type { PackageKeys } from "../Internal/Registrar.Types";
 import type { ReactiveEventContext } from "./Provider.Types";
-import { ReactiveEventInternalContext } from "./Provider.Internal";
+import { ReactiveEventContext } from "./Provider.Internal";
 
 const PendingInvokeStateValue: PendingInvokeState = Object.freeze({
     Data: undefined,
@@ -42,7 +44,7 @@ const SuspenseCache: GlobalSuspenseCacheMap = new GlobalSuspenseCacheMap();
 
 async function InvokeAndNormalize<
     PackageKey extends PackageKeys,
-    ChannelType extends RendererChannel<PackageKey>
+    ChannelType extends Channel.Invokable.Any<PackageKey, RendererOwner>
 >(
     Channel: ChannelType,
     Request: SafeRequest<RendererRequest<PackageKey, ChannelType>> = EmptyRequestParameter
@@ -65,7 +67,7 @@ async function InvokeAndNormalize<
             Data: undefined,
             Error: CaughtError as ThisErrorProp,
             IsPending: false
-        };
+        } as MainResponse<PackageKey, ChannelType>;
     }
 }
 
@@ -185,9 +187,9 @@ export function useInvoke<
 }
 
 export function useInvokeDeferred<PackageKey extends PackageKeys>(
-): Readonly<[ invokeDeferred: InvokeDeferred<PackageKey> ]>
+): Readonly<[ invokeDeferred: InvokeEventDeferred<PackageKey> ]>
 {
-    type DeferredReturnType = Awaited<ReturnType<InvokeDeferred<PackageKey>>>;
+    type DeferredReturnType = Awaited<ReturnType<InvokeEventDeferred<PackageKey>>>;
 
     async function invokeDeferred<ChannelType extends Channel.NoRequest<PackageKey, RendererOwner>>(
         channel: ChannelType
@@ -213,7 +215,7 @@ export function useInvokeDeferred<PackageKey extends PackageKeys>(
 
 function UseReactiveEvent(): Readonly<ReactiveEventContext>
 {
-    return useContext<ReactiveEventContext>(ReactiveEventInternalContext);
+    return useContext<ReactiveEventContext>(ReactiveEventContext);
 }
 
 function UsePackageKey<PackageKey extends PackageKeys>(): Readonly<[ PackageKey ]>
@@ -243,12 +245,94 @@ export function useOnEventDeferred<PackageKey extends PackageKeys>(
     function onEventDeferred<ChannelType extends MainChannel<PackageKey>>(
         channel: ChannelType,
         listener: Callback<PackageKey, MainOwner, IpcRendererEvent, typeof channel>
-    ): void
+    ): typeof listener
     {
         ipcRenderer.on(channel, listener);
+
+        return listener;
     };
 
     return [ onEventDeferred ] as const;
+}
+
+export function useOnEventsDeferred<PackageKey extends PackageKeys>(
+): Readonly<[ onEventsDeferred: OnEventsDeferred<PackageKey> ]>
+{
+    function onEventsDeferred<ChannelType extends MainChannel<PackageKey>>(
+        events: EventRecordStrict<PackageKey, ChannelType, MainOwner, IpcRendererEvent>
+    ): typeof events
+    {
+        type EntriesType = Array<EventRecordEntry<
+            typeof events,
+            PackageKey,
+            ChannelType,
+            MainOwner,
+            IpcRendererEvent>
+        >;
+        const Entries: EntriesType = Object.entries(events) as EntriesType;
+
+        Entries.forEach(RegisterListenerEntry);
+
+        return events;
+    };
+
+    return [ onEventsDeferred ] as const;
+}
+
+function UnregisterListenerEntry<
+    EventRecordType extends EventRecordStrict<PackageKey, ChannelType, MainOwner, IpcRendererEvent>,
+    PackageKey extends PackageKeys,
+    ChannelType extends MainChannel<PackageKey>
+>(
+    [ Channel, Listener ]: EventRecordEntry<EventRecordType, PackageKey, ChannelType, MainOwner>
+): void
+{
+    ipcRenderer.off(Channel, Listener);
+}
+
+function RegisterListenerEntry<
+    EventRecordType extends EventRecordStrict<PackageKey, ChannelType, MainOwner, IpcRendererEvent>,
+    PackageKey extends PackageKeys,
+    ChannelType extends MainChannel<PackageKey>
+>(
+    [ Channel, Listener ]: EventRecordEntry<
+        EventRecordType,
+        PackageKey,
+        ChannelType,
+        MainOwner,
+        IpcRendererEvent
+    >
+): void
+{
+    ipcRenderer.on(Channel, Listener);
+}
+
+export function useOnEvents<
+    PackageKey extends PackageKeys,
+    ChannelType extends MainChannel<PackageKey>
+>(
+    events: EventRecordStrict<PackageKey, ChannelType, MainOwner, IpcRendererEvent>
+): void
+{
+    useEffect((): ReturnType<EffectCallback> =>
+    {
+        type EntriesType = Array<EventRecordEntry<
+            typeof events,
+            PackageKey,
+            ChannelType,
+            MainOwner,
+            IpcRendererEvent>
+        >;
+
+        const Entries: EntriesType = Object.entries(events) as EntriesType;
+
+        Entries.forEach(RegisterListenerEntry);
+
+        return (): void =>
+        {
+            Entries.forEach(UnregisterListenerEntry);
+        };
+    }, [ events ]);
 }
 
 export function useOffEventDeferred<PackageKey extends PackageKeys>(
@@ -263,6 +347,28 @@ export function useOffEventDeferred<PackageKey extends PackageKeys>(
     };
 
     return [ offEventDeferred ] as const;
+}
+
+export function useOffEventsDeferred<PackageKey extends PackageKeys>(
+): Readonly<[ offEventsDeferred: OffEventsDeferred<PackageKey> ]>
+{
+    function offEventsDeferred<ChannelType extends MainChannel<PackageKey>>(
+        events: EventRecordStrict<PackageKey, ChannelType, MainOwner, IpcRendererEvent>
+    ): void
+    {
+        type EntriesType = Array<EventRecordEntry<
+            typeof events,
+            PackageKey,
+            ChannelType,
+            MainOwner,
+            IpcRendererEvent>
+        >;
+        const Entries: EntriesType = Object.entries(events) as EntriesType;
+
+        Entries.forEach(UnregisterListenerEntry);
+    };
+
+    return [ offEventsDeferred ] as const;
 }
 
 export function useSendEventDeferred<PackageKey extends PackageKeys>(

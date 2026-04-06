@@ -11,11 +11,11 @@ import type {
     InnerGlobalSuspenseCacheMap,
     InnerSuspenseCacheMap,
     InvokeAndNormalizeFunction } from "./SuspenseCacheMap.Types";
-import type { MainResponse, RendererRequest } from "./Hook.Types";
+import type { MainResponse, RendererRequest } from "./Hook.Types.ts.old";
 import { EmptyRequestParameter } from "../Callback/Callback";
 import type { EmptyRequestParameterType } from "../Callback";
 import type { PackageKeys } from "../Internal/Registrar.Types";
-import type { RendererChannel } from "./Hook.Internal.Types";
+import type { RendererChannel } from "./Hook.Internal.Types.ts.old";
 
 export class ChannelSuspenseCacheMap<
     PackageKey extends PackageKeys,
