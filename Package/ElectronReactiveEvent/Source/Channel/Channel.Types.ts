@@ -4,15 +4,13 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl.Types.js";
-import type { ErrorMessageKey, ErrorPayloadKey, ReactiveEventError } from "../Error/Error.Types.js";
+import type { EmptyEventParameter, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
+import type { ErrorKey, RequestKey, ResponseKey } from "../Decl/Decl.Internal.Types.js";
+import type { ErrorPayloadKey, ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types.js";
 import type {
-    ErrorKey,
     FilterByOwner,
     PackageKeys,
     Registrar,
-    RequestKey,
-    ResponseKey,
     Values } from "../Internal/index.js";
 
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
@@ -47,26 +45,15 @@ type WithErrorHelper<PackageKey extends PackageKeys> =
             : never
     };
 
-// type WithErrorMessageHelper<PackageKey extends PackageKeys> =
-//     {
-//         [ ChannelType in Channel.Invokable.Any<PackageKey> ]:
-//         ErrorKey extends keyof Registrar[PackageKey][ChannelType]
-//             ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
-//                 ? undefined
-//                 : ErrorMessageKey extends keyof ReactiveEventError<PackageKey, ChannelType>
-//                     ? ChannelType
-//                     : undefined
-//             : never;
-//     };
-
 type WithErrorPayloadHelper<PackageKey extends PackageKeys> =
     {
-        [ ChannelType in Channel.Invokable.Any<PackageKey> ]:
+        [ ChannelType in Channel.Handler.Any<PackageKey> ]:
         ErrorKey extends keyof Registrar[PackageKey][ChannelType]
             ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
                 ? undefined
-                : ErrorPayloadKey extends keyof ReactiveEventError<PackageKey, ChannelType>
-                    ? ReactiveEventError<PackageKey, ChannelType>[ErrorPayloadKey] extends EmptyEventParameter
+                : ErrorPayloadKey extends keyof ReactiveEventErrorDataInternal<PackageKey, ChannelType>
+                    ? ReactiveEventErrorDataInternal<PackageKey, ChannelType>[ErrorPayloadKey] extends
+                    EmptyEventParameter
                         ? undefined
                         : ChannelType
                     : never
@@ -102,6 +89,24 @@ export namespace Channel
         Exclude<
             Any<PackageKey, Owner>,
             NoError<PackageKey, Owner>
+        >;
+
+    export type ErrorMessage<
+        PackageKey extends PackageKeys,
+        OwnerType extends EventOwner
+    > =
+        Exclude<
+            Any<PackageKey, OwnerType>,
+            Values<WithErrorPayloadHelper<PackageKey>>
+        >;
+
+    export type ErrorPayload<
+        PackageKey extends PackageKeys,
+        OwnerType extends EventOwner
+    > =
+        Extract<
+            Any<PackageKey, OwnerType>,
+            Extract<Values<WithErrorPayloadHelper<PackageKey>>, string>
         >;
 
     export type NoError<
@@ -162,7 +167,7 @@ export namespace Channel
             number | symbol
         >;
 
-    export namespace Invokable
+    export namespace Handler
     {
         export type Any<PackageKey extends PackageKeys> =
             | Channel.Response<PackageKey, RendererOwner>
@@ -224,7 +229,7 @@ export namespace Channel
             >;
     }
 
-    export namespace Sendable
+    export namespace Listener
     {
         export type Any<
             PackageKey extends PackageKeys,
@@ -232,7 +237,7 @@ export namespace Channel
         > =
             Exclude<
                 Channel.Any<PackageKey, Owner>,
-                Invokable.Any<PackageKey>
+                Handler.Any<PackageKey>
             >;
 
         export type Request<

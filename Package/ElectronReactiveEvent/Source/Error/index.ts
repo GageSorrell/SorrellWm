@@ -4,4 +4,5 @@
  * License:   MIT
  */
 
-export * from "./Internal.js";
+export * from "./Error.js";
+export * from "./Error.Internal.Types.js";

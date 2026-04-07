@@ -1,0 +1,30 @@
+[electron-reactive-event](../../index.md) / [Listener](../index.md) / Listener
+
+# Listener Type
+
+```ts
+type Listener<PackageKey, OwnerType, EventType, ChannelType> =
+	ChannelType extends Request<PackageKey, OwnerType>
+		? ListenerRequest<PackageKey, OwnerType, EventType, ChannelType>
+		: ChannelType extends NoRequest<PackageKey, OwnerType>
+			? ListenerNoRequest<PackageKey, OwnerType, EventType, ChannelType>
+			: never;
+```
+
+## Type Parameters
+
+### PackageKey
+
+`PackageKey` _extends_ [`PackageKeys`](../../Internal/type-aliases/PackageKeys.md)
+
+### OwnerType
+
+`OwnerType` _extends_ [`EventOwner`](../../Decl/type-aliases/EventOwner.md)
+
+### EventType
+
+`EventType` _extends_ `IpcEvent`
+
+### ChannelType
+
+`ChannelType` _extends_ [`Any`](../../Channel/namespaces/Channel/namespaces/Listener/type-aliases/Any.md)\<`PackageKey`, `OwnerType`\>

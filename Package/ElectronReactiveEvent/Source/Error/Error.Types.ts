@@ -4,47 +4,20 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventErrorRecord, EventErrorTuple } from "../Decl.Types";
-import type { ErrorKey, PackageKeys, Registrar } from "../Internal";
+import type { ReactiveEventErrorMessage, ReactiveEventErrorPayload } from "./Error.Internal.Types";
 import type { Channel } from "../Channel";
+import type { EventOwner } from "../Decl/Decl.Types";
+import type { PackageKeys } from "../Internal";
 
-type ErrorNormalized<MessageType extends string, PayloadType = EmptyEventParameter> =
-    {
-        Message: MessageType;
-        Payload: PayloadType;
-    };
-
-type GetNormalizedError<
+export type ReactiveEventErrorData<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> = ErrorKey extends keyof Registrar[PackageKey][ChannelType]
-    ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
-        ? never
-        : Registrar[PackageKey][ChannelType][ErrorKey] extends string
-            ? ErrorNormalized<Registrar[PackageKey][ChannelType][ErrorKey]>
-            : Registrar[PackageKey][ChannelType][ErrorKey] extends
-            EventErrorTuple<infer MessageType, infer PayloadType>
-                ? ErrorNormalized<MessageType, PayloadType>
-                : Registrar[PackageKey][ChannelType][ErrorKey] extends
-                EventErrorRecord<infer MessageType, infer PayloadType>
-                    ? ErrorNormalized<MessageType, PayloadType>
-                    : never
-    : never;
-
-export type ErrorMessageKey = "Message";
-export type ErrorPayloadKey = "Payload";
-
-export type ReactiveEventError<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Error<PackageKey>
-> = Readonly<GetNormalizedError<PackageKey, ChannelType>>;
-
-export type ReactiveEventErrorMessage<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Error<PackageKey>
-> = ReactiveEventError<PackageKeys, ChannelType>["Message"];
-
-export type ReactiveEventErrorPayload<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Error<PackageKey>
-> = ReactiveEventError<PackageKeys, ChannelType>["Payload"];
+    ChannelType extends Channel.Error<PackageKey, EventOwner>
+> =
+    ChannelType extends Channel.ErrorPayload<PackageKey, EventOwner>
+        ? {
+            message: ReactiveEventErrorMessage<PackageKey, ChannelType>;
+        }
+        : {
+            message: ReactiveEventErrorMessage<PackageKey, ChannelType>;
+            payload: ReactiveEventErrorPayload<PackageKey, ChannelType>;
+        };

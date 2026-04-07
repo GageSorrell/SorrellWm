@@ -6,21 +6,17 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl.Types";
+import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl/Decl.Types";
+import type { ResponseKey as EventResponseKey, RequestKey } from "../Decl/Decl.Internal.Types";
 import type {
-    ResponseKey as EventResponseKey,
     FilterByOwner,
     PackageKeys,
-    RecordEntry,
-    Registrar,
-    RequestKey } from "../Internal";
+    Registrar } from "../Internal";
 import type { IpcMainEvent, IpcMainInvokeEvent, IpcRendererEvent } from "electron";
 import type { Channel } from "../Channel";
-import type { ReactiveEventError } from "../Error/Error.Types";
-import type { ResponseIndeterminate } from "../Renderer/Hook/Hook.Internal.Types";
-import type { executionAsyncId } from "node:async_hooks";
+import type { ReactiveEventErrorDataInternal } from "../Error";
 
-export type EventTypesFromOwner<OwnerType extends EventOwner> =
+export type IpcEventFromOwner<OwnerType extends EventOwner> =
     OwnerType extends MainOwner
         ? IpcRendererEvent
         : OwnerType extends RendererOwner
@@ -39,7 +35,7 @@ export type Request<
 
 export type RawResponseSuccess<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
+    ChannelType extends Channel.Handler.Any<PackageKey>
 > = EventResponseKey extends keyof FilterByOwner<PackageKey, RendererOwner>[ChannelType]
     ? FilterByOwner<PackageKey, RendererOwner>[ChannelType][EventResponseKey] extends EmptyEventParameter
         ? never
@@ -48,8 +44,8 @@ export type RawResponseSuccess<
 
 export type RawResponseError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> = ReactiveEventError<PackageKey, ChannelType>;
+    ChannelType extends Channel.Handler.Any<PackageKey>
+> = ReactiveEventErrorDataInternal<PackageKey, ChannelType>;
 
 /**
  * Your listeners can return values directly using the types in your event declarations,
@@ -61,7 +57,7 @@ export type RawResponseError<
  */
 export type RawResponse<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
+    ChannelType extends Channel.Handler.Any<PackageKey>
 > =
     | RawResponseSuccess<PackageKey, ChannelType>
     | RawResponseError<PackageKey, ChannelType>;
@@ -87,27 +83,24 @@ type ResponseBase<KeyType extends ResponseKey, ValueType> =
         }
     >;
 
-export type ResponseSuccessSync<
+export type ResponseSuccess<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Response<PackageKey>
+    ChannelType extends Channel.Handler.Response<PackageKey>
 > = ResponseBase<ResponseDataKey, Registrar[PackageKey][ChannelType][EventResponseKey]>;
-
-export type ResponsesSuccessSync<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Response<PackageKey>
-> =
-    ResponseBase<
-        ResponseDataKey,
-        ResponsesPart<
-            ChannelType,
-            Registrar[PackageKey][ChannelType][EventResponseKey]
-        >
-    >;
 
 type IsPendingPart<IsPendingType extends boolean> =
     Readonly<{
         isPending: IsPendingType;
     }>;
+
+type IpcEvent =
+    | IpcMainEvent
+    | IpcMainInvokeEvent
+    | IpcRendererEvent;
+
+type IpcEventPart<EventType extends IpcEvent> = Readonly<{
+    Event: EventType;
+}>;
 
 type MakeIsPending<RecordType extends Record<PropertyKey, unknown>> =
     | (
@@ -121,237 +114,125 @@ type MakeIsPending<RecordType extends Record<PropertyKey, unknown>> =
         IsPendingPart<false>
     );
 
-export type ResponseErrorSync<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Response<PackageKey>
-> = ResponseBase<ResponseErrorKey, ReactiveEventError<PackageKey, ChannelType>>;
-
-export type ResponsesErrorSync<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Response<PackageKey>
-> =
-    ResponseBase<
-        ResponseErrorKey,
-        ResponsesPart<
-            ChannelType,
-            ReactiveEventError<PackageKey, ChannelType>
-        >
-    >;
-
-export type ResponseFulfilled<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Response<PackageKey>
-> =
-    | ResponseSuccess<PackageKey, ChannelType>
-    | ResponseError<PackageKey, ChannelType>;
-
-export type ResponsesFulfilled<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Response<PackageKey>
-> =
-    | ResponsesSuccess<PackageKey, ChannelType>
-    | ResponsesError<PackageKey, ChannelType>;
-
-export type Response<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> =
-    | ResponseFulfilled<PackageKey, ChannelType>
-    | ResponseIndeterminate;
-
-export type ResponseSuccess<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> = MakeIsPending<ResponseSuccessSync<PackageKey, ChannelType>>;
-
-export type ResponsesSuccess<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> = MakeIsPending<ResponsesSuccessSync<PackageKey, ChannelType>>;
-
 export type ResponseError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> = MakeIsPending<ResponseErrorSync<PackageKey, ChannelType>>;
-
-export type ResponsesError<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> = MakeIsPending<ResponsesErrorSync<PackageKey, ChannelType>>;
-
-export type ResponseSyncFulfilled<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> =
-    | ResponseSuccessSync<PackageKey, ChannelType>
-    | ResponseErrorSync<PackageKey, ChannelType>;
-
-export type ResponsesSyncFulfilled<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> =
-    | ResponsesSuccessSync<PackageKey, ChannelType>
-    | ResponsesErrorSync<PackageKey, ChannelType>;
+    ChannelType extends Channel.Handler.Response<PackageKey>
+> = ResponseBase<ResponseErrorKey, ReactiveEventErrorDataInternal<PackageKey, ChannelType>>;
 
 export type ResponseSync<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
+    ChannelType extends Channel.Handler.Response<PackageKey>
 > =
-    | ResponseSyncFulfilled<PackageKey, ChannelType>
-    | ResponseIndeterminate;
+    IpcEventPart<IpcRendererEvent> &
+    (
+        | ResponseSuccess<PackageKey, ChannelType>
+        | ResponseError<PackageKey, ChannelType>
+    );
 
-export type ResponsesSync<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> =
-    | ResponsesSyncFulfilled<PackageKey, ChannelType>
-    | ResponsesIndeterminate<PackageKey, ChannelType>;
-
-export type InvokableListener<PackageKey extends PackageKeys> =
+export type ResponseIndeterminate =
     {
-        <ChannelType extends Channel.Invokable.NoRequest<PackageKey>>(
-            channel: ChannelType
-        ): RawResponse<PackageKey, typeof channel>;
-
-        <ChannelType extends Channel.Invokable.Request<PackageKey>>(
-            channel: ChannelType,
-            request: Request<PackageKey, MainOwner, typeof channel>
-        ): RawResponse<PackageKey, typeof channel>;
+        data: undefined;
+        error: undefined;
+        isPending: true;
     };
 
-export type SendableListener<
+export type ResponseSyncIndeterminate = Omit<ResponseIndeterminate, "isPending">;
+
+export type ResponseSettled<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Handler.Any<PackageKey>
+> =
+    Exclude<
+        Response<PackageKey, ChannelType>,
+        ResponseIndeterminate
+    >;
+
+export type Response<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Handler.Any<PackageKey>
+> = MakeIsPending<ResponseSync<PackageKey, ChannelType>>;
+
+type HandlerRequest<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Handler.Request<PackageKey>
+> =
+    {
+        (
+            event: IpcMainInvokeEvent,
+            request: Request<PackageKey, RendererOwner, ChannelType>
+        ): Promise<RawResponse<PackageKey, ChannelType>>;
+    };
+
+export type HandlerInternal<PackageKey extends PackageKeys> =
+    HandlerRequest<PackageKey, Channel.Handler.Any<PackageKey>>;
+
+type HandlerNoRequest<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Handler.NoRequest<PackageKey>
+> =
+    {
+        (event: IpcMainInvokeEvent): Promise<RawResponse<PackageKey, ChannelType>>;
+    };
+
+export type Handler<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Handler.Any<PackageKey>
+> =
+    ChannelType extends Channel.Handler.Request<PackageKey>
+        ? HandlerRequest<PackageKey, ChannelType>
+        : ChannelType extends Channel.Handler.NoRequest<PackageKey>
+            ? HandlerNoRequest<PackageKey, ChannelType>
+            : never;
+
+type ListenerRequest<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
-    ChannelTypeOuter extends Channel.Sendable.Any<PackageKey, OwnerType> =
-        Channel.Sendable.Any<PackageKey, OwnerType>
+    EventType extends IpcEvent,
+    ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>
 > =
     {
-        <ChannelType extends Extract<ChannelTypeOuter, Channel.Sendable.NoRequest<PackageKey, OwnerType>>>(
-            channel: ChannelType
-        ): void;
-
-        <ChannelType extends Extract<ChannelTypeOuter, Channel.Sendable.Request<PackageKey, OwnerType>>>(
-            channel: ChannelType,
-            request: Request<PackageKey, MainOwner, typeof channel>
-        ): void;
+        (
+            event: EventType,
+            request: Request<PackageKey, OwnerType, ChannelType>
+        ): RawResponse<PackageKey, ChannelType>;
     };
 
-export type AnyListener<
+type ListenerNoRequest<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner,
+    EventType extends IpcEvent,
+    ChannelType extends Channel.Listener.NoRequest<PackageKey, OwnerType>
+> =
+    {
+        (event: EventType): RawResponse<PackageKey, ChannelType>;
+    };
+
+export type Listener<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner,
+    EventType extends IpcEvent,
+    ChannelType extends Channel.Listener.Any<PackageKey, OwnerType>
+> =
+    ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>
+        ? ListenerRequest<PackageKey, OwnerType, EventType, ChannelType>
+        : ChannelType extends Channel.Listener.NoRequest<PackageKey, OwnerType>
+            ? ListenerNoRequest<PackageKey, OwnerType, EventType, ChannelType>
+            : never;
+
+export type AnyCallback<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner = EventOwner,
+    EventType extends IpcEvent = IpcEvent,
     ChannelType extends Channel.Any<PackageKey, OwnerType> =
         Channel.Any<PackageKey, OwnerType>
 > =
-    | InvokableListener<PackageKey>
-    | SendableListener<
-        PackageKey,
-        OwnerType,
-        Extract<
-            ChannelType,
-            Channel.Sendable.Any<PackageKey, OwnerType>
-        >
-    >;
-
-export type EventArray<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelTypeOuter extends Channel.NoRequest<PackageKey, OwnerType>
-> = Array<ChannelTypeOuter>;
-
-export type EventArraySafe<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, OwnerType>
-> = Array<Extract<ChannelType, Channel.NoRequest<PackageKey, OwnerType>>>;
-
-export type EventRecordStrict<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelTypeOuter extends Channel.Request<PackageKey, OwnerType>
-> =
-    {
-        [ ChannelType in ChannelTypeOuter ]: Request<PackageKey, OwnerType, ChannelType>;
-    };
-
-export type EventRecord<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, OwnerType>
-> =
-    EventRecordStrict<
-        PackageKey,
-        OwnerType,
-        Extract<ChannelType, Channel.Request<PackageKey, OwnerType>>
-    > &
-    EventRecordNoRequest<
-        PackageKey,
-        OwnerType,
-        Extract<ChannelType, Channel.NoRequest<PackageKey, OwnerType>>
-    >;
-
-export type EventRecordNoRequest<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelTypeOuter extends Channel.NoRequest<PackageKey, OwnerType>
-> =
-    {
-        [ ChannelType in ChannelTypeOuter ]: undefined;
-    };
-
-export type EventCollection<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, OwnerType>
-> =
-    ChannelType extends Channel.NoRequest<PackageKey, OwnerType>
-        ? EventArray<PackageKey, OwnerType, ChannelType>
-        : ChannelType extends Channel.Request<PackageKey, OwnerType>
-            ? EventRecordStrict<PackageKey, OwnerType, ChannelType>
-            : EventRecord<PackageKey, OwnerType, ChannelType>;
-
-export type EventRecordEntry<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, OwnerType>
-> = RecordEntry<EventRecordStrict<PackageKey, OwnerType, ChannelType>>;
-
-export type EventListenerRecord<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelTypeOuter extends Channel.Any<PackageKey, OwnerType>
-> =
-    {
-        [ ChannelType in ChannelTypeOuter ]: SendableListener<PackageKey, OwnerType, ChannelType>;
-    };
-
-export type ResponsesPart<
-    ChannelTypeOuter extends string,
-    ValueType
-> =
-    {
-        [ ChannelType in ChannelTypeOuter ]: ValueType;
-    };
-
-export type ResponsesIndeterminate<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Any<PackageKey, EventOwner>
-> =
-    Readonly<{
-        data: ResponsesPart<ChannelType, undefined>;
-        error: ResponsesPart<ChannelType, undefined>;
-    }> &
-    IsPendingPart<true>;
-
-export type EventListenerEntry<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelType extends Channel.Any<PackageKey, OwnerType>,
-    ListenerType extends AnyListener<PackageKey, OwnerType, ChannelType>
-> = [ Channel: ChannelType, Listener: ListenerType ];
-
-export type Responses<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Invokable.Any<PackageKey>
-> =
-    | ResponsesFulfilled<PackageKey, ChannelType>
-    | ResponsesIndeterminate<PackageKey, ChannelType>;
+    ChannelType extends Channel.Handler.Any<PackageKey>
+        ? Handler<PackageKey, ChannelType>
+        : ChannelType extends Channel.Listener.Any<PackageKey, OwnerType>
+            ? Listener<
+                PackageKey,
+                OwnerType,
+                EventType,
+                ChannelType
+            >
+            : never;

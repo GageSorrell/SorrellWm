@@ -1,0 +1,24 @@
+[electron-reactive-event](../index.md) / Listener
+
+# Listener
+
+## Type Aliases
+
+| Type Alias                                                             | Description                                                                                                                                                                                   |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [AnyCallback](type-aliases/AnyCallback.md)                             | -                                                                                                                                                                                             |
+| [Handler](type-aliases/Handler.md)                                     | -                                                                                                                                                                                             |
+| [HandlerInternal](type-aliases/HandlerInternal.md)                     | -                                                                                                                                                                                             |
+| [IpcEventFromOwner](type-aliases/IpcEventFromOwner.md)                 | -                                                                                                                                                                                             |
+| [Listener](type-aliases/Listener.md)                                   | -                                                                                                                                                                                             |
+| [RawResponse](type-aliases/RawResponse.md)                             | Your listeners can return values directly using the types in your event declarations, _i.e._, return your `ResponseType` when your event succeeds, and the `ErrorType` when your event fails. |
+| [RawResponseError](type-aliases/RawResponseError.md)                   | -                                                                                                                                                                                             |
+| [RawResponseSuccess](type-aliases/RawResponseSuccess.md)               | -                                                                                                                                                                                             |
+| [Request](type-aliases/Request.md)                                     | -                                                                                                                                                                                             |
+| [Response](type-aliases/Response.md)                                   | -                                                                                                                                                                                             |
+| [ResponseError](type-aliases/ResponseError.md)                         | -                                                                                                                                                                                             |
+| [ResponseIndeterminate](type-aliases/ResponseIndeterminate.md)         | -                                                                                                                                                                                             |
+| [ResponseSettled](type-aliases/ResponseSettled.md)                     | -                                                                                                                                                                                             |
+| [ResponseSuccess](type-aliases/ResponseSuccess.md)                     | -                                                                                                                                                                                             |
+| [ResponseSync](type-aliases/ResponseSync.md)                           | -                                                                                                                                                                                             |
+| [ResponseSyncIndeterminate](type-aliases/ResponseSyncIndeterminate.md) | -                                                                                                                                                                                             |

@@ -4,7 +4,10 @@
  * License:   MIT
  */
 
+/**
+ * @TODO Write description.
+ * @module Hook
+ */
+
 export * from "./Hook.js";
 export type * from "./Hook.Types.js";
-export * from "./Hook.Internal.js";
-export type * from "./Hook.Internal.Types.js";
