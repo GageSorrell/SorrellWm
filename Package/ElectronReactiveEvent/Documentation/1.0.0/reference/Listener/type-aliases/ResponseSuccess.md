@@ -5,7 +5,7 @@
 ```ts
 type ResponseSuccess<PackageKey, ChannelType> = ResponseBase<
 	ResponseDataKey,
-	Registrar[PackageKey][ChannelType][EventResponseKey]
+	Registrar[PackageKey][ChannelType][ResponseKey]
 >;
 ```
 

@@ -5,7 +5,7 @@
  */
 
 import type { EmptyEventParameter, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
-import type { ErrorKey, RequestKey, ResponseKey } from "../Decl/Decl.Internal.Types.js";
+import type { ErrorKey, RequestKey, ResponseKey } from "../Internal/Decl.Types.js";
 import type { ErrorPayloadKey, ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types.js";
 import type {
     FilterByOwner,
@@ -121,9 +121,7 @@ export namespace Channel
     /**
      * Channels whose event declarations specify a request type.
      *
-     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
-     * This string type does not need to literally match the `name` property of your `package.json`, but
-     * it is recommended to do so.
+     * @typeParam PackageKey - The unique string that identifies your package.
      */
     export type Request<
         PackageKey extends PackageKeys,
@@ -137,9 +135,7 @@ export namespace Channel
     /**
      * Channels whose event declarations do *not* specify a request type.
      *
-     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
-     * This string type does not need to literally match the `name` property of your `package.json`, but
-     * it is recommended to do so.
+     * @typeParam PackageKey - The unique string that identifies your package.
      */
     export type NoRequest<
         PackageKey extends PackageKeys,
@@ -154,9 +150,7 @@ export namespace Channel
      * A channel is the (`string`) key of an event declaration property in a registrar,
      * namespaced to your package.
      *
-     * @typeParam PackageKey - The name of the package that imports from `electron-reactive-event`.
-     * This string type does not need to literally match the `name` property of your `package.json`, but
-     * it is recommended to do so.
+     * @typeParam PackageKey - The unique string that identifies your package.
      */
     export type Any<
         PackageKey extends PackageKeys,

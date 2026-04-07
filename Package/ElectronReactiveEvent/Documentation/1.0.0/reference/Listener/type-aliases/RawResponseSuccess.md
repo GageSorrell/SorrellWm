@@ -4,19 +4,16 @@
 
 ```ts
 type RawResponseSuccess<PackageKey, ChannelType> =
-	EventResponseKey extends keyof FilterByOwner<
+	ResponseKey extends keyof FilterByOwner<
 		PackageKey,
 		RendererOwner
 	>[ChannelType]
 		? FilterByOwner<
 				PackageKey,
 				RendererOwner
-			>[ChannelType][EventResponseKey] extends EmptyEventParameter
+			>[ChannelType][ResponseKey] extends EmptyEventParameter
 			? never
-			: FilterByOwner<
-					PackageKey,
-					RendererOwner
-				>[ChannelType][EventResponseKey]
+			: FilterByOwner<PackageKey, RendererOwner>[ChannelType][ResponseKey]
 		: never;
 ```
 

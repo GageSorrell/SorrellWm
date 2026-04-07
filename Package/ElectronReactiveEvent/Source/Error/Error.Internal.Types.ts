@@ -8,7 +8,7 @@ import type { EmptyEventParameter, EventErrorRecord, EventErrorTuple, EventOwner
 import type { PackageKeys, Registrar } from "../Internal";
 import type { Channel } from "../Channel";
 import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
-import type { ErrorKey } from "../Decl/Decl.Internal.Types";
+import type { ErrorKey } from "../Internal/Decl.Types";
 
 type ErrorNormalized<MessageType extends string, PayloadType = EmptyOverloadParameter> =
     PayloadType extends EmptyEventParameter
@@ -39,19 +39,41 @@ type GetNormalizedError<
                     : never
     : never;
 
-export type ErrorMessageKey = "Message";
+/** The key of the payload in {@link ErrorNormalized}. */
 export type ErrorPayloadKey = "Payload";
 
+/**
+ * An error that always has a `Payload` property (it is {@link EmptyOverloadParameter} if empty).
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
 export type ReactiveEventErrorDataInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Error<PackageKey, EventOwner>
 > = Readonly<GetNormalizedError<PackageKey, ChannelType>>;
 
+/**
+ * The message of an error type, derived from {@link ReactiveEventErrorDataInternal}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
 export type ReactiveEventErrorMessage<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Error<PackageKey, EventOwner>
 > = ReactiveEventErrorDataInternal<PackageKey, ChannelType>["Message"];
 
+/**
+ * The payload of an error type, derived from {@link ReactiveEventErrorDataInternal}.
+ * It is {@link EmptyOverloadParameter} if the event declaration has no error payload type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
 export type ReactiveEventErrorPayload<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Error<PackageKey>

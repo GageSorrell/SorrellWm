@@ -10,6 +10,7 @@ type ReactiveEventFunctions<PackageKey> = Readonly<{
 	on: On<PackageKey>;
 	once: Once<PackageKey>;
 	removeHandler: RemoveHandler<PackageKey>;
+	send: Send<PackageKey>;
 }>;
 ```
 

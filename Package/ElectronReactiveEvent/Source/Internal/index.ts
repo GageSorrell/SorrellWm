@@ -4,5 +4,6 @@
  * License:   MIT
  */
 
+export * from "./Decl.Types.js";
 export * from "./Registrar.Types.js";
 export * from "./Utility.Types.js";

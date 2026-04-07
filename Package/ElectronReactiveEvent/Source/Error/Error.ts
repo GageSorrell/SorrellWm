@@ -14,6 +14,14 @@ import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
 import type { EventOwner } from "../Decl/Decl.Types";
 import type { PackageKeys } from "../Internal";
 
+/**
+ * Describes an error of an event.  This is used by `handle`, and is translated
+ * into the response given to the `renderer`.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
 export class ReactiveEventErrorInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.ErrorMessage<PackageKey>
@@ -31,6 +39,19 @@ export class ReactiveEventErrorInternal<
         | EmptyOverloadParameter;
 };
 
+/**
+ * An error of an event.  Returning this in your handler is how errors are
+ * described to the `renderer`.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ * @typeParam OwnerType - The owner of the given event declaration.
+ *
+ * @param message - The message of this event's error.
+ *
+ * @returns The internal-facing object that describes the error.
+ */
 export function ReactiveEventError<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Error<PackageKey, OwnerType>,
@@ -38,6 +59,20 @@ export function ReactiveEventError<
 >(
     message: ReactiveEventErrorMessage<PackageKey, ChannelType>
 ): ReactiveEventErrorInternal<PackageKey, ChannelType>;
+/**
+ * An error of an event.  Returning this in your handler is how errors are
+ * described to the `renderer`.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ * @typeParam OwnerType - The owner of the given event declaration.
+ *
+ * @param message - The message of this event's error.
+ * @param payload - The payload of this event's error.
+ *
+ * @returns The internal-facing object that describes the error.
+ */
 export function ReactiveEventError<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.ErrorPayload<PackageKey, OwnerType>,

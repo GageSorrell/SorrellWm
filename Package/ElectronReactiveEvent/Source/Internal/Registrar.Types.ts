@@ -7,7 +7,7 @@
 // @Todo TEMPORARY.
 import type { EmptyEventParameter, EventDecl, MainOwner, RendererOwner } from "../Decl/Decl.Types";
 import type { EventOwner } from "../Decl/Decl.Types";
-import type { OwnerKey } from "../Decl/Decl.Internal.Types";
+import type { OwnerKey } from "./Decl.Types";
 
 // @TODO TEMPORARY.
 // export interface Registrar { }

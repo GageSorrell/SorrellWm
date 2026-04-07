@@ -4,8 +4,8 @@
  * License:   MIT
  */
 
-import type { Handle, HandleOnce, Off, On, Once, RemoveHandler } from "./Main.Internal.Types";
-import { handle, handleOnce, off, on, once, removeHandler } from "./Main.Internal";
+import type { Handle, HandleOnce, Off, On, Once, RemoveHandler, Send } from "./Main.Internal.Types";
+import { handle, handleOnce, off, on, once, removeHandler, send } from "./Main.Internal";
 import type { PackageKeys } from "../Internal";
 import type { ReactiveEventFunctions } from "./Main.Types";
 
@@ -18,6 +18,7 @@ export function getReactiveEventFunctions<PackageKey extends PackageKeys>(
         off: off as Off<PackageKey>,
         on: on as On<PackageKey>,
         once: once as Once<PackageKey>,
-        removeHandler: removeHandler as RemoveHandler<PackageKey>
+        removeHandler: removeHandler as RemoveHandler<PackageKey>,
+        send: send as Send<PackageKey>
     };
 }

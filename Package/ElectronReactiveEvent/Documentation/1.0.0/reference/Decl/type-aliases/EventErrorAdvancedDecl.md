@@ -12,7 +12,7 @@ Define an error type as a discriminated union of `MessageType`, `PayloadType` co
 
 ### Parameter
 
-`Parameter` _extends_ `EventErrorAdvancedDeclParameter`\<`MessageType`, `PayloadType`\>
+`Parameter` _extends_ [`EventErrorAdvancedDeclParameter`](../../Internal/type-aliases/EventErrorAdvancedDeclParameter.md)\<`MessageType`, `PayloadType`\>
 
 ### MessageType
 

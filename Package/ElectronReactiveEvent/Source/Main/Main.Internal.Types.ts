@@ -6,9 +6,9 @@
 
 import type { Handler, Request } from "../Listener";
 import type { Channel } from "../Channel";
-import type { IpcMain } from "electron";
+import type { BrowserView, BrowserWindow, IpcMain } from "electron";
 import type { PackageKeys } from "../Internal";
-import type { RendererOwner } from "../Decl/Decl.Types";
+import type { MainOwner, RendererOwner } from "../Decl/Decl.Types";
 
 export type SendableEventHandler<PackageKey extends PackageKeys> =
     {
@@ -27,6 +27,31 @@ export type InvokableEventHandler<PackageKey extends PackageKeys> =
         <ChannelType extends Channel.Handler.Any<PackageKey>>(
             channel: ChannelType,
             listener: Handler<PackageKey, typeof channel>
+        ): void;
+    };
+
+export type Send<PackageKey extends PackageKeys> =
+    {
+        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+            browserWindow: BrowserWindow,
+            channel: ChannelType
+        ): void;
+
+        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+            browserWindow: BrowserWindow,
+            channel: ChannelType,
+            request: Request<PackageKey, MainOwner, typeof channel>
+        ): void;
+
+        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+            browserWindows: Array<BrowserWindow>,
+            channel: ChannelType
+        ): void;
+
+        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+            browserWindows: Array<BrowserWindow>,
+            channel: ChannelType,
+            request: Request<PackageKey, MainOwner, typeof channel>
         ): void;
     };
 

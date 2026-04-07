@@ -6,15 +6,16 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
+import { BrowserWindow, type IpcMainEvent } from "electron";
 import type { Handler, HandlerInternal, Listener, RawResponse, Request } from "../Listener";
 import { type IpcMainInvokeEvent, ipcMain } from "electron/main";
+import type { MainOwner, RendererOwner } from "../Decl/Decl.Types";
 import type { Channel } from "../Channel";
+import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
 import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
-import type { IpcMainEvent } from "electron";
 import type { NativeEventListener } from "./Main.Internal.Types";
 import type { PackageKeys } from "../Internal";
 import { ReactiveEventErrorInternal } from "../Error/index.js";
-import type { RendererOwner } from "../Decl/Decl.Types";
 
 export function handle<
     PackageKey extends PackageKeys,
@@ -133,4 +134,73 @@ export function once<
 ): void
 {
     ipcMain.once(channel, listener as NativeEventListener);
+}
+
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+    browserWindow: BrowserWindow,
+    channel: ChannelType
+): void;
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    browserWindow: BrowserWindow,
+    channel: ChannelType,
+    request: Request<PackageKey, MainOwner, typeof channel>
+): void;
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+    browserWindows: Array<BrowserWindow>,
+    channel: ChannelType
+): void;
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    browserWindows: Array<BrowserWindow>,
+    channel: ChannelType,
+    request: Request<PackageKey, MainOwner, typeof channel>
+): void;
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    browserWindows: undefined,
+    channel: ChannelType,
+    request: Request<PackageKey, MainOwner, typeof channel>
+): void;
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    browserWindows: BrowserWindow | Array<BrowserWindow> | undefined,
+    channel: ChannelType,
+    request:
+        | Request<PackageKey, MainOwner, typeof channel>
+        | EmptyOverloadParameter = EmptyOverloadParameterValue
+): void
+{
+    function Send(BrowserWindow: BrowserWindow): void
+    {
+        if (request !== EmptyOverloadParameterValue)
+        {
+            BrowserWindow.webContents.send(channel, request);
+        }
+        else
+        {
+            BrowserWindow.webContents.send(channel);
+        }
+    }
+
+    if (Array.isArray(browserWindows))
+    {
+        browserWindows.forEach(Send);
+    }
+    else if (browserWindows === undefined)
+    {
+        BrowserWindow.getAllWindows().forEach(Send);
+    }
+    else
+    {
+        Send(browserWindows);
+    }
 }
