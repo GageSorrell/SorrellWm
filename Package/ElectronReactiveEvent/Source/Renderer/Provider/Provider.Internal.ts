@@ -5,14 +5,13 @@
  */
 
 import { type Context, createContext } from "react";
-import type { PackageKeys } from "../../Internal";
 import type { ReactiveEventContext } from "./Provider.Types";
 import type { ReactiveEventContextInternal } from "./Provider.Internal.Types";
 import { ipcRenderer } from "electron";
 
 const EmptyReactiveEventContext: ReactiveEventContext =
     {
-        ipcRendererFunctions:
+        ipcRenderer:
         {
             invoke: ipcRenderer.invoke,
             off: ipcRenderer.off,
@@ -20,8 +19,7 @@ const EmptyReactiveEventContext: ReactiveEventContext =
             once: ipcRenderer.once,
             send: ipcRenderer.send,
             sendSync: ipcRenderer.sendSync
-        },
-        packageKey: "" as PackageKeys
+        }
     };
 
 const EmptyReactiveEventContextInternal: ReactiveEventContextInternal =

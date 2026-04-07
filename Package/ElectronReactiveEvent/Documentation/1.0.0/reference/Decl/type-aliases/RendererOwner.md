@@ -5,3 +5,5 @@
 ```ts
 type RendererOwner = typeof RendererOwnerValue;
 ```
+
+This type is used to represent events that are sent by the `renderer`.

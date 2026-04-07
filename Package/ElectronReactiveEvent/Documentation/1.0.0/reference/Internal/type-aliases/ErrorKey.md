@@ -5,3 +5,5 @@
 ```ts
 type ErrorKey = "ErrorType";
 ```
+
+The key of the error type in an event declaration.

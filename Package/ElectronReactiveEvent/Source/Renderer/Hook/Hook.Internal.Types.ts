@@ -4,8 +4,6 @@
  * License:   MIT
  */
 
-/* eslint-disable jsdoc/require-jsdoc */
-
 /* eslint-disable @typescript-eslint/no-namespace */
 
 import type {
@@ -23,11 +21,7 @@ import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Ty
 import type { PackageKeys } from "../../Internal/index.js";
 import type { Request } from "../../Listener/index.js";
 
-export type RequestSerializer<RequestType = unknown> =
-    {
-        (request: RequestType): string;
-    };
-
+// eslint-disable-next-line jsdoc/require-jsdoc
 export type InvokeOptionsOverloadedArgument<SuspendsType extends boolean = boolean> =
     | InvokeOptions<SuspendsType>
     | EmptyOverloadParameter
@@ -52,6 +46,7 @@ type OptionsFromOverload<
             ? InvokeOptions<SuspendsType>
             : undefined;
 
+// eslint-disable-next-line jsdoc/require-jsdoc
 export type InvokeResponseInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>,
@@ -74,23 +69,74 @@ export type InvokeResponseInternal<
         >
     >;
 
+/**
+ * Invoke an event when the containing component mounts.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type UseInvokeEvent<PackageKey extends PackageKeys> =
     {
+        /**
+         * Invoke an event when the containing component mounts.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The channel of the event that you wish to invoke.
+         *
+         * @returns The result returned by `main`.
+         */
         <ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
             channel: ChannelType
         ): InvokeResponse<PackageKey, typeof channel, undefined>;
 
+        /**
+         * Invoke an event when the containing component mounts.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The channel of the event that you wish to invoke.
+         * @param options - Specify whether this hook should suspend the containing component
+         * until `main` returns a response.
+         *
+         * @returns The result returned by `main`.
+         */
         <ChannelType extends Channel.Handler.NoRequest<PackageKey>,
             SuspendsType extends boolean>(
             channel: ChannelType,
             options: InvokeOptions<SuspendsType>
         ): InvokeResponse<PackageKey, typeof channel, typeof options>;
 
+        /**
+         * Invoke an event when the containing component mounts.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The channel of the event that you wish to invoke.
+         * @param request - The request of this event.
+         *
+         * @returns The result returned by `main`.
+         */
         <ChannelType extends Channel.Handler.Request<PackageKey>>(
             channel: ChannelType,
             request: Request<PackageKey, RendererOwner, typeof channel>
         ): InvokeResponse<PackageKey, typeof channel, undefined>;
 
+        /**
+         * Invoke an event when the containing component mounts.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The channel of the event that you wish to invoke.
+         * @param request - The request of this event.
+         * @param options - Specify whether this hook should suspend the containing component
+         * until `main` returns a response.
+         *
+         * @returns The result returned by `main`.
+         */
         <ChannelType extends Channel.Handler.Request<PackageKey>,
             SuspendsType extends boolean>(
             channel: ChannelType,

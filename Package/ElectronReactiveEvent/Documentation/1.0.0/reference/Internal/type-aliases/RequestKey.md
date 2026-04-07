@@ -5,3 +5,5 @@
 ```ts
 type RequestKey = "RequestType";
 ```
+
+The key of the request type in an event declaration.

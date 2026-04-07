@@ -5,3 +5,5 @@
 ```ts
 type ErrorPayloadKey = "Payload";
 ```
+
+The key of the payload in ErrorNormalized.

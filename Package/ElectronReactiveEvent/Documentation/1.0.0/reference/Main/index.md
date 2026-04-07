@@ -6,10 +6,12 @@
 
 | Type Alias                                                       | Description |
 | ---------------------------------------------------------------- | ----------- |
+| [IpcMainReactive](type-aliases/IpcMainReactive.md)               | -           |
 | [ReactiveEventFunctions](type-aliases/ReactiveEventFunctions.md) | -           |
 
 ## Functions
 
-| Function                                                            | Description |
-| ------------------------------------------------------------------- | ----------- |
-| [getReactiveEventFunctions](functions/getReactiveEventFunctions.md) | -           |
+| Function                                                        | Description |
+| --------------------------------------------------------------- | ----------- |
+| [getReactiveIpcFunctions](functions/getReactiveIpcFunctions.md) | -           |
+| [getReactiveIpcMain](functions/getReactiveIpcMain.md)           | -           |

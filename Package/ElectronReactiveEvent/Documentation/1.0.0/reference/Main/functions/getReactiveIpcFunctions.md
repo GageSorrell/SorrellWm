@@ -1,9 +1,9 @@
-[electron-reactive-event](../../index.md) / [Main](../index.md) / getReactiveEventFunctions
+[electron-reactive-event](../../index.md) / [Main](../index.md) / getReactiveIpcFunctions
 
-# getReactiveEventFunctions() Function
+# getReactiveIpcFunctions() Function
 
 ```ts
-function getReactiveEventFunctions<
+function getReactiveIpcFunctions<
 	PackageKey,
 >(): ReactiveEventFunctions<PackageKey>;
 ```

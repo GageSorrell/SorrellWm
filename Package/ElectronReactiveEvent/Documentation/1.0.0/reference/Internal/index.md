@@ -10,18 +10,14 @@
 
 ## Type Aliases
 
-| Type Alias                                                                         | Description                                 |
-| ---------------------------------------------------------------------------------- | ------------------------------------------- |
-| [ErrorKey](type-aliases/ErrorKey.md)                                               | -                                           |
-| [ErrorMessageKey](type-aliases/ErrorMessageKey.md)                                 | -                                           |
-| [ErrorPayloadKey](type-aliases/ErrorPayloadKey.md)                                 | -                                           |
-| [EventErrorAdvancedDeclParameter](type-aliases/EventErrorAdvancedDeclParameter.md) | -                                           |
-| [FilterByOwner](type-aliases/FilterByOwner.md)                                     | -                                           |
-| [KeyofOwner](type-aliases/KeyofOwner.md)                                           | -                                           |
-| [MainRegistrar](type-aliases/MainRegistrar.md)                                     | -                                           |
-| [OwnerKey](type-aliases/OwnerKey.md)                                               | -                                           |
-| [PackageKeys](type-aliases/PackageKeys.md)                                         | -                                           |
-| [RendererRegistrar](type-aliases/RendererRegistrar.md)                             | -                                           |
-| [RequestKey](type-aliases/RequestKey.md)                                           | -                                           |
-| [ResponseKey](type-aliases/ResponseKey.md)                                         | -                                           |
-| [Values](type-aliases/Values.md)                                                   | The values of a given `Record`-like object. |
+| Type Alias                                             | Description                                           |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| [ErrorKey](type-aliases/ErrorKey.md)                   | The key of the error type in an event declaration.    |
+| [FilterByOwner](type-aliases/FilterByOwner.md)         | -                                                     |
+| [MainRegistrar](type-aliases/MainRegistrar.md)         | -                                                     |
+| [OwnerKey](type-aliases/OwnerKey.md)                   | The key of the owner type in an event declaration.    |
+| [PackageKeys](type-aliases/PackageKeys.md)             | -                                                     |
+| [RendererRegistrar](type-aliases/RendererRegistrar.md) | -                                                     |
+| [RequestKey](type-aliases/RequestKey.md)               | The key of the request type in an event declaration.  |
+| [ResponseKey](type-aliases/ResponseKey.md)             | The key of the response type in an event declaration. |
+| [Values](type-aliases/Values.md)                       | The values of a given `Record`-like object.           |

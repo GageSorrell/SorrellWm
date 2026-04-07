@@ -4,22 +4,21 @@
 
 ## Classes
 
-| Class                                                               | Description |
-| ------------------------------------------------------------------- | ----------- |
-| [ReactiveEventErrorInternal](classes/ReactiveEventErrorInternal.md) | -           |
+| Class                                                               | Description                                                                                                            |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [ReactiveEventErrorInternal](classes/ReactiveEventErrorInternal.md) | Describes an error of an event. This is used by `handle`, and is translated into the response given to the `renderer`. |
 
 ## Type Aliases
 
-| Type Alias                                                                       | Description |
-| -------------------------------------------------------------------------------- | ----------- |
-| [ErrorMessageKey](type-aliases/ErrorMessageKey.md)                               | -           |
-| [ErrorPayloadKey](type-aliases/ErrorPayloadKey.md)                               | -           |
-| [ReactiveEventErrorDataInternal](type-aliases/ReactiveEventErrorDataInternal.md) | -           |
-| [ReactiveEventErrorMessage](type-aliases/ReactiveEventErrorMessage.md)           | -           |
-| [ReactiveEventErrorPayload](type-aliases/ReactiveEventErrorPayload.md)           | -           |
+| Type Alias                                                                       | Description                                                                                                                                                                                                   |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ErrorPayloadKey](type-aliases/ErrorPayloadKey.md)                               | The key of the payload in ErrorNormalized.                                                                                                                                                                    |
+| [ReactiveEventErrorDataInternal](type-aliases/ReactiveEventErrorDataInternal.md) | An error that always has a `Payload` property (it is EmptyOverloadParameter if empty).                                                                                                                        |
+| [ReactiveEventErrorMessage](type-aliases/ReactiveEventErrorMessage.md)           | The message of an error type, derived from [ReactiveEventErrorDataInternal](type-aliases/ReactiveEventErrorDataInternal.md).                                                                                  |
+| [ReactiveEventErrorPayload](type-aliases/ReactiveEventErrorPayload.md)           | The payload of an error type, derived from [ReactiveEventErrorDataInternal](type-aliases/ReactiveEventErrorDataInternal.md). It is EmptyOverloadParameter if the event declaration has no error payload type. |
 
 ## Functions
 
-| Function                                              | Description |
-| ----------------------------------------------------- | ----------- |
-| [ReactiveEventError](functions/ReactiveEventError.md) | -           |
+| Function                                              | Description                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [ReactiveEventError](functions/ReactiveEventError.md) | An error of an event. Returning this in your handler is how errors are described to the `renderer`. |

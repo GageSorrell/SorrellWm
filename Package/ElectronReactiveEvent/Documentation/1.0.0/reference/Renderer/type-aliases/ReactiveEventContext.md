@@ -8,19 +8,11 @@ type ReactiveEventContext = object;
 
 ## Properties
 
-### ipcRendererFunctions
+### ipcRenderer
 
 ```ts
-ipcRendererFunctions: Pick<
+ipcRenderer: Pick<
 	typeof ipcRenderer,
 	"invoke" | "send" | "sendSync" | "off" | "on" | "once"
 >;
-```
-
----
-
-### packageKey
-
-```ts
-packageKey: PackageKeys;
 ```

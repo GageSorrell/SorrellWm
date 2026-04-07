@@ -4,8 +4,6 @@
  * License:   MIT
  */
 
-/* eslint-disable jsdoc/require-jsdoc */
-
 import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl/Decl.Types";
 import type { ResponseKey as EventResponseKey, RequestKey } from "../Internal/Decl.Types";
 import type {

@@ -53,9 +53,9 @@ const IndeterminateResponse: ResponseIndeterminate =
 //     return useContext<ReactiveEventContextInternal>(ReactiveEventInternalContext);
 // };
 
-function UseIpcRenderer(): Readonly<ReactiveEventContextInternal["ipcRendererFunctions"]>
+function UseIpcRenderer(): Readonly<ReactiveEventContextInternal["ipcRenderer"]>
 {
-    return useContext<ReactiveEventContextInternal>(ReactiveEventInternalContext).ipcRendererFunctions;
+    return useContext<ReactiveEventContextInternal>(ReactiveEventInternalContext).ipcRenderer;
 };
 
 class ImmutableArgumentChangeError<Type> extends Error
@@ -440,7 +440,7 @@ export function useOnceEventDeferred<PackageKey extends PackageKeys>(
 function SendEventInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
-    send: ReactiveEventContextInternal["ipcRendererFunctions"]["send"],
+    send: ReactiveEventContextInternal["ipcRenderer"]["send"],
     channel: ChannelType,
     request:
         | Request<PackageKey, RendererOwner, typeof channel>

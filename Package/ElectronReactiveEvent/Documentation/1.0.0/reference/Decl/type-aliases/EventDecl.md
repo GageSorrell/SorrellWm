@@ -3,9 +3,10 @@
 # EventDecl Type
 
 ```ts
-type EventDecl<OwnerType, RequestType, ResponseType, ErrorType, Options> =
-	object;
+type EventDecl<OwnerType, RequestType, ResponseType, ErrorType> = object;
 ```
+
+All events in `electron-reactive-event` are modeled with this type.
 
 ## Type Parameters
 
@@ -13,13 +14,19 @@ type EventDecl<OwnerType, RequestType, ResponseType, ErrorType, Options> =
 
 `OwnerType` _extends_ [`EventOwner`](EventOwner.md)
 
+From whom an event of this type is sent.
+
 ### RequestType
 
 `RequestType` = [`EmptyEventParameter`](EmptyEventParameter.md)
 
+The type of the request object that is sent when an event occurs.
+
 ### ResponseType
 
 `ResponseType` = [`EmptyEventParameter`](EmptyEventParameter.md)
+
+The type of the response object that is sent when an event succeeds.
 
 ### ErrorType
 
@@ -27,9 +34,7 @@ type EventDecl<OwnerType, RequestType, ResponseType, ErrorType, Options> =
 \| [`EventErrorDecl`](EventErrorDecl.md)
 \| [`EmptyEventParameter`](EmptyEventParameter.md) = [`EmptyEventParameter`](EmptyEventParameter.md)
 
-### Options
-
-`Options` _extends_ `EventDeclOptions` \| [`EmptyEventParameter`](EmptyEventParameter.md) = [`EmptyEventParameter`](EmptyEventParameter.md)
+The type of the response object that is sent when an event fails.
 
 ## Properties
 

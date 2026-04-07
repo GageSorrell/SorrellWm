@@ -18,9 +18,7 @@ namespaced to your package.
 
 `PackageKey` _extends_ [`PackageKeys`](../../../../Internal/type-aliases/PackageKeys.md)
 
-The name of the package that imports from `electron-reactive-event`.
-This string type does not need to literally match the `name` property of your `package.json`, but
-it is recommended to do so.
+The unique string that identifies your package.
 
 ### Owner
 

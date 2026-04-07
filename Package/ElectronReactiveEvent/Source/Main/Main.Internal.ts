@@ -4,8 +4,6 @@
  * License:   MIT
  */
 
-/* eslint-disable jsdoc/require-jsdoc */
-
 import { BrowserWindow, type IpcMainEvent } from "electron";
 import type { Handler, HandlerInternal, Listener, RawResponse, Request } from "../Listener";
 import { type IpcMainInvokeEvent, ipcMain } from "electron/main";

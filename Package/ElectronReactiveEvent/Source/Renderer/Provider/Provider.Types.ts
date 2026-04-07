@@ -4,20 +4,18 @@
  * License:   MIT
  */
 
-import type { PackageKeys } from "../../Internal";
 import type { PropsWithChildren } from "react";
 import type { ipcRenderer } from "electron/renderer";
 
 export type ReactiveEventContext =
     {
-        ipcRendererFunctions: Pick<typeof ipcRenderer,
+        ipcRenderer: Pick<typeof ipcRenderer,
             | "invoke"
             | "send"
             | "sendSync"
             | "off"
             | "on"
             | "once">;
-        packageKey: PackageKeys;
     };
 
 export type ReactiveEventProviderProps = PropsWithChildren<{ value: ReactiveEventContext; }>;
