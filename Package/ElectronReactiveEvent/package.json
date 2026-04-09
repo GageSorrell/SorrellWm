@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Type-safe Electron IPC functions, including modern React hooks.",
   "keywords": [
     "electron",
@@ -10,7 +10,7 @@
     "type-safe",
     "reactive"
   ],
-  "homepage": "https://github.com/GageSorrell/SorrellWm#readme",
+  "homepage": "https://electron-reactive-event.sorrell.sh",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
