@@ -56,7 +56,7 @@ export type InvokeResponse<
     ? SuspendsType extends true
         ? ResponseSync<PackageKey, ChannelType>
         : Response<PackageKey, ChannelType>
-    : never;
+    : Response<PackageKey, ChannelType>;
 
 /**
  * Returns a copy of {@link InvokeEventDeferred}, to invoke events at a desired time.
@@ -88,7 +88,7 @@ export type UseOnEvent<PackageKey extends PackageKeys> =
          * @param channel - The channel on which the {@link listener} will listen.
          * @param listener - The callback function that will listen on {@link channel}.
          *
-         * @returns A function that will unregister the {@link listener}.
+         * @returns A function that will unregister the given {@link listener}.
          */
         <ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
             channel: ChannelType,
@@ -164,6 +164,11 @@ export type UseOffEventDeferred<PackageKey extends PackageKeys> =
 /**
  * Send an event when the containing component mounts.
  *
+ * @note {@link | Sendable events} do *not* end with a response returned by
+ * `main`.  If you wish to send an event to `main` such that it returns a
+ * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * with a `ResponseType !== {@link EmptyEventParameter}`.
+ *
  * @typeParam PackageKey - The unique string that identifies your package.
  */
 export type UseSendEvent<PackageKey extends PackageKeys> =
@@ -172,38 +177,39 @@ export type UseSendEvent<PackageKey extends PackageKeys> =
          * Send an event when the containing component mounts, whose event declaration
          * does *not* define a request type.
          *
+         * @note {@link | Sendable events} do *not* end with a response returned by
+         * `main`.  If you wish to send an event to `main` such that it returns a
+         * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+         * with a `ResponseType !== {@link EmptyEventParameter}`.
+         *
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to send.
-         *
-         * @returns The result returned by `main`.
          */
         <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
             channel: ChannelType
         ): void;
 
         /**
-         * Invoke an event when the containing component mounts, whose event declaration
+         * Send an event when the containing component mounts, whose event declaration
          * defines a request type.
+         *
+         * @note {@link | Sendable events} do *not* end with a response returned by
+         * `main`.  If you wish to send an event to `main` such that it returns a
+         * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+         * with a `ResponseType !== {@link EmptyEventParameter}`.
          *
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
-         * @param options - Specify whether this hook should suspend the containing component
-         * until `main` returns a response.
-         *
-         * @returns The result returned by `main`.
+         * @param request - The request sent with this event.
          */
-        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
-            channel: ChannelType
+        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+            channel: ChannelType,
+            request: Request<PackageKey, RendererOwner, typeof channel>
         ): void;
-
-        // <ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
-        //     channel: ChannelType,
-        //     request: Request<PackageKey, RendererOwner, typeof channel>
-        // ): void;
     };
 
 /**
@@ -234,7 +240,6 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          * @param channel - The channel of the event that you wish to invoke.
          *
          * @returns The result returned by `main`.
-         * {@label NoRequest}
          */
         <ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
             channel: ChannelType
@@ -271,7 +276,6 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          * @param request - The request of this event.
          *
          * @returns The result returned by `main`.
-         * {@label Request}
          */
         <ChannelType extends Channel.Handler.Request<PackageKey>>(
             channel: ChannelType,
@@ -291,7 +295,6 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          * until `main` returns a response.
          *
          * @returns The result returned by `main`.
-         * {@label RequestOptions}
          */
         <ChannelType extends Channel.Handler.Request<PackageKey>,
             SuspendsType extends boolean>(
@@ -392,6 +395,20 @@ export type SendEventDeferred<PackageKey extends PackageKeys> = UseSendEvent<Pac
  *
  * It is recommended to call this once in a module of your project, and export them to be used
  * throughout your project.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @property useInvokeEvent - The {@link UseInvokeEvent} hook, scoped to your {@link PackageKey}.
+ * @property useInvokeEventDeferred - The {@link UseInvokeEventDeferred} hook,
+ * scoped to your {@link PackageKey}.
+ * @property useOnEvent - The {@link UseOnEvent} hook, scoped to your {@link PackageKey}.
+ * @property useOnEventDeferred - The {@link UseOnEventDeferred} hook, scoped to your {@link PackageKey}.
+ * @property useOnceEvent - The {@link UseOnceEvent} hook, scoped to your {@link PackageKey}.
+ * @property useOnceEventDeferred - The {@link UseOnceEventDeferred} hook, scoped to your {@link PackageKey}.
+ * @property useOffEventDeferred - The {@link UseOffEventDeferred} hook, scoped to your {@link PackageKey}.
+ * @property useSendEvent - The {@link UseSendEvent} hook, scoped to your {@link PackageKey}.
+ * @property useSendEventDeferred - The {@link UseSendEventDeferred} hook,
+ * scoped to your {@link PackageKey}.
  */
 export type ReactiveEventHooks<PackageKey extends PackageKeys> = Readonly<{
     useInvokeEvent: UseInvokeEvent<PackageKey>;

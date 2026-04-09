@@ -4,10 +4,5 @@
  * License:   MIT
  */
 
-/**
- * @module Renderer
- * @TODO Write description.
- */
-
 export * from "./Hook/index.js";
 export * from "./Provider/index.js";

@@ -76,6 +76,8 @@ class ImmutableArgumentChangeError<Type> extends Error
 /**
  * Ensure that a given {@link Argument} has not changed between calls.
  *
+ * @typeParam Type - The type of the given {@link Argument}.
+ *
  * @param Argument - The argument of the calling hook whose immutability is enforced
  * by this hook.
  * @param AreEqual - The function used to determine whether the current value of the
@@ -112,7 +114,17 @@ function UseImmutableArgumentCheck<Type>(
 }
 
 /**
- * @inheritDoc UseInvokeEvent:NoRequest
+ * Invoke an event when the containing component mounts, whose event declaration
+ * does *not* define a request type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ *
+ * @returns The result returned by `main`.
+ *
  * @group Internal
  */
 export function useInvokeEvent<
@@ -121,7 +133,19 @@ export function useInvokeEvent<
     channel: ChannelType
 ): InvokeResponse<PackageKey, typeof channel, undefined>;
 /**
- * @inheritDoc UseInvokeEvent:NoRequestOptions
+ * Invoke an event when the containing component mounts, whose event declaration
+ * does *not* defines a request type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ * @param options - Specify whether this hook should suspend the containing component
+ * until `main` returns a response.
+ *
+ * @returns The result returned by `main`.
+ *
  * @group Internal
  */
 export function useInvokeEvent<
@@ -132,7 +156,18 @@ export function useInvokeEvent<
     options: InvokeOptions<SuspendsType>
 ): InvokeResponse<PackageKey, typeof channel, typeof options>;
 /**
- * @inheritDoc UseInvokeEvent:Request
+ * Invoke an event when the containing component mounts, whose event declaration
+ * defines a request type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ * @param request - The request of this event.
+ *
+ * @returns The result returned by `main`.
+ *
  * @group Internal
  */
 export function useInvokeEvent<
@@ -142,7 +177,20 @@ export function useInvokeEvent<
     request: Request<PackageKey, RendererOwner, typeof channel>
 ): InvokeResponse<PackageKey, typeof channel, undefined>;
 /**
- * @inheritDoc UseInvokeEvent:RequestOptions
+ * Invoke an event when the containing component mounts, whose event declaration
+ * defines a request type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ * @param request - The request of this event.
+ * @param options - Specify whether this hook should suspend the containing component
+ * until `main` returns a response.
+ *
+ * @returns The result returned by `main`.
+ *
  * @group Internal
  */
 export function useInvokeEvent<
@@ -153,9 +201,21 @@ export function useInvokeEvent<
     request: Request<PackageKey, RendererOwner, typeof channel>,
     options: InvokeOptions<SuspendsType>
 ): InvokeResponse<PackageKey, typeof channel, typeof options>;
-// eslint-disable-next-line jsdoc/require-param
 /**
- * @inheritDoc UseInvokeEvent
+ * Invoke an event when the containing component mounts.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ * @typeParam SuspendsType - The type of {@link InvokeOptions.suspend} if an
+ * {@link InvokeOptions} object is passed.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ * @param requestOrOptions - The first overloaded argument of this event.
+ * @param options - The second overloaded argument of this event.
+ *
+ * @returns The result returned by `main`.
+ *
  * @group Internal
  */
 export function useInvokeEvent<
@@ -200,6 +260,7 @@ export function useInvokeEvent<
                 | EmptyOverloadParameter;
         };
 
+    // eslint-disable-next-line jsdoc/require-jsdoc
     function HandleOverloadedArguments(): OverloadedArguments
     {
         if (options === EmptyOverloadParameterValue)
@@ -321,6 +382,15 @@ export function useInvokeEvent<
     return Response as ThisReturnType;
 }
 
+/**
+ * Returns a copy of {@link InvokeEventDeferred}, to invoke events at a desired time.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @returns An {@link InvokeEventDeferred} function.
+ *
+ * @group Internal
+ */
 export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
 ): Readonly<[ invokeEventDeferred: InvokeEventDeferred<PackageKey> ]>
 {
@@ -335,6 +405,7 @@ export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
         channel: ChannelType,
         request: Request<PackageKey, RendererOwner, typeof channel>
     ): Promise<ResponseSync<PackageKey, typeof channel>>;
+    // eslint-disable-next-line jsdoc/require-jsdoc
     async function invokeEventDeferred<
         ChannelType extends Channel.Handler.Request<PackageKey>>(
         channel: ChannelType,
@@ -356,6 +427,20 @@ export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
     return [ invokeEventDeferred ] as const;
 }
 
+/**
+ * Subscribe to events sent by `main` at the time that the containing component mounts.
+ * When the component unmounts, the listener is unsubscribed.
+ *
+ * @typeParam ChannelType - The type of the {@link channel} on which the
+ * {@link listener} will listen.
+ *
+ * @param channel - The channel on which the {@link listener} will listen.
+ * @param listener - The callback function that will listen on {@link channel}.
+ *
+ * @returns A function that will unregister the given {@link listener}.
+ *
+ * @group Internal
+ */
 export function useOnEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>
@@ -381,6 +466,15 @@ export function useOnEvent<
     return [ offEventDeferred ] as const;
 }
 
+/**
+ * Returns an {@link OnEventDeferred}, to subscribe to `main` events when desired.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @returns An {@link OnEventDeferred} function.
+ *
+ * @group Internal
+ */
 export function useOnEventDeferred<PackageKey extends PackageKeys>(
 ): Readonly<[ onEventDeferred: OnEventDeferred<PackageKey> ]>
 {
@@ -396,6 +490,7 @@ export function useOnEventDeferred<PackageKey extends PackageKeys>(
     {
         on(channel, listener);
 
+        // eslint-disable-next-line jsdoc/require-jsdoc
         function offEventDeferred(): void
         {
             off(channel, listener);
@@ -407,6 +502,19 @@ export function useOnEventDeferred<PackageKey extends PackageKeys>(
     return [ onEventDeferred ] as const;
 }
 
+/**
+ * Returns an {@link OffEventDeferred}, to unsubscribe to `main` events when desired.
+ *
+ * @note Both {@link UseOnEvent} and {@link UseOnceEvent} both return callbacks
+ * equivalent to this, but only for the event that is subscribed to by calling the
+ * respective hook.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @returns An {@link OffEventDeferred} function.
+ *
+ * @group Internal
+ */
 export function useOffEventDeferred<PackageKey extends PackageKeys>(
 ): Readonly<[ offEventDeferred: OffEventDeferred<PackageKey> ]>
 {
@@ -424,6 +532,23 @@ export function useOffEventDeferred<PackageKey extends PackageKeys>(
     return [ offEventDeferred ] as const;
 }
 
+/**
+ * Equivalent to {@link UseOnEvent}, but the listener will be unsubscribed
+ * after firing once.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the `main` event to which you wish to subscribe
+ * the {@link listener}.
+ * @param listener - The {@link RendererListener} that will be subscribed to the given
+ * {@link channel}.
+ *
+ * @returns An {@link OffEventDeferred} to unsubscribe the {@link listener} early.
+ *
+ * @group Internal
+ */
 export function useOnceEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>
@@ -449,6 +574,15 @@ export function useOnceEvent<
     return [ offEventDeferred ] as const;
 }
 
+/**
+ * Returns an {@link OnceEventDeferred}, to subscribe to `main` events when desired.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @returns A {@link OnceEventDeferred} function.
+ *
+ * @group Internal
+ */
 export function useOnceEventDeferred<PackageKey extends PackageKeys>(
 ): Readonly<[ onEventDeferred: OnceEventDeferred<PackageKey> ]>
 {
@@ -464,6 +598,7 @@ export function useOnceEventDeferred<PackageKey extends PackageKeys>(
     {
         once(channel, listener);
 
+        // eslint-disable-next-line jsdoc/require-jsdoc
         function offEventDeferred(): void
         {
             off(channel, listener);
@@ -475,6 +610,7 @@ export function useOnceEventDeferred<PackageKey extends PackageKeys>(
     return [ onEventDeferred ] as const;
 }
 
+// eslint-disable-next-line jsdoc/require-jsdoc
 function SendEventInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
@@ -495,17 +631,68 @@ function SendEventInternal<
     }
 }
 
+/**
+ * Send an event when the containing component mounts, whose event declaration
+ * does *not* define a request type.
+ *
+ * @note {@link | Sendable events} do *not* end with a response returned by
+ * `main`.  If you wish to send an event to `main` such that it returns a
+ * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * with a `ResponseType !== {@link EmptyEventParameter}`.
+ *
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to send.
+ *
+ * @group Internal
+ */
 export function useSendEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
     channel: ChannelType
 ): void;
+/**
+ * Send an event when the containing component mounts, whose event declaration
+ * defines a request type.
+ *
+ * @note {@link | Sendable events} do *not* end with a response returned by
+ * `main`.  If you wish to send an event to `main` such that it returns a
+ * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * with a `ResponseType !== {@link EmptyEventParameter}`.
+ *
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ * @param request - The request sent with this event.
+ *
+ * @group Internal
+ */
 export function useSendEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
     channel: ChannelType,
     request: Request<PackageKey, RendererOwner, typeof channel>
 ): void;
+/**
+ * Send an event when the containing component mounts.
+ *
+ * @note {@link | Sendable events} do *not* end with a response returned by
+ * `main`.  If you wish to send an event to `main` such that it returns a
+ * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * with a `ResponseType !== {@link EmptyEventParameter}`.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ *
+ * @param channel - The channel of the event that you wish to invoke.
+ * @param request - The overloaded request argument; it is sent to `main` iff it is
+ * *not* the default {@link EmptyOverloadParameterValue}.
+ *
+ * @group Internal
+ */
 export function useSendEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
@@ -523,6 +710,15 @@ export function useSendEvent<
     }, [ channel, request, send ]);
 }
 
+/**
+ * Returns a {@link SendEventDeferred} function, to send events when desired.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @returns A {@link SendEventDeferred} function.
+ *
+ * @group Internal
+ */
 export function useSendEventDeferred<PackageKey extends PackageKeys>(
 ): Readonly<[ sendEventDeferred: SendEventDeferred<PackageKey> ]>
 {
@@ -537,6 +733,7 @@ export function useSendEventDeferred<PackageKey extends PackageKeys>(
         channel: ChannelType,
         request: Request<PackageKey, RendererOwner, typeof channel>
     ): void;
+    // eslint-disable-next-line jsdoc/require-jsdoc
     function SendEventDeferredBase<
         ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
         channel: ChannelType,

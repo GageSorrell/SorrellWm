@@ -27,3 +27,5 @@ throughout your project.
 ### PackageKey
 
 `PackageKey` _extends_ [`PackageKeys`](../../../Internal/type-aliases/PackageKeys.md)
+
+The unique string that identifies your package.

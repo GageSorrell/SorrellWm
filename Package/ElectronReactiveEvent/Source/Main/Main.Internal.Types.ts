@@ -25,9 +25,12 @@ export type NativeHandlerListener = Parameters<IpcMain["handle"]>[1];
 export type NativeEventListener = Parameters<IpcMain["on"]>[1];
 
 /**
- * The type-safe type of the listener passed to {@link IpcMainReactive.on} *et al.*
+ * The type-safe type of the listener passed to
  * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on}
  * *et al.*
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired event declaration.
  */
 export type MainListener<
     PackageKey extends PackageKeys,

@@ -4,6 +4,11 @@
  * License:   MIT
  */
 
+/**
+ * @module Listener
+ * Foo
+ */
+
 export * from "./Listener.Types.js";
 export * from "./Listener.Internal.Types.js";
 export * from "./Listener.Internal.js";

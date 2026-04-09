@@ -8,7 +8,7 @@ type InvokeResponse<PackageKey, ChannelType, OptionsType> =
 		? SuspendsType extends true
 			? ResponseSync<PackageKey, ChannelType>
 			: Response<PackageKey, ChannelType>
-		: never;
+		: Response<PackageKey, ChannelType>;
 ```
 
 The type returned by [useInvokeEvent](../functions/useInvokeEvent.md).

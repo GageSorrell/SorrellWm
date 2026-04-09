@@ -4,8 +4,6 @@
  * License:   MIT
  */
 
-import type { EventOwner } from "../Decl/Decl.Types";
-
 /** The key of the request type in an event declaration. */
 export type RequestKey = "RequestType";
 

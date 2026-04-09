@@ -47,12 +47,12 @@ export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
 }
 
 /**
- * Get an object that replaces {@link https://www.electronjs.org/docs/latest/api/ipc-main | IpcMain's}
+ * Get an object that replaces {@link https://www.electronjs.org/docs/latest/api/ipc-main | ipcMain's}
  * IPC functions with their respective `electron-reactive-event`, type-safe counterparts.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  *
- * @returns An object that replaces {@link https://www.electronjs.org/docs/latest/api/ipc-main | IpcMain's}
+ * @returns An object that replaces {@link https://www.electronjs.org/docs/latest/api/ipc-main | ipcMain's}
  * IPC functions with their respective `electron-reactive-event`, type-safe counterparts.
  */
 export function getReactiveIpcMain<PackageKey extends PackageKeys>(): IpcMainReactive<PackageKey>

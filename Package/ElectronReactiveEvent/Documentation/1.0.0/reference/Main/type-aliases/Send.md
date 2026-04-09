@@ -8,6 +8,8 @@ type Send<PackageKey> = {
 	<ChannelType>(browserWindow, channel, request): void;
 	<ChannelType>(browserWindows, channel): void;
 	<ChannelType>(browserWindows, channel, request): void;
+	<ChannelType>(browserWindows, channel, request): void;
+	<ChannelType>(browserWindows, channel, request): void;
 };
 ```
 
@@ -169,6 +171,102 @@ event declaration.
 #### browserWindows
 
 `BrowserWindow`[]
+
+The [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window)
+to where the event will be sent.
+
+#### channel
+
+`ChannelType`
+
+The channel that uniquely identifies the desired
+event declaration.
+
+#### request
+
+[`Request`](../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
+
+The request of the given event.
+
+### Returns
+
+`void`
+
+## Call Signature
+
+```ts
+<ChannelType>(
+   browserWindows,
+   channel,
+   request): void;
+```
+
+Send an event to all [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window),
+whose event declarations do _not_ define a request type. This overload implicitly calls
+[BrowserWindow.getAllWindows()](https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows).
+
+### Type Parameters
+
+#### ChannelType
+
+`ChannelType` _extends_ `never`
+
+The channel that uniquely identifies the desired
+event declaration.
+
+### Parameters
+
+#### browserWindows
+
+`undefined`
+
+The [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window)
+to where the event will be sent.
+
+#### channel
+
+`ChannelType`
+
+The channel that uniquely identifies the desired
+event declaration.
+
+#### request
+
+[`Request`](../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
+
+The request of the given event.
+
+### Returns
+
+`void`
+
+## Call Signature
+
+```ts
+<ChannelType>(
+   browserWindows,
+   channel,
+   request): void;
+```
+
+Send an event to all [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window),
+whose event declarations define a request type. This overload implicitly calls
+[BrowserWindow.getAllWindows()](https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows).
+
+### Type Parameters
+
+#### ChannelType
+
+`ChannelType` _extends_ `never`
+
+The channel that uniquely identifies the desired
+event declaration.
+
+### Parameters
+
+#### browserWindows
+
+`undefined`
 
 The [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window)
 to where the event will be sent.

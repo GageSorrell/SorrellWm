@@ -6,6 +6,9 @@
 type ResponseIndeterminate = object;
 ```
 
+The type of the value returned by UseInvokeEvent when InvokeOptions.suspend
+is passed and before a [Handler](Handler.md) registered in `main` has returned a [Response](Response.md).
+
 ## Properties
 
 ### data

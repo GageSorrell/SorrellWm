@@ -5,3 +5,5 @@
 ```ts
 const EmptyOverloadParameterValue: unique symbol;
 ```
+
+This is used to define the type [EmptyOverloadParameter](../type-aliases/EmptyOverloadParameter.md).

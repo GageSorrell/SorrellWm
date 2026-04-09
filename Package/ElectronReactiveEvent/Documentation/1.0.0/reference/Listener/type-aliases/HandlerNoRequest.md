@@ -1,15 +1,15 @@
-[electron-reactive-event](../../index.md) / [Listener](../index.md) / HandlerInternal
+[electron-reactive-event](../../index.md) / [Listener](../index.md) / HandlerNoRequest
 
-# HandlerInternal Type
+# HandlerNoRequest Type
 
 ```ts
-type HandlerInternal<PackageKey, ChannelType> = (
+type HandlerNoRequest<PackageKey, ChannelType> = (
 	event,
-	request,
 ) => Promise<RawResponse<PackageKey, ChannelType>>;
 ```
 
-The base type for [handlers](Handler.md).
+A [Handler](Handler.md) that subscribes to an event whose declaration does
+_not_ have a request type.
 
 ## Type Parameters
 
@@ -21,7 +21,7 @@ The unique string that identifies your package.
 
 ### ChannelType
 
-`ChannelType` _extends_ [`Any`](../../Channel/namespaces/Channel/namespaces/Handler/type-aliases/Any.md)\<`PackageKey`\>
+`ChannelType` _extends_ [`NoRequest`](../../Channel/namespaces/Channel/namespaces/Handler/type-aliases/NoRequest.md)\<`PackageKey`\>
 
 The channel that uniquely identifies the desired
 event declaration.
@@ -31,10 +31,6 @@ event declaration.
 ### event
 
 `IpcMainInvokeEvent`
-
-### request
-
-[`Request`](Request.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
 
 ## Returns
 

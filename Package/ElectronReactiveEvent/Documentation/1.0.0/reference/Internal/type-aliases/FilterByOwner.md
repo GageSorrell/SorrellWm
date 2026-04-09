@@ -3,11 +3,11 @@
 # FilterByOwner Type
 
 ```ts
-type FilterByOwner<PackageKey, Owner> = {
+type FilterByOwner<PackageKey, OwnerType> = {
 	[ChannelType in keyof FilterByOwnerHelper<
 		PackageKey,
-		Owner
-	> as FilterByOwnerHelper<PackageKey, Owner>[ChannelType] extends true
+		OwnerType
+	> as FilterByOwnerHelper<PackageKey, OwnerType>[ChannelType] extends true
 		? ChannelType
 		: never]: ChannelType extends keyof Registrar[PackageKey]
 		? Registrar[PackageKey][ChannelType]
@@ -15,12 +15,18 @@ type FilterByOwner<PackageKey, Owner> = {
 };
 ```
 
+All event declarations of a given [PackageKey](#packagekey) and [OwnerType](#ownertype).
+
 ## Type Parameters
 
 ### PackageKey
 
 `PackageKey` _extends_ [`PackageKeys`](PackageKeys.md)
 
-### Owner
+The unique string that identifies your package.
 
-`Owner` _extends_ [`EventOwner`](../../Decl/type-aliases/EventOwner.md)
+### OwnerType
+
+`OwnerType` _extends_ [`EventOwner`](../../Decl/type-aliases/EventOwner.md)
+
+The owner of the event declarations identified by this type.

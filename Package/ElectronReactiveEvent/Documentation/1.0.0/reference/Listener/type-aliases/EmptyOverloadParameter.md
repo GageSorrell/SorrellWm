@@ -5,3 +5,5 @@
 ```ts
 type EmptyOverloadParameter = typeof EmptyOverloadParameterValue;
 ```
+
+This type is used internally by overloaded (private) signatures.

@@ -6,10 +6,10 @@ Channels are the `string`s that uniquely identify the event declarations of a gi
 
 ## Namespaces
 
-| Namespace                                | Description                                                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------ |
-| [Handler](namespaces/Handler/index.md)   | Channels of event declarations that can be used via useInvoke, handle _et al._ |
-| [Listener](namespaces/Listener/index.md) | Channels of event declarations that can be used via send, useOnEvent _et al._  |
+| Namespace                                | Description                                                                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Handler](namespaces/Handler/index.md)   | Channels of event declarations that can be used via [useInvokeEvent](../../../Renderer/Hook/type-aliases/UseInvokeEvent.md), [handle](../../../Main/type-aliases/Handle.md) _et al._ |
+| [Listener](namespaces/Listener/index.md) | Channels of event declarations that can be used via [send](../../../Main/type-aliases/Send.md), [useOnEvent](../../../Renderer/Hook/type-aliases/UseOnEvent.md) _et al._             |
 
 ## Type Aliases
 

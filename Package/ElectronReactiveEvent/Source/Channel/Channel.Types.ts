@@ -201,14 +201,14 @@ export namespace Channel
         >;
 
     /**
-     * Channels of event declarations that can be used via {@link useInvoke},
-     * {@link handle} *et al.*
+     * Channels of event declarations that can be used via {@link Renderer.UseInvokeEvent | useInvokeEvent},
+     * {@link Main.Handle | handle} *et al.*
      */
     export namespace Handler
     {
         /**
-         * Channels of event declarations that can be used via {@link send},
-         * {@link useOnEvent} *et al.*
+         * Channels of event declarations that can be used via {@link Main.Send | send},
+         * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
          *
          * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
@@ -320,14 +320,14 @@ export namespace Channel
     }
 
     /**
-     * Channels of event declarations that can be used via {@link send},
-     * {@link useOnEvent} *et al.*
+     * Channels of event declarations that can be used via {@link Main.Send | send},
+     * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
      */
     export namespace Listener
     {
         /**
-         * Channels of event declarations that can be used via {@link send},
-         * {@link useOnEvent} *et al.*
+         * Channels of event declarations that can be used via {@link Main.Send | send},
+         * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
          *
          * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam OwnerType - The owner of the event declarations identified by this type.

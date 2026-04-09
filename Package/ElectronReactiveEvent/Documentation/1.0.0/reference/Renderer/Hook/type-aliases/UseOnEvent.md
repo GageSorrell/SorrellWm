@@ -51,4 +51,4 @@ The callback function that will listen on [channel](#type).
 
 readonly \[[`OffEventDeferred`](OffEventDeferred.md)\<`PackageKey`\>\]
 
-A function that will unregister the [listener](#type).
+A function that will unregister the given [listener](#type).

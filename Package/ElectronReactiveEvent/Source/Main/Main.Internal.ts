@@ -67,7 +67,10 @@ function HandleBase<
         type ThisRequest = Request<PackageKey, RendererOwner, typeof Channel>;
         type ThisRawResponse = RawResponse<PackageKey, typeof Channel>;
         const RawResponse: ThisRawResponse =
-            await (Handler as HandlerInternal<PackageKey>)(Event, (ArgumentVector[0] as ThisRequest));
+            await (Handler as HandlerInternal<PackageKey, typeof Channel>)(
+                Event,
+                (ArgumentVector[0] as ThisRequest)
+            );
 
         if (RawResponse instanceof ReactiveEventErrorInternal)
         {
@@ -99,8 +102,8 @@ function HandleBase<
 }
 
 /**
- *
- * @param channel
+ * @inheritdoc RemoveHandler:Signature
+ * @group Internal
  */
 export function removeHandler<
     PackageKey extends PackageKeys,
@@ -226,6 +229,20 @@ export function send<
     channel: ChannelType,
     request: Request<PackageKey, MainOwner, typeof channel>
 ): void;
+/**
+ * @inheritdoc Send:NoRequestAllWindows
+ * @group Internal
+ */
+export function send<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+    browserWindows: undefined,
+    channel: ChannelType
+): void;
+/**
+ * @inheritdoc Send:RequestAllWindows
+ * @group Internal
+ */
 export function send<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
@@ -233,6 +250,10 @@ export function send<
     channel: ChannelType,
     request: Request<PackageKey, MainOwner, typeof channel>
 ): void;
+/**
+ * @inheritdoc Send
+ * @group Internal
+ */
 export function send<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
@@ -243,6 +264,7 @@ export function send<
         | EmptyOverloadParameter = EmptyOverloadParameterValue
 ): void
 {
+    // eslint-disable-next-line jsdoc/require-jsdoc
     function Send(BrowserWindow: BrowserWindow): void
     {
         if (request !== EmptyOverloadParameterValue)

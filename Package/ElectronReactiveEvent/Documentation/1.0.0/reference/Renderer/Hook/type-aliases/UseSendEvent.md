@@ -5,7 +5,7 @@
 ```ts
 type UseSendEvent<PackageKey> = {
 	<ChannelType>(channel): void;
-	<ChannelType>(channel): void;
+	<ChannelType>(channel, request): void;
 };
 ```
 
@@ -49,15 +49,20 @@ The channel of the event that you wish to send.
 
 `void`
 
-The result returned by `main`.
+### Note
+
+\| Sendable events do _not_ end with a response returned by
+`main`. If you wish to send an event to `main` such that it returns a
+[response](InvokeResponse.md), declare the EventDecl \| event type
+with a `ResponseType !== {@link EmptyEventParameter}`.
 
 ## Call Signature
 
 ```ts
-<ChannelType>(channel): void;
+<ChannelType>(channel, request): void;
 ```
 
-Invoke an event when the containing component mounts, whose event declaration
+Send an event when the containing component mounts, whose event declaration
 defines a request type.
 
 ### Type Parameters
@@ -77,8 +82,26 @@ event declaration.
 
 The channel of the event that you wish to invoke.
 
+#### request
+
+[`Request`](../../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
+
+The request sent with this event.
+
 ### Returns
 
 `void`
 
-The result returned by `main`.
+### Note
+
+\| Sendable events do _not_ end with a response returned by
+`main`. If you wish to send an event to `main` such that it returns a
+[response](InvokeResponse.md), declare the EventDecl \| event type
+with a `ResponseType !== {@link EmptyEventParameter}`.
+
+## Note
+
+\| Sendable events do _not_ end with a response returned by
+`main`. If you wish to send an event to `main` such that it returns a
+[response](InvokeResponse.md), declare the EventDecl \| event type
+with a `ResponseType !== {@link EmptyEventParameter}`.

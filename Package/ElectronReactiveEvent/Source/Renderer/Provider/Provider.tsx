@@ -19,6 +19,7 @@ import type { ReactiveEventProviderProps } from "./Provider.Types.js";
  * @param Props - The children and necessary IPC functions.
  * @param Props.children - The portion of your application which uses `electron-reactive-event`.
  * @param Props.value - The IPC functions needed by `electron-reactive-event`.
+ *
  * @returns Your application, equipped with the functionality needed to use `electron-reactive-event`.
  */
 export function ReactiveEventProvider(

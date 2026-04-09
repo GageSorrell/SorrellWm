@@ -4,14 +4,14 @@
 
 ```ts
 type UseInvokeEvent<PackageKey> = {
-	<ChannelType>(channel): never;
+	<ChannelType>(channel): Response<PackageKey, ChannelType>;
 	<ChannelType, SuspendsType>(
 		channel,
 		options,
 	): SuspendsType extends true
 		? ResponseSync<PackageKey, ChannelType>
 		: Response<PackageKey, ChannelType>;
-	<ChannelType>(channel, request): never;
+	<ChannelType>(channel, request): Response<PackageKey, ChannelType>;
 	<ChannelType, SuspendsType>(
 		channel,
 		request,
@@ -35,7 +35,7 @@ The unique string that identifies your package.
 ## Call Signature
 
 ```ts
-<ChannelType>(channel): never;
+<ChannelType>(channel): Response<PackageKey, ChannelType>;
 ```
 
 Invoke an event when the containing component mounts, whose event declaration
@@ -60,7 +60,7 @@ The channel of the event that you wish to invoke.
 
 ### Returns
 
-`never`
+[`Response`](../../../Listener/type-aliases/Response.md)\<`PackageKey`, `ChannelType`\>
 
 The result returned by `main`.
 
@@ -110,7 +110,7 @@ The result returned by `main`.
 ## Call Signature
 
 ```ts
-<ChannelType>(channel, request): never;
+<ChannelType>(channel, request): Response<PackageKey, ChannelType>;
 ```
 
 Invoke an event when the containing component mounts, whose event declaration
@@ -141,7 +141,7 @@ The request of this event.
 
 ### Returns
 
-`never`
+[`Response`](../../../Listener/type-aliases/Response.md)\<`PackageKey`, `ChannelType`\>
 
 The result returned by `main`.
 

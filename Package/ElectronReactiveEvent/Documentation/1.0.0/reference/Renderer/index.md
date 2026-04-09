@@ -2,10 +2,6 @@
 
 # Renderer
 
-## TODO
-
-Write description.
-
 ## References
 
 ### EqualityCheck

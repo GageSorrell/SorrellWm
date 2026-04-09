@@ -8,7 +8,7 @@ type RawResponse<PackageKey, ChannelType> =
 	| RawResponseError<PackageKey, ChannelType>;
 ```
 
-Your listeners can return values directly using the types in your event declarations,
+Your [handlers](Handler.md) can return values directly using the types in your event declarations,
 _i.e._, return your `ResponseType` when your event succeeds, and the `ErrorType` when
 your event fails.
 
@@ -21,6 +21,11 @@ so that it receives data in a homogenous structure: the [Response](Response.md) 
 
 `PackageKey` _extends_ [`PackageKeys`](../../Internal/type-aliases/PackageKeys.md)
 
+The unique string that identifies your package.
+
 ### ChannelType
 
 `ChannelType` _extends_ [`Any`](../../Channel/namespaces/Channel/namespaces/Handler/type-aliases/Any.md)\<`PackageKey`\>
+
+The channel that uniquely identifies the desired
+event declaration.

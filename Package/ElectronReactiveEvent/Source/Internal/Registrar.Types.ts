@@ -12,6 +12,17 @@ import type { OwnerKey } from "./Decl.Types";
 // @TODO TEMPORARY.
 // export interface Registrar { }
 
+/**
+ * The `Registrar` interface is used internally to store all {@link EventDecl | event declarations}
+ * used in a given project.  Event declarations are scoped to the package in which they are declared,
+ * and this scope is resolved via the `PackageKey` type parameter that is had by almost all generic types
+ * in this package.
+ *
+ * Event declarations are added to the `Registrar` via
+ * {@link https://www.typescriptlang.org/docs/handbook/declaration-merging.html | module augmentation}.
+ * Writing these `declare module` blocks is automated by the `electron-reactive-event-cli`,
+ * although using this is optional.
+ */
 export interface Registrar
 {
     __Internal__:
@@ -93,6 +104,10 @@ export interface Registrar
     }
 }
 
+/**
+ * This is the union of all `PackageKey` values used in a given project (that is, a given package
+ * using `electron-reactive-event`, and any dependencies that also use `electron-reactive-event`).
+ */
 export type PackageKeys = Exclude<keyof Registrar, number | symbol>;
 
 type ChannelsHelper<PackageKey extends PackageKeys> =
@@ -117,13 +132,19 @@ type FilterByOwnerHelper<
             : never;
     };
 
+/**
+ * All event declarations of a given {@link PackageKey} and {@link OwnerType}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam OwnerType - The owner of the event declarations identified by this type.
+ */
 export type FilterByOwner<
     PackageKey extends PackageKeys,
-    Owner extends EventOwner
+    OwnerType extends EventOwner
 > =
     {
-        [ ChannelType in keyof FilterByOwnerHelper<PackageKey, Owner> as
-        FilterByOwnerHelper<PackageKey, Owner>[
+        [ ChannelType in keyof FilterByOwnerHelper<PackageKey, OwnerType> as
+        FilterByOwnerHelper<PackageKey, OwnerType>[
             ChannelType
             // keyof FilterByOwnerHelper<PackageKey, Owner>
             // Extract<ChannelType, keyof FilterByOwnerHelper<PackageKey, Owner>>
@@ -134,6 +155,16 @@ export type FilterByOwner<
             : never;
     };
 
+/**
+ * All `main` event declarations of a given {@link PackageKey}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type MainRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, MainOwner>;
 
+/**
+ * All `renderer` event declarations of a given {@link PackageKey}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type RendererRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, RendererOwner>;

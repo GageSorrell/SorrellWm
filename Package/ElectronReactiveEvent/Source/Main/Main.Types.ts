@@ -134,6 +134,48 @@ export type Send<PackageKey extends PackageKeys> =
             channel: ChannelType,
             request: Request<PackageKey, MainOwner, typeof channel>
         ): void;
+
+        /**
+         * Send an event to all {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
+         * whose event declarations do *not* define a request type.  This overload implicitly calls
+         * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
+         * to where the event will be sent.
+         * @param channel - The channel that uniquely identifies the desired
+         * event declaration.
+         * @param request - The request of the given event.
+         * {@label NoRequestAllWindows}
+         */
+        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+            browserWindows: undefined,
+            channel: ChannelType,
+            request: Request<PackageKey, MainOwner, typeof channel>
+        ): void;
+
+        /**
+         * Send an event to all {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
+         * whose event declarations define a request type.  This overload implicitly calls
+         * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
+         * to where the event will be sent.
+         * @param channel - The channel that uniquely identifies the desired
+         * event declaration.
+         * @param request - The request of the given event.
+         * {@label RequestAllWindows}
+         */
+        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+            browserWindows: undefined,
+            channel: ChannelType,
+            request: Request<PackageKey, MainOwner, typeof channel>
+        ): void;
     };
 
 /**

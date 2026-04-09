@@ -9,8 +9,8 @@ type Any<PackageKey, OwnerType> = Exclude<
 >;
 ```
 
-Channels of event declarations that can be used via send,
-useOnEvent _et al._
+Channels of event declarations that can be used via [send](../../../../../../Main/type-aliases/Send.md),
+[useOnEvent](../../../../../../Renderer/Hook/type-aliases/UseOnEvent.md) _et al._
 
 ## Type Parameters
 

@@ -25,3 +25,5 @@ function removeHandler<PackageKey, ChannelType>(channel): void;
 ## Returns
 
 `void`
+
+## Inherit Doc
