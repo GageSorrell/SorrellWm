@@ -3,8 +3,8 @@
 # NoResponse Type
 
 ```ts
-type NoResponse<PackageKey, Owner> = Exclude<
-	Any<PackageKey, Owner>,
+type NoResponse<PackageKey, OwnerType> = Exclude<
+	Any<PackageKey, OwnerType>,
 	Extract<Values<WithResponseHelper<PackageKey>>, string>
 >;
 ```
@@ -17,6 +17,10 @@ Channels whose event declarations do _not_ define a response type.
 
 `PackageKey` _extends_ [`PackageKeys`](../../../../Internal/type-aliases/PackageKeys.md)
 
-### Owner
+The unique string that identifies your package.
 
-`Owner` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+### OwnerType
+
+`OwnerType` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+
+The owner of the event declarations identified by this type.

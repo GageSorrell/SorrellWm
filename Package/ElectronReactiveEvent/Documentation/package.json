@@ -5,7 +5,7 @@
     "predocs:dev": "typedoc",
     "docs:dev": "vitepress dev --host",
     "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+    "docs:preview": "vitepress preview --host"
   },
   "devDependencies": {
     "prettier": "^3.8.1",

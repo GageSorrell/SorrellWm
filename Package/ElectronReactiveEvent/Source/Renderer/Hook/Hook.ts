@@ -5,6 +5,7 @@
  */
 
 import type {
+    ReactiveEventHooks,
     UseInvokeEvent,
     UseInvokeEventDeferred,
     UseOffEventDeferred,
@@ -13,7 +14,7 @@ import type {
     UseOnceEvent,
     UseOnceEventDeferred,
     UseSendEvent,
-    UseSendEventDeferred } from "./Hook.Internal.Types";
+    UseSendEventDeferred } from "./Hook.Types";
 import {
     useInvokeEvent,
     useInvokeEventDeferred,
@@ -25,8 +26,18 @@ import {
     useSendEvent,
     useSendEventDeferred } from "./Hook.Internal";
 import type { PackageKeys } from "../../Internal";
-import type { ReactiveEventHooks } from "./Hook.Types";
 
+/**
+ * This is the entrypoint of `electron-reactive-event` in the `renderer`.
+ * To use these functions, you must wrap the part of your application in which
+ * you wish to use `electron-reactive-event` in a {@link ReactiveEventProvider}
+ * (to which you must supply the necessary
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-renderer | IpcRenderer functions}).
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @returns The hooks provided by `electron-reactive-event`, scoped to your {@link PackageKey}.
+ */
 export function getReactiveEventHooks<PackageKey extends PackageKeys>(): ReactiveEventHooks<PackageKey>
 {
     return {

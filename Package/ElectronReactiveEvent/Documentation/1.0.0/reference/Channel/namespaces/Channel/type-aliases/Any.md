@@ -3,14 +3,13 @@
 # Any Type
 
 ```ts
-type Any<PackageKey, Owner> = Exclude<
-	keyof FilterByOwner<PackageKey, Owner>,
+type Any<PackageKey, OwnerType> = Exclude<
+	keyof FilterByOwner<PackageKey, OwnerType>,
 	number | symbol
 >;
 ```
 
-A channel is the (`string`) key of an event declaration property in a registrar,
-namespaced to your package.
+Channels are the `string`s that uniquely identify the event declarations of a given package.
 
 ## Type Parameters
 
@@ -20,6 +19,8 @@ namespaced to your package.
 
 The unique string that identifies your package.
 
-### Owner
+### OwnerType
 
-`Owner` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+`OwnerType` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+
+The owner of the event declarations identified by this type.

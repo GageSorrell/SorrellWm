@@ -8,7 +8,7 @@ type ReactiveEventErrorDataInternal<PackageKey, ChannelType> = Readonly<
 >;
 ```
 
-An error that always has a `Payload` property (it is EmptyOverloadParameter if empty).
+An error that always has a `Payload` property (it is [EmptyOverloadParameter](../../Listener/type-aliases/EmptyOverloadParameter.md) if empty).
 
 ## Type Parameters
 

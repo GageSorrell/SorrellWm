@@ -3,8 +3,14 @@
 # Any Type
 
 ```ts
-type Any<PackageKey, Owner> = Exclude<Any<PackageKey, Owner>, Any<PackageKey>>;
+type Any<PackageKey, OwnerType> = Exclude<
+	Any<PackageKey, OwnerType>,
+	Any<PackageKey>
+>;
 ```
+
+Channels of event declarations that can be used via send,
+useOnEvent _et al._
 
 ## Type Parameters
 
@@ -12,6 +18,10 @@ type Any<PackageKey, Owner> = Exclude<Any<PackageKey, Owner>, Any<PackageKey>>;
 
 `PackageKey` _extends_ [`PackageKeys`](../../../../../../Internal/type-aliases/PackageKeys.md)
 
-### Owner
+The unique string that identifies your package.
 
-`Owner` _extends_ [`EventOwner`](../../../../../../Decl/type-aliases/EventOwner.md)
+### OwnerType
+
+`OwnerType` _extends_ [`EventOwner`](../../../../../../Decl/type-aliases/EventOwner.md)
+
+The owner of the event declarations identified by this type.

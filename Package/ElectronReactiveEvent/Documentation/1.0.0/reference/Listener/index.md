@@ -7,6 +7,7 @@
 | Type Alias                                                             | Description                                                                                                                                                                                   |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [AnyCallback](type-aliases/AnyCallback.md)                             | -                                                                                                                                                                                             |
+| [EmptyOverloadParameter](type-aliases/EmptyOverloadParameter.md)       | -                                                                                                                                                                                             |
 | [Handler](type-aliases/Handler.md)                                     | -                                                                                                                                                                                             |
 | [HandlerInternal](type-aliases/HandlerInternal.md)                     | -                                                                                                                                                                                             |
 | [IpcEventFromOwner](type-aliases/IpcEventFromOwner.md)                 | -                                                                                                                                                                                             |
@@ -22,3 +23,9 @@
 | [ResponseSuccess](type-aliases/ResponseSuccess.md)                     | -                                                                                                                                                                                             |
 | [ResponseSync](type-aliases/ResponseSync.md)                           | -                                                                                                                                                                                             |
 | [ResponseSyncIndeterminate](type-aliases/ResponseSyncIndeterminate.md) | -                                                                                                                                                                                             |
+
+## Variables
+
+| Variable                                                                | Description |
+| ----------------------------------------------------------------------- | ----------- |
+| [EmptyOverloadParameterValue](variables/EmptyOverloadParameterValue.md) | -           |

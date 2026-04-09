@@ -8,7 +8,7 @@ type ReactiveEventErrorPayload<PackageKey, ChannelType> =
 ```
 
 The payload of an error type, derived from [ReactiveEventErrorDataInternal](ReactiveEventErrorDataInternal.md).
-It is EmptyOverloadParameter if the event declaration has no error payload type.
+It is [EmptyOverloadParameter](../../Listener/type-aliases/EmptyOverloadParameter.md) if the event declaration has no error payload type.
 
 ## Type Parameters
 

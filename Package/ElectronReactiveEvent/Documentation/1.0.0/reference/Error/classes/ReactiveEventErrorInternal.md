@@ -15,7 +15,7 @@ The unique string that identifies your package.
 
 ### ChannelType
 
-`ChannelType` _extends_ [`ErrorMessage`](../../Channel/namespaces/Channel/namespaces/Handler/type-aliases/ErrorMessage.md)\<`PackageKey`\>
+`ChannelType` _extends_ [`ErrorMessageOnly`](../../Channel/namespaces/Channel/namespaces/Handler/type-aliases/ErrorMessageOnly.md)\<`PackageKey`\>
 
 The channel that uniquely identifies the desired
 event declaration.

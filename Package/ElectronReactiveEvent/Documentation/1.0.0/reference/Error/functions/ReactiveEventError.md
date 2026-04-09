@@ -1,6 +1,6 @@
 [electron-reactive-event](../../index.md) / [Error](../index.md) / ReactiveEventError
 
-# ReactiveEventError() Function
+# ReactiveEventError Function
 
 ## Call Signature
 

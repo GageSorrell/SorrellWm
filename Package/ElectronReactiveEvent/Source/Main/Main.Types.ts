@@ -4,50 +4,131 @@
  * License:   MIT
  */
 
-import type { Handler, Request } from "../Listener";
-import type { Channel } from "../Channel";
 import type { BrowserWindow, IpcMain } from "electron/main";
-import type { PackageKeys } from "../Internal";
+import type { Handler, Request } from "../Listener/index.js";
 import type { MainOwner, RendererOwner } from "../Decl";
+import type { Channel } from "../Channel";
+import type { MainListener } from "./Main.Internal.Types";
+import type { PackageKeys } from "../Internal";
 
+/**
+ * The type-safe form of the listener passed to {@link IpcMain.on} *et al.*
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type SendableEventHandler<PackageKey extends PackageKeys> =
     {
-        <ChannelType extends Channel.Listener.NoRequest<PackageKey, RendererOwner>>(
-            channel: ChannelType
-        ): void;
-
-        <ChannelType extends Channel.Listener.Request<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
             channel: ChannelType,
-            request: Request<PackageKey, RendererOwner, typeof channel>
+            listener: MainListener<PackageKey, typeof channel>
         ): void;
     };
 
-export type InvokableEventHandler<PackageKey extends PackageKeys> =
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainhandlechannel-listener | IpcMain.handle}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
+export type Handle<PackageKey extends PackageKeys> =
     {
+        /**
+         * Subscribe a {@link listener} to an event declaration given by {@link channel},
+         * which returns a response to the `renderer`.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The {@link Channel.Handler.Any | invokable channel} that uniquely
+         * identifies the invokable event to which the {@link listener} will be subscribed.
+         * @param handler - The callback which will be subscribed to the given {@link channel}.
+         *
+         * {@label Signature}
+         */
         <ChannelType extends Channel.Handler.Any<PackageKey>>(
             channel: ChannelType,
             listener: Handler<PackageKey, typeof channel>
         ): void;
     };
 
+/**
+ * The type-safe form of {@link IpcMain.send}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type Send<PackageKey extends PackageKeys> =
     {
+        /* eslint-disable @stylistic/max-len */
+
+        /**
+         * Send an event to the `renderer`, whose event declaration does *not* define
+         * a request type.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param browserWindow - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow}
+         * to where the event will be sent.
+         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
+         * identifies the event declaration.
+         * {@label NoRequestSingular}
+         */
         <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
             browserWindow: BrowserWindow,
             channel: ChannelType
         ): void;
 
+        /**
+         * Send an event to the `renderer`, whose event declaration defines a request type.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param browserWindow - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow}
+         * to where the event will be sent.
+         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
+         * identifies the event declaration.
+         * @param request - The request of the given event.
+         * {@label RequestSingular}
+         */
         <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
             browserWindow: BrowserWindow,
             channel: ChannelType,
             request: Request<PackageKey, MainOwner, typeof channel>
         ): void;
 
+        /**
+         * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
+         * whose event declarations do *not* define a request type.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
+         * to where the event will be sent.
+         * @param channel - The channel that uniquely identifies the desired
+         * event declaration.
+         * {@label NoRequestPlural}
+         */
         <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
             browserWindows: Array<BrowserWindow>,
             channel: ChannelType
         ): void;
 
+        /**
+         * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
+         * whose event declarations define a request type.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
+         * to where the event will be sent.
+         * @param channel - The channel that uniquely identifies the desired
+         * event declaration.
+         * @param request - The request of the given event.
+         * {@label RequestPlural}
+         */
         <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
             browserWindows: Array<BrowserWindow>,
             channel: ChannelType,
@@ -55,23 +136,176 @@ export type Send<PackageKey extends PackageKeys> =
         ): void;
     };
 
-export type On<PackageKey extends PackageKeys> = SendableEventHandler<PackageKey>;
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
+export type On<PackageKey extends PackageKeys> =
+    {
+        /**
+         * Subscribe a {@link listener} to an event declaration given by {@link channel},
+         * which does *not* return a response to the `renderer`.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
+         * identifies the sendable event to which the {@link listener} will be subscribed.
+         * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
+         *
+         * {@label Signature}
+         */
+        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+            channel: ChannelType,
+            listener: MainListener<PackageKey, typeof channel>
+        ): void;
+    };
 
-export type Once<PackageKey extends PackageKeys> = SendableEventHandler<PackageKey>;
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainoncechannel-listener | IpcMain.once}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
+export type Once<PackageKey extends PackageKeys> =
+    {
+        /**
+         * Subscribe a {@link listener} to an event declaration given by {@link channel},
+         * which does *not* return a response to the `renderer`.  The {@link listener}
+         * will be unsubscribed after it is called once.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
+         * identifies the sendable event to which the {@link listener} will be subscribed.
+         * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
+         *
+         * {@label Signature}
+         */
+        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+            channel: ChannelType,
+            listener: MainListener<PackageKey, typeof channel>
+        ): void;
+    };
 
-export type Off<PackageKey extends PackageKeys> = SendableEventHandler<PackageKey>;
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainoffchannel-listener | IpcMain.off}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
+export type Off<PackageKey extends PackageKeys> =
+    {
+        /**
+         * Unsubscribe a {@link listener} from an event declaration given by {@link channel}.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired event declaration.
+         *
+         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
+         * identifies the sendable event to which the {@link listener} will be subscribed.
+         * @param listener - The {@link MainListener} which will be unsubscribed from the given
+         * {@link channel}.
+         *
+         * {@label Signature}
+         */
+        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+            channel: ChannelType,
+            listener: MainListener<PackageKey, typeof channel>
+        ): void;
+    };
 
-export type Handle<PackageKey extends PackageKeys> = InvokableEventHandler<PackageKey>;
+/* eslint-disable @stylistic/max-len */
 
-export type HandleOnce<PackageKey extends PackageKeys> = Handle<PackageKey>;
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainhandleoncechannel-listener | IpcMain.handleOnce}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
+export type HandleOnce<PackageKey extends PackageKeys> =
+    {
+        /**
+         * Subscribe a {@link listener} to an event declaration given by {@link channel}.
+         * The {@link listener} will be unsubscribed after being invoked once.
+         *
+         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * event declaration.
+         *
+         * @param channel - The {@link Channel.Handler.Any | invokable channel} that uniquely
+         * identifies the invokable event to which the {@link listener} will be subscribed.
+         * @param listener - The {@link Handler} which will be subscribed to the given {@link channel}.
+         *
+         * {@label Signature}
+         */
+        <ChannelType extends Channel.Handler.Any<PackageKey>>(
+            channel: ChannelType,
+            listener: Handler<PackageKey, typeof channel>
+        ): void;
+    };
 
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovealllistenerschannel | IpcMain.removeAllListeners}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
+export type RemoveAllListeners<PackageKey extends PackageKeys> =
+    {
+        /**
+         * Remove all listeners of the given {@link channel}.
+         * If no {@link channel} is specified, then *all* listeners of all channels
+         * will be unsubscribed.
+         *
+         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely identifies
+         * the event declaration from which all currently-subscribed listeners will be unsubscribed.
+         *
+         * {@label Signature}
+         */
+        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+            channel?: ChannelType
+        ): void;
+    };
+
+/**
+ * The type-safe form of
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovehandlerchannel | IpcMain.removeHandler}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type RemoveHandler<PackageKey extends PackageKeys> =
     {
+        /**
+         * Remove the handler (listener) of the given {@link channel}, if one exists.
+         *
+         * @param channel - The {@link Channel.Handler.Any | invokable channel} that uniquely identifies
+         * the event declaration from which the handler will be unsubscribed, if one exists.
+         *
+         * {@label Signature}
+         */
         <ChannelType extends Channel.Handler.Any<PackageKey>>(
             channel: ChannelType
         ): void;
     };
 
+/**
+ * Type-safe IPC functions for events sent by `main`.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ *
+ * @property addListener - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainaddlistenerchannel-listener | IpcMain.addListener }
+ * @property handle - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainhandlechannel-listener | IpcMain.handle }
+ * @property handleOnce - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainhandleoncechannel-listener | IpcMain.handleOnce }
+ * @property off - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainoffchannel-listener | IpcMain.off }
+ * @property on - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on }
+ * @property once - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainoncechannel-listener | IpcMain.once }
+ * @property removeHandler - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovehandlerchannel | IpcMain.removeHandler }
+ * @property removeListener - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovelistenerchannel-listener | IpcMain.removeListener }
+ * @property removeAllListeners - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovealllistenerschannel | IpcMain.removeAllListeners }
+ * @property send - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/web-contents#contentssendchannel-args | webContents.send } for one or many {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}.
+ */
 export type ReactiveEventFunctions<PackageKey extends PackageKeys> =
     Readonly<{
         addListener: On<PackageKey>;
@@ -82,9 +316,16 @@ export type ReactiveEventFunctions<PackageKey extends PackageKeys> =
         once: Once<PackageKey>;
         removeHandler: RemoveHandler<PackageKey>;
         removeListener: Off<PackageKey>;
+        removeAllListeners: RemoveAllListeners<PackageKey>;
         send: Send<PackageKey>;
     }>;
 
+/**
+ * The {@link https://www.electronjs.org/docs/latest/api/ipc-main | IpcMain} type, but with the type-safe IPC functions
+ * given in {@link ReactiveEventFunctions}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ */
 export type IpcMainReactive<PackageKey extends PackageKeys> =
     Omit<IpcMain, keyof ReactiveEventFunctions<PackageKey>> &
     ReactiveEventFunctions<PackageKey>;

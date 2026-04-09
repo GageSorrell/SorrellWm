@@ -1,7 +1,9 @@
-/* File:      index.ts
+/* File:      index.Documentation.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-export type * from "./Listener.Types.js";
+export * from "./Listener.Types.js";
+export * from "./Listener.Internal.Types.js";
+export * from "./Listener.Internal.js";

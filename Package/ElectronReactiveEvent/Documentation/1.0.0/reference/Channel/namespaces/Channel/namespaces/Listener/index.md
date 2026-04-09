@@ -2,10 +2,13 @@
 
 # Listener
 
+Channels of event declarations that can be used via send,
+useOnEvent _et al._
+
 ## Type Aliases
 
-| Type Alias                             | Description |
-| -------------------------------------- | ----------- |
-| [Any](type-aliases/Any.md)             | -           |
-| [NoRequest](type-aliases/NoRequest.md) | -           |
-| [Request](type-aliases/Request.md)     | -           |
+| Type Alias                             | Description                                                                   |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| [Any](type-aliases/Any.md)             | Channels of event declarations that can be used via send, useOnEvent _et al._ |
+| [NoRequest](type-aliases/NoRequest.md) | Listener channels whose event declarations do _not_ define a request type.    |
+| [Request](type-aliases/Request.md)     | Listener channels whose event declarations define a request type.             |

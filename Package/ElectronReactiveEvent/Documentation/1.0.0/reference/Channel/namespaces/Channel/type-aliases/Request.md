@@ -3,8 +3,8 @@
 # Request Type
 
 ```ts
-type Request<PackageKey, Owner> = Extract<
-	Any<PackageKey, Owner>,
+type Request<PackageKey, OwnerType> = Extract<
+	Any<PackageKey, OwnerType>,
 	Extract<Values<WithRequestHelper<PackageKey>>, string>
 >;
 ```
@@ -19,6 +19,8 @@ Channels whose event declarations specify a request type.
 
 The unique string that identifies your package.
 
-### Owner
+### OwnerType
 
-`Owner` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+`OwnerType` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+
+The owner of the event declarations identified by this type.

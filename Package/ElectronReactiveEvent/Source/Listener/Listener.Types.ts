@@ -12,7 +12,7 @@ import type {
     Registrar } from "../Internal";
 import type { IpcMainEvent, IpcMainInvokeEvent, IpcRendererEvent } from "electron";
 import type { Channel } from "../Channel";
-import type { ReactiveEventErrorDataInternal } from "../Error";
+import type { ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types";
 
 export type IpcEventFromOwner<OwnerType extends EventOwner> =
     OwnerType extends MainOwner

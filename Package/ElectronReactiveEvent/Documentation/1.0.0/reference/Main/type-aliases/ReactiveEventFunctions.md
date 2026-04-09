@@ -10,14 +10,19 @@ type ReactiveEventFunctions<PackageKey> = Readonly<{
 	off: Off<PackageKey>;
 	on: On<PackageKey>;
 	once: Once<PackageKey>;
+	removeAllListeners: RemoveAllListeners<PackageKey>;
 	removeHandler: RemoveHandler<PackageKey>;
 	removeListener: Off<PackageKey>;
 	send: Send<PackageKey>;
 }>;
 ```
 
+Type-safe IPC functions for events sent by `main`.
+
 ## Type Parameters
 
 ### PackageKey
 
 `PackageKey` _extends_ [`PackageKeys`](../../Internal/type-aliases/PackageKeys.md)
+
+The unique string that identifies your package.

@@ -27,5 +27,13 @@ const EmptyReactiveEventContextInternal: ReactiveEventContextInternal =
         ...EmptyReactiveEventContext
     };
 
+/* The ESLint rule claims that `ReactiveEventInternalContext` does not have a JSDoc comment, when it does. */
+/* eslint-disable jsdoc/require-jsdoc */
+
+/**
+ * This is the context used by `electron-reactive-event`.
+ *
+ * @group Internal
+ */
 export const ReactiveEventInternalContext: Context<ReactiveEventContextInternal> =
     createContext<ReactiveEventContextInternal>(EmptyReactiveEventContextInternal);

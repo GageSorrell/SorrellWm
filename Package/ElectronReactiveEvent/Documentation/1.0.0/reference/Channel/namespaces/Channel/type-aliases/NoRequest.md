@@ -3,8 +3,8 @@
 # NoRequest Type
 
 ```ts
-type NoRequest<PackageKey, Owner> = Exclude<
-	Any<PackageKey, Owner>,
+type NoRequest<PackageKey, OwnerType> = Exclude<
+	Any<PackageKey, OwnerType>,
 	Extract<Values<WithRequestHelper<PackageKey>>, string>
 >;
 ```
@@ -19,6 +19,8 @@ Channels whose event declarations do _not_ specify a request type.
 
 The unique string that identifies your package.
 
-### Owner
+### OwnerType
 
-`Owner` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+`OwnerType` _extends_ [`EventOwner`](../../../../Decl/type-aliases/EventOwner.md)
+
+The owner of the event declarations identified by this type.

@@ -17,10 +17,12 @@ const Options =
         entryPoints: [
             "../Source/Channel/index.ts",
             "../Source/Decl/index.ts",
-            "../Source/Error/index.ts",
             "../Source/Internal/index.ts",
+            "../Source/Error/index.ts",
             "../Source/Listener/index.ts",
             "../Source/Main/index.ts",
+            "../Source/Renderer/Hook/index.ts",
+            "../Source/Renderer/Provider/index.ts",
             "../Source/Renderer/index.ts"
         ],
         favicon: "./public/logo.png",
@@ -47,9 +49,11 @@ const Options =
                 const GetNameWithoutTypeParameters = () =>
                 {
                     const GenericIndex = Arguments.name.indexOf("\\<");
-                    return (GenericIndex > 0)
+                    const NameMaybeParentheses = (GenericIndex > 0)
                         ? Arguments.name.slice(0, GenericIndex)
                         : Arguments.name;
+
+                    return NameMaybeParentheses.replaceAll("()", "");
                 };
 
                 const Name = GetNameWithoutTypeParameters();

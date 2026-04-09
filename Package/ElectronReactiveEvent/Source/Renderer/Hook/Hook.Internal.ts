@@ -4,8 +4,6 @@
  * License:   MIT
  */
 
-/* eslint-disable jsdoc/require-jsdoc */
-
 import {
     type EffectCallback,
     type RefObject,
@@ -53,6 +51,12 @@ const IndeterminateResponse: ResponseIndeterminate =
 //     return useContext<ReactiveEventContextInternal>(ReactiveEventInternalContext);
 // };
 
+/**
+ * @returns The internal context used to access the
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-renderer | IpcRenderer} functions.
+ *
+ * @group Internal
+ */
 function UseIpcRenderer(): Readonly<ReactiveEventContextInternal["ipcRenderer"]>
 {
     return useContext<ReactiveEventContextInternal>(ReactiveEventInternalContext).ipcRenderer;
@@ -69,6 +73,19 @@ class ImmutableArgumentChangeError<Type> extends Error
     }
 }
 
+/**
+ * Ensure that a given {@link Argument} has not changed between calls.
+ *
+ * @param Argument - The argument of the calling hook whose immutability is enforced
+ * by this hook.
+ * @param AreEqual - The function used to determine whether the current value of the
+ * {@link Argument} is equivalent to the previous value of the {@link Argument}.
+ *
+ * @throws An {@link ImmutableArgumentChangeError} iff the value of the {@link Argument}
+ * changed, according to the given {@link AreEqual} function.
+ *
+ * @group Internal
+ */
 function UseImmutableArgumentCheck<Type>(
     Argument: Type,
     AreEqual: EqualityCheck<Type> | undefined = undefined
@@ -94,11 +111,19 @@ function UseImmutableArgumentCheck<Type>(
     }
 }
 
+/**
+ * @inheritDoc UseInvokeEvent:NoRequest
+ * @group Internal
+ */
 export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
     channel: ChannelType
 ): InvokeResponse<PackageKey, typeof channel, undefined>;
+/**
+ * @inheritDoc UseInvokeEvent:NoRequestOptions
+ * @group Internal
+ */
 export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>,
@@ -106,12 +131,20 @@ export function useInvokeEvent<
     channel: ChannelType,
     options: InvokeOptions<SuspendsType>
 ): InvokeResponse<PackageKey, typeof channel, typeof options>;
+/**
+ * @inheritDoc UseInvokeEvent:Request
+ * @group Internal
+ */
 export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Request<PackageKey>>(
     channel: ChannelType,
     request: Request<PackageKey, RendererOwner, typeof channel>
 ): InvokeResponse<PackageKey, typeof channel, undefined>;
+/**
+ * @inheritDoc UseInvokeEvent:RequestOptions
+ * @group Internal
+ */
 export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Request<PackageKey>,
@@ -120,6 +153,11 @@ export function useInvokeEvent<
     request: Request<PackageKey, RendererOwner, typeof channel>,
     options: InvokeOptions<SuspendsType>
 ): InvokeResponse<PackageKey, typeof channel, typeof options>;
+// eslint-disable-next-line jsdoc/require-param
+/**
+ * @inheritDoc UseInvokeEvent
+ * @group Internal
+ */
 export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>,
