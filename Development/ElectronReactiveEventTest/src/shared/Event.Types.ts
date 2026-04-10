@@ -4,8 +4,9 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventDecl } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
+// eslint-disable-next-line @stylistic/max-len
+// import type { EmptyEventParameter, EventDecl } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
 
-export type GetData = EventDecl<"Main", EmptyEventParameter, number, "GetNah">;
+// export type GetData = EventDecl<"Main", EmptyEventParameter, number, "GetNah">;
 
-export type SetData = EventDecl<"Renderer", number, EmptyEventParameter, "SetNah">;
+// export type SetData = EventDecl<"Renderer", number, EmptyEventParameter, "SetNah">;

@@ -4,10 +4,15 @@
  * License:   MIT
  */
 
-import type { Listener, Request, Response, ResponseSync } from "../../Listener/index.js";
+import type {
+    HandlerRequest,
+    Listener,
+    ListenerRequest,
+    Response,
+    ResponseSync } from "../../Listener/index.js";
 import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types";
 import type { Channel } from "../../Channel";
-import type { IpcRendererEvent } from "electron";
+import type { InvokeOptions } from "./Hook.Unscoped.Types.js";
 import type { PackageKeys } from "../../Internal";
 
 /**
@@ -20,22 +25,7 @@ import type { PackageKeys } from "../../Internal";
 export type RendererListener<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>
-> = Listener<PackageKey, MainOwner, IpcRendererEvent, ChannelType>;
-
-/**
- * The options that may be passed to {@link useInvokeEvent}.
- *
- * @typeParam SuspendsType - The type of the {@link suspend} property, which is used to narrow down
- * the correct return type of {@link useInvokeEvent}.
- *
- * @property suspend - Whether {@link useInvokeEvent} should suspend until it receives a response from
- * `main`.  If `true`, then the {@link InvokeResponse} returned will be of type {@link ResponseSync}, *i.e.*,
- * the `isPending` property will be omitted.
- */
-export type InvokeOptions<SuspendsType extends boolean = boolean> =
-    {
-        suspend: SuspendsType;
-    };
+> = Listener<PackageKey, MainOwner, ChannelType>;
 
 /**
  * The type returned by {@link useInvokeEvent}.
@@ -208,7 +198,7 @@ export type UseSendEvent<PackageKey extends PackageKeys> =
          */
         <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
             channel: ChannelType,
-            request: Request<PackageKey, RendererOwner, typeof channel>
+            request: ListenerRequest<PackageKey, RendererOwner, typeof channel>
         ): void;
     };
 
@@ -279,7 +269,7 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          */
         <ChannelType extends Channel.Handler.Request<PackageKey>>(
             channel: ChannelType,
-            request: Request<PackageKey, RendererOwner, typeof channel>
+            request: HandlerRequest<PackageKey, typeof channel>
         ): InvokeResponse<PackageKey, typeof channel, undefined>;
 
         /**
@@ -299,7 +289,7 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
         <ChannelType extends Channel.Handler.Request<PackageKey>,
             SuspendsType extends boolean>(
             channel: ChannelType,
-            request: Request<PackageKey, RendererOwner, typeof channel>,
+            request: HandlerRequest<PackageKey, typeof channel>,
             options: InvokeOptions<SuspendsType>
         ): InvokeResponse<PackageKey, typeof channel, typeof options>;
     };
@@ -344,7 +334,7 @@ export type InvokeEventDeferred<PackageKey extends PackageKeys> =
          */
         <ChannelType extends Channel.Handler.Request<PackageKey>>(
             channel: ChannelType,
-            request: Request<PackageKey, RendererOwner, typeof channel>
+            request: HandlerRequest<PackageKey, typeof channel>
         ): Promise<ResponseSync<PackageKey, typeof channel>>;
     };
 /**

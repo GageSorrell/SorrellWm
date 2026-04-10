@@ -1,0 +1,21 @@
+{
+    "$schema": "https://electron-reactive-event.sorrell.sh/CliConfig.Schema.json",
+    "AugmentationModulePath": "E:\\SorrellWm\\Development\\ElectronReactiveEventTest\\src\\Reactive.Events.Generated.Types.ts",
+    "PackageKey": "electronreactiveeventtest",
+    "ScopedModulePath": "E:\\SorrellWm\\Development\\ElectronReactiveEventTest\\src\\Reactive.Generated.ts"
+//     /**
+//      * `electron-reactive-event-cli` can create modules for you that export the reactive
+//      * IPC functions, scoped to your `PackageKey`.
+//      */
+//     IpcModulePath?:
+//     {
+//         /** The path of the module that calls `getReactiveIpcMain`, and exports its output. */
+//         Main?: string;
+
+//         /** The path of the module that calls `getReactiveIpcHooks`, and exports its output. */
+//         Renderer?: string;
+//     };
+
+
+
+}

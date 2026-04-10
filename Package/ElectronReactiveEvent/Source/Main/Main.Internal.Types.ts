@@ -4,11 +4,7 @@
  * License:   MIT
  */
 
-import type { IpcMain, IpcMainEvent } from "electron";
-import type { Channel } from "../Channel";
-import type { Listener } from "../Listener/index.js";
-import type { PackageKeys } from "../Internal";
-import type { RendererOwner } from "../Decl";
+import type { IpcMain } from "electron";
 
 /**
  * The type of the listener passed to
@@ -23,16 +19,3 @@ export type NativeHandlerListener = Parameters<IpcMain["handle"]>[1];
  * *et al.*
  */
 export type NativeEventListener = Parameters<IpcMain["on"]>[1];
-
-/**
- * The type-safe type of the listener passed to
- * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on}
- * *et al.*
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- * @typeParam ChannelType - The channel that uniquely identifies the desired event declaration.
- */
-export type MainListener<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>
-> = Listener<PackageKey, RendererOwner, IpcMainEvent, ChannelType>;

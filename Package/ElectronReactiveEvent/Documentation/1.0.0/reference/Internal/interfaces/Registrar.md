@@ -23,8 +23,7 @@ __Internal__: object;
 #### BingBong
 
 ```ts
-BingBong: EventDecl<
-	typeof RendererOwnerValue,
+BingBong: EventDeclHandler<
 	typeof EmptyEventParameterValue,
 	typeof EmptyEventParameterValue,
 	[string, number]
@@ -34,73 +33,38 @@ BingBong: EventDecl<
 #### GetLitFam
 
 ```ts
-GetLitFam: EventDecl<
-	typeof RendererOwnerValue,
-	boolean,
-	typeof EmptyEventParameterValue,
-	string
->;
+GetLitFam: EventDeclHandler<boolean, typeof EmptyEventParameterValue, string>;
 ```
 
 #### MainEmptyEvent
 
 ```ts
-MainEmptyEvent: EventDecl<
-	typeof MainOwnerValue,
-	number,
-	{
-		Foo: string;
-	},
-	[
-		string,
-		{
-			Foo: string;
-		},
-	]
->;
+MainEmptyEvent: EventDeclListener<typeof MainOwnerValue, number>;
 ```
 
 #### MainEmptyEventNoRequest
 
 ```ts
-MainEmptyEventNoRequest: EventDecl<
+MainEmptyEventNoRequest: EventDeclListener<
 	typeof MainOwnerValue,
-	typeof EmptyEventParameterValue,
-	{
-		Foo: string;
-	},
-	[
-		string,
-		{
-			Foo: string;
-		},
-	]
+	typeof EmptyEventParameterValue
 >;
 ```
 
 #### MainEmptyEventNoRequestNoResponse
 
 ```ts
-MainEmptyEventNoRequestNoResponse: EventDecl<
+MainEmptyEventNoRequestNoResponse: EventDeclListener<
 	typeof MainOwnerValue,
-	typeof EmptyEventParameterValue,
-	typeof EmptyEventParameterValue,
-	[
-		string,
-		{
-			foo: string;
-		},
-	]
+	typeof EmptyEventParameterValue
 >;
 ```
 
 #### MainEmptyEventNoRequestNoResponseNoError
 
 ```ts
-MainEmptyEventNoRequestNoResponseNoError: EventDecl<
+MainEmptyEventNoRequestNoResponseNoError: EventDeclListener<
 	typeof MainOwnerValue,
-	typeof EmptyEventParameterValue,
-	typeof EmptyEventParameterValue,
 	typeof EmptyEventParameterValue
 >;
 ```
@@ -108,19 +72,16 @@ MainEmptyEventNoRequestNoResponseNoError: EventDecl<
 #### MainEmptyEventNoRequestNoResponseNoErrorPayload
 
 ```ts
-MainEmptyEventNoRequestNoResponseNoErrorPayload: EventDecl<
+MainEmptyEventNoRequestNoResponseNoErrorPayload: EventDeclListener<
 	typeof MainOwnerValue,
-	typeof EmptyEventParameterValue,
-	typeof EmptyEventParameterValue,
-	string
+	typeof EmptyEventParameterValue
 >;
 ```
 
 #### RendererEmptyEvent
 
 ```ts
-RendererEmptyEvent: EventDecl<
-	typeof RendererOwnerValue,
+RendererEmptyEvent: EventDeclHandler<
 	number,
 	{
 		Foo: string;
@@ -137,8 +98,7 @@ RendererEmptyEvent: EventDecl<
 #### RendererEmptyEventNoRequest
 
 ```ts
-RendererEmptyEventNoRequest: EventDecl<
-	typeof RendererOwnerValue,
+RendererEmptyEventNoRequest: EventDeclHandler<
 	typeof EmptyEventParameterValue,
 	{
 		Foo: string;
@@ -155,8 +115,7 @@ RendererEmptyEventNoRequest: EventDecl<
 #### RendererEmptyEventNoRequestNoResponse
 
 ```ts
-RendererEmptyEventNoRequestNoResponse: EventDecl<
-	typeof RendererOwnerValue,
+RendererEmptyEventNoRequestNoResponse: EventDeclHandler<
 	typeof EmptyEventParameterValue,
 	typeof EmptyEventParameterValue,
 	[
@@ -171,10 +130,8 @@ RendererEmptyEventNoRequestNoResponse: EventDecl<
 #### RendererEmptyEventNoRequestNoResponseNoError
 
 ```ts
-RendererEmptyEventNoRequestNoResponseNoError: EventDecl<
+RendererEmptyEventNoRequestNoResponseNoError: EventDeclListener<
 	typeof RendererOwnerValue,
-	typeof EmptyEventParameterValue,
-	typeof EmptyEventParameterValue,
 	typeof EmptyEventParameterValue
 >;
 ```
@@ -182,8 +139,7 @@ RendererEmptyEventNoRequestNoResponseNoError: EventDecl<
 #### RendererEmptyEventNoRequestNoResponseNoErrorPayload
 
 ```ts
-RendererEmptyEventNoRequestNoResponseNoErrorPayload: EventDecl<
-	typeof RendererOwnerValue,
+RendererEmptyEventNoRequestNoResponseNoErrorPayload: EventDeclHandler<
 	typeof EmptyEventParameterValue,
 	typeof EmptyEventParameterValue,
 	string
@@ -193,23 +149,11 @@ RendererEmptyEventNoRequestNoResponseNoErrorPayload: EventDecl<
 #### ResponsefulMainEvent
 
 ```ts
-ResponsefulMainEvent: EventDecl<
-	typeof MainOwnerValue,
-	number,
-	{
-		foo: string;
-	},
-	string
->;
+ResponsefulMainEvent: EventDeclListener<typeof MainOwnerValue, number>;
 ```
 
 #### ShowLitFam
 
 ```ts
-ShowLitFam: EventDecl<
-	typeof MainOwnerValue,
-	number,
-	typeof EmptyEventParameterValue,
-	string
->;
+ShowLitFam: EventDeclListener<typeof MainOwnerValue, number>;
 ```

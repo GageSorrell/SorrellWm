@@ -3,11 +3,11 @@
 # AnyCallback Type
 
 ```ts
-type AnyCallback<PackageKey, OwnerType, EventType, ChannelType> =
+type AnyCallback<PackageKey, OwnerType, ChannelType> =
 	ChannelType extends Any<PackageKey>
 		? Handler<PackageKey, ChannelType>
 		: ChannelType extends Any<PackageKey, OwnerType>
-			? Listener<PackageKey, OwnerType, EventType, ChannelType>
+			? Listener<PackageKey, OwnerType, ChannelType>
 			: never;
 ```
 
@@ -28,10 +28,6 @@ The unique string that identifies your package.
 `OwnerType` _extends_ [`EventOwner`](../../Decl/type-aliases/EventOwner.md) = [`EventOwner`](../../Decl/type-aliases/EventOwner.md)
 
 The owner of the event declarations identified by this type.
-
-### EventType
-
-`EventType` _extends_ `IpcEvent` = `IpcEvent`
 
 ### ChannelType
 

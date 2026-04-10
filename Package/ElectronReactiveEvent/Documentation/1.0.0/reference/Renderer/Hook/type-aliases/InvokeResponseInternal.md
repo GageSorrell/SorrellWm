@@ -41,7 +41,7 @@ event declaration.
 ### RequestOrOptionsType
 
 `RequestOrOptionsType` _extends_
-\| [`Request`](../../../Listener/type-aliases/Request.md)\<`PackageKey`, [`RendererOwner`](../../../Decl/type-aliases/RendererOwner.md), `ChannelType`\>
+\| [`EventRequest`](../../../Listener/type-aliases/EventRequest.md)\<`PackageKey`, [`RendererOwner`](../../../Decl/type-aliases/RendererOwner.md), `ChannelType`\>
 \| [`InvokeOptions`](InvokeOptions.md)
 \| [`EmptyOverloadParameter`](../../../Listener/type-aliases/EmptyOverloadParameter.md)
 

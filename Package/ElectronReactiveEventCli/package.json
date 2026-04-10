@@ -1,0 +1,43 @@
+{
+  "name": "electron-reactive-event-cli",
+  "version": "1.0.103",
+  "description": "CLI utility for electron-reactive-event.",
+  "bin": {
+    "electron-reactive-event-cli": "./Distribution/Bin.js",
+    "reactive-cli": "./Distribution/Bin.js"
+  },
+  "files": [
+    "./package.json",
+    "./Distribution/**/*"
+  ],
+  "keywords": [
+    "CLI",
+    "type-safe",
+    "IPC",
+    "electron",
+    "react",
+    "typescript"
+  ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm#readme",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "get-types": "node ./Distribution/WriteTypesToClipboard.js",
+    "generate-schema": "npx typescript-json-schema ./tsconfig.JsonSchema.json CliConfig --out ../ElectronReactiveEvent/Documentation/public/CliConfig.Schema.json"
+  },
+  "dependencies": {
+    "@sorrell/utilities": "^1.1.6",
+    "ora": "^9.3.0",
+    "typescript": "^6.0.2"
+  }
+}

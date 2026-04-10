@@ -4,14 +4,12 @@
  * License:   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-namespace */
-
-import type { InvokeOptions, InvokeResponse } from "./Hook.Types.js";
 import type { Channel } from "../../Channel/index.js";
 import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types.js";
+import type { HandlerRequest } from "../../Listener/Listener.Types.js";
+import type { InvokeOptions } from "./Hook.Unscoped.Types.js";
+import type { InvokeResponse } from "./Hook.Types.js";
 import type { PackageKeys } from "../../Internal/index.js";
-import type { RendererOwner } from "../../Decl/Decl.Types.js";
-import type { Request } from "../../Listener/index.js";
 
 /**
  * The type used by {@link InvokeResponseInternal} for the third argument of
@@ -28,7 +26,7 @@ type OptionsFromOverload<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>,
     RequestOrOptionsType extends
-        | Request<PackageKey, RendererOwner, ChannelType>
+        | HandlerRequest<PackageKey, ChannelType>
         | InvokeOptions
         | EmptyOverloadParameter,
     OptionsType extends
@@ -59,7 +57,7 @@ export type InvokeResponseInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>,
     RequestOrOptionsType extends
-        | Request<PackageKey, RendererOwner, ChannelType>
+        | HandlerRequest<PackageKey, ChannelType>
         | InvokeOptions
         | EmptyOverloadParameter,
     OptionsType extends

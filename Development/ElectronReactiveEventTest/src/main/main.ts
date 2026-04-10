@@ -4,14 +4,26 @@
  * License:   MIT
  */
 
-import path from "path";
-import { BrowserWindow, type IpcMainInvokeEvent, app, ipcMain, shell } from "electron";
+/* eslint-disable @typescript-eslint/naming-convention */
+
+import { BrowserWindow, type IpcMainEvent, app, shell } from "electron";
+import type {
+    Channel,
+    EventErrorRecord,
+    HandlerRequest,
+    ListenerRequest,
+    PackageKey,
+    RawResponse,
+    RendererOwner } from "../Reactive.Generated";
+import { handle, on } from "./ReactiveIpc";
+import type { IpcMainInvokeEvent } from "electron/main";
+import MenuBuilder from "./menu";
+import { ReactiveEventError } from "../Reactive.Generated";
+import type { Registrar } from "electron-reactive-event/registrar";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import MenuBuilder from "./menu";
+import path from "path";
 import { resolveHtmlPath } from "./util";
-import { GetMainReactiveEventFunctions, type MainCallbackArgument } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
-import type { IMainRegistrar, IRendererRegistrar } from "../shared/Registrar.Types";
 
 /* eslint global-require: off, no-console: off */
 
@@ -28,47 +40,76 @@ class AppUpdater
 // let mainWindow: BrowserWindow | null = null;
 const mainWindow: BrowserWindow = new BrowserWindow();
 
-const {
-    registerCallback,
-    registerCallbacks,
-    send,
-    unregisterCallback,
-    unregisterCallbacks,
-    unregisterAll
-} = GetMainReactiveEventFunctions<IMainRegistrar, IRendererRegistrar>();
+// const {
+//     registerCallback,
+//     registerCallbacks,
+//     send,
+//     unregisterCallback,
+//     unregisterCallbacks,
+//     unregisterAll
+// } = GetMainReactiveEventFunctions<IMainRegistrar, IRendererRegistrar>();
+handle()
+
+handle("GetDataPayload", async (
+    Event: IpcMainInvokeEvent,
+    Request: HandlerRequest<RendererOwner, "GetDataPayload">
+): Promise<RawResponse<"GetData">> =>
+{
+    type ThisReturnType = RawResponse<"GetDataPayload">;
+    return ReactiveEventError<"GetDataPayload">("NotFound");
+});
+
+send(undefined, "Notify", "Foo");
+
+on("GetData", (Event: IpcMainEvent): void =>
+{
+
+});
+
+on("GetData", (Event: IpcMainEvent, Request: boolean) =>
+{
+
+});
 
 let Data: number = 0;
 
-const OnSetData = async ({ Event, Request }: MainCallbackArgument<"SetData", IRendererRegistrar>): Promise<void> =>
-{
-    Data = Request;
-    return;
-};
+// const OnSetData = async ({ Event, Request }: MainCallbackArgument<"SetData", IRendererRegistrar>): Promise<void> =>
+// {
+//     Data = Request;
+//     return;
+// };
 
-registerCallback("SetData", OnSetData);
-send("Notify", "Foo", mainWindow);
+// registerCallback("SetData", OnSetData);
+// send("Notify", "Foo", mainWindow);
 
-ipcMain.on("ipc-example", async (event, arg) =>
-{
-    const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-    console.log(msgTemplate(arg));
-    event.reply("ipc-example", msgTemplate("pong"));
-});
+// ipcMain.on("ipc-example", async (event, arg) =>
+// {
+//     const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
+//     console.log(msgTemplate(arg));
+//     event.reply("ipc-example", msgTemplate("pong"));
+// });
 
 if (process.env.NODE_ENV === "production")
 {
-    const sourceMapSupport = require("source-map-support");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    type SourceMapSupport = { install: Function; };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sourceMapSupport: SourceMapSupport = require("source-map-support");
     sourceMapSupport.install();
 }
 
-const isDebug =
-    process.env.NODE_ENV === "development" || process.env.DEBUG_PROD === "true";
+const isDebug: boolean = (
+    process.env.NODE_ENV === "development" ||
+    process.env.DEBUG_PROD === "true"
+);
 
 if (isDebug)
 {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require("electron-debug").default();
 }
 
+/* eslint-disable */
 const installExtensions = async () =>
 {
     const installer = require("electron-devtools-installer");
@@ -82,6 +123,7 @@ const installExtensions = async () =>
         )
         .catch(console.log);
 };
+/* eslint-enable */
 
 const createWindow = async () =>
 {
@@ -90,7 +132,7 @@ const createWindow = async () =>
         await installExtensions();
     }
 
-    const RESOURCES_PATH = app.isPackaged
+    const RESOURCES_PATH: string = app.isPackaged
         ? path.join(process.resourcesPath, "assets")
         : path.join(__dirname, "../../assets");
 

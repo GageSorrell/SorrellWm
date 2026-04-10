@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
+import type { EmptyEventParameter, EventErrorRecord, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
 import type { ErrorKey, RequestKey, ResponseKey } from "../Internal/Decl.Types.js";
 import type { ErrorPayloadKey, ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types.js";
 import type {
@@ -12,6 +12,7 @@ import type {
     PackageKeys,
     Registrar,
     Values } from "../Internal/index.js";
+import type { EmptyOverloadParameter } from "../index.Scoped.js";
 
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
 
@@ -42,7 +43,21 @@ type WithErrorHelper<PackageKey extends PackageKeys> =
             ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
                 ? undefined
                 : ChannelType
-            : never
+            : never;
+            // ? Registrar[PackageKey][ChannelType][ErrorKey] extends string
+            //     ? ChannelType
+            //     : Registrar[PackageKey][ChannelType][ErrorKey] extends [ unknown, unknown ]
+            //         ? ChannelType
+            //         : Registrar[PackageKey][ChannelType][ErrorKey] extends EventErrorRecord<infer _, infer __>
+            //             ? ChannelType
+            //             : undefined
+            // : never;
+        //     ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
+        //         ? undefined
+        //         : Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyOverloadParameter
+        //             ? undefined
+        //             : ChannelType
+        //     : never
     };
 
 type WithErrorPayloadHelper<PackageKey extends PackageKeys> =
@@ -55,7 +70,10 @@ type WithErrorPayloadHelper<PackageKey extends PackageKeys> =
                     ? ReactiveEventErrorDataInternal<PackageKey, ChannelType>[ErrorPayloadKey] extends
                     EmptyEventParameter
                         ? undefined
-                        : ChannelType
+                        : ReactiveEventErrorDataInternal<PackageKey, ChannelType>[ErrorPayloadKey] extends
+                        EmptyOverloadParameter
+                            ? undefined
+                            : ChannelType
                     : never
             : never;
     };
@@ -69,13 +87,10 @@ export namespace Channel
      * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam OwnerType - The owner of the event declarations identified by this type.
      */
-    export type Response<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
+    export type Response<PackageKey extends PackageKeys> =
         Exclude<
-            Any<PackageKey, OwnerType>,
-            NoResponse<PackageKey, OwnerType>
+            Any<PackageKey, RendererOwner>,
+            NoResponse<PackageKey, RendererOwner>
         >;
 
     /**
@@ -99,13 +114,11 @@ export namespace Channel
      * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam OwnerType - The owner of the event declarations identified by this type.
      */
-    export type Error<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
-        Exclude<
-            Any<PackageKey, OwnerType>,
-            NoError<PackageKey, OwnerType>
+    export type Error<PackageKey extends PackageKeys> =
+        Extract<
+            Any<PackageKey, RendererOwner>,
+            // NoError<PackageKey, OwnerType>
+            Extract<Values<WithErrorHelper<PackageKey>>, string>
         >;
 
     /**
@@ -115,13 +128,10 @@ export namespace Channel
      * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam OwnerType - The owner of the event declarations identified by this type.
      */
-    export type ErrorMessageOnly<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
+    export type ErrorMessageOnly<PackageKey extends PackageKeys> =
         Exclude<
-            Any<PackageKey, OwnerType>,
-            Values<WithErrorPayloadHelper<PackageKey>>
+            Any<PackageKey, RendererOwner>,
+            Extract<Values<WithErrorPayloadHelper<PackageKey>>, string>
         >;
 
     /**
@@ -131,12 +141,9 @@ export namespace Channel
      * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam OwnerType - The owner of the event declarations identified by this type.
      */
-    export type ErrorPayload<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
+    export type ErrorPayload<PackageKey extends PackageKeys> =
         Extract<
-            Any<PackageKey, OwnerType>,
+            Any<PackageKey, RendererOwner>,
             Extract<Values<WithErrorPayloadHelper<PackageKey>>, string>
         >;
 
@@ -153,6 +160,7 @@ export namespace Channel
         Exclude<
             Any<PackageKey, OwnerType>,
             Extract<Values<WithErrorHelper<PackageKey>>, string>
+            // Error<PackageKey>
         >;
 
     /**
@@ -214,8 +222,8 @@ export namespace Channel
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
          */
         export type Any<PackageKey extends PackageKeys> =
-            | Channel.Response<PackageKey, RendererOwner>
-            | Channel.Error<PackageKey, RendererOwner>;
+            | Channel.Response<PackageKey>
+            | Channel.Error<PackageKey>;
 
         /**
          * {@link Handler} channels whose event declarations define a request type.
@@ -238,7 +246,7 @@ export namespace Channel
         export type Response<PackageKey extends PackageKeys> =
             Extract<
                 Any<PackageKey>,
-                Channel.Response<PackageKey, RendererOwner>
+                Channel.Response<PackageKey>
             >;
 
         /**
@@ -275,9 +283,10 @@ export namespace Channel
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
          */
         export type Error<PackageKey extends PackageKeys> =
-            Extract<
+            Exclude<
                 Any<PackageKey>,
-                Extract<Values<WithErrorHelper<PackageKey>>, string>
+                NoError<PackageKey>
+                // Extract<Values<WithErrorHelper<PackageKey>>, string>
             >;
 
         /**
@@ -290,7 +299,7 @@ export namespace Channel
         export type ErrorMessageOnly<PackageKey extends PackageKeys> =
             Exclude<
                 Any<PackageKey>,
-                Values<WithErrorPayloadHelper<PackageKey>>
+                Extract<Values<WithErrorPayloadHelper<PackageKey>>, string>
             >;
 
         /**
@@ -336,10 +345,19 @@ export namespace Channel
             PackageKey extends PackageKeys,
             OwnerType extends EventOwner
         > =
-            Exclude<
-                Channel.Any<PackageKey, OwnerType>,
-                Handler.Any<PackageKey>
+            | Extract<
+                Channel.NoResponse<PackageKey, OwnerType>,
+                Channel.NoError<PackageKey, OwnerType>
+            >
+            | Extract<
+                Channel.NoError<PackageKey, OwnerType>,
+                Channel.NoResponse<PackageKey, OwnerType>
             >;
+
+        //     Exclude<
+        //         Channel.Any<PackageKey, OwnerType>,
+        //         Handler.Any<PackageKey>
+        //     >;
 
         /**
          * {@link Listener} channels whose event declarations define a request type.

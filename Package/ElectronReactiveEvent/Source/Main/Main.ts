@@ -11,7 +11,7 @@ import type {
     Off,
     On,
     Once,
-    ReactiveEventFunctions,
+    ReactiveIpcFunctions,
     RemoveAllListeners,
     RemoveHandler,
     Send } from "./Main.Types";
@@ -30,7 +30,7 @@ import { ipcMain } from "electron/main";
  * @returns Type-safe IPC functions for sending events from `main`.
  */
 export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
-): ReactiveEventFunctions<PackageKey>
+): ReactiveIpcFunctions<PackageKey>
 {
     return {
         addListener: on as On<PackageKey>,

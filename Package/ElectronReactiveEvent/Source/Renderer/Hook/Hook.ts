@@ -5,7 +5,7 @@
  */
 
 import type {
-    ReactiveEventHooks,
+    ReactiveEventHooks as ReactiveIpcHooks,
     UseInvokeEvent,
     UseInvokeEventDeferred,
     UseOffEventDeferred,
@@ -38,7 +38,7 @@ import type { PackageKeys } from "../../Internal";
  *
  * @returns The hooks provided by `electron-reactive-event`, scoped to your {@link PackageKey}.
  */
-export function getReactiveEventHooks<PackageKey extends PackageKeys>(): ReactiveEventHooks<PackageKey>
+export function getReactiveIpcHooks<PackageKey extends PackageKeys>(): ReactiveIpcHooks<PackageKey>
 {
     return {
         useInvokeEvent: useInvokeEvent as UseInvokeEvent<PackageKey>,

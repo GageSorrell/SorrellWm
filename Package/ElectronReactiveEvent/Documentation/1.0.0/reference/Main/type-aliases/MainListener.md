@@ -6,7 +6,6 @@
 type MainListener<PackageKey, ChannelType> = Listener<
 	PackageKey,
 	RendererOwner,
-	IpcMainEvent,
 	ChannelType
 >;
 ```

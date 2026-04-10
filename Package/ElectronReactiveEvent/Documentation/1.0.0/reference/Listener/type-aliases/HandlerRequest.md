@@ -3,10 +3,10 @@
 # HandlerRequest Type
 
 ```ts
-type HandlerRequest<PackageKey, ChannelType> = HandlerInternal<
-	PackageKey,
-	ChannelType
->;
+type HandlerRequest<PackageKey, ChannelType> = (
+	event,
+	request,
+) => Promise<RawResponse<PackageKey, ChannelType>>;
 ```
 
 A [Handler](Handler.md) that subscribes to an event whose declaration has a request type.
@@ -25,3 +25,17 @@ The unique string that identifies your package.
 
 The channel that uniquely identifies the desired
 event declaration.
+
+## Parameters
+
+### event
+
+`IpcMainInvokeEvent`
+
+### request
+
+[`EventRequest`](EventRequest.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
+
+## Returns
+
+`Promise`\<[`RawResponse`](RawResponse.md)\<`PackageKey`, `ChannelType`\>\>

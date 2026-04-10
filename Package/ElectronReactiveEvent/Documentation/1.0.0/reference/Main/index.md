@@ -26,7 +26,7 @@
 | Function                                                        | Description                                                                                                                                                                         |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [getReactiveIpcFunctions](functions/getReactiveIpcFunctions.md) | This is the entrypoint of `electron-reactive-event` for `main`.                                                                                                                     |
-| [getReactiveIpcMain](functions/getReactiveIpcMain.md)           | Get an object that replaces [IpcMain's](https://www.electronjs.org/docs/latest/api/ipc-main) IPC functions with their respective `electron-reactive-event`, type-safe counterparts. |
+| [getReactiveIpcMain](functions/getReactiveIpcMain.md)           | Get an object that replaces [ipcMain's](https://www.electronjs.org/docs/latest/api/ipc-main) IPC functions with their respective `electron-reactive-event`, type-safe counterparts. |
 
 ## Internal
 
@@ -36,13 +36,13 @@ internally, then exports them cast to types that omit the `PackageKey`
 type parameter. This way, you do not need to specify the name of your
 package with every hook call.
 
-| Function                                              | Description                         |
-| ----------------------------------------------------- | ----------------------------------- |
-| [handle](functions/handle.md)                         | -                                   |
-| [handleOnce](functions/handleOnce.md)                 | -                                   |
-| [off](functions/off.md)                               | -                                   |
-| [on](functions/on.md)                                 | -                                   |
-| [once](functions/once.md)                             | -                                   |
-| [removeAllListeners](functions/removeAllListeners.md) | -                                   |
-| [removeHandler](functions/removeHandler.md)           | -                                   |
-| [send](functions/send.md)                             | The type-safe form of IpcMain.send. |
+| Function                                              | Description                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [handle](functions/handle.md)                         | -                                                                                                                                                                                                                                                                                                       |
+| [handleOnce](functions/handleOnce.md)                 | -                                                                                                                                                                                                                                                                                                       |
+| [off](functions/off.md)                               | -                                                                                                                                                                                                                                                                                                       |
+| [on](functions/on.md)                                 | Subscribe a [listener](functions/on.md#on) to an event declaration given by [channel](functions/on.md#on), which does _not_ return a response to the `renderer`.                                                                                                                                        |
+| [once](functions/once.md)                             | Subscribe a [listener](functions/once.md#once) to an event declaration given by [channel](functions/once.md#once), which does _not_ return a response to the `renderer`. The [listener](functions/once.md#once) will be unsubscribed after it is called once.                                           |
+| [removeAllListeners](functions/removeAllListeners.md) | -                                                                                                                                                                                                                                                                                                       |
+| [removeHandler](functions/removeHandler.md)           | -                                                                                                                                                                                                                                                                                                       |
+| [send](functions/send.md)                             | Send an event to all [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window), whose event declarations define a request type. This overload implicitly calls [BrowserWindow.getAllWindows()](https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows). |

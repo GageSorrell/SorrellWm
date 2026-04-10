@@ -24,7 +24,7 @@ function off<PackageKey, ChannelType>(channel, listener): void;
 
 ### listener
 
-[`Listener`](../../Listener/type-aliases/Listener.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `IpcMainEvent`, `ChannelType`\>
+[`Listener`](../../Listener/type-aliases/Listener.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
 
 ## Returns
 

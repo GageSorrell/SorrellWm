@@ -10,22 +10,11 @@ import type {
     FilterByOwner,
     PackageKeys,
     Registrar } from "../Internal";
-import type { IpcMainEvent, IpcMainInvokeEvent, IpcRendererEvent } from "electron";
+import type { IpcMainEvent, IpcMainInvokeEvent } from "electron/main";
+import type { ListenerNoRequest, ResponseIndeterminate } from "./Listener.Unscoped.Types";
 import type { Channel } from "../Channel";
-import type { HandlerInternal } from "./Listener.Internal.Types";
+import type { IpcRendererEvent } from "electron/renderer";
 import type { ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types";
-
-/**
- * The possible `Event` types, given the owner of the event declaration.
- *
- * @typeParam OwnerType - The owner of the event declarations identified by this type.
- */
-export type IpcEventFromOwner<OwnerType extends EventOwner> =
-    OwnerType extends MainOwner
-        ? IpcRendererEvent
-        : OwnerType extends RendererOwner
-            ? (IpcMainEvent | IpcMainInvokeEvent)
-            : never;
 
 /**
  * The request type of a given event declaration, identified by its {@link PackageKey},
@@ -36,7 +25,7 @@ export type IpcEventFromOwner<OwnerType extends EventOwner> =
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Request<
+export type EventRequest<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
     ChannelType extends Channel.Request<PackageKey, OwnerType>
@@ -45,6 +34,21 @@ export type Request<
         ? never
         : FilterByOwner<PackageKey, OwnerType>[ChannelType][RequestKey]
     : never;
+
+/**
+ * The request type of a given {@link EventDeclListener | sendable event declaration}, identifie
+ * by its {@link PackageKey}, {@link OwnerType}, and {@link ChannelType}.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam OwnerType - The owner of the event declarations identified by this type.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
+export type ListenerRequest<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner,
+    ChannelType extends Channel.Request<PackageKey, OwnerType>
+> = EventRequest<PackageKey, OwnerType, ChannelType>;
 
 /**
  * The type returned by a handler when the given invokable event succeeds.
@@ -71,7 +75,7 @@ export type RawResponseSuccess<
  */
 export type RawResponseError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>
+    ChannelType extends Channel.Handler.Error<PackageKey>
 > = ReactiveEventErrorDataInternal<PackageKey, ChannelType>;
 
 /**
@@ -128,21 +132,36 @@ type ResponseBase<KeyType extends ResponseKey, ValueType> =
  */
 export type ResponseSuccess<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Response<PackageKey>
-> = ResponseBase<ResponseDataKey, Registrar[PackageKey][ChannelType][EventResponseKey]>;
+    ChannelType extends Channel.Handler.Any<PackageKey>
+> =
+    IsPendingPart<false> &
+    (ChannelType extends Channel.Handler.Request<PackageKey>
+        ? {
+            data: Registrar[PackageKey][ChannelType][EventResponseKey];
+            error: undefined;
+        }
+        : ChannelType extends Channel.Handler.NoRequest<PackageKey>
+            ? {
+                data: undefined;
+                error: undefined;
+            }
+            : never
+        );
+// > = ResponseBase<ResponseDataKey, Registrar[PackageKey][ChannelType][EventResponseKey]>;
 
 type IsPendingPart<IsPendingType extends boolean> =
     Readonly<{
         isPending: IsPendingType;
     }>;
 
+/** The possible types for the `Event` parameter of a {@link Listener} callback. */
 type IpcEvent =
     | IpcMainEvent
     | IpcMainInvokeEvent
     | IpcRendererEvent;
 
 type IpcEventPart<EventType extends IpcEvent> = Readonly<{
-    Event: EventType;
+    event: EventType;
 }>;
 
 type MakeIsPending<RecordType extends Record<PropertyKey, unknown>> =
@@ -166,7 +185,7 @@ type MakeIsPending<RecordType extends Record<PropertyKey, unknown>> =
  */
 export type ResponseError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Response<PackageKey>
+    ChannelType extends Channel.Handler.Error<PackageKey>
 > = ResponseBase<ResponseErrorKey, ReactiveEventErrorDataInternal<PackageKey, ChannelType>>;
 
 /**
@@ -180,24 +199,22 @@ export type ResponseError<
  */
 export type ResponseSync<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Response<PackageKey>
+    ChannelType extends Channel.Handler.Any<PackageKey>
 > =
     IpcEventPart<IpcRendererEvent> &
-    (
-        | ResponseSuccess<PackageKey, ChannelType>
-        | ResponseError<PackageKey, ChannelType>
-    );
-
-/**
- * The type of the value returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
- * is passed and before a {@link Handler} registered in `main` has returned a {@link Response}.
- */
-export type ResponseIndeterminate =
-    {
-        data: undefined;
-        error: undefined;
-        isPending: true;
-    };
+    ChannelType extends Channel.Handler.Response<PackageKey>
+        ? ChannelType extends Channel.Handler.Error<PackageKey>
+            ? (
+                | ResponseSuccess<PackageKey, ChannelType>
+                | ResponseError<PackageKey, ChannelType>
+            )
+            : ResponseSuccess<PackageKey, ChannelType>
+        : ChannelType extends Channel.Handler.Error<PackageKey>
+            ? ResponseError<PackageKey, ChannelType>
+            : {
+                data: undefined;
+                error: undefined;
+            };
 
 /**
  * A {@link Response} returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
@@ -246,7 +263,7 @@ export type HandlerNoRequest<
     };
 
 /**
- * A {@link Handler} that subscribes to an event whose declaration has a request type.
+ * The request A {@link Handler} that subscribes to an event whose declaration has a request type.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
@@ -255,7 +272,25 @@ export type HandlerNoRequest<
 export type HandlerRequest<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Request<PackageKey>
-> = HandlerInternal<PackageKey, ChannelType>;
+> = EventRequest<PackageKey, RendererOwner, ChannelType>;
+
+/**
+ * A {@link Handler} that subscribes to an event whose declaration has a request type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
+export type HandlerWithRequest<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Handler.Request<PackageKey>
+> =
+    {
+        (
+            event: IpcMainInvokeEvent,
+            request: HandlerRequest<PackageKey, ChannelType>
+        ): Promise<RawResponse<PackageKey, ChannelType>>;
+    };
 
 /**
  * A callback function that can be registered for invokable events, *i.e.*, the
@@ -271,33 +306,38 @@ export type Handler<
     ChannelType extends Channel.Handler.Any<PackageKey>
 > =
     ChannelType extends Channel.Handler.Request<PackageKey>
-        ? HandlerRequest<PackageKey, ChannelType>
+        ? HandlerWithRequest<PackageKey, ChannelType>
         : ChannelType extends Channel.Handler.NoRequest<PackageKey>
             ? HandlerNoRequest<PackageKey, ChannelType>
             : never;
 
-type ListenerRequest<
+/**
+ * A {@link Listener} that is subscribable to a {@link Channel.Listener.Request | listener channel }
+ * whose event declaration has a request type.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam OwnerType - The owner of the event declarations identified by this type.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * event declaration.
+ */
+export type ListenerWithRequest<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
-    EventType extends IpcEvent,
     ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>
 > =
-    {
-        (
-            event: EventType,
-            request: Request<PackageKey, OwnerType, ChannelType>
-        ): RawResponse<PackageKey, ChannelType>;
-    };
-
-type ListenerNoRequest<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    EventType extends IpcEvent,
-    ChannelType extends Channel.Listener.NoRequest<PackageKey, OwnerType>
-> =
-    {
-        (event: EventType): RawResponse<PackageKey, ChannelType>;
-    };
+    OwnerType extends RendererOwner
+        ? {
+            (
+                event: IpcMainEvent,
+                request: ListenerRequest<PackageKey, RendererOwner, ChannelType>
+            ): void;
+        }
+        : {
+            (
+                event: IpcRendererEvent,
+                request: ListenerRequest<PackageKey, MainOwner, ChannelType>
+            ): void;
+        };
 
 /**
  * A callback function that can be registered for sendable events, *i.e.*, the
@@ -305,19 +345,19 @@ type ListenerNoRequest<
  * {@link UseSendEvent}, {@link SendEventDeferred}, or {@link Send}.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam OwnerType - The owner of the event declarations identified by this type.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type Listener<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
-    EventType extends IpcEvent,
     ChannelType extends Channel.Listener.Any<PackageKey, OwnerType>
 > =
     ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>
-        ? ListenerRequest<PackageKey, OwnerType, EventType, ChannelType>
+        ? ListenerWithRequest<PackageKey, OwnerType, ChannelType>
         : ChannelType extends Channel.Listener.NoRequest<PackageKey, OwnerType>
-            ? ListenerNoRequest<PackageKey, OwnerType, EventType, ChannelType>
+            ? ListenerNoRequest<OwnerType>
             : never;
 
 /**
@@ -333,7 +373,6 @@ export type Listener<
 export type AnyCallback<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner = EventOwner,
-    EventType extends IpcEvent = IpcEvent,
     ChannelType extends Channel.Any<PackageKey, OwnerType> =
         Channel.Any<PackageKey, OwnerType>
 > =
@@ -343,7 +382,6 @@ export type AnyCallback<
             ? Listener<
                 PackageKey,
                 OwnerType,
-                EventType,
                 ChannelType
             >
             : never;

@@ -5,10 +5,9 @@
  */
 
 import type { BrowserWindow, IpcMain } from "electron/main";
-import type { Handler, Request } from "../Listener/index.js";
+import type { Handler, Listener, ListenerRequest } from "../Listener/index.js";
 import type { MainOwner, RendererOwner } from "../Decl";
 import type { Channel } from "../Channel";
-import type { MainListener } from "./Main.Internal.Types";
 import type { PackageKeys } from "../Internal";
 
 /**
@@ -71,7 +70,6 @@ export type Send<PackageKey extends PackageKeys> =
          * to where the event will be sent.
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
          * identifies the event declaration.
-         * {@label NoRequestSingular}
          */
         <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
             browserWindow: BrowserWindow,
@@ -89,12 +87,11 @@ export type Send<PackageKey extends PackageKeys> =
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
          * identifies the event declaration.
          * @param request - The request of the given event.
-         * {@label RequestSingular}
          */
         <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
             browserWindow: BrowserWindow,
             channel: ChannelType,
-            request: Request<PackageKey, MainOwner, typeof channel>
+            request: ListenerRequest<PackageKey, MainOwner, typeof channel>
         ): void;
 
         /**
@@ -108,7 +105,6 @@ export type Send<PackageKey extends PackageKeys> =
          * to where the event will be sent.
          * @param channel - The channel that uniquely identifies the desired
          * event declaration.
-         * {@label NoRequestPlural}
          */
         <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
             browserWindows: Array<BrowserWindow>,
@@ -127,12 +123,11 @@ export type Send<PackageKey extends PackageKeys> =
          * @param channel - The channel that uniquely identifies the desired
          * event declaration.
          * @param request - The request of the given event.
-         * {@label RequestPlural}
          */
         <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
             browserWindows: Array<BrowserWindow>,
             channel: ChannelType,
-            request: Request<PackageKey, MainOwner, typeof channel>
+            request: ListenerRequest<PackageKey, MainOwner, typeof channel>
         ): void;
 
         /**
@@ -144,16 +139,13 @@ export type Send<PackageKey extends PackageKeys> =
          * event declaration.
          *
          * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
-         * to where the event will be sent.
+         * to where the event will be sent.  If `undefined`, then all browser windows will be sent the event.
          * @param channel - The channel that uniquely identifies the desired
          * event declaration.
-         * @param request - The request of the given event.
-         * {@label NoRequestAllWindows}
          */
-        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
             browserWindows: undefined,
-            channel: ChannelType,
-            request: Request<PackageKey, MainOwner, typeof channel>
+            channel: ChannelType
         ): void;
 
         /**
@@ -165,16 +157,15 @@ export type Send<PackageKey extends PackageKeys> =
          * event declaration.
          *
          * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
-         * to where the event will be sent.
+         * to where the event will be sent.  If `undefined`, then all browser windows will be sent the event.
          * @param channel - The channel that uniquely identifies the desired
          * event declaration.
          * @param request - The request of the given event.
-         * {@label RequestAllWindows}
          */
         <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
             browserWindows: undefined,
             channel: ChannelType,
-            request: Request<PackageKey, MainOwner, typeof channel>
+            request: ListenerRequest<PackageKey, MainOwner, typeof channel>
         ): void;
     };
 
@@ -196,14 +187,25 @@ export type On<PackageKey extends PackageKeys> =
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
          * identifies the sendable event to which the {@link listener} will be subscribed.
          * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
-         *
-         * {@label Signature}
          */
         <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
             channel: ChannelType,
             listener: MainListener<PackageKey, typeof channel>
         ): void;
     };
+
+/**
+ * The type-safe type of the listener passed to
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on}
+ * *et al.*
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam ChannelType - The channel that uniquely identifies the desired event declaration.
+ */
+export type MainListener<
+    PackageKey extends PackageKeys,
+    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>
+> = Listener<PackageKey, RendererOwner, ChannelType>;
 
 /**
  * The type-safe form of
@@ -224,8 +226,6 @@ export type Once<PackageKey extends PackageKeys> =
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
          * identifies the sendable event to which the {@link listener} will be subscribed.
          * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
-         *
-         * {@label Signature}
          */
         <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
             channel: ChannelType,
@@ -348,7 +348,7 @@ export type RemoveHandler<PackageKey extends PackageKeys> =
  * @property removeAllListeners - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovealllistenerschannel | IpcMain.removeAllListeners }
  * @property send - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/web-contents#contentssendchannel-args | webContents.send } for one or many {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}.
  */
-export type ReactiveEventFunctions<PackageKey extends PackageKeys> =
+export type ReactiveIpcFunctions<PackageKey extends PackageKeys> =
     Readonly<{
         addListener: On<PackageKey>;
         handle: Handle<PackageKey>;
@@ -364,10 +364,10 @@ export type ReactiveEventFunctions<PackageKey extends PackageKeys> =
 
 /**
  * The {@link https://www.electronjs.org/docs/latest/api/ipc-main | IpcMain} type, but with the type-safe IPC functions
- * given in {@link ReactiveEventFunctions}.
+ * given in {@link ReactiveIpcFunctions}.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  */
 export type IpcMainReactive<PackageKey extends PackageKeys> =
-    Omit<IpcMain, keyof ReactiveEventFunctions<PackageKey>> &
-    ReactiveEventFunctions<PackageKey>;
+    Omit<IpcMain, keyof ReactiveIpcFunctions<PackageKey>> &
+    ReactiveIpcFunctions<PackageKey>;

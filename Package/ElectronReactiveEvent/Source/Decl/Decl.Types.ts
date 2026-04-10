@@ -4,6 +4,8 @@
  * License:   MIT
  */
 
+import type { EventDeclHandler, EventDeclListener } from "../Internal";
+
 /* eslint-disable @typescript-eslint/naming-convention */
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -107,8 +109,17 @@ export type EventErrorDecl<
     | EventErrorTuple<MessageType, PayloadType>
     | EventErrorRecord<MessageType, PayloadType>;
 
+/* eslint-disable @stylistic/max-len */
+
 /**
  * All events in `electron-reactive-event` are modeled with this type.
+ *
+ * @note One important distinction is that event declarations with a {@link ResponseType}
+ * can only have `OwnerType === {@link RendererOwner}`.  This is a consequence of only
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendererinvokechannel-args | ipcRenderer.invoke}
+ * being able to send events *and* receive a response from the receiver (*i.e.*, from `main`).
+ * Event declarations, depending upon whether `{@link ResponseType} === {@link EmptyEventParameter}`,
+ * evaluate to one of the two internal types {@link EventDeclHandler} or {@link EventDeclListener}.
  *
  * @typeParam OwnerType - From whom an event of this type is sent.
  * @typeParam RequestType - The type of the request object that is sent when an event occurs.
@@ -121,9 +132,16 @@ export type EventDecl<
     ResponseType = EmptyEventParameter,
     ErrorType extends EventErrorDecl | EmptyEventParameter = EmptyEventParameter
 > =
-    {
-        OwnerType: OwnerType;
-        RequestType: RequestType;
-        ResponseType: ResponseType;
-        ErrorType: ErrorType;
-    };
+    OwnerType extends MainOwner
+        ? ResponseType extends EmptyEventParameter
+            ? ErrorType extends EmptyEventParameter
+                ? EventDeclListener<MainOwner, RequestType>
+                : never
+            : never
+        : OwnerType extends RendererOwner
+            ? ResponseType extends EmptyEventParameter
+                ? ErrorType extends EmptyEventParameter
+                    ? EventDeclListener<RendererOwner, RequestType>
+                    : EventDeclHandler<RequestType, ResponseType, ErrorType>
+                : EventDeclHandler<RequestType, ResponseType, ErrorType>
+            : never;

@@ -6,7 +6,6 @@
 type RendererListener<PackageKey, ChannelType> = Listener<
 	PackageKey,
 	MainOwner,
-	IpcRendererEvent,
 	ChannelType
 >;
 ```

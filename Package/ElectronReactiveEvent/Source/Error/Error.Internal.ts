@@ -22,7 +22,7 @@ import type { PackageKeys } from "../Internal";
  */
 export class ReactiveEventErrorInternal<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.ErrorMessageOnly<PackageKey>
+    ChannelType extends Channel.Handler.Error<PackageKey>
 >
 {
     public constructor(Data: ReactiveEventErrorDataInternal<PackageKey, ChannelType>)

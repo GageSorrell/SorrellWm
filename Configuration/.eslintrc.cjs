@@ -24,7 +24,9 @@ module.exports = {
             files:
             [
                 "Package/ElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.tsx"
+                "Package/ElectronReactiveEvent/Source/**/*.tsx",
+                "Package/ElectronReactiveEventCli/Source/**/*.ts",
+                "Package/ElectronReactiveEventCli/Source/**/*.tsx"
             ],
             rules:
             {

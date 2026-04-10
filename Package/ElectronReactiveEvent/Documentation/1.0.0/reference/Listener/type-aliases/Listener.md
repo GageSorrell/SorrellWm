@@ -3,11 +3,11 @@
 # Listener Type
 
 ```ts
-type Listener<PackageKey, OwnerType, EventType, ChannelType> =
+type Listener<PackageKey, OwnerType, ChannelType> =
 	ChannelType extends Request<PackageKey, OwnerType>
-		? ListenerRequest<PackageKey, OwnerType, EventType, ChannelType>
+		? ListenerRequest<PackageKey, OwnerType, ChannelType>
 		: ChannelType extends NoRequest<PackageKey, OwnerType>
-			? ListenerNoRequest<PackageKey, OwnerType, EventType, ChannelType>
+			? ListenerNoRequest<OwnerType>
 			: never;
 ```
 
@@ -27,9 +27,7 @@ The unique string that identifies your package.
 
 `OwnerType` _extends_ [`EventOwner`](../../Decl/type-aliases/EventOwner.md)
 
-### EventType
-
-`EventType` _extends_ `IpcEvent`
+The owner of the event declarations identified by this type.
 
 ### ChannelType
 

@@ -8,7 +8,7 @@ type Send<PackageKey> = {
 	<ChannelType>(browserWindow, channel, request): void;
 	<ChannelType>(browserWindows, channel): void;
 	<ChannelType>(browserWindows, channel, request): void;
-	<ChannelType>(browserWindows, channel, request): void;
+	<ChannelType>(browserWindows, channel): void;
 	<ChannelType>(browserWindows, channel, request): void;
 };
 ```
@@ -99,7 +99,7 @@ identifies the event declaration.
 
 #### request
 
-[`Request`](../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
+[`EventRequest`](../../Listener/type-aliases/EventRequest.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
 
 The request of the given event.
 
@@ -184,7 +184,7 @@ event declaration.
 
 #### request
 
-[`Request`](../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
+[`EventRequest`](../../Listener/type-aliases/EventRequest.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
 
 The request of the given event.
 
@@ -195,10 +195,7 @@ The request of the given event.
 ## Call Signature
 
 ```ts
-<ChannelType>(
-   browserWindows,
-   channel,
-   request): void;
+<ChannelType>(browserWindows, channel): void;
 ```
 
 Send an event to all [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window),
@@ -221,7 +218,7 @@ event declaration.
 `undefined`
 
 The [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window)
-to where the event will be sent.
+to where the event will be sent. If `undefined`, then all browser windows will be sent the event.
 
 #### channel
 
@@ -229,12 +226,6 @@ to where the event will be sent.
 
 The channel that uniquely identifies the desired
 event declaration.
-
-#### request
-
-[`Request`](../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
-
-The request of the given event.
 
 ### Returns
 
@@ -269,7 +260,7 @@ event declaration.
 `undefined`
 
 The [BrowserWindows](https://www.electronjs.org/docs/latest/api/browser-window)
-to where the event will be sent.
+to where the event will be sent. If `undefined`, then all browser windows will be sent the event.
 
 #### channel
 
@@ -280,7 +271,7 @@ event declaration.
 
 #### request
 
-[`Request`](../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
+[`EventRequest`](../../Listener/type-aliases/EventRequest.md)\<`PackageKey`, _typeof_ `MainOwnerValue`, `ChannelType`\>
 
 The request of the given event.
 

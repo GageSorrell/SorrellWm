@@ -18,5 +18,6 @@
 
 export * from "./Hook.js";
 export type * from "./Hook.Types.js";
+export type * from "./Hook.Unscoped.Types.js";
 export type * from "./Hook.Internal.js";
 export * from "./Hook.Internal.Types.js";

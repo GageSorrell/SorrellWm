@@ -10,7 +10,6 @@ import type {
     ReactiveEventErrorPayload } from "./Error.Internal.Types";
 import type { Channel } from "../Channel";
 import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
-import type { EventOwner } from "../Decl/Decl.Types";
 import type { PackageKeys } from "../Internal";
 import { ReactiveEventErrorInternal } from "./Error.Internal";
 
@@ -21,7 +20,6 @@ import { ReactiveEventErrorInternal } from "./Error.Internal";
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
- * @typeParam OwnerType - The owner of the given event declaration.
  *
  * @param message - The message of this event's error.
  *
@@ -29,8 +27,7 @@ import { ReactiveEventErrorInternal } from "./Error.Internal";
  */
 export function ReactiveEventError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Error<PackageKey, OwnerType>,
-    OwnerType extends EventOwner = EventOwner
+    ChannelType extends Channel.Error<PackageKey>
 >(
     message: ReactiveEventErrorMessage<PackageKey, ChannelType>
 ): ReactiveEventErrorInternal<PackageKey, ChannelType>;
@@ -41,7 +38,6 @@ export function ReactiveEventError<
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
- * @typeParam OwnerType - The owner of the given event declaration.
  *
  * @param message - The message of this event's error.
  * @param payload - The payload of this event's error.
@@ -50,15 +46,13 @@ export function ReactiveEventError<
  */
 export function ReactiveEventError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.ErrorPayload<PackageKey, OwnerType>,
-    OwnerType extends EventOwner = EventOwner>(
+    ChannelType extends Channel.ErrorPayload<PackageKey>>(
     message: ReactiveEventErrorMessage<PackageKey, ChannelType>,
     payload: ReactiveEventErrorPayload<PackageKey, ChannelType>
 ): ReactiveEventErrorInternal<PackageKey, ChannelType>;
 export function ReactiveEventError<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Error<PackageKey, OwnerType>,
-    OwnerType extends EventOwner = EventOwner>(
+    ChannelType extends Channel.Error<PackageKey>>(
     message: ReactiveEventErrorMessage<PackageKey, ChannelType>,
     payload: ReactiveEventErrorPayload<PackageKey, ChannelType> = EmptyOverloadParameterValue
 ): ReactiveEventErrorInternal<PackageKey, ChannelType>

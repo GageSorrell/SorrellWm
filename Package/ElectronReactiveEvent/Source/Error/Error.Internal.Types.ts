@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventErrorRecord, EventErrorTuple, EventOwner } from "../Decl/Decl.Types";
+import type { EmptyEventParameter, EventErrorRecord, EventErrorTuple } from "../Decl/Decl.Types";
 import type { PackageKeys, Registrar } from "../Internal";
 import type { Channel } from "../Channel";
 import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
@@ -51,7 +51,7 @@ export type ErrorPayloadKey = "Payload";
  */
 export type ReactiveEventErrorDataInternal<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Error<PackageKey, EventOwner>
+    ChannelType extends Channel.Error<PackageKey>
 > = Readonly<GetNormalizedError<PackageKey, ChannelType>>;
 
 /**
@@ -63,7 +63,7 @@ export type ReactiveEventErrorDataInternal<
  */
 export type ReactiveEventErrorMessage<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Error<PackageKey, EventOwner>
+    ChannelType extends Channel.Error<PackageKey>
 > = ReactiveEventErrorDataInternal<PackageKey, ChannelType>["Message"];
 
 /**

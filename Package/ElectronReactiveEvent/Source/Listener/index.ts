@@ -10,5 +10,6 @@
  */
 
 export * from "./Listener.Types.js";
+export * from "./Listener.Unscoped.Types.js";
 export * from "./Listener.Internal.Types.js";
 export * from "./Listener.Internal.js";

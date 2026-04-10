@@ -161,7 +161,7 @@ The channel of the event that you wish to invoke.
 
 #### request
 
-[`Request`](../../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
+[`EventRequest`](../../../Listener/type-aliases/EventRequest.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
 
 The request of this event.
 
@@ -215,7 +215,7 @@ The channel of the event that you wish to invoke.
 
 #### request
 
-[`Request`](../../../Listener/type-aliases/Request.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
+[`EventRequest`](../../../Listener/type-aliases/EventRequest.md)\<`PackageKey`, _typeof_ `RendererOwnerValue`, `ChannelType`\>
 
 The request of this event.
 

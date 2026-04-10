@@ -3,10 +3,8 @@
 # Any Type
 
 ```ts
-type Any<PackageKey, OwnerType> = Exclude<
-	Any<PackageKey, OwnerType>,
-	Any<PackageKey>
->;
+type Any<PackageKey, OwnerType> = NoResponse<PackageKey, OwnerType> &
+	NoError<PackageKey, OwnerType>;
 ```
 
 Channels of event declarations that can be used via [send](../../../../../../Main/type-aliases/Send.md),

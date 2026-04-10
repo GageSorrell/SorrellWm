@@ -4,32 +4,37 @@
  * License:   MIT
  */
 
-import type {
+/* eslint-disable @typescript-eslint/naming-convention */
+
+import type { EmptyEventParameter, EventDecl, MainOwner, RendererOwner } from "electron-reactive-event";
+
+export type Notify = EventDecl<
+    MainOwner,
+    string,
     EmptyEventParameter,
-    EventDecl,
-    IMainRegistrarBase,
-    IRendererRegistrarBase } from "../../../../Package/ElectronReactiveEvent/Distribution/index.inner";
+    "Nah"
+>;
 
-export interface IMainRegistrar extends IMainRegistrarBase
-{
-    Notify: EventDecl<
-        string,
-        EmptyEventParameter,
-        "Nah"
-    >;
-}
+export type GetData = EventDecl<
+    RendererOwner,
+    boolean
+>;
 
-export interface IRendererRegistrar extends IRendererRegistrarBase
-{
-    GetData: EventDecl<
-        EmptyEventParameter,
-        number,
-        "NotFound"
-    >;
+export type GetDataPayload = EventDecl<
+    RendererOwner,
+    { RequestProperty: Record<PropertyKey, unknown>; },
+    EmptyEventParameter,
+    [ "NotFound", number ]
+>;
 
-    SetData: EventDecl<
-        number,
-        EmptyEventParameter,
-        "CouldNotSet"
-    >;
-}
+export type GetDataFoo = EventDecl<
+    RendererOwner,
+    { RequestProperty: Record<PropertyKey, unknown>; }
+>;
+
+export type SetData = EventDecl<
+    RendererOwner,
+    number,
+    { Foo: boolean; },
+    "CouldNotSet"
+>;

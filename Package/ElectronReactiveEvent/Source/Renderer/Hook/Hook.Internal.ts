@@ -19,8 +19,12 @@ import type {
     InvokeOptionsOverloadedArgument,
     InvokeResponseInternal } from "./Hook.Internal.Types";
 import type {
+    HandlerRequest,
+    ListenerRequest,
+    ResponseIndeterminate,
+    ResponseSync } from "../../Listener/index.js";
+import type {
     InvokeEventDeferred,
-    InvokeOptions,
     InvokeResponse,
     OffEventDeferred,
     OnEventDeferred,
@@ -28,13 +32,10 @@ import type {
     RendererListener,
     SendEventDeferred } from "./Hook.Types";
 import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types";
-import type {
-    Request,
-    ResponseIndeterminate,
-    ResponseSync } from "../../Listener/index.js";
 import type { Channel } from "../../Channel";
 import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";
 import { EmptyOverloadParameterValue } from "../../Listener/Listener.Internal";
+import type { InvokeOptions } from "./Hook.Unscoped.Types";
 import type { PackageKeys } from "../../Internal";
 import type { ReactiveEventContextInternal } from "../Provider/Provider.Internal.Types";
 import { ReactiveEventInternalContext } from "../Provider/Provider.Internal";
@@ -174,7 +175,7 @@ export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Request<PackageKey>>(
     channel: ChannelType,
-    request: Request<PackageKey, RendererOwner, typeof channel>
+    request: HandlerRequest<PackageKey, typeof channel>
 ): InvokeResponse<PackageKey, typeof channel, undefined>;
 /**
  * Invoke an event when the containing component mounts, whose event declaration
@@ -198,7 +199,7 @@ export function useInvokeEvent<
     ChannelType extends Channel.Handler.Request<PackageKey>,
     SuspendsType extends boolean>(
     channel: ChannelType,
-    request: Request<PackageKey, RendererOwner, typeof channel>,
+    request: HandlerRequest<PackageKey, typeof channel>,
     options: InvokeOptions<SuspendsType>
 ): InvokeResponse<PackageKey, typeof channel, typeof options>;
 /**
@@ -224,7 +225,7 @@ export function useInvokeEvent<
     SuspendsType extends boolean>(
     channel: ChannelType,
     requestOrOptions:
-        | Request<PackageKey, RendererOwner, typeof channel>
+        | HandlerRequest<PackageKey, typeof channel>
         | InvokeOptions<SuspendsType>
         | EmptyOverloadParameter = EmptyOverloadParameterValue,
     options: InvokeOptionsOverloadedArgument<SuspendsType> = EmptyOverloadParameterValue
@@ -235,7 +236,7 @@ export function useInvokeEvent<
     typeof options
 >
 {
-    type ThisRequest = Request<PackageKey, RendererOwner, typeof channel>;
+    type ThisRequest = HandlerRequest<PackageKey, typeof channel>;
     type ThisReturnType =
         InvokeResponseInternal<
             PackageKey,
@@ -403,14 +404,14 @@ export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
     async function invokeEventDeferred<
         ChannelType extends Channel.Handler.Request<PackageKey>>(
         channel: ChannelType,
-        request: Request<PackageKey, RendererOwner, typeof channel>
+        request: HandlerRequest<PackageKey, typeof channel>
     ): Promise<ResponseSync<PackageKey, typeof channel>>;
     // eslint-disable-next-line jsdoc/require-jsdoc
     async function invokeEventDeferred<
         ChannelType extends Channel.Handler.Request<PackageKey>>(
         channel: ChannelType,
         request:
-            | Request<PackageKey, RendererOwner, typeof channel>
+            | HandlerRequest<PackageKey, typeof channel>
             | EmptyOverloadParameter = EmptyOverloadParameterValue
     ): Promise<ResponseSync<PackageKey, typeof channel>>
     {
@@ -617,7 +618,7 @@ function SendEventInternal<
     send: ReactiveEventContextInternal["ipcRenderer"]["send"],
     channel: ChannelType,
     request:
-        | Request<PackageKey, RendererOwner, typeof channel>
+        | HandlerRequest<PackageKey, typeof channel>
         | EmptyOverloadParameter = EmptyOverloadParameterValue
 ): void
 {
@@ -673,7 +674,7 @@ export function useSendEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
     channel: ChannelType,
-    request: Request<PackageKey, RendererOwner, typeof channel>
+    request: ListenerRequest<PackageKey, RendererOwner, typeof channel>
 ): void;
 /**
  * Send an event when the containing component mounts.
@@ -698,7 +699,7 @@ export function useSendEvent<
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
     channel: ChannelType,
     request:
-        | Request<PackageKey, RendererOwner, typeof channel>
+        | ListenerRequest<PackageKey, RendererOwner, typeof channel>
         | EmptyOverloadParameter = EmptyOverloadParameterValue
 ): void
 {
@@ -731,14 +732,14 @@ export function useSendEventDeferred<PackageKey extends PackageKeys>(
     function SendEventDeferredBase<
         ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
         channel: ChannelType,
-        request: Request<PackageKey, RendererOwner, typeof channel>
+        request: ListenerRequest<PackageKey, RendererOwner, typeof channel>
     ): void;
     // eslint-disable-next-line jsdoc/require-jsdoc
     function SendEventDeferredBase<
         ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
         channel: ChannelType,
         request:
-            | Request<PackageKey, RendererOwner, typeof channel>
+            | ListenerRequest<PackageKey, RendererOwner, typeof channel>
             | EmptyOverloadParameter = EmptyOverloadParameterValue
     ): void
     {

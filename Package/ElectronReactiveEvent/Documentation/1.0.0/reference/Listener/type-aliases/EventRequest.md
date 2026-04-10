@@ -1,9 +1,9 @@
-[electron-reactive-event](../../index.md) / [Listener](../index.md) / Request
+[electron-reactive-event](../../index.md) / [Listener](../index.md) / EventRequest
 
-# Request Type
+# EventRequest Type
 
 ```ts
-type Request<PackageKey, OwnerType, ChannelType> =
+type EventRequest<PackageKey, OwnerType, ChannelType> =
 	RequestKey extends keyof FilterByOwner<PackageKey, OwnerType>[ChannelType]
 		? FilterByOwner<
 				PackageKey,

@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event",
-  "version": "0.0.2",
+  "version": "0.0.32",
   "description": "Type-safe Electron IPC functions, including modern React hooks.",
   "keywords": [
     "electron",
@@ -25,19 +25,33 @@
     "url": "https://sorrell.sh"
   },
   "type": "commonjs",
-  "main": "./Distribution/index.js",
+  "exports": {
+    ".": "./Distribution/index.js",
+    "./scoped": "./Distribution/index.Scoped.js",
+    "./registrar": "./Distribution/Internal/Registrar.Types.js"
+  },
   "scripts": {
     "build": "tsc -p ./tsconfig.json"
   },
+  "types": "./Distribution/index.d.ts",
+  "files": [
+    "./package.json",
+    "./Distribution/**/*"
+  ],
   "devDependencies": {
     "@types/node": "^25.5.1",
     "@types/react": "*",
-    "electron": "^41.1.1",
-    "typescript": "^6.0.2"
+    "clipboardy": "^5.3.1",
+    "electron": "^41.1.1"
   },
   "peerDependencies": {
     "@types/react": "^19.2.14",
     "electron": "^41.1.1",
     "react": "^19.2.4"
+  },
+  "dependencies": {
+    "@sorrell/utilities": "^1.1.6",
+    "ora": "^9.3.0",
+    "typescript": "^6.0.2"
   }
 }
