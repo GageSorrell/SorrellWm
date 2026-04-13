@@ -4,10 +4,10 @@
  * License:   MIT
  */
 
-import type { ReactiveEventErrorMessage, ReactiveEventErrorPayload } from "./Error.Internal.Types";
-import type { Channel } from "../Channel";
-import type { PackageKeys } from "../Internal";
-import type { ReactiveEventErrorInternal } from "./Error.Internal";
+import type { ReactiveEventErrorMessage, ReactiveEventErrorPayload } from "./Error.Internal.Types.js";
+import type { Channel } from "../Channel/index.js";
+import type { PackageKeys } from "../Internal/index.js";
+import type { ReactiveEventErrorInternal } from "./Error.Internal.js";
 
 /**
  * When an error is given to the `renderer` as a result of a `handler` returning an error,

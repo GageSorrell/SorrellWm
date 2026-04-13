@@ -5,8 +5,8 @@
  */
 
 import { type Context, createContext } from "react";
-import type { ReactiveEventContext } from "./Provider.Types";
-import type { ReactiveEventContextInternal } from "./Provider.Internal.Types";
+import type { ReactiveEventContext } from "./Provider.Types.js";
+import type { ReactiveEventContextInternal } from "./Provider.Internal.Types.js";
 import { ipcRenderer } from "electron";
 
 const EmptyReactiveEventContext: ReactiveEventContext =

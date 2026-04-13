@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EventDeclHandler, EventDeclListener } from "../Internal";
+import type { EventDeclHandler, EventDeclListener } from "../Internal/index.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

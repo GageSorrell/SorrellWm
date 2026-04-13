@@ -4,17 +4,17 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl/Decl.Types";
-import type { ResponseKey as EventResponseKey, RequestKey } from "../Internal/Decl.Types";
+import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl/Decl.Types.js";
+import type { ResponseKey as EventResponseKey, RequestKey } from "../Internal/Decl.Types.js";
 import type {
     FilterByOwner,
     PackageKeys,
-    Registrar } from "../Internal";
+    Registrar } from "../Internal/index.js";
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron/main";
-import type { ListenerNoRequest, ResponseIndeterminate } from "./Listener.Unscoped.Types";
-import type { Channel } from "../Channel";
+import type { ListenerNoRequest, ResponseIndeterminate } from "./Listener.Unscoped.Types.js";
+import type { Channel } from "../Channel/index.js";
 import type { IpcRendererEvent } from "electron/renderer";
-import type { ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types";
+import type { ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types.js";
 
 /**
  * The request type of a given event declaration, identified by its {@link PackageKey},
@@ -155,7 +155,7 @@ type IsPendingPart<IsPendingType extends boolean> =
     }>;
 
 /** The possible types for the `Event` parameter of a {@link Listener} callback. */
-type IpcEvent =
+export type IpcEvent =
     | IpcMainEvent
     | IpcMainInvokeEvent
     | IpcRendererEvent;
@@ -323,22 +323,29 @@ export type Handler<
 export type ListenerWithRequest<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
-    ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>
+    ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>,
+    EventType extends IpcEvent | undefined = undefined
 > =
-    OwnerType extends RendererOwner
-        ? {
-            (
-                event: IpcMainEvent,
-                request: ListenerRequest<PackageKey, RendererOwner, ChannelType>
-            ): void;
-        }
+    EventType extends undefined
+        ? OwnerType extends RendererOwner
+            ? {
+                (
+                    event: IpcMainEvent,
+                    request: ListenerRequest<PackageKey, RendererOwner, ChannelType>
+                ): void;
+            }
+            : {
+                (
+                    event: IpcRendererEvent,
+                    request: ListenerRequest<PackageKey, MainOwner, ChannelType>
+                ): void;
+            }
         : {
             (
-                event: IpcRendererEvent,
-                request: ListenerRequest<PackageKey, MainOwner, ChannelType>
+                event: EventType,
+                request: ListenerRequest<PackageKey, RendererOwner, ChannelType>
             ): void;
         };
-
 /**
  * A callback function that can be registered for sendable events, *i.e.*, the
  * {@link ChannelType} is of type {@link Channel.Listener.Any}, and is sent via
@@ -352,12 +359,13 @@ export type ListenerWithRequest<
 export type Listener<
     PackageKey extends PackageKeys,
     OwnerType extends EventOwner,
-    ChannelType extends Channel.Listener.Any<PackageKey, OwnerType>
+    ChannelType extends Channel.Listener.Any<PackageKey, OwnerType>,
+    EventType extends IpcEvent | undefined = undefined
 > =
     ChannelType extends Channel.Listener.Request<PackageKey, OwnerType>
-        ? ListenerWithRequest<PackageKey, OwnerType, ChannelType>
+        ? ListenerWithRequest<PackageKey, OwnerType, ChannelType, EventType>
         : ChannelType extends Channel.Listener.NoRequest<PackageKey, OwnerType>
-            ? ListenerNoRequest<OwnerType>
+            ? ListenerNoRequest<OwnerType, EventType>
             : never;
 
 /**

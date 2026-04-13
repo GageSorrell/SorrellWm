@@ -4,8 +4,9 @@
  * License:   MIT
  */
 
-import type { EventOwner, RendererOwner } from "../Decl";
+import type { EventOwner, RendererOwner } from "../Decl/index.js";
 import type { IpcMainEvent, IpcRendererEvent } from "electron";
+import type { IpcEvent } from "./Listener.Types.js";
 
 /**
  * The type of the value returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
@@ -24,11 +25,18 @@ export type ResponseIndeterminate =
  *
  * @typeParam OwnerType - The owner of the event declarations identified by this type.
  */
-export type ListenerNoRequest<OwnerType extends EventOwner> =
-    OwnerType extends RendererOwner
-        ? {
-            (event: IpcMainEvent): void;
-        }
+export type ListenerNoRequest<
+    OwnerType extends EventOwner,
+    EventType extends IpcEvent | undefined = undefined
+> =
+    EventType extends undefined
+        ? OwnerType extends RendererOwner
+            ? {
+                (event: IpcRendererEvent): void;
+            }
+            : {
+                (event: IpcMainEvent): void;
+            }
         : {
-            (event: IpcRendererEvent): void;
+            (event: EventType): void;
         };

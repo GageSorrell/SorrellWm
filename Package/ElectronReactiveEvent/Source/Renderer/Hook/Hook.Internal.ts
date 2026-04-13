@@ -17,7 +17,7 @@ import {
 import type {
     EqualityCheck,
     InvokeOptionsOverloadedArgument,
-    InvokeResponseInternal } from "./Hook.Internal.Types";
+    InvokeResponseInternal } from "./Hook.Internal.Types.js";
 import type {
     HandlerRequest,
     ListenerRequest,
@@ -30,15 +30,16 @@ import type {
     OnEventDeferred,
     OnceEventDeferred,
     RendererListener,
-    SendEventDeferred } from "./Hook.Types";
-import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types";
-import type { Channel } from "../../Channel";
-import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";
-import { EmptyOverloadParameterValue } from "../../Listener/Listener.Internal";
-import type { InvokeOptions } from "./Hook.Unscoped.Types";
-import type { PackageKeys } from "../../Internal";
-import type { ReactiveEventContextInternal } from "../Provider/Provider.Internal.Types";
-import { ReactiveEventInternalContext } from "../Provider/Provider.Internal";
+    SendEventDeferred } from "./Hook.Types.js";
+import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types.js";
+import type { Channel } from "../../Channel/index.js";
+import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types.js";
+import { EmptyOverloadParameterValue } from "../../Listener/Listener.Internal.js";
+import type { InvokeOptions } from "./Hook.Unscoped.Types.js";
+import type { PackageKeys } from "../../Internal/index.js";
+import type { ReactiveEventContextInternal } from "../Provider/Provider.Internal.Types.js";
+import { ReactiveEventInternalContext } from "../Provider/Provider.Internal.js";
+import type { IpcMainEvent, IpcRendererEvent } from "electron";
 
 const IndeterminateResponse: ResponseIndeterminate =
     {

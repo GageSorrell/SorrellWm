@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyOverloadParameterValue } from "./Listener.Internal";
+import type { EmptyOverloadParameterValue } from "./Listener.Internal.js";
 
 /** This type is used internally by overloaded (private) signatures. */
 export type EmptyOverloadParameter = typeof EmptyOverloadParameterValue;

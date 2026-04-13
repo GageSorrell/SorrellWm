@@ -5,9 +5,9 @@
  */
 
 // @Todo TEMPORARY.
-import type { EmptyEventParameter, EventDecl, MainOwner, RendererOwner } from "../Decl/Decl.Types";
-import type { EventOwner } from "../Decl/Decl.Types";
-import type { OwnerKey } from "./Decl.Types";
+import type { EmptyEventParameter, EventDecl, MainOwner, RendererOwner } from "../Decl/Decl.Types.js";
+import type { EventOwner } from "../Decl/Decl.Types.js";
+import type { OwnerKey } from "./Decl.Types.js";
 
 // @TODO TEMPORARY.
 // export interface Registrar { }
@@ -27,10 +27,44 @@ export interface Registrar
 {
     __Internal__:
     {
-        GetLitFam: EventDecl<RendererOwner, boolean, EmptyEventParameter, string>;
-        BingBong: EventDecl<RendererOwner, EmptyEventParameter, EmptyEventParameter, [ string, number ]>;
-        ShowLitFam: EventDecl<MainOwner, number, EmptyEventParameter, string>;
-        ResponsefulMainEvent: EventDecl<MainOwner, number, { foo: string; }, string>;
+        MainEventRequest: EventDecl<MainOwner, number, EmptyEventParameter, string>;
+
+        MainEventRequestResponseErrorMessage: EventDecl<MainOwner, number, { foo: string; }, string>;
+
+        MainEmptyEventNoRequestNoResponseNoError: EventDecl<
+            MainOwner,
+            EmptyEventParameter,
+            EmptyEventParameter,
+            EmptyEventParameter
+        >;
+
+        MainEmptyEventNoRequestNoResponseNoErrorPayload: EventDecl<
+            MainOwner,
+            EmptyEventParameter,
+            EmptyEventParameter,
+            string
+        >;
+
+        MainEmptyEventNoRequestNoResponse: EventDecl<
+            MainOwner,
+            EmptyEventParameter,
+            EmptyEventParameter,
+            [ string, { foo: string; } ]
+        >;
+
+        MainEmptyEventNoRequest: EventDecl<
+            MainOwner,
+            EmptyEventParameter,
+            { Foo: string; },
+            [ string, { Foo: string; } ]
+        >;
+
+        MainEmptyEvent: EventDecl<
+            MainOwner,
+            number,
+            { Foo: string; },
+            [ string, { Foo: string; } ]
+        >;
 
         RendererEmptyEventNoRequestNoResponseNoError: EventDecl<
             RendererOwner,
@@ -67,39 +101,13 @@ export interface Registrar
             [ string, { Foo: string; } ]
         >;
 
-        MainEmptyEventNoRequestNoResponseNoError: EventDecl<
-            MainOwner,
-            EmptyEventParameter,
-            EmptyEventParameter,
-            EmptyEventParameter
-        >;
+        RendererEventRequestResponse: EventDecl<RendererOwner, boolean, EmptyEventParameter, string>;
 
-        MainEmptyEventNoRequestNoResponseNoErrorPayload: EventDecl<
-            MainOwner,
+        RendererEventErrorPayloadOnly: EventDecl<
+            RendererOwner,
             EmptyEventParameter,
             EmptyEventParameter,
-            string
-        >;
-
-        MainEmptyEventNoRequestNoResponse: EventDecl<
-            MainOwner,
-            EmptyEventParameter,
-            EmptyEventParameter,
-            [ string, { foo: string; } ]
-        >;
-
-        MainEmptyEventNoRequest: EventDecl<
-            MainOwner,
-            EmptyEventParameter,
-            { Foo: string; },
-            [ string, { Foo: string; } ]
-        >;
-
-        MainEmptyEvent: EventDecl<
-            MainOwner,
-            number,
-            { Foo: string; },
-            [ string, { Foo: string; } ]
+            [ string, number ]
         >;
     }
 }

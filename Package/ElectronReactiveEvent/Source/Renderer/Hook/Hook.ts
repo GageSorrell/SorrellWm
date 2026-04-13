@@ -14,7 +14,7 @@ import type {
     UseOnceEvent,
     UseOnceEventDeferred,
     UseSendEvent,
-    UseSendEventDeferred } from "./Hook.Types";
+    UseSendEventDeferred } from "./Hook.Types.js";
 import {
     useInvokeEvent,
     useInvokeEventDeferred,
@@ -24,8 +24,8 @@ import {
     useOnceEvent,
     useOnceEventDeferred,
     useSendEvent,
-    useSendEventDeferred } from "./Hook.Internal";
-import type { PackageKeys } from "../../Internal";
+    useSendEventDeferred } from "./Hook.Internal.js";
+import type { PackageKeys } from "../../Internal/index.js";
 
 /**
  * This is the entrypoint of `electron-reactive-event` in the `renderer`.

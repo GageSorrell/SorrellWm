@@ -4,16 +4,21 @@
  * License:   MIT
  */
 
-import type { Handler, HandlerRequest, Listener, ListenerRequest, RawResponse } from "../Listener/index.js";
+import type {
+    Handler,
+    HandlerRequest,
+    Listener,
+    ListenerRequest
+    /* RawResponse */ } from "../Listener/index.js";
 import { type IpcMainInvokeEvent, ipcMain } from "electron/main";
-import type { MainOwner, RendererOwner } from "../Decl/Decl.Types";
+import type { MainOwner, RendererOwner } from "../Decl/Decl.Types.js";
 import { BrowserWindow } from "electron";
-import type { Channel } from "../Channel";
-import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
-import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
-import type { NativeEventListener } from "./Main.Internal.Types";
-import type { PackageKeys } from "../Internal";
-import { ReactiveEventErrorInternal } from "../Error/Error.Internal";
+import type { Channel } from "../Channel/index.js";
+import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types.js";
+import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal.js";
+import type { NativeEventListener } from "./Main.Internal.Types.js";
+import type { PackageKeys } from "../Internal/index.js";
+import { ReactiveEventErrorInternal } from "../Error/Error.Internal.js";
 
 /**
  * @inheritdoc Handle:Signature
@@ -65,14 +70,20 @@ function HandleBase<
     ): Promise<WrapperReturnType>
     {
         type ThisRequest = HandlerRequest<PackageKey, typeof Channel>;
-        type ThisRawResponse = RawResponse<PackageKey, typeof Channel>;
+        // type ThisRawResponse = RawResponse<PackageKey, typeof Channel>;
+        type ThisRawResponse =
+            {
+                Message: string;
+                Payload: unknown;
+            };
+
         const RawResponse: ThisRawResponse =
             await (Handler as Handler<PackageKey, typeof Channel>)(
                 Event,
                 (ArgumentVector[0] as ThisRequest)
             );
 
-        if (RawResponse instanceof ReactiveEventErrorInternal)
+        if ((RawResponse as object) instanceof ReactiveEventErrorInternal)
         {
             const error: unknown =
                 RawResponse.Payload !== EmptyOverloadParameterValue

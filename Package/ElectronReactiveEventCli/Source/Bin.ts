@@ -29,7 +29,7 @@ async function ShowHelp(): Promise<void>
     const Version: string = PackageJson.version;
     /* eslint-disable @stylistic/max-len */
     console.log(`electron-reactive-event-cli v${ Version }.\nCopyright 2026 Gage Sorrell.\nReleased under the MIT license.\n
-Commands:
+Commands (Core):
 
     all:                   Performs everything below but setup.
     declare-events:        Generates a module that augments the Registrar with your event declarations.
@@ -40,6 +40,11 @@ Commands:
     generate-ipc:          Generates IPC modules for main and renderer.
     set-up:                Creates a config file.  This is necessary for using the CLI.
     setup:                 Alias for set-up.
+
+Commands (Miscellaneous):
+    docs:                  Opens the documentation reference in the default browser.
+    download-sample:       Downloads the sample project.
+    help:                  Outputs this text.
 `);
     /* eslint-enable @stylistic/max-len */
 }

@@ -7,10 +7,10 @@
 import type {
     ReactiveEventErrorDataInternal,
     ReactiveEventErrorMessage,
-    ReactiveEventErrorPayload } from "./Error.Internal.Types";
-import type { Channel } from "../Channel";
-import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
-import type { PackageKeys } from "../Internal";
+    ReactiveEventErrorPayload } from "./Error.Internal.Types.js";
+import type { Channel } from "../Channel/index.js";
+import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types.js";
+import type { PackageKeys } from "../Internal/index.js";
 
 /**
  * Describes an error of an event.  This is used by `handle`, and is translated

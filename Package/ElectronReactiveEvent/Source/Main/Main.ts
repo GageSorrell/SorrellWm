@@ -14,9 +14,17 @@ import type {
     ReactiveIpcFunctions,
     RemoveAllListeners,
     RemoveHandler,
-    Send } from "./Main.Types";
-import { handle, handleOnce, off, on, once, removeAllListeners, removeHandler, send } from "./Main.Internal";
-import type { PackageKeys } from "../Internal";
+    Send } from "./Main.Types.js";
+import {
+    handle,
+    handleOnce,
+    off,
+    on,
+    once,
+    removeAllListeners,
+    removeHandler,
+    send } from "./Main.Internal.js";
+import type { PackageKeys } from "../Internal/index.js";
 import { ipcMain } from "electron/main";
 
 /**
@@ -34,8 +42,8 @@ export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
 {
     return {
         addListener: on as On<PackageKey>,
-        handle: handle as Handle<PackageKey>,
-        handleOnce: handleOnce as HandleOnce<PackageKey>,
+        handle: handle as unknown as Handle<PackageKey>,
+        handleOnce: handleOnce as unknown as HandleOnce<PackageKey>,
         off: off as Off<PackageKey>,
         on: on as On<PackageKey>,
         once: once as Once<PackageKey>,

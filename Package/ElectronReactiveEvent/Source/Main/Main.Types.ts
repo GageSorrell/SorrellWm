@@ -6,9 +6,9 @@
 
 import type { BrowserWindow, IpcMain } from "electron/main";
 import type { Handler, Listener, ListenerRequest } from "../Listener/index.js";
-import type { MainOwner, RendererOwner } from "../Decl";
-import type { Channel } from "../Channel";
-import type { PackageKeys } from "../Internal";
+import type { MainOwner, RendererOwner } from "../Decl/index.js";
+import type { Channel } from "../Channel/index.js";
+import type { PackageKeys } from "../Internal/index.js";
 
 /**
  * The type-safe form of the listener passed to {@link IpcMain.on} *et al.*

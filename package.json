@@ -20,6 +20,8 @@
         "!./Development/**/*",
         "!./Package/ElectronReactiveEvent/**/*",
         "!./Package/ElectronReactiveEvent",
+        "!./Package/ElectronReactiveEvent/Sample",
+        "!./Package/ElectronReactiveEvent/Sample/**/*",
         "!./Package/ElectronReactiveEventCli/**/*",
         "!./Package/ElectronReactiveEventCli",
         "!./Documentation",

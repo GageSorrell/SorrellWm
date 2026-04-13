@@ -7,11 +7,11 @@
 import type {
     ReactiveEventErrorDataInternal,
     ReactiveEventErrorMessage,
-    ReactiveEventErrorPayload } from "./Error.Internal.Types";
-import type { Channel } from "../Channel";
-import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
-import type { PackageKeys } from "../Internal";
-import { ReactiveEventErrorInternal } from "./Error.Internal";
+    ReactiveEventErrorPayload } from "./Error.Internal.Types.js";
+import type { Channel } from "../Channel/index.js";
+import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal.js";
+import type { PackageKeys } from "../Internal/index.js";
+import { ReactiveEventErrorInternal } from "./Error.Internal.js";
 
 /**
  * An error of an event.  Returning this in your handler is how errors are

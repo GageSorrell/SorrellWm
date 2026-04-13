@@ -4,11 +4,11 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventErrorRecord, EventErrorTuple } from "../Decl/Decl.Types";
-import type { PackageKeys, Registrar } from "../Internal";
-import type { Channel } from "../Channel";
-import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
-import type { ErrorKey } from "../Internal/Decl.Types";
+import type { EmptyEventParameter, EventErrorRecord, EventErrorTuple } from "../Decl/Decl.Types.js";
+import type { PackageKeys, Registrar } from "../Internal/index.js";
+import type { Channel } from "../Channel/index.js";
+import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types.js";
+import type { ErrorKey } from "../Internal/Decl.Types.js";
 
 type ErrorNormalized<MessageType extends string, PayloadType = EmptyOverloadParameter> =
     PayloadType extends EmptyEventParameter

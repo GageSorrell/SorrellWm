@@ -153,6 +153,7 @@
 			"OVERLAPPEDWINDOW",
 			"PAINTSTRUCT",
 			"RENDERFULLCONTENT",
+			"Responseful",
 			"SHOWNOACTIVATE",
 			"sorrellwm",
 			"SRECORD",

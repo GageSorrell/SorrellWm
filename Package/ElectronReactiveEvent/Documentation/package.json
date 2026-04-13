@@ -1,5 +1,5 @@
 {
-  "name": "vitepress-example",
+  "name": "electron-reactive-event-documentation",
   "private": true,
   "scripts": {
     "predocs:dev": "typedoc",

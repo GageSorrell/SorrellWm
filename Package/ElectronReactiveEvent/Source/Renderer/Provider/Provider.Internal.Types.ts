@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { ReactiveEventContext } from "./Provider.Types";
+import type { ReactiveEventContext } from "./Provider.Types.js";
 
 /**
  * The context used by the hooks in this package.

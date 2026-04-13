@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventErrorRecord, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
+import type { EmptyEventParameter, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
 import type { ErrorKey, RequestKey, ResponseKey } from "../Internal/Decl.Types.js";
 import type { ErrorPayloadKey, ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types.js";
 import type {
@@ -44,20 +44,6 @@ type WithErrorHelper<PackageKey extends PackageKeys> =
                 ? undefined
                 : ChannelType
             : never;
-            // ? Registrar[PackageKey][ChannelType][ErrorKey] extends string
-            //     ? ChannelType
-            //     : Registrar[PackageKey][ChannelType][ErrorKey] extends [ unknown, unknown ]
-            //         ? ChannelType
-            //         : Registrar[PackageKey][ChannelType][ErrorKey] extends EventErrorRecord<infer _, infer __>
-            //             ? ChannelType
-            //             : undefined
-            // : never;
-        //     ? Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyEventParameter
-        //         ? undefined
-        //         : Registrar[PackageKey][ChannelType][ErrorKey] extends EmptyOverloadParameter
-        //             ? undefined
-        //             : ChannelType
-        //     : never
     };
 
 type WithErrorPayloadHelper<PackageKey extends PackageKeys> =

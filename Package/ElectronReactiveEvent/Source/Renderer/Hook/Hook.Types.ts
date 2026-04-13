@@ -10,10 +10,11 @@ import type {
     ListenerRequest,
     Response,
     ResponseSync } from "../../Listener/index.js";
-import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types";
-import type { Channel } from "../../Channel";
+import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types.js";
+import type { Channel } from "../../Channel/index.js";
 import type { InvokeOptions } from "./Hook.Unscoped.Types.js";
-import type { PackageKeys } from "../../Internal";
+import type { IpcRendererEvent } from "electron/renderer";
+import type { PackageKeys } from "../../Internal/index.js";
 
 /**
  * The type of the {@link Listener | listener} function passed to {@link useOnEvent} *et al.*
@@ -25,7 +26,7 @@ import type { PackageKeys } from "../../Internal";
 export type RendererListener<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>
-> = Listener<PackageKey, MainOwner, ChannelType>;
+> = Listener<PackageKey, RendererOwner, ChannelType, IpcRendererEvent>;
 
 /**
  * The type returned by {@link useInvokeEvent}.

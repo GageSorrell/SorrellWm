@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventErrorDecl, EventOwner, RendererOwner } from "../Decl/Decl.Types";
+import type { EmptyEventParameter, EventErrorDecl, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
 
 /** The key of the request type in an event declaration. */
 export type RequestKey = "RequestType";
