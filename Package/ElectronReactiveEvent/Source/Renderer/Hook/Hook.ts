@@ -14,7 +14,7 @@ import type {
     UseOnceEvent,
     UseOnceEventDeferred,
     UseSendEvent,
-    UseSendEventDeferred } from "./Hook.Types.js";
+    UseSendEventDeferred } from "./Hook.Types";
 import {
     useInvokeEvent,
     useInvokeEventDeferred,
@@ -24,8 +24,8 @@ import {
     useOnceEvent,
     useOnceEventDeferred,
     useSendEvent,
-    useSendEventDeferred } from "./Hook.Internal.js";
-import type { PackageKeys } from "../../Internal/index.js";
+    useSendEventDeferred } from "./Hook.Internal";
+import type { PackageKeys } from "../../Internal";
 
 /**
  * This is the entrypoint of `electron-reactive-event` in the `renderer`.
@@ -38,7 +38,7 @@ import type { PackageKeys } from "../../Internal/index.js";
  *
  * @returns The hooks provided by `electron-reactive-event`, scoped to your {@link PackageKey}.
  */
-export function getReactiveIpcHooks<PackageKey extends PackageKeys>(): ReactiveIpcHooks<PackageKey>
+export function getReactiveHooks<PackageKey extends PackageKeys>(): ReactiveIpcHooks<PackageKey>
 {
     return {
         useInvokeEvent: useInvokeEvent as UseInvokeEvent<PackageKey>,

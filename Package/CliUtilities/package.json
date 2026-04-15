@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.22",
+  "version": "1.0.27",
   "description": "Utilities for CLI tools.",
   "keywords": [
     "cli",
@@ -23,6 +23,14 @@
   "license": "MIT",
   "author": "Gage Sorrell <gage@sorrell.sh>",
   "type": "module",
+  "exports": {
+    ".": {
+      "default": "./Distribution/index.js",
+      "import": "./Distribution/index.js",
+      "require": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    }
+  },
   "main": "./Distribution/index.js",
   "types": "./Distribution/index.d.ts",
   "scripts": {
@@ -37,6 +45,7 @@
     "@inquirer/prompts": "^8.3.2",
     "@inquirer/type": "^4.0.4",
     "@sorrell/inquirer-file-selector": "^1.0.4",
+    "@sorrell/utilities": "^1.1.11",
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",
     "clipboardy": "^5.3.1",

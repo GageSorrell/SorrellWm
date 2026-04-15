@@ -5,13 +5,32 @@
  */
 
 import { access, realpath } from "fs/promises";
-import { dirname, join } from "path";
+import { dirname, join, resolve } from "path";
 import { constants as FsConstants } from "fs";
+import type { IPackageJson } from "package-json-type";
 import Process from "process";
 
-export async function GetPackageRootDirectory(): Promise<string>
+export async function GetPackageJson(Path?: string): Promise<IPackageJson>
 {
-    let CurrentDirectory: string = await realpath(Process.cwd());
+    const Root: string = await GetPackageRootDirectory(Path);
+
+    return JSON.parse(resolve(Root, "package.json")) as IPackageJson;
+}
+
+/**
+ * Get the root directory of the Node.js project in which the
+ * current working directory resides.
+ *
+ * @param Path - *(Optional)* The given path from which to look for a root directory.
+ *
+ * @throws `Error` iff the current working directory is not within a Node.js project.
+ *
+ * @returns The path of the root directory of the Node.js project in which the
+ * current working directory resides.
+ */
+export async function GetPackageRootDirectory(Path?: string): Promise<string>
+{
+    let CurrentDirectory: string = await realpath(Path || Process.cwd());
 
     while (true)
     {

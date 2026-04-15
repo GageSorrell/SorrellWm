@@ -14,6 +14,11 @@ export async function GenerateIpcCommand(): Promise<void>
 {
     SetCommand("generate-ipc");
 
+    await GenerateIpc();
+}
+
+export async function GenerateIpc(): Promise<void>
+{
     await GenerateIpcMainModule();
     await GenerateIpcRendererModule();
 }

@@ -10,8 +10,6 @@
  */
 export type CliConfig =
     {
-        "$schema": string;
-
         /**
          * The path to the file containing the `declare module` block that augments
          * the `Registrar` type with your event declarations.  This path should be
@@ -46,4 +44,11 @@ export type CliConfig =
          * `tsconfig.json`.
          */
         ScopedModulePath: string;
+    };
+
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+type CliConfigSchema =
+    CliConfig &
+    {
+        "$schema": string;
     };

@@ -27,5 +27,6 @@
         "moduleDetection": "force",
         "skipLibCheck": true
     },
+    "include": [ "Source/**/*" ],
     "exclude": [ "node_modules", "Distribution" ]
 }

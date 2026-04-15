@@ -1,0 +1,55 @@
+{
+  "name": "create-electron-reactive-event",
+  "version": "0.0.2",
+  "description": "The init package for using electron-reactive-event-cli.",
+  "bin": "./Distribution/index.js",
+  "keywords": [
+    "electron-reactive-event",
+    "electron",
+    "init",
+    "create",
+    "react",
+    "reactive",
+    "event",
+    "typescript",
+    "ts",
+    "type-safety",
+    "type-safe",
+    "cli",
+    "electron-reactive-event-cli"
+  ],
+  "files": [
+    ".npmignore",
+    "package.json",
+    "package-lock.json",
+    "ReadMe.md",
+    "Distribution",
+    "Distribution/**/*"
+  ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm#readme",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "type": "commonjs",
+  "main": "./Distribution/index.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "bin": "node ./Distribution/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "@listr2/prompt-adapter-enquirer": "^4.2.1",
+    "@sorrell/cli-utilities": "^1.0.27",
+    "@sorrell/utilities": "^1.1.8",
+    "listr2": "^10.2.1"
+  }
+}

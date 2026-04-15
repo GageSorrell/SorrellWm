@@ -23,6 +23,9 @@ module.exports = {
         {
             files:
             [
+                "Package/CliUtilities/Source/**/*.ts",
+                "Package/Utilities/Source/**/*.ts",
+                "Package/CreateElectronReactiveEvent/Source/**/*.ts",
                 "Package/ElectronReactiveEvent/Source/**/*.ts",
                 "Package/ElectronReactiveEvent/Source/**/*.tsx",
                 "Package/ElectronReactiveEventCli/Source/**/*.ts",
@@ -45,8 +48,8 @@ module.exports = {
                     ]
                 } ],
                 "jsdoc/require-param": "error",
-                "jsdoc/require-param-description": "error"
-                // "tsdoc/syntax": "error"
+                "jsdoc/require-param-description": "error",
+                "no-console": "off"
             }
         }
     ],

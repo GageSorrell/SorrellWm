@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.1.6",
+    "version": "1.1.14",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -30,15 +30,23 @@
         "./package.json",
         "tsconfig.json"
     ],
+    "exports": {
+        ".": {
+            "types": "./Distribution/index.d.ts",
+            "import": "./Distribution/index.js",
+            "require": "./Distribution/index.js",
+            "default": "./Distribution/index.js"
+        }
+    },
     "main": "Distribution/index.js",
     "types": "Distribution/index.d.ts",
     "scripts": {
         "build": "tsc -p ./tsconfig.json",
-        "publish-bump-safe": "node ./Distribution/Binaries/PublishBumpSafe.js",
-        "ora": "node ./Distribution/Temp.js"
+        "publish-bump-safe": "node ./Distribution/Binaries/PublishBumpSafe.js"
     },
     "devDependencies": {
         "@types/node": "^25.5.0",
+        "package-json-type": "^1.1.2",
         "typescript": "^6.0.2"
     }
 }

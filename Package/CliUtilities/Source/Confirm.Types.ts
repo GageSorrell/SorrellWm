@@ -7,6 +7,7 @@
 import type { PartialDeep } from "@inquirer/type";
 import type { Theme } from "@inquirer/core";
 
+/** The configuration object for {@link Confirm}. */
 export type FConfirmConfig =
     {
         message: string;

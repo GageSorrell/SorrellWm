@@ -4,9 +4,9 @@
  * License:   MIT
  */
 
-import type { EventOwner, RendererOwner } from "../Decl/index.js";
+import type { EventOwner, RendererOwner } from "../Registrar/Registrar.Types";
 import type { IpcMainEvent, IpcRendererEvent } from "electron";
-import type { IpcEvent } from "./Listener.Types.js";
+import type { IpcEvent } from "./Listener.Types";
 
 /**
  * The type of the value returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}

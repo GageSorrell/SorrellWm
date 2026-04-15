@@ -12,7 +12,7 @@
  * The provider of `electron-reactive-event`, and related content.
  */
 
-export * from "./Provider.js";
-export type * from "./Provider.Types.js";
-export type * from "./Provider.Internal.js";
-export * from "./Provider.Internal.Types.js";
+export * from "./Provider";
+export type * from "./Provider.Types";
+export type * from "./Provider.Internal";
+export * from "./Provider.Internal.Types";

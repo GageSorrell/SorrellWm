@@ -5,23 +5,9 @@
  */
 
 import type { BrowserWindow, IpcMain } from "electron/main";
-import type { Handler, Listener, ListenerRequest } from "../Listener/index.js";
-import type { MainOwner, RendererOwner } from "../Decl/index.js";
-import type { Channel } from "../Channel/index.js";
-import type { PackageKeys } from "../Internal/index.js";
-
-/**
- * The type-safe form of the listener passed to {@link IpcMain.on} *et al.*
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- */
-export type SendableEventHandler<PackageKey extends PackageKeys> =
-    {
-        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
-            channel: ChannelType,
-            listener: MainListener<PackageKey, typeof channel>
-        ): void;
-    };
+import type { Handler, Listener, ListenerRequest } from "../Listener";
+import type { MainOwner, PackageKeys, RendererOwner } from "../Internal";
+import type { Channel } from "../Channel";
 
 /**
  * The type-safe form of
@@ -333,7 +319,7 @@ export type RemoveHandler<PackageKey extends PackageKeys> =
     };
 
 /**
- * Type-safe IPC functions for events sent by `main`.
+ * Type-safe IPC functions for working with events in `main`.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  *
@@ -348,7 +334,7 @@ export type RemoveHandler<PackageKey extends PackageKeys> =
  * @property removeAllListeners - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovealllistenerschannel | IpcMain.removeAllListeners }
  * @property send - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/web-contents#contentssendchannel-args | webContents.send } for one or many {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}.
  */
-export type ReactiveIpcFunctions<PackageKey extends PackageKeys> =
+export type ReactiveIpcMainFunctions<PackageKey extends PackageKeys> =
     Readonly<{
         addListener: On<PackageKey>;
         handle: Handle<PackageKey>;
@@ -364,10 +350,10 @@ export type ReactiveIpcFunctions<PackageKey extends PackageKeys> =
 
 /**
  * The {@link https://www.electronjs.org/docs/latest/api/ipc-main | IpcMain} type, but with the type-safe IPC functions
- * given in {@link ReactiveIpcFunctions}.
+ * given in {@link ReactiveIpcMainFunctions}.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  */
 export type IpcMainReactive<PackageKey extends PackageKeys> =
-    Omit<IpcMain, keyof ReactiveIpcFunctions<PackageKey>> &
-    ReactiveIpcFunctions<PackageKey>;
+    Omit<IpcMain, keyof ReactiveIpcMainFunctions<PackageKey>> &
+    ReactiveIpcMainFunctions<PackageKey>;

@@ -11,10 +11,10 @@ import type {
     Off,
     On,
     Once,
-    ReactiveIpcFunctions,
+    ReactiveIpcMainFunctions,
     RemoveAllListeners,
     RemoveHandler,
-    Send } from "./Main.Types.js";
+    Send } from "./Main.Types";
 import {
     handle,
     handleOnce,
@@ -23,9 +23,8 @@ import {
     once,
     removeAllListeners,
     removeHandler,
-    send } from "./Main.Internal.js";
-import type { PackageKeys } from "../Internal/index.js";
-import { ipcMain } from "electron/main";
+    send } from "./Main.Internal";
+import type { PackageKeys } from "../Internal";
 
 /**
  * This is the entrypoint of `electron-reactive-event` for `main`.
@@ -38,7 +37,7 @@ import { ipcMain } from "electron/main";
  * @returns Type-safe IPC functions for sending events from `main`.
  */
 export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
-): ReactiveIpcFunctions<PackageKey>
+): ReactiveIpcMainFunctions<PackageKey>
 {
     return {
         addListener: on as On<PackageKey>,
@@ -65,8 +64,19 @@ export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
  */
 export function getReactiveIpcMain<PackageKey extends PackageKeys>(): IpcMainReactive<PackageKey>
 {
-    return {
-        ...ipcMain,
-        ...getReactiveIpcFunctions<PackageKey>()
-    };
+    try
+    {
+        /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+        const { ipcMain } = require("electron/main");
+
+        return {
+            ...ipcMain,
+            ...getReactiveIpcFunctions<PackageKey>()
+        };
+    }
+    catch
+    {
+        /* eslint-disable-next-line @stylistic/max-len */
+        throw new Error("Could not import ipcMain from electron/main.  Make sure that electron is installed as a dependency.");
+    }
 }

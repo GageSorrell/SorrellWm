@@ -9,8 +9,8 @@
 import { DeclareEvents } from "./DeclareEvents";
 import { SetCommand } from "./Command";
 
-export async function DeclareEventsCommand(): Promise<void>
+export async function DeclareEventsCommand(Path?: string): Promise<void>
 {
     SetCommand("declare-events");
-    await DeclareEvents();
+    await DeclareEvents(Path);
 }

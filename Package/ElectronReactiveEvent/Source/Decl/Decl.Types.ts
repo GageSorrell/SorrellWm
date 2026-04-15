@@ -4,110 +4,12 @@
  * License:   MIT
  */
 
-import type { EventDeclHandler, EventDeclListener } from "../Internal/index.js";
-
-/* eslint-disable @typescript-eslint/naming-convention */
-
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-const EmptyEventParameterValue: unique symbol = Symbol("EmptyEventParameterValue");
-
-/**
- * Use this type as a type parameter in {@link EventDecl} when you do not wish
- * to have a given type for that declaration (*i.e.*, request, response, or error).
- */
-export type EmptyEventParameter = typeof EmptyEventParameterValue;
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const MainOwnerValue: unique symbol = Symbol("MainOwnerValue");
-const RendererOwnerValue: unique symbol = Symbol("RendererOwnerValue");
-/* eslint-enable @typescript-eslint/no-unused-vars */
-
-/** This type is used to represent events that are sent by `main`. */
-export type MainOwner = typeof MainOwnerValue;
-
-/** This type is used to represent events that are sent by the `renderer`. */
-export type RendererOwner = typeof RendererOwnerValue;
-
-/** An *owner* of a given event type is from whom events of that event type are sent. */
-export type EventOwner =
-    | MainOwner
-    | RendererOwner;
-
-/**
- * A pairing of a message type and payload type.
- * Use this with {@link EventErrorAdvancedDecl} to define
- * a discriminated union of possible error types.
- *
- * @typeParam MessageType - The message type of the error.
- * @typeParam PayloadType - The payload type of the error.
- */
-export type EventErrorAdvancedDeclParameter<
-    MessageType extends string = string,
-    PayloadType = unknown
-> =
-    {
-        MessageType: MessageType;
-        PayloadType: PayloadType;
-    };
-
-/**
- * Define an error type as a discriminated union of `MessageType`, `PayloadType` combinations.
- *
- * @typeParam MessageType - The message type of the error.
- * @typeParam PayloadType - The payload type of the error.
- */
-export type EventErrorAdvancedDecl<
-    Parameter extends EventErrorAdvancedDeclParameter<MessageType, PayloadType>,
-    MessageType extends string = string,
-    PayloadType = unknown
-> = Parameter;
-
-/**
- * Define an error type as a message type and payload type.
- * This is equivalent to using {@link EventErrorRecord}, just as a
- * tuple-type.  Any type assignable to {@link PayloadType} will
- * be usable with any type assignable to {@link MessageType}.
- *
- * @typeParam MessageType - The message type of the error.
- * @typeParam PayloadType - The payload type of the error.
- */
-export type EventErrorTuple<
-    MessageType extends string = string,
-    PayloadType = unknown
-> = [ MessageType, PayloadType ];
-
-/**
- * Define an error type as a message type and payload type.
- * This is equivalent to using {@link EventErrorTuple}, just as a
- * record-type.  Any type assignable to {@link PayloadType} will
- * be usable with any type assignable to {@link MessageType}.
- *
- * @typeParam MessageType - The message type of the error.
- * @typeParam PayloadType - The payload type of the error.
- */
-export type EventErrorRecord<
-    MessageType extends string = string,
-    PayloadType = unknown
-> =
-    {
-        Message: MessageType;
-        Payload: PayloadType;
-    };
-
-/**
- * Define an error type as just a message type, or as message and payload
- * types, either as a tuple-type or record-type.
- *
- * @typeParam MessageType - The message type of the error.
- * @typeParam PayloadType - The payload type of the error.
- */
-export type EventErrorDecl<
-    MessageType extends string = string,
-    PayloadType = unknown
-> =
-    | MessageType
-    | EventErrorTuple<MessageType, PayloadType>
-    | EventErrorRecord<MessageType, PayloadType>;
+import type {
+    EventDeclHandler,
+    EventDeclListener,
+    EventOwner,
+    MainOwner,
+    RendererOwner } from "../Internal";
 
 /* eslint-disable @stylistic/max-len */
 
@@ -128,19 +30,19 @@ export type EventErrorDecl<
  */
 export type EventDecl<
     OwnerType extends EventOwner,
-    RequestType = EmptyEventParameter,
-    ResponseType = EmptyEventParameter,
-    ErrorType extends EventErrorDecl | EmptyEventParameter = EmptyEventParameter
+    RequestType = never,
+    ResponseType = never,
+    ErrorType = never
 > =
     OwnerType extends MainOwner
-        ? ResponseType extends EmptyEventParameter
-            ? ErrorType extends EmptyEventParameter
+        ? [ ResponseType ] extends [ never ]
+            ? [ ErrorType ] extends [ never ]
                 ? EventDeclListener<MainOwner, RequestType>
                 : never
             : never
         : OwnerType extends RendererOwner
-            ? ResponseType extends EmptyEventParameter
-                ? ErrorType extends EmptyEventParameter
+            ? [ ResponseType ] extends [ never ]
+                ? [ ErrorType ] extends [ never ]
                     ? EventDeclListener<RendererOwner, RequestType>
                     : EventDeclHandler<RequestType, ResponseType, ErrorType>
                 : EventDeclHandler<RequestType, ResponseType, ErrorType>

@@ -21,7 +21,7 @@
  * the {@link Hook} and {@link Provider} modules.
  */
 
-export * from "./Main.js";
-export * from "./Main.Types.js";
-export * from "./Main.Internal.js";
-export * from "./Main.Internal.Types.js";
+export * from "./Main";
+export * from "./Main.Types";
+export * from "./Main.Internal";
+export * from "./Main.Internal.Types";

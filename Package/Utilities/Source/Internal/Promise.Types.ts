@@ -3,8 +3,3 @@
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
-
-export type TTrySource<DataType> =
-    | Promise<DataType>
-    | (() => DataType)
-    | (() => Promise<DataType>);

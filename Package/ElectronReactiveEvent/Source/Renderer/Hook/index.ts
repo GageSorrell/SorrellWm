@@ -16,8 +16,8 @@
  * The hooks provided by `electron-reactive-event`.
  */
 
-export * from "./Hook.js";
-export type * from "./Hook.Types.js";
-export type * from "./Hook.Unscoped.Types.js";
-export type * from "./Hook.Internal.js";
-export * from "./Hook.Internal.Types.js";
+export * from "./Hook";
+export type * from "./Hook.Types";
+export type * from "./Hook.Unscoped.Types";
+export type * from "./Hook.Internal";
+export * from "./Hook.Internal.Types";

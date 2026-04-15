@@ -6,8 +6,6 @@
 
 export * from "./Channel/index.js";
 export * from "./Decl/index.js";
-export * from "./Error/Error.js";
-export * from "./Error/Error.Types.js";
 export * from "./Listener/Listener.Types.js";
 export * from "./Main/Main.js";
 export * from "./Main/Main.Types.js";

@@ -17,29 +17,27 @@ import {
 import type {
     EqualityCheck,
     InvokeOptionsOverloadedArgument,
-    InvokeResponseInternal } from "./Hook.Internal.Types.js";
+    ResultInternal } from "./Hook.Internal.Types";
 import type {
     HandlerRequest,
+    InvokeResultSync,
     ListenerRequest,
-    ResponseIndeterminate,
-    ResponseSync } from "../../Listener/index.js";
+    ResponseIndeterminate } from "../../Listener";
 import type {
     InvokeEventDeferred,
-    InvokeResponse,
+    InvokeResult,
     OffEventDeferred,
     OnEventDeferred,
     OnceEventDeferred,
     RendererListener,
-    SendEventDeferred } from "./Hook.Types.js";
-import type { MainOwner, RendererOwner } from "../../Decl/Decl.Types.js";
-import type { Channel } from "../../Channel/index.js";
-import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types.js";
-import { EmptyOverloadParameterValue } from "../../Listener/Listener.Internal.js";
-import type { InvokeOptions } from "./Hook.Unscoped.Types.js";
-import type { PackageKeys } from "../../Internal/index.js";
-import type { ReactiveEventContextInternal } from "../Provider/Provider.Internal.Types.js";
-import { ReactiveEventInternalContext } from "../Provider/Provider.Internal.js";
-import type { IpcMainEvent, IpcRendererEvent } from "electron";
+    SendEventDeferred } from "./Hook.Types";
+import type { MainOwner, PackageKeys, RendererOwner } from "../../Internal";
+import type { Channel } from "../../Channel";
+import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";
+import { EmptyOverloadParameterValue } from "../../Listener/Listener.Internal";
+import type { InvokeOptions } from "./Hook.Unscoped.Types";
+import type { ReactiveEventContextInternal } from "../Provider/Provider.Internal.Types";
+import { ReactiveEventInternalContext } from "../Provider/Provider.Internal";
 
 const IndeterminateResponse: ResponseIndeterminate =
     {
@@ -133,7 +131,7 @@ export function useInvokeEvent<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
     channel: ChannelType
-): InvokeResponse<PackageKey, typeof channel, undefined>;
+): InvokeResult<PackageKey, typeof channel>;
 /**
  * Invoke an event when the containing component mounts, whose event declaration
  * does *not* defines a request type.
@@ -156,7 +154,7 @@ export function useInvokeEvent<
     SuspendsType extends boolean>(
     channel: ChannelType,
     options: InvokeOptions<SuspendsType>
-): InvokeResponse<PackageKey, typeof channel, typeof options>;
+): InvokeResult<PackageKey, typeof channel, typeof options>;
 /**
  * Invoke an event when the containing component mounts, whose event declaration
  * defines a request type.
@@ -177,7 +175,7 @@ export function useInvokeEvent<
     ChannelType extends Channel.Handler.Request<PackageKey>>(
     channel: ChannelType,
     request: HandlerRequest<PackageKey, typeof channel>
-): InvokeResponse<PackageKey, typeof channel, undefined>;
+): InvokeResult<PackageKey, typeof channel>;
 /**
  * Invoke an event when the containing component mounts, whose event declaration
  * defines a request type.
@@ -202,7 +200,7 @@ export function useInvokeEvent<
     channel: ChannelType,
     request: HandlerRequest<PackageKey, typeof channel>,
     options: InvokeOptions<SuspendsType>
-): InvokeResponse<PackageKey, typeof channel, typeof options>;
+): InvokeResult<PackageKey, typeof channel, typeof options>;
 /**
  * Invoke an event when the containing component mounts.
  *
@@ -230,7 +228,7 @@ export function useInvokeEvent<
         | InvokeOptions<SuspendsType>
         | EmptyOverloadParameter = EmptyOverloadParameterValue,
     options: InvokeOptionsOverloadedArgument<SuspendsType> = EmptyOverloadParameterValue
-): InvokeResponseInternal<
+): ResultInternal<
     PackageKey,
     typeof channel,
     typeof requestOrOptions,
@@ -239,7 +237,7 @@ export function useInvokeEvent<
 {
     type ThisRequest = HandlerRequest<PackageKey, typeof channel>;
     type ThisReturnType =
-        InvokeResponseInternal<
+        ResultInternal<
             PackageKey,
             typeof channel,
             typeof requestOrOptions,
@@ -367,7 +365,11 @@ export function useInvokeEvent<
     if (Suspends)
     {
         const SuspendedInvocation: ThisReturnTypeSync = use(InvokePromise);
-        SetResponse(SuspendedInvocation as ThisReturnType);
+        SetResponse({
+            data: undefined,
+            error: undefined,
+            ...SuspendedInvocation
+        } as ThisReturnType);
         // SetResponse((_Old: ThisReturnTypeMaybe): ThisReturnTypeMaybe =>
         // {
         //     return SuspendedInvocation as ThisReturnType;
@@ -377,6 +379,7 @@ export function useInvokeEvent<
     {
         InvokePromise.then((Value: ThisReturnTypeSync): void =>
         {
+            (Value as Record<string, unknown>).isPending = false;
             SetResponse(Value as ThisReturnType);
         });
     }
@@ -401,12 +404,12 @@ export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
     async function invokeEventDeferred<
         ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
         channel: ChannelType
-    ): Promise<ResponseSync<PackageKey, typeof channel>>;
+    ): Promise<InvokeResultSync<PackageKey, typeof channel>>;
     async function invokeEventDeferred<
         ChannelType extends Channel.Handler.Request<PackageKey>>(
         channel: ChannelType,
         request: HandlerRequest<PackageKey, typeof channel>
-    ): Promise<ResponseSync<PackageKey, typeof channel>>;
+    ): Promise<InvokeResultSync<PackageKey, typeof channel>>;
     // eslint-disable-next-line jsdoc/require-jsdoc
     async function invokeEventDeferred<
         ChannelType extends Channel.Handler.Request<PackageKey>>(
@@ -414,7 +417,7 @@ export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
         request:
             | HandlerRequest<PackageKey, typeof channel>
             | EmptyOverloadParameter = EmptyOverloadParameterValue
-    ): Promise<ResponseSync<PackageKey, typeof channel>>
+    ): Promise<InvokeResultSync<PackageKey, typeof channel>>
     {
         if (request !== EmptyOverloadParameterValue)
         {
@@ -433,6 +436,7 @@ export function useInvokeEventDeferred<PackageKey extends PackageKeys>(
  * Subscribe to events sent by `main` at the time that the containing component mounts.
  * When the component unmounts, the listener is unsubscribed.
  *
+ * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The type of the {@link channel} on which the
  * {@link listener} will listen.
  *
@@ -639,7 +643,7 @@ function SendEventInternal<
  *
  * @note {@link | Sendable events} do *not* end with a response returned by
  * `main`.  If you wish to send an event to `main` such that it returns a
- * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * {@link InvokeResult | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
  * @typeParam ChannelType - The channel that uniquely identifies the desired
@@ -660,7 +664,7 @@ export function useSendEvent<
  *
  * @note {@link | Sendable events} do *not* end with a response returned by
  * `main`.  If you wish to send an event to `main` such that it returns a
- * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * {@link InvokeResult | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
  * @typeParam ChannelType - The channel that uniquely identifies the desired
@@ -682,7 +686,7 @@ export function useSendEvent<
  *
  * @note {@link | Sendable events} do *not* end with a response returned by
  * `main`.  If you wish to send an event to `main` such that it returns a
- * {@link InvokeResponse | response}, declare the {@link EventDecl | event type}
+ * {@link InvokeResult | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
  * @typeParam PackageKey - The unique string that identifies your package.

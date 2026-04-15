@@ -4,4 +4,13 @@
  * License:   MIT
  */
 
-export type TDeepWriteable<Type> = { -readonly [ Key in keyof Type ]: TDeepWriteable<Type[Key]> };
+/**
+ * Defines a type that corresponds to {@link RecordLike}, such that every
+ * `readonly` modifier is removed, recursively.
+ *
+ * @typeParam RecordLike - The type to make writeable.
+ */
+export type TDeepWriteable<RecordLike> =
+    {
+        -readonly [ Key in keyof RecordLike ]: TDeepWriteable<RecordLike[Key]>
+    };

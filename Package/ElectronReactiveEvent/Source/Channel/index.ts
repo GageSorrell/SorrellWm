@@ -4,4 +4,4 @@
  * License:   MIT
  */
 
-export type * from "./Channel.Types.js";
+export type * from "./Channel.Types";

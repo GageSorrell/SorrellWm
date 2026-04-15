@@ -4,10 +4,7 @@
  * License:   MIT
  */
 
-export * from "./Decl/Decl.Types.js";
-export * from "./Error/Error.js";
-export * from "./Main/Main.js";
-export * from "./Renderer/Hook/Hook.js";
-export * from "./Renderer/Provider/Provider.js";
-export * from "./Renderer/Hook/Hook.Unscoped.Types.js";
-export * from "./Listener/Listener.Unscoped.Types.js";
+export * from "./index.Shared";
+
+export * from "./Main/Main";
+export * from "./Main/Main.Types";

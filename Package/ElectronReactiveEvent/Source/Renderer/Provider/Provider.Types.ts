@@ -26,19 +26,17 @@ export type ReactiveEventContext =
          * that wrap the IPC functions, which do not forward calls that seem unusual.
          *
          * @property invoke - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendererinvokechannel-args | invoke } function.
-         * @property send - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrenderersendchannel-args | send } function.
-         * @property sendSync - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrenderersendsyncchannel-args | sendSync } function.
          * @property off - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendereroffchannel-listener | off } function.
          * @property on - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendereronchannel-listener | on } function.
          * @property once - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendereroncechannel-listener | once } function.
+         * @property send - The {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrenderersendchannel-args | send } function.
          */
         ipcRenderer: Pick<IpcRenderer,
             | "invoke"
-            | "send"
-            | "sendSync"
             | "off"
             | "on"
-            | "once">;
+            | "once"
+            | "send">;
     };
 
 /**
@@ -53,4 +51,4 @@ export type ReactiveEventContext =
  * @property value - The object containing the necessary {@link https://www.electronjs.org/docs/latest/api/ipc-renderer | IpcRenderer }
  * functions, exposed via a preload script (see {@link /guides/getting-started} for more details).
  */
-export type ReactiveEventProviderProps = PropsWithChildren<{ value: ReactiveEventContext; }>;
+export type ReactiveEventProviderProps = PropsWithChildren<{ value?: ReactiveEventContext; }>;

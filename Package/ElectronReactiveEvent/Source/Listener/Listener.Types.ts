@@ -4,17 +4,19 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventOwner, MainOwner, RendererOwner } from "../Decl/Decl.Types.js";
-import type { ResponseKey as EventResponseKey, RequestKey } from "../Internal/Decl.Types.js";
+import type { ErrorKey, ResponseKey as EventResponseKey, RequestKey } from "../Internal/Decl.Types";
 import type {
+    EventOwner,
     FilterByOwner,
+    MainOwner,
     PackageKeys,
-    Registrar } from "../Internal/index.js";
+    Registrar,
+    RendererOwner} from "../Internal";
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron/main";
-import type { ListenerNoRequest, ResponseIndeterminate } from "./Listener.Unscoped.Types.js";
-import type { Channel } from "../Channel/index.js";
+import type { ListenerNoRequest, ResponseIndeterminate } from "./Listener.Unscoped.Types";
+import type { Channel } from "../Channel";
 import type { IpcRendererEvent } from "electron/renderer";
-import type { ReactiveEventErrorDataInternal } from "../Error/Error.Internal.Types.js";
+import type { Reactive } from "../Reactive";
 
 /**
  * The request type of a given event declaration, identified by its {@link PackageKey},
@@ -30,7 +32,7 @@ export type EventRequest<
     OwnerType extends EventOwner,
     ChannelType extends Channel.Request<PackageKey, OwnerType>
 > = RequestKey extends keyof FilterByOwner<PackageKey, OwnerType>[ChannelType]
-    ? FilterByOwner<PackageKey, OwnerType>[ChannelType][RequestKey] extends EmptyEventParameter
+    ? [ FilterByOwner<PackageKey, OwnerType>[ChannelType][RequestKey] ] extends [ never ]
         ? never
         : FilterByOwner<PackageKey, OwnerType>[ChannelType][RequestKey]
     : never;
@@ -50,65 +52,18 @@ export type ListenerRequest<
     ChannelType extends Channel.Request<PackageKey, OwnerType>
 > = EventRequest<PackageKey, OwnerType, ChannelType>;
 
-/**
- * The type returned by a handler when the given invokable event succeeds.
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- * @typeParam ChannelType - The channel that uniquely identifies the desired
- * event declaration.
- */
-export type RawResponseSuccess<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>
-> = EventResponseKey extends keyof FilterByOwner<PackageKey, RendererOwner>[ChannelType]
-    ? FilterByOwner<PackageKey, RendererOwner>[ChannelType][EventResponseKey] extends EmptyEventParameter
-        ? never
-        : FilterByOwner<PackageKey, RendererOwner>[ChannelType][EventResponseKey]
-    : never;
+type ResultDataKey = "data";
+type ResultErrorKey = "error";
+type ResultKey =
+    | ResultDataKey
+    | ResultErrorKey;
 
-/**
- * The type returned by a handler when the given invokable event fails.
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- * @typeParam ChannelType - The channel that uniquely identifies the desired
- * event declaration.
- */
-export type RawResponseError<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Error<PackageKey>
-> = ReactiveEventErrorDataInternal<PackageKey, ChannelType>;
+type ResponseOtherKey<KeyType extends ResultKey> =
+    KeyType extends ResultDataKey
+        ? ResultErrorKey
+        : ResultDataKey;
 
-/**
- * Your {@link Handler | handlers} can return values directly using the types in your event declarations,
- * *i.e.*, return your `ResponseType` when your event succeeds, and the `ErrorType` when
- * your event fails.
- *
- * `electron-reactive-event` transforms your return value before sending it to the `renderer`
- * so that it receives data in a homogenous structure: the {@link Response} type.
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- * @typeParam ChannelType - The channel that uniquely identifies the desired
- * event declaration.
- */
-export type RawResponse<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>
-> =
-    | RawResponseSuccess<PackageKey, ChannelType>
-    | RawResponseError<PackageKey, ChannelType>;
-
-type ResponseDataKey = "data";
-type ResponseErrorKey = "error";
-type ResponseKey =
-    | ResponseDataKey
-    | ResponseErrorKey;
-
-type ResponseOtherKey<KeyType extends ResponseKey> =
-    KeyType extends ResponseDataKey
-        ? ResponseErrorKey
-        : ResponseDataKey;
-
-type ResponseBase<KeyType extends ResponseKey, ValueType> =
+type ResponseBase<KeyType extends ResultKey, ValueType> =
     Readonly<
         {
             [ Key in KeyType ]: ValueType;
@@ -124,13 +79,13 @@ type ResponseBase<KeyType extends ResponseKey, ValueType> =
  * your event fails.
  *
  * `electron-reactive-event` transforms your return value before sending it to the `renderer`
- * so that it receives data in a homogenous structure: the {@link Response} type.
+ * so that it receives data in a homogenous structure: the {@link InvokeResultAsync} type.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type ResponseSuccess<
+export type ResultSuccess<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>
 > =
@@ -147,7 +102,6 @@ export type ResponseSuccess<
             }
             : never
         );
-// > = ResponseBase<ResponseDataKey, Registrar[PackageKey][ChannelType][EventResponseKey]>;
 
 type IsPendingPart<IsPendingType extends boolean> =
     Readonly<{
@@ -159,10 +113,6 @@ export type IpcEvent =
     | IpcMainEvent
     | IpcMainInvokeEvent
     | IpcRendererEvent;
-
-type IpcEventPart<EventType extends IpcEvent> = Readonly<{
-    event: EventType;
-}>;
 
 type MakeIsPending<RecordType extends Record<PropertyKey, unknown>> =
     | (
@@ -183,10 +133,13 @@ type MakeIsPending<RecordType extends Record<PropertyKey, unknown>> =
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type ResponseError<
+export type ResultError<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Error<PackageKey>
-> = ResponseBase<ResponseErrorKey, ReactiveEventErrorDataInternal<PackageKey, ChannelType>>;
+> =
+    ErrorKey extends keyof Registrar[PackageKey][ChannelType]
+        ? ResponseBase<ResultErrorKey, Registrar[PackageKey][ChannelType][ErrorKey]>
+        : never;
 
 /**
  * The type returned to the `renderer` by a {@link Handler} when the
@@ -197,27 +150,23 @@ export type ResponseError<
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type ResponseSync<
+export type InvokeResultSync<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>
 > =
-    IpcEventPart<IpcRendererEvent> &
     ChannelType extends Channel.Handler.Response<PackageKey>
         ? ChannelType extends Channel.Handler.Error<PackageKey>
             ? (
-                | ResponseSuccess<PackageKey, ChannelType>
-                | ResponseError<PackageKey, ChannelType>
+                | ResultSuccess<PackageKey, ChannelType>
+                | ResultError<PackageKey, ChannelType>
             )
-            : ResponseSuccess<PackageKey, ChannelType>
+            : ResultSuccess<PackageKey, ChannelType>
         : ChannelType extends Channel.Handler.Error<PackageKey>
-            ? ResponseError<PackageKey, ChannelType>
-            : {
-                data: undefined;
-                error: undefined;
-            };
+            ? ResultError<PackageKey, ChannelType>
+            : never;
 
 /**
- * A {@link Response} returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
+ * A {@link InvokeResultAsync} returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
  * is not `true`, and `main` has returned a response.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
@@ -229,22 +178,22 @@ export type ResponseSettled<
     ChannelType extends Channel.Handler.Any<PackageKey>
 > =
     Exclude<
-        Response<PackageKey, ChannelType>,
+        InvokeResultAsync<PackageKey, ChannelType>,
         ResponseIndeterminate
     >;
 
 /**
- * A {@link Response} returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
+ * A {@link InvokeResultAsync} returned by {@link UseInvokeEvent} when {@link InvokeOptions.suspend}
  * is not `true`, possibly before `main` has sent a value to the `renderer`.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Response<
+export type InvokeResultAsync<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>
-> = MakeIsPending<ResponseSync<PackageKey, ChannelType>>;
+> = MakeIsPending<InvokeResultSync<PackageKey, ChannelType>>;
 
 /**
  * A {@link Handler} that subscribes to an event whose declaration does
@@ -259,11 +208,11 @@ export type HandlerNoRequest<
     ChannelType extends Channel.Handler.NoRequest<PackageKey>
 > =
     {
-        (event: IpcMainInvokeEvent): Promise<RawResponse<PackageKey, ChannelType>>;
+        (event: IpcMainInvokeEvent): Promise<Reactive.Result<PackageKey, ChannelType>>;
     };
 
 /**
- * The request A {@link Handler} that subscribes to an event whose declaration has a request type.
+ * The request sent to a {@link Handler} via {@link UseInvoke}.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
@@ -289,7 +238,7 @@ export type HandlerWithRequest<
         (
             event: IpcMainInvokeEvent,
             request: HandlerRequest<PackageKey, ChannelType>
-        ): Promise<RawResponse<PackageKey, ChannelType>>;
+        ): Promise<Reactive.Result<PackageKey, ChannelType>>
     };
 
 /**

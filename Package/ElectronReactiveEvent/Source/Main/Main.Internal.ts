@@ -4,21 +4,39 @@
  * License:   MIT
  */
 
+import type { BrowserWindow, IpcMain } from "electron/main";
 import type {
     Handler,
-    HandlerRequest,
     Listener,
-    ListenerRequest
-    /* RawResponse */ } from "../Listener/index.js";
-import { type IpcMainInvokeEvent, ipcMain } from "electron/main";
-import type { MainOwner, RendererOwner } from "../Decl/Decl.Types.js";
-import { BrowserWindow } from "electron";
-import type { Channel } from "../Channel/index.js";
-import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types.js";
-import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal.js";
-import type { NativeEventListener } from "./Main.Internal.Types.js";
-import type { PackageKeys } from "../Internal/index.js";
-import { ReactiveEventErrorInternal } from "../Error/Error.Internal.js";
+    ListenerRequest } from "../Listener";
+import type { MainOwner, PackageKeys, RendererOwner } from "../Internal";
+/* eslint-disable-next-line @typescript-eslint/consistent-type-imports */
+import { Channel } from "../Channel";
+import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
+import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
+import type { NativeEventListener } from "../Shared/Shared.Internal.Types";
+
+let __IpcMain: IpcMain | undefined = undefined;
+
+/** @returns Electron's `ipcMain` module. */
+function GetIpcMain(): IpcMain
+{
+    try
+    {
+        if (__IpcMain === undefined)
+        {
+            /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+            __IpcMain = require("electron/main").ipcMain;
+        }
+
+        return __IpcMain as IpcMain;
+    }
+    catch
+    {
+        /* eslint-disable-next-line @stylistic/max-len */
+        throw new Error("Could not import ipcMain from electron/main.  Make sure that electron is installed as a dependency.");
+    }
+}
 
 /**
  * @inheritdoc Handle:Signature
@@ -31,85 +49,7 @@ export function handle<
     handler: Handler<PackageKey, typeof channel>
 ): void
 {
-    HandleBase(ipcMain.handle, channel, handler);
-}
-
-/* eslint-disable @stylistic/max-len */
-
-/**
- * An abstraction that simplifies the implementation of {@link handle} and {@link handleOnce}.
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- * @typeParam ChannelType - The channel that uniquely identifies the desired
- * event declaration.
- *
- * @param IpcFunction - The function (either
- * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainhandlechannel-listener | ipcMain.handle}
- * or {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainhandleoncechannel-listener | ipcMain.handleOnce})
- * that this function will call.
- * @param Channel - The channel to which the {@link Handler} will be subscribed.
- * @param Handler - The callback function that will be subscribed to the event given by {@link Channel}.
- *
- * @group Internal
- */
-function HandleBase<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>>(
-    IpcFunction: typeof ipcMain.handle | typeof ipcMain.handleOnce,
-    Channel: ChannelType,
-    Handler: Handler<PackageKey, typeof Channel>
-): void
-{
-    /* eslint-enable @stylistic/max-len */
-    type WrapperReturnType = Awaited<ReturnType<typeof Handler>>;
-
-    // eslint-disable-next-line jsdoc/require-jsdoc
-    async function ListenerWrapper(
-        Event: IpcMainInvokeEvent,
-        ...ArgumentVector: Array<unknown>
-    ): Promise<WrapperReturnType>
-    {
-        type ThisRequest = HandlerRequest<PackageKey, typeof Channel>;
-        // type ThisRawResponse = RawResponse<PackageKey, typeof Channel>;
-        type ThisRawResponse =
-            {
-                Message: string;
-                Payload: unknown;
-            };
-
-        const RawResponse: ThisRawResponse =
-            await (Handler as Handler<PackageKey, typeof Channel>)(
-                Event,
-                (ArgumentVector[0] as ThisRequest)
-            );
-
-        if ((RawResponse as object) instanceof ReactiveEventErrorInternal)
-        {
-            const error: unknown =
-                RawResponse.Payload !== EmptyOverloadParameterValue
-                    ? {
-                        message: RawResponse.Message,
-                        payload: RawResponse.Payload
-                    }
-                    : {
-                        message: RawResponse.Message
-                    };
-
-            return {
-                data: undefined,
-                error
-            } as WrapperReturnType;
-        }
-        else
-        {
-            return {
-                data: RawResponse,
-                error: undefined
-            } as WrapperReturnType;
-        }
-    }
-
-    IpcFunction(Channel, ListenerWrapper);
+    GetIpcMain().handle(channel, handler);
 }
 
 /**
@@ -122,10 +62,8 @@ export function removeHandler<
     channel: ChannelType
 ): void
 {
-    ipcMain.removeHandler(channel);
+    GetIpcMain().removeHandler(channel);
 }
-
-/* eslint-disable @stylistic/max-len */
 
 /**
  * @inheritdoc HandleOnce:Signature
@@ -136,10 +74,10 @@ export function handleOnce<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>>(
     channel: ChannelType,
-    listener: Handler<PackageKey, typeof channel>
+    handler: Handler<PackageKey, typeof channel>
 ): void
 {
-    HandleBase(ipcMain.handleOnce, channel, listener);
+    GetIpcMain().handleOnce(channel, handler);
 }
 
 /**
@@ -153,7 +91,7 @@ export function off<
     listener: Listener<PackageKey, RendererOwner, typeof channel>
 ): void
 {
-    ipcMain.off(channel, listener as NativeEventListener);
+    GetIpcMain().off(channel, listener as NativeEventListener<MainOwner>);
 }
 
 /**
@@ -167,7 +105,7 @@ export function removeAllListeners<
     channel?: ChannelType
 ): void
 {
-    ipcMain.removeAllListeners(channel);
+    GetIpcMain().removeAllListeners(channel);
 }
 
 /**
@@ -190,7 +128,7 @@ export function on<
     listener: Listener<PackageKey, RendererOwner, typeof channel>
 ): void
 {
-    ipcMain.on(channel, listener as NativeEventListener);
+    GetIpcMain().on(channel, listener as NativeEventListener<MainOwner>);
 }
 
 /**
@@ -214,7 +152,7 @@ export function once<
     listener: Listener<PackageKey, RendererOwner, typeof channel>
 ): void
 {
-    ipcMain.once(channel, listener as NativeEventListener);
+    GetIpcMain().once(channel, listener as NativeEventListener<MainOwner>);
 }
 
 /* eslint-disable @stylistic/max-len */
@@ -353,9 +291,8 @@ export function send<
     request: ListenerRequest<PackageKey, MainOwner, typeof channel>
 ): void;
 /**
- * Send an event to all {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
- * whose event declarations define a request type.  This overload implicitly calls
- * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
+ * Send an event to a given
+ * {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow or set of BrowserWindows}.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
@@ -372,7 +309,7 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
     browserWindows: BrowserWindow | Array<BrowserWindow> | undefined,
     channel: ChannelType,
     request:
@@ -399,7 +336,17 @@ export function send<
     }
     else if (browserWindows === undefined)
     {
-        BrowserWindow.getAllWindows().forEach(Send);
+        try
+        {
+            /* eslint-disable-next-line */
+            const BrowserWindow = require("electron/main").BrowserWindow;
+            BrowserWindow.getAllWindows().forEach(Send);
+        }
+        catch
+        {
+            /* eslint-disable-next-line @stylistic/max-len */
+            throw new Error("Could not import BrowserWindow from electron/main.  Make sure that electron is installed as a dependency.");
+        }
     }
     else
     {

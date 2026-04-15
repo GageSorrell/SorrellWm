@@ -4,5 +4,5 @@
  * License:   MIT
  */
 
-export * from "./Main.js";
-export * from "./Main.Types.js";
+export * from "./Main";
+export * from "./Main.Types";

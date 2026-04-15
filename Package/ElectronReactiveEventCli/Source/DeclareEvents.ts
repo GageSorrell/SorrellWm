@@ -339,17 +339,17 @@ ${ Entries }
     };
 }
 
-export async function DeclareEvents(): Promise<void>
+export async function DeclareEvents(Path?: string): Promise<void>
 {
-    const Config: CliConfig = await GetConfigSafe();
-    const DefaultConfig: CliConfig = await GetDefaultConfig();
+    const Config: CliConfig = await GetConfigSafe(Path);
+    const DefaultConfig: CliConfig = await GetDefaultConfig(Path);
 
     const DefaultLabelAugmentationPath: string =
         Config.AugmentationModulePath === DefaultConfig.AugmentationModulePath
             ? "default"
             : "";
 
-    if (!(await HasConfig()))
+    if (!(await HasConfig(Path)))
     {
         /* eslint-disable-next-line @stylistic/max-len */
         console.log("\n💡 Tip: You can create a default config file by running\n\n    npm exec electron-reactive-event setup\n");

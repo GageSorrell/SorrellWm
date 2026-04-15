@@ -17,12 +17,24 @@ import {
 import type { FConfirmConfig } from "./index.js";
 import type { Prompt } from "@inquirer/type";
 
+/**
+ * @param Value - The answer.
+ * @returns The string to display for the given answer.
+ */
 function GetAnswerString(Value: boolean): string
 {
     return Value ? "Yes" : "No";
 }
 
-/** An `inquirer` prompt identical to `confirm`, but with more natural handling of keypresses. */
+/* eslint-disable jsdoc/require-jsdoc */
+
+/**
+ * An `inquirer` prompt identical to `confirm`, but with more natural handling of keypresses.
+ *
+ * @param config - The configuration for this prompt.
+ *
+ * @returns The `boolean` corresponding to the user's choice.
+ */
 export const Confirm: Prompt<boolean, FConfirmConfig> = createPrompt<boolean, FConfirmConfig>(
     (Configuration: FConfirmConfig, Done: ((Value: boolean) => void)) =>
     {
@@ -80,3 +92,5 @@ export const Confirm: Prompt<boolean, FConfirmConfig> = createPrompt<boolean, FC
         ].join("");
     }
 );
+
+/* eslint-enable jsdoc/require-jsdoc */

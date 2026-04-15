@@ -4,4 +4,4 @@
  * License:   MIT
  */
 
-export type * from "./Listener.Types.js";
+export type * from "./Listener.Types";

@@ -4,15 +4,15 @@
  * License:   MIT
  */
 
-import type { Channel } from "../../Channel/index.js";
-import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types.js";
-import type { HandlerRequest } from "../../Listener/Listener.Types.js";
-import type { InvokeOptions } from "./Hook.Unscoped.Types.js";
-import type { InvokeResponse } from "./Hook.Types.js";
-import type { PackageKeys } from "../../Internal/index.js";
+import type { Channel } from "../../Channel";
+import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";
+import type { HandlerRequest } from "../../Listener/Listener.Types";
+import type { InvokeOptions } from "./Hook.Unscoped.Types";
+import type { InvokeResult } from "./Hook.Types";
+import type { PackageKeys } from "../../Internal";
 
 /**
- * The type used by {@link InvokeResponseInternal} for the third argument of
+ * The type used by {@link ResultInternal} for the third argument of
  * the overloaded (private) signature of {@link useInvokeEvent}.
  *
  * @group Internal
@@ -42,7 +42,7 @@ type OptionsFromOverload<
             : undefined;
 
 /**
- * An extension of {@link InvokeResponse} that is equipped to handle
+ * An extension of {@link InvokeResult} that is equipped to handle
  * the overloaded (private) signature of {@link useInvokeEvent}.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
@@ -53,7 +53,7 @@ type OptionsFromOverload<
  *
  * @group Internal
  */
-export type InvokeResponseInternal<
+export type ResultInternal<
     PackageKey extends PackageKeys,
     ChannelType extends Channel.Handler.Any<PackageKey>,
     RequestOrOptionsType extends
@@ -64,7 +64,7 @@ export type InvokeResponseInternal<
         | InvokeOptions
         | EmptyOverloadParameter
 > =
-    InvokeResponse<
+    InvokeResult<
         PackageKey,
         ChannelType,
         OptionsFromOverload<

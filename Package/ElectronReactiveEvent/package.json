@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event",
-  "version": "0.0.32",
+  "version": "0.0.49",
   "description": "Type-safe Electron IPC functions, including modern React hooks.",
   "keywords": [
     "electron",
@@ -24,14 +24,17 @@
     "name": "Gage Sorrell",
     "url": "https://sorrell.sh"
   },
-  "type": "module",
+  "type": "commonjs",
   "exports": {
     ".": "./Distribution/index.js",
-    "./scoped": "./Distribution/index.Scoped.js",
-    "./registrar": "./Distribution/Internal/Registrar.Types.js"
+    "./main": "./Distribution/index.Main.js",
+    "./renderer": "./Distribution/index.renderer.js",
+    "./scoped": "./Distribution/Scoped.js",
+    "./unsafe": "./Distribution/Unsafe/index.js"
   },
   "scripts": {
-    "build": "tsc -p ./tsconfig.json"
+    "build": "tsc -p ./tsconfig.json",
+    "postinstall": "echo \"Consider installing `electron-reactive-event-cli` for automatic project setup.\""
   },
   "types": "./Distribution/index.d.ts",
   "files": [
@@ -41,12 +44,11 @@
   "devDependencies": {
     "@types/node": "^25.5.1",
     "@types/react": "*",
-    "clipboardy": "^5.3.1",
-    "electron": "^41.1.1"
+    "clipboardy": "^5.3.1"
   },
   "peerDependencies": {
     "@types/react": "^19.2.14",
-    "electron": "^35.0.2",
+    "electron": "^35.7.5",
     "react": "^19.2.4"
   },
   "dependencies": {

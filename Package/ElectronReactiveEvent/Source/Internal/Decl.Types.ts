@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { EmptyEventParameter, EventErrorDecl, EventOwner, RendererOwner } from "../Decl/Decl.Types.js";
+import type { EventOwner, RendererOwner } from "../Registrar";
 
 /** The key of the request type in an event declaration. */
 export type RequestKey = "RequestType";
@@ -30,7 +30,7 @@ export type OwnerKey = "OwnerType";
 export type EventDeclListener<
     OwnerType extends EventOwner,
     RequestType
-> = EventDeclBase<OwnerType, RequestType, EmptyEventParameter, EmptyEventParameter>;
+> = EventDeclBase<OwnerType, RequestType, never, never>;
 
 /* eslint-disable @stylistic/max-len */
 
@@ -44,16 +44,16 @@ export type EventDeclListener<
  * @typeParam ErrorType - The type of the response object that is sent when an event fails.
  */
 export type EventDeclHandler<
-    RequestType = EmptyEventParameter,
-    ResponseType = EmptyEventParameter,
-    ErrorType extends EventErrorDecl | EmptyEventParameter = EmptyEventParameter
+    RequestType = never,
+    ResponseType = never,
+    ErrorType = never
 > = EventDeclBase<RendererOwner, RequestType, ResponseType, ErrorType>;
 
 type EventDeclBase<
     OwnerType extends EventOwner,
-    RequestType = EmptyEventParameter,
-    ResponseType = EmptyEventParameter,
-    ErrorType extends EventErrorDecl | EmptyEventParameter = EmptyEventParameter
+    RequestType = never,
+    ResponseType = never,
+    ErrorType = never
 > =
     {
         OwnerType: OwnerType;

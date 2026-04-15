@@ -1,0 +1,17 @@
+/* File:      Try.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2026 Gage Sorrell
+ * License:   MIT
+ */
+
+// Accepts `async` function or `Promise`.
+// `async` function should optionally accept an "UpdateMessage" function
+// and `Fail(Message: string)` function.
+
+export async function DoTask<Type>(
+    Task: TTask<Type>,
+
+): Promise<Type>
+{
+
+}

@@ -15,7 +15,6 @@ Learn how the optional CLI can be used to eliminate the need to write boilerplat
 ## Pages
 
 * [Introduction](./introduction.md)
-* [Project Setup](./project-setup.md)
-* [The `setup` Command](./setup.md)
-* [The `register` Command](./register.md)
+* [Getting Started](./getting-started.md)
+* [Command Reference](./command-reference.md)
 * [JSON Schema](./schema.md)

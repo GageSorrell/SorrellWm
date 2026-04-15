@@ -4,4 +4,4 @@
  * License:   MIT
  */
 
-export * from "./Decl.Types.js";
+export * from "./Decl.Types";

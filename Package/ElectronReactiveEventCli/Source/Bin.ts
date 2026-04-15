@@ -10,6 +10,9 @@
 
 import { AllCommand } from "./All.Command";
 import { DeclareEventsCommand } from "./DeclareEvents.Command";
+import { DocsCommand } from "./Docs.Command";
+import { DownloadSampleCommand } from "./DownloadSample.Command";
+import { GenerateCommand } from "./Generate.Command";
 import { GenerateIpcCommand } from "./GenerateIpc.Command";
 import { GenerateIpcMainModuleCommand } from "./GenerateIpcMainModule";
 import { GenerateIpcRendererModuleCommand } from "./GenerateIpcRendererModule";
@@ -33,6 +36,7 @@ Commands (Core):
 
     all:                   Performs everything below but setup.
     declare-events:        Generates a module that augments the Registrar with your event declarations.
+    generate:              Runs all generate-* commands.
     generate-scoped-types: Generates copies of the types exported by electron-reactive-event/scoped, but scoped to your PackageKey.
     generate-types:        Alias for generate-scoped-types.
     generate-ipc main:     Generates a module that exports reactive IPC functions for main.
@@ -43,7 +47,7 @@ Commands (Core):
 
 Commands (Miscellaneous):
     docs:                  Opens the documentation reference in the default browser.
-    download-sample:       Downloads the sample project.
+    download-sample:       Downloads the sample project to the current directory.
     help:                  Outputs this text.
 `);
     /* eslint-enable @stylistic/max-len */
@@ -56,7 +60,13 @@ async function Main(): Promise<void>
         {
             all: AllCommand,
 
+            docs: DocsCommand,
+
+            "download-sample": DownloadSampleCommand,
+
             "declare-events": DeclareEventsCommand,
+
+            generate: GenerateCommand,
 
             "generate-scoped-types": GenerateScopedTypesCommand,
             "generate-types": GenerateScopedTypesCommand,

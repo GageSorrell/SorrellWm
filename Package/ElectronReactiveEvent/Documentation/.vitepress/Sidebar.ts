@@ -82,12 +82,8 @@ export const sidebar: DefaultTheme.Sidebar =
                     link: "/1.0.0/cli/getting-started"
                 },
                 {
-                    text: "<code>setup</code> Command",
-                    link: "/1.0.0/cli/setup"
-                },
-                {
-                    text: "<code>register</code> Command",
-                    link: "/1.0.0/cli/register"
+                    text: "Command Reference",
+                    link: "/1.0.0/cli/command-reference"
                 },
                 {
                     text: "JSON Schema",

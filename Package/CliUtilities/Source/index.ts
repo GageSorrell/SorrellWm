@@ -8,4 +8,6 @@ export * from "./Confirm.js";
 export * from "./Confirm.Types.js";
 export * from "./FileSelector.js";
 export * from "./FileSelector.Types.js";
-export * from "./Print.js";
+export * from "./Print/index.js";
+export * from "./Ora.js";
+export * from "./Ora.Types.js";

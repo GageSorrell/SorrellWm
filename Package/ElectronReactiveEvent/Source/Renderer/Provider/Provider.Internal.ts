@@ -5,22 +5,20 @@
  */
 
 import { type Context, createContext } from "react";
-import type { ReactiveEventContext } from "./Provider.Types.js";
-import type { ReactiveEventContextInternal } from "./Provider.Internal.Types.js";
-import { ipcRenderer } from "electron";
+import type { ReactiveEventContext } from "./Provider.Types";
+import type { ReactiveEventContextInternal } from "./Provider.Internal.Types";
 
 const EmptyReactiveEventContext: ReactiveEventContext =
     {
         ipcRenderer:
         {
-            invoke: ipcRenderer.invoke,
-            off: ipcRenderer.off,
-            on: ipcRenderer.on,
-            once: ipcRenderer.once,
-            send: ipcRenderer.send,
-            sendSync: ipcRenderer.sendSync
+            invoke: undefined,
+            off: undefined,
+            on: undefined,
+            once: undefined,
+            send: undefined
         }
-    };
+    } as unknown as ReactiveEventContext;
 
 const EmptyReactiveEventContextInternal: ReactiveEventContextInternal =
     {

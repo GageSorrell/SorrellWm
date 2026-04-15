@@ -42,3 +42,12 @@ All [event declarations](./Glossary.html#event-declaration) define events that a
 Every event declaration has exactly one **owner**, which is from *where* an event of that declaration type is sent.
 
 That is, if an event is sent from `main` to the `renderer`, then its owner is `main`; similarly, if an event is sent from the `renderer` to `main`, then its owner is the `renderer`.
+
+## Result
+
+The term **result** refers to either a *response* or an *error*, *i.e.*, it is what is returned by handlers.
+
+:::note
+Be careful to avoid conflating *responses* (values returned when a handler succeeds) and *results* (*anything* that is returned by a handler).
+:::
+

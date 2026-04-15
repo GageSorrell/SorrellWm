@@ -1,10 +1,10 @@
 [electron-reactive-event](../introduction.md) / [CLI](./) / Getting Started
 
-# Project Setup
+# Getting Started
 
 ::: tip Purpose
 This article describes how to set up your project to use the `electron-reactive-event-cli`.
-It is assumed in this guide that you have already completed the steps detailed in the *main* [Project Setup](../project-setup.md) article.
+It is assumed in this guide that you have already completed the steps detailed in the *main* [Project Setup](../article/project-setup.md) article.
 :::
 
 <div class="CustomTocContainer">
@@ -13,7 +13,6 @@ It is assumed in this guide that you have already completed the steps detailed i
 [[toc]]
 
 </div>
-
 
 ## 0. *(Optional)* Install the CLI
 

@@ -4,11 +4,10 @@
  * License:   MIT
  */
 
-import type { TTryResult } from "./index.js";
-import type { TTrySource } from "./Internal/index.js";
+import type { TTryResult, TTrySource } from "./index.js";
 
 /**
-TTryResult * Implements "Errors-as-values" for `async` functions and `Promise<DataType>`s.
+ * Implements "Errors-as-values" for `async` functions and `Promise<DataType>`s.
  *
  * If the `async` function or `Promise<DataType>` returns/resolves, then the `Error`
  * property of the returned object will be `undefined`, and the result of the
@@ -18,6 +17,9 @@ TTryResult * Implements "Errors-as-values" for `async` functions and `Promise<Da
  * Similarly, if the `async` function or `Promise<DataType>` throws, then the `Data`
  * property of the returned object is `undefined`, and the `Error` property is what
  * was thrown to the `catch` block.
+ *
+ * @typeParam DataType - The type of the data that the `async` function or `Promise<DataType>`.
+ * @param Source - The `async` function or `Promise` to evaluate.
  */
 export async function Try<DataType>(Source: TTrySource<DataType>): Promise<TTryResult<DataType>>
 {

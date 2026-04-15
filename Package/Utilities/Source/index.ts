@@ -9,8 +9,6 @@ export * from "./FileSystem.Types.js";
 export * from "./Functional.js";
 export * from "./Functional.Types.js";
 export * from "./Npm.js";
-export * from "./Ora.js";
-export * from "./Ora.Types.js";
 export * from "./Promise.js";
 export * from "./Promise.Types.js";
 export * from "./String.js";

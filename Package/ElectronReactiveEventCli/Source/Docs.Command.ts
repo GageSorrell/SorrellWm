@@ -4,9 +4,12 @@
  * License:   MIT
  */
 
-async function Docs(): Promise<void>
+import { SetCommand } from "./Command";
+import open from "open";
+
+/** Opens the documentation page for the CLI. */
+export async function DocsCommand(): Promise<void>
 {
-
+    SetCommand("docs");
+    open("https://electron-reactive-event.sorrell.sh/1.0.0/cli/introduction");
 }
-
-Docs();

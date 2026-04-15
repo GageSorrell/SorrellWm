@@ -4,5 +4,5 @@
  * License:   MIT
  */
 
-export * from "./Hook/index.js";
-export * from "./Provider/index.js";
+export * from "./Hook";
+export * from "./Provider";
