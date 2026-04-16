@@ -34,6 +34,7 @@ module.exports = {
             rules:
             {
                 "@typescript-eslint/naming-convention": "off",
+                "@typescript-eslint/no-namespace": "off",
                 "jsdoc/check-param-names": "error",
                 "jsdoc/require-hyphen-before-param-description": [ "error", "always" ],
                 "jsdoc/require-jsdoc": [ "error", {

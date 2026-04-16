@@ -4,5 +4,4 @@
  * License:   MIT
  */
 
-export * from "./Provider.js";
-export * from "./Provider.Types.js";
+export * as Handler from "./index.Inner";

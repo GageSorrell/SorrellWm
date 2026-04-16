@@ -5,9 +5,11 @@
  */
 
 import type { BrowserWindow, IpcMain } from "electron/main";
-import type { Handler, Listener, ListenerRequest } from "../Listener";
 import type { MainOwner, PackageKeys, RendererOwner } from "../Internal";
 import type { Channel } from "../Channel";
+import type { Decl } from "../Decl";
+import type { Handler } from "../Handler/Handler.Types";
+import type { Listener } from "../Listener";
 
 /**
  * The type-safe form of
@@ -18,21 +20,21 @@ import type { Channel } from "../Channel";
 export type Handle<PackageKey extends PackageKeys> =
     {
         /**
-         * Subscribe a {@link listener} to an event declaration given by {@link channel},
+         * Subscribe a {@link handler} to an event declaration given by {@link channel},
          * which returns a response to the `renderer`.
          *
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The {@link Channel.Handler.Any | invokable channel} that uniquely
-         * identifies the invokable event to which the {@link listener} will be subscribed.
+         * identifies the invokable event to which the {@link handler} will be subscribed.
          * @param handler - The callback which will be subscribed to the given {@link channel}.
          *
          * {@label Signature}
          */
-        <ChannelType extends Channel.Handler.Any<PackageKey>>(
+        <ChannelType extends Channel.Handler<PackageKey>>(
             channel: ChannelType,
-            listener: Handler<PackageKey, typeof channel>
+            handler: Handler<PackageKey, typeof channel>
         ): void;
     };
 
@@ -57,7 +59,7 @@ export type Send<PackageKey extends PackageKeys> =
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
          * identifies the event declaration.
          */
-        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
             browserWindow: BrowserWindow,
             channel: ChannelType
         ): void;
@@ -74,10 +76,10 @@ export type Send<PackageKey extends PackageKeys> =
          * identifies the event declaration.
          * @param request - The request of the given event.
          */
-        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
             browserWindow: BrowserWindow,
             channel: ChannelType,
-            request: ListenerRequest<PackageKey, MainOwner, typeof channel>
+            request: Decl.Request<PackageKey, typeof channel, MainOwner>
         ): void;
 
         /**
@@ -92,7 +94,7 @@ export type Send<PackageKey extends PackageKeys> =
          * @param channel - The channel that uniquely identifies the desired
          * event declaration.
          */
-        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
             browserWindows: Array<BrowserWindow>,
             channel: ChannelType
         ): void;
@@ -110,10 +112,10 @@ export type Send<PackageKey extends PackageKeys> =
          * event declaration.
          * @param request - The request of the given event.
          */
-        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
             browserWindows: Array<BrowserWindow>,
             channel: ChannelType,
-            request: ListenerRequest<PackageKey, MainOwner, typeof channel>
+            request: Decl.Request<PackageKey, typeof channel, MainOwner>
         ): void;
 
         /**
@@ -129,7 +131,7 @@ export type Send<PackageKey extends PackageKeys> =
          * @param channel - The channel that uniquely identifies the desired
          * event declaration.
          */
-        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
             browserWindows: undefined,
             channel: ChannelType
         ): void;
@@ -148,10 +150,10 @@ export type Send<PackageKey extends PackageKeys> =
          * event declaration.
          * @param request - The request of the given event.
          */
-        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
             browserWindows: undefined,
             channel: ChannelType,
-            request: ListenerRequest<PackageKey, MainOwner, typeof channel>
+            request: Decl.Request<PackageKey, typeof channel, MainOwner>
         ): void;
     };
 
@@ -174,7 +176,7 @@ export type On<PackageKey extends PackageKeys> =
          * identifies the sendable event to which the {@link listener} will be subscribed.
          * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
          */
-        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
             channel: ChannelType,
             listener: MainListener<PackageKey, typeof channel>
         ): void;
@@ -190,7 +192,7 @@ export type On<PackageKey extends PackageKeys> =
  */
 export type MainListener<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>
+    ChannelType extends Channel.Listener<PackageKey, RendererOwner>
 > = Listener<PackageKey, RendererOwner, ChannelType>;
 
 /**
@@ -213,7 +215,7 @@ export type Once<PackageKey extends PackageKeys> =
          * identifies the sendable event to which the {@link listener} will be subscribed.
          * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
          */
-        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
             channel: ChannelType,
             listener: MainListener<PackageKey, typeof channel>
         ): void;
@@ -239,7 +241,7 @@ export type Off<PackageKey extends PackageKeys> =
          *
          * {@label Signature}
          */
-        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
             channel: ChannelType,
             listener: MainListener<PackageKey, typeof channel>
         ): void;
@@ -268,7 +270,7 @@ export type HandleOnce<PackageKey extends PackageKeys> =
          *
          * {@label Signature}
          */
-        <ChannelType extends Channel.Handler.Any<PackageKey>>(
+        <ChannelType extends Channel.Handler<PackageKey>>(
             channel: ChannelType,
             listener: Handler<PackageKey, typeof channel>
         ): void;
@@ -292,7 +294,7 @@ export type RemoveAllListeners<PackageKey extends PackageKeys> =
          *
          * {@label Signature}
          */
-        <ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
             channel?: ChannelType
         ): void;
     };
@@ -313,7 +315,7 @@ export type RemoveHandler<PackageKey extends PackageKeys> =
          *
          * {@label Signature}
          */
-        <ChannelType extends Channel.Handler.Any<PackageKey>>(
+        <ChannelType extends Channel.Handler<PackageKey>>(
             channel: ChannelType
         ): void;
     };

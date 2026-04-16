@@ -4,5 +4,4 @@
  * License:   MIT
  */
 
-export * from "./Main";
-export * from "./Main.Types";
+export * from "./Invoke.Types";

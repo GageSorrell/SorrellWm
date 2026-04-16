@@ -6,8 +6,8 @@
 
 /* eslint-disable no-console */
 
-import type { Channels, Types } from "./GenerateScopedTypes.Types";
 import { GetHeader, Try } from "./Command";
+import type { Channels } from "./GenerateScopedTypes.Types";
 import type { CliConfig } from "./Config.Types";
 import { GetConfigSafe } from "./Config";
 import { writeFile } from "node:fs/promises";
@@ -98,103 +98,96 @@ export async function GenerateScopedTypesInner(): Promise<void>
 
     /* eslint-disable @stylistic/max-len */
 
-    const Types: Types =
+    const Types: Record<"Scoped" | "Unscoped", Array<string>> =
         {
-            AnyCallback: "export type AnyCallback<OwnerType extends EventOwnerImported, ChannelType extends Channel.Any<OwnerType>> = AnyCallbackImported<PackageKey, OwnerType, ChannelType>;",
-            EmptyEventParameter: ReexportedType,
-            EventDecl: ReexportedType,
-            EventErrorAdvancedDecl: ReexportedType,
-            EventErrorAdvancedDeclParameter: ReexportedType,
-            EventErrorDecl: ReexportedType,
-            EventErrorRecord: ReexportedType,
-            EventErrorTuple: ReexportedType,
-            EventOwner: ReexportedType,
-            EventRequest: "export type EventRequest<OwnerType extends EventOwnerImported, ChannelType extends Channel.Request<OwnerType>> = EventRequestImported<PackageKey, OwnerType, ChannelType>;",
-            Handle: "export type Handle = HandleImported<PackageKey>;",
-            HandleOnce: "export type HandleOnce = HandleOnceImported<PackageKey>;",
-            Handler: "export type Handler<ChannelType extends Channel.Handler.Any> = HandlerImported<PackageKey, ChannelType>;",
-            HandlerNoRequest: "export type HandlerNoRequest<ChannelType extends Channel.Handler.NoRequest> = HandlerNoRequestImported<PackageKey, ChannelType>;",
-            HandlerRequest: "export type HandlerRequest<ChannelType extends Channel.Handler.Request> = HandlerRequestImported<PackageKey, ChannelType>;",
-            HandlerWithRequest: "export type HandlerWithRequest<ChannelType extends Channel.Handler.Request> = HandlerWithRequestImported<PackageKey, ChannelType>;",
-            InvokeEventDeferred: "export type InvokeEventDeferred = InvokeEventDeferredImported<PackageKey>;",
-            InvokeResponse: "export type InvokeResponse<ChannelType extends Channel.Handler.Any, OptionsType extends InvokeOptions | undefined> = InvokeResponseImported<PackageKey, ChannelType, OptionsType>;",
-            IpcMainReactive: "export type IpcMainReactive = IpcMainReactiveImported<PackageKey>;",
-            Listener: "export type Listener<OwnerType extends EventOwnerImported, ChannelType extends Channel.Listener.Any<OwnerType>> = ListenerImported<PackageKey, OwnerType, ChannelType>;",
-            ListenerNoRequest: ReexportedType,
-            ListenerRequest: "export type ListenerRequest<OwnerType extends EventOwnerImported, ChannelType extends Channel.Request<OwnerType>> = ListenerRequestImported<PackageKey, OwnerType, ChannelType>;",
-            ListenerWithRequest: "export type ListenerWithRequest<OwnerType extends EventOwnerImported, ChannelType extends Channel.Listener.Request<OwnerType>> = ListenerWithRequestImported<PackageKey, OwnerType, ChannelType>;",
-            MainListener: "export type MainListener<ChannelType extends Channel.Listener.Any<RendererOwnerImported>> = MainListenerImported<PackageKey, ChannelType>;",
-            MainOwner: ReexportedType,
-            Off: "export type Off = OffImported<PackageKey>;",
-            OffEventDeferred: "export type OffEventDeferred = OffEventDeferredImported<PackageKey>;",
-            On: "export type On = OnImported<PackageKey>;",
-            OnEventDeferred: "export type OnEventDeferred = OnEventDeferredImported<PackageKey>;",
-            Once: "export type Once = OnceImported<PackageKey>;",
-            OnceEventDeferred: "export type OnceEventDeferred = OnceEventDeferredImported<PackageKey>;",
-            ReactiveEventContext: ReexportedType,
-            ReactiveEventErrorData: "export type ReactiveEventErrorData<ChannelType extends Channel.Error> = ReactiveEventErrorDataImported<PackageKey, ChannelType>;",
-            ReactiveEventHooks: "export type ReactiveEventHooks = ReactiveEventHooksImported<PackageKey>;",
-            ReactiveEventProviderProps: ReexportedType,
-            ReactiveIpcFunctions: "export type ReactiveIpcFunctions = ReactiveIpcFunctionsImported<PackageKey>;",
-            RemoveAllListeners: "export type RemoveAllListeners = RemoveAllListenersImported<PackageKey>;",
-            RemoveHandler: "export type RemoveHandler = RemoveHandlerImported<PackageKey>;",
-            RendererListener: "export type RendererListener<ChannelType extends Channel.Listener.Any<MainOwnerImported>> = RendererListenerImported<PackageKey, ChannelType>;",
-            RendererOwner: ReexportedType,
-            Response: "export type Response<ChannelType extends Channel.Handler.Any> = ResponseImported<PackageKey, ChannelType>;",
-            ResponseError: "export type ResponseError<ChannelType extends Channel.Handler.Error> = ResponseErrorImported<PackageKey, ChannelType>;",
-            ResponseIndeterminate: ReexportedType,
-            ResponseSettled: "export type ResponseSettled<ChannelType extends Channel.Handler.Any> = ResponseSettledImported<PackageKey, ChannelType>;",
-            ResponseSuccess: "export type ResponseSuccess<ChannelType extends Channel.Handler.Response> = ResponseSuccessImported<PackageKey, ChannelType>;",
-            ResponseSync: "export type ResponseSync<ChannelType extends Channel.Handler.Any> = ResponseSyncImported<PackageKey, ChannelType>;",
-            Send: "export type Send = SendImported<PackageKey>;",
-            SendEventDeferred: "export type SendEventDeferred = SendEventDeferredImported<PackageKey>;",
-            SendableEventHandler: "export type SendableEventHandler = SendableEventHandlerImported<PackageKey>;",
-            UseInvokeEvent: "export type UseInvokeEvent = UseInvokeEventImported<PackageKey>;",
-            UseInvokeEventDeferred: "export type UseInvokeEventDeferred = UseInvokeEventDeferredImported<PackageKey>;",
-            UseOffEventDeferred: "export type UseOffEventDeferred = UseOffEventDeferredImported<PackageKey>;",
-            UseOnEvent: "export type UseOnEvent = UseOnEventImported<PackageKey>;",
-            UseOnEventDeferred: "export type UseOnEventDeferred = UseOnEventDeferredImported<PackageKey>;",
-            UseOnceEvent: "export type UseOnceEvent = UseOnceEventImported<PackageKey>;",
-            UseOnceEventDeferred: "export type UseOnceEventDeferred = UseOnceEventDeferredImported<PackageKey>;",
-            UseSendEvent: "export type UseSendEvent = UseSendEventImported<PackageKey>;",
-            UseSendEventDeferred: "export type UseSendEventDeferred = UseSendEventDeferredImported<PackageKey>;"
+            Scoped:
+            [
+                "Channel<OwnerType extends EventOwner>",
+                "FilterByOwner<OwnerType extends EventOwner>",
+                "Handle",
+                "HandleOnce",
+                "InvokeEventDeferred",
+                "IpcMainReactive",
+                "Listener<OwnerType extends EventOwner, ChannelType extends Channel.Listener<PackageKey, OwnerType>, EventType extends IpcEvent | undefined>",
+                "MainListener<ChannelType extends Channel.Listener<PackageKey, RendererOwner>>",
+                "MainRegistrar",
+                "Off",
+                "OffEventDeferred",
+                "On",
+                "OnEventDeferred",
+                "Once",
+                "OnceEventDeferred",
+                "ReactiveEventHooks",
+                "ReactiveIpcMainFunctions",
+                "RemoveAllListeners",
+                "RemoveHandler",
+                "RendererListener<ChannelType extends Channel.Listener<PackageKey, MainOwner>>",
+                "RendererRegistrar",
+                "Send",
+                "SendEventDeferred",
+                "UseInvokeEvent",
+                "UseInvokeEventDeferred",
+                "UseOffEventDeferred",
+                "UseOnEvent",
+                "UseOnEventDeferred",
+                "UseOnceEvent",
+                "UseOnceEventDeferred",
+                "UseSendEvent",
+                "UseSendEventDeferred"
+            ],
+            Unscoped:
+            [
+                "EventDecl<OwnerType extends EventOwner, RequestType, ResponseType, ErrorType>",
+                "EventDeclHandler<RequestType, ResponseType, ErrorType>",
+                "EventDeclListener<OwnerType extends EventOwner, RequestType>",
+                "EventOwner",
+                "IpcEvent",
+                "MainOwner",
+                "PackageKeys",
+                "ReactiveEventContext",
+                "ReactiveEventProviderProps",
+                "RendererOwner"
+            ]
         };
-
-    const ReactiveErrorFunction: string =
-        "export const ReactiveEventError = ReactiveEventErrorImported as ReactiveEventErrorFunctionImported<PackageKey>;\n";
 
     /* eslint-enable @stylistic/max-len */
 
-    const TypeNames: Array<string> = Object.keys(Types);
-    const Unimported: Array<string> =
-        [
-            "EmptyEventParameter",
-            "EmptyOverloadParameter",
-            "EventDecl",
-            "EventErrorAdvancedDecl",
-            "EventErrorAdvancedDeclParameter",
-            "EventErrorDecl",
-            "EventErrorRecord",
-            "EventErrorTuple",
-            "InvokeOptionsOverloadedArgument",
-            "ListenerNoRequest",
-            "ReactiveEventProviderProps",
-            "ReactiveEventContext",
-            "ReactiveEventContextInternal",
-            "ResponseIndeterminate"
-        ];
+    const ScopedExportStatementsSimple: Array<string> = Types.Scoped
+        .filter((Type: string) => !Type.includes("<"))
+        .map((Type: string): string =>
+        {
+            return `export ${ Type } = ${ Type }Imported<PackageKey>;`;
+        });
 
-    const FilterImportTypes = (Type: string): boolean =>
-    {
-        return (
-            [ "Handler", "Listener", "Request", "Response" ].includes(Type) ||
-            !(
-                Object.keys(Channels).includes(Type) ||
-                Object.keys(Channels.Handler).includes(Type) ||
-                Object.keys(Channels.Listener).includes(Type)
-            )
-        );
-    };
+    const ScopedExportStatementsAdvanced: Array<string> = Types.Scoped
+        .filter((Type: string) => Type.includes("<"))
+        .map((Type: string): string =>
+        {
+            const TypeArgumentVector: string | undefined = ((): string | undefined =>
+            {
+                if (!Type.includes("<"))
+                {
+                    return undefined;
+                }
+
+                const Input: string =
+                    Type.slice(Type.indexOf("<") + 1, Type.indexOf(">"))
+
+                const Matches: Array<string> = [ ];
+                const Pattern: RegExp = /(?:^|,)\s*([^,\s]+)/g;
+
+                let Match: RegExpExecArray | null;
+
+                while ((Match = Pattern.exec(Input)) !== null)
+                {
+                    Matches.push(Match[1] as string);
+                }
+
+                return Matches.join(", ");
+            })();
+
+            return `export ${ Type } = ${ Type }Imported<PackageKey, ${ TypeArgumentVector }>;`;
+        });
 
     // eslint-disable-next-line jsdoc/require-jsdoc
     function MakeImported(Name: string): string
@@ -204,44 +197,61 @@ export async function GenerateScopedTypesInner(): Promise<void>
 
     const ImportStatement: string = (
         "import type { \n" +
-        TypeNames
-            // eslint-disable-next-line @stylistic/max-len
-            .filter(FilterImportTypes)
-            .filter((Type: string): boolean => !Unimported.includes(Type))
-            .map((Type: string) => `    ${ Type } as ${ Type }Imported`)
+        Types.Scoped
+            .map((Type: string): string =>
+            {
+                const Name: string = Type.includes("<")
+                    ? Type.slice(0, Type.indexOf("<"))
+                    : Type;
+                return `    ${ Name } as ${ Name }Imported`;
+            })
             .join(",\n") +
-        MakeImported("Channel") +
-        MakeImported("ReactiveEventErrorFunction") +
-        "\n} from \"electron-reactive-event/scoped\";\n"
+        "\n} from \"electron-reactive-event\";\n"
+    );
+
+    const ImportedNamespaces: Array<string> =
+        [
+            "Channel",
+            "Handler",
+            "Invoke",
+            "Listener"
+        ];
+
+    const NamespacesImportStatement: string = (
+        "import { \n" +
+        ImportedNamespaces
+            .map((Namespace: string): string =>
+            {
+                return `    ${ Namespace } as ${ Namespace }Imported`;
+            })
+            .join(",\n") +
+        "\n} from \"electron-reactive-event\";\n"
     );
 
     const ImportErrorFunction: string =
         "import { ReactiveEventError as ReactiveEventErrorImported } from " +
         "\"electron-reactive-event/scoped\";";
 
-    const UnscopedImportStatement: string =
-        "import type { InvokeOptions } from \"electron-reactive-event\";\n";
-
     const PackageKeyDefinition: string = `export type PackageKey = "${ PackageKey }";\n`;
 
     // eslint-disable-next-line @stylistic/max-len
     // const PackageKeyDeclareModule: string = `declare module "electron-reactive-event/registrar"\n{\n    interface Registrar\n    {\n        ${ PackageKey }: { };\n    }\n};\n`;
 
-    type EntryType = [ string, string | symbol ];
-    const ExportStatements: string =
-        Object
-            .entries(Types)
-            .filter(([ _Key, Value ]: EntryType) => typeof Value === "string")
-            .map(([ _Key, Value ]: EntryType) => Value)
-            .join("\n") + "\n";
+    // type EntryType = [ string, string | symbol ];
+    // const ExportStatements: string =
+    //     Object
+    //         .entries(Types)
+    //         .filter(([ _Key, Value ]: EntryType) => typeof Value === "string")
+    //         .map(([ _Key, Value ]: EntryType) => Value)
+    //         .join("\n") + "\n";
 
-    const ReexportStatements: string = "export type {\n" +
-        Object
-            .entries(Types)
-            .filter(([ _Key, Value ]: [ string, string | symbol ]) => typeof Value !== "string")
-            .map(([ Key ]: [ string, string | symbol ]) => `    ${ Key }`)
-            .join(",\n") +
-        "\n} from \"electron-reactive-event/scoped\";\n";
+    // const ReexportStatements: string = "export type {\n" +
+    //     Object
+    //         .entries(Types)
+    //         .filter(([ _Key, Value ]: [ string, string ]) => typeof Value !== "string")
+    //         .map(([ Key ]: [ string, string | symbol ]) => `    ${ Key }`)
+    //         .join(",\n") +
+    //     "\n} from \"electron-reactive-event/scoped\";\n";
 
     const BeginChannelLine: string = "export namespace Channel\n{\n";
     const EndChannelLine: string = "};\n";
@@ -268,6 +278,10 @@ export async function GenerateScopedTypesInner(): Promise<void>
     const Channel: string = BeginChannelLine + ChannelLines.join("\n") + EndChannelLine;
     const Header: string = GetHeader("Reactive.Types.Generated.ts", "generate-scoped-types");
 
+    const Invoke: string = "@TODO";
+    const Handler: string = "@TODO";
+    const Listener: string = "@TODO";
+
     try
     {
         const ScopedModulePath: string = await (async (): Promise<string> =>
@@ -281,14 +295,12 @@ export async function GenerateScopedTypesInner(): Promise<void>
             [
                 Header,
                 ImportStatement,
-                UnscopedImportStatement,
-                ImportErrorFunction,
-                ReexportStatements,
+                NamespacesImportStatement,
                 PackageKeyDefinition,
-                ReactiveErrorFunction,
-                // PackageKeyDeclareModule,
                 Channel,
-                ExportStatements
+                Handler,
+                Invoke,
+                Listener
             ].join("\n")
         );
 

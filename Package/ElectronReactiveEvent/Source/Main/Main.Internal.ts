@@ -4,17 +4,30 @@
  * License:   MIT
  */
 
-import type { BrowserWindow, IpcMain } from "electron/main";
-import type {
-    Handler,
-    Listener,
-    ListenerRequest } from "../Listener";
-import type { MainOwner, PackageKeys, RendererOwner } from "../Internal";
+import type { BrowserWindow, IpcMain, IpcRenderer } from "electron";
+import type { EventOwner, MainOwner, PackageKeys, RendererOwner } from "../Internal";
 /* eslint-disable-next-line @typescript-eslint/consistent-type-imports */
 import { Channel } from "../Channel";
+import type { Decl } from "../Decl";
 import type { EmptyOverloadParameter } from "../Listener/Listener.Internal.Types";
 import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
-import type { NativeEventListener } from "../Shared/Shared.Internal.Types";
+import type { Handler } from "../Handler/Handler.Types";
+import type { Listener } from "../Listener";
+
+/* eslint-disable @stylistic/max-len */
+
+/**
+ * The type of the listener passed to
+ * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on}
+ * or {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendereronchannel-listener | IpcRenderer.on}
+ * *et al.*
+ */
+type NativeEventListener<OwnerType extends EventOwner> =
+    OwnerType extends MainOwner
+        ? Parameters<IpcMain["on"]>[1]
+        : OwnerType extends RendererOwner
+            ? Parameters<IpcRenderer["on"]>[1]
+            : never;
 
 let __IpcMain: IpcMain | undefined = undefined;
 
@@ -44,7 +57,7 @@ function GetIpcMain(): IpcMain
  */
 export function handle<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>>(
+    ChannelType extends Channel.Handler<PackageKey>>(
     channel: ChannelType,
     handler: Handler<PackageKey, typeof channel>
 ): void
@@ -58,7 +71,7 @@ export function handle<
  */
 export function removeHandler<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>>(
+    ChannelType extends Channel.Handler<PackageKey>>(
     channel: ChannelType
 ): void
 {
@@ -72,7 +85,7 @@ export function removeHandler<
 export function handleOnce<
     /* eslint-enable @stylistic/max-len */
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>>(
+    ChannelType extends Channel.Handler<PackageKey>>(
     channel: ChannelType,
     handler: Handler<PackageKey, typeof channel>
 ): void
@@ -86,7 +99,7 @@ export function handleOnce<
  */
 export function off<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+    ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
     channel: ChannelType,
     listener: Listener<PackageKey, RendererOwner, typeof channel>
 ): void
@@ -100,7 +113,7 @@ export function off<
  */
 export function removeAllListeners<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>
+    ChannelType extends Channel.Listener<PackageKey, RendererOwner>
 >(
     channel?: ChannelType
 ): void
@@ -123,7 +136,7 @@ export function removeAllListeners<
  */
 export function on<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+    ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
     channel: ChannelType,
     listener: Listener<PackageKey, RendererOwner, typeof channel>
 ): void
@@ -147,7 +160,7 @@ export function on<
  */
 export function once<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, RendererOwner>>(
+    ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
     channel: ChannelType,
     listener: Listener<PackageKey, RendererOwner, typeof channel>
 ): void
@@ -174,7 +187,7 @@ export function once<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
     browserWindow: BrowserWindow,
     channel: ChannelType
 ): void;
@@ -195,10 +208,10 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
     browserWindow: BrowserWindow,
     channel: ChannelType,
-    request: ListenerRequest<PackageKey, MainOwner, typeof channel>
+    request: Decl.Request<PackageKey, typeof channel, MainOwner>
 ): void;
 /**
  * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
@@ -217,7 +230,7 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
     browserWindows: Array<BrowserWindow>,
     channel: ChannelType
 ): void;
@@ -239,10 +252,10 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
     browserWindows: Array<BrowserWindow>,
     channel: ChannelType,
-    request: ListenerRequest<PackageKey, MainOwner, typeof channel>
+    request: Decl.Request<PackageKey, typeof channel, MainOwner>
 ): void;
 /**
  * Send an event to all {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
@@ -262,7 +275,7 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
     browserWindows: undefined,
     channel: ChannelType
 ): void;
@@ -285,10 +298,10 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
     browserWindows: undefined,
     channel: ChannelType,
-    request: ListenerRequest<PackageKey, MainOwner, typeof channel>
+    request: Decl.Request<PackageKey, typeof channel, MainOwner>
 ): void;
 /**
  * Send an event to a given
@@ -309,11 +322,11 @@ export function send<
  */
 export function send<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
+    ChannelType extends Channel.Listener<PackageKey, MainOwner>>(
     browserWindows: BrowserWindow | Array<BrowserWindow> | undefined,
     channel: ChannelType,
     request:
-        | ListenerRequest<PackageKey, MainOwner, typeof channel>
+        | Decl.Request<PackageKey, typeof channel, MainOwner>
         | EmptyOverloadParameter = EmptyOverloadParameterValue
 ): void
 {

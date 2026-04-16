@@ -13,8 +13,6 @@ import type {
     RendererOwner,
     Values } from "../Internal";
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-namespace */
-
 type WithRequestHelper<PackageKey extends PackageKeys> =
     {
         [ ChannelType in keyof Registrar[PackageKey] ]:
@@ -45,229 +43,52 @@ type WithErrorHelper<PackageKey extends PackageKeys> =
             : never;
     };
 
+/**
+ * Channels are the `string`s that uniquely identify the event declarations of a given package.
+ *
+ * @typeParam PackageKey - The unique string that identifies your package.
+ * @typeParam OwnerType - The owner of the event declarations identified by this type.
+ */
+export type Channel<
+    PackageKey extends PackageKeys,
+    OwnerType extends EventOwner
+> =
+    Exclude<
+        keyof FilterByOwner<PackageKey, OwnerType>,
+        number | symbol
+    >;
+
 /** Channels are the `string`s that uniquely identify the event declarations of a given package. */
 export namespace Channel
 {
-    /**
-     * Channels whose event declarations define a response type.
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type Response<PackageKey extends PackageKeys> =
-        Exclude<
-            Any<PackageKey, RendererOwner>,
-            NoResponse<PackageKey, RendererOwner>
-        >;
-
-    /**
-     * Channels whose event declarations do *not* define a response type.
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type NoResponse<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
-        Exclude<
-            Any<PackageKey, OwnerType>,
-            Extract<Values<WithResponseHelper<PackageKey>>, string>
-        >;
-
-    /**
-     * Channels whose event declarations define an error type.
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type Error<PackageKey extends PackageKeys> =
-        Extract<
-            Any<PackageKey, RendererOwner>,
-            Extract<Values<WithErrorHelper<PackageKey>>, string>
-        >;
-
-    /**
-     * Channel with no error type (*i.e.*, no error message type and no error payload type).
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type NoError<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
-        Exclude<
-            Any<PackageKey, OwnerType>,
-            Extract<Values<WithErrorHelper<PackageKey>>, string>
-        >;
-
-    /**
-     * Channels whose event declarations specify a request type.
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type Request<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
-        Extract<
-            Any<PackageKey, OwnerType>,
-            Extract<Values<WithRequestHelper<PackageKey>>, string>
-        >;
-
-    /**
-     * Channels whose event declarations do *not* specify a request type.
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type NoRequest<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
-        Exclude<
-            Any<PackageKey, OwnerType>,
-            Extract<Values<WithRequestHelper<PackageKey>>, string>
-        >;
-
-    /**
-     * Channels are the `string`s that uniquely identify the event declarations of a given package.
-     *
-     * @typeParam PackageKey - The unique string that identifies your package.
-     * @typeParam OwnerType - The owner of the event declarations identified by this type.
-     */
-    export type Any<
-        PackageKey extends PackageKeys,
-        OwnerType extends EventOwner
-    > =
-        Exclude<
-            keyof FilterByOwner<PackageKey, OwnerType>,
-            number | symbol
-        >;
-
-    /**
-     * Channels of event declarations that can be used via {@link Renderer.UseInvokeEvent | useInvokeEvent},
-     * {@link Main.Handle | handle} *et al.*
-     */
-    export namespace Handler
+    export namespace With
     {
         /**
-         * Channels of event declarations that can be used via {@link Main.Send | send},
-         * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
-        export type Any<PackageKey extends PackageKeys> =
-            | Channel.Response<PackageKey>
-            | Channel.Error<PackageKey>;
-
-        /**
-         * {@link Handler} channels whose event declarations define a request type.
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
-        export type Request<PackageKey extends PackageKeys> =
-            Extract<
-                Any<PackageKey>,
-                Channel.Request<PackageKey, RendererOwner>
-            >;
-
-        /**
-         * {@link Handler} channels whose event declarations define a response type.
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
+        * Channels whose event declarations define a response type.
+        *
+        * @typeParam PackageKey - The unique string that identifies your package.
+        * @typeParam OwnerType - The owner of the event declarations identified by this type.
+        */
         export type Response<PackageKey extends PackageKeys> =
-            Extract<
-                Any<PackageKey>,
-                Channel.Response<PackageKey>
-            >;
-
-        /**
-         * {@link Handler} channels whose event declarations do *not* define a request type.
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
-        export type NoRequest<PackageKey extends PackageKeys> =
-            Extract<
-                Any<PackageKey>,
-                Channel.NoRequest<PackageKey, RendererOwner>
-            >;
-
-        /**
-         * {@link Handler} channels whose event declarations do *not* define a response type.
-         *
-         * @note {@link Handler} events with no response type can still return data to the
-         * `renderer` as an error type.
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
-        export type NoResponse<PackageKey extends PackageKeys> =
             Exclude<
-                Any<PackageKey>,
-                Extract<Values<WithResponseHelper<PackageKey>>, string>
+                Channel<PackageKey, RendererOwner>,
+                Without.Response<PackageKey, RendererOwner>
             >;
 
         /**
-         * {@link Handler} channels whose event declarations define an error type.
+         * Channels whose event declarations define an error type.
          *
          * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
          */
         export type Error<PackageKey extends PackageKeys> =
-            Exclude<
-                Any<PackageKey>,
-                NoError<PackageKey>
-            >;
-
-        /**
-         * {@link Handler} channels whose event declarations do *not* define an error type.
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
-        export type NoError<PackageKey extends PackageKeys> =
-            Exclude<
-                Any<PackageKey>,
+            Extract<
+                Channel<PackageKey, RendererOwner>,
                 Extract<Values<WithErrorHelper<PackageKey>>, string>
             >;
-    }
-
-    /**
-     * Channels of event declarations that can be used via {@link Main.Send | send},
-     * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
-     */
-    export namespace Listener
-    {
-        /**
-         * Channels of event declarations that can be used via {@link Main.Send | send},
-         * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
-         *
-         * @typeParam PackageKey - The unique string that identifies your package.
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         */
-        export type Any<
-            PackageKey extends PackageKeys,
-            OwnerType extends EventOwner
-        > =
-            | Extract<
-                Channel.NoResponse<PackageKey, OwnerType>,
-                Channel.NoError<PackageKey, OwnerType>
-            >
-            | Extract<
-                Channel.NoError<PackageKey, OwnerType>,
-                Channel.NoResponse<PackageKey, OwnerType>
-            >;
 
         /**
-         * {@link Listener} channels whose event declarations define a request type.
+         * Channels whose event declarations specify a request type.
          *
          * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
@@ -277,23 +98,218 @@ export namespace Channel
             OwnerType extends EventOwner
         > =
             Extract<
-                Any<PackageKey, OwnerType>,
-                Channel.Request<PackageKey, OwnerType>
+                Channel<PackageKey, OwnerType>,
+                Extract<Values<WithRequestHelper<PackageKey>>, string>
             >;
+    }
 
+    export namespace Without
+    {
         /**
-         * {@link Listener} channels whose event declarations do *not* define a request type.
+         * Channels whose event declarations do *not* define a response type.
          *
          * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
          */
-        export type NoRequest<
+        export type Response<
             PackageKey extends PackageKeys,
             OwnerType extends EventOwner
         > =
-            Extract<
-                Any<PackageKey, OwnerType>,
-                Channel.NoRequest<PackageKey, OwnerType>
+            Exclude<
+                Channel<PackageKey, OwnerType>,
+                Extract<Values<WithResponseHelper<PackageKey>>, string>
             >;
+
+        /**
+         * Channel with no error type (*i.e.*, no error message type and no error payload type).
+         *
+         * @typeParam PackageKey - The unique string that identifies your package.
+         * @typeParam OwnerType - The owner of the event declarations identified by this type.
+         */
+        export type Error<
+            PackageKey extends PackageKeys,
+            OwnerType extends EventOwner
+        > =
+            Exclude<
+                Channel<PackageKey, OwnerType>,
+                Extract<Values<WithErrorHelper<PackageKey>>, string>
+            >;
+
+        /**
+         * Channels whose event declarations do *not* specify a request type.
+         *
+         * @typeParam PackageKey - The unique string that identifies your package.
+         * @typeParam OwnerType - The owner of the event declarations identified by this type.
+         */
+        export type Request<
+            PackageKey extends PackageKeys,
+            OwnerType extends EventOwner
+        > =
+            Exclude<
+                Channel<PackageKey, OwnerType>,
+                Extract<Values<WithRequestHelper<PackageKey>>, string>
+            >;
+    }
+
+    /**
+     * Channels of event declarations that can be used via {@link Main.Send | send},
+     * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
+     *
+     * @typeParam PackageKey - The unique string that identifies your package.
+     * @typeParam OwnerType - The owner of the event declarations identified by this type.
+     */
+    export type Handler<PackageKey extends PackageKeys> =
+        | Channel.With.Response<PackageKey>
+        | Channel.With.Error<PackageKey>;
+
+    /**
+     * Channels of event declarations that can be used via {@link Renderer.UseInvokeEvent | useInvokeEvent},
+     * {@link Main.Handle | handle} *et al.*
+     */
+    export namespace Handler
+    {
+        export namespace With
+        {
+            /**
+             * {@link Handler} channels whose event declarations define a request type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Request<PackageKey extends PackageKeys> =
+                Extract<
+                    Handler<PackageKey>,
+                    Channel.With.Request<PackageKey, RendererOwner>
+                >;
+
+            /**
+             * {@link Handler} channels whose event declarations define a response type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Response<PackageKey extends PackageKeys> =
+                Extract<
+                    Handler<PackageKey>,
+                    Channel.With.Response<PackageKey>
+                >;
+
+            /**
+             * {@link Handler} channels whose event declarations define an error type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Error<PackageKey extends PackageKeys> =
+                Exclude<
+                    Handler<PackageKey>,
+                    Handler.Without.Error<PackageKey>
+                >;
+        }
+
+        export namespace Without
+        {
+            /**
+             * {@link Handler} channels whose event declarations do *not* define a request type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Request<PackageKey extends PackageKeys> =
+                Extract<
+                    Handler<PackageKey>,
+                    Channel.Without.Request<PackageKey, RendererOwner>
+                >;
+
+            /**
+             * {@link Handler} channels whose event declarations do *not* define a response type.
+             *
+             * @note {@link Handler} events with no response type can still return data to the
+             * `renderer` as an error type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Response<PackageKey extends PackageKeys> =
+                Exclude<
+                    Handler<PackageKey>,
+                    Extract<Values<WithResponseHelper<PackageKey>>, string>
+                >;
+
+            /**
+             * {@link Handler} channels whose event declarations do *not* define an error type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Error<PackageKey extends PackageKeys> =
+                Exclude<
+                    Handler<PackageKey>,
+                    Extract<Values<WithErrorHelper<PackageKey>>, string>
+                >;
+        }
+    }
+
+    /**
+     * Channels of event declarations that can be used via {@link Main.Send | send},
+     * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
+     *
+     * @typeParam PackageKey - The unique string that identifies your package.
+     * @typeParam OwnerType - The owner of the event declarations identified by this type.
+     */
+    export type Listener<
+        PackageKey extends PackageKeys,
+        OwnerType extends EventOwner
+    > =
+        | Extract<
+            Channel.Without.Response<PackageKey, OwnerType>,
+            Channel.Without.Error<PackageKey, OwnerType>
+        >
+        | Extract<
+            Channel.Without.Error<PackageKey, OwnerType>,
+            Channel.Without.Response<PackageKey, OwnerType>
+        >;
+
+    /**
+     * Channels of event declarations that can be used via {@link Main.Send | send},
+     * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
+     */
+    export namespace Listener
+    {
+        export namespace With
+        {
+            /**
+             * {@link Listener} channels whose event declarations define a request type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Request<
+                PackageKey extends PackageKeys,
+                OwnerType extends EventOwner
+            > =
+                Extract<
+                    Listener<PackageKey, OwnerType>,
+                    Channel.With.Request<PackageKey, OwnerType>
+                >;
+        }
+
+        export namespace Without
+        {
+            /**
+             * {@link Listener} channels whose event declarations do *not* define a request type.
+             *
+             * @typeParam PackageKey - The unique string that identifies your package.
+             * @typeParam OwnerType - The owner of the event declarations identified by this type.
+             */
+            export type Request<
+                PackageKey extends PackageKeys,
+                OwnerType extends EventOwner
+            > =
+                Extract<
+                    Listener<PackageKey, OwnerType>,
+                    Channel.Without.Request<PackageKey, OwnerType>
+                >;
+        }
     }
 }

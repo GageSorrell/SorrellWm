@@ -4,16 +4,13 @@
  * License:   MIT
  */
 
-import type {
-    HandlerRequest,
-    InvokeResultAsync,
-    InvokeResultSync,
-    Listener,
-    ListenerRequest } from "../../Listener";
 import type { MainOwner, PackageKeys, RendererOwner } from "../../Internal";
 import type { Channel } from "../../Channel";
-import type { InvokeOptions } from "./Hook.Unscoped.Types";
+import type { Decl } from "../../Decl";
+/* eslint-disable-next-line @typescript-eslint/consistent-type-imports */
+import { Invoke } from "../../Invoke/Invoke.Types";
 import type { IpcRendererEvent } from "electron/renderer";
+import type { Listener } from "../../Listener";
 
 /**
  * The type of the {@link Listener | listener} function passed to {@link useOnEvent} *et al.*
@@ -24,29 +21,8 @@ import type { IpcRendererEvent } from "electron/renderer";
  */
 export type RendererListener<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>
+    ChannelType extends Channel.Listener<PackageKey, MainOwner>
 > = Listener<PackageKey, RendererOwner, ChannelType, IpcRendererEvent>;
-
-/**
- * The type returned by {@link useInvokeEvent}.
- *
- * @typeParam PackageKey - The unique string that identifies your package.
- * @typeParam ChannelType - The channel that uniquely identifies the desired
- * event declaration.
- * @typeParam OptionsType - The specific type of {@link InvokeOptions} passed
- * to the {@link useInvokeEvent} call from which this response is produced.
- * The {@link InvokeOptions.suspend | suspend} property determines whether this
- * type will contain an `isPending` property.
- */
-export type InvokeResult<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>,
-    OptionsType extends InvokeOptions | undefined = undefined
-> = OptionsType extends InvokeOptions<infer SuspendsType>
-    ? SuspendsType extends true
-        ? InvokeResultSync<PackageKey, ChannelType>
-        : InvokeResultAsync<PackageKey, ChannelType>
-    : InvokeResultAsync<PackageKey, ChannelType>;
 
 /**
  * Returns a copy of {@link InvokeEventDeferred}, to invoke events at a desired time.
@@ -80,7 +56,7 @@ export type UseOnEvent<PackageKey extends PackageKeys> =
          *
          * @returns A function that will unregister the given {@link listener}.
          */
-        <ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, MainOwner>>(
             channel: ChannelType,
             listener: RendererListener<PackageKey, typeof channel>
         ): Readonly<[ offEventDeferred: OffEventDeferred<PackageKey> ]>;
@@ -119,7 +95,7 @@ export type UseOnceEvent<PackageKey extends PackageKeys> =
          *
          * @returns An {@link OffEventDeferred} to unsubscribe the {@link listener} early.
          */
-        <ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, MainOwner>>(
             channel: ChannelType,
             listener: RendererListener<PackageKey, typeof channel>
         ): Readonly<[ offEventDeferred: OffEventDeferred<PackageKey> ]>;
@@ -156,7 +132,7 @@ export type UseOffEventDeferred<PackageKey extends PackageKeys> =
  *
  * @note {@link | Sendable events} do *not* end with a response returned by
  * `main`.  If you wish to send an event to `main` such that it returns a
- * {@link InvokeResult | response}, declare the {@link EventDecl | event type}
+ * {@link Invoke.Result | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
  * @typeParam PackageKey - The unique string that identifies your package.
@@ -169,15 +145,15 @@ export type UseSendEvent<PackageKey extends PackageKeys> =
          *
          * @note {@link | Sendable events} do *not* end with a response returned by
          * `main`.  If you wish to send an event to `main` such that it returns a
-         * {@link InvokeResult | response}, declare the {@link EventDecl | event type}
-         * with a `ResponseType !== {@link EmptyEventParameter}`.
+         * response, declare the {@link EventDecl | event type} with a
+         * `ResponseType !== never`.
          *
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to send.
          */
-        <ChannelType extends Channel.Listener.NoRequest<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
             channel: ChannelType
         ): void;
 
@@ -187,7 +163,7 @@ export type UseSendEvent<PackageKey extends PackageKeys> =
          *
          * @note {@link | Sendable events} do *not* end with a response returned by
          * `main`.  If you wish to send an event to `main` such that it returns a
-         * {@link InvokeResult | response}, declare the {@link EventDecl | event type}
+         * {@link Invoke.Result | response}, declare the {@link EventDecl | event type}
          * with a `ResponseType !== {@link EmptyEventParameter}`.
          *
          * @typeParam ChannelType - The channel that uniquely identifies the desired
@@ -196,9 +172,9 @@ export type UseSendEvent<PackageKey extends PackageKeys> =
          * @param channel - The channel of the event that you wish to invoke.
          * @param request - The request sent with this event.
          */
-        <ChannelType extends Channel.Listener.Request<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
             channel: ChannelType,
-            request: ListenerRequest<PackageKey, RendererOwner, typeof channel>
+            request: Decl.Request<PackageKey, typeof channel, RendererOwner>
         ): void;
     };
 
@@ -231,9 +207,9 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          *
          * @returns The result returned by `main`.
          */
-        <ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
+        <ChannelType extends Channel.Handler.Without.Request<PackageKey>>(
             channel: ChannelType
-        ): InvokeResult<PackageKey, typeof channel, undefined>;
+        ): Invoke.Result<PackageKey, typeof channel, undefined>;
 
         /**
          * Invoke an event when the containing component mounts, whose event declaration
@@ -249,11 +225,11 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          * @returns The result returned by `main`.
          * {@label NoRequestOptions}
          */
-        <ChannelType extends Channel.Handler.NoRequest<PackageKey>,
+        <ChannelType extends Channel.Handler.Without.Request<PackageKey>,
             SuspendsType extends boolean>(
             channel: ChannelType,
-            options: InvokeOptions<SuspendsType>
-        ): InvokeResult<PackageKey, typeof channel, typeof options>;
+            options: Invoke.Options<SuspendsType>
+        ): Invoke.Result<PackageKey, typeof channel, typeof options>;
 
         /**
          * Invoke an event when the containing component mounts, whose event declaration
@@ -267,10 +243,10 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          *
          * @returns The result returned by `main`.
          */
-        <ChannelType extends Channel.Handler.Request<PackageKey>>(
+        <ChannelType extends Channel.Handler.With.Request<PackageKey>>(
             channel: ChannelType,
-            request: HandlerRequest<PackageKey, typeof channel>
-        ): InvokeResult<PackageKey, typeof channel, undefined>;
+            request: Decl.Request<PackageKey, typeof channel>
+        ): Invoke.Result<PackageKey, typeof channel, undefined>;
 
         /**
          * Invoke an event when the containing component mounts, whose event declaration
@@ -286,12 +262,12 @@ export type UseInvokeEvent<PackageKey extends PackageKeys> =
          *
          * @returns The result returned by `main`.
          */
-        <ChannelType extends Channel.Handler.Request<PackageKey>,
+        <ChannelType extends Channel.Handler.With.Request<PackageKey>,
             SuspendsType extends boolean>(
             channel: ChannelType,
-            request: HandlerRequest<PackageKey, typeof channel>,
-            options: InvokeOptions<SuspendsType>
-        ): InvokeResult<PackageKey, typeof channel, typeof options>;
+            request: Decl.Request<PackageKey, typeof channel>,
+            options: Invoke.Options<SuspendsType>
+        ): Invoke.Result<PackageKey, typeof channel, typeof options>;
     };
 
 /**
@@ -317,9 +293,9 @@ export type InvokeEventDeferred<PackageKey extends PackageKeys> =
          *
          * @returns The response from `main`, given as a promise, which resolves to a {@link InvokeResultSync}.
          */
-        <ChannelType extends Channel.Handler.NoRequest<PackageKey>>(
+        <ChannelType extends Channel.Handler.Without.Request<PackageKey>>(
             channel: ChannelType
-        ): Promise<InvokeResultSync<PackageKey, typeof channel>>;
+        ): Promise<Invoke.Result.Sync<PackageKey, typeof channel>>;
 
         /**
          * Invoke a `renderer` event whose event declaration defines a request type,
@@ -334,10 +310,10 @@ export type InvokeEventDeferred<PackageKey extends PackageKeys> =
          *
          * @returns The response from `main`, given as a promise, which resolves to a {@link InvokeResultSync}.
          */
-        <ChannelType extends Channel.Handler.Request<PackageKey>>(
+        <ChannelType extends Channel.Handler.With.Request<PackageKey>>(
             channel: ChannelType,
-            request: HandlerRequest<PackageKey, typeof channel>
-        ): Promise<InvokeResultSync<PackageKey, typeof channel>>;
+            request: Decl.Request<PackageKey, typeof channel>
+        ): Promise<Invoke.Result.Sync<PackageKey, typeof channel>>;
 
         /* eslint-enable @stylistic/max-len */
     };
@@ -361,7 +337,7 @@ export type OnEventDeferred<PackageKey extends PackageKeys> = UseOnEvent<Package
  */
 export type OffEventDeferred<PackageKey extends PackageKeys> =
     {
-        <ChannelType extends Channel.Listener.Any<PackageKey, MainOwner>>(
+        <ChannelType extends Channel.Listener<PackageKey, MainOwner>>(
             channel: ChannelType,
             listener: RendererListener<PackageKey, typeof channel>
         ): void;

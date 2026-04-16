@@ -18,6 +18,5 @@
 
 export * from "./Hook";
 export type * from "./Hook.Types";
-export type * from "./Hook.Unscoped.Types";
 export type * from "./Hook.Internal";
 export * from "./Hook.Internal.Types";

@@ -15,7 +15,7 @@
 
 /* eslint-disable */
 
-import type { 
+import type {
     AnyCallback as AnyCallbackImported,
     EventOwner as EventOwnerImported,
     EventRequest as EventRequestImported,
@@ -51,7 +51,7 @@ import type {
     RendererOwner as RendererOwnerImported,
     Response as ResponseImported,
     ResponseError as ResponseErrorImported,
-    ResponseSettled as ResponseSettledImported,
+    ResultSettled as ResponseSettledImported,
     ResponseSuccess as ResponseSuccessImported,
     ResponseSync as ResponseSyncImported,
     Send as SendImported,

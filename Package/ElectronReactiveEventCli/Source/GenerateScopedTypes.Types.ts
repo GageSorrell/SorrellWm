@@ -28,59 +28,30 @@ export type Channels =
         Listener: Record<string, string>;
     };
 
-export type ExportedType =
-    | "AnyCallback"
-    | "EmptyEventParameter"
-    | "EventDecl"
-    | "EventErrorAdvancedDecl"
-    | "EventErrorAdvancedDeclParameter"
-    | "EventErrorDecl"
-    | "EventErrorRecord"
-    | "EventErrorTuple"
-    | "EventOwner"
-    | "EventRequest"
+export type ScopedExport =
+    | "Channel"
+    | "FilterByOwner"
     | "Handle"
     | "HandleOnce"
-    | "Handler"
-    | "HandlerNoRequest"
-    | "HandlerRequest"
-    | "HandlerWithRequest"
     | "InvokeEventDeferred"
-    | "InvokeResponse"
     | "IpcMainReactive"
     | "Listener"
-    | "ListenerNoRequest"
-    | "ListenerRequest"
-    | "ListenerWithRequest"
     | "MainListener"
-    | "MainOwner"
+    | "MainRegistrar"
     | "Off"
     | "OffEventDeferred"
     | "On"
     | "OnEventDeferred"
     | "Once"
     | "OnceEventDeferred"
-    | "RawResponse"
-    | "RawResponseError"
-    | "RawResponseSuccess"
-    | "ReactiveEventContext"
-    | "ReactiveEventErrorData"
-    | "ReactiveIpcFunctions"
     | "ReactiveEventHooks"
-    | "ReactiveEventProviderProps"
+    | "ReactiveIpcMainFunctions"
     | "RemoveAllListeners"
     | "RemoveHandler"
     | "RendererListener"
-    | "RendererOwner"
-    | "Response"
-    | "ResponseError"
-    | "ResponseIndeterminate"
-    | "ResponseSettled"
-    | "ResponseSuccess"
-    | "ResponseSync"
+    | "RendererRegistrar"
     | "Send"
     | "SendEventDeferred"
-    | "SendableEventHandler"
     | "UseInvokeEvent"
     | "UseInvokeEventDeferred"
     | "UseOffEventDeferred"
@@ -91,7 +62,27 @@ export type ExportedType =
     | "UseSendEvent"
     | "UseSendEventDeferred";
 
+export type UnscopedExport =
+    | "EventDecl"
+    | "EventDeclHandler"
+    | "EventDeclListener"
+    | "EventOwner"
+    | "IpcEvent"
+    | "MainOwner"
+    | "PackageKeys"
+    | "ReactiveEventContext"
+    | "ReactiveEventProviderProps"
+    | "Registrar"
+    | "RendererOwner";
+
 export type Types =
     {
-        [ Key in ExportedType ]: string | symbol;
+        Scoped:
+        {
+            [ Key in ScopedExport ]: string | symbol;
+        };
+        Unscoped:
+        {
+            [ Key in UnscopedExport ]: string | symbol;
+        };
     };

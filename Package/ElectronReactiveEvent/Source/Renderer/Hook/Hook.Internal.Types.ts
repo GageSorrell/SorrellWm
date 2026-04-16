@@ -5,10 +5,9 @@
  */
 
 import type { Channel } from "../../Channel";
+import type { Decl } from "../../Decl";
 import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";
-import type { HandlerRequest } from "../../Listener/Listener.Types";
-import type { InvokeOptions } from "./Hook.Unscoped.Types";
-import type { InvokeResult } from "./Hook.Types";
+import type { Invoke } from "../../Invoke/Invoke.Types";
 import type { PackageKeys } from "../../Internal";
 
 /**
@@ -18,27 +17,27 @@ import type { PackageKeys } from "../../Internal";
  * @group Internal
  */
 export type InvokeOptionsOverloadedArgument<SuspendsType extends boolean = boolean> =
-    | InvokeOptions<SuspendsType>
+    | Invoke.Options<SuspendsType>
     | EmptyOverloadParameter
     | undefined;
 
 type OptionsFromOverload<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>,
+    ChannelType extends Channel.Handler<PackageKey>,
     RequestOrOptionsType extends
-        | HandlerRequest<PackageKey, ChannelType>
-        | InvokeOptions
+        | Decl.Request<PackageKey, ChannelType>
+        | Invoke.Options
         | EmptyOverloadParameter,
     OptionsType extends
-        | InvokeOptions
+        | Invoke.Options
         | EmptyOverloadParameter
 > =
     OptionsType extends EmptyOverloadParameter
-        ? RequestOrOptionsType extends InvokeOptions<infer SuspendsType>
-            ? InvokeOptions<SuspendsType>
+        ? RequestOrOptionsType extends Invoke.Options<infer SuspendsType>
+            ? Invoke.Options<SuspendsType>
             : undefined
-        : OptionsType extends InvokeOptions<infer SuspendsType>
-            ? InvokeOptions<SuspendsType>
+        : OptionsType extends Invoke.Options<infer SuspendsType>
+            ? Invoke.Options<SuspendsType>
             : undefined;
 
 /**
@@ -55,16 +54,16 @@ type OptionsFromOverload<
  */
 export type ResultInternal<
     PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.Any<PackageKey>,
+    ChannelType extends Channel.Handler<PackageKey>,
     RequestOrOptionsType extends
-        | HandlerRequest<PackageKey, ChannelType>
-        | InvokeOptions
+        | Decl.Request<PackageKey, ChannelType>
+        | Invoke.Options
         | EmptyOverloadParameter,
     OptionsType extends
-        | InvokeOptions
+        | Invoke.Options
         | EmptyOverloadParameter
 > =
-    InvokeResult<
+    Invoke.Result<
         PackageKey,
         ChannelType,
         OptionsFromOverload<
