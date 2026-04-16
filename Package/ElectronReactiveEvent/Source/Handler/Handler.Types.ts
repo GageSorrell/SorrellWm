@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { ErrorKey, PackageKeys, Registrar, ResponseKey } from "../Internal";
+import type { ErrorKey, Registrar, ResponseKey } from "../Internal";
 import type { Channel } from "../Channel";
 import type { Decl } from "../Decl";
 import type { IpcMainInvokeEvent } from "electron/main";
@@ -14,19 +14,15 @@ export namespace With
     /**
      * A {@link Handler} that subscribes to an event whose declaration has a request type.
      *
-     * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
-    export type Request<
-        PackageKey extends PackageKeys,
-        ChannelType extends Channel.Handler.With.Request<PackageKey>
-    > =
+    export type Request<ChannelType extends Channel.Handler.With.Request> =
         {
             (
                 event: IpcMainInvokeEvent,
-                request: Decl.Request<PackageKey, ChannelType>
-            ): Promise<Result<PackageKey, ChannelType>>
+                request: Decl.Request<ChannelType>
+            ): Promise<Result<ChannelType>>
         };
 }
 
@@ -36,16 +32,12 @@ export namespace Without
      * A {@link Handler} that subscribes to an event whose declaration does
      * *not* have a request type.
      *
-     * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
-    export type Request<
-        PackageKey extends PackageKeys,
-        ChannelType extends Channel.Handler.Without.Request<PackageKey>
-    > =
+    export type Request<ChannelType extends Channel.Handler.Without.Request> =
         {
-            (event: IpcMainInvokeEvent): Promise<Result<PackageKey, ChannelType>>;
+            (event: IpcMainInvokeEvent): Promise<Result<ChannelType>>;
         };
 }
 
@@ -54,18 +46,14 @@ export namespace Without
  * {@link ChannelType} is of type {@link Channel.Handler}, and is invoked via
  * {@link UseInvokeEvent} or {@link InvokeEventDeferred}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Handler<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>
-> =
-    ChannelType extends Channel.Handler.With.Request<PackageKey>
-        ? With.Request<PackageKey, ChannelType>
-        : ChannelType extends Channel.Handler.Without.Request<PackageKey>
-            ? Without.Request<PackageKey, ChannelType>
+export type Handler<ChannelType extends Channel.Handler> =
+    ChannelType extends Channel.Handler.With.Request
+        ? With.Request<ChannelType>
+        : ChannelType extends Channel.Handler.Without.Request
+            ? Without.Request<ChannelType>
             : never;
 
 /**
@@ -73,21 +61,17 @@ export type Handler<
  * Values of this type should only come from calling {@link succeed}.  This value
  * gets transformed into {@link InvokeResult} when received by the `renderer`.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Success<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>
-> =
-    [ Registrar[PackageKey][ChannelType][ResponseKey] ] extends [ never ]
+export type Success<ChannelType extends Channel.Handler> =
+    [ Registrar[ChannelType][ResponseKey] ] extends [ never ]
         ? {
             data: undefined;
             error: undefined;
         }
         : {
-            data: Registrar[PackageKey][ChannelType][ResponseKey];
+            data: Registrar[ChannelType][ResponseKey];
             error: undefined;
         };
 
@@ -96,17 +80,13 @@ export type Success<
  * Values of this type should only come from calling {@link fail}.  This value
  * gets transformed into {@link InvokeResult} when received by the `renderer`.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Failure<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler.With.Error<PackageKey>
-> =
+export type Failure<ChannelType extends Channel.Handler.With.Error> =
     {
         data: undefined;
-        error: Registrar[PackageKey][ChannelType][ErrorKey];
+        error: Registrar[ChannelType][ErrorKey];
     };
 
 /**
@@ -114,13 +94,9 @@ export type Failure<
  * only come from calling {@link succeed} or {@link fail}.  This value
  * gets transformed into {@link InvokeResult} when received by the `renderer`.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Result<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>
-> =
-    | Success<PackageKey, ChannelType>
-    | Failure<PackageKey, ChannelType>;
+export type Result<ChannelType extends Channel.Handler> =
+    | Success<ChannelType>
+    | Failure<ChannelType>;

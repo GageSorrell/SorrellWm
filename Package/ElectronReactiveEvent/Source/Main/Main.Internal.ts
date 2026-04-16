@@ -5,7 +5,7 @@
  */
 
 import type { BrowserWindow, IpcMain, IpcRenderer } from "electron";
-import type { EventOwner, MainOwner, PackageKeys, RendererOwner } from "../Internal";
+import type { EventOwner, MainOwner, RendererOwner } from "../Internal";
 /* eslint-disable-next-line @typescript-eslint/consistent-type-imports */
 import { Channel } from "../Channel";
 import type { Decl } from "../Decl";
@@ -55,11 +55,9 @@ function GetIpcMain(): IpcMain
  * @inheritdoc Handle:Signature
  * @group Internal
  */
-export function handle<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>>(
+export function handle<ChannelType extends Channel.Handler>(
     channel: ChannelType,
-    handler: Handler<PackageKey, typeof channel>
+    handler: Handler<typeof channel>
 ): void
 {
     GetIpcMain().handle(channel, handler);
@@ -69,9 +67,7 @@ export function handle<
  * @inheritdoc RemoveHandler:Signature
  * @group Internal
  */
-export function removeHandler<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>>(
+export function removeHandler<ChannelType extends Channel.Handler>(
     channel: ChannelType
 ): void
 {
@@ -83,11 +79,9 @@ export function removeHandler<
  * @group Internal
  */
 export function handleOnce<
-    /* eslint-enable @stylistic/max-len */
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>>(
+    ChannelType extends Channel.Handler>(
     channel: ChannelType,
-    handler: Handler<PackageKey, typeof channel>
+    handler: Handler<typeof channel>
 ): void
 {
     GetIpcMain().handleOnce(channel, handler);
@@ -97,11 +91,9 @@ export function handleOnce<
  * @inheritdoc Off:Signature
  * @group Internal
  */
-export function off<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
+export function off<ChannelType extends Channel.Listener<RendererOwner>>(
     channel: ChannelType,
-    listener: Listener<PackageKey, RendererOwner, typeof channel>
+    listener: Listener<RendererOwner, typeof channel>
 ): void
 {
     GetIpcMain().off(channel, listener as NativeEventListener<MainOwner>);
@@ -111,9 +103,7 @@ export function off<
  * @inheritdoc RemoveAllListeners:Signature
  * @group Internal
  */
-export function removeAllListeners<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener<PackageKey, RendererOwner>
+export function removeAllListeners<ChannelType extends Channel.Listener<RendererOwner>
 >(
     channel?: ChannelType
 ): void
@@ -134,11 +124,9 @@ export function removeAllListeners<
  *
  * @group Internal
  */
-export function on<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
+export function on<ChannelType extends Channel.Listener<RendererOwner>>(
     channel: ChannelType,
-    listener: Listener<PackageKey, RendererOwner, typeof channel>
+    listener: Listener<RendererOwner, typeof channel>
 ): void
 {
     GetIpcMain().on(channel, listener as NativeEventListener<MainOwner>);
@@ -158,11 +146,9 @@ export function on<
  *
  * @group Internal
  */
-export function once<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener<PackageKey, RendererOwner>>(
+export function once<ChannelType extends Channel.Listener<RendererOwner>>(
     channel: ChannelType,
-    listener: Listener<PackageKey, RendererOwner, typeof channel>
+    listener: Listener<RendererOwner, typeof channel>
 ): void
 {
     GetIpcMain().once(channel, listener as NativeEventListener<MainOwner>);
@@ -174,7 +160,6 @@ export function once<
  * Send an event to the `renderer`, whose event declaration does *not* define
  * a request type.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -185,16 +170,13 @@ export function once<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener.Without.Request<MainOwner>>(
     browserWindow: BrowserWindow,
     channel: ChannelType
 ): void;
 /**
  * Send an event to the `renderer`, whose event declaration defines a request type.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -206,18 +188,15 @@ export function send<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener.With.Request<MainOwner>>(
     browserWindow: BrowserWindow,
     channel: ChannelType,
-    request: Decl.Request<PackageKey, typeof channel, MainOwner>
+    request: Decl.Request<typeof channel, MainOwner>
 ): void;
 /**
  * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
  * whose event declarations do *not* define a request type.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -228,9 +207,7 @@ export function send<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener.Without.Request<MainOwner>>(
     browserWindows: Array<BrowserWindow>,
     channel: ChannelType
 ): void;
@@ -238,7 +215,6 @@ export function send<
  * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
  * whose event declarations define a request type.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -250,19 +226,16 @@ export function send<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener.With.Request<MainOwner>>(
     browserWindows: Array<BrowserWindow>,
     channel: ChannelType,
-    request: Decl.Request<PackageKey, typeof channel, MainOwner>
+    request: Decl.Request<typeof channel, MainOwner>
 ): void;
 /**
  * Send an event to all {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
  * whose event declarations do *not* define a request type.  This overload implicitly calls
  * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -273,9 +246,7 @@ export function send<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.Without.Request<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener.Without.Request<MainOwner>>(
     browserWindows: undefined,
     channel: ChannelType
 ): void;
@@ -284,7 +255,6 @@ export function send<
  * whose event declarations define a request type.  This overload implicitly calls
  * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -296,18 +266,15 @@ export function send<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener.With.Request<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener.With.Request<MainOwner>>(
     browserWindows: undefined,
     channel: ChannelType,
-    request: Decl.Request<PackageKey, typeof channel, MainOwner>
+    request: Decl.Request<typeof channel, MainOwner>
 ): void;
 /**
  * Send an event to a given
  * {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow or set of BrowserWindows}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
@@ -320,13 +287,11 @@ export function send<
  *
  * @group Internal
  */
-export function send<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Listener<PackageKey, MainOwner>>(
+export function send<ChannelType extends Channel.Listener<MainOwner>>(
     browserWindows: BrowserWindow | Array<BrowserWindow> | undefined,
     channel: ChannelType,
     request:
-        | Decl.Request<PackageKey, typeof channel, MainOwner>
+        | Decl.Request<typeof channel, MainOwner>
         | EmptyOverloadParameter = EmptyOverloadParameterValue
 ): void
 {

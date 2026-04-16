@@ -8,11 +8,10 @@ import type {
     ErrorKey,
     EventOwner,
     MainOwner,
-    PackageKeys,
     Registrar,
     RendererOwner,
     RequestKey,
-    ResponseKey} from "../Internal";
+    ResponseKey } from "../Internal";
 import type { Channel } from "../Channel";
 
 export namespace Decl
@@ -20,39 +19,31 @@ export namespace Decl
     /**
      * The request type of a given event declaration.
      *
-     * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
     export type Request<
-        PackageKey extends PackageKeys,
-        ChannelType extends Channel.With.Request<PackageKey, OwnerType>,
+        ChannelType extends Channel.With.Request<OwnerType>,
         OwnerType extends EventOwner = EventOwner
-    > = Registrar[PackageKey][ChannelType][RequestKey];
+    > = Registrar[ChannelType][RequestKey];
 
     /**
      * The response type of a given event declaration.
      *
-     * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
-    export type Response<
-        PackageKey extends PackageKeys,
-        ChannelType extends Channel.Handler.With.Response<PackageKey>
-    > = Registrar[PackageKey][ChannelType][ResponseKey];
+    export type Response<ChannelType extends Channel.Handler.With.Response> =
+        Registrar[ChannelType][ResponseKey];
 
     /**
      * The error type of a given event declaration.
      *
-     * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
-    export type Error<
-        PackageKey extends PackageKeys,
-        ChannelType extends Channel.Handler.With.Error<PackageKey>
-    > = Registrar[PackageKey][ChannelType][ErrorKey];
+    export type Error<ChannelType extends Channel.Handler.With.Error> =
+        Registrar[ChannelType][ErrorKey];
 }
 
 /* eslint-disable @stylistic/max-len */
@@ -66,10 +57,8 @@ export namespace Decl
  * @typeParam OwnerType - From whom an event of this type is sent.
  * @typeParam RequestType - The type of the request object that is sent when an event occurs.
  */
-export type EventDeclListener<
-    OwnerType extends EventOwner,
-    RequestType
-> = EventDeclBase<OwnerType, RequestType, never, never>;
+export type EventDeclListener<OwnerType extends EventOwner, RequestType> =
+    EventDeclBase<OwnerType, RequestType, never, never>;
 
 /* eslint-disable @stylistic/max-len */
 

@@ -24,7 +24,6 @@ import {
     removeAllListeners,
     removeHandler,
     send } from "./Main.Internal";
-import type { PackageKeys } from "../Internal";
 
 /**
  * This is the entrypoint of `electron-reactive-event` for `main`.
@@ -32,24 +31,23 @@ import type { PackageKeys } from "../Internal";
  * @see {@link getReactiveIpcMain} for the same, but packaged with the
  * other event-emitter contents of {@link https://www.electronjs.org/docs/latest/api/ipc-main | IpcMain}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  *
  * @returns Type-safe IPC functions for sending events from `main`.
  */
-export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
-): ReactiveIpcMainFunctions<PackageKey>
+export function getReactiveIpcFunctions(
+): ReactiveIpcMainFunctions
 {
     return {
-        addListener: on as On<PackageKey>,
-        handle: handle as unknown as Handle<PackageKey>,
-        handleOnce: handleOnce as unknown as HandleOnce<PackageKey>,
-        off: off as Off<PackageKey>,
-        on: on as On<PackageKey>,
-        once: once as Once<PackageKey>,
-        removeAllListeners: removeAllListeners as RemoveAllListeners<PackageKey>,
-        removeHandler: removeHandler as RemoveHandler<PackageKey>,
-        removeListener: on as Off<PackageKey>,
-        send: send as Send<PackageKey>
+        addListener: on as On,
+        handle: handle as unknown as Handle,
+        handleOnce: handleOnce as unknown as HandleOnce,
+        off: off as Off,
+        on: on as On,
+        once: once as Once,
+        removeAllListeners: removeAllListeners as RemoveAllListeners,
+        removeHandler: removeHandler as RemoveHandler,
+        removeListener: on as Off,
+        send: send as Send
     };
 }
 
@@ -57,12 +55,11 @@ export function getReactiveIpcFunctions<PackageKey extends PackageKeys>(
  * Get an object that replaces {@link https://www.electronjs.org/docs/latest/api/ipc-main | ipcMain's}
  * IPC functions with their respective `electron-reactive-event`, type-safe counterparts.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  *
  * @returns An object that replaces {@link https://www.electronjs.org/docs/latest/api/ipc-main | ipcMain's}
  * IPC functions with their respective `electron-reactive-event`, type-safe counterparts.
  */
-export function getReactiveIpcMain<PackageKey extends PackageKeys>(): IpcMainReactive<PackageKey>
+export function getReactiveIpcMain(): IpcMainReactive
 {
     try
     {
@@ -71,7 +68,7 @@ export function getReactiveIpcMain<PackageKey extends PackageKeys>(): IpcMainRea
 
         return {
             ...ipcMain,
-            ...getReactiveIpcFunctions<PackageKey>()
+            ...getReactiveIpcFunctions()
         };
     }
     catch

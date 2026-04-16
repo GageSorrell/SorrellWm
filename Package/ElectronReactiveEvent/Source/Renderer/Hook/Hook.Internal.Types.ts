@@ -8,7 +8,6 @@ import type { Channel } from "../../Channel";
 import type { Decl } from "../../Decl";
 import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";
 import type { Invoke } from "../../Invoke/Invoke.Types";
-import type { PackageKeys } from "../../Internal";
 
 /**
  * The type used by {@link ResultInternal} for the third argument of
@@ -21,11 +20,9 @@ export type InvokeOptionsOverloadedArgument<SuspendsType extends boolean = boole
     | EmptyOverloadParameter
     | undefined;
 
-type OptionsFromOverload<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>,
+type OptionsFromOverload<ChannelType extends Channel.Handler,
     RequestOrOptionsType extends
-        | Decl.Request<PackageKey, ChannelType>
+        | Decl.Request<ChannelType>
         | Invoke.Options
         | EmptyOverloadParameter,
     OptionsType extends
@@ -44,7 +41,6 @@ type OptionsFromOverload<
  * An extension of {@link InvokeResult} that is equipped to handle
  * the overloaded (private) signature of {@link useInvokeEvent}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  * @typeParam RequestOrOptionsType - The overloaded type for the second argument.
@@ -52,11 +48,9 @@ type OptionsFromOverload<
  *
  * @group Internal
  */
-export type ResultInternal<
-    PackageKey extends PackageKeys,
-    ChannelType extends Channel.Handler<PackageKey>,
+export type ResultInternal<ChannelType extends Channel.Handler,
     RequestOrOptionsType extends
-        | Decl.Request<PackageKey, ChannelType>
+        | Decl.Request<ChannelType>
         | Invoke.Options
         | EmptyOverloadParameter,
     OptionsType extends
@@ -64,10 +58,8 @@ export type ResultInternal<
         | EmptyOverloadParameter
 > =
     Invoke.Result<
-        PackageKey,
         ChannelType,
         OptionsFromOverload<
-            PackageKey,
             ChannelType,
             RequestOrOptionsType,
             OptionsType

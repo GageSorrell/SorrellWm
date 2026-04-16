@@ -25,7 +25,6 @@ import {
     useOnceEventDeferred,
     useSendEvent,
     useSendEventDeferred } from "./Hook.Internal";
-import type { PackageKeys } from "../../Internal";
 
 /**
  * This is the entrypoint of `electron-reactive-event` in the `renderer`.
@@ -34,25 +33,24 @@ import type { PackageKeys } from "../../Internal";
  * (to which you must supply the necessary
  * {@link https://www.electronjs.org/docs/latest/api/ipc-renderer | IpcRenderer functions}).
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  *
  * @returns The hooks provided by `electron-reactive-event`, scoped to your {@link PackageKey}.
  */
-export function getReactiveHooks<PackageKey extends PackageKeys>(): ReactiveIpcHooks<PackageKey>
+export function getReactiveHooks(): ReactiveIpcHooks
 {
     return {
-        useInvokeEvent: useInvokeEvent as UseInvokeEvent<PackageKey>,
-        useInvokeEventDeferred: useInvokeEventDeferred as UseInvokeEventDeferred<PackageKey>,
+        useInvokeEvent: useInvokeEvent as UseInvokeEvent,
+        useInvokeEventDeferred: useInvokeEventDeferred as UseInvokeEventDeferred,
 
-        useOnEvent: useOnEvent as UseOnEvent<PackageKey>,
-        useOnEventDeferred: useOnEventDeferred as UseOnEventDeferred<PackageKey>,
+        useOnEvent: useOnEvent as UseOnEvent,
+        useOnEventDeferred: useOnEventDeferred as UseOnEventDeferred,
 
-        useOnceEvent: useOnceEvent as UseOnceEvent<PackageKey>,
-        useOnceEventDeferred: useOnceEventDeferred as UseOnceEventDeferred<PackageKey>,
+        useOnceEvent: useOnceEvent as UseOnceEvent,
+        useOnceEventDeferred: useOnceEventDeferred as UseOnceEventDeferred,
 
-        useOffEventDeferred: useOffEventDeferred as UseOffEventDeferred<PackageKey>,
+        useOffEventDeferred: useOffEventDeferred as UseOffEventDeferred,
 
-        useSendEvent: useSendEvent as UseSendEvent<PackageKey>,
-        useSendEventDeferred: useSendEventDeferred as UseSendEventDeferred<PackageKey>
+        useSendEvent: useSendEvent as UseSendEvent,
+        useSendEventDeferred: useSendEventDeferred as UseSendEventDeferred
     } as const;
 }

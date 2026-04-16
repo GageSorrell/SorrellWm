@@ -6,7 +6,6 @@
 
 import type { Channel } from "../Channel";
 import type { Decl } from "../Decl";
-import type { PackageKeys } from "../Registrar";
 
 export namespace Invoke
 {
@@ -45,7 +44,6 @@ export namespace Invoke
     /**
      * The type returned by {@link useInvokeEvent}.
      *
-     * @typeParam PackageKey - The unique string that identifies your package.
      * @typeParam ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      * @typeParam OptionsType - The specific type of {@link InvokeOptions} passed
@@ -54,14 +52,13 @@ export namespace Invoke
      * type will contain an `isPending` property.
      */
     export type Result<
-        PackageKey extends PackageKeys,
-        ChannelType extends Channel.Handler<PackageKey>,
+        ChannelType extends Channel.Handler,
         OptionsType extends Options | undefined = undefined
     > = OptionsType extends Options<infer SuspendsType>
         ? SuspendsType extends true
-            ? Result.Sync<PackageKey, ChannelType>
-            : Result.Async<PackageKey, ChannelType>
-        : Result.Async<PackageKey, ChannelType>;
+            ? Result.Sync<ChannelType>
+            : Result.Async<ChannelType>
+        : Result.Async<ChannelType>;
 
     export namespace Result
     {
@@ -84,37 +81,30 @@ export namespace Invoke
          * A {@link Result} returned by {@link UseInvokeEvent} when {@link Options.suspend}
          * is not `true`, possibly before `main` has sent a value to the `renderer`.
          *
-         * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          */
-        export type Async<
-            PackageKey extends PackageKeys,
-            ChannelType extends Channel.Handler<PackageKey>
-        > = MakeIsPending<Result.Sync<PackageKey, ChannelType>>;
+        export type Async<ChannelType extends Channel.Handler> =
+            MakeIsPending<Result.Sync<ChannelType>>;
 
         /**
          * The type returned to the `renderer` by a {@link Handler} when the
          * {@link InvokeOptions.suspend | suspend} option is passed via {@link InvokeOptions},
          * or when {@link InvokeEventDeferred} is called.
          *
-         * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          */
-        export type Sync<
-            PackageKey extends PackageKeys,
-            ChannelType extends Channel.Handler<PackageKey>
-        > =
-            ChannelType extends Channel.Handler.With.Response<PackageKey>
-                ? ChannelType extends Channel.Handler.With.Error<PackageKey>
+        export type Sync<ChannelType extends Channel.Handler> =
+            ChannelType extends Channel.Handler.With.Response
+                ? ChannelType extends Channel.Handler.With.Error
                     ? (
-                        | Sync.Success<PackageKey, ChannelType>
-                        | Sync.Error<PackageKey, ChannelType>
+                        | Sync.Success<ChannelType>
+                        | Sync.Error<ChannelType>
                     )
-                    : Sync.Success<PackageKey, ChannelType>
-                : ChannelType extends Channel.Handler.With.Error<PackageKey>
-                    ? Sync.Error<PackageKey, ChannelType>
+                    : Sync.Success<ChannelType>
+                : ChannelType extends Channel.Handler.With.Error
+                    ? Sync.Error<ChannelType>
                     : never;
 
         export namespace Sync
@@ -123,20 +113,16 @@ export namespace Invoke
              * The type returned by {@link UseInvokeEvent} and {@link InvokeEventDeferred}
              * when an event succeeds.
              *
-             * @typeParam PackageKey - The unique string that identifies your package.
              * @typeParam ChannelType - The channel that uniquely identifies the desired
              * event declaration.
              */
-            export type Success<
-                PackageKey extends PackageKeys,
-                ChannelType extends Channel.Handler<PackageKey>
-            > =
-                ChannelType extends Channel.Handler.With.Request<PackageKey>
+            export type Success<ChannelType extends Channel.Handler> =
+                ChannelType extends Channel.Handler.With.Request
                     ? {
-                        data: Decl.Response<PackageKey, ChannelType>;
+                        data: Decl.Response<ChannelType>;
                         error: undefined;
                     }
-                    : ChannelType extends Channel.Handler.Without.Request<PackageKey>
+                    : ChannelType extends Channel.Handler.Without.Request
                         ? {
                             data: undefined;
                             error: undefined;
@@ -146,17 +132,14 @@ export namespace Invoke
              * The type returned by {@link UseInvokeEvent} and {@link InvokeEventDeferred}
              * when an event fails.
              *
-             * @typeParam PackageKey - The unique string that identifies your package.
              * @typeParam ChannelType - The channel that uniquely identifies the desired
              * event declaration.
              */
-            export type Error<
-                PackageKey extends PackageKeys,
-                ChannelType extends Channel.Handler.With.Error<PackageKey>
-            > = {
-                data: undefined;
-                error: Decl.Error<PackageKey, ChannelType>;
-            };
+            export type Error<ChannelType extends Channel.Handler.With.Error> =
+                {
+                    data: undefined;
+                    error: Decl.Error<ChannelType>;
+                };
         }
     }
 }

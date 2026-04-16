@@ -37,28 +37,19 @@ export type EventOwner =
  */
 export interface Registrar { }
 
-/**
- * This is the union of all `PackageKey` values used in a given project (that is, a given package
- * using `electron-reactive-event`, and any dependencies that also use `electron-reactive-event`).
- */
-export type PackageKeys = Exclude<keyof Registrar, number | symbol>;
-
-type ChannelsHelper<PackageKey extends PackageKeys> =
+type ChannelsHelper =
     {
-        [ ChannelType in keyof Registrar[PackageKey] as Extract<ChannelType, string> ]: ChannelType;
+        [ ChannelType in keyof Registrar as Extract<ChannelType, string> ]: ChannelType;
     };
 
-type Channels<PackageKey extends PackageKeys> =
-    Extract<ChannelsHelper<PackageKey>[keyof ChannelsHelper<PackageKey>], string>;
+type Channels =
+    Extract<ChannelsHelper[keyof ChannelsHelper], string>;
 
-type FilterByOwnerHelper<
-    PackageKey extends PackageKeys,
-    Owner extends EventOwner
-> =
+type FilterByOwnerHelper<Owner extends EventOwner> =
     {
-        [ ChannelType in Channels<PackageKey> ]: ChannelType extends keyof Registrar[PackageKey]
-            ? OwnerKey extends keyof Registrar[PackageKey][ChannelType]
-                ? Registrar[PackageKey][ChannelType][OwnerKey] extends Owner
+        [ ChannelType in Channels ]: ChannelType extends keyof Registrar
+            ? OwnerKey extends keyof Registrar[ChannelType]
+                ? Registrar[ChannelType][OwnerKey] extends Owner
                     ? true
                     : false
                 : never
@@ -66,38 +57,29 @@ type FilterByOwnerHelper<
     };
 
 /**
- * All event declarations of a given {@link PackageKey} and {@link OwnerType}.
+ * All event declarations of a given {@link OwnerType}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam OwnerType - The owner of the event declarations identified by this type.
  */
-export type FilterByOwner<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner
-> =
+export type FilterByOwner<OwnerType extends EventOwner> =
     {
-        [ ChannelType in keyof FilterByOwnerHelper<PackageKey, OwnerType> as
-        FilterByOwnerHelper<PackageKey, OwnerType>[
-            ChannelType
-            // keyof FilterByOwnerHelper<PackageKey, Owner>
-            // Extract<ChannelType, keyof FilterByOwnerHelper<PackageKey, Owner>>
-            // ChannelType
-        ] extends true ? ChannelType : never
-        ]: ChannelType extends keyof Registrar[PackageKey]
-            ? Registrar[PackageKey][ChannelType]
+        [ ChannelType in keyof FilterByOwnerHelper<OwnerType> as
+        FilterByOwnerHelper<OwnerType>[ChannelType] extends true
+            ? ChannelType
+            : never
+        ]: ChannelType extends keyof Registrar
+            ? Registrar[ChannelType]
             : never;
     };
 
 /**
  * All `main` event declarations of a given {@link PackageKey}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  */
-export type MainRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, MainOwner>;
+export type MainRegistrar = FilterByOwner<MainOwner>;
 
 /**
  * All `renderer` event declarations of a given {@link PackageKey}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  */
-export type RendererRegistrar<PackageKey extends PackageKeys> = FilterByOwner<PackageKey, RendererOwner>;
+export type RendererRegistrar = FilterByOwner<RendererOwner>;

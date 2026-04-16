@@ -7,8 +7,7 @@
 import type {
     EventOwner,
     MainOwner,
-    PackageKeys,
-    RendererOwner } from "../Internal";
+        RendererOwner } from "../Internal";
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron/main";
 import type { Channel } from "../Channel";
 import type { Decl } from "../Decl";
@@ -23,15 +22,13 @@ export namespace Listener
          * {@link Channel.Listener.With.Request | listener channel } whose event
          * declaration has a request type.
          *
-         * @typeParam PackageKey - The unique string that identifies your package.
          * @typeParam OwnerType - The owner of the event declarations identified by this type.
          * @typeParam ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          */
         export type Request<
-            PackageKey extends PackageKeys,
             OwnerType extends EventOwner,
-            ChannelType extends Channel.Listener.With.Request<PackageKey, OwnerType>,
+            ChannelType extends Channel.Listener.With.Request<OwnerType>,
             EventType extends IpcEvent | undefined = undefined
         > =
             EventType extends undefined
@@ -39,19 +36,19 @@ export namespace Listener
                     ? {
                         (
                             event: IpcMainEvent,
-                            request: Decl.Request<PackageKey, ChannelType, RendererOwner>
+                            request: Decl.Request<ChannelType, RendererOwner>
                         ): void;
                     }
                     : {
                         (
                             event: IpcRendererEvent,
-                            request: Decl.Request<PackageKey, ChannelType, MainOwner>
+                            request: Decl.Request<ChannelType, MainOwner>
                         ): void;
                     }
                 : {
                     (
                         event: EventType,
-                        request: Decl.Request<PackageKey, ChannelType, RendererOwner>
+                        request: Decl.Request<ChannelType, RendererOwner>
                     ): void;
                 };
 
@@ -97,19 +94,16 @@ export type IpcEvent =
  * {@link ChannelType} is of type {@link Listener.With.Any}, and is sent via
  * {@link UseSendEvent}, {@link SendEventDeferred}, or {@link Send}.
  *
- * @typeParam PackageKey - The unique string that identifies your package.
  * @typeParam OwnerType - The owner of the event declarations identified by this type.
  * @typeParam ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
-export type Listener<
-    PackageKey extends PackageKeys,
-    OwnerType extends EventOwner,
-    ChannelType extends Channel.Listener<PackageKey, OwnerType>,
+export type Listener<OwnerType extends EventOwner,
+    ChannelType extends Channel.Listener<OwnerType>,
     EventType extends IpcEvent | undefined = undefined
 > =
-    ChannelType extends Channel.Listener.With.Request<PackageKey, OwnerType>
-        ? Listener.With.Request<PackageKey, OwnerType, ChannelType, EventType>
-        : ChannelType extends Channel.Listener.Without.Request<PackageKey, OwnerType>
+    ChannelType extends Channel.Listener.With.Request<OwnerType>
+        ? Listener.With.Request<OwnerType, ChannelType, EventType>
+        : ChannelType extends Channel.Listener.Without.Request<OwnerType>
             ? Listener.Without.Request<OwnerType, EventType>
             : never;
