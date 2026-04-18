@@ -4,7 +4,7 @@
  * License:   MIT
  */
 
-import type { TExtractFunction } from "./index.js";
+import type { TExtractFunction } from "../Functional/index.js";
 
 /**
  * @typeParam DataType - The {@link Data} type of this.

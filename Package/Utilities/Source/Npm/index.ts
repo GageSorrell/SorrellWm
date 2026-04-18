@@ -1,0 +1,16 @@
+/* File:      index.ts
+ * Author:    Gage Sorrell <gage@sorrell.sh>
+ * Copyright: (c) 2026 Gage Sorrell
+ * License:   MIT
+ */
+
+/**
+ * @module Npm
+ * Utilities for working with `npm` (NodeJS) packages.
+ * Many of these likely work with packages of other NodeJS
+ * package managers and adjacent runtimes (*e.g.*, `bun` or `deno`).
+ */
+
+export * from "./Npm.js";
+export * from "./Npm.Error.js";
+export * from "./Npm.Types.js";

@@ -14,3 +14,11 @@ export type TDeepWriteable<RecordLike> =
     {
         -readonly [ Key in keyof RecordLike ]: TDeepWriteable<RecordLike[Key]>
     };
+
+/**
+ * Given a {@link RecordLike | record-like type}, this type is the union
+ * of the values of all properties in the {@link RecordLike | record-like type}.
+ *
+ * @typeParam RecordLike - The record-like type from which this type extracts value types.
+ */
+export type Values<RecordLike> = RecordLike[keyof RecordLike];

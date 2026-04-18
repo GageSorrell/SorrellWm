@@ -5,7 +5,7 @@
  */
 
 export * from "./Decl.Types";
-export * from "../Registrar/Registrar.Types";
-export * from "./Utility.Types";
+export * from "./Log";
 export * from "./Reactive";
 export * from "./Reactive.Types";
+export * from "./Utility.Types";

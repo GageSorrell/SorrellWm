@@ -4,12 +4,17 @@
  * License:   MIT
  */
 
-export * from "./FileSystem.js";
-export * from "./FileSystem.Types.js";
-export * from "./Functional.js";
-export * from "./Functional.Types.js";
-export * from "./Npm.js";
-export * from "./Promise.js";
-export * from "./Promise.Types.js";
-export * from "./String.js";
-export * from "./Utility.Types.js";
+/**
+ * @module
+ * General-purpose utility types and functions.
+ * This module barrel-exports each scoped export of this package.
+ * Use the scoped exports of this package to access only specific
+ * utilities (*e.g.*, `async`, `npm`, *etc.*).
+ */
+
+export * as Async from "./Async/index.js";
+export * as FileSystem from "./FileSystem/index.js";
+export * as Functional from "./Functional/index.js";
+export * as Npm from "./Npm/index.js";
+export * as String from "./String/index.js";
+export * as Utility from "./Utility/index.js";

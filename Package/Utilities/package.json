@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.1.14",
+    "version": "1.1.26",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -19,7 +19,7 @@
     },
     "license": "MIT",
     "bin": {
-        "publish-bump-safe": "./Distribution/Binaries/PublishBumpSafe.js"
+        "@sorrell/utilities": "./Distribution/Binaries/Bin.js"
     },
     "author": "Gage Sorrell <gage@sorrell.sh>",
     "type": "module",
@@ -36,17 +36,51 @@
             "import": "./Distribution/index.js",
             "require": "./Distribution/index.js",
             "default": "./Distribution/index.js"
+        },
+        "./async": {
+            "types": "./Distribution/Async/index.d.ts",
+            "import": "./Distribution/Async/index.js",
+            "require": "./Distribution/Async/index.js",
+            "default": "./Distribution/Async/index.js"
+        },
+        "./functional": {
+            "types": "./Distribution/Functional/index.d.ts",
+            "import": "./Distribution/Functional/index.js",
+            "require": "./Distribution/Functional/index.js",
+            "default": "./Distribution/Functional/index.js"
+        },
+        "./fs": {
+            "types": "./Distribution/FileSystem/index.d.ts",
+            "import": "./Distribution/FileSystem/index.js",
+            "require": "./Distribution/FileSystem/index.js",
+            "default": "./Distribution/FileSystem/index.js"
+        },
+        "./npm": {
+            "types": "./Distribution/Npm/index.d.ts",
+            "import": "./Distribution/Npm/index.js",
+            "require": "./Distribution/Npm/index.js",
+            "default": "./Distribution/Npm/index.js"
         }
     },
     "main": "Distribution/index.js",
     "types": "Distribution/index.d.ts",
     "scripts": {
-        "build": "tsc -p ./tsconfig.json",
-        "publish-bump-safe": "node ./Distribution/Binaries/PublishBumpSafe.js"
+        "bin": "node ./Distribution/Binaries/Bin.js",
+        "build": "tsc -p ./tsconfig.json"
     },
     "devDependencies": {
-        "@types/node": "^25.5.0",
+        "@types/node": "^25.6.0",
+        "@types/semver": "^7.7.1",
         "package-json-type": "^1.1.2",
         "typescript": "^6.0.2"
+    },
+    "dependencies": {
+        "@effect/cli": "^0.75.1",
+        "@effect/platform-node": "^0.106.0",
+        "chalk": "^5.6.2",
+        "effect": "^3.21.1",
+        "listr2": "^10.2.1",
+        "node-pty": "^1.1.0",
+        "semver": "^7.7.4"
     }
 }

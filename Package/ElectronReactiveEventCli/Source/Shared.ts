@@ -9,7 +9,8 @@ import {
     type ListrBaseClassOptions,
     type ListrTaskObject,
     Listr as OriginalListr } from "listr2";
-import type { ListrConstructorTask, PackageNameType } from "./Shared.Types";
+import { type ListrConstructorTask, RunListr } from "@sorrell/cli-utilities";
+import type { PackageNameType } from "./Shared.Types";
 
 /* eslint-disable jsdoc/require-jsdoc */
 

@@ -25,6 +25,10 @@ export const sidebar: DefaultTheme.Sidebar =
                     link: "/1.0.0/articles/requirements"
                 },
                 {
+                    text: "FAQ",
+                    link: "/1.0.0/articles/faq"
+                },
+                {
                     text: "Glossary",
                     link: "/1.0.0/articles/glossary"
                 },

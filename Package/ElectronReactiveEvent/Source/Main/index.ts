@@ -21,7 +21,7 @@
  * the {@link Hook} and {@link Provider} modules.
  */
 
-export * from "./Main";
+export * as ipcMain from "./Main";
 export * from "./Main.Types";
 export * from "./Main.Internal";
 export * from "./Main.Internal.Types";

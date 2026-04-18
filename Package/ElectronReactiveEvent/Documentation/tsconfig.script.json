@@ -1,0 +1,39 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions":
+    {
+        "target": "ES2023",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+
+        "rootDir": "./Script",
+        "outDir": "./Intermediate",
+
+        "lib":
+        [
+            "ES2023",
+            "DOM",
+            "DOM.Iterable"
+        ],
+
+        "jsx": "react-jsx",
+
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "types": [ "node" ],
+
+        "strict": true,
+        "isolatedModules": true,
+
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": true,
+        "useUnknownInCatchVariables": true,
+
+        "skipLibCheck": true,
+        "noEmitOnError": true
+  },
+  "include": [ "Script", "Script/**/*" ],
+  "exclude": [ "node_modules", "Intermediate" ]
+}

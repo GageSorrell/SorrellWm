@@ -162,17 +162,6 @@ export type Send =
  */
 export type On =
     {
-        /**
-         * Subscribe a {@link listener} to an event declaration given by {@link channel},
-         * which does *not* return a response to the `renderer`.
-         *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
-         * event declaration.
-         *
-         * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
-         * identifies the sendable event to which the {@link listener} will be subscribed.
-         * @param listener - The {@link MainListener} which will be subscribed to the given {@link channel}.
-         */
         <ChannelType extends Channel.Listener<RendererOwner>>(
             channel: ChannelType,
             listener: MainListener<typeof channel>
@@ -324,7 +313,7 @@ export type RemoveHandler =
  * @property removeAllListeners - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainremovealllistenerschannel | IpcMain.removeAllListeners }
  * @property send - Type-safe equivalent of {@link https://www.electronjs.org/docs/latest/api/web-contents#contentssendchannel-args | webContents.send } for one or many {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}.
  */
-export type ReactiveIpcMainFunctions =
+type ReactiveIpcMainFunctions =
     Readonly<{
         addListener: On;
         handle: Handle;

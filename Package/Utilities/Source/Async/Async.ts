@@ -1,10 +1,10 @@
-/* File:      Promise.ts
+/* File:      Async.ts
  * Author:    Gage Sorrell <gage@sorrell.sh>
  * Copyright: (c) 2026 Gage Sorrell
  * License:   MIT
  */
 
-import type { TTryResult, TTrySource } from "./index.js";
+import type { TTryResult, TTrySource } from "./Async.Types.js";
 
 /**
  * Implements "Errors-as-values" for `async` functions and `Promise<DataType>`s.

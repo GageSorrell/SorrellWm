@@ -1,31 +1,69 @@
 {
     "compilerOptions": {
+        // "target": "ES2022",
+        // "module": "NodeNext",
+        // "moduleResolution": "NodeNext",
+
+        // "rootDir": "./Source",
+        // "outDir": "./Distribution",
+        // "lib": [ "ES2023" ],
+        // "types": [ "node" ],
+
+        // "sourceMap": true,
+        // "declaration": true,
+        // "declarationMap": true,
+
+        // "noEmit": false,
+        // "noUncheckedIndexedAccess": true,
+        // "exactOptionalPropertyTypes": true,
+        // "noImplicitReturns": true,
+        // "noImplicitOverride": true,
+        // "noUnusedLocals": true,
+        // "noUnusedParameters": true,
+        // "noFallthroughCasesInSwitch": true,
+        // "noPropertyAccessFromIndexSignature": true,
+        // "strict": true,
+        // "jsx": "react-jsx",
+        // "isolatedModules": true,
+        // "noUncheckedSideEffectImports": true,
+        // "moduleDetection": "force",
+        // "skipLibCheck": true
+
+        "target": "ESNext",
+        "module": "NodeNext",
+        "verbatimModuleSyntax": true,
+
+        // "moduleResolution": "NodeNext",
+
         "rootDir": "./Source",
         "outDir": "./Distribution",
-        "module": "nodenext",
-        "target": "esnext",
-        "lib": [
-            "esnext"
+
+        "lib":
+        [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
         ],
-        "types": [ "node" ],
-        "sourceMap": true,
+
+        "jsx": "react-jsx",
+
         "declaration": true,
         "declarationMap": true,
-        "noEmit": false,
+        "sourceMap": true,
+
+        "strict": true,
+        "isolatedModules": true,
+
+        "types": [ "node" ],
+
+        "moduleResolution": "nodenext",
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
-        "noImplicitReturns": true,
         "noImplicitOverride": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "strict": true,
-        "jsx": "react-jsx",
-        "isolatedModules": true,
-        "noUncheckedSideEffectImports": true,
-        "moduleDetection": "force",
-        "skipLibCheck": true
+        "useUnknownInCatchVariables": true,
+
+        "skipLibCheck": true,
+        "noEmitOnError": true
     },
     "include": [ "Source/**/*" ],
     "exclude": [ "node_modules", "Distribution" ]

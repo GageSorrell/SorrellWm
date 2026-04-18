@@ -6,16 +6,15 @@
 
 /* eslint-disable jsdoc/require-jsdoc, no-console */
 
+import { Code, type Wrapper as WrapperOuter } from "@sorrell/cli-utilities";
 import { DefaultConfigFileName, GetDefaultConfig } from "./Config";
 import { RunListr, SimpleError } from "./Shared";
 import { readFile, writeFile } from "fs/promises";
 import Chalk from "chalk";
-import { Code } from "@sorrell/cli-utilities";
 import { GetPackageRootDirectory } from "@sorrell/utilities";
 import type { Listr } from "listr2";
 import { ListrEnquirerPromptAdapter } from "@listr2/prompt-adapter-enquirer";
 import { SetCommand } from "./Command";
-import type { Wrapper as WrapperOuter } from "./Shared.Types";
 import { existsSync } from "fs";
 import { resolve } from "path";
 

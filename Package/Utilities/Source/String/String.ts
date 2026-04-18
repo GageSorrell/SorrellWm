@@ -5,6 +5,11 @@
  */
 
 /**
+ * @module String
+ * Functions for manipulating strings.
+ */
+
+/**
  * @param In - The string that you wish to test.
  * @returns Whether the given string contains *only* (Latin alphabet) letters.
  */
