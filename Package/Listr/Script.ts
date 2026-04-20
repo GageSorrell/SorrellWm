@@ -9,6 +9,8 @@ import { basename, dirname, relative, resolve } from "path";
 import { type Dirent, promises as Fs } from "fs";
 import type { IPackageJson } from "package-json-type";
 import { Async } from "@sorrell/utilities";
+import Chalk from "chalk";
+import { Code } from "@sorrell/cli-utilities";
 
 async function GetDependencies(): Promise<Array<string>>
 {
@@ -235,22 +237,39 @@ async function Main(): Promise<void>
 
     const FixedFiles: Array<File> = await Async.Map(Files, await FixFile(Dependencies, TsConfigPaths));
 
-    FixedFiles.forEach((FixedFile: File): void =>
+    async function WriteFixedFile(FixedFile: File): Promise<void>
     {
-        const Imports: Array<string> = FixedFile.Contents.split("\n").filter(Line => Line.trim().startsWith("import"));
-        console.log(`File: ${ basename(FixedFile.Path) }`);
-        const LogImport = (Import: string): void =>
-        {
-            const Quote: "'" | "\"" = Import.includes("'") ? "'" : "\"";
-            const StartIndex: number = Import.indexOf(Quote) + 1;
-            const EndIndex: number = Import.indexOf(Quote, StartIndex);
+        const BackupPath: string = FixedFile.Path + ".old";
+        await Fs.copyFile(FixedFile.Path, BackupPath);
+        const StartPathFormatted: string = Code(relative(FixedFile.Path, resolve(".", "Source")));
+        const BackupPathFormatted: string = Code(BackupPath);
+        const Checkmark: string = Chalk.green.bold("✓");
+        const Log = (Statement: string): void => console.log(`${ Checkmark } ${ Statement }`);
+        Log(`Moved ${ StartPathFormatted } -> ${ BackupPathFormatted }`);
 
-            const ImportPath: string = Import.slice(StartIndex, EndIndex);
-            console.log(`    ${ ImportPath }`);
-        };
+        const ModuleNameFormatted: string = Code(basename(FixedFile.Path));
 
-        Imports.forEach(LogImport);
+        await Fs.rm(FixedFile.Path);
+        Log(`Deleted ${ ModuleNameFormatted }`);
+
+        await Fs.writeFile(FixedFile.Path, FixedFile.Contents, { encoding: "utf-8" });
+        Log(`Wrote ${ ModuleNameFormatted }`);
+
+        // const Imports: Array<string> = FixedFile.Contents.split("\n").filter(Line => Line.trim().startsWith("import"));
+        // console.log(`File: ${ basename(FixedFile.Path) }`);
+        // const LogImport = (Import: string): void =>
+        // {
+        //     const Quote: "'" | "\"" = Import.includes("'") ? "'" : "\"";
+        //     const StartIndex: number = Import.indexOf(Quote) + 1;
+        //     const EndIndex: number = Import.indexOf(Quote, StartIndex);
+
+        //     const ImportPath: string = Import.slice(StartIndex, EndIndex);
+        //     console.log(`    ${ ImportPath }`);
+        // };
+
+        // Imports.forEach(LogImport);
     });
+    Async.Map(FixedFiles, WriteFixedFile);
 
     // Files.forEach((File: File): void =>
     // {
