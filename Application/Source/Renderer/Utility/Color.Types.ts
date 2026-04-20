@@ -1,7 +1,8 @@
-/* File:      Color.Types.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2024 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Color.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2024 Gage Sorrell
+ * @license   MIT
  */
 
 import type { FHexColor } from "@sorrellwm/windows";

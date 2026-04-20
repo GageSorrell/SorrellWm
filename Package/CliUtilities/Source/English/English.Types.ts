@@ -1,0 +1,35 @@
+/**
+ * @file      English.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import type { Inflectors } from "en-inflectors";
+import type { TValues } from "@sorrell/utilities/misc";
+
+type InflectorFunctions =
+    {
+        [ Key in keyof Inflectors as Inflectors[Key] extends Function ? Key : never ]:
+        Key;
+    };
+
+type InflectorFunctionsWithArgument =
+    {
+        [ Key in keyof Inflectors as Inflectors[Key] extends (Argument: string) => string ? Key : never ]:
+        Key;
+    };
+
+type InflectorFunctionsNoArgument =
+    {
+        [ Key in keyof Inflectors as Inflectors[Key] extends () => string ? Key : never ]:
+        Key;
+    };
+
+export type InflectorFunction = TValues<InflectorFunctions>;
+
+export namespace InflectorFunction
+{
+    export type WithArgument = TValues<InflectorFunctionsWithArgument>;
+    export type NoArgument = TValues<InflectorFunctionsNoArgument>;
+}

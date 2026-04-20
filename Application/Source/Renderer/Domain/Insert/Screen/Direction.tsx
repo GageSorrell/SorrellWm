@@ -1,7 +1,8 @@
-/* File:      Direction.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Direction.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 // import { Command, CompoundCommand } from "@/Domain/Common";

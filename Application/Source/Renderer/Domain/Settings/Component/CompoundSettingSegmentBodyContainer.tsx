@@ -1,7 +1,8 @@
-/* File:      CompoundSettingSegmentBodyContainer.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      CompoundSettingSegmentBodyContainer.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import { Collapse } from "@fluentui/react-motion-components-preview";

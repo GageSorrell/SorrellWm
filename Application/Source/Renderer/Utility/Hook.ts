@@ -1,7 +1,8 @@
-/* File:      Hook.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Hook.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 /* eslint-disable react-hooks/exhaustive-deps */
@@ -25,7 +26,7 @@ import type {
     FUseIndexReturnValue,
     TUseDomRectReturnValue,
     TUseIndexedArgument,
-    TUseIndexedReturnType} from "./Hook.Types";
+    TUseIndexedReturnType } from "./Hook.Types";
 import {
     type FSimpleCallback,
     Identity,

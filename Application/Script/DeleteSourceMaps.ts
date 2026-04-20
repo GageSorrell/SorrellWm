@@ -1,7 +1,8 @@
-/* File:      DeleteSourceMaps.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      DeleteSourceMaps.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import * as Fs from "fs";

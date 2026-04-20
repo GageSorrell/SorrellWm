@@ -1,7 +1,8 @@
-/* File:      Keyboard.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2024 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Keyboard.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2024 Gage Sorrell
+ * @license   MIT
  */
 
 import type { FKeyboardEvent } from "./Keyboard.Types";

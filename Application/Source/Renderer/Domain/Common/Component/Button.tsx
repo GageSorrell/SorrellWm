@@ -1,7 +1,8 @@
-/* File:      Button.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Button.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import { type ButtonProps, Button as FluentButton } from "@fluentui/react-components";

@@ -1,7 +1,8 @@
-/* File:      BooleanSettingControl.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      BooleanSettingControl.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import type { CSSProperties, ChangeEvent, ReactNode } from "react";

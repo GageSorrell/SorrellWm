@@ -1,7 +1,8 @@
-/* File:      Panel.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Panel.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import { Body1, Skeleton, SkeletonItem, Title3, makeStyles, tokens } from "@fluentui/react-components";

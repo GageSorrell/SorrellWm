@@ -1,7 +1,8 @@
-/* File:      Build.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2024 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Build.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2024 Gage Sorrell
+ * @license   MIT
  */
 
 /* eslint-disable no-console */
@@ -38,7 +39,7 @@ import chalk from "chalk";
  */
 
 /* eslint-disable-next-line @stylistic/max-len */
-const FileHeader: string = "/* File:      GeneratedTypes.d.ts\n * Author:    Gage Sorrell <gage@sorrell.sh>\n * Copyright: (c) 2024 Gage Sorrell\n * License:   MIT\n */\n\n/* AUTO-GENERATED FILE. */\n\n/* eslint-disable */\n\n";
+const FileHeader: string = "/**\n * @file:      GeneratedTypes.d.ts\n * @author    Gage Sorrell <gage@sorrell.sh>\n * @copyright (c) 2024 Gage Sorrell\n * @license   MIT\n */\n\n/* AUTO-GENERATED FILE. */\n\n/* eslint-disable */\n\n";
 
 const MacroName: string = "DECLARE_NAPI_FUNCTION";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */

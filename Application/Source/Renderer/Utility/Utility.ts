@@ -1,7 +1,8 @@
-/* File:      Utility.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2024 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Utility.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2024 Gage Sorrell
+ * @license   MIT
  */
 
 import type { CSSProperties, DependencyList } from "react";

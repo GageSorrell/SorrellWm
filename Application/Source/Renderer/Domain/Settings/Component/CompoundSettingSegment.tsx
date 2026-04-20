@@ -1,7 +1,8 @@
-/* File:      CompoundSettingSegment.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      CompoundSettingSegment.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import type { CCompoundSettingSegment, PCompoundSettingSegment } from "./CompoundSettingSegment.Types";

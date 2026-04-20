@@ -1,7 +1,8 @@
-/* File:      KeyCombination.Types.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2024 Gage Sorrell
- * License:   MIT
+/**
+ * @file      KeyCombination.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2024 Gage Sorrell
+ * @license   MIT
  */
 
 import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";

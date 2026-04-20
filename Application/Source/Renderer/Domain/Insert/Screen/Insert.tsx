@@ -1,7 +1,8 @@
-/* File:      Insert.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Insert.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 // import { type NavigateFunction, useNavigate } from "react-router-dom";

@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.29",
+  "version": "1.0.36",
   "description": "Utilities for CLI tools.",
   "keywords": [
     "cli",
@@ -21,7 +21,11 @@
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
   "license": "MIT",
-  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -29,6 +33,30 @@
       "import": "./Distribution/index.js",
       "require": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
+    },
+    "./format": {
+      "default": "./Distribution/Format/index.js",
+      "import": "./Distribution/Format/index.js",
+      "require": "./Distribution/Format/index.js",
+      "types": "./Distribution/Format/index.d.ts"
+    },
+    "./inquirer": {
+      "default": "./Distribution/Inquirer/index.js",
+      "import": "./Distribution/Inquirer/index.js",
+      "require": "./Distribution/Inquirer/index.js",
+      "types": "./Distribution/Inquirer/index.d.ts"
+    },
+    "./listr": {
+      "default": "./Distribution/Listr/index.js",
+      "import": "./Distribution/Listr/index.js",
+      "require": "./Distribution/Listr/index.js",
+      "types": "./Distribution/Listr/index.d.ts"
+    },
+    "./pty": {
+      "default": "./Distribution/PseudoTerminal/index.js",
+      "import": "./Distribution/PseudoTerminal/index.js",
+      "require": "./Distribution/PseudoTerminal/index.js",
+      "types": "./Distribution/PseudoTerminal/index.d.ts"
     }
   },
   "main": "./Distribution/index.js",
@@ -47,7 +75,7 @@
     "@inquirer/type": "^4.0.4",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
     "@sorrell/inquirer-file-selector": "^1.0.4",
-    "@sorrell/utilities": "^1.1.11",
+    "@sorrell/utilities": "^1.1.33",
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",
     "clipboardy": "^5.3.1",
@@ -55,6 +83,7 @@
     "effect": "^3.21.1",
     "en-inflectors": "^1.0.12",
     "listr2": "^10.2.1",
+    "node-pty": "^1.1.0",
     "ora": "^9.3.0"
   }
 }

@@ -1,7 +1,8 @@
-/* File:      Transactions.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Transactions.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  * Comment:   Define types used in `Event.Types.ts` that
  *            do not otherwise have a good place to go.
  */

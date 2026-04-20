@@ -1,6 +1,10 @@
 {
   "name": "@sorrell/inquirer-file-selector",
-  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "author": {
+  "email": "gage@sorrell.sh",
+  "name": "Gage Sorrell",
+  "url": "https://sorrell.sh"
+},
   "description": "Inquirer file selector prompt, forked from `br14n-sol/inquirer-file-selector`.",
   "version": "1.0.4",
   "license": "MIT",

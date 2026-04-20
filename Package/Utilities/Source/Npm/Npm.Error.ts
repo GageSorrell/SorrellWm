@@ -1,7 +1,8 @@
-/* File:      Npm.Error.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Npm.Error.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import { Data } from "effect";
@@ -22,6 +23,6 @@ export class PackageJsonParseError extends Data.TaggedError("PackageJsonParseErr
  *
  * @field Path - The `Path` argument passed to the effect returning this error, if one was given.
  */
-export class RootDirectoryNotFound extends Data.TaggedError("RootDirectoryNotFound")<{
+export class RootDirectoryNotFoundError extends Data.TaggedError("RootDirectoryNotFound")<{
     readonly Path: string | undefined;
 }> { }

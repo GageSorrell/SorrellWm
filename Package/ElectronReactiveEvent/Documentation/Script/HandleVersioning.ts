@@ -1,12 +1,11 @@
-/* File:      HandleVersioning.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      HandleVersioning.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention, no-console */
-
-import { Code, Format } from "@sorrell/cli-utilities";
+import { Code, Format, RunListr } from "@sorrell/cli-utilities";
 import { type Dirent, promises as Fs } from "fs";
 import type { Redirect, VercelConfig } from "@vercel/config/v1";
 import { resolve } from "path";
@@ -178,6 +177,17 @@ function GetLatestVersion(Versions: Array<Version>): Version
 
 async function Main(): Promise<void>
 {
+
+    ListrTaskTensed([
+        {
+            task: async (Context, Task) =>
+            {
+
+            },
+            title: ``
+        },
+        ""
+    ]);
     const VercelConfig: VercelConfig | undefined = await GetVercelConfig();
     if (VercelConfig === undefined)
     {

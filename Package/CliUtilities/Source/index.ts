@@ -1,15 +1,12 @@
-/* File:      index.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      index.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
-export * from "./Confirm.js";
-export * from "./Confirm.Types.js";
-export * from "./Listr.js";
-export * from "./Listr.Types.js";
-export * from "./FileSelector.js";
-export * from "./FileSelector.Types.js";
-export * from "./Print/index.js";
-export * from "./Ora.js";
-export * from "./Ora.Types.js";
+export * from "./Inquirer/Confirm.js";
+export * as Listr from "./Listr/index.js";
+export * as Inquirer from "./Inquirer/index.js";
+export * as Format from "./Format/index.js";
+export * as Ora from "./Ora/index.js";

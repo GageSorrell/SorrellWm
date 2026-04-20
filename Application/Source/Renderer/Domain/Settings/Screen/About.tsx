@@ -1,7 +1,8 @@
-/* File:      About.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      About.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import { Body1Strong, Table, TableBody, TableCell, TableRow } from "@fluentui/react-components";

@@ -1,7 +1,8 @@
-/* File:      Keyboard.Types.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Keyboard.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import type { FActionKey } from "../../../../Shared/Settings";

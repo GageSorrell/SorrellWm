@@ -1,7 +1,8 @@
-/* File:      SettingSegmentContainer.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      SettingSegmentContainer.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import { Body1Strong, tokens } from "@fluentui/react-components";

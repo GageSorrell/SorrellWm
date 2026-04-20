@@ -1,7 +1,8 @@
-/* File:      Routes.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Routes.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import { MemoryRouter, Route, Routes as RouterRoutes } from "react-router-dom";

@@ -1,7 +1,8 @@
-/* File:      Async.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Async.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import type { TTryResult, TTrySource } from "./Async.Types.js";
@@ -42,4 +43,39 @@ export async function Try<DataType>(Source: TTrySource<DataType>): Promise<TTryR
             Error: ErrorValue
         };
     }
+}
+
+/**
+ * A cleaner way of using `Array.prototype.map` with an `async` function.
+ *
+ * @typeParam ArgumentElementType - The type of the given {@link Elements}.
+ * @typeParam ReturnElementType - The type of the `Array` returned by this.
+ *
+ * @param Elements - The `Array` that will be transformed.
+ * @param Mapper - The function that maps each {@link ArgumentElementType}
+ * to a {@link ReturnElementType}.
+ *
+ * @returns An `Array` of {@link ReturnElementType}.
+ *
+ * @example
+ * In an `async` function,
+ * ```typescript
+ * const ArgumentElements: Array<ArgumentElementType> = [ ... ];
+ * const ToReturnElement = async (Element: ArgumentElementType): Promise<ReturnElementType> => ...;
+ * const ReturnElements: Array<ReturnElementType> = await Map(ArgumentElements, ToReturnElement);
+ * ```
+ */
+export async function Map<ArgumentElementType, ReturnElementType>(
+    Elements: Array<ArgumentElementType>,
+    Mapper: ((Element: ArgumentElementType) => Promise<ReturnElementType>)
+): Promise<Array<ReturnElementType>>
+{
+    const MapperWrapped = async (Element: ArgumentElementType): Promise<ReturnElementType> =>
+    {
+        return Mapper(Element);
+    };
+
+    const Out: Array<Promise<ReturnElementType>> = Elements.map(MapperWrapped);
+
+    return await Promise.all(Out);
 }

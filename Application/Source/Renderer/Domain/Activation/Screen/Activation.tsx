@@ -1,7 +1,8 @@
-/* File:      Activation.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Activation.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import { CommandContainer, type FCommand, type FSimpleCommand } from "@/Domain/Common/Component/Command";

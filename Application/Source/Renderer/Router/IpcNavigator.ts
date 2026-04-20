@@ -1,7 +1,8 @@
-/* File:      IpcNavigator.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      IpcNavigator.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";

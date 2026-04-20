@@ -1,39 +1,9 @@
 {
-    "compilerOptions": {
-        // "target": "ES2022",
-        // "module": "NodeNext",
-        // "moduleResolution": "NodeNext",
-
-        // "rootDir": "./Source",
-        // "outDir": "./Distribution",
-        // "lib": [ "ES2023" ],
-        // "types": [ "node" ],
-
-        // "sourceMap": true,
-        // "declaration": true,
-        // "declarationMap": true,
-
-        // "noEmit": false,
-        // "noUncheckedIndexedAccess": true,
-        // "exactOptionalPropertyTypes": true,
-        // "noImplicitReturns": true,
-        // "noImplicitOverride": true,
-        // "noUnusedLocals": true,
-        // "noUnusedParameters": true,
-        // "noFallthroughCasesInSwitch": true,
-        // "noPropertyAccessFromIndexSignature": true,
-        // "strict": true,
-        // "jsx": "react-jsx",
-        // "isolatedModules": true,
-        // "noUncheckedSideEffectImports": true,
-        // "moduleDetection": "force",
-        // "skipLibCheck": true
-
+    "compilerOptions":
+    {
         "target": "ESNext",
         "module": "NodeNext",
         "verbatimModuleSyntax": true,
-
-        // "moduleResolution": "NodeNext",
 
         "rootDir": "./Source",
         "outDir": "./Distribution",

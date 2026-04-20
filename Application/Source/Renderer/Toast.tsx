@@ -1,7 +1,8 @@
-/* File:      Toast.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Toast.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import type { CToast, FDispatchFunction, FDispatchOptions } from "./Toast.Types";

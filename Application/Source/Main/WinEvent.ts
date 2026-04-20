@@ -1,7 +1,8 @@
-/* File:      WinEvent.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      WinEvent.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 // import { type FBox, GetWindowLocationAndSize, InitializeWinEvents } from "@sorrellwm/windows";

@@ -32,7 +32,11 @@
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
   "license": "MIT",
-  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "author": {
+  "email": "gage@sorrell.sh",
+  "name": "Gage Sorrell",
+  "url": "https://sorrell.sh"
+},
   "type": "commonjs",
   "main": "./Distribution/index.js",
   "scripts": {

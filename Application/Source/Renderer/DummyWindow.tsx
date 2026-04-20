@@ -1,7 +1,8 @@
-/* File:      DummyWindow.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      DummyWindow.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import {
@@ -11,7 +12,7 @@ import {
     type RefObject,
     useEffect,
     useRef,
-    useState} from "react";
+    useState } from "react";
 import { UseSendEventDeferred } from "./Event";
 // import { UseSendIpcEventDeferred } from "./Event";
 

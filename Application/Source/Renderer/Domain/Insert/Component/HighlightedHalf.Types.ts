@@ -1,7 +1,8 @@
-/* File:      HighlightedHalf.Types.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      HighlightedHalf.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 import type { FCardinalDirection } from "../../../../Shared/Shared.Types";

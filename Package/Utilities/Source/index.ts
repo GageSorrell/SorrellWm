@@ -1,7 +1,8 @@
-/* File:      index.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      index.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 /**
@@ -17,4 +18,4 @@ export * as FileSystem from "./FileSystem/index.js";
 export * as Functional from "./Functional/index.js";
 export * as Npm from "./Npm/index.js";
 export * as String from "./String/index.js";
-export * as Utility from "./Utility/index.js";
+export * as Miscellaneous from "./Miscellaneous/index.js";

@@ -1,7 +1,8 @@
-/* File:      SetupPrimaryMonitor.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      SetupPrimaryMonitor.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  * Comment:   If enabled, then move VS Code to the small monitor,
  *            and create a set of dummy windows to use for testing.
  *            This assumes my personal desktop setup (that is, my
@@ -19,7 +20,7 @@ import {
     type HWindow,
     MinimizeWindow,
     RestoreWindow,
-    SetWindowPosition} from "@sorrellwm/windows";
+    SetWindowPosition } from "@sorrellwm/windows";
 import {
     type SpawnOptions,
     spawn as SpawnProcess } from "child_process";

@@ -1,7 +1,8 @@
-/* File:      Renderer.Dev.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Renderer.Dev.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  */
 
 /* eslint-disable @typescript-eslint/no-require-imports */

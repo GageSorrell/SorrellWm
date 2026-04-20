@@ -1,7 +1,8 @@
-/* File:      Keybind.tsx
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2026 Gage Sorrell
- * License:   MIT
+/**
+ * @file      Keybind.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 import { Body1, Body1Strong, Caption1, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";

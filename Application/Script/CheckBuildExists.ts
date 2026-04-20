@@ -1,7 +1,8 @@
-/* File:      CheckBuildExists.ts
- * Author:    Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License:   MIT
+/**
+ * @file      CheckBuildExists.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2025 Gage Sorrell
+ * @license   MIT
  * Comment:   Check if the renderer and main bundles are built.
  */
 
