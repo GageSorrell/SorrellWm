@@ -1,7 +1,7 @@
 {
     "compilerOptions":
     {
-        "target": "ES2023",
+        "target": "ESNext",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "lib": [ "ES2023" ],
@@ -26,7 +26,6 @@
         "declaration": true,
         "declarationMap": true,
 
-        "noImplicitOverride": true,
         "useUnknownInCatchVariables": true
     },
     "include": [ "Source/**/*" ],

@@ -5,98 +5,80 @@
  * @license   MIT
  */
 
-import { Effect } from "effect";
-import type { CliCommand, CommandFn } from "./Effect.Types.js";
-import type { Config, ConfigArgument, FGlobalRequirements, TRequirements, TRequirementsArgument } from "../Options/Options.Types.js";
-import type { MakeCommandOverloadedCommandFn, MakeCommandReturnType, OverloadedCommandFn, OverloadedRequirementsArgument } from "./Effect.Internal.Types.js";
-import { Command } from "@effect/cli";
-import { DefaultGlobalOptions, GlobalOptions } from "../Options/Options.js";
+/* eslint-disable @typescript-eslint/no-namespace */
 
-export function TryPromise<A, R extends FGlobalRequirements>(
-    CommandFn: CommandFn<A, R>
-): Effect.Effect<A, never, never>;
-export function TryPromise<A, R extends TRequirements>(
-    CommandFn: CommandFn<A, R>,
-    Config: ConfigArgument<R>
-): Effect.Effect<A, never, never>;
-export function TryPromise<A, R extends TRequirements>(
-    CommandFn: CommandFn<A, R>,
-    Config: TRequirementsArgument<R>
-): Effect.Effect<A, never, never>;
-export function TryPromise<A, R extends TRequirements>(
-    CommandFn: OverloadedCommandFn<A, typeof InConfig>,
-    InConfig?: ConfigArgument<R> | TRequirementsArgument<R>
-): Effect.Effect<A, never, never>
+import type { EffectSequenceArgument, SequenceEffect } from "./Effect.Types.js";
+import type { Effect } from "effect";
+import { StepTag, type EffectStepAny } from "./Effect.Internal.Types.js";
+import { MakeStep } from "./Effect.Internal.js";
+
+export namespace Step
 {
-    const Requirements: OverloadedRequirementsArgument<typeof InConfig> =
-        (InConfig === undefined)
-            ? DefaultGlobalOptions
-            : {
-                ...DefaultGlobalOptions,
-                ...InConfig
-            };
-
-    function Wrapper(_Signal: AbortSignal): PromiseLike<A>
+    const Map = MakeStep<StepTag.Map ParameterType, A, E = never, R = never>(
+        Step: Step.Map.Untagged<E, R>
+    ): Step.Map.Tagged<E, R>
     {
-        return CommandFn(Requirements);
+
     }
 
-    return Effect.tryPromise({
-        catch: (Cause: unknown) =>
-        {
-            console.error(Cause);
-        },
-        try: Wrapper
-    }).pipe(
-        Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-    );
+    function SideEffect<ParameterType, E = never, R = never>(
+        Step: Step.SideEffect.Untagged<E, R>
+    ): Step.SideEffect.Tagged<E, R>
+    {
+
+    }
+    function Detached<E = never, R = never>(
+        Step: Step.Detached.Untagged<E, R>
+    ): Step.Detached.Tagged<E, R>
+    {
+
+    }
+    function Seed<A, E = never, R = never>(
+        Step: Step.Seed.Untagged<E, R>
+    ): Step.Seed.Tagged<E, R>
+    {
+
+    }
 }
 
-export function MakeCommand<NameType extends string, A>(
-    Name: NameType,
-    CommandFn: CommandFn<A, FGlobalRequirements>,
-): MakeCommandReturnType<typeof Name, undefined>
-export function MakeCommand<
-    NameType extends string,
-    A,
-    R extends TRequirements
->(
-    Name: NameType,
-    CommandFn: CommandFn<A, R>,
-    Config: ConfigArgument<R>
-): MakeCommandReturnType<typeof Name, typeof Config>
-export function MakeCommand<
-    NameType extends string,
-    A,
-    R extends TRequirements
->(
-    Name: NameType,
-    CommandFn: MakeCommandOverloadedCommandFn<A, typeof InConfig>,
-    InConfig:
-        | ConfigArgument<R>
-        | undefined = undefined
-): MakeCommandReturnType<typeof Name, typeof InConfig>
+export function RunMixedSteps<A, SequenceTail extends Array<EffectStepAny>>(
+    EffectSequence: EffectSequenceArgument<A, SequenceTail>
+): SequenceEffect<typeof EffectSequence>
 {
-    if (InConfig === undefined)
-    {
-        return Command.make(
-            Name,
-            GlobalOptions,
-            (Options): Effect.Effect<void, never, never> =>
+    const [ Seed, ...Tail ] = EffectSequence;
+
+    return Tail.reduce(
+        (CurrentEffect, CurrentStep) =>
+        {
+            switch (CurrentStep.Type)
             {
-                return TryPromise(CommandFn, Options);
+                case "Map":
+                {
+                    return CurrentEffect.pipe(
+                        Effect.flatMap(CurrentStep.Run)
+                    );
+                }
+
+                case "SideEffect":
+                {
+                    return CurrentEffect.pipe(
+                        Effect.tap(CurrentStep.Run)
+                    );
+                }
+
+                case "DetachedSideEffect":
+                {
+                    return CurrentEffect.pipe(
+                        Effect.tap(() => CurrentStep.Run())
+                    );
+                }
+
+                default:
+                {
+                    return CurrentEffect;
+                }
             }
-        );
-    }
-    else
-    {
-        return Command.make(
-            Name,
-            InConfig,
-            (Options): Effect.Effect<void, never, never> =>
-            {
-                return TryPromise(CommandFn, Options as ConfigArgument<R>);
-            }
-        ) as unknown as MakeCommandReturnType<NameType, R>;
-    }
+        },
+        First.Run()
+    );
 }

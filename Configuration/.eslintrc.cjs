@@ -1,7 +1,8 @@
-/* File:    .eslintrc.js
- * Author:  Gage Sorrell <gage@sorrell.sh>
- * Copyright: (c) 2025 Gage Sorrell
- * License: MIT
+/**
+ * @file      .eslintrc.cjs
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 /* eslint-disable-next-line no-undef */
@@ -24,6 +25,7 @@ module.exports = {
             files:
             [
                 "Package/CliUtilities/Source/**/*.ts",
+                "Package/Listr/Source/**/*.ts",
                 "Package/Utilities/Source/**/*.ts",
                 "Package/CreateElectronReactiveEvent/Source/**/*.ts",
                 "Package/ElectronReactiveEvent/Source/**/*.ts",
@@ -85,16 +87,28 @@ module.exports = {
     {
         "jsdoc/check-access": "error",
         "jsdoc/check-alignment": "error",
-        "jsdoc/check-indentation": "error",
+        "jsdoc/check-indentation": "off",
         "jsdoc/check-line-alignment": "error",
         "jsdoc/check-param-names": "error",
         "jsdoc/check-property-names": "error",
         "jsdoc/check-syntax": "error",
-        "jsdoc/check-tag-names": "error",
+        "jsdoc/check-tag-names":
+            [
+                "error",
+                {
+                    definedTags: [ "note" ],
+                    // This was previously set to `true` to address
+                    // an issue of which I no longer remember the
+                    // details.  I have now set it to `false` so that
+                    // `@property` works on JSDoc comments of types.
+                    typed: false
+                    // typed: true
+                }
+            ],
         "jsdoc/check-template-names": "error",
         "jsdoc/check-types": "error",
         "jsdoc/check-values": "error",
-        "jsdoc/convert-to-jsdoc-comments": "error",
+        "jsdoc/convert-to-jsdoc-comments": "off",
         "jsdoc/empty-tags": "error",
         "jsdoc/escape-inline-tags": "error",
         "jsdoc/implements-on-classes": "error",
@@ -111,13 +125,19 @@ module.exports = {
         "jsdoc/no-missing-syntax": "off",
         "jsdoc/no-multi-asterisks": "error",
         "jsdoc/no-restricted-syntax": "off",
-        "jsdoc/no-types": "error",
-        "jsdoc/no-undefined-types": "error",
+        "jsdoc/no-types": "off",
+        "jsdoc/no-undefined-types": "off",
         "jsdoc/prefer-import-tag": "error",
         "jsdoc/reject-any-type": "error",
         "jsdoc/reject-function-type": "error",
         "jsdoc/require-asterisk-prefix": "error",
-        "jsdoc/require-description": "error",
+        "jsdoc/require-description":
+            [
+                "error",
+                {
+                    checkGetters: false
+                }
+            ],
         "jsdoc/require-description-complete-sentence": "off",
         "jsdoc/require-example": "off",
         "jsdoc/require-file-overview": "error",
@@ -142,7 +162,7 @@ module.exports = {
         "jsdoc/require-param": "error",
         "jsdoc/require-param-description": "error",
         "jsdoc/require-param-name": "error",
-        "jsdoc/require-param-type": "error",
+        "jsdoc/require-param-type": "off",
         "jsdoc/require-property": "error",
         "jsdoc/require-property-description": "error",
         "jsdoc/require-property-name": "error",
@@ -153,8 +173,8 @@ module.exports = {
         "jsdoc/require-returns-description": "error",
         "jsdoc/require-returns-type": "error",
         "jsdoc/require-tags": "off",
-        "jsdoc/require-template": "error",
-        "jsdoc/require-template-description": "error",
+        "jsdoc/require-template": "off",
+        "jsdoc/require-template-description": "off",
         "jsdoc/require-throws": "error",
         "jsdoc/require-throws-description": "error",
         "jsdoc/require-throws-type": "error",
@@ -166,54 +186,62 @@ module.exports = {
             "error",
             {
                 reportIntraTagGroupSpacing: false,
-                tags:
+                reportTagGroupSpacing: false,
+                tagSequence:
                 [
-                    "file",
-                    "author",
-                    "copyright",
-                    "license"
+                    {
+                        tags:
+                        [
+                            "file",
+                            "author",
+                            "copyright",
+                            "license"
+                        ]
+                    }
                 ]
             }
         ],
-        "jsdoc/tag-lines":
-            [
-                "error",
-                "always",
-                {
-                    count: 2,
-                    tags:
-                    {
-                        author:
-                        {
-                            lines: "never"
-                        },
-                        copyright:
-                        {
-                            lines: "never"
-                        },
-                        file:
-                        {
-                            lines: "never"
-                        },
-                        license:
-                        {
-                            lines: "never"
-                        }
-                    }
-                }
-            ],
-        "jsdoc/text-escaping":
-            [
-                "error",
-                {
-                    escapeMarkdown: true
-                }
-            ],
+        "jsdoc/tag-lines": "off",
+        //     [
+        //         "error",
+        //         "always",
+        //         {
+        //             count: 1,
+        //             tags:
+        //             {
+        //                 author:
+        //                 {
+        //                     lines: "never"
+        //                 },
+        //                 copyright:
+        //                 {
+        //                     lines: "never"
+        //                 },
+        //                 description:
+        //                 {
+        //                     lines: "any"
+        //                 },
+        //                 file:
+        //                 {
+        //                     lines: "never"
+        //                 },
+        //                 license:
+        //                 {
+        //                     lines: "never"
+        //                 },
+        //                 returns:
+        //                 {
+        //                     lines: "any"
+        //                 }
+        //             }
+        //         }
+        //     ],
+        "jsdoc/text-escaping": "off",
         "jsdoc/ts-method-signature-style": "error",
         "jsdoc/ts-no-empty-object-type": "error",
         "jsdoc/ts-no-unnecessary-template-expression": "error",
         "jsdoc/ts-prefer-function-type": "error",
-        "jsdoc/type-formatting": "error",
+        "jsdoc/type-formatting": "off",
         "jsdoc/valid-types": "error",
 
         "@stylistic/array-bracket-spacing": [ "error", "always" ],

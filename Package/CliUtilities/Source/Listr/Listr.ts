@@ -71,7 +71,7 @@ class ListrInternal<ContextType>
 /**
  * A wrapper for `new Listr` that handles errors nicely.
  *
- * @typeParam ContextType - The type of the `listr2` context used by the {@link Task}.
+ * @template ContextType - The type of the `listr2` context used by the {@link Task}.
  *
  * @param Task - The task(s) to run.
  * @param GenericErrorMessage - The error message that is shown if the {@link Task | task(s)} throw(s)
@@ -165,7 +165,7 @@ export function NewListrTask<ContextType = unknown>(
 /**
  * @TODO Write this comment.
  *
- * @typeParam ContextType -
+ * @template ContextType -
  * @param Task -
  *
  * @returns

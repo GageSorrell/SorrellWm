@@ -23,7 +23,7 @@ export type Handle =
          * Subscribe a {@link handler} to an event declaration given by {@link channel},
          * which returns a response to the `renderer`.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The {@link Channel.Handler.Any | invokable channel} that uniquely
@@ -50,7 +50,7 @@ export type Send =
          * Send an event to the `renderer`, whose event declaration does *not* define
          * a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param browserWindow - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow}
@@ -66,7 +66,7 @@ export type Send =
         /**
          * Send an event to the `renderer`, whose event declaration defines a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param browserWindow - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow}
@@ -85,7 +85,7 @@ export type Send =
          * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
          * whose event declarations do *not* define a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -102,7 +102,7 @@ export type Send =
          * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
          * whose event declarations define a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -122,7 +122,7 @@ export type Send =
          * whose event declarations do *not* define a request type.  This overload implicitly calls
          * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -140,7 +140,7 @@ export type Send =
          * whose event declarations define a request type.  This overload implicitly calls
          * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -174,7 +174,7 @@ export type On =
  * {@link https://www.electronjs.org/docs/latest/api/ipc-main#ipcmainonchannel-listener | IpcMain.on}
  * *et al.*
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired event declaration.
+ * @template ChannelType - The channel that uniquely identifies the desired event declaration.
  */
 export type MainListener<ChannelType extends Channel.Listener<RendererOwner>> =
     Listener<RendererOwner, ChannelType>;
@@ -191,7 +191,7 @@ export type Once =
          * which does *not* return a response to the `renderer`.  The {@link listener}
          * will be unsubscribed after it is called once.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
@@ -214,7 +214,7 @@ export type Off =
         /**
          * Unsubscribe a {@link listener} from an event declaration given by {@link channel}.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired event declaration.
+         * @template ChannelType - The channel that uniquely identifies the desired event declaration.
          *
          * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
          * identifies the sendable event to which the {@link listener} will be subscribed.
@@ -242,7 +242,7 @@ export type HandleOnce =
          * Subscribe a {@link listener} to an event declaration given by {@link channel}.
          * The {@link listener} will be unsubscribed after being invoked once.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The {@link Channel.Handler.Any | invokable channel} that uniquely

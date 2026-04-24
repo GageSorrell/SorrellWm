@@ -15,7 +15,7 @@ export namespace With
     /**
      * A {@link Handler} that subscribes to an event whose declaration has a request type.
      *
-     * @typeParam ChannelType - The channel that uniquely identifies the desired
+     * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
     export type Request<ChannelType extends Channel.Handler.With.Request> =
@@ -33,7 +33,7 @@ export namespace Without
      * A {@link Handler} that subscribes to an event whose declaration does
      * *not* have a request type.
      *
-     * @typeParam ChannelType - The channel that uniquely identifies the desired
+     * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
     export type Request<ChannelType extends Channel.Handler.Without.Request> =
@@ -47,7 +47,7 @@ export namespace Without
  * {@link ChannelType} is of type {@link Channel.Handler}, and is invoked via
  * {@link UseInvokeEvent} or {@link InvokeEventDeferred}.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type Handler<ChannelType extends Channel.Handler> =
@@ -62,7 +62,7 @@ export type Handler<ChannelType extends Channel.Handler> =
  * Values of this type should only come from calling {@link succeed}.  This value
  * gets transformed into {@link InvokeResult} when received by the `renderer`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type Success<ChannelType extends Channel.Handler> =
@@ -81,7 +81,7 @@ export type Success<ChannelType extends Channel.Handler> =
  * Values of this type should only come from calling {@link fail}.  This value
  * gets transformed into {@link InvokeResult} when received by the `renderer`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type Failure<ChannelType extends Channel.Handler.With.Error> =
@@ -95,7 +95,7 @@ export type Failure<ChannelType extends Channel.Handler.With.Error> =
  * only come from calling {@link succeed} or {@link fail}.  This value
  * gets transformed into {@link InvokeResult} when received by the `renderer`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type Result<ChannelType extends Channel.Handler> =

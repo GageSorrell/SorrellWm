@@ -10,9 +10,9 @@ import type { Brand } from "./Reactive.Types";
 /**
  * Factory function for {@link Brand}.
  *
- * @typeParam BrandedType - The branded type that this function returns.
- * @typeParam IdType - The ID string of the given {@link BrandedType}.
- * @typeParam InnerType - The type wrapped by the given {@link BrandedType}.
+ * @template BrandedType - The branded type that this function returns.
+ * @template IdType - The ID string of the given {@link BrandedType}.
+ * @template InnerType - The type wrapped by the given {@link BrandedType}.
  *
  * @param Value - The value to "brand" as {@link BrandedType}.
  *

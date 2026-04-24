@@ -1,0 +1,49 @@
+/**
+ * @file      Update.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import type { Args, Command, Options } from "@effect/cli";
+import type {
+    TCommandOptionsFromConfig,
+    TMakeCommandConfig,
+    TMakeConfig,
+    TOptionsFromConfig
+} from "../Options/Options.Types.js";
+import type { NpmError } from "./Update.Internal.js";
+
+/**
+ * The options passed to the main internal function of the
+ * {@link UpdateCommand}.
+ */
+export type UpdateOptions = TCommandOptionsFromConfig<UpdateConfig>;
+
+export type SaveOptions = TOptionsFromConfig<SaveConfig>;
+
+export type SaveConfig = TMakeConfig<{
+    NoSave: Options.Options<boolean>;
+    Save: Options.Options<boolean>;
+    SaveDev: Options.Options<boolean>;
+    SaveOptional: Options.Options<boolean>;
+    SavePeer: Options.Options<boolean>;
+    SaveProd: Options.Options<boolean>;
+}>;
+
+export type UpdateConfig =
+    SaveConfig &
+    TMakeCommandConfig<{
+        Package: Args.Args<string>;
+    }>;
+
+export type UpdateError =
+    | NpmError
+    | Error;
+
+export type UpdateCommandType = Command.Command<
+    "update",
+    UpdateConfig,
+    UpdateError,
+    UpdateOptions
+>;

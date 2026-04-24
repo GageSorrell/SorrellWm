@@ -1,31 +1,6 @@
 {
-    "extends": "@tsconfig/node24/tsconfig.json",
-    "ts-node":
-    {
-        "esm": true,
-        "compilerOptions": {
-            "module": "ESNext",
-            "target": "ESNext"
-        }
-    },
-  "compilerOptions": {
-        "module": "node16",
-        "moduleResolution": "node16",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-        "strictNullChecks": false,
-        "outDir": "./Distribution",
-        "rootDir": "./Source/",
-        "paths": {
-            "@constants": [ "./constants/index" ],
-            "@interfaces": [ "./interfaces/index" ],
-            "@lib": [ "./lib/index" ],
-            "@presets": [ "./presets/index" ],
-            "@renderer": [ "./renderer/index" ],
-            "@utils": [ "./utils/index" ],
-            "@root": [ "./index" ]
-        }
-    },
-    "include": [ "./Script.ts" ],
-    "exclude": [ "node_modules" ]
+    "compilerOptions": { "outDir": "./Binaries" },
+    "extends": "./tsconfig.Base.json",
+    "include": [ "./Script/**/*" ],
+    "exclude": [ "./Source/**/*" ]
 }

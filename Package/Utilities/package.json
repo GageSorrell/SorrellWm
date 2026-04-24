@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.1.34",
+    "version": "1.1.51",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -26,10 +26,8 @@
     "type": "module",
     "files": [
         "./Distribution/**/*",
-        "./Source/**/*",
         "./ReadMe.md",
-        "./package.json",
-        "tsconfig.json"
+        "./package.json"
     ],
     "exports": {
         ".": {
@@ -38,11 +36,23 @@
             "require": "./Distribution/index.js",
             "default": "./Distribution/index.js"
         },
+        "./array": {
+            "types": "./Distribution/Array/index.d.ts",
+            "import": "./Distribution/Array/index.js",
+            "require": "./Distribution/Array/index.js",
+            "default": "./Distribution/Array/index.js"
+        },
         "./async": {
             "types": "./Distribution/Async/index.d.ts",
             "import": "./Distribution/Async/index.js",
             "require": "./Distribution/Async/index.js",
             "default": "./Distribution/Async/index.js"
+        },
+        "./effect": {
+            "types": "./Distribution/Effect/index.d.ts",
+            "import": "./Distribution/Effect/index.js",
+            "require": "./Distribution/Effect/index.js",
+            "default": "./Distribution/Effect/index.js"
         },
         "./functional": {
             "types": "./Distribution/Functional/index.d.ts",
@@ -77,6 +87,7 @@
     },
     "devDependencies": {
         "@types/node": "^25.6.0",
+        "clipboardy": "^5.3.1",
         "package-json-type": "^1.1.2",
         "typescript": "^6.0.2"
     },

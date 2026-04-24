@@ -90,6 +90,7 @@
 		"cSpell.words": [
 			"allman",
 			"BLENDFUNCTION",
+			"BOTTOMBAR",
 			"cctype",
 			"charconv",
 			"clocale",
@@ -167,6 +168,7 @@
 			"Tileable",
 			"Titlebar",
 			"TOOLWINDOW",
+			"tsover",
 			"typeinfo",
 			"Unblur",
 			"Unblurred",
@@ -180,14 +182,16 @@
 			"WNDCLASSEXA",
 			"WNDCLASSEXW",
 			"xfacet"
-		]
+		],
+		"js/ts.tsdk.path": "node_modules\\typescript\\lib"
 	},
 	"extensions": {
 		"recommendations": [
 			"ms-vscode.cpptools",
             "josetr.cmake-language-support-vscode",
             "streetsidesoftware.code-spell-checker",
-            "ms-vscode.powershell"
+			"ms-vscode.powershell",
+			"effectful-tech.effect-vscode"
 		]
 	}
 }

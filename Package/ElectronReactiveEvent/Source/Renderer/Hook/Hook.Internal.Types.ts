@@ -42,10 +42,10 @@ type OptionsFromOverload<ChannelType extends Channel.Handler,
  * An extension of {@link InvokeResult} that is equipped to handle
  * the overloaded (private) signature of {@link useInvokeEvent}.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
- * @typeParam RequestOrOptionsType - The overloaded type for the second argument.
- * @typeParam OptionsType - The overloaded type for the third argument.
+ * @template RequestOrOptionsType - The overloaded type for the second argument.
+ * @template OptionsType - The overloaded type for the third argument.
  *
  * @group Internal
  */
@@ -71,7 +71,7 @@ export type ResultInternal<ChannelType extends Channel.Handler,
  * A predicate function which determines whether objects of a given {@link Type}
  * are equivalent *in some sense*.
  *
- * @typeParam Type - The type of the objects being compared.
+ * @template Type - The type of the objects being compared.
  *
  * @param A - The first argument being considered.
  * @param B - The second argument being considered.

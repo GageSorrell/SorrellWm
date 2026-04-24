@@ -30,7 +30,7 @@ export namespace Invoke
     /**
      * The options that may be passed to {@link useInvokeEvent}.
      *
-     * @typeParam SuspendsType - The type of the {@link suspend} property, which is used to narrow down
+     * @template SuspendsType - The type of the {@link suspend} property, which is used to narrow down
      * the correct return type of {@link useInvokeEvent}.
      *
      * @property suspend - Whether {@link useInvokeEvent} should suspend until it receives a response from
@@ -45,9 +45,9 @@ export namespace Invoke
     /**
      * The type returned by {@link useInvokeEvent}.
      *
-     * @typeParam ChannelType - The channel that uniquely identifies the desired
+     * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
-     * @typeParam OptionsType - The specific type of {@link InvokeOptions} passed
+     * @template OptionsType - The specific type of {@link InvokeOptions} passed
      * to the {@link useInvokeEvent} call from which this response is produced.
      * The {@link InvokeOptions.suspend | suspend} property determines whether this
      * type will contain an `isPending` property.
@@ -82,7 +82,7 @@ export namespace Invoke
          * A {@link Result} returned by {@link UseInvokeEvent} when {@link Options.suspend}
          * is not `true`, possibly before `main` has sent a value to the `renderer`.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          */
         export type Async<ChannelType extends Channel.Handler> =
@@ -93,7 +93,7 @@ export namespace Invoke
          * {@link InvokeOptions.suspend | suspend} option is passed via {@link InvokeOptions},
          * or when {@link InvokeEventDeferred} is called.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          */
         export type Sync<ChannelType extends Channel.Handler> =
@@ -114,7 +114,7 @@ export namespace Invoke
              * The type returned by {@link UseInvokeEvent} and {@link InvokeEventDeferred}
              * when an event succeeds.
              *
-             * @typeParam ChannelType - The channel that uniquely identifies the desired
+             * @template ChannelType - The channel that uniquely identifies the desired
              * event declaration.
              */
             export type Success<ChannelType extends Channel.Handler> =
@@ -133,7 +133,7 @@ export namespace Invoke
              * The type returned by {@link UseInvokeEvent} and {@link InvokeEventDeferred}
              * when an event fails.
              *
-             * @typeParam ChannelType - The channel that uniquely identifies the desired
+             * @template ChannelType - The channel that uniquely identifies the desired
              * event declaration.
              */
             export type Error<ChannelType extends Channel.Handler.With.Error> =

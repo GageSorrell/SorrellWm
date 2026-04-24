@@ -60,7 +60,7 @@ type FilterByOwnerHelper<Owner extends EventOwner> =
 /**
  * All event declarations of a given {@link OwnerType}.
  *
- * @typeParam OwnerType - The owner of the event declarations identified by this type.
+ * @template OwnerType - The owner of the event declarations identified by this type.
  */
 export type FilterByOwner<OwnerType extends EventOwner> =
     {

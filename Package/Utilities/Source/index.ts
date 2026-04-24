@@ -13,6 +13,7 @@
  * utilities (*e.g.*, `async`, `npm`, *etc.*).
  */
 
+export * as Array from "./Array/index.js";
 export * as Async from "./Async/index.js";
 export * as FileSystem from "./FileSystem/index.js";
 export * as Functional from "./Functional/index.js";

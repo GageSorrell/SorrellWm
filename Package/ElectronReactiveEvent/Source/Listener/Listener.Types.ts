@@ -23,8 +23,8 @@ export namespace Listener
          * {@link Channel.Listener.With.Request | listener channel } whose event
          * declaration has a request type.
          *
-         * @typeParam OwnerType - The owner of the event declarations identified by this type.
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template OwnerType - The owner of the event declarations identified by this type.
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          */
         export type Request<
@@ -62,8 +62,8 @@ export namespace Listener
         * A {@link Listener} that is subscribable to a {@link Channel | listener channel }
         * whose event declaration has no request type.
         *
-        * @typeParam OwnerType - The owner of the event declarations identified by this type.
-        * @typeParam EventOverrideType - An optional override for the event type in the function signature.
+        * @template OwnerType - The owner of the event declarations identified by this type.
+        * @template EventOverrideType - An optional override for the event type in the function signature.
         */
         export type Request<
             OwnerType extends EventOwner,
@@ -95,8 +95,8 @@ export type IpcEvent =
  * {@link ChannelType} is of type {@link Listener.With.Any}, and is sent via
  * {@link UseSendEvent}, {@link SendEventDeferred}, or {@link Send}.
  *
- * @typeParam OwnerType - The owner of the event declarations identified by this type.
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template OwnerType - The owner of the event declarations identified by this type.
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type Listener<OwnerType extends EventOwner,

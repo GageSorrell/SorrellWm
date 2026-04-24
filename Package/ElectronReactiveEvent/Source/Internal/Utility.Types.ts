@@ -7,6 +7,6 @@
 
 /**
  * The values of a given `Record`-like object.
- * @typeParam RecordLike - The record-like object from which value types are extracted.
+ * @template RecordLike - The record-like object from which value types are extracted.
  */
 export type Values<RecordLike> = RecordLike[keyof RecordLike];

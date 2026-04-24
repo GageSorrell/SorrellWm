@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-export * from "./Array";
 export * from "./Functional.Types";
 export * from "./Utility";
 export * from "./Utility.Types";

@@ -1,87 +1,102 @@
 {
-  "name": "@sorrell/listr",
-  "version": "1.0.0",
-  "description": "Terminal task list reborn! Create beautiful CLI interfaces via easy and logical to implement task lists that feel alive and interactive.",
-  "license": "MIT",
-  "repository": "https://github.com/listr2/listr2",
-  "type": "module",
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      }
+    "name": "@sorrell/listr",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "build:all": "npm run build && npm run build:test && npm run build:script",
+        "build:script": "tsc -p ./tsconfig.Script.json",
+        "build:test": "tsc -p ./tsconfig.Test.json",
+        "test:bun:effect": "node --test ./Binaries/**/*.Test.js",
+        "test:bun:main": "node --test ./Binaries/**/*.Test.js",
+        "test:node:effect": "node --test ./Binaries/**/*.Test.js",
+        "test:node:main": "node --test ./Binaries/**/*.Test.js",
+        "pretest:bun:effect": "npm run build:test",
+        "pretest:bun:main": "npm run build:test",
+        "pretest:node:effect": "bun run build:test",
+        "pretest:node:main": "bun run build:test",
+        "test:bun": "bun test ./Binaries/**/*.Test.js",
+        "test:all": "npm run test:node && npm run test:bun",
+        "test": "npm run test"
     },
-    "./package.json": "./package.json"
-  },
-  "authors": [
-    {
-      "name": "Gage Sorrell",
-      "email": "gage@sorrell.sh",
-      "url": "https://sorrell.sh"
+    "keywords": [
+        "listr",
+        "terminal",
+        "interactive",
+        "prompt",
+        "effect",
+        "functional",
+        "typescript",
+        "ts"
+    ],
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Utilities",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
-    {
-      "name": "Cenk Kilic",
-      "email": "cenk@kilic.dev",
-      "url": "https://cenk.kilic.dev"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "type": "module",
+    "experimental": {
+        "@effect/experimental": {
+            "optional": true
+        },
+        "@effect/platform": {
+            "optional": true
+        },
+        "@effect/platform-bun": {
+            "optional": true
+        },
+        "@effect/platform-node": {
+            "optional": true
+        }
+    },
+    "exports": {
+        ".": {
+            "types": "./Distribution/Index.Main.d.ts",
+            "import": "./Distribution/Index.Main.js",
+            "require": "./Distribution/Index.Main.js",
+            "default": "./Distribution/Index.Main.js"
+        },
+        "./effect": {
+            "types": "./Distribution/Effect/index.d.ts",
+            "import": "./Distribution/Effect/index.js",
+            "require": "./Distribution/Effect/index.js",
+            "default": "./Distribution/Effect/index.js"
+        },
+        "./number": {
+            "types": "./Distribution/Number/index.d.ts",
+            "import": "./Distribution/Number/index.js",
+            "require": "./Distribution/Number/index.js",
+            "default": "./Distribution/Number/index.js"
+        }
+    },
+    "peerDependencies": {
+        "@effect/experimental": "^0.60.0",
+        "@effect/platform-bun": "^0.89.0",
+        "@effect/platform-node": "^0.106.0",
+        "effect": "^3.21.1"
+    },
+    "devDependencies": {
+        "@effect/experimental": "^0.60.0",
+        "@effect/language-service": "^0.85.1",
+        "@effect/platform": "^0.96.0",
+        "@effect/platform-bun": "^0.89.0",
+        "@effect/platform-node": "^0.106.0",
+        "@sorrell/cli": "^0.0.1",
+        "@types/node": "^25.6.0",
+        "effect": "^3.21.1",
+        "typescript": "^6.0.3"
+    },
+    "dependencies": {
+        "@sorrell/cli-utilities": "^1.0.36",
+        "@sorrell/utilities": "^1.1.38"
     }
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "engines": {
-    "node": ">=22.13.0"
-  },
-  "scripts": {
-    "build": "tsdown ./Source/index.ts",
-    "dev:start": "tsdown --watch --tsconfig",
-    "test": "NODE_OPTIONS=\"--no-warnings --experimental-vm-modules\" jest --config tests/jest.config.ts",
-    "test:cov": "npm run test --coverage",
-    "script": "ts-node -P ./tsconfig.script.json Script.ts",
-    "test:dev": "NODE_OPTIONS='--no-warnings --experimental-vm-modules --inspect=0.0.0.0:9229' npm run test --verbose --watchAll"
-  },
-  "keywords": [
-    "listr",
-    "listr2",
-    "cli",
-    "task",
-    "list",
-    "tasklist",
-    "terminal",
-    "term",
-    "console",
-    "ascii",
-    "unicode",
-    "loading",
-    "indicator",
-    "progress",
-    "busy",
-    "wait",
-    "idle"
-  ],
-  "dependencies": {
-    "@sorrell/utilities": "^1.1.34",
-    "cli-truncate": "^5.2.0",
-    "eventemitter3": "^5.0.4",
-    "log-update": "^6.1.0",
-    "rfdc": "^1.4.1",
-    "wrap-ansi": "^10.0.0"
-  },
-  "devDependencies": {
-    "@swc/core": "^1.15.30",
-    "@tsconfig/node24": "^24.0.4",
-    "@types/zen-observable": "^0.8.7",
-    "chalk": "^5.6.2",
-    "package-json-type": "^1.1.2",
-    "rxjs": "^7.8.2",
-    "tsdown": "^0.21.9",
-    "zen-observable": "^0.10.0"
-  }
 }

@@ -67,7 +67,7 @@ class ImmutableArgumentChangeError<Type> extends Error
 /**
  * Ensure that a given {@link Argument} has not changed between calls.
  *
- * @typeParam Type - The type of the given {@link Argument}.
+ * @template Type - The type of the given {@link Argument}.
  *
  * @param Argument - The argument of the calling hook whose immutability is enforced
  * by this hook.
@@ -108,7 +108,7 @@ function UseImmutableArgumentCheck<Type>(
  * Invoke an event when the containing component mounts, whose event declaration
  * does *not* define a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to invoke.
@@ -124,7 +124,7 @@ export function useInvokeEvent<ChannelType extends Channel.Handler.Without.Reque
  * Invoke an event when the containing component mounts, whose event declaration
  * does *not* defines a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to invoke.
@@ -144,7 +144,7 @@ export function useInvokeEvent<ChannelType extends Channel.Handler.Without.Reque
  * Invoke an event when the containing component mounts, whose event declaration
  * defines a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to invoke.
@@ -162,7 +162,7 @@ export function useInvokeEvent<ChannelType extends Channel.Handler.With.Request>
  * Invoke an event when the containing component mounts, whose event declaration
  * defines a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to invoke.
@@ -183,9 +183,9 @@ export function useInvokeEvent<ChannelType extends Channel.Handler.With.Request,
 /**
  * Invoke an event when the containing component mounts.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
- * @typeParam SuspendsType - The type of {@link Invoke.Options.suspend} if an
+ * @template SuspendsType - The type of {@link Invoke.Options.suspend} if an
  * {@link Invoke.Options} object is passed.
  *
  * @param channel - The channel of the event that you wish to invoke.
@@ -405,7 +405,7 @@ export function useInvokeEventDeferred(
  * Subscribe to events sent by `main` at the time that the containing component mounts.
  * When the component unmounts, the listener is unsubscribed.
  *
- * @typeParam ChannelType - The type of the {@link channel} on which the
+ * @template ChannelType - The type of the {@link channel} on which the
  * {@link listener} will listen.
  *
  * @param channel - The channel on which the {@link listener} will listen.
@@ -505,7 +505,7 @@ export function useOffEventDeferred(
  * Equivalent to {@link UseOnEvent}, but the listener will be unsubscribed
  * after firing once.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the `main` event to which you wish to subscribe
@@ -602,7 +602,7 @@ function SendEventInternal<ChannelType extends Channel.Handler.Without.Request>(
  * {@link Invoke.Result | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to send.
@@ -621,7 +621,7 @@ export function useSendEvent<ChannelType extends Channel.Handler.Without.Request
  * {@link Invoke.Result | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to invoke.
@@ -641,7 +641,7 @@ export function useSendEvent<ChannelType extends Channel.Handler.Without.Request
  * {@link Invoke.Result | response}, declare the {@link EventDecl | event type}
  * with a `ResponseType !== {@link EmptyEventParameter}`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The channel of the event that you wish to invoke.

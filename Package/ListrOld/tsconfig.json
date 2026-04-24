@@ -1,0 +1,33 @@
+{
+    "extends": "@tsconfig/node24/tsconfig.json",
+    "ts-node":
+    {
+        "esm": true,
+        "compilerOptions": {
+            "module": "ESNext",
+            "target": "ESNext"
+        },
+        "swc": true
+    },
+  "compilerOptions": {
+        "module": "node16",
+        "moduleResolution": "node16",
+        "types": [ "node" ],
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strictNullChecks": false,
+        "outDir": "./Distribution",
+        "rootDir": "./Source/",
+        "paths": {
+            "@constants/*": [ "./Source/constants/*" ],
+            "@interfaces/*": [ "./Source/interfaces/*" ],
+            "@lib/*": [ "./Source/lib/*" ],
+            "@presets/*": [ "./Source/presets/*" ],
+            "@renderer/*": [ "./Source/renderer/*" ],
+            "@utils/*": [ "./Source/utils/*" ],
+            "@root/*": [ "./Source/*" ]
+        }
+    },
+    "include": [ "Source/**/*" ],
+    "exclude": [ "node_modules", "Source/**/*.spec.*" ]
+}

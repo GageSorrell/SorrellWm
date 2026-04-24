@@ -154,7 +154,7 @@ export function removeAllListeners<ChannelType extends Channel.Listener<Renderer
  * Subscribe a {@link listener} to an event declaration given by {@link channel},
  * which does *not* return a response to the `renderer`.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
@@ -174,7 +174,7 @@ export function on<ChannelType extends Channel.Listener<RendererOwner>>(
  * which does *not* return a response to the `renderer`.  The {@link listener}
  * will be unsubscribed after it is called once.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param channel - The {@link Channel.Listener.Any | sendable channel} that uniquely
@@ -197,7 +197,7 @@ export function once<ChannelType extends Channel.Listener<RendererOwner>>(
  * Send an event to the `renderer`, whose event declaration does *not* define
  * a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindow - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow}
@@ -214,7 +214,7 @@ export function send<ChannelType extends Channel.Listener.Without.Request<MainOw
 /**
  * Send an event to the `renderer`, whose event declaration defines a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindow - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow}
@@ -234,7 +234,7 @@ export function send<ChannelType extends Channel.Listener.With.Request<MainOwner
  * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
  * whose event declarations do *not* define a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -252,7 +252,7 @@ export function send<ChannelType extends Channel.Listener.Without.Request<MainOw
  * Send an event to multiple {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows},
  * whose event declarations define a request type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -273,7 +273,7 @@ export function send<ChannelType extends Channel.Listener.With.Request<MainOwner
  * whose event declarations do *not* define a request type.  This overload implicitly calls
  * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -292,7 +292,7 @@ export function send<ChannelType extends Channel.Listener.Without.Request<MainOw
  * whose event declarations define a request type.  This overload implicitly calls
  * {@link https://www.electronjs.org/docs/latest/api/browser-window#browserwindowgetallwindows | BrowserWindow.getAllWindows() }.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}
@@ -312,7 +312,7 @@ export function send<ChannelType extends Channel.Listener.With.Request<MainOwner
  * Send an event to a given
  * {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindow or set of BrowserWindows}.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param browserWindows - The {@link https://www.electronjs.org/docs/latest/api/browser-window | BrowserWindows}

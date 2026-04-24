@@ -5,25 +5,30 @@
  * @license   MIT
  */
 
+import type { Options as ArrayOptions, TArray } from "@sorrell/utilities/array";
 import { Options } from "@effect/cli";
-import type { Config, FGlobalRequirements, TRequirementsArgument } from "./Options.Types.js";
+import type { FGlobalConfig } from "./Options.Types.js";
 
 /**
  * @module Options
  * Options shared by multiple commands.
  */
 
-export const Silent: Options.Options<boolean> = Options.boolean("silent")
-    .pipe(Options.withAlias("s"));
+export/**
+       * If specified and `true`, then nothing will be output to the terminal.
+       */
+const Silent: Options.Options<boolean> = Options.boolean("silent").pipe(Options.withAlias("s"));
 
-export const GlobalOptions: Config<FGlobalRequirements> =
-    {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+export/**
+       * An array containing all global options.
+       */
+const GlobalOptionsArray: TArray<Options.Options<any>, ArrayOptions.Readonly> =
+    [
         Silent
-    };
+    ] as const;
 
-export const DefaultGlobalOptions: TRequirementsArgument<FGlobalRequirements> =
-    {
-        Silent: false
-    };
+export const GlobalOptions: FGlobalConfig = { Silent };
 
-
+/* eslint-enable @typescript-eslint/no-explicit-any */

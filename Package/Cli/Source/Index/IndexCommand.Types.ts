@@ -5,10 +5,12 @@
  * @license   MIT
  */
 
-import type { Args, Options } from "@effect/cli";
-import type { TRequirements } from "../Options/Options.Types.js";
+export const __DummyExport_Index_Types: "DummyExport" = "DummyExport" as const;
 
-export type FIndexCommandRequirements = TRequirements<{
-    Path: Args.Args<string>;
-    Internal: Options.Options<boolean>;
-}>;
+// import type { Args, Options } from "@effect/cli";
+// import type { TRequirements } from "../Options/Options.Types.Old.js";
+
+// export type FIndexCommandRequirements = TRequirements<{
+//     Path: Args.Args<string>;
+//     Internal: Options.Options<boolean>;
+// }>;

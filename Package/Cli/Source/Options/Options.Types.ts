@@ -5,51 +5,46 @@
  * @license   MIT
  */
 
-import type { Args, Options } from "@effect/cli";
+import type { Args, Command, Options } from "@effect/cli";
 
-type FRequirementsBase =
-    {
-        [ Key: string ]:
-            | Args.Args<unknown>
-            | Options.Options<unknown>
-    };
-
-// type THandleRequirements<RequirementsType extends Partial<FRequirementsBase>> =
-//     FGlobalRequirements extends RequirementsType
-//         ? FGlobalRequirements
-//         : [ Extract<keyof RequirementsType, keyof FGlobalRequirements> ] extends [ never ]
-//         ? {
-//             [ Key in keyof RequirementsType ]: RequirementsType[Key];
-//         }
-//         : never;
-
-export type FGlobalRequirements =
+export type FGlobalConfig =
     {
         Silent: Options.Options<boolean>;
     };
 
-export type TRequirementsArgument<RequirementsType extends TRequirements> =
+export type FGlobalArguments = TOptionsFromConfig<FGlobalConfig>;
+
+export type TOptionsFromConfig<ConfigType extends Command.Command.Config> =
     {
-        [ Key in keyof RequirementsType ]:
-            RequirementsType[Key] extends Options.Options<infer Type>
+        readonly [ Key in keyof ConfigType ]:
+        ConfigType[Key] extends Args.Args<infer Type>
+            ? Type
+            : ConfigType[Key] extends Options.Options<infer Type>
                 ? Type
-                : RequirementsType[Key] extends Args.Args<infer Type>
-                    ? Type
-                    : never;
+                : never;
     };
 
-export type TRequirements<RequirementsType extends FRequirementsBase = FGlobalRequirements> =
-    FGlobalRequirements &
-    RequirementsType;
-
-export type Config<RequirementsType extends TRequirements> =
+export type TCommandOptionsFromConfig<ConfigType extends Command.Command.Config> =
+    TOptionsFromConfig<ConfigType> &
     {
-        readonly [ Key in keyof RequirementsType ]: RequirementsType[Key] extends Args.Args<unknown> | Options.Options<unknown>
-            ? RequirementsType[Key]
-            : never;
+        readonly [ Key in keyof FGlobalConfig ]:
+        FGlobalConfig[Key] extends Args.Args<infer Type>
+            ? Type
+            : FGlobalConfig[Key] extends Options.Options<infer Type>
+                ? Type
+                : never;
     };
 
-export type ConfigArgument<RequirementsType extends TRequirements> =
-    {
-        readonly [ Key in keyof RequirementsType as Key extends keyof FGlobalRequirements ? never : Key ]: Config<RequirementsType>[Key]
-    };
+export type FConfigBase =
+    Record<
+        string,
+        | Args.Args<unknown>
+        | Options.Options<unknown>
+    >;
+
+export type TMakeConfig<ConfigType extends FConfigBase> = Readonly<ConfigType>;
+
+export type TMakeCommandConfig<BaseType extends FConfigBase> =
+    [ Extract<keyof BaseType, keyof FGlobalConfig> ] extends [ never ]
+        ? Readonly<BaseType & FGlobalConfig>
+        : never;

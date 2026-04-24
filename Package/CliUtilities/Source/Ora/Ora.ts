@@ -43,7 +43,7 @@ export function Ora(Argument: FOraOptions): IOra
  *
  * Executes an `async` function or `Promise` with a progress indicator.
  *
- * @typeParam Type - The type of the data to which the given {@link AsyncSource} resolves.
+ * @template Type - The type of the data to which the given {@link AsyncSource} resolves.
  *
  * @param AsyncSource - The `async` function or `Promise` whose state is conveyed
  * by the returned instance of `Ora`.

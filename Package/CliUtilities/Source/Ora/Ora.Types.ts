@@ -13,7 +13,7 @@ export type FOraOptions = Extract<Parameters<typeof ora>[0], object>;
 /**
  * The `async` function or `Promise` passed to {@link Ora}.
  *
- * @typeParam Type - The type of the value returned by the task.
+ * @template Type - The type of the value returned by the task.
  */
 export type TOraTaskArgument<Type> =
     | (() => Promise<Type>)

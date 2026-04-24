@@ -5,14 +5,15 @@
  * @license   MIT
  */
 
-import type { FInitRequirements } from "./Init.Types.js";
-import { MakeCommand } from "../Effect/Effect.js";
-import type { TRequirementsArgument } from "../Options/Options.Types.js";
-import type { CliCommand } from "../Effect/Effect.Types.js";
+// import type { FInitRequirements } from "./Init.Types.js";
+// import { MakeCommand } from "../Effect/Effect.js";
+// import type { CliCommand } from "../Effect/Effect.Types.js";
 
-async function Init(Options: TRequirementsArgument<FInitRequirements>): Promise<void>
-{
+export const __DummyExport_Init: "DummyExport" = "DummyExport" as const;
 
-}
+// async function Init(Options: TRequirementsArgument<FInitRequirements>): Promise<void>
+// {
 
-export const InitCommand: CliCommand<"init", FInitRequirements> = MakeCommand("init", Init);
+// }
+
+// export const InitCommand: CliCommand<"init", FInitRequirements> = MakeCommand("init", Init);

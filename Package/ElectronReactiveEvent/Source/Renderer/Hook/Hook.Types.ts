@@ -16,7 +16,7 @@ import type { Listener } from "../../Listener";
 /**
  * The type of the {@link Listener | listener} function passed to {@link useOnEvent} *et al.*
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  */
 export type RendererListener<ChannelType extends Channel.Listener<MainOwner>> =
@@ -44,7 +44,7 @@ export type UseOnEvent =
          * Subscribe to events sent by `main` at the time that the containing component mounts.
          * When the component unmounts, the listener is unsubscribed.
          *
-         * @typeParam ChannelType - The type of the {@link channel} on which the
+         * @template ChannelType - The type of the {@link channel} on which the
          * {@link listener} will listen.
          *
          * @param channel - The channel on which the {@link listener} will listen.
@@ -79,7 +79,7 @@ export type UseOnceEvent =
          * Equivalent to {@link UseOnEvent }, but the listener will be unsubscribed
          * after firing once.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the `main` event to which you wish to subscribe
@@ -139,7 +139,7 @@ export type UseSendEvent =
          * response, declare the {@link EventDecl | event type} with a
          * `ResponseType !== never`.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to send.
@@ -157,7 +157,7 @@ export type UseSendEvent =
          * {@link Invoke.Result | response}, declare the {@link EventDecl | event type}
          * with a `ResponseType !== {@link EmptyEventParameter}`.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
@@ -189,7 +189,7 @@ export type UseInvokeEvent =
          * Invoke an event when the containing component mounts, whose event declaration
          * does *not* define a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
@@ -204,7 +204,7 @@ export type UseInvokeEvent =
          * Invoke an event when the containing component mounts, whose event declaration
          * does *not* defines a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
@@ -224,7 +224,7 @@ export type UseInvokeEvent =
          * Invoke an event when the containing component mounts, whose event declaration
          * defines a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
@@ -241,7 +241,7 @@ export type UseInvokeEvent =
          * Invoke an event when the containing component mounts, whose event declaration
          * defines a request type.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
@@ -274,7 +274,7 @@ export type InvokeEventDeferred =
          * at a time other than {@link https://react.dev/reference/react/useEffect | onMount }
          * of the containing component.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.
@@ -290,7 +290,7 @@ export type InvokeEventDeferred =
          * at a time other than {@link https://react.dev/reference/react/useEffect | onMount }
          * of the containing component.
          *
-         * @typeParam ChannelType - The channel that uniquely identifies the desired
+         * @template ChannelType - The channel that uniquely identifies the desired
          * event declaration.
          *
          * @param channel - The channel of the event that you wish to invoke.

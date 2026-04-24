@@ -32,8 +32,7 @@
     "./Distribution/**/*",
     "./Source/**/*",
     "./ReadMe.md",
-    "./package.json",
-    "tsconfig.json"
+    "./package.json"
   ],
   "main": "Distribution/index.js",
   "types": "Distribution/index.d.ts",

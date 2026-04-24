@@ -16,7 +16,7 @@ import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
  * when your event succeeds, such that the corresponding event declaration
  * does *not* define a response type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @returns An object indicating that the {@link Handler} in which a call
@@ -29,7 +29,7 @@ export function succeed<ChannelType extends Channel.Handler.Without.Response
  * when your event succeeds, such that the corresponding event declaration
  * defines a response type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param In - The response data of your event.  This is mapped to the
@@ -46,7 +46,7 @@ export function succeed<ChannelType extends Channel.Handler.With.Response
  * Return a call to this function in your {@link Handler | handlers}
  * when your event succeeds.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param In - *(Optional)* The response data of your event.  No value should be provided
@@ -77,7 +77,7 @@ export function succeed<ChannelType extends Channel.Handler
  * when your event fails.  The corresponding event declaration must
  * define an error type.
  *
- * @typeParam ChannelType - The channel that uniquely identifies the desired
+ * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
  * @param In - The error data of your event.  This is mapped to the

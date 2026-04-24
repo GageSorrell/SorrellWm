@@ -5,6 +5,8 @@
  * @license   MIT
  */
 
-import type { FGlobalRequirements } from "../Options/Options.Types.js";
+// import type { FGlobalArguments } from "../Options/Options.Types.js";
 
-export type FInitRequirements = FGlobalRequirements;
+// export type FInitRequirements = FGlobalArguments;
+
+export const __DummyExport_Init_Types: "DummyExport" = "DummyExport" as const;

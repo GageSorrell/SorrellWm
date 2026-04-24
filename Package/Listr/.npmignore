@@ -1,4 +1,3 @@
-# source code
-**
-!/dist
-!/dist/**
+!/Distribution
+!/Distribution/**/*
+tsconfig.json

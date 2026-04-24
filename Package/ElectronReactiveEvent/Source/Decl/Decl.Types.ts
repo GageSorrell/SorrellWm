@@ -20,7 +20,7 @@ export namespace Decl
     /**
      * The request type of a given event declaration.
      *
-     * @typeParam ChannelType - The channel that uniquely identifies the desired
+     * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
     export type Request<
@@ -31,7 +31,7 @@ export namespace Decl
     /**
      * The response type of a given event declaration.
      *
-     * @typeParam ChannelType - The channel that uniquely identifies the desired
+     * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
     export type Response<ChannelType extends Channel.Handler.With.Response> =
@@ -40,7 +40,7 @@ export namespace Decl
     /**
      * The error type of a given event declaration.
      *
-     * @typeParam ChannelType - The channel that uniquely identifies the desired
+     * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
      */
     export type Error<ChannelType extends Channel.Handler.With.Error> =
@@ -55,8 +55,8 @@ export namespace Decl
  * (identified as the type parameter {@link OwnerType} with the {@link MainOwner} and {@link RendererOwner}
  * types, respectively).
  *
- * @typeParam OwnerType - From whom an event of this type is sent.
- * @typeParam RequestType - The type of the request object that is sent when an event occurs.
+ * @template OwnerType - From whom an event of this type is sent.
+ * @template RequestType - The type of the request object that is sent when an event occurs.
  */
 export type EventDeclListener<OwnerType extends EventOwner, RequestType> =
     EventDeclBase<OwnerType, RequestType, never, never>;
@@ -68,9 +68,9 @@ export type EventDeclListener<OwnerType extends EventOwner, RequestType> =
  * returned only by {@link https://www.electronjs.org/docs/latest/api/ipc-renderer#ipcrendererinvokechannel-args | ipcRenderer.invoke},
  * event declarations of this type can only be `renderer` events (*i.e.*, *sent* by the `renderer`).
  *
- * @typeParam RequestType - The type of the request object that is sent when an event occurs.
- * @typeParam ResponseType - The type of the response object that is sent when an event succeeds.
- * @typeParam ErrorType - The type of the response object that is sent when an event fails.
+ * @template RequestType - The type of the request object that is sent when an event occurs.
+ * @template ResponseType - The type of the response object that is sent when an event succeeds.
+ * @template ErrorType - The type of the response object that is sent when an event fails.
  */
 export type EventDeclHandler<
     RequestType = never,
@@ -101,10 +101,10 @@ type EventDeclBase<
  * Event declarations, depending upon whether `{@link ResponseType} === {@link EmptyEventParameter}`,
  * evaluate to one of the two internal types {@link EventDeclHandler} or {@link EventDeclListener}.
  *
- * @typeParam OwnerType - From whom an event of this type is sent.
- * @typeParam RequestType - The type of the request object that is sent when an event occurs.
- * @typeParam ResponseType - The type of the response object that is sent when an event succeeds.
- * @typeParam ErrorType - The type of the response object that is sent when an event fails.
+ * @template OwnerType - From whom an event of this type is sent.
+ * @template RequestType - The type of the request object that is sent when an event occurs.
+ * @template ResponseType - The type of the response object that is sent when an event succeeds.
+ * @template ErrorType - The type of the response object that is sent when an event fails.
  */
 export type EventDecl<
     OwnerType extends EventOwner,

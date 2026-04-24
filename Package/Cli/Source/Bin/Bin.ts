@@ -7,15 +7,12 @@
  * @license   MIT
  */
 
-import { Command } from "@effect/cli";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import { Command } from "@effect/cli";
 import { Effect } from "effect";
-import { GetPackageJson } from "@sorrell/utilities/npm";
-import type { IPackageJson } from "package-json-type";
-import { PublishCommand } from "../Publish/index.js";
-import { IndexCommand } from "../Index/IndexCommand.js";
-import { InitCommand } from "../Init/Init.js";
-import type { CliCommand } from "../Effect/Effect.Types.js";
+import { GetVersion } from "../Command/Command.js";
+import type { TNonemptyArray } from "@sorrell/utilities/array";
+import { UpdateCommand } from "../Update/index.js";
 
 /**
  * The entry-point for commands provided by this package.
@@ -28,29 +25,20 @@ async function Main(): Promise<void>
             return Effect.succeed(undefined);
         });
 
-    const version: string = await (async (): Promise<string> =>
-    {
-        try
-        {
-            const PackageJson: IPackageJson = await Effect.runPromise(GetPackageJson());
-            return PackageJson.version || "";
-        }
-        catch
-        {
-            return "";
-        }
-    })();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
 
-        type SubCommandArray = readonly [
-            Command.Command<any, any, any, any>,
-            ...Array<Command.Command<any, any, any, any>>
-        ];
+    const version: string = await GetVersion();
 
-        const SubCommands: SubCommandArray =
+    type TSubCommandArray = TNonemptyArray<Command.Command<any, any, any, any>>;
+
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    const SubCommands: TSubCommandArray =
         [
-            IndexCommand,
-            InitCommand,
-            PublishCommand
+            UpdateCommand
+            // IndexCommand,
+            // InitCommand,
+            // PublishCommand
         ];
 
     const cli: ReturnType<typeof Command.run> = Command.run(
