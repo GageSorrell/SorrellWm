@@ -23,25 +23,26 @@ function CreateSharedOptions()
 
             array: "./Source/Array/index.ts",
             async: "./Source/Async/index.ts",
+            complex: "./Source/Math/Complex.ts",
             effect: "./Source/Effect/index.ts",
             fs: "./Source/FileSystem/index.ts",
             functional: "./Source/Functional/index.ts",
+            math: "./Source/Math/index.ts",
             misc: "./Source/Miscellaneous/index.ts",
             npm: "./Source/Npm/index.ts",
-            number: "./Source/Number/index.ts",
-            numberExperimental: "./Source/Number/Index.Experimental.ts"
+            path: "./Source/Path/index.ts"
         },
-        platform: "neutral",
-        target: [ "es2021" ],
-        sourcemap: true,
-        packages: "external",
-        tsconfig: TypeScriptConfigPath,
         logLevel: "info",
+        packages: "external",
+        platform: "neutral",
         plugins: [
             Tsover({
                 tsconfigPath: TypeScriptConfigPath
             })
-        ]
+        ],
+        sourcemap: true,
+        target: [ "es2021" ],
+        tsconfig: TypeScriptConfigPath,
     };
 }
 

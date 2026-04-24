@@ -1,6 +1,6 @@
 {
     "compilerOptions": { "outDir": "./Distribution" },
     "extends": "./tsconfig.Base.json",
-    "include": [ "./Source/**/*", "../Utilities/Source/Number" ],
+    "include": [ "./Source/**/*", "../Utilities/Source/Math" ],
     "exclude": [ "./Source/**/*.Test.ts" ]
 }

@@ -31,65 +31,71 @@
     ],
     "exports": {
         ".": {
-            "types": "./Distribution/index.d.ts",
-            "import": "./Distribution/index.js",
-            "require": "./Distribution/index.js",
-            "default": "./Distribution/index.js"
+            "types": "./Distribution/Types/index.d.ts",
+            "import": "./Distribution/ESM/index.js",
+            "require": "./Distribution/CJS/index.js",
+            "default": "./Distribution/ESM/index.js"
         },
         "./array": {
-            "types": "./Distribution/Array/index.d.ts",
-            "import": "./Distribution/Array/index.js",
-            "require": "./Distribution/Array/index.js",
-            "default": "./Distribution/Array/index.js"
+            "types": "./Distribution/Types/Array/index.d.ts",
+            "import": "./Distribution/ESM/Array/index.js",
+            "require": "./Distribution/CJS/Array/index.js",
+            "default": "./Distribution/ESM/Array/index.js"
         },
         "./async": {
-            "types": "./Distribution/Async/index.d.ts",
-            "import": "./Distribution/Async/index.js",
-            "require": "./Distribution/Async/index.js",
-            "default": "./Distribution/Async/index.js"
+            "types": "./Distribution/Types/Async/index.d.ts",
+            "import": "./Distribution/ESM/Async/index.js",
+            "require": "./Distribution/CJS/Async/index.js",
+            "default": "./Distribution/ESM/Async/index.js"
+        },
+        "./complex": {
+            "types": "./Distribution/Types/Math/Complex.d.ts",
+            "import": "./Distribution/ESM/Math/Complex.js",
+            "require": "./Distribution/CJS/Math/Complex.js",
+            "default": "./Distribution/ESM/Math/Complex.js"
         },
         "./effect": {
-            "types": "./Distribution/Effect/index.d.ts",
-            "import": "./Distribution/Effect/index.js",
-            "require": "./Distribution/Effect/index.js",
-            "default": "./Distribution/Effect/index.js"
+            "types": "./Distribution/Types/Effect/index.d.ts",
+            "import": "./Distribution/ESM/Effect/index.js",
+            "require": "./Distribution/CJS/Effect/index.js",
+            "default": "./Distribution/ESM/Effect/index.js"
         },
         "./fs": {
-            "types": "./Distribution/FileSystem/index.d.ts",
-            "import": "./Distribution/FileSystem/index.js",
-            "require": "./Distribution/FileSystem/index.js",
-            "default": "./Distribution/FileSystem/index.js"
+            "types": "./Distribution/Types/FileSystem/index.d.ts",
+            "import": "./Distribution/ESM/FileSystem/index.js",
+            "require": "./Distribution/CJS/FileSystem/index.js",
+            "default": "./Distribution/ESM/FileSystem/index.js"
         },
         "./functional": {
-            "types": "./Distribution/Functional/index.d.ts",
-            "import": "./Distribution/Functional/index.js",
-            "require": "./Distribution/Functional/index.js",
-            "default": "./Distribution/Functional/index.js"
+            "types": "./Distribution/Types/Functional/index.d.ts",
+            "import": "./Distribution/ESM/Functional/index.js",
+            "require": "./Distribution/CJS/Functional/index.js",
+            "default": "./Distribution/ESM/Functional/index.js"
         },
         "./misc": {
-            "types": "./Distribution/Miscellaneous/index.d.ts",
-            "import": "./Distribution/Miscellaneous/index.js",
-            "require": "./Distribution/Miscellaneous/index.js",
-            "default": "./Distribution/Miscellaneous/index.js"
+            "types": "./Distribution/Types/Miscellaneous/index.d.ts",
+            "import": "./Distribution/ESM/Miscellaneous/index.js",
+            "require": "./Distribution/CJS/Miscellaneous/index.js",
+            "default": "./Distribution/ESM/Miscellaneous/index.js"
         },
         "./npm": {
-            "types": "./Distribution/Npm/index.d.ts",
-            "import": "./Distribution/Npm/index.js",
-            "require": "./Distribution/Npm/index.js",
-            "default": "./Distribution/Npm/index.js"
+            "types": "./Distribution/Types/Npm/index.d.ts",
+            "import": "./Distribution/ESM/Npm/index.js",
+            "require": "./Distribution/CJS/Npm/index.js",
+            "default": "./Distribution/ESM/Npm/index.js"
         },
-        "./number": {
-            "types": "./Distribution/Number/index.d.ts",
-            "import": "./Distribution/Number/index.js",
-            "require": "./Distribution/Number/index.js",
-            "default": "./Distribution/Number/index.js"
+        "./math": {
+            "types": "./Distribution/Types/Math/index.d.ts",
+            "import": "./Distribution/ESM/Math/index.js",
+            "require": "./Distribution/CJS/Math/index.js",
+            "default": "./Distribution/ESM/Math/index.js"
         },
-        "./number-experimental": {
-            "types": "./Distribution/Number/Index.Experimental.d.ts",
-            "import": "./Distribution/Number/Index.Experimental.js",
-            "require": "./Distribution/Number/Index.Experimental.js",
-            "default": "./Distribution/Number/Index.Experimental.js"
-        }
+        "./path": {
+            "types": "./Distribution/Types/Path/index.d.ts",
+            "import": "./Distribution/ESM/Path/index.js",
+            "require": "./Distribution/CJS/Path/index.js",
+            "default": "./Distribution/ESM/Path/index.js"
+        },
     },
     "overrides": {
         "typescript": "npm:tsover@^6.0.0"

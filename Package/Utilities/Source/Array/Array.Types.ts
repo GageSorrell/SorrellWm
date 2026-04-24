@@ -8,7 +8,7 @@
 import type { DefinedOnlyOption, MaybeDefinedOption, ReadonlyOption } from "./Array.Internal.ts";
 import type { NoOptions, TOptions } from "../Miscellaneous/Utility.Types.ts";
 import type { TBuildStaticTArray } from "./Array.Internal.Types.ts";
-import type { TIsNonNegativeInteger } from "../Number/Number.Types.ts";
+import type { TIsNonNegativeInteger } from "../Math/Math.Types.ts";
 
 /**
  * An `Array` type, which is optionally customizable via an {@link OptionsType}.

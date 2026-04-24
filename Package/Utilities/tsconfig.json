@@ -44,6 +44,5 @@
         "allowSyntheticDefaultImports": true
     },
     "include": [ "Source/**/*" ],
-    // "include": [ "./Source/Number/Number.Experimental.ts" ],
     "exclude": [ "node_modules" ]
 }

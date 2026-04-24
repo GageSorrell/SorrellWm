@@ -1,8 +1,9 @@
 /**
- * @file      Number.Experimental.Types.ts
+ * @file      Index.Complex.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-export type Foo = boolean;
+export * from "./Complex.ts";
+export * from "./Complex.Types.ts";

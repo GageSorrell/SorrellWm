@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type * as InternalTypes from "./Number.Internal.Types.ts";
+import type * as InternalTypes from "./Math.Internal.Types.js";
 
 /**
  * Determines whether a given {@link NumberType} is a nonnegative integer.

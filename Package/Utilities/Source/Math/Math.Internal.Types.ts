@@ -1,5 +1,5 @@
 /**
- * @file      Number.Internal.Types.ts
+ * @file      Math.Internal.Types.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
