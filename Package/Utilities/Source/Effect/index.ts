@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export * as Effect from "./Index.Effect.js";
+export * as Effect from "./Index.Effect.ts";

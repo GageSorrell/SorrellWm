@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
-export * from "./Functional.js";
-export * from "./Functional.Types.js";
+export * from "./Functional.ts";
+export * from "./Functional.Types.ts";

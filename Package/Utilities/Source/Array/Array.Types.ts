@@ -5,10 +5,10 @@
  * @license   MIT
  */
 
-import type { DefinedOnlyOption, MaybeDefinedOption, ReadonlyOption } from "./Array.Internal.js";
-import type { NoOptions, TOptions } from "../Miscellaneous/Utility.Types.js";
-import type { TBuildStaticTArray } from "./Array.Internal.Types.js";
-import type { TIsNonNegativeInteger } from "../Number/Number.Types.js";
+import type { DefinedOnlyOption, MaybeDefinedOption, ReadonlyOption } from "./Array.Internal.ts";
+import type { NoOptions, TOptions } from "../Miscellaneous/Utility.Types.ts";
+import type { TBuildStaticTArray } from "./Array.Internal.Types.ts";
+import type { TIsNonNegativeInteger } from "../Number/Number.Types.ts";
 
 /**
  * An `Array` type, which is optionally customizable via an {@link OptionsType}.

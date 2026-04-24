@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
-export * from "./Async.js";
-export * from "./Async.Types.js";
+export * from "./Async.ts";
+export * from "./Async.Types.ts";

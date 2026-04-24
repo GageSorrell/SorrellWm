@@ -7,7 +7,7 @@
 
 import { type FileHandle, access, open, unlink } from "fs/promises";
 import { basename, dirname, extname, join } from "path";
-import { type FFileExtension } from "./index.js";
+import { type FFileExtension } from "./FileSystem.Types.ts";
 import { constants as FsConstants } from "fs";
 import os from "os";
 

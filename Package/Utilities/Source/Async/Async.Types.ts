@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
-import type { TExtractFunction, TFunction } from "../Functional/index.js";
-import type { TPromise, TPromiseLike } from "./Async.js";
+import type { TExtractFunction, TFunction } from "../Functional/index.ts";
+import type { TPromise, TPromiseLike } from "./Async.ts";
 
 /**
  * @template DataType - The {@link Data} type of this.

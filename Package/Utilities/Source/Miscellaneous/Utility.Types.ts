@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { NoOptions } from "./Utility.Internal.js";
+import type { NoOptions } from "./Utility.Internal.ts";
 
 /**
  * Defines a type that corresponds to {@link RecordLike}, such that every

@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export * from "./Utility.Types.js";
+export * from "./Utility.Types.ts";

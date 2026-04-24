@@ -6,10 +6,10 @@
  */
 
 import { promises as Fs, constants as FsConstants } from "fs";
-import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.js";
+import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import { dirname, join } from "path";
 import { Effect } from "effect";
-import type { GetPackageJsonEffect } from "./Npm.Types.js";
+import type { GetPackageJsonEffect } from "./Npm.Types.ts";
 import type { IPackageJson } from "package-json-type";
 import Process from "process";
 

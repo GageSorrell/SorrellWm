@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export * from "./String.js";
+export * from "./String.ts";

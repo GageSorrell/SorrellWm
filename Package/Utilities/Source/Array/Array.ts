@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
-import type { FilteredArray, Options, TArrayType } from "./Array.Types.js";
-import type { NoOptions } from "../Miscellaneous/Utility.Types.js";
+import type { FilteredArray, Options, TArrayType } from "./Array.Types.ts";
+import type { NoOptions } from "../Miscellaneous/Utility.Types.ts";
 
 /**
  * Filter out all instances of `undefined` from a given {@link Array:param}.

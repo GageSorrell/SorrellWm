@@ -1,15 +1,16 @@
 {
     "compilerOptions":
     {
-        "target": "ESNext",
-        "module": "NodeNext",
-        "verbatimModuleSyntax": true,
+        "ignoreDeprecations": "6.0",
+        "target": "es2023",
+        "module": "preserve",
 
         "rootDir": "./Source",
         "outDir": "./Distribution",
 
         "lib":
         [
+            "tsover",
             "ES2022",
             "DOM",
             "DOM.Iterable"
@@ -26,15 +27,23 @@
 
         "types": [ "node" ],
 
-        "moduleResolution": "nodenext",
+        "moduleResolution": "bundler",
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
         "useUnknownInCatchVariables": true,
 
         "skipLibCheck": true,
-        "noEmitOnError": true
+        "noEmitOnError": true,
+
+        "noEmit": false,
+
+        "rewriteRelativeImportExtensions": true,
+        "allowImportingTsExtensions": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": [ "Source/**/*" ],
-    "exclude": [ "node_modules", "Distribution" ]
+    // "include": [ "./Source/Number/Number.Experimental.ts" ],
+    "exclude": [ "node_modules" ]
 }

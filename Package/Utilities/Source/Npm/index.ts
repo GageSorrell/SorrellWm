@@ -12,6 +12,6 @@
  * package managers and adjacent runtimes (*e.g.*, `bun` or `deno`).
  */
 
-export * from "./Npm.js";
-export * from "./Npm.Error.js";
-export * from "./Npm.Types.js";
+export * from "./Npm.ts";
+export * from "./Npm.Error.ts";
+export * from "./Npm.Types.ts";

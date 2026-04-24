@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
-export * from "./Array.js";
-export * from "./Array.Types.js";
+export * from "./Array.ts";
+export * from "./Array.Types.ts";

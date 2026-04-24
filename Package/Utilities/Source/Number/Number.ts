@@ -7,4 +7,4 @@
 
 /* eslint-disable */
 
-const __DummyExport_Number: "DummyExport" = "DummyExport" as const;
+export const __DummyExport_Number: "DummyExport" = "DummyExport" as const;

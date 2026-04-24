@@ -5,8 +5,7 @@
  * @license   MIT
  */
 
-import type { Argon2Algorithm } from "node:crypto";
-import type { TMaybeAsync } from "../Async/Async.Types.js";
+import type { TMaybeAsync } from "../Async/Async.Types.ts";
 
 export type TExtractFunction<Type> =
     Type extends { (...ArgumentVector: infer ArgumentVectorType): infer ReturnType }

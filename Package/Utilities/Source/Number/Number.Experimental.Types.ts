@@ -1,9 +1,8 @@
 /**
- * @file      index.ts
+ * @file      Number.Experimental.Types.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-export * from "./FileSystem.ts";
-export * from "./FileSystem.Types.ts";
+export type Foo = boolean;

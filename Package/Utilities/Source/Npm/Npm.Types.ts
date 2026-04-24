@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.js";
+import type { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import type { Effect } from "effect";
 import type { IPackageJson } from "package-json-type";
 

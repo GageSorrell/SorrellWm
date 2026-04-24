@@ -145,6 +145,7 @@
 			"lpfn",
 			"lpsz",
 			"LPWSTR",
+			"mathbf",
 			"maximizable",
 			"minisearch",
 			"mspaint",
@@ -183,7 +184,7 @@
 			"WNDCLASSEXW",
 			"xfacet"
 		],
-		"js/ts.tsdk.path": "node_modules\\typescript\\lib"
+		"js/ts.tsdk.path": "./Package/Utilities/node_modules/typescript/lib"
 	},
 	"extensions": {
 		"recommendations": [

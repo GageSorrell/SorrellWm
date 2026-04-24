@@ -5,3 +5,4 @@
  * @license   MIT
  */
 
+export const FooEffect: string = "";

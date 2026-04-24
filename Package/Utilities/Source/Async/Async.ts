@@ -5,15 +5,14 @@
  * @license   MIT
  */
 
-import { AbstractMethodCallError, type TNullable } from "../Miscellaneous/Utility.Types.js";
+import { AbstractMethodCallError, type TNullable } from "../Miscellaneous/Utility.Types.ts";
 import type {
     TOnFulfilled,
     TOnRejected,
     TPromiseCtorArgument,
     TTryResult,
-    TTrySource
-} from "./Async.Types.js";
-import type { TFunction } from "../Functional/Functional.Types.js";
+    TTrySource } from "./Async.Types.ts";
+import type { TFunction } from "../Functional/Functional.Types.ts";
 
 /**
  * Implements "Errors-as-values" for `async` functions and `Promise<DataType>`s.

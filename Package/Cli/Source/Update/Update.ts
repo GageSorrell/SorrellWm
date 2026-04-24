@@ -244,52 +244,50 @@ function InstallPackage({ Package, Silent }: NpmConfig): NpmInstallCommandFactor
     });
 }
 
-function UninstallPackage({ Package, Silent }: NpmConfig): NpmUninstallCommandFactory
+function UninstallPackage({ Package, SaveFlag, Silent }: NpmConfig): NpmUninstallCommandFactory
 {
-    return function(SaveFlag: string): UpdateEffect
+    type ThisEffect = Effect.Effect<void, NpmError, never>;
+    const Foo: ThisEffect = Effect.gen(function* ()
     {
-        return Effect.gen(function* ()
+        yield* MaybeLogStep(Silent, `Uninstalling "${ Package }"...`);
+
+        const InstallArguments: ReadonlyArray<string> =
+            BuildNpmInstallArguments(Package, SaveFlag);
+
+        yield* MaybeLogStep(
+            Silent,
+            `Starting npm install in a pseudo terminal: ${ InstallArguments.join(" ") }`
+        );
+
+        const Result: UpdateCommandResult =
+            yield* RunNpmCommand([
+                "uninstall",
+                "--save",
+                Package
+            ]);
+
+        if (Result.ExitCode !== 0)
         {
-            yield* MaybeLogStep(Silent, `Uninstalling "${ Package }"...`);
-
-            const InstallArguments: ReadonlyArray<string> =
-                BuildNpmInstallArguments(Package, SaveFlag);
-
-            yield* MaybeLogStep(
-                Silent,
-                `Starting npm install in a pseudo terminal: ${ InstallArguments.join(" ") }`
-            );
-
-            const Result: UpdateCommandResult =
-                yield* RunNpmCommand([
-                    "uninstall",
-                    "--save",
-                    Package
-                ]);
-
-            if (Result.ExitCode !== 0)
+            if (!Silent)
             {
-                if (!Silent)
+                // yield* Console.error("npm uninstall failed.");
+
+                if (Result.Output.trim().length > 0)
                 {
-                    yield* Console.error("npm uninstall failed.");
-
-                    if (Result.Output.trim().length > 0)
-                    {
-                        yield* Console.error(Result.Output);
-                    }
+                    // yield* Console.error(Result.Output);
                 }
-
-                return yield* Effect.fail(
-                    new NpmError({
-                        ExitCode: Result.ExitCode,
-                        Output: Result.Output
-                    })
-                );
             }
 
-            yield* MaybeLogStep(Silent, `Uninstalled ${ Package } successfully!`);
-        });
-    };
+            return yield* Effect.fail<NpmError>(
+                new NpmError({
+                    ExitCode: Result.ExitCode,
+                    Output: Result.Output
+                })
+            );
+        }
+
+        yield* MaybeLogStep(Silent, `Uninstalled ${ Package } successfully!`);
+    });
 }
 
 const Config: UpdateConfig =

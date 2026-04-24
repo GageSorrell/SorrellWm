@@ -54,17 +54,17 @@
             "require": "./Distribution/Effect/index.js",
             "default": "./Distribution/Effect/index.js"
         },
-        "./functional": {
-            "types": "./Distribution/Functional/index.d.ts",
-            "import": "./Distribution/Functional/index.js",
-            "require": "./Distribution/Functional/index.js",
-            "default": "./Distribution/Functional/index.js"
-        },
         "./fs": {
             "types": "./Distribution/FileSystem/index.d.ts",
             "import": "./Distribution/FileSystem/index.js",
             "require": "./Distribution/FileSystem/index.js",
             "default": "./Distribution/FileSystem/index.js"
+        },
+        "./functional": {
+            "types": "./Distribution/Functional/index.d.ts",
+            "import": "./Distribution/Functional/index.js",
+            "require": "./Distribution/Functional/index.js",
+            "default": "./Distribution/Functional/index.js"
         },
         "./misc": {
             "types": "./Distribution/Miscellaneous/index.d.ts",
@@ -77,22 +77,58 @@
             "import": "./Distribution/Npm/index.js",
             "require": "./Distribution/Npm/index.js",
             "default": "./Distribution/Npm/index.js"
+        },
+        "./number": {
+            "types": "./Distribution/Number/index.d.ts",
+            "import": "./Distribution/Number/index.js",
+            "require": "./Distribution/Number/index.js",
+            "default": "./Distribution/Number/index.js"
+        },
+        "./number-experimental": {
+            "types": "./Distribution/Number/Index.Experimental.d.ts",
+            "import": "./Distribution/Number/Index.Experimental.js",
+            "require": "./Distribution/Number/Index.Experimental.js",
+            "default": "./Distribution/Number/Index.Experimental.js"
         }
     },
-    "main": "./index.js",
-    "types": "./Distribution/index.d.ts",
+    "overrides": {
+        "typescript": "npm:tsover@^6.0.0"
+    },
+    "peerDependenciesMeta": {
+        "tsover": {
+            "optional": true
+        },
+        "tsover-runtime": {
+            "optional": true
+        }
+    },
+    "main": "./Distribution/index.js",
+    "types": "./Distribution/types/index.d.ts",
     "scripts": {
-        "build": "tsc -p ./tsconfig.json",
-        "prepublish": "tsc -p ./tsconfig.json"
+        "prepublish": "npm run build",
+         "build:js": "node esbuild.config.mts",
+        "build:types": "tsc -p tsconfig.types.json",
+        "build": "npm run build:js && npm run build:types"
     },
     "devDependencies": {
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-typescript": "^12.3.0",
         "@types/node": "^25.6.0",
         "clipboardy": "^5.3.1",
+        "esbuild": "^0.28.0",
         "package-json-type": "^1.1.2",
-        "typescript": "^6.0.2"
+        "rollup": "^4.60.2",
+        "tslib": "^2.8.1",
+        "tsover": "^6.0.0",
+        "tsover-runtime": "0.0.6",
+        "typescript": "npm:tsover@^6.0.0"
     },
     "dependencies": {
         "chalk": "^5.6.2",
         "effect": "^3.21.1"
+    },
+    "peerDependencies": {
+        "tsover": "^6.0.0",
+        "tsover-runtime": "^0.0.6"
     }
 }

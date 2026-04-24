@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
-import type { Options, TArrayType } from "./Array.Types.js";
-import type { NoOptions } from "../Miscellaneous/Utility.Types.js";
+import type { Options, TArrayType } from "./Array.Types.ts";
+import type { NoOptions } from "../Miscellaneous/Utility.Types.ts";
 
 /**
  * @module Array.Internal
@@ -41,12 +41,11 @@ export type TBuildStaticTArrayMutable<
             [ ...Accumulator, ElementType ]
         >;
 
-
 /**
  * Used to define {@link Array.TStaticArray}.
  * @template ElementType - The type of this, or the type of this `Array`.
- * @template OptionsType - *(Optional)* The {@link ValidateArrayOptions:type | options type} for this type.
- * @template __Accumulator - *Do not use.*  This is used internally by this type to construct
+ * @template ArraySize - The number of {@link ElementType | ElementTypes} in this `Array`.  The
+ * @template ReadonlyType - Whether the built {@link Array} type will be `readonly`.
  * this type.
  * @internal
  */

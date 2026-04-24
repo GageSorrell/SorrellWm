@@ -31,7 +31,7 @@ export type NpmConfig =
         | "Silent"
     >;
 
-export type NpmCommandEffect = Effect.Effect<UpdateCommandResult, Error>;
+export type NpmCommandEffect = Effect.Effect<UpdateCommandResult, NpmError, never>;
 
 export type NpmUninstallCommandFactory = EffectFactory<never, void, NpmError>;
 export type NpmInstallCommandFactory = EffectFactory<string, void, NpmError>;
