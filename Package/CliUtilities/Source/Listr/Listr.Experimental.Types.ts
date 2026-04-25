@@ -5,24 +5,26 @@
  * @license   MIT
  */
 
-import type { ExitSymbol, FailureSymbol, SuccessSymbol } from "./Listr.Experimental.Internal.js";
+export type __DummyExport_ListrExperimental_Types = string;
 
-type Exit = typeof ExitSymbol;
-type Failure = typeof FailureSymbol;
-type Success = typeof SuccessSymbol;
+// import type { ExitSymbol, FailureSymbol, SuccessSymbol } from "./Listr.Experimental.Internal.js";
 
-export type Return =
-    {
-        Exit: Exit;
-        Failure: Failure;
-        Subtasks:
-            {
-                <NewContextType>(Subtasks: Array<ListrTask<NewContextType>>): void;
-            };
-        Success: Success;
-    };
+// type Exit = typeof ExitSymbol;
+// type Failure = typeof FailureSymbol;
+// type Success = typeof SuccessSymbol;
 
-export type ListrCtorArgument<ContextType> =
-    {
+// export type Return =
+//     {
+//         Exit: Exit;
+//         Failure: Failure;
+//         Subtasks:
+//             {
+//                 <NewContextType>(Subtasks: Array<ListrTask<NewContextType>>): void;
+//             };
+//         Success: Success;
+//     };
 
-    };
+// export type ListrCtorArgument<ContextType> =
+//     {
+
+//     };

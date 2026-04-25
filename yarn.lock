@@ -2,7 +2,7 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 8
+  version: 9
   cacheKey: 10c0
 
 "@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.27.1, @babel/code-frame@npm:^7.28.6, @babel/code-frame@npm:^7.29.0":
@@ -1259,6 +1259,52 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sorrellwm/build@workspace:Script/Build":
+  version: 0.0.0-use.local
+  resolution: "@sorrellwm/build@workspace:Script/Build"
+  dependencies:
+    "@types/node": "npm:^22.10.1"
+    chalk: "npm:^5.3.0"
+    concurrently: "npm:^9.1.0"
+    nodemon: "npm:^3.1.7"
+    ora: "npm:^8.1.1"
+    typescript: "npm:^5.7.2"
+  languageName: unknown
+  linkType: soft
+
+"@sorrellwm/clean-repo@workspace:Script/CleanRepo":
+  version: 0.0.0-use.local
+  resolution: "@sorrellwm/clean-repo@workspace:Script/CleanRepo"
+  dependencies:
+    "@sorrellwm/script-utility": "workspace:^*"
+    "@types/node": "npm:^22.10.1"
+    chalk: "npm:^5.3.0"
+    concurrently: "npm:^9.1.0"
+    nodemon: "npm:^3.1.7"
+    ora: "npm:^8.1.1"
+    typescript: "npm:^5.7.2"
+  languageName: unknown
+  linkType: soft
+
+"@sorrellwm/script-utility@workspace:Package/ScriptUtility, @sorrellwm/script-utility@workspace:^*":
+  version: 0.0.0-use.local
+  resolution: "@sorrellwm/script-utility@workspace:Package/ScriptUtility"
+  dependencies:
+    "@types/node": "npm:^22.10.1"
+    chalk: "npm:^5.3.0"
+    ora: "npm:^8.1.1"
+    typescript: "npm:^6.0.3"
+  languageName: unknown
+  linkType: soft
+
+"@sorrellwm/yarn-config@workspace:Script/YarnConfig":
+  version: 0.0.0-use.local
+  resolution: "@sorrellwm/yarn-config@workspace:Script/YarnConfig"
+  dependencies:
+    "@yarnpkg/types": "npm:^4.0.1"
+  languageName: unknown
+  linkType: soft
+
 "@standard-schema/spec@npm:^1.0.0":
   version: 1.1.0
   resolution: "@standard-schema/spec@npm:1.1.0"
@@ -1992,6 +2038,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@yarnpkg/types@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "@yarnpkg/types@npm:4.0.1"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/90226789475680ba599833571dd76c0718dd5b4c5022481263ef309d6a628f6246671cd6ca86e49c966ddefa7aca6ccef82240dc1476d2cea702ea5bee2a6b72
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^4.0.0":
   version: 4.0.0
   resolution: "abbrev@npm:4.0.0"
@@ -2459,20 +2514,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"build@workspace:Script/Build":
-  version: 0.0.0-use.local
-  resolution: "build@workspace:Script/Build"
-  dependencies:
-    "@types/node": "npm:^22.10.1"
-    chalk: "npm:^5.3.0"
-    concurrently: "npm:^9.1.0"
-    nodemon: "npm:^3.1.7"
-    ora: "npm:^8.1.1"
-    script-utility: "npm:1.0.0"
-    typescript: "npm:^5.7.2"
-  languageName: unknown
-  linkType: soft
-
 "cac@npm:^7.0.0":
   version: 7.0.0
   resolution: "cac@npm:7.0.0"
@@ -2621,20 +2662,6 @@ __metadata:
   checksum: 10c0/aec4ca58f87145fac221386790ecaae8b012f2e2359a45acb61d8c75ea4fa84f6ea869f17abc1a7e91a808eff0fed581209632f03540de16f72f0a28f5fd35ac
   languageName: node
   linkType: hard
-
-"clean-repo@workspace:Script/CleanRepo":
-  version: 0.0.0-use.local
-  resolution: "clean-repo@workspace:Script/CleanRepo"
-  dependencies:
-    "@types/node": "npm:^22.10.1"
-    chalk: "npm:^5.3.0"
-    concurrently: "npm:^9.1.0"
-    nodemon: "npm:^3.1.7"
-    ora: "npm:^8.1.1"
-    script-utility: "npm:1.0.0"
-    typescript: "npm:^5.7.2"
-  languageName: unknown
-  linkType: soft
 
 "cli-cursor@npm:^5.0.0":
   version: 5.0.0
@@ -6172,17 +6199,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"script-utility@npm:1.0.0, script-utility@workspace:Package/ScriptUtility":
-  version: 0.0.0-use.local
-  resolution: "script-utility@workspace:Package/ScriptUtility"
-  dependencies:
-    "@types/node": "npm:^22.10.1"
-    chalk: "npm:^5.3.0"
-    ora: "npm:^8.1.1"
-    typescript: "npm:^6.0.3"
-  languageName: unknown
-  linkType: soft
-
 "semver@npm:^6.3.1, semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4":
   version: 7.7.4
   resolution: "semver@npm:7.7.4"
@@ -6385,6 +6401,7 @@ __metadata:
     "@eslint/js": "npm:^9.39.4"
     "@stylistic/eslint-plugin": "npm:^5.10.0"
     "@types/node": "npm:^25.0.3"
+    "@yarnpkg/types": "npm:^4.0.1"
     eslint: "npm:^9.39.4"
     eslint-plugin-jsdoc: "npm:^62.8.1"
     eslint-plugin-react: "npm:^7.37.5"

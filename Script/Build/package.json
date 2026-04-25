@@ -1,9 +1,10 @@
 {
-  "name": "build",
-  "packageManager": "yarn@4.5.3",
-  "version": "0.0.1",
+  "name": "@sorrellwm/build",
+  "packageManager": "yarn@4.14.1",
+  "private": true,
+  "version": "1.0.0",
   "type": "module",
-  "description": "Build SorrellWm.",
+  "description": "The build tool for @sorrell/wm.",
   "main": "./Distribution/index.js",
   "scripts": {
     "build": "tsc",
@@ -20,8 +21,6 @@
     "concurrently": "^9.1.0",
     "nodemon": "^3.1.7",
     "ora": "^8.1.1",
-    "script-utility": "1.0.0",
     "typescript": "^5.7.2"
-  },
-  "private": true
+  }
 }

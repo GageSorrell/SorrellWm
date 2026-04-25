@@ -1,9 +1,9 @@
 {
-    "name": "script-utility",
+    "name": "@sorrellwm/script-utility",
     "version": "1.0.0",
     "main": "./Distribution/index.js",
     "type": "module",
-    "packageManager": "yarn@4.5.3",
+    "packageManager": "yarn@4.14.1",
     "scripts": {
         "build": "tsc"
     },

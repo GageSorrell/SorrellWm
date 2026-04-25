@@ -50,6 +50,7 @@ module.exports = {
         {
             files:
             [
+                "Configuration/**/*.cts",
                 "Package/Cli/Source/**/*.ts",
                 "Package/CliUtilities/Source/**/*.ts",
                 "Package/ElectronReactiveEvent/Source/**/*.ts",
@@ -338,6 +339,7 @@ module.exports = {
                 ignoreCase: false
             }
         ],
+        "require-yield": "off",
         "sort-imports":
         [
             "error",

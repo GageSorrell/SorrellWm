@@ -13,7 +13,7 @@ import Ora, { type Ora as FOra } from "ora";
 import Chalk from "chalk";
 import { LogError } from "./Log.js";
 
-export const DoTasks = async <T>(...Tasks: TArray<TTaskTuple<T>>): Promise<void> =>
+export const DoTasks = async <T>(...Tasks: Array<TTaskTuple<T>>): Promise<void> =>
 {
     await Promise.all(Tasks.map(([ Task, Description ]: TTaskTuple<T>): Promise<T> =>
     {
@@ -77,16 +77,16 @@ export const GetRef = <T>(InitialValue?: T): TRef<T> =>
 };
 
 /**
- * Like `Array#map`, but if the predicate returns `undefined`,
+ * Like {@link Array.prototype.map}, but if the predicate returns `undefined`,
  * then that item will not have a corresponding item in the
  * returned array.
  */
 export const MapSome = <T, U>(
-    InArray: TArray<T> | Readonly<TArray<T>>,
+    InArray: Array<T> | Readonly<Array<T>>,
     Predicate: (Item: T) => (U | undefined)
-): TArray<U> =>
+): Array<U> =>
 {
-    return InArray.map(Predicate).filter((Item: U | undefined): boolean => Item !== undefined) as TArray<U>;
+    return InArray.map(Predicate).filter((Item: U | undefined): boolean => Item !== undefined) as Array<U>;
 };
 
 export const GetPath = (CommonPath: FCommonPath): string =>

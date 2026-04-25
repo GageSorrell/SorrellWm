@@ -20,7 +20,7 @@ import {
     LogError,
     MapSome,
     Run,
-    type TRef } from "ScriptUtility";
+    type TRef } from "@sorrellwm/script-utility";
 import { type ChildProcess, spawn } from "child_process";
 import type {
     FComplexFlag,

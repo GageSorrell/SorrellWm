@@ -5,9 +5,9 @@
  * @license   MIT
  */
 
+import type { UpdateConfig, UpdateError, UpdateOptions } from "./Update.Types.js";
 import type { EffectFactory } from "../Effect/Effect.Types.js";
 import type { NpmError } from "./Update.Internal.js";
-import type { UpdateConfig, UpdateError, UpdateOptions } from "./Update.Types.js";
 
 /**
  * @module UpdateInternalTypes

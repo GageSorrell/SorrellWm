@@ -9,7 +9,7 @@ import type { Args, Command, Options } from "@effect/cli";
 
 export type FGlobalConfig =
     {
-        Silent: Options.Options<boolean>;
+        silent: Options.Options<boolean>;
     };
 
 export type FGlobalArguments = TOptionsFromConfig<FGlobalConfig>;

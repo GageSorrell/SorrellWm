@@ -5,9 +5,12 @@
  * @license   MIT
  */
 
+import type * as TypeScript from "typescript";
 import type { NoOptions } from "./Utility.Internal.ts";
 
 /**
+ * @deprecated Use {@link TMutable} instead.
+ *
  * Defines a type that corresponds to {@link RecordLike}, such that every
  * `readonly` modifier is removed, recursively.
  *
@@ -15,8 +18,29 @@ import type { NoOptions } from "./Utility.Internal.ts";
  */
 export type TDeepWriteable<RecordLike> =
     {
-        -readonly [ Key in keyof RecordLike ]: TDeepWriteable<RecordLike[Key]>
+        -readonly [ Key in keyof RecordLike ]: TDeepWriteable<RecordLike[Key]>;
     };
+
+/**
+ * Defines a type that corresponds to {@link RecordLike}, such that every
+ * `readonly` modifier is removed, recursively.
+ *
+ * @template RecordLike - The type to make writeable.
+ * @template ShallowOption - Whether the `readonly` modifier should be stripped recursively.
+ * If `true` (the default), then only the properties of the given type will have the `readonly`
+ * modifier stripped (that is, if any of these properties is a {@link Record} type with `readonly`
+ * modifiers, then those will *not* be removed if {@link ShallowOption} is `true`).
+ */
+export type TMutable<RecordLike, ShallowOption extends boolean = true> =
+    ShallowOption extends false
+        ? {
+            -readonly [ Key in keyof RecordLike ]: RecordLike[Key];
+        }
+        : ShallowOption extends true
+            ? {
+                -readonly [ Key in keyof RecordLike ]: TMutable<RecordLike[Key]>;
+            }
+            : never;
 
 /**
  * Given a {@link RecordLike | record-like type}, this type is the union
@@ -78,3 +102,88 @@ export class AbstractMethodCallError extends Error
         super(ClassName);
     }
 }
+
+/** The type corresponding to the schema of `tsconfig.json`. */
+export interface FTsConfig
+{
+    extends?: string | Array<string>;
+    files?: Array<string>;
+    include?: Array<string>;
+    exclude?: Array<string>;
+    references?: Array<TypeScript.ProjectReference>;
+    compilerOptions?: FCompilerOptions;
+    watchOptions?: TypeScript.WatchOptions;
+    typeAcquisition?: TypeScript.TypeAcquisition;
+    compileOnSave?: boolean;
+}
+
+type FOverriddenCompilerOptions =
+    | "jsx"
+    | "lib"
+    | "module"
+    | "moduleResolution"
+    | "target";
+
+type FCompilerOptions =
+    Omit<TypeScript.server.protocol.CompilerOptions, FOverriddenCompilerOptions> &
+    Partial<{
+        jsx: JsxEmit;
+        lib: Array<string>;
+        module: FModuleKind;
+        moduleResolution: FModuleResolutionKind;
+        target: FTarget;
+    }>;
+
+type JsxEmit =
+    | "none"
+    | "preserve"
+    | "react-native"
+    | "react"
+    | "react-jsx"
+    | "react-jsxdev";
+
+type FModuleKind =
+    | "none"
+    | "commonjs"
+    | "amd"
+    | "umd"
+    | "system"
+    | "es6"
+    | "es2015"
+    | "es2020"
+    | "es2022"
+    | "esnext"
+    | "node16"
+    | "node18"
+    | "node20"
+    | "nodenext"
+    | "preserve";
+
+type FModuleResolutionKind =
+    | "classic"
+    | "node"
+    | "node"
+    | "node10"
+    | "node16"
+    | "nodenext"
+    | "bundler";
+
+export type FTarget =
+    | "es3"
+    | "es5"
+    | "es6"
+    | "es2015"
+    | "es2016"
+    | "es2017"
+    | "es2018"
+    | "es2019"
+    | "es2020"
+    | "es2021"
+    | "es2022"
+    | "es2023"
+    | "es2024"
+    | "es2025"
+    | "esnext"
+    | "json"
+    | "esnext"
+    | "es2025";

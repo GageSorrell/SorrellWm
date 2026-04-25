@@ -45,8 +45,8 @@
   "dependencies": {
     "@effect/cli": "^0.75.1",
     "@effect/platform-node": "^0.106.0",
-    "@sorrell/cli-utilities": "^1.0.36",
-    "@sorrell/utilities": "^1.1.51",
+    "@sorrell/cli-utilities": "^1.0.41",
+    "@sorrell/utilities": "^1.1.56",
     "chalk": "^5.6.2",
     "effect": "^3.21.1",
     "listr2": "^10.2.1",

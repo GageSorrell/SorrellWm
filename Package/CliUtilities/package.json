@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.36",
+  "version": "1.0.41",
   "description": "Utilities for CLI tools.",
   "keywords": [
     "cli",
@@ -45,6 +45,12 @@
       "import": "./Distribution/Inquirer/index.js",
       "require": "./Distribution/Inquirer/index.js",
       "types": "./Distribution/Inquirer/index.d.ts"
+    },
+    "./command": {
+      "default": "./Distribution/Command/index.js",
+      "import": "./Distribution/Command/index.js",
+      "require": "./Distribution/Command/index.js",
+      "types": "./Distribution/Command/index.d.ts"
     },
     "./listr": {
       "default": "./Distribution/Listr/index.js",

@@ -224,7 +224,7 @@ function RunNpmCommand(Arguments: ReadonlyArray<string>): NpmCommandEffect
     });
 }
 
-function ClearCache({ Silent }: FGlobalArguments): NpmCommandEffect
+function ClearCache({ silent: Silent }: FGlobalArguments): NpmCommandEffect
 {
     return Effect.gen(function* ()
     {
@@ -234,7 +234,7 @@ function ClearCache({ Silent }: FGlobalArguments): NpmCommandEffect
     });
 }
 
-function InstallPackage({ Package, Silent }: NpmConfig): NpmInstallCommandFactory
+function InstallPackage({ Package, silent: Silent }: NpmConfig): NpmInstallCommandFactory
 {
     return Effect.gen(function* ()
     {
@@ -244,7 +244,7 @@ function InstallPackage({ Package, Silent }: NpmConfig): NpmInstallCommandFactor
     });
 }
 
-function UninstallPackage({ Package, SaveFlag, Silent }: NpmConfig): NpmUninstallCommandFactory
+function UninstallPackage({ Package, SaveFlag, silent: Silent }: NpmConfig): NpmUninstallCommandFactory
 {
     type ThisEffect = Effect.Effect<void, NpmError, never>;
     const Foo: ThisEffect = Effect.gen(function* ()
@@ -328,11 +328,11 @@ const UpdateCommand: UpdateCommandType = Command.make("update", Config, Main);
 
 function Main(Options: UpdateOptions): UpdateEffect
 {
-    const { Package, Silent, ...SaveOptions } = Options;
+    const { Package, silent: Silent, ...SaveOptions } = Options;
 
     return pipe(
-        UninstallPackage({ Package, Silent }),
-        ClearCache({ Silent }),
+        UninstallPackage({ Package, silent: Silent }),
+        ClearCache({ silent: Silent }),
         Effect.andThen(
             GetSelectedSaveFlag(SaveOptions),
             InstallPackage(Options)

@@ -11,6 +11,7 @@ import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
 import { GetVersion } from "../Command/Command.js";
+import { InitCommand } from "../Init/Init.js";
 import type { TNonemptyArray } from "@sorrell/utilities/array";
 import { UpdateCommand } from "../Update/index.js";
 
@@ -35,6 +36,7 @@ async function Main(): Promise<void>
 
     const SubCommands: TSubCommandArray =
         [
+            InitCommand,
             UpdateCommand
             // IndexCommand,
             // InitCommand,
