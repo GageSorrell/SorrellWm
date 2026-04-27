@@ -5,8 +5,11 @@
  * @license   MIT
  */
 
+import type { CommandExecutor, FileSystem } from "@effect/platform";
+import type { ConfigError, Effect } from "effect";
 import type { Args } from "@effect/cli/Args";
-import type { FileSystem } from "@effect/platform";
+import type { FStepService } from "../Effect/Effect.js";
+import type { NodeContext } from "@effect/platform-node";
 import type { Options } from "@effect/cli/Options";
 import type { TCommand } from "../Command/Command.Types.js";
 import type { TConfig } from "../Config/Config.Types.js";
@@ -30,6 +33,16 @@ export type FIndexCommand =
         IndexConfig,
         never,
         FileSystem.FileSystem
+    >;
+
+export type FIndexEffect =
+    Effect.Effect<
+        void,
+        ConfigError.ConfigError,
+        | FileSystem.FileSystem
+        | FStepService
+        | NodeContext.NodeContext
+        | CommandExecutor.CommandExecutor
     >;
 
 // type FCommand = Command.Command<

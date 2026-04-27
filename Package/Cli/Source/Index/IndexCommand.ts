@@ -6,32 +6,21 @@
  */
 
 import { Args, Options } from "@effect/cli";
-import { Console, Effect, Record, type ConfigError } from "effect";
+import type { BadArgument, PlatformError, SystemError } from "@effect/platform/Error";
+import { CliConfig, MakeConfig } from "../Config/Config.js";
+import { type ConfigError, Effect, Record } from "effect";
 import { type Dirent, promises as Fs } from "fs";
-import type { FIndexCommand, IndexConfig, TsExtension } from "./IndexCommand.Types.js";
+import type { FIndexCommand, FIndexEffect, IndexConfig, TsExtension } from "./IndexCommand.Types.js";
 import type { TLocalOptions, TOptions } from "../Options/Options.Types.js";
 import { Code } from "@sorrell/cli-utilities/format";
 import type { FCliConfigSchema } from "../Config/Config.Types.js";
-import { FileSystem, type CommandExecutor } from "@effect/platform";
-import { MakeCommand } from "../Command/Command.js";
-import { CliConfig, MakeConfig } from "../Config/Config.js";
-import { resolve } from "path";
 import { FStepService } from "../Effect/Effect.js";
-import type { PlatformError } from "@effect/platform/Error";
-import { NodeRuntime, type NodeContext } from "@effect/platform-node";
+import { FileSystem } from "@effect/platform";
+import { MakeCommand } from "../Command/Command.js";
+import { resolve } from "path";
 
 // @TODO Temporary.
 /* eslint-disable jsdoc/require-jsdoc */
-
-function GetLogStep(silent: TOptions<IndexConfig>["silent"]): ((Message: string) => void)
-{
-    return silent
-        ? function(_: string): void { }
-        : function(Message: string): void
-        {
-            Console.log(Message);
-        };
-}
 
 const Config: IndexConfig = MakeConfig({
     extension: Args.choice<TsExtension>(
@@ -49,7 +38,10 @@ const IndexCommand: FIndexCommand = MakeCommand("init", Config, Main);
 
 function HandleFileCreation(
     { extension, internal, name }: TLocalOptions<IndexConfig>
-): Effect.Effect<void, ConfigError.ConfigError, FStepService | FileSystem.FileSystem>
+): Effect.Effect<
+    void,
+    SystemError | BadArgument | ConfigError.ConfigError, FStepService | FileSystem.FileSystem
+>
 {
     return Effect.gen(function*()
     {
@@ -69,7 +61,7 @@ function HandleFileCreation(
 
         function WriteFile(
             BaseName: string,
-            BaseContents: string = "\n"
+            BaseContents: string
         ): Effect.Effect<void, PlatformError>
         {
             return Effect.gen(function*()
@@ -102,10 +94,17 @@ function HandleFileCreation(
 
         const IndexContents: string = `export * from "./${ name }${ FileExtension }";`;
 
-        // const FilesWithContent: Record<string, string> = Record.map(, (Value, Key) =>
-        // {
-        //     return `${Key}:${Value}`;
-        // });
+        const FilesWithContent: Record<string, string> =
+            Record.fromIterableWith(BaseNames, (BaseName: string): [ string, string ] =>
+            {
+                const Contents: string = (BaseName === "index")
+                    ? IndexContents
+                    : "\n";
+
+                return [ BaseName, Contents ] as const;
+            });
+
+        yield* Effect.all(Record.collect(FilesWithContent, WriteFile));
     });
 }
 
@@ -131,7 +130,7 @@ function HandleDirectory(Name: TOptions<IndexConfig>["name"]): Effect.Effect<boo
                     withFileTypes: true
                 } as const;
 
-            return Effect.tryPromise(() => Fs.readdir(resolve("."), Options));
+            return Effect.tryPromise(() => Fs.readdir(Path, Options));
         }
 
         const Entries: Array<Dirent> = yield* ReadDirectory(resolve("."));
@@ -155,7 +154,7 @@ function HandleDirectory(Name: TOptions<IndexConfig>["name"]): Effect.Effect<boo
     });
 }
 
-function Main(InOptions: TOptions<IndexConfig>): Effect.Effect<void, ConfigError.ConfigError, FileSystem.FileSystem | FStepService | NodeContext.NodeContext | CommandExecutor.CommandExecutor>
+function Main(InOptions: TOptions<IndexConfig>): FIndexEffect
 {
     const { name } = InOptions;
 
@@ -177,12 +176,9 @@ function Main(InOptions: TOptions<IndexConfig>): Effect.Effect<void, ConfigError
             throw new Error();
         }
 
-        const Foo = yield* HandleFileCreation(Options);
+        yield* HandleFileCreation(Options);
     })
-    .pipe(
-    Effect.catchAll((_ErrorValue) =>
-        Effect.succeed(false)
-    ));
+        .pipe(Effect.catchAll((_ErrorValue: unknown) => Effect.succeed(false)));
 }
 
 // 1. Create folder of given name
