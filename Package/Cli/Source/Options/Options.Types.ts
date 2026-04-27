@@ -6,15 +6,12 @@
  */
 
 import type { Args, Command, Options } from "@effect/cli";
+import type { FGlobalConfig } from "../Config/Config.Types.js";
+import type { Simplify } from "effect/Types";
 
-export type FGlobalConfig =
-    {
-        silent: Options.Options<boolean>;
-    };
+export type FGlobalOptions = TOptions<FGlobalConfig>;
 
-export type FGlobalArguments = TOptionsFromConfig<FGlobalConfig>;
-
-export type TOptionsFromConfig<ConfigType extends Command.Command.Config> =
+export type TOptionsBase<ConfigType extends Command.Command.Config> =
     {
         readonly [ Key in keyof ConfigType ]:
         ConfigType[Key] extends Args.Args<infer Type>
@@ -24,27 +21,27 @@ export type TOptionsFromConfig<ConfigType extends Command.Command.Config> =
                 : never;
     };
 
-export type TCommandOptionsFromConfig<ConfigType extends Command.Command.Config> =
-    TOptionsFromConfig<ConfigType> &
-    {
-        readonly [ Key in keyof FGlobalConfig ]:
-        FGlobalConfig[Key] extends Args.Args<infer Type>
-            ? Type
-            : FGlobalConfig[Key] extends Options.Options<infer Type>
-                ? Type
-                : never;
-    };
+export type TLocalOptions<ConfigType extends Command.Command.Config> =
+    Omit<TOptionsBase<ConfigType>, keyof FGlobalConfig>;
 
-export type FConfigBase =
-    Record<
-        string,
-        | Args.Args<unknown>
-        | Options.Options<unknown>
-    >;
+// export type TOptions<ConfigType extends Command.Command.Config> =
+//     TOptionsBase<FGlobalConfig> &
+//     TOptionsBase<ConfigType>;
+export type TOptions<ConfigType extends Command.Command.Config> =
+    Simplify<Simplify<
+        {
+            readonly [Key in keyof ConfigType]: Command.Command.ParseConfigValue<ConfigType[Key]>;
+        } &
+        {
+            readonly [Key in keyof FGlobalConfig]: Command.Command.ParseConfigValue<FGlobalConfig[Key]>;
+        }
+    >>;
 
-export type TMakeConfig<ConfigType extends FConfigBase> = Readonly<ConfigType>;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type TMakeCommandConfig<BaseType extends FConfigBase> =
-    [ Extract<keyof BaseType, keyof FGlobalConfig> ] extends [ never ]
-        ? Readonly<BaseType & FGlobalConfig>
-        : never;
+// export type TOptionsFromCommand<CommandType extends FCommandAny> =
+//     CommandType extends Command.Command<any, any, any, infer OptionsType>
+//         ? OptionsType
+//         : never;
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

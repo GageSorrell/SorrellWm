@@ -6,7 +6,6 @@
  */
 
 import type { Options as ArrayOptions, TArray } from "@sorrell/utilities/array";
-import type { FConfigBase, FGlobalConfig, TMakeCommandConfig, TMakeConfig } from "./Options.Types.js";
 import { Options } from "@effect/cli";
 
 /**
@@ -28,17 +27,5 @@ const GlobalOptionsArray: TArray<Options.Options<any>, ArrayOptions.Readonly> =
     [
         silent
     ] as const;
-
-export const GlobalOptions: FGlobalConfig = { silent };
-
-export function MakeConfig<ConfigBaseType extends FConfigBase>(
-    Config: ConfigBaseType
-): TMakeConfig<ConfigBaseType>
-{
-    return {
-        ...Config,
-        ...GlobalOptions
-    };
-}
 
 /* eslint-enable @typescript-eslint/no-explicit-any */

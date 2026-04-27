@@ -1,8 +1,9 @@
 /**
- * @file      Effect.Types.ts
+ * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-export type Dummy_Effect__Types = string;
+export * from "./Config.js";
+export * from "./Config.Types.js";

@@ -5,10 +5,9 @@
  * @license   MIT
  */
 
-import { Args, Command, Options } from "@effect/cli";
+import { Args, Options } from "@effect/cli";
 import type { FTsConfig, TMutable } from "@sorrell/utilities/misc";
 import { promises as Fs, existsSync } from "fs";
-import { GlobalOptions, MakeConfig } from "../Options/Options.js";
 import {
     type InitCommandType,
     type InitConfig,
@@ -23,8 +22,14 @@ import { Code } from "@sorrell/cli-utilities/format";
 import { Console } from "effect";
 import { Effect } from "effect";
 import type { IPackageJson } from "package-json-type";
+import { MakeCommand } from "../Command/Command.js";
+import { MakeConfig } from "../Config/Config.js";
 import { Spawn } from "@sorrell/cli-utilities/pty";
+import type { TFunction } from "@sorrell/utilities/functional";
+import type { TLocalOptions } from "../Options/Options.Types.js";
 import { resolve } from "path";
+import type { TSubCommandEffect } from "../Command/Command.Types.js";
+import { FStepService } from "../Effect/Effect.js";
 
 function GetLogStep(silent: InitOptions["silent"]): ((Message: string) => void)
 {
@@ -41,14 +46,13 @@ const Config: InitConfig = MakeConfig({
     isPrivate: Options.boolean("private"),
     name: Args.text({ name: "name" }),
     packageType: Args.choice([ [ "electron", "electron" ], [ "none", "none" ], [ "script", "script" ] ]),
-    tsover: Options.boolean("tsover"),
-    ...GlobalOptions
+    tsover: Options.boolean("tsover")
 });
 
 export/**
        * The `init` command of `@sorrell/cli`.
        */
-const InitCommand: InitCommandType = Command.make("init", Config, CommandMain);
+const InitCommand: InitCommandType = MakeCommand("init", Config, Main);
 
 async function GetTsConfig({
     packageType,
@@ -142,7 +146,7 @@ async function GetTsConfig({
             script: ScriptBase
         };
 
-    const Out: FTsConfig = Bases[packageType];
+    const Out: FTsConfig = Bases[packageType as PackageType];
 
     if (tsover)
     {
@@ -292,81 +296,110 @@ async function WriteFile(Path: string, Contents: unknown): Promise<void>
     return Fs.writeFile(Path, OutContents, { encoding: "utf-8" });
 }
 
-function Main(AllOptions: InitOptions): () => Promise<void>
+async function HandlePackageJson(
+    LogStep: TFunction<string>,
+    Options: TLocalOptions<InitConfig>
+): Promise<void>
 {
-    const { silent, ...Options } = AllOptions;
-
-    const LogStep: ((Message: string) => void) = GetLogStep(silent);
-
-    return async function(): Promise<void>
+    LogStep(`Writing ${ Code("package.json") }... `);
+    const PackageJson: IPackageJson = await GetPackageJson(Options);
+    const PackageJsonPath: string = resolve("./package.json");
+    const AlreadyExists: boolean = existsSync(PackageJsonPath);
+    if (AlreadyExists)
     {
-        // 1. Create `package.json`
-        LogStep(`Writing ${ Code("package.json") }... `);
-        const PackageJson: IPackageJson = await GetPackageJson(Options);
-        const PackageJsonPath: string = resolve("./package.json");
-        const AlreadyExists: boolean = existsSync(PackageJsonPath);
-        if (AlreadyExists)
-        {
-            throw new InitRichError({
-                Stringified: "package.json already exists in this directory."
-            });
-        }
+        const Stringified: string = "package.json already exists in this directory.";
+        throw new InitRichError({ Stringified });
+    }
 
-        await WriteFile(PackageJsonPath, PackageJson);
-
-        // 2. Create `Source` directory
-        await Fs.mkdir(resolve("./Source"));
-
-        // 3. Create `tsconfig.json`
-        await WriteFile(
-            resolve("./tsconfig.json"),
-            await GetTsConfig(Options)
-        );
-
-        // 4. Create `.npmignore` if `!internal`
-        if (!Options.internal)
-        {
-            if (!silent)
-            {
-                LogStep("Writing .npmignore...");
-            }
-            await Fs.writeFile(
-                resolve("./.npmignore"),
-                "!Distribution\nSource\nnode_modules",
-                { encoding: "utf-8" }
-            );
-        }
-
-        // 5. Run `yarn install`
-        await Spawn("yarn", [ "install" ]).OnExit;
-
-        // 6. Create ReadMe
-        await Fs.writeFile(resolve("./ReadMe.md"), `# \`${ Options.name }\`\n`, { encoding: "utf-8" });
-    };
+    await WriteFile(PackageJsonPath, PackageJson);
 }
 
-function CommandMain(Options: InitOptions): InitEffect
+async function HandleSourceDirectory(LogStep: TFunction<string>): Promise<void>
 {
+    LogStep(`Creating ${ Code("Source") } directory...`);
+    await Fs.mkdir(resolve("./Source"));
+}
+
+async function HandleTsConfig(
+    LogStep: TFunction<string>,
+    Options: TLocalOptions<InitConfig>
+): Promise<void>
+{
+    LogStep(`Creating ${ Code("tsconfig.json") }...`);
+    await WriteFile(
+        resolve("./tsconfig.json"),
+        await GetTsConfig(Options)
+    );
+}
+
+async function HandleNpmIgnore(
+    LogStep: TFunction<string>,
+    Options: InitOptions
+): Promise<void>
+{
+    LogStep(`Creating ${ Code(".npmignore") }...`);
+
+    if (!Options.internal)
+    {
+        if (!Options.silent)
+        {
+            LogStep("Writing .npmignore...");
+        }
+        await WriteFile(
+            resolve("./.npmignore"),
+            "!Distribution\nSource\nnode_modules"
+        );
+    }
+}
+
+async function HandleInstall(LogStep: TFunction<string>): Promise<void>
+{
+    LogStep(`Running ${ Code("yarn install") }...`);
+    await Spawn("yarn", [ "install" ]).OnExit;
+}
+
+async function HandleReadMe(
+    LogStep: TFunction<string>,
+    Name: InitOptions["name"]
+): Promise<void>
+{
+    LogStep(`Running ${ Code("yarn install") }...`);
+    await WriteFile(resolve("./ReadMe.md"), `# \`${ Name }\`\n`);
+}
+
+function Main(Options: InitOptions): TSubCommandEffect<InitError>
+{
+    // const LogStep: ((Message: string) => void) = GetLogStep(silent);
+
     return Effect.gen(function*()
     {
-        yield* Effect.fail(new InitRichError({ Stringified: "" }));
-
-        yield* Effect.try<void, InitError>({
-            catch(Cause: unknown): InitError
+        const { Log } = yield* FStepService;
+        return Effect.tryPromise({
+            catch: Catch,
+            try: async () =>
             {
-                try
-                {
-                    return new InitRichError({
-                        Stringified: JSON.stringify(Cause)
-                    });
-                }
-                catch
-                {
-                    return new InitPlainError();
-                }
-
-            },
-            try: Main(Options)
+                await HandlePackageJson(Log, Options);
+                await HandleSourceDirectory(Log);
+                await HandleTsConfig(Log, Options);
+                await HandleNpmIgnore(Log, Options);
+                await HandleInstall(Log);
+                await HandleReadMe(Log, Options.name);
+            }
         });
     });
+
+}
+
+function Catch(Error: unknown): InitError
+{
+    try
+    {
+        return new InitRichError({
+            Stringified: JSON.stringify(Error)
+        });
+    }
+    catch
+    {
+        return new InitPlainError();
+    }
 }

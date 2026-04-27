@@ -14,4 +14,3 @@
 
 export * from "./Npm.ts";
 export * from "./Npm.Error.ts";
-export * from "./Npm.Types.ts";

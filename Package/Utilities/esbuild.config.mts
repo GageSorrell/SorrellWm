@@ -30,6 +30,7 @@ function CreateSharedOptions()
             math: "./Source/Math/index.ts",
             misc: "./Source/Miscellaneous/index.ts",
             npm: "./Source/Npm/index.ts",
+            "npm-effect": "./Source/Npm/Index.Effect.ts",
             path: "./Source/Path/index.ts"
         },
         logLevel: "info",

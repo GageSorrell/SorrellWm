@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.1.56",
+    "version": "1.1.60",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -38,63 +38,69 @@
         },
         "./array": {
             "types": "./Distribution/Types/Array/index.d.ts",
-            "import": "./Distribution/ESM/Array/index.js",
-            "require": "./Distribution/CJS/Array/index.js",
-            "default": "./Distribution/ESM/Array/index.js"
+            "import": "./Distribution/ESM/array.js",
+            "require": "./Distribution/CJS/array.js",
+            "default": "./Distribution/ESM/array.js"
         },
         "./async": {
             "types": "./Distribution/Types/Async/index.d.ts",
-            "import": "./Distribution/ESM/Async/index.js",
-            "require": "./Distribution/CJS/Async/index.js",
-            "default": "./Distribution/ESM/Async/index.js"
+            "import": "./Distribution/ESM/async.js",
+            "require": "./Distribution/CJS/async.js",
+            "default": "./Distribution/ESM/async.js"
         },
         "./complex": {
-            "types": "./Distribution/Types/Math/Complex.d.ts",
-            "import": "./Distribution/ESM/Math/Complex.js",
-            "require": "./Distribution/CJS/Math/Complex.js",
-            "default": "./Distribution/ESM/Math/Complex.js"
+            "types": "./Distribution/Types/Math/Index.Complex.d.ts",
+            "import": "./Distribution/ESM/complex.js",
+            "require": "./Distribution/CJS/complex.js",
+            "default": "./Distribution/ESM/complex.js"
         },
         "./effect": {
             "types": "./Distribution/Types/Effect/index.d.ts",
-            "import": "./Distribution/ESM/Effect/index.js",
-            "require": "./Distribution/CJS/Effect/index.js",
-            "default": "./Distribution/ESM/Effect/index.js"
+            "import": "./Distribution/ESM/effect.js",
+            "require": "./Distribution/CJS/effect.js",
+            "default": "./Distribution/ESM/effect.js"
         },
         "./fs": {
             "types": "./Distribution/Types/FileSystem/index.d.ts",
-            "import": "./Distribution/ESM/FileSystem/index.js",
-            "require": "./Distribution/CJS/FileSystem/index.js",
-            "default": "./Distribution/ESM/FileSystem/index.js"
+            "import": "./Distribution/ESM/fs.js",
+            "require": "./Distribution/CJS/fs.js",
+            "default": "./Distribution/ESM/fs.js"
         },
         "./functional": {
             "types": "./Distribution/Types/Functional/index.d.ts",
-            "import": "./Distribution/ESM/Functional/index.js",
-            "require": "./Distribution/CJS/Functional/index.js",
-            "default": "./Distribution/ESM/Functional/index.js"
+            "import": "./Distribution/ESM/functional.js",
+            "require": "./Distribution/CJS/functional.js",
+            "default": "./Distribution/ESM/functional.js"
         },
         "./misc": {
             "types": "./Distribution/Types/Miscellaneous/index.d.ts",
-            "import": "./Distribution/ESM/Miscellaneous/index.js",
-            "require": "./Distribution/CJS/Miscellaneous/index.js",
-            "default": "./Distribution/ESM/Miscellaneous/index.js"
+            "import": "./Distribution/ESM/misc.js",
+            "require": "./Distribution/CJS/misc.js",
+            "default": "./Distribution/ESM/misc.js"
         },
         "./npm": {
             "types": "./Distribution/Types/Npm/index.d.ts",
-            "import": "./Distribution/ESM/Npm/index.js",
-            "require": "./Distribution/CJS/Npm/index.js",
-            "default": "./Distribution/ESM/Npm/index.js"
+            "import": "./Distribution/ESM/npm.js",
+            "require": "./Distribution/CJS/npm.js",
+            "default": "./Distribution/ESM/npm.js"
+        },
+        "./npm/effect": {
+            "types": "./Distribution/Types/Npm/Index.Effect.d.ts",
+            "import": "./Distribution/ESM/npm-effect.js",
+            "require": "./Distribution/CJS/npm-effect.js",
+            "default": "./Distribution/ESM/npm-effect.js"
         },
         "./math": {
             "types": "./Distribution/Types/Math/index.d.ts",
-            "import": "./Distribution/ESM/Math/index.js",
-            "require": "./Distribution/CJS/Math/index.js",
-            "default": "./Distribution/ESM/Math/index.js"
+            "import": "./Distribution/ESM/math.js",
+            "require": "./Distribution/CJS/math.js",
+            "default": "./Distribution/ESM/math.js"
         },
         "./path": {
             "types": "./Distribution/Types/Path/index.d.ts",
-            "import": "./Distribution/ESM/Path/index.js",
-            "require": "./Distribution/CJS/Path/index.js",
-            "default": "./Distribution/ESM/Path/index.js"
+            "import": "./Distribution/ESM/path.js",
+            "require": "./Distribution/CJS/path.js",
+            "default": "./Distribution/ESM/path.js"
         }
     },
     "overrides": {
@@ -108,8 +114,8 @@
             "optional": true
         }
     },
-    "main": "./Distribution/index.js",
-    "types": "./Distribution/types/index.d.ts",
+    "main": "./Distribution/ESM/index.js",
+    "types": "./Distribution/Types/index.d.ts",
     "scripts": {
         "prepublish": "npm run build",
         "build:js": "node esbuild.config.mts",

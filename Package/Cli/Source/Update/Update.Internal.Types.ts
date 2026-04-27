@@ -5,33 +5,36 @@
  * @license   MIT
  */
 
-import type { UpdateConfig, UpdateError, UpdateOptions } from "./Update.Types.js";
-import type { EffectFactory } from "../Effect/Effect.Types.js";
-import type { NpmError } from "./Update.Internal.js";
+export type UpdateInternalTypesDummy = string;
 
-/**
- * @module UpdateInternalTypes
- * Internal types for the {@link Update} module.
- *
- * @internal
- */
+// import type { UpdateConfig, UpdateError, UpdateOptions } from "./Update.Types.js";
+// // import type { EffectFactory } from "../Effect/Effect.Types.js";
+// import type { NpmError } from "./Update.Internal.js";
+// import type { Effect } from "effect";
 
-export interface UpdateCommandResult
-{
-    readonly ExitCode: number;
-    readonly Output: string;
-}
+// /**
+//  * @module UpdateInternalTypes
+//  * Internal types for the {@link Update} module.
+//  *
+//  * @internal
+//  */
 
-export type UpdateEffect = Effect.Effect<void, UpdateError, UpdateConfig>;
+// export interface UpdateCommandResult
+// {
+//     readonly ExitCode: number;
+//     readonly Output: string;
+// }
 
-export type NpmConfig =
-    Pick<
-        UpdateOptions,
-        | "Package"
-        | "Silent"
-    >;
+// export type UpdateEffect = Effect.Effect<void, UpdateError, UpdateConfig>;
 
-export type NpmCommandEffect = Effect.Effect<UpdateCommandResult, NpmError, never>;
+// export type NpmConfig =
+//     Pick<
+//         UpdateOptions,
+//         | "Package"
+//         | "silent"
+//     >;
 
-export type NpmUninstallCommandFactory = EffectFactory<never, void, NpmError>;
-export type NpmInstallCommandFactory = EffectFactory<string, void, NpmError>;
+// export type NpmCommandEffect = Effect.Effect<UpdateCommandResult, NpmError, never>;
+
+// export type NpmUninstallCommandFactory = EffectFactory<never, void, NpmError>;
+// export type NpmInstallCommandFactory = EffectFactory<string, void, NpmError>;

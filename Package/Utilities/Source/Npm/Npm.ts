@@ -8,66 +8,62 @@
 import { promises as Fs, constants as FsConstants } from "fs";
 import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import { dirname, join } from "path";
-import { Effect } from "effect";
-import type { GetPackageJsonEffect } from "./Npm.Types.ts";
 import type { IPackageJson } from "package-json-type";
 import Process from "process";
-
-/* eslint-disable-next-line jsdoc/require-jsdoc */
-function HasErrorCode(Value: unknown): Value is { readonly code: string }
-{
-    return typeof Value === "object"
-        && Value !== null
-        && "code" in Value
-        && typeof (Value as { readonly code: unknown }).code === "string";
-}
 
 /**
  * Get the `package.json` of the Node.js project in which the
  * given path, or the current working directory, resides.
  *
- * @param Path - *(Optional)* The given path from which to look for a root directory.
+ * @param Path - The given path from which to look for a root directory.
  *
- * @returns An Effect that succeeds with the parsed `package.json`, or fails
- * with {@link RootDirectoryNotFoundError} or {@link PackageJsonParseError}.
+ * @throws {RootDirectoryNotFoundError | PackageJsonParseError} An error
+ * describing either failure to identify a root directory, or failing to
+ * parse the discovered `package.json`.
+ *
+ * @returns {Promise<IPackageJson>} The {@link IPackageJson} of {@link Path}
+ * if provided, otherwise of `process.cwd()`.
+ *
+ * @example
+ * Suppose `process.cwd() === "./MyPackage"`,
+ * ```typescript
+ * const PackageJson: IPackageJson = await GetPackageJson();
+ * // `PackageJson` <- *The parsed `package.json` of `MyPackage`.*
+ * ```
  */
-export function GetPackageJson(
-    Path?: string
-): GetPackageJsonEffect
+export async function GetPackageJson(Path?: string): Promise<IPackageJson>
 {
-    return Effect.gen(function* ()
+    const RootDirectory: string = await GetPackageRootDirectory(Path);
+    const PackageJsonPath: string = join(RootDirectory, "package.json");
+
+    const FileContents: string = await Fs.readFile(PackageJsonPath, "utf-8");
+
+    const PackageJson: IPackageJson = await (async (): Promise<IPackageJson> =>
     {
-        const RootDirectory: string = yield* GetPackageRootDirectory(Path);
-        const PackageJsonPath: string = join(RootDirectory, "package.json");
-
-        const FileContents: string = yield* Effect.tryPromise({
-            catch: (Cause: unknown) => Cause,
-            try: () => Fs.readFile(PackageJsonPath, "utf-8")
-        }).pipe(
-            Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-        );
-
-        const PackageJson: IPackageJson = yield* Effect.try({
-            catch: (Cause: unknown) =>
-                new PackageJsonParseError({
-                    Cause,
-                    Path: PackageJsonPath
-                }),
-            try: () => JSON.parse(FileContents) as IPackageJson
-        });
-
-        return PackageJson;
+        try
+        {
+            return JSON.parse(FileContents) as IPackageJson;
+        }
+        catch (Cause: unknown)
+        {
+            throw new PackageJsonParseError({ Cause, Path: PackageJsonPath });
+        }
     });
+
+    return PackageJson;
 }
 
 /**
  * Get the root directory of the Node.js project in which the
  * current working directory resides.
  *
- * @param Path - *(Optional)* The given path from which to look for a root directory.
+ * @param Path - The given path from which to look for a root directory.
  *
- * @returns An Effect that succeeds with the package root directory, or fails
- * with {@link RootDirectoryNotFoundError}.
+ * @throws {RootDirectoryNotFoundError} An error iff the root directory
+ * of a NodeJS package could not be found.
+ *
+ * @returns {Promise<string>} The path to the root directory of the package
+ * containing {@link Path} if specified, otherwise containing `process.cwd()`.
  *
  * @example
  * Suppose `process.cwd()` is any one of the following,
@@ -78,8 +74,7 @@ export function GetPackageJson(
  * then,
  *
  * ```typescript
- * import { Effect } from "effect";
- * const Root: string = await Effect.runPromise(GetPackageRootDirectory());
+ * const Root: string = await GetPackageRootDirectory();
  * // `Root` <- `"/home/alex/myPackage"`
  * ```
  *
@@ -88,14 +83,11 @@ export function GetPackageJson(
  * (of course, neither are `/home/alex` or `/home`).  Then,
  *
  * ```typescript
- * import { Effect } from "effect";
  * const TestPath: string = "/home/alex/Documents";
  * let Root: string | undefined = undefined;
  * try
  * {
- *     Root = await Effect.runPromise(
- *         GetPackageRootDirectory(TestPath)
- *     );
+ *     Root = await GetPackageRootDirectory(TestPath);
  * }
  * catch (Error: unknown)
  * {
@@ -110,11 +102,10 @@ export function GetPackageJson(
  * (of course, neither are `/home/alex` or `/home`).  Then,
  *
  * ```typescript
- * import { Effect } from "effect";
  * let Root: string | undefined = undefined;
  * try
  * {
- *     Root = await Effect.runPromise(GetPackageRootDirectory());
+ *     Root = await GetPackageRootDirectory();
  * }
  * catch (Error: unknown)
  * {
@@ -123,78 +114,39 @@ export function GetPackageJson(
  * // `Root` <- `undefined`
  * ```
  */
-export function GetPackageRootDirectory(
-    Path?: string
-): Effect.Effect<string, RootDirectoryNotFoundError, never>
+export async function GetPackageRootDirectory(Path?: string): Promise<string>
 {
-    return Effect.gen(function* ()
+    let CurrentDirectory: string = await Fs.realpath(Path ?? Process.cwd());
+
+    while (true)
     {
-        let CurrentDirectory: string = yield* Effect.tryPromise({
-            catch: (Cause: unknown) => Cause,
-            try: () => Fs.realpath(Path ?? Process.cwd())
-        }).pipe(
-            Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-        );
+        const PackageJsonPath: string = join(CurrentDirectory, "package.json");
 
-        while (true)
+        const PackageJsonExists: boolean = await (async (): Promise<boolean> =>
         {
-            const PackageJsonPath: string = join(CurrentDirectory, "package.json");
-
-            const PackageJsonExists: boolean = yield* Effect.tryPromise({
-                catch: (Cause: unknown) => Cause,
-                try: () => Fs.access(PackageJsonPath, FsConstants.F_OK)
-            }).pipe(
-                Effect.as(true),
-                Effect.catchIf(
-                    (Cause: unknown): Cause is { readonly code: string } =>
-                        HasErrorCode(Cause) && Cause.code === "ENOENT",
-                    () => Effect.succeed(false)
-                ),
-                Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-            );
-
-            if (PackageJsonExists)
+            try
             {
-                return CurrentDirectory;
+                await Fs.access(PackageJsonPath, FsConstants.F_OK);
+                return true;
             }
-
-            const ParentDirectory: string = dirname(CurrentDirectory);
-
-            if (ParentDirectory === CurrentDirectory)
+            catch
             {
-                return yield* Effect.fail(
-                    new RootDirectoryNotFoundError({ Path })
-                );
+                return false;
             }
+        })();
 
-            CurrentDirectory = ParentDirectory;
+        if (PackageJsonExists)
+        {
+            return CurrentDirectory;
         }
-    });
+
+        const ParentDirectory: string = dirname(CurrentDirectory);
+
+        if (ParentDirectory === CurrentDirectory)
+        {
+            throw new RootDirectoryNotFoundError({ Path });
+        }
+
+        CurrentDirectory = ParentDirectory;
+    }
 }
-// export async function GetPackageRootDirectory(Path?: string): Promise<string>
-// {
-//     let CurrentDirectory: string = await realpath(Path || Process.cwd());
-
-//     while (true)
-//     {
-//         const PackageJsonPath: string = join(CurrentDirectory, "package.json");
-
-//         try
-//         {
-//             await access(PackageJsonPath, FsConstants.F_OK);
-//             return CurrentDirectory;
-//         }
-//         catch { /* Empty */ }
-
-//         const ParentDirectory: string = dirname(CurrentDirectory);
-
-//         if (ParentDirectory === CurrentDirectory)
-//         {
-//             throw new Error(
-//                 `Could not find a Node.js project root above "${ Path || Process.cwd() }".`
-//             );
-//         }
-
-//         CurrentDirectory = ParentDirectory;
-//     }
-// }

@@ -5,6 +5,6 @@
  * @license   MIT
  */
 
-import type { FGlobalArguments } from "../Options/Options.Types.js";
+import type { FGlobalOptions } from "../Options/Options.Types.js";
 
-export type FPublishRequirements = FGlobalArguments;
+export type FPublishRequirements = FGlobalOptions;

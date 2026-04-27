@@ -12,17 +12,23 @@ export type TExtractFunction<Type> =
         ? (...ArgumentVector: ArgumentVectorType) => ReturnType
         : never;
 
-export type TFunction<
-    ArgumentVectorType extends Array<unknown> = [ ],
-    ReturnType = void
-> =
-    [ ArgumentVectorType ] extends [ never ]
+/**
+ * A function type with defaults that make defining callback types convenient.
+ *
+ * @template ArgumentType - The type of the argument or argument vector.
+ * If `ArgumentType extends Array<unknown>`, then this will be taken to
+ * be the argument vector.  To set the argument vector to be a single,
+ * `Array` argument, say `MyArrayType`, set `ArgumentType` to `[ MyArrayType ]`.
+ * @template ReturnType - The type returned by this.
+ */
+export type TFunction<ArgumentType = never, ReturnType = void> =
+    [ ArgumentType ] extends [ never ]
         ? {
             (): ReturnType;
         }
-        : {
-            (...ArgumentVector: ArgumentVectorType): ReturnType;
-        };
+        : ArgumentType extends Array<unknown>
+            ? (...ArgumentVector: ArgumentType) => ReturnType
+            : (Argument: ArgumentType) => ReturnType;
 
 export namespace TFunction
 {

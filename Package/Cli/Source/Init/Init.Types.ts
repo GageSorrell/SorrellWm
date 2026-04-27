@@ -7,13 +7,14 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { Data, type Effect } from "effect";
-import type { TCommandOptionsFromConfig, TMakeCommandConfig } from "../Options/Options.Types.js";
+import type { TCommand, TSubCommandEffect } from "../Command/Command.Types.js";
 import type { Args } from "@effect/cli/Args";
-import type { Command } from "@effect/cli";
+import { Data } from "effect";
 import type { Options } from "@effect/cli/Options";
+import type { TConfig } from "../Config/Config.Types.js";
+import type { TOptions } from "../Options/Options.Types.js";
 
-export type InitOptions = TCommandOptionsFromConfig<InitConfig>;
+export type InitOptions = TOptions<InitConfig>;
 
 export type PackageType =
     /** The given package is intended to be used with `electron`. */
@@ -37,19 +38,16 @@ export type PackageType =
  * @property {Options<boolean>} tsover - Whether `tsover` should be added.
  */
 export type InitConfig =
-    TMakeCommandConfig<{
+    TConfig<{
         internal: Options<boolean>;
         name: Args<string>;
         isPrivate: Options<boolean>;
-        packageType: Args<PackageType>;
+        packageType: Args<string>;
         tsover: Options<boolean>;
     }>;
 
-export type InitEffect = Effect.Effect<void, InitError, InitConfig>;
+export type InitEffect = TSubCommandEffect<InitError>;
 
-/**
- * Foo bar.
- */
 export class InitRichError extends Data.TaggedError("InitRichError")<{
     Stringified: string;
 }> { }
@@ -60,9 +58,8 @@ export type InitError =
     | InitPlainError
     | InitRichError;
 
-export type InitCommandType = Command.Command<
+export type InitCommandType = TCommand<
     "init",
     InitConfig,
-    InitError,
-    InitOptions
+    InitError
 >;

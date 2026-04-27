@@ -11,17 +11,16 @@ import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
 import { GetVersion } from "../Command/Command.js";
+import { IndexCommand } from "../Index/IndexCommand.js";
 import { InitCommand } from "../Init/Init.js";
-import type { TNonemptyArray } from "@sorrell/utilities/array";
-import { UpdateCommand } from "../Update/index.js";
+// import { UpdateCommand } from "../Update/index.js";
 
-/**
- * The entry-point for commands provided by this package.
- */
+/** The entry-point for commands provided by this package. */
 async function Main(): Promise<void>
 {
-    const MainCommand: Command.Command<"@sorrell/utilities", never, never, object> =
-        Command.make("@sorrell/utilities", { }, (_: object): Effect.Effect<void, never, never> =>
+    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
+    const MainCommand: Command.Command<"@sorrell/cli", never, never, { }> =
+        Command.make("@sorrell/cli", { }, (_: object): Effect.Effect<void, never, never> =>
         {
             return Effect.succeed(undefined);
         });
@@ -30,36 +29,48 @@ async function Main(): Promise<void>
 
     const version: string = await GetVersion();
 
-    type TSubCommandArray = TNonemptyArray<Command.Command<any, any, any, any>>;
-
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
-    const SubCommands: TSubCommandArray =
+    /* eslint-disable-next-line @typescript-eslint/typedef */
+    const SubCommands =
         [
             InitCommand,
-            UpdateCommand
+            IndexCommand
+            // UpdateCommand
             // IndexCommand,
             // InitCommand,
             // PublishCommand
-        ];
+        ] as const;
 
-    const cli: ReturnType<typeof Command.run> = Command.run(
-        MainCommand.pipe(Command.withSubcommands(SubCommands)),
-        {
-            name: "@sorrell/utilities",
-            version
-        }
-    );
+    // const cli: ReturnType<typeof Command.run> = Command.run(
+    //     MainCommand.pipe(Command.withSubcommands(SubCommands)),
+    //     {
+    //         name: "@sorrell/cli",
+    //         version
+    //     }
+    // );
 
-    const ArgumentVector: Array<string> = process.argv.length === 2
-        ? [ ...process.argv, "--help" ]
-        : process.argv;
+    // const ArgumentVector: Array<string> = process.argv.length === 2
+    //     ? [ ...process.argv, "--help" ]
+    //     : process.argv;
 
-    cli(ArgumentVector).pipe(
-        // @ts-expect-error Nasty type stuff.
-        Effect.provide(NodeContext.layer),
-        NodeRuntime.runMain
-    );
+    // cli(ArgumentVector).pipe(
+    //     // @ts-expect-error Nasty type stuff.
+    //     Effect.provide(NodeContext.layer),
+    //     NodeRuntime.runMain
+    // );
+
+    /* eslint-disable-next-line @typescript-eslint/typedef */
+    const CliFn =
+        Command.run(
+            MainCommand.pipe(Command.withSubcommands(SubCommands)),
+            {
+                name: "@sorrell/cli",
+                version
+            }
+        );
+
+    CliFn(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);
 }
 
 Main();

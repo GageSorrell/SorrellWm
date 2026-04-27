@@ -5,7 +5,185 @@
  * @license   MIT
  */
 
-export const __DummyExport_Index: "DummyExport" = "DummyExport" as const;
+import { Args, Options } from "@effect/cli";
+import { Console, Effect, Record, type ConfigError } from "effect";
+import { type Dirent, promises as Fs } from "fs";
+import type { FIndexCommand, IndexConfig, TsExtension } from "./IndexCommand.Types.js";
+import type { TLocalOptions, TOptions } from "../Options/Options.Types.js";
+import { Code } from "@sorrell/cli-utilities/format";
+import type { FCliConfigSchema } from "../Config/Config.Types.js";
+import { FileSystem, type CommandExecutor } from "@effect/platform";
+import { MakeCommand } from "../Command/Command.js";
+import { CliConfig, MakeConfig } from "../Config/Config.js";
+import { resolve } from "path";
+import { FStepService } from "../Effect/Effect.js";
+import type { PlatformError } from "@effect/platform/Error";
+import { NodeRuntime, type NodeContext } from "@effect/platform-node";
+
+// @TODO Temporary.
+/* eslint-disable jsdoc/require-jsdoc */
+
+function GetLogStep(silent: TOptions<IndexConfig>["silent"]): ((Message: string) => void)
+{
+    return silent
+        ? function(_: string): void { }
+        : function(Message: string): void
+        {
+            Console.log(Message);
+        };
+}
+
+const Config: IndexConfig = MakeConfig({
+    extension: Args.choice<TsExtension>(
+        [ [ "none", "none" ], [ "js", "js" ], [ "ts", "ts" ], [ "from-config", "from-config" ] ],
+        { name: "extension" }
+    ).pipe(Args.withDefault("from-config")),
+    internal: Options.boolean("internal"),
+    name: Args.text({ name: "name" })
+});
+
+export/**
+       * The `init` command of `@sorrell/cli`.
+       */
+const IndexCommand: FIndexCommand = MakeCommand("init", Config, Main);
+
+function HandleFileCreation(
+    { extension, internal, name }: TLocalOptions<IndexConfig>
+): Effect.Effect<void, ConfigError.ConfigError, FStepService | FileSystem.FileSystem>
+{
+    return Effect.gen(function*()
+    {
+        const { Log } = yield* FStepService;
+        const { Index: Header } = yield* CliConfig;
+
+        function GetParsedHeader(FileName: string): string
+        {
+            const Base: string = (Array.isArray(Header)
+                ? Header.join("\n")
+                : Header || "") as string;
+
+            return Base
+                .replaceAll("${ CurrentYear }", (new Date().getFullYear()).toString())
+                .replaceAll("${ FileName }", FileName);
+        }
+
+        function WriteFile(
+            BaseName: string,
+            BaseContents: string = "\n"
+        ): Effect.Effect<void, PlatformError>
+        {
+            return Effect.gen(function*()
+            {
+                const FileName: string = `${ BaseName }.ts`;
+                Log(`Writing ${ FileName }...`);
+
+                const Contents: string = GetParsedHeader(FileName) + BaseContents;
+                yield* Fs.writeFileString(resolve(`./${ name }/${ FileName }`), Contents);
+            });
+        }
+
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+
+        const BaseNames: ReadonlyArray<string> =
+            [
+                name,
+                `${ name }.Types`,
+                "index",
+                ...(internal ?
+                    [
+                        `${ name }.Internal`,
+                        `${ name }.Internal.Types`
+                    ] : [ ])
+            ];
+
+        const FileExtension: string = extension === "none"
+            ? `.${ extension }`
+            : "";
+
+        const IndexContents: string = `export * from "./${ name }${ FileExtension }";`;
+
+        // const FilesWithContent: Record<string, string> = Record.map(, (Value, Key) =>
+        // {
+        //     return `${Key}:${Value}`;
+        // });
+    });
+}
+
+function HandleDirectory(Name: TOptions<IndexConfig>["name"]): Effect.Effect<boolean, unknown, FStepService>
+{
+    return Effect.gen(function*()
+    {
+        const { Log } = yield* FStepService;
+        Log(`Checking whether ${ Code(Name) } already exists...`);
+
+        // const Fs = yield* FileSystem.FileSystem;
+        function ReadDirectory(Path: string): Effect.Effect<Array<Dirent>, unknown, never>
+        {
+            type FOptions = Readonly<{
+                encoding?: BufferEncoding | null | undefined;
+                withFileTypes: true;
+                recursive?: boolean | undefined;
+            }>;
+            const Options: FOptions =
+                {
+                    encoding: undefined,
+                    recursive: false,
+                    withFileTypes: true
+                } as const;
+
+            return Effect.tryPromise(() => Fs.readdir(resolve("."), Options));
+        }
+
+        const Entries: Array<Dirent> = yield* ReadDirectory(resolve("."));
+
+        const DirectoryExists: boolean = Entries.some(({ isDirectory, name }: Dirent): boolean =>
+        {
+            return (
+                Name === name &&
+                isDirectory()
+            );
+        });
+
+        if (DirectoryExists)
+        {
+            Log(`Found directory ${ Code(Name) }; checking whether it is empty...`);
+            const DirectoryEntries: Array<Dirent> = yield* ReadDirectory(resolve(`./${ Name }`));
+            return DirectoryEntries.length === 0;
+        }
+
+        return true;
+    });
+}
+
+function Main(InOptions: TOptions<IndexConfig>): Effect.Effect<void, ConfigError.ConfigError, FileSystem.FileSystem | FStepService | NodeContext.NodeContext | CommandExecutor.CommandExecutor>
+{
+    const { name } = InOptions;
+
+    return Effect.gen(function*()
+    {
+        const Config: FCliConfigSchema = yield* CliConfig;
+
+        const extension: TsExtension = (InOptions.extension === "from-config")
+            ? (Config.Index.Extension || "js").toLowerCase() as TsExtension
+            : InOptions.extension;
+
+        const Options: TLocalOptions<IndexConfig> = { ...InOptions, extension };
+
+        const { Log } = yield* FStepService;
+        const DirectorySuccess: boolean = yield* HandleDirectory(name);
+        if (!DirectorySuccess)
+        {
+            Log(`Directory ${ Code(name) } already exists and is nonempty.  Exiting...`);
+            throw new Error();
+        }
+
+        const Foo = yield* HandleFileCreation(Options);
+    })
+    .pipe(
+    Effect.catchAll((_ErrorValue) =>
+        Effect.succeed(false)
+    ));
+}
 
 // 1. Create folder of given name
 // 2. Create `index.ts` file in that directory that `exports * from "./${folder name}"`

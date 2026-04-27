@@ -34,7 +34,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
-    "update": "node ./Distribution/Bin/Bin.js update"
+    "test": "node ./Distribution/Bin/Bin.js"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
@@ -44,9 +44,10 @@
   },
   "dependencies": {
     "@effect/cli": "^0.75.1",
+    "@effect/platform": "^0.96.1",
     "@effect/platform-node": "^0.106.0",
-    "@sorrell/cli-utilities": "^1.0.41",
-    "@sorrell/utilities": "^1.1.56",
+    "@sorrell/cli-utilities": "^1.0.43",
+    "@sorrell/utilities": "^1.1.60",
     "chalk": "^5.6.2",
     "effect": "^3.21.1",
     "listr2": "^10.2.1",

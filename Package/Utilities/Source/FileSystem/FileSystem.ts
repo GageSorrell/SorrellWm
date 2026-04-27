@@ -153,3 +153,8 @@ export async function IsValidFileName(
         return false;
     }
 }
+
+export async function WriteTextFile(Path: string, Contents: string): Promise<void>
+{
+    await Fs.writeFile(resolve(`./${ name }/${ FileName }`), Contents, { encoding: "utf-8" });
+}
