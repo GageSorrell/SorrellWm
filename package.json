@@ -1,6 +1,8 @@
 {
     "name": "@sorrellwm/monorepo",
     "description": "The tiling window manager for everyone.",
+    "version": "0.0.0",
+    "private": true,
     "keywords": [
         "electron",
         "wm",
@@ -12,7 +14,7 @@
         "tiling-wm",
         "tiled"
     ],
-    "homepage": "https://github.com/GageSorrell/SorrellWm",
+    "homepage": "https://github.com/GageSorrell/SorrellWm#ReadMe",
     "bugs": {
         "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
@@ -28,27 +30,27 @@
     },
     "packageManager": "npm@11.13.0",
     "engines": {
-        "node": ">=24.14.0 <25"
+        "node": ">=24.14.0 <25",
+        "npm": ">=11.0.0"
     },
     "type": "module",
+    "overrides": {
+        "typescript": "npm:tsover@^6.0.0"
+    },
     "workspaces": [
+        "Application",
+        "!Application/Release/Application",
         "Package/*",
         "Package/**/*",
-        "!Package/EsLintConfigSorrell",
         "!Package/PipeOperator",
-        "Package/ScriptUtility",
         "!Package/Listr",
         "!Template",
         "!Template/**/*",
         "!Package/Listr/**/*",
-        "!Package/CliUtilities",
         "!Package/InquirerFileSelector",
         "!Package/OraSpinnerDemo",
-        "!Package/Utilities",
         "!Development/**/*",
         "!Package/CreateElectronReactiveEvent",
-        "!Package/Cli",
-        "!Package/Cli/**/*",
         "!Package/ElectronReactiveEvent/**/*",
         "!Package/ElectronReactiveEvent",
         "!Package/ElectronReactiveEventExtension/**/*",
@@ -57,28 +59,20 @@
         "!Package/ElectronReactiveEvent/Sample/**/*",
         "!Package/ElectronReactiveEventCli/**/*",
         "!Package/ElectronReactiveEventCli",
-        "!Documentation",
-        "!Documentation/**/*",
+        "Documentation",
         "Script/*"
     ],
-    "scripts": {
-        "build": "cd ./Script/Build && npm run build && npm run start",
-        "setup": "yarn run set-up",
-        "set-up": "cd ./Package/ScriptUtility && yarn run build && cd ../../Script/Build && yarn run build && cd ../../Script/CleanRepo && yarn run build && cd ../../Application/Windows && npm link && cd .. && npm link --save @sorrellwm/windows && echo \"The build tool has been built and the repo's Win32 package has been linked via npm to the app.\""
-    },
     "devDependencies": {
         "@eslint/js": "^9.39.4",
         "@stylistic/eslint-plugin": "^5.10.0",
         "@types/node": "^25.0.3",
-        "@yarnpkg/types": "^4.0.1",
         "eslint": "^9.39.4",
         "eslint-plugin-jsdoc": "^62.8.1",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.0.1",
         "eslint-plugin-tsdoc": "^0.5.2",
         "ts-node": "^10.9.2",
-        "typescript": "^6.0.2",
+        "typescript": "npm:tsover@^6.0.0",
         "typescript-eslint": "^8.57.2"
-    },
-    "private": true
+    }
 }

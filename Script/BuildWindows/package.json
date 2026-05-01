@@ -1,0 +1,49 @@
+{
+  "name": "@sorrell/build-windows",
+  "version": "1.0.0",
+  "private": false,
+  "description": "A build tool for NodeJS packages that expose the Windows API via the node-addon-api.",
+  "bin": {
+    "@sorrell/build-windows": "./Distribution/index.js"
+  },
+  "types": "./Distribution/index.d.ts",
+  "scripts": {
+    "build": "tsgo -p ./tsconfig.json",
+    "start": "node ./Distribution/index.js"
+  },
+  "keywords": [
+    "windows",
+    "native-module",
+    "node-addon-api",
+    "cpp",
+    "c++",
+    "typescript",
+    "ts"
+  ],
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Script/BuildWindows#ReadMe",
+  "repository": {
+    "directory": "Script/BuildWindows",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.6.0"
+  },
+  "dependencies": {
+    "@effect/cli": "^0.75.1",
+    "@sorrell/cli-utilities": "^1.0.43",
+    "@sorrell/utilities": "^1.1.60",
+    "effect": "^3.21.2",
+    "terminal-image": "^4.3.0"
+  }
+}

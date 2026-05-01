@@ -42,6 +42,9 @@
     "./package.json",
     "./Distribution/**/*"
   ],
+    "overrides": {
+        "typescript": "npm:tsover@^6.0.0"
+    },
   "devDependencies": {
     "@types/node": "^25.5.1",
     "@types/react": "*",
@@ -55,6 +58,6 @@
   "dependencies": {
     "@sorrell/utilities": "^1.1.6",
     "ora": "^9.3.0",
-    "typescript": "^6.0.2"
+    "typescript": "npm:tsover@^6.0.0"
   }
 }

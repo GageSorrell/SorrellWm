@@ -1,7 +1,6 @@
 {
     "compilerOptions":
     {
-        "baseUrl": "./",
         "paths":
         {
             "#/*":
@@ -41,12 +40,6 @@
         "rewriteRelativeImportExtensions": true,
         "strictNullChecks": true
     },
-    "plugins":
-    [
-        {
-            "transform": "typia/lib/transform"
-        }
-    ],
     "include":
     [
         "Configuration",
@@ -57,7 +50,6 @@
         "Windows",
         "Intermediate",
         "node_modules",
-        "Release/Build",
         "Release/Application/Distribution"
     ]
 }

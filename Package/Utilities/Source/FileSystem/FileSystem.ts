@@ -5,9 +5,10 @@
  * @license   MIT
  */
 
-import { type FileHandle, access, open, unlink } from "fs/promises";
 import { basename, dirname, extname, join } from "path";
 import { type FFileExtension } from "./FileSystem.Types.ts";
+import { type FileHandle } from "fs/promises";
+import { promises as Fs } from "fs";
 import { constants as FsConstants } from "fs";
 import os from "os";
 
@@ -15,7 +16,7 @@ async function PathExists(Path: string): Promise<boolean>
 {
     try
     {
-        await access(Path, FsConstants.F_OK);
+        await Fs.access(Path, FsConstants.F_OK);
         return true;
     }
     catch
@@ -140,11 +141,11 @@ export async function IsValidFileName(
 
     try
     {
-        const ThisFileHandle: FileHandle = await open(FilePath, "wx");
+        const ThisFileHandle: FileHandle = await Fs.open(FilePath, "wx");
         await ThisFileHandle.close();
         if (!PersistNewFile)
         {
-            await unlink(FilePath);
+            await Fs.unlink(FilePath);
         }
         return true;
     }
@@ -154,7 +155,26 @@ export async function IsValidFileName(
     }
 }
 
+/**
+ * Write a text file to a given {@link Path} having contents {@link Contents}.
+ *
+ * @param Path - The path of the file that will be written.
+ * @param Contents - The text contents of the file to write.
+ *
+ * @returns {Promise<void>} A {@link Promise} that resolves when the call to {@link Fs.writeFile} resolves.
+ *
+ * @example
+ * ```typescript
+ * import { WriteTextFile } from "@sorrell/utilities/fs";
+ * import { resolve } from "path";
+ *
+ * const MyReadMe: string = "# ReadMe\n\nThis package accomplishes...\n";
+ * const MyReadMePath: string = resolve(".");
+ *
+ * await WriteTextFile(MyReadMePath, MyReadMe);
+ * ```
+ */
 export async function WriteTextFile(Path: string, Contents: string): Promise<void>
 {
-    await Fs.writeFile(resolve(`./${ name }/${ FileName }`), Contents, { encoding: "utf-8" });
+    await Fs.writeFile(Path, Contents, { encoding: "utf-8" });
 }

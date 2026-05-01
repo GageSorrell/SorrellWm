@@ -1,12 +1,21 @@
 {
-  "name": "SorrellWm",
+  "name": "@sorrell/wm-release",
+  "private": true,
   "version": "1.0.0",
-  "description": "@TODO",
+  "description": "The tiling window manager for everyone.",
   "license": "MIT",
   "author": {
     "name": "Gage Sorrell",
     "email": "gage@sorrell.sh",
     "url": "https://github.com/GageSorrell"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm#ReadMe",
+  "bugs": {
+      "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
   "main": "./Distribution/Main/main.js",
   "scripts": {
@@ -15,6 +24,6 @@
     "link-modules": "node -r ts-node/register ../../Script/LinkModules.ts"
   },
   "dependencies": {
-    "@sorrellwm/windows": "file:../../Windows"
+    "@sorrell/wm-windows": "^1.0.0"
   }
 }

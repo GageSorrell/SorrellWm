@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.1.60",
+    "version": "1.1.61",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -114,7 +114,6 @@
             "optional": true
         }
     },
-    "main": "./Distribution/ESM/index.js",
     "types": "./Distribution/Types/index.d.ts",
     "scripts": {
         "prepublish": "npm run build",

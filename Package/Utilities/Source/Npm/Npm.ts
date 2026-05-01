@@ -48,7 +48,7 @@ export async function GetPackageJson(Path?: string): Promise<IPackageJson>
         {
             throw new PackageJsonParseError({ Cause, Path: PackageJsonPath });
         }
-    });
+    })();
 
     return PackageJson;
 }

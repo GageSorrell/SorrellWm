@@ -45,6 +45,12 @@ jobs:
           - local_path: "Package/CliUtilities"
             repository_name: "CliUtilities"
 
+          - local_path: "Package/Windows"
+            repository_name: "Windows"
+
+          - local_path: "Script/BuildWindows"
+            repository_name: "BuildWindows"
+
     steps:
       - name: Checkout the monorepo
         uses: actions/checkout@v6

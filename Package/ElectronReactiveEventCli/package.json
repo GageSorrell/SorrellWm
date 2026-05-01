@@ -55,7 +55,7 @@
     "open": "^11.0.0",
     "ora": "^9.3.0",
     "simple-git": "^3.36.0",
-    "typescript": "^6.0.2"
+    "typescript": "npm:tsover@^6.0.0"
   },
   "devDependencies": {
     "@types/degit": "^2.8.6",

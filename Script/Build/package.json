@@ -13,7 +13,11 @@
     "watch-build-complete": "nodemon --watch ./Distribution --exec \"node ./Distribution/index.js\"",
     "start": "node ./Distribution/index.js"
   },
-  "author": "Gage Sorrell <gage@sorrell.sh>",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.1",
@@ -21,6 +25,6 @@
     "concurrently": "^9.1.0",
     "nodemon": "^3.1.7",
     "ora": "^8.1.1",
-    "typescript": "^5.7.2"
+    "typescript": "npm:tsover@^6.0.0"
   }
 }

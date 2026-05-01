@@ -1,0 +1,46 @@
+{
+  "name": "@sorrell/wm-windows",
+  "private": false,
+  "version": "1.0.0",
+  "description": "The primary API through which SorrellWm interacts with the Windows API.",
+  "main": "./index.js",
+  "scripts": {
+    "build": "cd ../../Script/Build && npm run start",
+    "cmake-step": "cmake-js compile --out ./Build",
+    "start": "npm run build"
+  },
+  "keywords": [
+    "sorrellwm",
+    "c++",
+    "cpp",
+    "native-module",
+    "windows",
+    "win32",
+    "windows-api",
+    "cmake"
+  ],
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Windows#ReadMe",
+  "repository": {
+    "directory": "Package/WmWindows",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^8.7.0",
+    "node-api-headers": "^1.8.0"
+  },
+  "devDependencies": {
+    "cmake-js": "^8.0.0"
+  }
+}

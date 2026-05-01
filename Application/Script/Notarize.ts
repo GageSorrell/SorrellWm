@@ -53,7 +53,6 @@ exports.default = async function notarizeMacos(Context: IContext)
 
     const ApplicationName: string = Context.packager.appInfo.productFilename;
 
-    /* @ts-expect-error Unsure. */
     await notarize({
         appBundleId: build.appId,
         appPath: `${ appOutDir }/${ ApplicationName }.app`,

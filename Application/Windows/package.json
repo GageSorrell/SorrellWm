@@ -5,11 +5,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "cd ../../Script/Build && yarn run start",
+    "build": "cd ../../Script/Build && npm run start",
     "cmake-step": "cmake-js compile --out ../Build",
     "start": "npm run build"
   },
-  "author": "Gage Sorrell",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",

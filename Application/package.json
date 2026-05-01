@@ -87,7 +87,6 @@
     "react-router-dom": "^6.16.0",
     "source-map-support": "^0.5.21",
     "tsover-runtime": "^0.0.6",
-    "typia": "^11.0.3",
     "util": "^0.12.5",
     "zustand": "^5.0.2"
   },
@@ -140,7 +139,6 @@
     "tsconfig-paths-webpack-plugin": "^4.1.0",
     "tsover": "^6.0.0",
     "typescript": "npm:tsover@^6.0.0",
-    "typescript-eslint": "^8.57.1",
     "url-loader": "^4.1.1",
     "webpack": "^5.88.2",
     "webpack-bundle-analyzer": "^4.9.1",

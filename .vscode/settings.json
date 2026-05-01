@@ -27,14 +27,12 @@
     ],
     "files.exclude":
     {
-        "**/node_modules/**": true,
-        "**/Application/Build/**": true
+        "**/node_modules/**": true
     },
     "search.useIgnoreFiles": false,
     "files.watcherExclude":
     {
-        "**/node_modules/**": true,
-        "**/Application/Build/**": true
+        "**/node_modules/**": true
     },
     "search.exclude":
     {

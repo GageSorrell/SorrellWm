@@ -1,3 +1,5 @@
+*Copyright &copy; 2026 Gage Sorrell.  Released under the [MIT license](./License.md).*
+
 # `@sorrell/cli`
 
 **Purpose.**&ensp;This package contains general-purpose scripts for NodeJS development.
@@ -44,5 +46,3 @@ A given command might perform behavior *in addition to* what is described below.
 
 *(Optional)*.&ensp;If specified, then nothing will be output to the terminal.
 The script will exit with `exitCode === 0` if successful, otherwise it will exit with `exitCode === 1`.
-
-*Bump.*
