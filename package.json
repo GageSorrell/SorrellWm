@@ -1,20 +1,32 @@
 {
-    "name": "sorrell-wm-monorepo",
+    "name": "@sorrellwm/monorepo",
     "description": "The tiling window manager for everyone.",
     "keywords": [
         "electron",
-        "macos",
-        "windows-11",
-        "window-manager",
         "wm",
-        "fluent-ui"
+        "fluent-ui",
+        "windows-11",
+        "windows",
+        "window-manager",
+        "tiling",
+        "tiling-wm",
+        "tiled"
     ],
+    "homepage": "https://github.com/GageSorrell/SorrellWm",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
     "author": {
         "email": "gage@sorrell.sh",
         "name": "Gage Sorrell",
         "url": "https://sorrell.sh"
     },
-    "packageManager": "yarn@4.14.1",
+    "packageManager": "npm@11.13.0",
     "engines": {
         "node": ">=24.14.0 <25"
     },
@@ -51,7 +63,6 @@
     ],
     "scripts": {
         "build": "cd ./Script/Build && npm run build && npm run start",
-        "build:config": "tsc -p ./Configuration/tsconfig.yarn.config.json",
         "setup": "yarn run set-up",
         "set-up": "cd ./Package/ScriptUtility && yarn run build && cd ../../Script/Build && yarn run build && cd ../../Script/CleanRepo && yarn run build && cd ../../Application/Windows && npm link && cd .. && npm link --save @sorrellwm/windows && echo \"The build tool has been built and the repo's Win32 package has been linked via npm to the app.\""
     },
