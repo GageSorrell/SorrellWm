@@ -7,13 +7,13 @@
         "build:all": "npm run build && npm run build:test && npm run build:script",
         "build:script": "tsc -p ./tsconfig.Script.json",
         "build:test": "tsc -p ./tsconfig.Test.json",
-        "test:bun:effect": "node --test ./Binaries/**/*.Test.js",
-        "test:bun:main": "node --test ./Binaries/**/*.Test.js",
+        "test:bun:effect": "bun test ./Binaries/**/*.Test.js",
+        "test:bun:main": "bun test ./Binaries/**/*.Test.js",
         "test:node:effect": "node --test ./Binaries/**/*.Test.js",
         "test:node:main": "node --test ./Binaries/**/*.Test.js",
-        "pretest:bun:effect": "npm run build:test",
-        "pretest:bun:main": "npm run build:test",
-        "pretest:node:effect": "bun run build:test",
+        "pretest:bun:effect": "bun run build:test",
+        "pretest:bun:main": "bun run build:test",
+        "pretest:node:effect": "node run build:test",
         "pretest:node:main": "bun run build:test",
         "test:bun": "bun test ./Binaries/**/*.Test.js",
         "test:all": "npm run test:node && npm run test:bun",
@@ -94,6 +94,9 @@
         "@types/node": "^24.12.2",
         "effect": "^3.21.1",
         "typescript": "npm:tsover@^6.0.0"
+    },
+    "overrides": {
+      "uuid": "^14.0.0"
     },
     "dependencies": {
         "@sorrell/cli-utilities": "^1.0.43",
