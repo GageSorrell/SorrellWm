@@ -1,0 +1,51 @@
+{
+  "name": "@sorrell/pipe-operator",
+  "version": "1.0.0",
+  "description": "Adds the pipe operator to TypeScript via tsover.",
+  "exports": {
+    ".": {
+      "types": "./Distribution/Types/index.d.ts",
+      "import": "./Distribution/ESM/index.js",
+      "require": "./Distribution/CJS/index.js",
+      "default": "./Distribution/ESM/index.js"
+    }
+  },
+  "types": "./Distribution/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build:js": "node esbuild.config.mts",
+    "build:types": "tsc -p tsconfig.types.json",
+    "build": "npm run build:js && npm run build:types"
+  },
+  "overrides": {
+    "typescript": "npm:tsover@^6.0.0"
+  },
+  "keywords": [
+    "pipe",
+    "functional",
+    "fp",
+    "typescript",
+    "effect",
+    "ts",
+    "tsover",
+    "operator",
+    "overloading",
+    "operator-overloading"
+  ],
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "esbuild": "^0.28.0",
+    "tsover": "^6.0.0",
+    "typescript": "npm:tsover@^6.0.0"
+  },
+  "dependencies": {
+    "tsover-runtime": "^0.0.6"
+  }
+}

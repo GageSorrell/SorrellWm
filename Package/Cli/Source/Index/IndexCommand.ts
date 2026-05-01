@@ -26,15 +26,15 @@ const Config: IndexConfig = MakeConfig({
     extension: Args.choice<TsExtension>(
         [ [ "none", "none" ], [ "js", "js" ], [ "ts", "ts" ], [ "from-config", "from-config" ] ],
         { name: "extension" }
-    ).pipe(Args.withDefault("from-config")),
+    ).pipe(Args.withDefault("from-config")).pipe(Args.withDescription("")),
     internal: Options.boolean("internal"),
     name: Args.text({ name: "name" })
 });
 
 export/**
-       * The `init` command of `@sorrell/cli`.
+       * The `index` command of `@sorrell/cli`.
        */
-const IndexCommand: FIndexCommand = MakeCommand("init", Config, Main);
+const IndexCommand: FIndexCommand = MakeCommand("index", Config, Main);
 
 function HandleFileCreation(
     { extension, internal, name }: TLocalOptions<IndexConfig>

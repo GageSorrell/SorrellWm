@@ -1,0 +1,20 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "target": "ES2021",
+        "module": "preserve",
+        "moduleResolution": "bundler",
+        "lib": [
+            "ES2021",
+            "tsover"
+        ],
+        "declaration": false,
+        "declarationMap": false,
+        "emitDeclarationOnly": false,
+        "noEmit": false
+    },
+    "include": [
+        "Source/**/*.ts",
+        "Source/**/*.tsx"
+    ]
+}

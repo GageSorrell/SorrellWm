@@ -38,4 +38,3 @@ export namespace TFunction
     > =
         TMaybeAsync<TFunction<ArgumentVectorType, ReturnType>>;
 }
-

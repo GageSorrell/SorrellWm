@@ -1,0 +1,33 @@
+{
+  "name": "@sorrell/functional",
+  "version": "1.0.10",
+  "description": "Functional programming utilities for TypeScript.",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "prepublish": "npm run build"
+  },
+  "main": "./Distribution/index.js",
+  "types": "./Distribution/index.d.ts",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "private": false,
+  "keywords": [
+    "functional",
+    "typescript",
+    "ts",
+    "library",
+    "utility",
+    "utilities",
+    "fp",
+    "sorrell"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

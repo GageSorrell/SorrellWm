@@ -29,7 +29,7 @@ export type IndexConfig =
 
 export type FIndexCommand =
     TCommand<
-        "init",
+        "index",
         IndexConfig,
         never,
         FileSystem.FileSystem
@@ -44,10 +44,3 @@ export type FIndexEffect =
         | NodeContext.NodeContext
         | CommandExecutor.CommandExecutor
     >;
-
-// type FCommand = Command.Command<
-//     "echo",
-//     FStepService,
-//     never,
-//     FConfig
-// >;

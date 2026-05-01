@@ -5,19 +5,18 @@
  * @license   MIT
  */
 
-import { ConfigProvider, GlobalConfig } from "../Config/Config.js";
+import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
+import { type CliApp, Command, type ValidationError } from "@effect/cli";
 import { FStepService, GetWithStep } from "../Effect/Effect.js";
-import type { TCommand, TCommandMain, TSubCommandEffect } from "./Command.Types.js";
-import { Command, type CliApp, type ValidationError } from "@effect/cli";
+import type { TCommand, TCommandMain } from "./Command.Types.js";
+import { ConfigProvider } from "../Config/Config.js";
 import { Effect } from "effect";
-import type { FGlobalOptions, TOptions } from "../Options/Options.Types.js";
+import type { FGlobalConfig } from "../Config/Config.Types.js";
+import type { FGlobalOptions } from "../Options/Options.Types.js";
 import { GetPackageJson } from "@sorrell/utilities/npm/effect";
 import type { IPackageJson } from "package-json-type";
-import type { Simplify } from "effect/Types";
-import type { FGlobalConfig } from "../Config/Config.Types.js";
-import type { FConfigBase } from "../Config/Config.Internal.Types.js";
 import { NodeContext } from "@effect/platform-node";
-import type { And, Or, InvalidData, MissingData, SourceUnavailable, Unsupported } from "effect/ConfigError";
+import type { Simplify } from "effect/Types";
 
 export/**
        * All CLI commands have `version` that is this package's version.
@@ -85,9 +84,19 @@ export function MakeCommand<
         }>
     >;
 
+    type ThisErrorType =
+        | ErrorType
+        |ValidationError.ValidationError
+        |And
+        |Or
+        |InvalidData
+        |MissingData
+        |SourceUnavailable
+        |Unsupported;
+
     type ThisEffect = Effect.Effect<
         void,
-        ErrorType | ValidationError.ValidationError | And | Or | InvalidData | MissingData | SourceUnavailable | Unsupported,
+        ThisErrorType,
         Exclude<RequirementsType, FStepService> | CliApp.CliApp.Environment
     >;
 

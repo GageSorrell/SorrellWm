@@ -9,6 +9,11 @@
         "wm",
         "fluent-ui"
     ],
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
     "packageManager": "yarn@4.14.1",
     "engines": {
         "node": ">=24.14.0 <25"
@@ -17,6 +22,8 @@
     "workspaces": [
         "Package/*",
         "Package/**/*",
+        "!Package/EsLintConfigSorrell",
+        "!Package/PipeOperator",
         "Package/ScriptUtility",
         "!Package/Listr",
         "!Template",

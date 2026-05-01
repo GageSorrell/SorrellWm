@@ -18,6 +18,7 @@ import type { FStepService } from "../Effect/Effect.js";
 import type { NodeContext } from "@effect/platform-node";
 import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
 import type { CommandExecutor, FileSystem } from "@effect/platform";
+import type { TEffectError } from "./Command.Internal.Types.js";
 
 // import type { Effect, Types } from "effect";
 // import type { Command } from "@effect/cli";
@@ -101,7 +102,7 @@ export type TCommand<
     Command.Command<
         NameType,
         Exclude<RequirementsType, FStepService> | CliApp.CliApp.Environment | NodeContext.NodeContext,
-        ErrorType | ValidationError | And | Or | InvalidData | MissingData | SourceUnavailable | Unsupported,
+        TEffectError<ErrorType>,
         Simplify<Simplify<
             {
                 readonly [Key in keyof (ConfigType & FGlobalConfig)]:

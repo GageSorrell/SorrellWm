@@ -1,7 +1,7 @@
 {
   "name": "@sorrell/cli-utilities",
   "version": "1.0.43",
-  "description": "Utilities for CLI tools.",
+  "description": "Utilities developing CLI tools with TypeScript.",
   "keywords": [
     "cli",
     "utility",

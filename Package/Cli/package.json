@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "bin": {
     "@sorrell/cli": "./Distribution/Bin/Bin.js"
   },

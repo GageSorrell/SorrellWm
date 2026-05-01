@@ -1,7 +1,7 @@
 /**
- * @file      .eslintrc.cjs
+ * @file      index.cjs
  * @author    Gage Sorrell <gage@sorrell.sh>
- * @copyright (c) 2026 Gage Sorrell
+ * @copyright (c) 2024—2026 Gage Sorrell
  * @license   MIT
  */
 
@@ -15,56 +15,9 @@ module.exports = {
     ignorePatterns:
     [
         "**/Distribution/*",
-        "**/Intermediate/*",
-        "**/webpack.*.js",
-        "!**/.vitepress/*"
-    ],
-    overrides:
-    [
-        {
-            files:
-            [
-                "Package/CliUtilities/Source/**/*.ts",
-                "Package/PipeOperator/Source/**/*.ts",
-                "Package/Listr/Source/**/*.ts",
-                "Package/Utilities/Source/**/*.ts",
-                "Package/CreateElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.tsx",
-                "Package/ElectronReactiveEventCli/Source/**/*.ts",
-                "Package/ElectronReactiveEventCli/Source/**/*.tsx"
-            ],
-            rules:
-            {
-                "@typescript-eslint/naming-convention": "off",
-                "@typescript-eslint/no-namespace": "off",
-                "jsdoc/require-example":
-                    [
-                        "error",
-                        {
-                            exemptNoArguments: true
-                        }
-                    ],
-                "no-console": "off"
-            }
-        },
-        {
-            files:
-            [
-                "Configuration/**/*.cts",
-                "Package/Cli/Source/**/*.ts",
-                "Package/CliUtilities/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEventCli/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Documentation/**/*.ts",
-                "Package/ElectronReactiveEvent/Sample/**/*.ts",
-                "Package/ElectronReactiveEvent/Sample/**/*.tsx"
-            ],
-            rules:
-            {
-                "no-console": "off"
-            }
-        }
+        "**/node_modules/*",
+        "**/dist/*",
+        "**/Intermediate/*"
     ],
     parser: "@typescript-eslint/parser",
     parserOptions:
@@ -337,17 +290,6 @@ module.exports = {
     },
     settings:
     {
-        "import/resolver":
-        {
-            /* eslint-disable-next-line @stylistic/max-len */
-            /* See https://github.com/benmosher/eslint-plugin-import/issues/1396#issuecomment-575727774 for line below */
-            node:
-            {
-                extensions: [ ".js", ".jsx", ".ts", ".tsx", ".mts" ],
-                moduleDirectory: [ "Application/node_modules", "Application/src/" ]
-            },
-            typescript: { }
-        },
         jsdoc:
         {
             mode: "typescript"
