@@ -27,9 +27,6 @@ jobs:
           - local_path: "Package/ElectronReactiveEventCodeExtension"
             repository_name: "ElectronReactiveEventCodeExtension"
 
-          - local_path: "Package/InquirerFileSelector"
-            repository_name: "InquirerFileSelector"
-
           - local_path: "Package/Utilities"
             repository_name: "Utilities"
 
