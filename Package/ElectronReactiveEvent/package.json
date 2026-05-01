@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event",
-  "version": "0.0.56",
+  "version": "0.0.57",
   "description": "Type-safe Electron IPC functions, including modern React hooks.",
   "keywords": [
     "electron",
@@ -41,7 +41,9 @@
   "types": "./Distribution/index.d.ts",
   "files": [
     "./package.json",
-    "./Distribution/**/*"
+    "./Distribution/**/*",
+    "!./Sample",
+    "!./Sample/**/*"
   ],
   "overrides": {
     "typescript": "npm:tsover@^6.0.0"

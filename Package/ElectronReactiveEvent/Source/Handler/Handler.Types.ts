@@ -31,8 +31,8 @@ export namespace With
 export namespace Without
 {
     /**
-     * A {@link Handler} that subscribes to an event whose declaration does
-     * *not* have a request type.
+     * A {@link Handler} that subscribes to an event whose declaration
+     * does *not* have a request type.
      *
      * @template ChannelType - The channel that uniquely identifies the desired
      * event declaration.
