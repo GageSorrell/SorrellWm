@@ -1,6 +1,14 @@
+/**
+ * @file      main.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
 /**
+ * @module main
  * This module executes inside of electron's main process. You can start
  * electron renderer process from here and communicate with the other processes
  * through IPC.
@@ -8,15 +16,13 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
+
 import path from 'path';
 import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { ipcMain } from "../Main.Generated";
-import type { IpcMainInvokeEvent } from "electron/main";
-import type { RawResponse } from "../Reactive.Generated";
 
 class AppUpdater
 {
@@ -30,13 +36,13 @@ class AppUpdater
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.handle("SetColorTemperature", async (
-    Event: IpcMainInvokeEvent,
-    Temperature: number
-): Promise<RawResponse<"SetColorTemperature">> =>
-{
-    return;
-});
+// ipcMain.handle("SetColorTemperature", async (
+//     Event: IpcMainInvokeEvent,
+//     Temperature: number
+// ): Promise<Registrar["SetColorTemperature"]> =>
+// {
+//     return;
+// });
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');

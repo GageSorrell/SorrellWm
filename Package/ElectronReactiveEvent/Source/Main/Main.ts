@@ -6,7 +6,7 @@
  */
 
 import type { BrowserWindow, IpcMain, IpcRenderer } from "electron";
-import type { EventOwner, MainOwner, RendererOwner } from "../Internal";
+import type { EventOwner, MainOwner, RendererOwner } from "../Registrar/Registrar.Types";
 /* eslint-disable-next-line @typescript-eslint/consistent-type-imports */
 import { Channel } from "../Channel";
 import type { Decl } from "../Decl";

@@ -5,10 +5,7 @@
  * @license   MIT
  */
 
-import type {
-    EventOwner,
-    MainOwner,
-        RendererOwner } from "../Internal";
+import type { EventOwner, MainOwner, RendererOwner } from "../Registrar/Registrar.Types";
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron/main";
 import type { Channel } from "../Channel";
 import type { Decl } from "../Decl";

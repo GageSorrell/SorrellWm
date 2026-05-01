@@ -5,11 +5,11 @@
  * @license   MIT
  */
 
-import type { EmptyEventParameter, EventDecl, RendererOwner } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "electron-reactive-event";
 
 export type SetColorTemperature = EventDecl<
     RendererOwner,
     number,
-    EmptyEventParameter,
+    never,
     "TemperatureOutOfRange"
 >;

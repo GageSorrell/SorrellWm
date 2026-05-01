@@ -5,14 +5,8 @@
  * @license   MIT
  */
 
-import type {
-    ErrorKey,
-    EventOwner,
-    MainOwner,
-    Registrar,
-    RendererOwner,
-    RequestKey,
-    ResponseKey } from "../Internal";
+import type { ErrorKey, RequestKey, ResponseKey } from "../Internal";
+import type { EventOwner, MainOwner, Registrar, RendererOwner } from "../Registrar/Registrar.Types";
 import type { Channel } from "../Channel";
 
 export namespace Decl

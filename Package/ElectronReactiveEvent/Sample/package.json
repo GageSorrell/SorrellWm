@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event-sample",
-  "description": "Sample project for showcasing `electron-reactive-event`, based on the electron-react-boilerplate template.",
+  "description": "Sample project for showcasing `electron-reactive-event`, based on the `electron-react-boilerplate` template.",
   "keywords": [
     "electron",
     "react",
@@ -18,6 +18,7 @@
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
+    "directory": "Package/ElectronReactiveEvent/Sample",
     "type": "git",
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
@@ -29,7 +30,7 @@
   },
   "main": "./.erb/dll/main.bundle.dev.js",
   "scripts": {
-    "reactive": "electron-reactive-event-cli generate && electron-reactive-event-cli declare-events",
+    "reactive": "reactive-cli generate && reactive-cli declare-events",
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true NODE_OPTIONS=\"-r ts-node/register --no-warnings\" webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true NODE_OPTIONS=\"-r ts-node/register --no-warnings\" webpack --config ./.erb/configs/webpack.config.main.prod.ts",
@@ -128,7 +129,7 @@
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
     "detect-port": "^2.1.0",
-    "electron": "^35.0.2",
+    "electron": "^41.4.0",
     "electron-builder": "^25.1.8",
     "electron-devtools-installer": "^4.0.0",
     "electron-reactive-event-cli": "^1.0.111",

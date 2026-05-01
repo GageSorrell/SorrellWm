@@ -6,7 +6,7 @@
  */
 
 import type { BrowserWindow, IpcMain } from "electron/main";
-import type { MainOwner, RendererOwner } from "../Internal";
+import type { MainOwner, RendererOwner } from "../Registrar/Registrar.Types";
 import type { Channel } from "../Channel";
 import type { Decl } from "../Decl";
 import type { Handler } from "../Handler/Handler.Types";

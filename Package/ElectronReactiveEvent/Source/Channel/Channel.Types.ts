@@ -6,12 +6,8 @@
  */
 
 import type { ErrorKey, RequestKey, ResponseKey } from "../Internal/Decl.Types";
-import type {
-    EventOwner,
-    FilterByOwner,
-    Registrar,
-    RendererOwner,
-    Values } from "../Internal";
+import type { Values } from "../Internal/Utility.Types";
+import type { EventOwner, FilterByOwner, Registrar, RendererOwner } from "../Registrar/Registrar.Types";
 
 type WithRequestHelper =
     {

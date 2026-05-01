@@ -26,7 +26,7 @@ import type {
     OnceEventDeferred,
     RendererListener,
     SendEventDeferred } from "./Hook.Types";
-import type { MainOwner, RendererOwner } from "../../Internal";
+import type { MainOwner, RendererOwner } from "../../Registrar/Registrar.Types";
 import type { Channel } from "../../Channel";
 import type { Decl } from "../../Decl";
 import type { EmptyOverloadParameter } from "../../Listener/Listener.Internal.Types";

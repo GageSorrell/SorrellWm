@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { MainOwner, RendererOwner } from "../../Internal";
+import type { MainOwner, RendererOwner } from "../../Registrar/Registrar.Types";
 import type { Channel } from "../../Channel";
 import type { Decl } from "../../Decl";
 /* eslint-disable-next-line @typescript-eslint/consistent-type-imports */
@@ -305,6 +305,7 @@ export type InvokeEventDeferred =
 
         /* eslint-enable @stylistic/max-len */
     };
+
 /**
  * The function that allows the `renderer` to subscribe to `main` events with a {@link RendererListener}.
  * This is equivalent to the {@link UseOnEvent | UseOnEvent type}.
@@ -351,17 +352,15 @@ export type SendEventDeferred = UseSendEvent;
  * throughout your project.
  *
  *
- * @property useInvokeEvent - The {@link UseInvokeEvent} hook, scoped to your {@link PackageKey}.
- * @property useInvokeEventDeferred - The {@link UseInvokeEventDeferred} hook,
- * scoped to your {@link PackageKey}.
- * @property useOnEvent - The {@link UseOnEvent} hook, scoped to your {@link PackageKey}.
- * @property useOnEventDeferred - The {@link UseOnEventDeferred} hook, scoped to your {@link PackageKey}.
- * @property useOnceEvent - The {@link UseOnceEvent} hook, scoped to your {@link PackageKey}.
- * @property useOnceEventDeferred - The {@link UseOnceEventDeferred} hook, scoped to your {@link PackageKey}.
- * @property useOffEventDeferred - The {@link UseOffEventDeferred} hook, scoped to your {@link PackageKey}.
- * @property useSendEvent - The {@link UseSendEvent} hook, scoped to your {@link PackageKey}.
- * @property useSendEventDeferred - The {@link UseSendEventDeferred} hook,
- * scoped to your {@link PackageKey}.
+ * @property {UseInvokeEvent} useInvokeEvent - The {@link UseInvokeEvent} hook.
+ * @property {UseInvokeEventDeferred} useInvokeEventDeferred - The {@link UseInvokeEventDeferred} hook.
+ * @property {UseOnEvent} useOnEvent - The {@link UseOnEvent} hook.
+ * @property {UseOnEventDeferred} useOnEventDeferred - The {@link UseOnEventDeferred} hook.
+ * @property {UseOnceEvent} useOnceEvent - The {@link UseOnceEvent} hook.
+ * @property {UseOnceEventDeferred} useOnceEventDeferred - The {@link UseOnceEventDeferred} hook.
+ * @property {UseOffEventDeferred} useOffEventDeferred - The {@link UseOffEventDeferred} hook.
+ * @property {UseSendEvent} useSendEvent - The {@link UseSendEvent} hook.
+ * @property {UseSendEventDeferred} useSendEventDeferred - The {@link UseSendEventDeferred} hook.
  */
 export type ReactiveEventHooks = Readonly<{
     useInvokeEvent: UseInvokeEvent;

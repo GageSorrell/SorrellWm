@@ -5,10 +5,11 @@
  * @license   MIT
  */
 
-import type { ErrorKey, Registrar, ResponseKey } from "../Internal";
+import type { ErrorKey, ResponseKey } from "../Internal";
 import type { Channel } from "../Channel";
 import type { Decl } from "../Decl";
 import type { IpcMainInvokeEvent } from "electron/main";
+import type { Registrar } from "../Registrar/Registrar.Types";
 
 export namespace With
 {
