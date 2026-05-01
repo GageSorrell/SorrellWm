@@ -6,6 +6,7 @@
  */
 
 import type * as InternalTypes from "./Math.Internal.Types.js";
+import type { TBuildTuple, TInclusiveRangeFromTuple, TIsLessThanOrEqual } from "./Math.Internal.Types.js";
 
 /**
  * Determines whether a given {@link NumberType} is a nonnegative integer.
@@ -112,3 +113,25 @@ export namespace Permutations
     export type Two<OneType, TwoType> =
         InternalTypes.Two<OneType, TwoType>;
 }
+
+/**
+ * The union of integers from {@link StartValue} to {@link EndValue}, inclusive.
+ *
+ * @template StartValue - The least value in the range.
+ * @template EndValue - The greatest value in the range.
+ */
+export type TIntegralRange<
+    StartValue extends number,
+    EndValue extends number
+> =
+    number extends StartValue
+        ? never
+        : number extends EndValue
+            ? never
+            : TIsNonNegativeInteger<StartValue> extends true
+                ? TIsNonNegativeInteger<EndValue> extends true
+                    ? TIsLessThanOrEqual<StartValue, EndValue> extends true
+                        ? TInclusiveRangeFromTuple<TBuildTuple<StartValue>, EndValue>
+                        : never
+                    : never
+                : never;

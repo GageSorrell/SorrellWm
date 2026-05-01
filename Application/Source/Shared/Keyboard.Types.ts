@@ -5,6 +5,10 @@
  * @license   MIT
  */
 
+/**
+ * The numeric values of keyboard keys,
+ * {@link https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes | assigned by Microsoft}.
+ */
 export type FVirtualKey =
     | 0x05
     | 0x06

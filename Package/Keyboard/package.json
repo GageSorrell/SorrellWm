@@ -1,0 +1,41 @@
+{
+  "name": "@sorrell/keyboard",
+  "version": "1.0.0",
+  "description": "Utilities for handling keyboard shortcuts in Windows desktop applications.",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./Distribution/Types/index.d.mts",
+        "default": "./Distribution/index.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/index.d.cts",
+        "default": "./Distribution/index.cjs"
+      }
+    }
+  },
+    "scripts": {
+        "prepack": "npm run build",
+        "build:js": "node esbuild.config.mts",
+        "prebuild:types": "tsc -p ./tsconfig.script.json",
+        "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
+        "build": "npm run build:js && npm run build:types"
+    },
+  "keywords": [ "desktop", "application", "keyboard", "settings", "keys", "windows", "win-11", "windows-11" ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Keyboard#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Keyboard",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "type": "module"
+}

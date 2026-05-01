@@ -9,12 +9,14 @@
 
 import { build as Build, type BuildOptions } from "esbuild";
 import { rm as RemoveDirectory, writeFile as WriteFile } from "node:fs/promises";
+import Tsover from "tsover/plugin/esbuild";
 
 const DistributionDirectory: string = "Distribution";
 const TypeScriptConfigPath: string = "tsconfig.esbuild.json";
 
 const EntryPoints: Record<string, string> =
     {
+        effect: "./Source/Effect/index.ts",
         index: "./Source/index.ts"
     } as const;
 
@@ -42,8 +44,13 @@ function CreateSharedOptions(): BuildOptions
         logLevel: "info",
         packages: "external",
         platform: "neutral",
+        plugins: [
+            Tsover({
+                tsconfigPath: TypeScriptConfigPath
+            })
+        ],
         sourcemap: true,
-        target: [ "ES2023" ],
+        target: [ "es2021" ],
         tsconfig: TypeScriptConfigPath
     };
 }
@@ -55,7 +62,7 @@ function CreatePackageExportPath(EntryPointName: string): string
         return ".";
     }
 
-    return `./${ EntryPointName }`;
+    return `./${EntryPointName}`;
 }
 
 function CreatePackageExports(OutputDirectoryPrefix: string): Record<string, FPackageExport>
@@ -68,13 +75,13 @@ function CreatePackageExports(OutputDirectoryPrefix: string): Record<string, FPa
 
         PackageExports[ExportPath] = {
             import: {
-                default: `${ OutputDirectoryPrefix }/${ EntryPointName }.js`,
-                types: `${ OutputDirectoryPrefix }/${ EntryPointName }.d.mts`
+                default: `${OutputDirectoryPrefix}/${EntryPointName}.js`,
+                types: `${OutputDirectoryPrefix}/${EntryPointName}.d.mts`
             },
 
             require: {
-                default: `${ OutputDirectoryPrefix }/${ EntryPointName }.cjs`,
-                types: `${ OutputDirectoryPrefix }/${ EntryPointName }.d.cts`
+                default: `${OutputDirectoryPrefix}/${EntryPointName}.cjs`,
+                types: `${OutputDirectoryPrefix}/${EntryPointName}.d.cts`
             }
         };
     }
@@ -105,6 +112,6 @@ await Promise.all([
 ]);
 
 await WriteFile(
-    `${ DistributionDirectory }/PackageExports.Generated.json`,
-    `${ JSON.stringify(CreatePackageExports("./Distribution"), undefined, 4) }\n`
+    `${DistributionDirectory}/PackageExports.Generated.json`,
+    `${JSON.stringify(CreatePackageExports("./Distribution"), undefined, 4)}\n`
 );

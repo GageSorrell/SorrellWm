@@ -194,3 +194,32 @@ export type Three<OneType, TwoType, ThreeType> =
 export type Two<OneType, TwoType> =
     | readonly [ OneType, TwoType ]
     | readonly [ TwoType, OneType ];
+
+export type TBuildTuple<
+    Length extends number,
+    Accumulator extends Array<unknown> = [ ]
+> =
+    Accumulator["length"] extends Length
+        ? Accumulator
+        : TBuildTuple<Length, [...Accumulator, unknown]>;
+
+export type TIsLessThanOrEqual<
+    Left extends number,
+    Right extends number
+> =
+    TBuildTuple<Right> extends [...TBuildTuple<Left>, ...infer _ ]
+        ? true
+        : false;
+
+export type TInclusiveRangeFromTuple<
+    CurrentTuple extends Array<unknown>,
+    EndValue extends number,
+    Result extends number = never
+> =
+    CurrentTuple["length"] extends EndValue
+        ? Result | EndValue
+        : TInclusiveRangeFromTuple<
+            [...CurrentTuple, unknown],
+            EndValue,
+            Result | CurrentTuple["length"]
+        >;

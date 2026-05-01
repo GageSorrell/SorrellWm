@@ -6,7 +6,7 @@
  */
 
 import type { FKeyId } from "../../Shared/Keyboard.Types";
-import type { TIntegralRange } from "../Utility";
+import type { TIntegralRange } from "@sorrell/utilities/math";
 import type { TStaticArray } from "@sorrell/utilities/array";
 
 export type FKeybindDirection =
