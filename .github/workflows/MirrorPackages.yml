@@ -1,0 +1,79 @@
+name: Mirror Packages
+
+on:
+  push:
+    branches:
+      - Master
+    tags:
+      - "*"
+
+jobs:
+  mirror-packages:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - local_path: "Package/ElectronReactiveEvent"
+            repository_name: "ElectronReactiveEvent"
+
+          - local_path: "Package/ElectronReactiveEventCli"
+            repository_name: "ElectronReactiveEventCli"
+
+          - local_path: "Package/CreateElectronReactiveEvent"
+            repository_name: "CreateElectronReactiveEvent"
+
+          - local_path: "Package/ElectronReactiveEventCodeExtension"
+            repository_name: "ElectronReactiveEventCodeExtension"
+
+          - local_path: "Package/InquirerFileSelector"
+            repository_name: "InquirerFileSelector"
+
+          - local_path: "Package/Utilities"
+            repository_name: "Utilities"
+
+          - local_path: "Package/EsLintConfigSorrell"
+            repository_name: "EsLintConfigSorrell"
+
+          - local_path: "Package/Functional"
+            repository_name: "Functional"
+
+          - local_path: "Package/Cli"
+            repository_name: "Cli"
+
+          - local_path: "Package/CliUtilities"
+            repository_name: "CliUtilities"
+
+    steps:
+      - name: Checkout the monorepo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror ${{ matrix.package.repository_name }}
+        if: ${{ github.ref_type != 'tag' }}
+        uses: danharrin/monorepo-split-github-action@v2.4.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        with:
+          package_directory: ${{ matrix.package.local_path }}
+          repository_organization: "GageSorrell"
+          repository_name: ${{ matrix.package.repository_name }}
+          branch: "main"
+          user_name: "GageSorrell"
+          user_email: "gage@sorrell.sh"
+
+      - name: Mirror tag for ${{ matrix.package.repository_name }}
+        if: ${{ github.ref_type == 'tag' }}
+        uses: danharrin/monorepo-split-github-action@v2.4.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        with:
+          package_directory: ${{ matrix.package.local_path }}
+          repository_organization: "GageSorrell"
+          repository_name: ${{ matrix.package.repository_name }}
+          branch: "main"
+          tag: ${{ github.ref_name }}
+          user_name: "GageSorrell"
+          user_email: "gage@sorrell.sh"
