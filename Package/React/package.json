@@ -52,7 +52,7 @@
     },
     "dependencies": {
         "@fluentui/react-components": "^9.73.8",
-        "@sorrell/utilities": "^1.2.1",
+        "@sorrell/utilities": "^1.2.4",
         "react": "^19.2.5",
         "react-router-dom": "^6.30.3"
     }

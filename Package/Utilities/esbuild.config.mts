@@ -28,7 +28,8 @@ const EntryPoints: Record<string, string> =
         misc: "./Source/Miscellaneous/index.ts",
         npm: "./Source/Npm/index.ts",
         "npm-effect": "./Source/Npm/Index.Effect.ts",
-        path: "./Source/Path/index.ts"
+        path: "./Source/Path/index.ts",
+        record: "./Source/Record/index.ts"
     } as const;
 
 type FPackageExport =

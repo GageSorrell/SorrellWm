@@ -34,26 +34,3 @@ export type TObjectPath<
             : never;
 
 export type FColor = `#${ string }`;
-
-export type TRef<Type> = { Ref: Type | undefined };
-
-export type TMapRecordTransformer<
-    KeyType extends PropertyKey,
-    PropertyType, ElementType
-> =
-    {
-        (Key: KeyType, Property: PropertyType, Index: number): ElementType;
-    };
-
-export type TFlatMapRecordTransformer<
-    KeyType extends PropertyKey,
-    PropertyType,
-    ElementType
-> =
-    {
-        (
-            Key: KeyType,
-            Property: PropertyType,
-            Index: number
-        ): ElementType | Array<ElementType>;
-    };

@@ -17,13 +17,8 @@ import {
     useOptimistic,
     useRef,
     useState,
-    useTransition } from "react";
-import {
-    Delay,
-    GetPropertyFromPath,
-    MakeRef,
-    SetPropertyFromPath,
-    type TRef } from "../Shared/Utility";
+    useTransition
+} from "react";
 import type { FLogger, FSettings, FSimpleCallback } from "../Shared";
 import type {
     FSettingsPath,
@@ -32,15 +27,20 @@ import type {
     TGetSetting,
     TUseSettingStateReturnType
 } from "./Settings.Types";
+import {
+    GetPropertyFromPath,
+    SetPropertyFromPath,
+    type TPath
+} from "@sorrell/utilities/record";
 // import { IsSuccessful, UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event.tsx.old";
 import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
 import { UseSendEvent, UseSendEventDeferred } from "./Event";
 import { Button } from "./Domain/Common";
 import { DefaultSettings } from "../Shared/Settings";
+import { Delay } from "../Shared/Utility";
 import { GetLogger } from "./Log";
 import { Identity } from "@sorrell/utilities/functional";
 import type { TInternal } from "./Utility";
-import type { TPath } from "../Shared/Utility/Object.Types";
 import type { TSetState } from "@sorrell/react";
 import { UseToaster } from "./Toast";
 
@@ -233,9 +233,7 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
     ): Promise<void> =>
     {
         const NewSettings: FSettings = { ...RealSettings };
-        const NewSettingsRef: TRef<FSettings> = MakeRef<FSettings>();
-        NewSettingsRef.Ref = NewSettings;
-        SetPropertyFromPath(NewSettingsRef, Path, Value);
+        SetPropertyFromPath(NewSettings, Path, Value);
         SetOptimisticSettings(NewSettings);
         // const Result: TSendEventDeferredReturnType<"UpdateSettings", IFrontendEventRegistrar> =
         // const Result: any =

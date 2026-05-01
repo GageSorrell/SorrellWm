@@ -19,20 +19,21 @@
     "react",
     "typescript"
   ],
-  "homepage": "https://github.com/GageSorrell/SorrellWm#readme",
+  "homepage": "https://electron-reactive-event.sorrell.sh",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
+    "directory": "Package/ElectronReactiveEventCli",
     "type": "git",
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
   "license": "MIT",
   "author": {
-  "email": "gage@sorrell.sh",
-  "name": "Gage Sorrell",
-  "url": "https://sorrell.sh"
-},
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
   "type": "commonjs",
   "exports": {
     ".": "./Distribution/index.js"
@@ -46,8 +47,8 @@
   },
   "dependencies": {
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
-    "@sorrell/cli-utilities": "^1.0.29",
-    "@sorrell/utilities": "^1.1.14",
+    "@sorrell/cli-utilities": "^1.0.43",
+    "@sorrell/utilities": "^1.2.4",
     "chalk": "^5.6.2",
     "degit": "^2.8.4",
     "listr2": "^10.2.1",

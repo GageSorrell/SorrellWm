@@ -5,20 +5,16 @@
  * @license   MIT
  */
 
+import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
 import type { CliApp, Command } from "@effect/cli";
-import type { ValidationError } from "@effect/cli/ValidationError";
+import type { CommandExecutor, FileSystem } from "@effect/platform";
 import type { Effect } from "effect";
-import type { FGlobalOptions, TOptions } from "../Options/Options.Types.js";
-import type { Simplify } from "effect/Types";
-import type { FGlobalConfig, TConfig } from "../Config/Config.Types.js";
-import type { FConfigBase } from "../Config/Config.Internal.Types.js";
-import type { Args } from "@effect/cli/Args";
-import type { Options } from "@effect/cli/Options";
+import type { FGlobalConfig } from "../Config/Config.Types.js";
 import type { FStepService } from "../Effect/Effect.js";
 import type { NodeContext } from "@effect/platform-node";
-import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
-import type { CommandExecutor, FileSystem } from "@effect/platform";
+import type { Simplify } from "effect/Types";
 import type { TEffectError } from "./Command.Internal.Types.js";
+import type { ValidationError } from "@effect/cli/ValidationError";
 
 // import type { Effect, Types } from "effect";
 // import type { Command } from "@effect/cli";

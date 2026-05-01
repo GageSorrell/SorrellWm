@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.2",
+    "version": "1.2.4",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -149,6 +149,16 @@
             "require": {
                 "types": "./Distribution/Types/Path/index.d.cts",
                 "default": "./Distribution/path.cjs"
+            }
+        },
+        "./record": {
+            "import": {
+                "types": "./Distribution/Types/Record/index.d.mts",
+                "default": "./Distribution/record.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Record/index.d.cts",
+                "default": "./Distribution/record.cjs"
             }
         }
     },

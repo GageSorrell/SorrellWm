@@ -23,7 +23,7 @@ async function Main(): Promise<void>
             return Effect.succeed(undefined);
         });
 
-    const version: string = "v0.0.3";
+    const version: string = "v0.0.12";
 
     /* eslint-disable @typescript-eslint/typedef */
 

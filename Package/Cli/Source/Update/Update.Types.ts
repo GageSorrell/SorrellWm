@@ -8,8 +8,8 @@
 import type { Args, Options } from "@effect/cli";
 import type { NpmError } from "./Update.Internal.js";
 import type { TCommand } from "../Command/Command.Types.js";
-import type { TLocalOptions } from "../Options/Options.Types.js";
 import type { TConfig } from "../Config/Config.Types.js";
+import type { TLocalOptions } from "../Options/Options.Types.js";
 
 /**
  * The options passed to the main internal function of the

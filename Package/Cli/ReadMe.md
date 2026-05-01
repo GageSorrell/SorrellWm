@@ -9,7 +9,7 @@ npx @sorrell/cli help
 ```
 
 > [!TIP]
-> For utilities to use in your own scripts, use [`@sorrell/cli-utilities`](../CliUtilities/ReadMe.md), of which this package makes extensive use.
+> For utilities to use in your own scripts, use [`@sorrell/cli-utilities`](https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CliUtilities#ReadMe), of which this package makes extensive use.
 
 ## Documentation
 

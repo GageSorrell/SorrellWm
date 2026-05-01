@@ -1,0 +1,81 @@
+{
+  "name": "@sorrell/effect-cli",
+  "version": "0.75.9",
+  "type": "module",
+  "license": "MIT",
+  "description": "A fork of @effect/cli that adds customization to auto-generated behavior of your commands.",
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EffectCli#ReadMe",
+  "repository": {
+    "directory": "Package/EffectCli",
+    "type": "git",
+    "url": "https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "tags": [
+    "cli",
+    "typescript",
+    "algebraic-data-types",
+    "functional-programming",
+    "sorrell"
+  ],
+  "keywords": [
+    "cli",
+    "typescript",
+    "algebraic-data-types",
+    "functional-programming",
+    "sorrell"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts",
+    "./internal/*": null
+  },
+  "scripts": {
+    "codegen": "build-utils prepare-v3",
+    "postbuild": "ts-node --skipProject ./Script/SetDistVersion.ts",
+    "build": "npm run build:esm && npm run build:annotate && npm run build:cjs && build-utils pack-v3",
+    "build:esm": "tsc -b tsconfig.build.json",
+    "build:cjs": "babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps",
+    "build:annotate": "babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps",
+    "check": "tsc -b tsconfig.json",
+    "test": "vitest",
+    "publish": "npm publish ./dist --access public",
+    "coverage": "vitest --coverage"
+  },
+  "peerDependencies": {
+    "@effect/platform": "^0.96.1",
+    "@effect/printer": "^0.49.0",
+    "@effect/printer-ansi": "^0.49.0",
+    "effect": "^3.21.2"
+  },
+  "dependencies": {
+    "ini": "^4.1.3",
+    "toml": "^3.0.0",
+    "yaml": "^2.5.0"
+  },
+  "effect": {
+    "generateIndex": {
+      "include": [
+        "**/*"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@effect/platform": "^0.96.1",
+    "@effect/platform-node": "^0.106.0",
+    "@effect/printer": "^0.49.0",
+    "@effect/printer-ansi": "^0.49.0",
+    "@types/ini": "^4.1.1",
+    "@types/node": "^25.6.0",
+    "babel-plugin-annotate-pure-calls": "^0.5.0",
+    "effect": "^3.21.2",
+    "package-json-type": "^1.1.2",
+    "rimraf": "^6.1.3",
+    "shx": "^0.4.0"
+  }
+}

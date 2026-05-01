@@ -13,7 +13,8 @@ import {
     LayoutRowFourFocusCenterTopFilled,
     PersonRunningRegular,
     SparkleActionRegular,
-    TextEditStyleRegular } from "@fluentui/react-icons";
+    TextEditStyleRegular
+} from "@fluentui/react-icons";
 import {
     type Context,
     type FC,
@@ -23,16 +24,16 @@ import {
     useContext,
     useEffect,
     useMemo,
-    useState } from "react";
+    useState
+} from "react";
 import {
     DefaultSettings,
     type FLogger,
-    type FSimpleCallback,
-    type FSettings,
-    GetPropertyFromPath } from "../../../../Shared";
-import type { TPath } from "../../../../Shared/Utility/Object.Types";
-import { UseSettings, UseUpdateSetting, UseUpdateSettings } from "@/Settings";
+    type FSettings
+} from "../../../../Shared";
+import { GetPropertyFromPath, type TPath } from "@sorrell/utilities/record";
 import { Toast, type ToastProps, ToastTitle } from "@fluentui/react-components";
+import { UseSettings, UseUpdateSetting, UseUpdateSettings } from "@/Settings";
 import type { CKeyboardSettings } from "./Keyboard.Types";
 import type { FKeyId } from "../../../../Shared/Keyboard.Types";
 import type { FKeybindPair } from "../Component/Keyboard/KeybindSet.Types";
@@ -44,6 +45,7 @@ import { SettingsScreen } from "./SettingsScreen";
 import { UseCommands } from "@/Command";
 import { UseSendIpcEventDeferred } from "@/Temp";
 import { UseToaster } from "@/Toast";
+import type { TFunction } from "@sorrell/utilities/functional";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Keyboard");
@@ -133,8 +135,10 @@ export const Keyboard = (): ReactElement =>
                     ActionKey.replaceAll("]", "").replaceAll("[", ".") as TPath<FKeybinds>;
 
                 const Value: Array<FKeyId> =
-                    /* @ts-expect-error Depth. */
-                    (GetPropertyFromPath<typeof Path>(Settings.Keybinds, Path) as Array<FKeyId>);
+                    (GetPropertyFromPath<typeof Settings.Keybinds, typeof Path>(
+                        Settings.Keybinds,
+                        Path
+                    ) as unknown as Array<FKeyId>);
 
                 if (Array.isArray(Value))
                 {
@@ -259,7 +263,7 @@ export const Keyboard = (): ReactElement =>
             }
         ];
 
-    const CancelSetKeybindCallback: FSimpleCallback = useCallback((): void =>
+    const CancelSetKeybindCallback: TFunction = useCallback((): void =>
     {
         SetEditingKeybind((_Old: FActionKey | undefined): undefined =>
         {
@@ -305,7 +309,7 @@ export const Keyboard = (): ReactElement =>
         }
     }, [ AttemptedKey, DispatchToast ]);
 
-    useEffect((): FSimpleCallback =>
+    useEffect((): TFunction =>
     {
         const OnKeyDown = async (Event: KeyboardEvent): Promise<void> =>
         {

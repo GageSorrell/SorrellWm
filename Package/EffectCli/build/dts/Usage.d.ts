@@ -1,0 +1,124 @@
+/**
+ * @since 1.0.0
+ */
+import type { Option } from "effect/Option";
+import type { CliConfig } from "./CliConfig.js";
+import type { HelpDoc } from "./HelpDoc.js";
+import type { Span } from "./HelpDoc/Span.js";
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export type Usage = Empty | Mixed | Named | Optional | Repeated | Alternation | Concat;
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Empty {
+    readonly _tag: "Empty";
+}
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Mixed {
+    readonly _tag: "Mixed";
+}
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Named {
+    readonly _tag: "Named";
+    readonly names: ReadonlyArray<string>;
+    readonly acceptedValues: Option<string>;
+}
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Optional {
+    readonly _tag: "Optional";
+    readonly usage: Usage;
+}
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Repeated {
+    readonly _tag: "Repeated";
+    readonly usage: Usage;
+}
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Alternation {
+    readonly _tag: "Alternation";
+    readonly left: Usage;
+    readonly right: Usage;
+}
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Concat {
+    readonly _tag: "Concat";
+    readonly left: Usage;
+    readonly right: Usage;
+}
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export declare const alternation: {
+    (that: Usage): (self: Usage) => Usage;
+    (self: Usage, that: Usage): Usage;
+};
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export declare const concat: {
+    (that: Usage): (self: Usage) => Usage;
+    (self: Usage, that: Usage): Usage;
+};
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export declare const empty: Usage;
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export declare const enumerate: {
+    (config: CliConfig): (self: Usage) => Array<Span>;
+    (self: Usage, config: CliConfig): Array<Span>;
+};
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export declare const getHelp: (self: Usage) => HelpDoc;
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export declare const mixed: Usage;
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export declare const named: (names: ReadonlyArray<string>, acceptedValues: Option<string>) => Usage;
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export declare const optional: (self: Usage) => Usage;
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export declare const repeated: (self: Usage) => Usage;
+//# sourceMappingURL=Usage.d.ts.map

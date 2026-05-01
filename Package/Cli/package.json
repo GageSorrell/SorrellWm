@@ -1,8 +1,9 @@
 {
   "name": "@sorrell/cli",
-  "version": "0.0.4",
+  "version": "0.0.12",
   "bin": {
-    "@sorrell/cli": "./Distribution/Bin/Bin.js"
+    "@sorrell/cli": "./Distribution/Bin/Bin.js",
+    "sorrell": "./Distribution/Bin/Bin.js"
   },
   "description": "General-purpose commands for NodeJS development.",
   "keywords": [
@@ -17,11 +18,12 @@
     "nodejs",
     "node"
   ],
-  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Cli",
+  "homepage": "https://cli.sorrell.sh",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
+    "directory": "Package/Cli",
     "type": "git",
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
@@ -56,7 +58,7 @@
     "@effect/platform": "^0.96.1",
     "@effect/platform-node": "^0.106.0",
     "@sorrell/cli-utilities": "^1.0.43",
-    "@sorrell/utilities": "^1.1.61",
+    "@sorrell/utilities": "^1.2.4",
     "effect": "^3.21.1",
     "listr2": "^10.2.1",
     "node-pty": "^1.1.0",

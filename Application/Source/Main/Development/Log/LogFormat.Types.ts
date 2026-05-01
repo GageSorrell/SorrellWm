@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { TIntegralRange } from "../../../Shared";
+import type { TIntegralRange } from "@sorrell/utilities/math";
 import type { TNonemptyArray } from "@sorrell/utilities/array";
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */

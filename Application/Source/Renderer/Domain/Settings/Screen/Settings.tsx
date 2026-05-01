@@ -45,13 +45,14 @@ import type {
     PSettingsNavDrawer,
     PTitlebar
 } from "./Settings.Types";
-import { type FSimpleCallback, MapRecord } from "../../../../Shared";
 import { GetFlexStyle, UseState, UseWindowEffect } from "@sorrell/react";
 import { About } from "./About";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { General } from "./General/General";
 import { GetLogger } from "@/Log";
 import { Keyboard } from "./Keyboard";
+import { MapRecord } from "@sorrell/utilities/record";
+import type { TFunction } from "@sorrell/utilities/functional";
 import { Tokens } from "../../../../Shared/Tokens";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -271,7 +272,7 @@ export const Settings = (): ReactElement =>
 
     const PreviousNavType: RefObject<FNavDrawerType> = useRef<FNavDrawerType>(NavType);
 
-    const HandleWindowResize: FSimpleCallback = useCallback((): void =>
+    const HandleWindowResize: TFunction = useCallback((): void =>
     {
         const NewNavType: FNavDrawerType = GetNavType();
 

@@ -14,7 +14,7 @@
         "tiling-wm",
         "tiled"
     ],
-    "homepage": "https://github.com/GageSorrell/SorrellWm#ReadMe",
+    "homepage": "https://wm.sorrell.sh",
     "bugs": {
         "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
@@ -43,6 +43,8 @@
         "Package/*",
         "Package/**/*",
         "!Package/PipeOperator",
+        "!Package/EffectCli",
+        "!Package/EffectCli/dist",
         "!Package/Listr",
         "!Template",
         "!Template/**/*",

@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
+import { GetPropertyFromPath, SetPropertyFromPath } from "@sorrell/utilities/record";
 import type { TRecord } from "@sorrell/wm-windows";
-import { GetPropertyFromPath, SetPropertyFromPath } from "../Utility";
 
 type FKeyType = string | symbol;
 

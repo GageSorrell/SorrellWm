@@ -42,7 +42,7 @@
   "dependencies": {
     "@effect/cli": "^0.75.1",
     "@sorrell/cli-utilities": "^1.0.43",
-    "@sorrell/utilities": "^1.1.60",
+    "@sorrell/utilities": "^1.2.4",
     "effect": "^3.21.2",
     "terminal-image": "^4.3.0"
   }
