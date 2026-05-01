@@ -55,6 +55,7 @@
         "!Package/OraSpinnerDemo",
         "!Development/**/*",
         "!Package/CreateElectronReactiveEvent",
+        "!Package/ElectronReactiveEvent/Documentation",
         "!Package/ElectronReactiveEvent/Sample",
         "!Package/ElectronReactiveEvent/Sample/**/*",
         "Documentation",
