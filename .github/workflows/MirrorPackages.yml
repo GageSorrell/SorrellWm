@@ -51,6 +51,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Append mirror notice to ReadMe.md
+        shell: bash
+        run: |
+          ReadMePath="${{ matrix.package.local_path }}/ReadMe.md"
+
+          if [[ ! -f "$ReadMePath" ]]; then
+            echo "::error::Expected ReadMe.md not found at $ReadMePath"
+            exit 1
+          fi
+
+          cat >> "$ReadMePath" <<'EOF'
+
+          ------
+
+          *This repository is a read-only mirror.  Development takes place in the [`SorrellWm` monorepo](https://github.com/GageSorrell/SorrellWm).*
+          EOF
+
       - name: Mirror ${{ matrix.package.repository_name }}
         if: ${{ github.ref_type != 'tag' }}
         uses: danharrin/monorepo-split-github-action@v2.4.4
