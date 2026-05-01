@@ -52,13 +52,18 @@ const Log: FLogger = GetTreeLogger();
 
 const Forest: FForest = [ ];
 
+/**
+ * Get the current {@link FForest} that models the user's desktop.
+ *
+ * @returns {FForest} The current {@link FForest} that models the user's desktop.
+ */
 export function GetForest(): FForest
 {
     return Forest;
     // return [ ...Forest ];
 }
 
-const GetDepth = (Vertex: FVertex): number =>
+function GetDepth(Vertex: FVertex): number
 {
     let Depth: number = 0;
     let Parent: FPanel | undefined = GetParent(Vertex);
@@ -70,14 +75,15 @@ const GetDepth = (Vertex: FVertex): number =>
     }
 
     return Depth;
-};
+}
 
 /**
  * Log the contents of the forest.
+ *
  * @param Transformer - Optionally, pass a function to transform the log statement for each vertex,
- *                      based upon the behavior that you wish to describe by logging.
+ * based upon the behavior that you wish to describe by logging.
  */
-export const LogForest = (Transformer?: FLogTransformer): void =>
+export function LogForest(Transformer?: FLogTransformer): void
 {
     Log(Forest);
     Log("Logged Forest!");
@@ -133,7 +139,7 @@ const Cell = (Handle: HWindow): FCell =>
     };
 };
 
-export const UpdateForest = (UpdateFunction: (OldForest: FForest) => FForest): void =>
+export function UpdateForest(UpdateFunction: (OldForest: FForest) => FForest): void
 {
     const NewForest: FForest = UpdateFunction([ ...Forest ]);
     Forest.length = 0;
@@ -171,7 +177,7 @@ async function InitializeTree(): Promise<void>
  * tile all restored windows, and place them in the root panel of the
  * respective monitor to which they belong.
  */
-export const TileAllWindows = (): void =>
+export function TileAllWindows(): void
 {
     const Monitors: TArray<FMonitorInfo> = GetMonitors();
 
@@ -237,11 +243,11 @@ export const TileAllWindows = (): void =>
                 const UniformWidth: number = MonitorInfo.WorkSize.Width / Panel.Children.length;
                 const OutChild: FVertex = { ...Child };
                 OutChild.Size =
-                {
-                    ...MonitorInfo.WorkSize,
-                    Width: UniformWidth,
-                    X: UniformWidth * Index + MonitorInfo.WorkSize.X
-                };
+                    {
+                        ...MonitorInfo.WorkSize,
+                        Width: UniformWidth,
+                        X: UniformWidth * Index + MonitorInfo.WorkSize.X
+                    };
 
                 return OutChild;
             });
@@ -264,7 +270,7 @@ export const TileAllWindows = (): void =>
 };
 
 /** @remarks This is not a completely thorough type-check function. */
-export const IsVertex = (In: unknown): In is FVertex =>
+export function IsVertex(In: unknown): In is FVertex
 {
     return (
         typeof In === "object" &&
@@ -275,12 +281,12 @@ export const IsVertex = (In: unknown): In is FVertex =>
     );
 };
 
-export const IsCell = (Vertex: FVertex): Vertex is FCell =>
+export function IsCell(Vertex: FVertex): Vertex is FCell
 {
     return "Handle" in Vertex;
 };
 
-export const Flatten = (): TArray<FVertex> =>
+export function Flatten(): TArray<FVertex>
 {
     const OutArray: TArray<FVertex> = [ ];
 
@@ -297,7 +303,7 @@ export const Flatten = (): TArray<FVertex> =>
  * Run a function for each vertex until the function returns `false` for
  * an iteration.
  */
-export const Traverse = (Predicate: TPredicate<FVertex>, Entry?: FVertex): void =>
+export function Traverse(Predicate: TPredicate<FVertex>, Entry?: FVertex): void
 {
     let Continues: boolean = true;
     const Recurrence = (Vertex: FVertex): void =>
@@ -358,7 +364,7 @@ const GetAllCells = (Panels: TArray<FPanel>): TArray<FCell> =>
     return Result;
 };
 
-export const Exists = (Predicate: (Vertex: FVertex) => boolean): boolean =>
+export function Exists(Predicate: (Vertex: FVertex) => boolean): boolean
 {
     let DoesExist: boolean = false;
     Traverse((Vertex: FVertex): boolean =>
@@ -375,17 +381,17 @@ export const Exists = (Predicate: (Vertex: FVertex) => boolean): boolean =>
 };
 
 /** @TODO */
-export const ExistsExactlyOne = (_Predicate: (Vertex: FVertex) => boolean): boolean =>
+export function ExistsExactlyOne(_Predicate: (Vertex: FVertex) => boolean): boolean
 {
     return false;
 };
 
-export const ForAll = (_Predicate: (Vertex: FVertex) => boolean): boolean =>
+export function ForAll(_Predicate: (Vertex: FVertex) => boolean): boolean
 {
     return false;
 };
 
-export const IsWindowTiled = (Handle: HWindow): boolean =>
+export function IsWindowTiled(Handle: HWindow): boolean
 {
     return Exists((Vertex: FVertex): boolean =>
     {
@@ -393,7 +399,7 @@ export const IsWindowTiled = (Handle: HWindow): boolean =>
     });
 };
 
-export const GetCellFromHandle = (Handle: HWindow): FCell | undefined =>
+export function GetCellFromHandle(Handle: HWindow): FCell | undefined
 {
     return Find((Vertex: FVertex): boolean =>
     {
@@ -401,7 +407,7 @@ export const GetCellFromHandle = (Handle: HWindow): FCell | undefined =>
     }) as FCell | undefined;
 };
 
-export const GetPanels = (): TArray<FPanel> =>
+export function GetPanels(): TArray<FPanel>
 {
     const Vertices: TArray<FVertex> = Flatten();
     return Vertices.filter((Vertex: FVertex): boolean => !IsCell(Vertex)) as TArray<FPanel>;
@@ -606,7 +612,7 @@ const ComputeGapData = async (): Promise<TMap<FVertex, FBox>> =>
     return Out;
 };
 
-export const GetRealSize = async (InVertex: FVertex): Promise<FBox | undefined> =>
+export async function GetRealSize(InVertex: FVertex): Promise<FBox | undefined>
 {
     const { Gap } = await GetSettings();
     const IsGapNonzero: boolean = Gap > 0;
@@ -630,7 +636,7 @@ export const GetRealSize = async (InVertex: FVertex): Promise<FBox | undefined> 
     }
 };
 
-export const Publish = async (): Promise<void> =>
+export async function Publish(): Promise<void>
 {
     const { Gap } = await GetSettings();
     const IsGapNonzero: boolean = Gap > 0;
@@ -706,7 +712,7 @@ const PanelContainsVertex = (currentVertex: FVertex, targetVertex: FVertex): boo
     return false;
 };
 
-export const GetRootPanel = (Vertex: FVertex): FPanel | undefined =>
+export function GetRootPanel(Vertex: FVertex): FPanel | undefined
 {
     for (const Panel of Forest)
     {
@@ -719,7 +725,7 @@ export const GetRootPanel = (Vertex: FVertex): FPanel | undefined =>
     return undefined;
 };
 
-const GetPanelApplicationNames = (Panel: FPanel): TArray<string> =>
+function GetPanelApplicationNames(Panel: FPanel): TArray<string>
 {
     const ResultNames: TArray<string> = [ ];
 
@@ -745,7 +751,7 @@ const GetPanelApplicationNames = (Panel: FPanel): TArray<string> =>
     return ResultNames;
 };
 
-export const AnnotatePanel = (Panel: FPanel): FAnnotatedPanel | undefined =>
+export function AnnotatePanel(Panel: FPanel): FAnnotatedPanel | undefined
 {
     const RootPanel: FPanel | undefined = GetRootPanel(Panel);
     if (RootPanel !== undefined && RootPanel.MonitorId !== undefined)
@@ -767,14 +773,14 @@ export const AnnotatePanel = (Panel: FPanel): FAnnotatedPanel | undefined =>
     return undefined;
 };
 
-export const GetPanelScreenshot = async (Panel: FPanel): Promise<string | undefined> =>
+export async function GetPanelScreenshot(Panel: FPanel): Promise<string | undefined>
 {
     const ScreenshotPath: string = CaptureScreenSectionToTempPngFile(Panel.Size);
 
     return await GetPngBase64(ScreenshotPath);
 };
 
-export const MakeSizesUniform = (Panel: FPanel): void =>
+export function MakeSizesUniform(Panel: FPanel): void
 {
     Panel.Children.forEach((Child: FVertex, Index: number): void =>
     {
@@ -795,12 +801,14 @@ export const MakeSizesUniform = (Panel: FPanel): void =>
     });
 };
 
-export const IsPanelAnnotated = (Panel: FPanel | FAnnotatedPanel): Panel is FAnnotatedPanel =>
+export function IsPanelAnnotated(
+    Panel: FPanel | FAnnotatedPanel
+): Panel is FAnnotatedPanel
 {
     return "Screenshot" in Panel;
 };
 
-export const GetCurrentPanel = (): FPanel | undefined =>
+export function GetCurrentPanel(): FPanel | undefined
 {
     const Handle: HWindow | undefined = GetActiveWindow();
     if (Handle !== undefined)
@@ -826,7 +834,10 @@ export const GetCurrentPanel = (): FPanel | undefined =>
     }
 };
 
-export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindow): FCell | undefined =>
+export function BringIntoPanel(
+    InPanel: FPanel | FAnnotatedPanel,
+    Handle: HWindow
+): FCell | undefined
 {
     if (Handle !== undefined)
     {
@@ -855,12 +866,7 @@ export const BringIntoPanel = (InPanel: FPanel | FAnnotatedPanel, Handle: HWindo
     return undefined;
 };
 
-// export const ArePanelsEqual = (A: FPanel | FAnnotatedPanel, B: FPanel | FAnnotatedPanel): boolean =>
-// {
-//     return AreBoxesEqual(A.Size, B.Size);
-// };
-
-export const Find = (Predicate: TPredicate<FVertex>): FVertex | undefined =>
+export function Find(Predicate: TPredicate<FVertex>): FVertex | undefined
 {
     let Out: FVertex | undefined = undefined;
 
@@ -888,23 +894,23 @@ export const Find = (Predicate: TPredicate<FVertex>): FVertex | undefined =>
     return Out;
 };
 
-export const IsPanel = (Vertex: FVertex): Vertex is FPanel =>
+export function IsPanel(Vertex: FVertex): Vertex is FPanel
 {
     return "Children" in Vertex;
-};
+}
 
 // const FormatPanel = (InPanel: FPanel | FAnnotatedPanel): string =>
 // {
 //     return "";
 // };
 
-export const GetPanelFromAnnotated = (Panel: FAnnotatedPanel): FPanel | undefined =>
+export function GetPanelFromAnnotated(Panel: FAnnotatedPanel): FPanel | undefined
 {
     const LoggedPanel: Partial<FPanel> =
-    {
-        Size: Panel.Size,
-        Type: Panel.Type
-    };
+        {
+            Size: Panel.Size,
+            Type: Panel.Type
+        };
 
     Log("Begins GetPanelFromAnnotated, Panel is", LoggedPanel);
     return Find((Vertex: FVertex): boolean =>
@@ -933,37 +939,49 @@ export const GetPanelFromAnnotated = (Panel: FAnnotatedPanel): FPanel | undefine
     }) as FPanel | undefined;
 };
 
-export const RemoveAnnotations = ({ Children, MonitorId, Size, Type, ZOrder }: FAnnotatedPanel): FPanel =>
+/**
+ * Get an {@link FPanel} from a given {@link FAnnotatedPanel}.
+ *
+ * @param AnnotatedPanel - The {@link FAnnotatedPanel} from which the annotations
+ * will be removed.
+ *
+ * @returns {FPanel} The {@link FPanel} that constituted the given {@link AnnotatedPanel},
+ * without the annotations.
+ */
+export function RemoveAnnotations(AnnotatedPanel: FAnnotatedPanel): FPanel
 {
     return {
-        Children,
-        MonitorId,
-        Size,
-        Type,
-        ZOrder
+        Children: AnnotatedPanel.Children,
+        MonitorId: AnnotatedPanel.MonitorId,
+        Size: AnnotatedPanel.Size,
+        Type: AnnotatedPanel.Type,
+        ZOrder: AnnotatedPanel.ZOrder
     };
 };
 
-const ArePanelsEqual = (A: FPanel, B: FPanel): boolean =>
+/**
+ * Determines whether two panels are equal.
+ *
+ * @param A - The first {@link FPanel} argument.
+ * @param B - The second {@link FPanel} argument.
+ *
+ * @returns {boolean} Whether {@link A} and {@link B} are equal.
+ */
+function ArePanelsEqual(A: FPanel, B: FPanel): boolean
 {
-    /** @TODO To support stack boxes, check if children are also equal as well. */
+    // @TODO To support stack boxes, check if children are also equal as well.
     return A.Children.length === B.Children.length && AreBoxesEqual(A.Size, B.Size);
-    // if (A.Children.length === B.Children.length)
-    // {
-    //     /* We impose that the order of the children must be the same. */
-    //     return A.Children.every((AChild: FVertex, Index: number): boolean =>
-    //     {
-    //         const BChild: FVertex = B.Children[Index];
-    //         return AreVerticesEqual(AChild, BChild);
-    //     });
-    // }
-    // else
-    // {
-    //     return false;
-    // }
 };
 
-export const AreVerticesEqual = (A: FVertex, B: FVertex): boolean =>
+/**
+ * Determines whether two vertices are equal.
+ *
+ * @param A - The first {@link FVertex} argument.
+ * @param B - The second {@link FVertex} argument.
+ *
+ * @returns {boolean} Whether {@link A} and {@link B} are equal.
+ */
+export function AreVerticesEqual(A: FVertex, B: FVertex): boolean
 {
     if (IsCell(A) && IsCell(B))
     {
@@ -979,8 +997,16 @@ export const AreVerticesEqual = (A: FVertex, B: FVertex): boolean =>
     }
 };
 
-/** Get the parent vertex of `Vertex`.  Returns undefined iff it is a root panel. */
-export const GetParent = (Vertex: FVertex): FPanel | undefined =>
+/**
+ * Get the parent vertex of `Vertex`.  Returns undefined iff it is a root panel.
+ *
+ * @param Vertex - The {@link FVertex} whose parent is returned by this function,
+ * if the given {@link FVertex} has a parent.
+ *
+ * @returns {FPanel | undefined} The parent of the given {@link Vertex}, if the given
+ * {@link Vertex} has a parent (otherwise `undefined`).
+ */
+export function GetParent(Vertex: FVertex): FPanel | undefined
 {
     return Find((InVertex: FVertex): boolean =>
     {
@@ -1000,9 +1026,14 @@ export const GetParent = (Vertex: FVertex): FPanel | undefined =>
 
 /**
  * Get the index of the given `Vertex` in its parent panel.
- * @returns `undefined` if the `Vertex` is a root panel.
+ *
+ * @param Vertex - The vertex whose index in its parent panel is returned by this.
+ *
+ * @returns {number | undefined} The index of the given {@link Vertex} in its
+ * containing panel.  If the given {@link Vertex} does not have a parent panel,
+ * then this function returns `undefined`.
  */
-export const GetIndexInPanel = (Vertex: FVertex): number | undefined =>
+export function GetIndexInPanel(Vertex: FVertex): number | undefined
 {
     const ParentPanel: FPanel | undefined = GetParent(Vertex);
     if (ParentPanel !== undefined)
@@ -1038,7 +1069,7 @@ export const GetIndexInPanel = (Vertex: FVertex): number | undefined =>
 
 let InterimFocusedVertex: FVertex | undefined = undefined;
 
-export const SetInterimFocusedVertexToActive = (): void =>
+export function SetInterimFocusedVertexToActive(): void
 {
     const ActiveWindow: HWindow | undefined = GetActiveWindow();
     if (ActiveWindow !== undefined)
@@ -1047,17 +1078,17 @@ export const SetInterimFocusedVertexToActive = (): void =>
     }
 };
 
-export const GetInterimFocusedVertex = (): FVertex | undefined =>
+export function GetInterimFocusedVertex(): FVertex | undefined
 {
     return InterimFocusedVertex;
 };
 
-export const ClearInterimFocusedVertex = (): void =>
+export function ClearInterimFocusedVertex(): void
 {
     InterimFocusedVertex = undefined;
 };
 
-export const VertexToString = (Vertex: FVertex): string =>
+export function VertexToString(Vertex: FVertex): string
 {
     return IsCell(Vertex)
         ? GetWindowTitle(Vertex.Handle)
@@ -1066,7 +1097,7 @@ export const VertexToString = (Vertex: FVertex): string =>
 
 // let ChangeFocusDebounceTime: number = 0;
 
-export const ChangeFocus = (FocusChange: FFocusChange): void =>
+export function ChangeFocus(FocusChange: FFocusChange): void
 {
     // const Now: number = new Date().getTime();
     // const DebounceDuration: number = 50;
@@ -1192,10 +1223,16 @@ export const ChangeFocus = (FocusChange: FFocusChange): void =>
 
 /**
  * Given a panel, get its 0th cell.
- * @TODO Consider modifying this such that if the 0th child of the panel is a panel with no children,
- *       then try the 1st child, 2nd, etc.
+ *
+ * @todo Consider modifying this such that if the 0th child of the panel is a panel with no children,
+ * then try the 1st child, 2nd, etc.
+ *
+ * @param Panel - The panel whose zeroth {@link FCell} is returned by this.
+ *
+ * @returns {FCell | undefined} The zeroth {@link FCell} of the given {@link Panel}.
+ * If the given {@link Panel} has no children, then `undefined` is returned.
  */
-const GetZerothCell = (Panel: FPanel): FCell | undefined =>
+function GetZerothCell(Panel: FPanel): FCell | undefined
 {
     if (Panel.Children[0] !== undefined)
     {
@@ -1209,7 +1246,7 @@ const GetZerothCell = (Panel: FPanel): FCell | undefined =>
     }
 };
 
-export const FinishFocus = (): void =>
+export function FinishFocus(): void
 {
     if (InterimFocusedVertex !== undefined)
     {
@@ -1241,7 +1278,7 @@ export const FinishFocus = (): void =>
     }
 };
 
-export const GetNextIndex = (Vertex: FVertex): number | undefined =>
+export function GetNextIndex(Vertex: FVertex): number | undefined
 {
     const Parent: FPanel | undefined = GetParent(Vertex);
     if (Parent !== undefined)
@@ -1257,7 +1294,7 @@ export const GetNextIndex = (Vertex: FVertex): number | undefined =>
     }
 };
 
-export const GetNextSibling = (Vertex: FVertex): FVertex | undefined =>
+export function GetNextSibling(Vertex: FVertex): FVertex | undefined
 {
     const Parent: FPanel | undefined = GetParent(Vertex);
     if (Parent !== undefined)
@@ -1272,7 +1309,7 @@ export const GetNextSibling = (Vertex: FVertex): FVertex | undefined =>
     return undefined;
 };
 
-export const GetPreviousSibling = (Vertex: FVertex): FVertex | undefined =>
+export function GetPreviousSibling(Vertex: FVertex): FVertex | undefined
 {
     const Parent: FPanel | undefined = GetParent(Vertex);
     if (Parent !== undefined)
@@ -1287,7 +1324,17 @@ export const GetPreviousSibling = (Vertex: FVertex): FVertex | undefined =>
     return undefined;
 };
 
-export const GetPreviousIndex = (Vertex: FVertex): number | undefined =>
+/**
+ * Get one less than the index of a given {@link Vertex} in its parent panel.
+ *
+ * @param Vertex - The {@link FVertex} whose index in its parent panel is used
+ * to compute the value returned by this.
+ *
+ * @returns {number | undefined} One less than the index of the given {@link Vertex}
+ * in its parent panel.  If the given {@link Vertex} does not have a parent panel,
+ * then `undefined` is returned.
+ */
+export function GetPreviousIndex(Vertex: FVertex): number | undefined
 {
     const Parent: FPanel | undefined = GetParent(Vertex);
     if (Parent !== undefined)
