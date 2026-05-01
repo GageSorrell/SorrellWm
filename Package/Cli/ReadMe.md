@@ -44,3 +44,5 @@ A given command might perform behavior *in addition to* what is described below.
 
 *(Optional)*.&ensp;If specified, then nothing will be output to the terminal.
 The script will exit with `exitCode === 0` if successful, otherwise it will exit with `exitCode === 1`.
+
+*Bump.*
