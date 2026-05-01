@@ -1,0 +1,66 @@
+{
+  "name": "@sorrellwm/keyboard-ui",
+  "private": "false",
+  "version": "1.0.0",
+  "description": "A Fluent-UI—based component library for displaying keys on the keyboard.",
+  "scripts": {
+    "prepack": "npm run build",
+    "dev": "vite",
+    "build": "vite build",
+    "storybook": "storybook dev -p 6006",
+    "build:storybook": "storybook build",
+    "check": "tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./Distribution/Types/index.d.mts",
+        "default": "./Distribution/index.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/index.d.cts",
+        "default": "./Distribution/index.cjs"
+      }
+    }
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/KeyboardUi#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/KeyboardUi",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "keywords": [
+    "fluent",
+    "fluent-ui",
+    "component",
+    "sorrellwm",
+    "react",
+    "library"
+  ],
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@storybook/react-vite": "^10.3.6",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "storybook": "^10.3.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vite-plugin-dts": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

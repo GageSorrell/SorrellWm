@@ -89,6 +89,7 @@
 		"typescript.format.enable": false,
 		"cSpell.words": [
             "allman",
+            "autodocs",
             "BLENDFUNCTION",
             "BOTTOMBAR",
             "cctype",

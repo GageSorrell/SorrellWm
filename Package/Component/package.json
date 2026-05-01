@@ -1,0 +1,42 @@
+{
+  "name": "@sorrellwm/component",
+  "private": "true",
+  "version": "1.0.0",
+  "description": "The main component library of SorrellWm.",
+  "scripts": {
+    "prepack": "npm run build",
+    "build:js": "node esbuild.config.mts",
+    "prebuild:types": "tsc -p ./tsconfig.script.json",
+    "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
+    "build": "npm run build:js && npm run build:types"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./Distribution/Types/index.d.mts",
+        "default": "./Distribution/index.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/index.d.cts",
+        "default": "./Distribution/index.cjs"
+      }
+    }
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Component#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Component",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "keywords": [ "fluent", "fluent-ui", "component", "sorrellwm", "react", "library" ],
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "type": "module"
+}

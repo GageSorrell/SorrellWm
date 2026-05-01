@@ -10,13 +10,18 @@ import { Switch, type SwitchOnChangeData } from "@fluentui/react-components";
 import { GetFlexStyle } from "@sorrell/react";
 import type { PBooleanSettingControl } from "./BooleanSettingControl.Types";
 
-export const BooleanSettingControl = (
-    { Disabled, Value, OnChangeValue }: PBooleanSettingControl
-): ReactNode =>
+export function BooleanSettingControl({
+    Disabled,
+    OnChangeValue,
+    Value
+}: PBooleanSettingControl): ReactNode
 {
     const RootStyle: CSSProperties = GetFlexStyle("row", "flex-end", "center");
 
-    const OnChange = (_Event: ChangeEvent<HTMLInputElement>, Data: SwitchOnChangeData): void =>
+    const OnChange = (
+        _Event: ChangeEvent<HTMLInputElement>,
+        Data: SwitchOnChangeData
+    ): void =>
     {
         OnChangeValue(Data.checked);
     };
@@ -32,4 +37,4 @@ export const BooleanSettingControl = (
             />
         </div>
     );
-};
+}
