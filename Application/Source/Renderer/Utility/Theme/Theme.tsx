@@ -12,7 +12,7 @@ import {
     createDarkTheme,
     createLightTheme } from "@fluentui/react-components";
 import { type CSSProperties, type PropsWithChildren, type ReactNode, useMemo } from "react";
-import type { FHexColor } from "@sorrellwm/windows";
+import type { FHexColor } from "@sorrell/wm-windows";
 import type { FLogger } from "../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseSendEvent } from "@/Event";
@@ -63,15 +63,17 @@ const UseSystemTheme = (): Readonly<[ theme: Theme ]> =>
     return [ SystemTheme ] as const;
 };
 
-/** Provide Fluent UI with a custom theme based on the system's theme color and light/dark mode. */
-export const FluentThemeProvider = ({ children }: PropsWithChildren): ReactNode =>
+export/**
+       * Provide Fluent UI with a custom theme based on the system's theme color and light/dark mode.
+       */
+const FluentThemeProvider = ({ children }: PropsWithChildren): ReactNode =>
 {
     const [ theme ] = UseSystemTheme();
 
     const RootStyle: CSSProperties =
-    {
-        background: "none"
-    };
+        {
+            background: "none"
+        };
 
     return (
         <FluentProvider

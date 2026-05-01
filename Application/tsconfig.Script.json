@@ -1,7 +1,4 @@
 {
-    "compilerOptions":
-    {
-    },
     "extends": "./tsconfig.json",
     "include":
     [
@@ -9,6 +6,7 @@
     ],
     "exclude":
     [
-        "Source"
+        "Source",
+        "Script/Notarize.ts"
     ]
 }

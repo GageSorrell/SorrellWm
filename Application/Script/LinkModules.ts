@@ -5,20 +5,19 @@
  * @license   MIT
  */
 
-import * as Fs from "fs";
-import { Paths } from "../Configuration";
+import { existsSync, symlinkSync } from "fs";
+import { Paths } from "../Configuration/Script/Path";
 
 const { AppNodeModules, ConfigurationNodeModules, SourceNodeModules } = Paths;
 
-if (Fs.existsSync(AppNodeModules))
+if (existsSync(AppNodeModules || ""))
 {
-    if (!Fs.existsSync(SourceNodeModules))
+    if (!existsSync(SourceNodeModules || ""))
     {
-        Fs.symlinkSync(AppNodeModules, SourceNodeModules, "junction");
+        symlinkSync(AppNodeModules || "", SourceNodeModules || "", "junction");
     }
-    // if (!Fs.existsSync(erbNodeModulesPath))
-    if (!Fs.existsSync(ConfigurationNodeModules))
+    if (!existsSync(ConfigurationNodeModules || ""))
     {
-        Fs.symlinkSync(AppNodeModules, ConfigurationNodeModules, "junction");
+        symlinkSync(AppNodeModules || "", ConfigurationNodeModules || "", "junction");
     }
 }

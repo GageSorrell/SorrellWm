@@ -1,9 +1,35 @@
 {
   "name": "@sorrell/wm-windows",
-  "private": false,
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "The primary API through which SorrellWm interacts with the Windows API.",
-  "main": "./index.js",
+  "private": false,
+  "type": "module",
+   "main": "./index.cjs",
+    "types": "./index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./index.d.mts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
+    }
+},
+  "files": [
+    "package.json",
+    "Build",
+    "Build/**/*",
+    "License.md",
+    "ReadMe.md",
+    "tsconfig.json",
+    "*.mts",
+    "*.cts",
+    "index.js",
+    "index.cjs"
+  ],
   "scripts": {
     "build": "cd ../../Script/Build && npm run start",
     "cmake-step": "cmake-js compile --out ./Build",
@@ -34,7 +60,6 @@
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "license": "MIT",
-  "type": "module",
   "dependencies": {
     "bindings": "^1.5.0",
     "node-addon-api": "^8.7.0",

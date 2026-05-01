@@ -21,7 +21,6 @@ import {
 import {
     Delay,
     GetPropertyFromPath,
-    Identity,
     MakeRef,
     SetPropertyFromPath,
     type TRef } from "../Shared/Utility";
@@ -31,17 +30,18 @@ import type {
     FUseSettingsStateReturnType,
     TControlledProps,
     TGetSetting,
-    TUseSettingStateReturnType } from "./Settings.Types";
+    TUseSettingStateReturnType
+} from "./Settings.Types";
 // import { IsSuccessful, UseSendIpcEvent, UseSendIpcEventDeferred } from "./Event.tsx.old";
-import { IsEventSuccess, type TSendEventDeferredReturnType } from "electron-reactive-event";
-import type { TInternal, TSetState } from "./Utility";
 import { Toast, ToastTitle, ToastTrigger } from "@fluentui/react-components";
 import { UseSendEvent, UseSendEventDeferred } from "./Event";
 import { Button } from "./Domain/Common";
 import { DefaultSettings } from "../Shared/Settings";
 import { GetLogger } from "./Log";
-import type { IFrontendEventRegistrar } from "../Shared/Event/Event.Types";
+import { Identity } from "@sorrell/utilities/functional";
+import type { TInternal } from "./Utility";
 import type { TPath } from "../Shared/Utility/Object.Types";
+import type { TSetState } from "@sorrell/react";
 import { UseToaster } from "./Toast";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -58,27 +58,28 @@ type TUpdateAction = <PathType extends FSettingsPath,>(
 ) => Promise<void>;
 
 type TUpdateTuple<PathType extends FSettingsPath = FSettingsPath,> =
-{
-    Path: PathType;
-    Value: TGetSetting<PathType>;
-};
+    {
+        Path: PathType;
+        Value: TGetSetting<PathType>;
+    };
 
 type TUpdateManyFunction = <PathType extends FSettingsPath,>(
     ...Pairs: Array<TUpdateTuple<PathType>>
 ) => void;
 
-export type CSettings = TInternal<{
-    IsPending: boolean;
-    OptimisticSettings: FSettings;
-    RealSettings: FSettings;
-    StartTransition: TransitionStartFunction;
-    UpdateFunction: TUpdateFunction;
-    UpdateManyFunction: TUpdateManyFunction;
-}>;
+export type CSettings =
+    TInternal<{
+        IsPending: boolean;
+        OptimisticSettings: FSettings;
+        RealSettings: FSettings;
+        StartTransition: TransitionStartFunction;
+        UpdateFunction: TUpdateFunction;
+        UpdateManyFunction: TUpdateManyFunction;
+    }>;
 
 const DefaultContextSettings: CSettings =
-{
-    INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:
+    {
+        INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:
     {
         IsPending: false,
         OptimisticSettings: DefaultSettings,
@@ -87,7 +88,7 @@ const DefaultContextSettings: CSettings =
         UpdateFunction: Identity,
         UpdateManyFunction: Identity
     }
-};
+    };
 
 const SettingsContext: Context<CSettings> = createContext<CSettings>(DefaultContextSettings);
 
@@ -197,13 +198,13 @@ const SettingsFailureToast = (): ReactNode =>
     }, [ SendIpcEvent ]);
 
     const RequestRestartButton: ReactNode =
-    (
-        <ToastTrigger>
-            <Button { ...{ onMouseDown } }>
+        (
+            <ToastTrigger>
+                <Button { ...{ onMouseDown } }>
                 Restart SorrellWm
-            </Button>
-        </ToastTrigger>
-    );
+                </Button>
+            </ToastTrigger>
+        );
 
     return (
         <Toast>
@@ -236,10 +237,13 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
         NewSettingsRef.Ref = NewSettings;
         SetPropertyFromPath(NewSettingsRef, Path, Value);
         SetOptimisticSettings(NewSettings);
-        const Result: TSendEventDeferredReturnType<"UpdateSettings", IFrontendEventRegistrar> =
-            await SendEvent("UpdateSettings", NewSettings);
+        // const Result: TSendEventDeferredReturnType<"UpdateSettings", IFrontendEventRegistrar> =
+        // const Result: any =
+        //     await SendEvent("UpdateSettings", NewSettings);
 
-        if (IsEventSuccess(Result))
+        // if (IsEventSuccess(Result))
+        // @TODO Temporary.
+        if (true)
         {
             SetRealSettings(NewSettings);
         }
@@ -278,8 +282,8 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
         };
 
     const value: CSettings =
-    {
-        INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:
+        {
+            INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:
         {
             IsPending,
             OptimisticSettings,
@@ -288,7 +292,7 @@ export const SettingsProvider = ({ children }: PropsWithChildren): ReactNode =>
             UpdateFunction,
             UpdateManyFunction
         }
-    };
+        };
 
     return (
         <SettingsContext.Provider { ...{ value } }>

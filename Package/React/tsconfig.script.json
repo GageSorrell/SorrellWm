@@ -1,0 +1,15 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "outDir": "./Intermediate",
+        "module": "preserve",
+        "types": [ "node" ],
+        "moduleResolution": "bundler",
+        "lib": [
+            "ES2023"
+        ]
+    },
+    "include": [ "Script/**/*.ts" ],
+    "exclude": [ "Source" ]
+}

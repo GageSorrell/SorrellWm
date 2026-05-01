@@ -9,7 +9,7 @@
 
 import type { FStoreFunction, GGlobal, GGlobalDefault } from "./Store.Types";
 import { type PropsWithChildren, type ReactNode, useEffect, useState } from "react";
-import type { FHexColor } from "@sorrellwm/windows";
+import type { FHexColor } from "@sorrell/wm-windows";
 // import { Log } from "./Log";
 import { create } from "zustand";
 

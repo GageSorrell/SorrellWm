@@ -8,7 +8,7 @@
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import type { JSXElement } from "@fluentui/react-components";
 import type { ReactNode } from "react";
-import type { TPropsWithChildren } from "@/Utility";
+import type { TPropsWithChildren } from "@sorrell/react";
 import { UseCompoundContext } from "./CompoundSettingSegment";
 
 export const CompoundSettingSegmentBodyContainer = (

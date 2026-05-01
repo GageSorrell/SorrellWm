@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
-import type * as TypeScript from "typescript";
 import type { NoOptions } from "./Utility.Internal.ts";
+import type TypeScript from "typescript";
 
 /**
  * @deprecated Use {@link TMutable} instead.
@@ -51,15 +51,6 @@ export type TMutable<RecordLike, ShallowOption extends boolean = true> =
 export type TValues<RecordLike> = RecordLike[keyof RecordLike];
 
 /**
- * The union of a given {@link ElementType} and the array of a given {@link ElementType}.
- *
- * @template ElementType - The type of this, or the type of elements contained by this.
- */
-export type TMaybeArray<ElementType> =
-    | ElementType
-    | Array<ElementType>;
-
-/**
  * The element type of the return value of `Object.entries()`.
  *
  * @template RecordLike - The record-like type of the argument of `Object.entries()`.
@@ -95,6 +86,7 @@ export type TNullable<Type> =
     | null
     | undefined;
 
+/** An error that is thrown in default implementations of `abstract` `class`es. */
 export class AbstractMethodCallError extends Error
 {
     public constructor(ClassName?: string)
@@ -168,7 +160,7 @@ type FModuleResolutionKind =
     | "nodenext"
     | "bundler";
 
-export type FTarget =
+type FTarget =
     | "es3"
     | "es5"
     | "es6"
@@ -187,3 +179,14 @@ export type FTarget =
     | "json"
     | "esnext"
     | "es2025";
+
+/**
+ * Maps a given {@link RecordLike} type to an identical {@link Record} type, but
+ * the properties are wrapped with {@link NonNullable}.
+ *
+ * @template RecordLike - The `Record`-like type from which this type is defined.
+ */
+export type TRecordNonNullable<RecordLike> =
+    {
+        [ Key in keyof RecordLike ]: NonNullable<RecordLike[Key]>;
+    };

@@ -15,7 +15,8 @@ import {
     KeyboardRegular,
     SettingsFilled,
     SettingsRegular,
-    bundleIcon } from "@fluentui/react-icons";
+    bundleIcon
+} from "@fluentui/react-icons";
 import {
     type CSSProperties,
     type FC,
@@ -24,7 +25,8 @@ import {
     type RefObject,
     useCallback,
     useRef,
-    useState } from "react";
+    useState
+} from "react";
 import {
     Caption1,
     Hamburger,
@@ -33,16 +35,18 @@ import {
     NavDrawerHeader,
     NavItem,
     type OnNavItemSelectData,
-    tokens } from "@fluentui/react-components";
+    tokens
+} from "@fluentui/react-components";
 import type {
     FNavDrawerType,
     FSettingsScreen,
     FSettingsScreenKey,
     FSettingsScreens,
     PSettingsNavDrawer,
-    PTitlebar } from "./Settings.Types";
+    PTitlebar
+} from "./Settings.Types";
 import { type FSimpleCallback, MapRecord } from "../../../../Shared";
-import { GetFlexStyle, UseState, UseWindowEffect } from "@/Utility";
+import { GetFlexStyle, UseState, UseWindowEffect } from "@sorrell/react";
 import { About } from "./About";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { General } from "./General/General";
@@ -56,22 +60,22 @@ const Log: FLogger = GetLogger("Settings");
 const Titlebar = ({ OnClickHamburger, ShowHamburger }: PTitlebar): ReactNode =>
 {
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("row", "flex-start", "center"),
-        gap: 12,
-        height: Tokens.TitlebarHeight,
-        minHeight: Tokens.TitlebarHeight,
-        minWidth: "100%",
-        paddingLeft: 32,
-        width: "100%"
-    };
+        {
+            ...GetFlexStyle("row", "flex-start", "center"),
+            gap: 12,
+            height: Tokens.TitlebarHeight,
+            minHeight: Tokens.TitlebarHeight,
+            minWidth: "100%",
+            paddingLeft: 32,
+            width: "100%"
+        };
 
     const HamburgerButton = (): ReactNode =>
     {
         const HamburgerStyle: CSSProperties =
-        {
-            cursor: "pointer"
-        };
+            {
+                cursor: "pointer"
+            };
 
         return ShowHamburger && (
             <Hamburger
@@ -108,9 +112,9 @@ const SettingsNavDrawer = (Props: PSettingsNavDrawer): ReactNode =>
     } = Props;
 
     const NavDrawerStyle: CSSProperties =
-    {
-        backgroundColor: NavType === "inline" ? "#00000000" : undefined
-    };
+        {
+            backgroundColor: NavType === "inline" ? "#00000000" : undefined
+        };
 
     const GetNavItemStyle = (Value: FSettingsScreenKey): CSSProperties =>
     {
@@ -120,16 +124,16 @@ const SettingsNavDrawer = (Props: PSettingsNavDrawer): ReactNode =>
     };
 
     const NavDrawerHeaderStyle: CSSProperties =
-    {
-        ...GetFlexStyle("row", "flex-start", "center"),
-        gap: 12,
-        height: Tokens.TitlebarHeight,
-        marginTop: -5,
-        minHeight: Tokens.TitlebarHeight,
-        minWidth: "100%",
-        paddingLeft: 2,
-        width: "100%"
-    };
+        {
+            ...GetFlexStyle("row", "flex-start", "center"),
+            gap: 12,
+            height: Tokens.TitlebarHeight,
+            marginTop: -5,
+            minHeight: Tokens.TitlebarHeight,
+            minWidth: "100%",
+            paddingLeft: 2,
+            width: "100%"
+        };
 
     const NavItems = (): ReactNode =>
     {
@@ -163,9 +167,9 @@ const SettingsNavDrawer = (Props: PSettingsNavDrawer): ReactNode =>
     };
 
     const HamburgerStyle: CSSProperties =
-    {
-        cursor: "pointer"
-    };
+        {
+            cursor: "pointer"
+        };
 
     return (
         <NavDrawer
@@ -201,14 +205,14 @@ const SettingsNavDrawer = (Props: PSettingsNavDrawer): ReactNode =>
 export const Settings = (): ReactElement =>
 {
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("column", "flex-start", "center"),
-        height: "100vh",
-        maxHeight: "100vh",
-        maxWidth: "100vw",
-        overflow: "hidden",
-        width: "100vw"
-    };
+        {
+            ...GetFlexStyle("column", "flex-start", "center"),
+            height: "100vh",
+            maxHeight: "100vh",
+            maxWidth: "100vw",
+            overflow: "hidden",
+            width: "100vw"
+        };
 
     const [ SelectedScreen, OnChangeSelectedScreen ] = UseState<FSettingsScreenKey>("General");
 
@@ -245,14 +249,14 @@ export const Settings = (): ReactElement =>
     }, [ SetHeight ]));
 
     const BodyStyle: CSSProperties =
-    {
-        ...GetFlexStyle("row", "flex-start", "flex-start"),
-        // flex: 1,
-        gap: 16,
-        height: Height - Tokens.TitlebarHeight,
-        maxHeight: "100%",
-        width: "100%"
-    };
+        {
+            ...GetFlexStyle("row", "flex-start", "flex-start"),
+            // flex: 1,
+            gap: 16,
+            height: Height - Tokens.TitlebarHeight,
+            maxHeight: "100%",
+            width: "100%"
+        };
 
     const GetNavType: (() => FNavDrawerType) = useCallback((): FNavDrawerType =>
     {
@@ -298,53 +302,53 @@ export const Settings = (): ReactElement =>
     };
 
     const TitlebarProps: PTitlebar =
-    {
-        OnClickHamburger: OnChangeIsNavOpen,
-        ShowHamburger: NavType === "overlay"
-    };
+        {
+            OnClickHamburger: OnChangeIsNavOpen,
+            ShowHamburger: NavType === "overlay"
+        };
 
     /* eslint-disable sort-keys */
     const Screens: FSettingsScreens =
-    {
-        General:
+        {
+            General:
         {
             Component: General,
             Icon: GetBundledIcon("General", SettingsFilled, SettingsRegular)
         },
-        Keyboard:
+            Keyboard:
         {
             Component: Keyboard,
             Icon: GetBundledIcon("Keyboard", KeyboardFilled, KeyboardRegular)
         },
-        About:
+            About:
         {
             Component: About,
             Icon: GetBundledIcon("About", InfoFilled, InfoRegular)
         }
-    };
+        };
     /* eslint-enable sort-keys */
 
     const SettingsNavDrawerProps: PSettingsNavDrawer =
-    {
-        IsNavOpen,
-        NavType,
-        OnChangeSelectedScreen,
-        OnClickHamburger: OnChangeIsNavOpen,
-        Screens,
-        SelectedScreen,
-        ShowHamburger: NavType === "overlay"
-    };
+        {
+            IsNavOpen,
+            NavType,
+            OnChangeSelectedScreen,
+            OnClickHamburger: OnChangeIsNavOpen,
+            Screens,
+            SelectedScreen,
+            ShowHamburger: NavType === "overlay"
+        };
 
     const SelectedSettingsScreen: FC = (): ReactNode =>
     {
         const SettingsScreenContainerStyle: CSSProperties =
-        {
-            flex: 1,
-            maxHeight: "100%",
-            overflowY: [ "Keyboard" ].includes(SelectedScreen) ? "scroll" : "auto",
-            paddingLeft: 16,
-            width: "100%"
-        };
+            {
+                flex: 1,
+                maxHeight: "100%",
+                overflowY: [ "Keyboard" ].includes(SelectedScreen) ? "scroll" : "auto",
+                paddingLeft: 16,
+                width: "100%"
+            };
         const SettingsScreen: FC = Screens[SelectedScreen].Component;
         return (
             <div style={ SettingsScreenContainerStyle }>

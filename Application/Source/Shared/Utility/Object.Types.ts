@@ -5,26 +5,27 @@
  * @license   MIT
  */
 
-import type { FRecord } from "@sorrellwm/windows";
+import type { FRecord } from "@sorrell/wm-windows";
 
 type TGetRecordProperties<ObjectType> =
-{
-    [
+    {
+        [
         Key in keyof ObjectType as ObjectType[Extract<Key, string>] extends FRecord
             ? Key
             : never
-    ]: ObjectType[Key];
-};
+        ]: ObjectType[Key];
+    };
 
 type TGetRecordKeys<ObjectType> = keyof TGetRecordProperties<ObjectType>;
 
 type TMapToPath<ObjectType> =
-{
-    [ Key in Extract<TGetRecordKeys<ObjectType>, string> ]: `${ Key }.${ TPathInternal<TGetRecordProperties<ObjectType>[Key]> }`;
-};
+    {
+        [ Key in Extract<TGetRecordKeys<ObjectType>, string> ]:
+        `${ Key }.${ TPathInternal<TGetRecordProperties<ObjectType>[Key]> }`;
+    };
 
 /**
- * @Param ParentKey - The use of this parameter--for reasons that I do not
+ * @template ParentKey - The use of this parameter--for reasons that I do not
  *                    understand--prevent an error regarding stack depth
  *                    when evaluating this type.
  */
@@ -41,11 +42,11 @@ type TPathInternal<ObjectType, ParentKey extends string | undefined = undefined>
 export type TPath<ObjectType> = TPathInternal<ObjectType>;
 
 type FDepthMap =
-{
-    3: 2;
-    2: 1;
-    1: 0;
-};
+    {
+        3: 2;
+        2: 1;
+        1: 0;
+    };
 
 type FDepth = keyof FDepthMap | 0;
 type FValidDepth = keyof FDepthMap;
@@ -90,14 +91,14 @@ export type TGetType<ObjectType, PathType extends TPath<ObjectType>, DepthType e
 //     >;
 
 type FTestType =
-{
-    Foo:
     {
-        Bar: number;
+        Foo:
+        {
+            Bar: number;
+        };
+        Baz: string;
+        ArrayProp: Array<boolean>;
     };
-    Baz: string;
-    ArrayProp: Array<boolean>;
-};
 
 const TestPath: TPath<FTestType> = "ArrayProp";
 // const TestType: TGetType<FTestType, "ArrayProp"> | "Nah" = "Nah";

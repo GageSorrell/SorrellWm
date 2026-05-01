@@ -437,7 +437,7 @@ const GenerateTypesDeclarationsFile = async (
     const CoreTypesFile: string = await Fs.promises.readFile(CoreTypesFilePath, { encoding: "utf-8" });
 
     /* eslint-disable-next-line @stylistic/max-len */
-    const ImportStatement: string = `import type { ${ Array.from(NontrivialTypes).join(", ") } } from "./Core";\n\n`;
+    const ImportStatement: string = `import type { ${ Array.from(NontrivialTypes).join(", ") } } from "./Core.js";\n\n`;
 
     NontrivialTypes.forEach((NontrivialType: string): void =>
     {
@@ -445,7 +445,7 @@ const GenerateTypesDeclarationsFile = async (
         if (!TypeIsDefinedInCore)
         {
             /* eslint-disable-next-line @stylistic/max-len */
-            LogError(`Type ${ C(NontrivialType) } is referenced by a function, but it is not defined in ${ C("Core.d.ts") }`);
+            LogError(`Type ${ C(NontrivialType) } is referenced by a function, but it is not defined in ${ C("Core.d.cts") }`);
         }
     });
 
@@ -454,7 +454,7 @@ const GenerateTypesDeclarationsFile = async (
         FileHeader +
         ImportStatement +
         Declarations.join("\n") + "\n";
-    const GeneratedTypesFilePath: string = Path.resolve(GetPath("Windows"), "Types.Generated.d.ts");
+    const GeneratedTypesFilePath: string = Path.resolve(GetPath("Windows"), "Types.Generated.d.cts");
     /* eslint-enable @stylistic/max-len */
 
     await Fs.promises.writeFile(GeneratedTypesFilePath, GeneratedTypesFileContents);
@@ -525,7 +525,7 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
     // const FunctionImports: string = ExposedFunctions.map(GetExportName).join(", ");
 
     // const HandleFileImportStatement: string =
-    //     `import { ${ FunctionImports }, ${ TypeImports } } from "@sorrellwm/windows";\n\n`;
+    //     `import { ${ FunctionImports }, ${ TypeImports } } from "@sorrell/wm-windows";\n\n`;
 
     // const IpcImportStatement: string = "import { ipcMain } from \"electron\"\n";
 
@@ -554,12 +554,14 @@ const GenerateIpcCode = async (RegisteredFunctions: Array<FRegisteredFunction>):
     /* eslint-enable @stylistic/max-len */
 
     /* eslint-disable-next-line @stylistic/max-len */
-    // const PreloadImportStatement: string = `import { ${ CoreTypeImports } } from "@sorrellwm/windows";\n`;
+    // const PreloadImportStatement: string = `import { ${ CoreTypeImports } } from "@sorrell/wm-windows";\n`;
     /* eslint-enable @stylistic/max-len */
 
-    const PreloadContents: string = `/* File:    Preload.ts
- * Author:  Gage Sorrell <gage@sorrell.sh>
- * License: MIT
+    const PreloadContents: string = `/**
+ * @file      Preload.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 /* eslint-disable */
@@ -677,10 +679,10 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
 {
     /* eslint-disable @stylistic/max-len */
     type FHookDefinition =
-    {
-        Hook: string;
-        ImportedTypes: Array<string>;
-    };
+        {
+            Hook: string;
+            ImportedTypes: Array<string>;
+        };
 
     const HookDefinitions: Array<FHookDefinition> =
         RegisteredFunctions.filter((RegisteredFunction: FRegisteredFunction): boolean =>
@@ -732,7 +734,7 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
 
     const ImportedTypes: Array<string> = Array.from(new Set<string>(HookDefinitions.map((Def: FHookDefinition) => Def.ImportedTypes).flat()));
     const SorrellWmImportStatement: string = ImportedTypes.length > 0
-        ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrellwm/windows";`
+        ? `import { ${ ImportedTypes.map((Type: string) => `type ${ Type }`) } } from "@sorrell/wm-windows";`
         : "";
     const ImportStatements: string = `import { useEffect, useState } from "react";\n${ SorrellWmImportStatement }\n\n`;
     const HookDefinitionsString: string = HookDefinitions.map((Def: FHookDefinition) => Def.Hook).join("\n\n");
@@ -740,7 +742,7 @@ const GenerateHooks = async (RegisteredFunctions: Array<FRegisteredFunction>): P
     const HookModuleContents: string = FileHeader + ImportStatements + HookDefinitionsString;
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    const GeneratedModulePath: string = Path.resolve(GetPath("Renderer"), "Hooks.Generated.ts");
+    const GeneratedModulePath: string = Path.resolve(GetPath("Renderer"), "Hooks.Generated.cts");
     await Fs.promises.writeFile(GeneratedModulePath, HookModuleContents, { encoding: "utf-8" });
 };
 

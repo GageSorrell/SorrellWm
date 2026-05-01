@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { FBox, HMonitor, HWindow } from "@sorrellwm/windows";
+import type { FBox, HMonitor, HWindow } from "@sorrell/wm-windows";
 
 export type FVertexBase =
 {

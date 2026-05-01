@@ -6,7 +6,7 @@
  */
 
 import type { FGetTimeToken, FLogFunction, FLogger, FLoggerInterim } from "../Shared/Log.Types";
-import type { FLogLevel } from "@sorrellwm/windows";
+import type { FLogLevel } from "@sorrell/wm-windows";
 import { GetTimeToken } from "../Shared/Log";
 
 export const GetTime = (): FGetTimeToken =>

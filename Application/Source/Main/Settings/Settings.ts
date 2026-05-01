@@ -9,7 +9,7 @@ import type { FLogger, FRejectFunction, FSettings, TResolveFunction } from "../.
 import { DefaultSettings } from "../../Shared";
 import ElectronSettings from "electron-settings";
 import { GetLogger } from "#/Development";
-import { SetRunOnStartup } from "@sorrellwm/windows";
+import { SetRunOnStartup } from "@sorrell/wm-windows";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Settings");

@@ -6,10 +6,10 @@
  */
 
 import { type NavigateFunction, useLocation, useNavigate } from "react-router-dom";
-import { UseIpcEvent, UseSendIpcEventDeferred } from "@/Event";
-import { useCallback, useEffect } from "react";
-import type { FNavigateRequest } from "../../Shared/Event/Navigate.Types";
-import type { TEventCallback } from "../../Shared/Event";
+// import { UseIpcEvent, UseSendIpcEventDeferred } from "@/Event";
+import { SendIpcEvent } from "@/Temp";
+import { useEffect } from "react";
+// import type { FNavigateRequest } from "../../Shared/Event/Navigate.Types";
 
 export const UseIpcNavigatorState = (): Readonly<[ State: unknown ]> =>
 {
@@ -20,33 +20,33 @@ export const UseIpcNavigatorState = (): Readonly<[ State: unknown ]> =>
 export const IpcNavigator = (): undefined =>
 {
     const Navigator: NavigateFunction = useNavigate();
-    type FOnNavigateCallback = (In: FNavigateRequest) => ReturnType<TEventCallback<"Navigate">>;
-    const OnNavigate: FOnNavigateCallback = useCallback(
-        async ({ Route, State }: FNavigateRequest): ReturnType<TEventCallback<"Navigate">> =>
-        {
-            const HasState: boolean = (
-                State !== undefined &&
-                typeof State === "object" &&
-                State !== null
-            );
+    // type FOnNavigateCallback = (In: FNavigateRequest) => ReturnType<Promise<any>>;
+    // const OnNavigate: FOnNavigateCallback = useCallback(
+    //     async ({ Route, State }: FNavigateRequest): ReturnType<any> =>
+    //     {
+    //         const HasState: boolean = (
+    //             State !== undefined &&
+    //             typeof State === "object" &&
+    //             State !== null
+    //         );
 
-            if (HasState)
-            {
-                Navigator(Route, { state: State });
-            }
-            else
-            {
-                Navigator(Route);
-            }
+    //         if (HasState)
+    //         {
+    //             Navigator(Route, { state: State });
+    //         }
+    //         else
+    //         {
+    //             Navigator(Route);
+    //         }
 
-            return { Data: undefined, Error: undefined };
-        },
-        [ Navigator ]
-    );
+    //         return { Data: undefined, Error: undefined };
+    //     },
+    //     [ Navigator ]
+    // );
 
-    UseIpcEvent("Navigate", OnNavigate);
+    // UseIpcEvent("Navigate", OnNavigate);
 
-    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    // const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
     useEffect((): void =>
     {

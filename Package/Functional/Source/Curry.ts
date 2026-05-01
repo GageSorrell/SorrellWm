@@ -5,37 +5,43 @@
  * @license   MIT
  */
 
+import type {
+    FCurriedArgument,
+    TArgumentVectorWithCurry,
+    TCurriedArgumentVector,
+    TCurriedFunction
+} from "./Curry.Types.js";
 import { CurriedArgument } from "./Curry.Internal.js";
-import type { FCurriedArgument, TArgumentVectorWithCurry, TCurriedArgumentVector, TCurriedFunction } from "./Curry.Types.js";
+
+export/**
+       * Denotes in the `CurriedArgumentVector` of a call to {@link Curry} an argument in the argument vector
+       * of the `Function` given to {@link Curry} that should remain in the argument vector of the returned
+       * curried function.
+       */
+const _: FCurriedArgument = CurriedArgument;
+
+/* eslint-disable @stylistic/max-len */
 
 /**
- * Denotes in the `CurriedArgumentVector` of a call to {@link Curry} an argument in the argument vector
- * of the `Function` given to {@link Curry} that should remain in the argument vector of the returned
- * curried function.
- */
-export const _: FCurriedArgument = CurriedArgument;
-
-/**
- * Curry a function by fixing some (but not all) of its arguments, by providing a given {@link Function},
+ * Curry a function by fixing some (but not all) of its arguments, by providing a given {@link InFunction},
  * and a {@link CurriedArgumentVector} containing the fixed arguments, and {@link _} in place of the
  * arguments that will remain open.
- * 
- * @template ArgumentVectorType - The base type of the argument vector of the given {@link Function}.
- * @template CurriedVectorType - The base type of the given {@link CurriedArgumentVector}.
- * @template ThisReturnType - The base type of the return type of the given {@link Function}.
- * 
- * @param Function - The function to curry.
- * @param CurriedArgumentVector - A vector matching the argument vector of {@link Function}, with {@link _}
- * appearing at least once in place of an argument of proper type to {@link Function}.
- * 
- * @returns {TCurriedFunction<Parameters<typeof Function>, typeof CurriedArgumentVector, ReturnType<typeof Function>>} A
- * function identical to the given {@link Function}, but with argument vector consisting of the arguments replaced by {@link _}
+ *
+ * @template ArgumentVectorType - The base type of the argument vector of the given {@link InFunction}.
+ * @template ThisReturnType - The base type of the return type of the given {@link InFunction}.
+ *
+ * @param InFunction - The function to curry.
+ * @param CurriedArgumentVector - A vector matching the argument vector of {@link InFunction}, with {@link _}
+ * appearing at least once in place of an argument of proper type to {@link InFunction}.
+ *
+ * @returns {TCurriedFunction<Parameters<typeof InFunction>, typeof CurriedArgumentVector, ReturnType<typeof InFunction>>} A
+ * function identical to the given {@link InFunction}, but with argument vector consisting of the arguments replaced by {@link _}
  * in the given {@link CurriedArgumentVector}.
- * 
+ *
  * @example
  * ```typescript
  * import { Curry, _ } from "@sorrell/functional";
- * 
+ *
  * function LongFunction(A: string, B: boolean, C: number): string
  * {
  *     return `${ A }, ${ B }, ${ C }`;
@@ -48,14 +54,22 @@ export const _: FCurriedArgument = CurriedArgument;
  */
 export function Curry<
     ArgumentVectorType extends Array<unknown>,
-    CurriedVectorType extends TArgumentVectorWithCurry<ArgumentVectorType>,
     ThisReturnType
 >(
-    Function: (...ArgumentVector: ArgumentVectorType) => ThisReturnType,
-    ...CurriedArgumentVector: TArgumentVectorWithCurry<Parameters<typeof Function>>
-): TCurriedFunction<Parameters<typeof Function>, typeof CurriedArgumentVector, ReturnType<typeof Function>>
+    InFunction: (...ArgumentVector: ArgumentVectorType) => ThisReturnType,
+    ...CurriedArgumentVector: TArgumentVectorWithCurry<Parameters<typeof InFunction>>
+): TCurriedFunction<Parameters<typeof InFunction>, typeof CurriedArgumentVector, ReturnType<typeof InFunction>>
 {
-    function ConstructFilledArgumentVector(...ArgumentVector: TCurriedArgumentVector<Parameters<typeof Function>, typeof CurriedArgumentVector>): Parameters<typeof Function>
+    /* eslint-enable @stylistic/max-len */
+    type FThisArgumentVector = TCurriedArgumentVector<
+        Parameters<typeof InFunction>,
+        typeof CurriedArgumentVector
+    >;
+
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
+    function ConstructFilledArgumentVector(
+        ...ArgumentVector: FThisArgumentVector
+    ): Parameters<typeof InFunction>
     {
         let VariableAssignedIndex: number = 0;
         return CurriedArgumentVector.map((Argument: unknown) =>
@@ -70,11 +84,21 @@ export function Curry<
             {
                 return Argument;
             }
-        }) as unknown as Parameters<typeof Function>;
+        }) as unknown as Parameters<typeof InFunction>;
     }
 
-    return function(...ArgumentVector: TCurriedArgumentVector<Parameters<typeof Function>, typeof CurriedArgumentVector>): ReturnType<typeof Function>
+    type FThisReturnType =
+        TCurriedFunction<
+            Parameters<typeof InFunction>,
+            typeof CurriedArgumentVector,
+            ReturnType<typeof InFunction>
+        >;
+
+    return function(...ArgumentVector: FThisArgumentVector): ReturnType<typeof InFunction>
     {
-        return Function(...ConstructFilledArgumentVector(...ArgumentVector) as any) as ReturnType<typeof Function>;
-    } as TCurriedFunction<Parameters<typeof Function>, typeof CurriedArgumentVector, ReturnType<typeof Function>>;
+        return InFunction(
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            ...ConstructFilledArgumentVector(...ArgumentVector) as any
+        ) as ReturnType<typeof InFunction>;
+    } as FThisReturnType;
 }

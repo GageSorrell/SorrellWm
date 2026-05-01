@@ -1,33 +1,54 @@
 {
   "name": "@sorrell/functional",
-  "version": "1.0.10",
+  "version": "1.0.13",
   "description": "Functional programming utilities for TypeScript.",
+  "private": false,
   "scripts": {
-    "build": "tsc -p ./tsconfig.json",
-    "prepublish": "npm run build"
+    "prepack": "npm run build",
+    "build:js": "node esbuild.config.mts",
+    "prebuild:types": "tsc -p ./tsconfig.script.json",
+    "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
+    "build": "npm run build:js && npm run build:types"
   },
-  "main": "./Distribution/index.js",
-  "types": "./Distribution/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./Distribution/Types/index.d.mts",
+        "default": "./Distribution/index.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/index.d.cts",
+        "default": "./Distribution/index.cjs"
+      }
+    }
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Functional#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Functional",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
   "author": {
     "email": "gage@sorrell.sh",
     "name": "Gage Sorrell",
     "url": "https://sorrell.sh"
   },
-  "private": false,
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0"
+  },
   "keywords": [
     "functional",
     "typescript",
     "ts",
-    "library",
-    "utility",
     "utilities",
-    "fp",
+    "utils",
     "sorrell"
   ],
   "license": "MIT",
-  "type": "module",
-  "devDependencies": {
-    "@types/node": "^25.6.0",
-    "typescript": "npm:tsover@^6.0.0"
-  }
+  "type": "module"
 }

@@ -16,7 +16,9 @@
                 "./Source/Renderer/Domain/*"
             ]
         },
+        "rootDir": "./",
         "incremental": true,
+        "types": [ "node" ],
         "target": "ES2023",
         "module": "Node16",
         "lib":
@@ -47,7 +49,6 @@
     ],
     "exclude":
     [
-        "Windows",
         "Intermediate",
         "node_modules",
         "Release/Application/Distribution"

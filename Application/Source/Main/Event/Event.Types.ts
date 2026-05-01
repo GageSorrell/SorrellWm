@@ -5,19 +5,17 @@
  * @license   MIT
  */
 
-import type {
-    FIpcFrontendChannel,
-    FPoorBackendEvents,
-    FPoorResponseAsSuccess,
-    TEventCallback,
-    TPoorResponseAsFailure
-} from "../../Shared";
+type FPoorBackendEvents = any;
+type FPoorResponseAsSuccess = any;
+type TEventCallback<Type = unknown> = (...Arguments: Array<unknown>) => Promise<any>;
+type TPoorResponseAsFailure<Type> = any;
+type FIpcFrontendChannel = string;
 
 export type TIpcCallback<ChannelType extends FIpcFrontendChannel = FIpcFrontendChannel> =
-{
-    Channel: ChannelType;
-    Callback: TEventCallback<ChannelType>;
-};
+    {
+        Channel: ChannelType;
+        Callback: TEventCallback<ChannelType>;
+    };
 
 export type TPoorEventResponse<Type extends keyof FPoorBackendEvents> =
     | FPoorResponseAsSuccess

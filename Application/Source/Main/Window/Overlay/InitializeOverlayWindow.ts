@@ -74,7 +74,7 @@ async function InitializeOverlayWindow(): Promise<void>
     /** @TODO Find better place for this. */
 
     RegisterCommonIpcCallbacks(OverlayWindow);
-    RegisterIpcCallbacks(OverlayWindow, OverlayEvents);
+    RegisterIpcCallbacks(OverlayWindow, OverlayEvents as any);
 
     /* eslint-disable @stylistic/max-len */
     // On("OnChangeFocus", async (_Event: Electron.Event, ...Arguments: TArray<unknown>) =>

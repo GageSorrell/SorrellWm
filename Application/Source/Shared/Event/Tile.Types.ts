@@ -5,19 +5,21 @@
  * @license   MIT
  */
 
-import type { FResponseDeclNone, TEventDecl } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "electron-reactive-event";
 import type { FAnnotatedPanel } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FBringIntoPanelErrorCode = TEventErrorCode<"">;
 
-declare module "./Event.Types"
+declare module "electron-reactive-event/registrar"
 {
-    interface IFrontendEventRegistrar
+    /* eslint-disable-next-line @typescript-eslint/naming-convention */
+    interface Registrar
     {
-        BringIntoPanel: TEventDecl<
+        BringIntoPanel: EventDecl<
+            RendererOwner,
             FAnnotatedPanel,
-            FResponseDeclNone,
+            never,
             FBringIntoPanelErrorCode
         >;
     }

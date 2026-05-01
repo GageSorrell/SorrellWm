@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.1.61",
+    "version": "1.2.1",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -9,11 +9,12 @@
         "typescript",
         "ts"
     ],
-    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Utilities",
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Utilities#ReadMe",
     "bugs": {
         "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
     "repository": {
+        "directory": "Package/Utilities",
         "type": "git",
         "url": "git+https://github.com/GageSorrell/SorrellWm.git"
     },
@@ -31,76 +32,124 @@
     ],
     "exports": {
         ".": {
-            "types": "./Distribution/Types/index.d.ts",
-            "import": "./Distribution/ESM/index.js",
-            "require": "./Distribution/CJS/index.js",
-            "default": "./Distribution/ESM/index.js"
+            "import": {
+                "types": "./Distribution/Types/index.d.mts",
+                "default": "./Distribution/index.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/index.d.cts",
+                "default": "./Distribution/index.cjs"
+            }
         },
         "./array": {
-            "types": "./Distribution/Types/Array/index.d.ts",
-            "import": "./Distribution/ESM/array.js",
-            "require": "./Distribution/CJS/array.js",
-            "default": "./Distribution/ESM/array.js"
+            "import": {
+                "types": "./Distribution/Types/Array/index.d.mts",
+                "default": "./Distribution/array.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Array/index.d.cts",
+                "default": "./Distribution/array.cjs"
+            }
         },
         "./async": {
-            "types": "./Distribution/Types/Async/index.d.ts",
-            "import": "./Distribution/ESM/async.js",
-            "require": "./Distribution/CJS/async.js",
-            "default": "./Distribution/ESM/async.js"
+            "import": {
+                "types": "./Distribution/Types/Async/index.d.mts",
+                "default": "./Distribution/async.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Async/index.d.cts",
+                "default": "./Distribution/async.cjs"
+            }
         },
         "./complex": {
-            "types": "./Distribution/Types/Math/Index.Complex.d.ts",
-            "import": "./Distribution/ESM/complex.js",
-            "require": "./Distribution/CJS/complex.js",
-            "default": "./Distribution/ESM/complex.js"
+            "import": {
+                "types": "./Distribution/Types/Math/Index.Complex.d.mts",
+                "default": "./Distribution/complex.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Math/Index.Complex.d.cts",
+                "default": "./Distribution/complex.cjs"
+            }
         },
         "./effect": {
-            "types": "./Distribution/Types/Effect/index.d.ts",
-            "import": "./Distribution/ESM/effect.js",
-            "require": "./Distribution/CJS/effect.js",
-            "default": "./Distribution/ESM/effect.js"
+            "import": {
+                "types": "./Distribution/Types/Effect/index.d.mts",
+                "default": "./Distribution/effect.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Effect/index.d.cts",
+                "default": "./Distribution/effect.cjs"
+            }
         },
         "./fs": {
-            "types": "./Distribution/Types/FileSystem/index.d.ts",
-            "import": "./Distribution/ESM/fs.js",
-            "require": "./Distribution/CJS/fs.js",
-            "default": "./Distribution/ESM/fs.js"
+            "import": {
+                "types": "./Distribution/Types/FileSystem/index.d.mts",
+                "default": "./Distribution/fs.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/FileSystem/index.d.cts",
+                "default": "./Distribution/fs.cjs"
+            }
         },
         "./functional": {
-            "types": "./Distribution/Types/Functional/index.d.ts",
-            "import": "./Distribution/ESM/functional.js",
-            "require": "./Distribution/CJS/functional.js",
-            "default": "./Distribution/ESM/functional.js"
+            "import": {
+                "types": "./Distribution/Types/Functional/index.d.mts",
+                "default": "./Distribution/functional.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Functional/index.d.cts",
+                "default": "./Distribution/functional.cjs"
+            }
         },
         "./misc": {
-            "types": "./Distribution/Types/Miscellaneous/index.d.ts",
-            "import": "./Distribution/ESM/misc.js",
-            "require": "./Distribution/CJS/misc.js",
-            "default": "./Distribution/ESM/misc.js"
+            "import": {
+                "types": "./Distribution/Types/Miscellaneous/index.d.mts",
+                "default": "./Distribution/misc.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Miscellaneous/index.d.cts",
+                "default": "./Distribution/misc.cjs"
+            }
         },
         "./npm": {
-            "types": "./Distribution/Types/Npm/index.d.ts",
-            "import": "./Distribution/ESM/npm.js",
-            "require": "./Distribution/CJS/npm.js",
-            "default": "./Distribution/ESM/npm.js"
+            "import": {
+                "types": "./Distribution/Types/Npm/index.d.mts",
+                "default": "./Distribution/npm.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Npm/index.d.cts",
+                "default": "./Distribution/npm.cjs"
+            }
         },
         "./npm/effect": {
-            "types": "./Distribution/Types/Npm/Index.Effect.d.ts",
-            "import": "./Distribution/ESM/npm-effect.js",
-            "require": "./Distribution/CJS/npm-effect.js",
-            "default": "./Distribution/ESM/npm-effect.js"
+            "import": {
+                "types": "./Distribution/Types/Npm/Index.Effect.d.mts",
+                "default": "./Distribution/npm-effect.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Npm/Index.Effect.d.cts",
+                "default": "./Distribution/npm-effect.cjs"
+            }
         },
         "./math": {
-            "types": "./Distribution/Types/Math/index.d.ts",
-            "import": "./Distribution/ESM/math.js",
-            "require": "./Distribution/CJS/math.js",
-            "default": "./Distribution/ESM/math.js"
+            "import": {
+                "types": "./Distribution/Types/Math/index.d.mts",
+                "default": "./Distribution/math.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Math/index.d.cts",
+                "default": "./Distribution/math.cjs"
+            }
         },
         "./path": {
-            "types": "./Distribution/Types/Path/index.d.ts",
-            "import": "./Distribution/ESM/path.js",
-            "require": "./Distribution/CJS/path.js",
-            "default": "./Distribution/ESM/path.js"
+            "import": {
+                "types": "./Distribution/Types/Path/index.d.mts",
+                "default": "./Distribution/path.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Path/index.d.cts",
+                "default": "./Distribution/path.cjs"
+            }
         }
     },
     "overrides": {
@@ -116,16 +165,18 @@
     },
     "types": "./Distribution/Types/index.d.ts",
     "scripts": {
-        "prepublish": "npm run build",
+        "prepack": "npm run build",
         "build:js": "node esbuild.config.mts",
-        "build:types": "tsc -p tsconfig.types.json",
+        "prebuild:types": "tsc -p ./tsconfig.script.json",
+        "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
         "build": "npm run build:js && npm run build:types"
     },
     "devDependencies": {
-        "@types/node": "^25.6.0",
+        "@types/node": "^24.12.2",
         "clipboardy": "^5.3.1",
         "esbuild": "^0.28.0",
         "package-json-type": "^1.1.2",
+        "ts-node": "^10.9.2",
         "tslib": "^2.8.1",
         "tsover": "^6.0.0",
         "tsover-runtime": "0.0.6"

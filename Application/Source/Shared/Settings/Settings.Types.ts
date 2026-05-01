@@ -21,12 +21,12 @@ export const ExternalSettings = [ "RunOnStartup" ] as const;
 export type FExternalSetting = typeof ExternalSettings[number];
 
 export type FSettings =
-{
-    AnimationScalar: number;
-    Gap: number;
-    RunOnStartup: boolean;
-    Keybinds: FKeybinds;
-    ShowUpdateNotifications: boolean;
-};
+    {
+        AnimationScalar: number;
+        Gap: number;
+        RunOnStartup: boolean;
+        Keybinds: FKeybinds;
+        ShowUpdateNotifications: boolean;
+    };
 
 export type FSettingsKeys = keyof FSettings;

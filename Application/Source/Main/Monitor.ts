@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { type FMonitorInfo, InitializeMonitors } from "@sorrellwm/windows";
+import { type FMonitorInfo, InitializeMonitors } from "@sorrell/wm-windows";
 import { TDispatcher, type TSubscriptionHandle } from "#/Event/Dispatcher";
 import { RegisterInitializationFunction } from "#/Initialize/Initialize";
 import { Subscribe } from "#/Event/NodeIpc";

@@ -11,7 +11,8 @@ import {
     type FCompoundCommand,
     type FSimpleCommand,
     type FSubCommand,
-    SwitchOnCommandType } from "./Domain/Common/Component/Command";
+    SwitchOnCommandType
+} from "./Domain/Common/Component/Command";
 import {
     type Context,
     type Dispatch,
@@ -26,11 +27,12 @@ import {
     useState } from "react";
 import type { FAction, FActionKey, FKeybinds } from "../Shared/Settings";
 import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility";
-import { Identity, type TMaybeArray } from "../Shared/Utility";
 import type { FKeyId } from "../Shared/Keyboard.Types";
 import type { FLogger } from "../Shared/Log.Types";
 import { GetLogger } from "@/Log";
-import type { TRecord } from "@sorrellwm/windows";
+import { Identity } from "@sorrell/utilities/functional";
+import type { TMaybeArray } from "@sorrell/utilities/array";
+import type { TRecord } from "@sorrell/wm-windows";
 import { UseSetting } from "./Settings";
 import { UseShortcut } from "./Keybind";
 
@@ -38,14 +40,14 @@ import { UseShortcut } from "./Keybind";
 const Log: FLogger = GetLogger("Command");
 
 export type CCommand =
-{
-    SetCommands: Dispatch<SetStateAction<TArray<FCommand>>>;
-};
+    {
+        SetCommands: Dispatch<SetStateAction<TArray<FCommand>>>;
+    };
 
 const EmptyContext: CCommand =
-{
-    SetCommands: Identity
-};
+    {
+        SetCommands: Identity
+    };
 
 const CommandsContext: Context<CCommand> = createContext<CCommand>(EmptyContext);
 
@@ -225,9 +227,9 @@ export const CommandsProvider = ({ children }: PropsWithChildren): ReactNode =>
     }, [ Commands, RegisterCommandShortcut, UnregisterCommandShortcut ]);
 
     const value: CCommand =
-    {
-        SetCommands
-    };
+        {
+            SetCommands
+        };
 
     return (
         <CommandsContext.Provider { ...{ value } }>

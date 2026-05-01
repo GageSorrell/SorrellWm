@@ -5,9 +5,9 @@
  * @license   MIT
  */
 
-import type { TPath, TGetType } from "../Shared/Utility/Object.Types";
+import type { TGetType, TPath } from "../Shared/Utility/Object.Types";
 import type { FSettings } from "../Shared";
-import type { THandler } from "./Utility";
+import type { THandler } from "@sorrell/react";
 
 export type TUseSettingStateReturnType<PathType extends TPath<FSettings>> = Readonly<[
     TGetType<FSettings, PathType>,

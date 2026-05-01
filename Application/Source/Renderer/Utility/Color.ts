@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { FColor, FHexColor, FHslColor } from "@sorrellwm/windows";
+import type { FColor, FHexColor, FHslColor } from "@sorrell/wm-windows";
 import type { FThemeColors } from "./Color.Types";
 import { UseStore } from "@/Store.Old";
 import { contrast } from "./Theme/FluentThemeDesigner";

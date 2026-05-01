@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { HMonitor, HWindow } from "@sorrellwm/windows";
+import type { HMonitor, HWindow } from "@sorrell/wm-windows";
 
 export type HHandle =
     | HWindow

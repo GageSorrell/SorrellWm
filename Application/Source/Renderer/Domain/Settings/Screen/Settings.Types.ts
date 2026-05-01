@@ -6,9 +6,9 @@
  */
 
 import type { FC } from "react";
-import type { FSimpleCallback } from "../../../../Shared";
 import type { FluentIcon } from "@fluentui/react-icons";
-import type { TControlled } from "@/Utility";
+import type { TControlled } from "@sorrell/react";
+import type { TFunction } from "@sorrell/utilities/functional";
 
 export type FSettingsScreenKey =
     | "General"
@@ -16,18 +16,18 @@ export type FSettingsScreenKey =
     | "About";
 
 export type FSettingsScreen =
-{
-    Component: FC;
-    Icon: FluentIcon;
-};
+    {
+        Component: FC;
+        Icon: FluentIcon;
+    };
 
 export type FSettingsScreens = Record<FSettingsScreenKey, FSettingsScreen>;
 
 export type PTitlebar =
-{
-    OnClickHamburger: FSimpleCallback;
-    ShowHamburger: boolean;
-};
+    {
+        OnClickHamburger: TFunction;
+        ShowHamburger: boolean;
+    };
 
 export type PSettingsNavDrawer =
     PTitlebar &

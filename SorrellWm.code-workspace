@@ -185,7 +185,7 @@
             "WNDCLASSEXW",
             "xfacet"
         ],
-		"js/ts.tsdk.path": "./Package/PipeOperator/node_modules/typescript/lib"
+		"js/ts.tsdk.path": "node_modules/typescript/lib"
 	},
 	"extensions": {
 		"recommendations": [

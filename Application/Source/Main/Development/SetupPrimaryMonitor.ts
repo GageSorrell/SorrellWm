@@ -20,7 +20,7 @@ import {
     type HWindow,
     MinimizeWindow,
     RestoreWindow,
-    SetWindowPosition } from "@sorrellwm/windows";
+    SetWindowPosition } from "@sorrell/wm-windows";
 import {
     type SpawnOptions,
     spawn as SpawnProcess } from "child_process";

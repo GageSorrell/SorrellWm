@@ -6,15 +6,15 @@
  */
 
 import { type ReactElement, type ReactNode } from "react";
-import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Event";
+import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Temp";
 import { BooleanSettingControl } from "../../Component/BooleanSettingControl";
 import type { FLogger } from "../../../../../Shared/Log.Types";
-import type { FSettings, FSimpleCallback } from "../../../../../Shared";
+import type { FSimpleCallback } from "../../../../../Shared";
 import { GetLogger } from "@/Log";
 import { SettingSegment } from "../../Component/SettingSegment";
 import { SettingSegmentContainer } from "../../Component/SettingSegmentContainer";
 import { SettingsScreen } from "../SettingsScreen";
-import type { TPath } from "Source/Shared/Utility/Object.Types";
+// import type { TPath } from "Source/Shared/Utility/Object.Types";
 import { TimerRegular } from "@fluentui/react-icons";
 import { UseSettingState } from "@/Settings";
 import { VersionUpdates } from "./VersionUpdates";

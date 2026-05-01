@@ -5,16 +5,13 @@
  * @license   MIT
  */
 
-import { Statements } from "./FilteredLogStatements.json";
-
-export * from "./CheckBuildExists";
-export * from "./CheckNativeDependencies";
-export * from "./CheckNodeEnvironment";
-export * from "./CheckPortInUse";
-export * from "./Clean";
-export * from "./DeleteSourceMaps";
-export * from "./ElectronRebuild";
-export * from "./LinkModules";
-export * from "./Notarize";
-export * from "./Start";
-export const FilteredLogStatements: typeof Statements = Statements;
+export * from "./CheckBuildExists.js";
+export * from "./CheckNativeDependencies.js";
+export * from "./CheckNodeEnvironment.js";
+export * from "./CheckPortInUse.js";
+export * from "./Clean.js";
+export * from "./DeleteSourceMaps.js";
+export * from "./ElectronRebuild.js";
+export * from "./LinkModules.js";
+// export * from "./Notarize";
+export * from "./Start.js";

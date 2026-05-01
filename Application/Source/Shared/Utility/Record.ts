@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-// import type { FRecord, TRecord } from "@sorrellwm/windows";
+// import type { FRecord, TRecord } from "@sorrell/wm-windows";
 // import type { SRecord, TStructuredMap, TStructuredMapCallback } from "./Record.Types";
 // import type { TMapRecordTransformer, TObjectPath, TTypeFromPath } from "./Utility.Types";
 // import type { TGetFromPathReturnType } from "./Record.Internal.Types";

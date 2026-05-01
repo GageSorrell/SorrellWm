@@ -6,12 +6,13 @@
  */
 
 import { CommandContainer, type FCommand, type FCompoundCommand } from "@/Domain/Common";
-import { Action } from "@/Action";
-import { useCallback, useState, type ReactElement } from "react";
-import { UseSendIpcEvent, UseSendIpcEventDeferred } from "@/Event";
 import type { FPanelStep, FTiledMoveResult, FTranslation } from "../../../../Shared/Event/Move.Types";
-import type { FSimpleCallback, TArrayNonempty } from "../../../../Shared";
-import { UseIndexedValue } from "@/Utility";
+import { type ReactElement, useCallback, useState } from "react";
+import { UseSendIpcEvent, UseSendIpcEventDeferred } from "@/Temp";
+import { Action } from "@/Action";
+import type { TFunction } from "@sorrell/utilities/functional";
+import type { TNonemptyArray } from "@sorrell/utilities/array";
+import { UseIndexedValue } from "@sorrell/react";
 
 export const Move = (): ReactElement =>
 {
@@ -19,10 +20,15 @@ export const Move = (): ReactElement =>
 
     const [ MoveResult, SetMoveResult ] = useState<FTiledMoveResult>({ IsOnPanel: false });
 
-    /** @TODO Make this set of values editable as a setting. */
-    const StepSizes: TArrayNonempty<number> = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ];
+    // @TODO Make this set of values editable as a setting.
+    const StepSizes: TNonemptyArray<number> = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ];
 
-    const [ StepSize, StepSizeIndex, IncrementStepSize, DecrementStepSize ] = UseIndexedValue(StepSizes, { Value: 32 });
+    const [
+        StepSize,
+        StepSizeIndex,
+        IncrementStepSize,
+        DecrementStepSize
+    ] = UseIndexedValue(StepSizes, { Value: 32 });
 
     const { Data } = UseSendIpcEvent("GetIsActiveWindowTiled", undefined);
 
@@ -37,30 +43,30 @@ export const Move = (): ReactElement =>
     // };
 
     const TranslationLeft: FTranslation =
-    {
-        Direction: "X",
-        Distance: -1 * StepSize
-    };
+        {
+            Direction: "X",
+            Distance: -1 * StepSize
+        };
 
     const TranslationUp: FTranslation =
-    {
-        Direction: "Y",
-        Distance: -1 * StepSize
-    };
+        {
+            Direction: "Y",
+            Distance: -1 * StepSize
+        };
 
     const TranslationDown: FTranslation =
-    {
-        Direction: "Y",
-        Distance: StepSize
-    };
+        {
+            Direction: "Y",
+            Distance: StepSize
+        };
 
     const TranslationRight: FTranslation =
-    {
-        Direction: "X",
-        Distance: StepSize
-    };
+        {
+            Direction: "X",
+            Distance: StepSize
+        };
 
-    const MakeFloatingMoveCallback = useCallback((Translation: FTranslation): FSimpleCallback =>
+    const MakeFloatingMoveCallback = useCallback((Translation: FTranslation): TFunction =>
     {
         return (): void =>
         {
@@ -69,10 +75,10 @@ export const Move = (): ReactElement =>
     }, [ SendIpcEvent ]);
 
     const FloatingDirectionCommands: FCompoundCommand =
-    {
-        Description: "@TODO",
-        Name: "Move",
-        SubCommands:
+        {
+            Description: "@TODO",
+            Name: "Move",
+            SubCommands:
         [
             {
                 Action: [ "Direction.Left" ],
@@ -91,7 +97,7 @@ export const Move = (): ReactElement =>
                 Callback: MakeFloatingMoveCallback(TranslationRight)
             }
         ]
-    };
+        };
 
     const MakeTiledMoveCallback = (Step: FPanelStep): (() => Promise<void>) =>
     {
@@ -106,10 +112,10 @@ export const Move = (): ReactElement =>
     };
 
     const TiledDirectionCommands: FCompoundCommand =
-    {
-        Description: "@TODO",
-        Name: "Move",
-        SubCommands:
+        {
+            Description: "@TODO",
+            Name: "Move",
+            SubCommands:
         [
             {
                 Action: [ "Direction.Left" ],
@@ -128,7 +134,7 @@ export const Move = (): ReactElement =>
                 Callback: MakeTiledMoveCallback("Next")
             }
         ]
-    };
+        };
 
     const Commands: TArray<FCommand> = IsTiled
         ? [ TiledDirectionCommands ]

@@ -16,15 +16,15 @@ import {
     useContext,
     useId } from "react";
 import { Toaster, useToastController } from "@fluentui/react-components";
-import { Identity } from "../Shared";
+import { Identity } from "@sorrell/utilities/functional";
 
 const EmptyContext: CToast =
-{
-    INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:
     {
-        Dispatch: Identity
-    }
-};
+        INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:
+        {
+            Dispatch: Identity
+        }
+    };
 
 const ToastContext: Context<CToast> = createContext<CToast>(EmptyContext);
 

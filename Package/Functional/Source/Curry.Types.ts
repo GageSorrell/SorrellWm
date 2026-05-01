@@ -6,7 +6,7 @@
  */
 
 import type { CurriedArgument } from "./Curry.Internal.js";
-import type { TCurriedRecurrence, TWithCurryRecurrence } from "./Curry.Internal.Types.js";
+import type { TCurriedRecurrence } from "./Curry.Internal.Types.js";
 import type { TFunction } from "./Functional.Types.js";
 
 /**
@@ -27,7 +27,7 @@ export type TArgumentVectorWithCurry<ArgumentVectorType extends Array<unknown>> 
 /**
  * The argument vector for a curried {@link TFunction} of {@link ArgumentVectorType},
  * with fixed arguments given by {@link WithCurryType}.
- * 
+ *
  * @template ArgumentVectorType - The argument vector of the function being curried.
  * @template WithCurryType - The argument vector that contains fixed arguments of
  * {@link ArgumentVectorType}, and denotes (via {@link FCurriedArgument}) which arguments remain open
@@ -36,7 +36,7 @@ export type TArgumentVectorWithCurry<ArgumentVectorType extends Array<unknown>> 
 export type TCurriedArgumentVector<
     ArgumentVectorType extends Array<unknown>,
     WithCurryType extends Array<unknown>
-> = 
+> =
     ArgumentVectorType["length"] extends number
         ? TCurriedRecurrence<ArgumentVectorType, WithCurryType>["length"] extends 0
             ? ArgumentVectorType
@@ -46,16 +46,16 @@ export type TCurriedArgumentVector<
 /**
  * A curried function, for a base function with a given {@link ArgumentVectorType} and return type
  * {@link ThisReturnType}, and a given {@link CurriedVectorType}.
- * 
+ *
  * @template ArgumentVectorType - The base type of the argument vector of the given {@link Function}.
- * @template CurriedVectorType - The base type of the given {@link CurriedArgumentVector}.
+ * @template WithCurryType - The base type of the given {@link CurriedArgumentVector}.
  * @template ThisReturnType - The base type of the return type of the given {@link Function}.
  */
 export type TCurriedFunction<
     ArgumentVectorType extends Array<unknown>,
     WithCurryType extends Array<unknown>,
     ThisReturnType
-> = 
+> =
     TFunction<
         TCurriedArgumentVector<ArgumentVectorType, WithCurryType>,
         ThisReturnType

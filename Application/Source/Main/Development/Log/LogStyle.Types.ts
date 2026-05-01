@@ -6,7 +6,7 @@
  */
 
 import type { BackgroundColor, ForegroundColor } from "chalk";
-import type { FHexColor } from "@sorrellwm/windows";
+import type { FHexColor } from "@sorrell/wm-windows";
 
 export type FLogStyleFunction = (In: string) => string;
 

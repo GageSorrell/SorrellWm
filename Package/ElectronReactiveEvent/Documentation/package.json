@@ -5,8 +5,8 @@
     "predev": "typedoc",
     "prepreview": "typedoc",
     "prebuild": "typedoc && npm run handle-versioning",
-    "build-script": "tsc -p ./tsconfig.script.json",
-    "handle-versioning": "npm run build-script && node ./Intermediate/HandleVersioning.ts",
+    "build:script": "tsc -p ./tsconfig.script.json",
+    "handle-versioning": "npm run build:script && node ./Intermediate/HandleVersioning.ts",
     "dev": "vitepress dev --host",
     "build": "vitepress build",
     "preview": "vitepress preview --host"
@@ -14,7 +14,7 @@
   "devDependencies": {
     "@sorrell/cli-utilities": "^1.0.29",
     "@sorrell/utilities": "^1.1.14",
-    "@types/node": "^25.6.0",
+    "@types/node": "^24.12.2",
     "@types/semver": "^7.7.1",
     "@vercel/config": "^0.2.0",
     "prettier": "^3.8.1",
@@ -22,7 +22,7 @@
     "typedoc": "^0.28.5",
     "typedoc-plugin-markdown": "^4.7.0",
     "typedoc-vitepress-theme": "^1.1.2",
-    "typescript": "npm:tsover@^6.0.0"
+    "typescript": "npm:tsover@^6.0.0",
     "vitepress": "^1.6.3"
   },
   "dependencies": {

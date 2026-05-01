@@ -7,12 +7,12 @@
 
 import { CommandContainer, type FCommand, type FSimpleCommand } from "@/Domain/Common/Component/Command";
 import { type FC, type ReactElement, useEffect } from "react";
-import { UseNavigator, UseOnce } from "@/Utility";
-import { UseSendIpcEvent, UseSendIpcEventDeferred } from "@/Event";
 import { Action } from "@/Action";
 import type { FLogger } from "../../../../Shared/Log.Types";
 import { GetLogger } from "@/Log";
 import { UseIpcNavigatorState } from "@/Router";
+import { UseNavigator } from "@sorrell/react";
+import { UseSendIpcEvent } from "@/Temp";
 
 const Log: FLogger = GetLogger("Activation");
 
@@ -21,34 +21,34 @@ const ActivationTiled = (): ReactElement =>
     const [ Navigate ] = UseNavigator();
 
     const Commands: TArray<FCommand> =
-    [
-        {
-            Action: [ "Direction.Up" ],
-            Callback: Navigate("/Insert"),
-            Description: "@TODO",
-            Name: "Insert"
-        },
-        {
-            Action:  [ "Direction.Down" ],
-            Callback: Navigate("/Move"),
-            Description: "@TODO",
-            Name: "Move"
-        },
-        {
-            Action: [ "Direction.Right" ],
-            Callback: Navigate("/Resize"),
-            Description: "@TODO",
-            Name: "Resize"
-        }
-    ];
+        [
+            {
+                Action: [ "Direction.Up" ],
+                Callback: Navigate("/Insert"),
+                Description: "@TODO",
+                Name: "Insert"
+            },
+            {
+                Action:  [ "Direction.Down" ],
+                Callback: Navigate("/Move"),
+                Description: "@TODO",
+                Name: "Move"
+            },
+            {
+                Action: [ "Direction.Right" ],
+                Callback: Navigate("/Resize"),
+                Description: "@TODO",
+                Name: "Resize"
+            }
+        ];
 
     const FocusCommand: FSimpleCommand =
-    {
-        Action: [ "Direction.Left" ],
-        Callback: Navigate("/Focus"),
-        Description: "@TODO",
-        Name: "Focus"
-    };
+        {
+            Action: [ "Direction.Left" ],
+            Callback: Navigate("/Focus"),
+            Description: "@TODO",
+            Name: "Focus"
+        };
 
     const { Data: FocusData } = UseSendIpcEvent("GetFocusData", undefined);
 
@@ -58,14 +58,14 @@ const ActivationTiled = (): ReactElement =>
     }
 
     const BottomShelfCommands: TArray<FCommand> =
-    [
-        {
-            Action: [ "Miscellaneous.Settings" ],
-            Callback: () => Log("Settings was selected."),
-            Description: "@TODO",
-            Name: "Settings"
-        }
-    ];
+        [
+            {
+                Action: [ "Miscellaneous.Settings" ],
+                Callback: () => Log("Settings was selected."),
+                Description: "@TODO",
+                Name: "Settings"
+            }
+        ];
 
     return (
         <Action>
@@ -99,25 +99,25 @@ const ActivationNotTiled = (): ReactElement =>
     // };
 
     const Commands: TArray<FCommand> =
-    [
-        {
-            Action: [ "Direction.Left" ],
-            Callback: Navigate("/Tile"),
-            Description: "@TODO",
-            Name: "Tile (Bring into Panel)"
-        },
-        {
-            Action: [ "Direction.Up" ],
-            Callback: Navigate("/Move"),
-            Description: "@TODO",
-            Name: "Move"
-        },
-        {
-            Action: [ "Direction.Down" ],
-            Callback: Navigate("/Resize"),
-            Description: "@TODO",
-            Name: "Resize"
-        }
+        [
+            {
+                Action: [ "Direction.Left" ],
+                Callback: Navigate("/Tile"),
+                Description: "@TODO",
+                Name: "Tile (Bring into Panel)"
+            },
+            {
+                Action: [ "Direction.Up" ],
+                Callback: Navigate("/Move"),
+                Description: "@TODO",
+                Name: "Move"
+            },
+            {
+                Action: [ "Direction.Down" ],
+                Callback: Navigate("/Resize"),
+                Description: "@TODO",
+                Name: "Resize"
+            }
         // {
         //     Action: [ "Primary[0]" ],
         //     Callback: Navigate("/Resize"),
@@ -130,17 +130,17 @@ const ActivationNotTiled = (): ReactElement =>
         //     Description: "@TODO",
         //     Name: "Maximize"
         // }
-    ];
+        ];
 
     const BottomShelfCommands: TArray<FCommand> =
-    [
-        {
-            Action: [ "Miscellaneous.Peek" ],
-            Callback: () => Log("Peek was selected."),
-            Description: "@TODO",
-            Name: "Peek"
-        }
-    ];
+        [
+            {
+                Action: [ "Miscellaneous.Peek" ],
+                Callback: () => Log("Peek was selected."),
+                Description: "@TODO",
+                Name: "Peek"
+            }
+        ];
 
     return (
         <Action>
@@ -156,9 +156,9 @@ export const Activation = (): ReactElement =>
     const GetIsTiled = (): boolean =>
     {
         type FNavigatorState =
-        {
-            IsTiled: boolean;
-        };
+            {
+                IsTiled: boolean;
+            };
 
         const IsStateValid = (State: unknown): State is FNavigatorState =>
         {

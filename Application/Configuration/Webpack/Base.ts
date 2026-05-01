@@ -7,58 +7,61 @@
  */
 
 import { type Configuration, EnvironmentPlugin } from "webpack";
-import { dependencies as Externals } from "../../Release/Application/package.json";
-import { Paths } from "../Script";
+import { Paths } from "../Script/Path";
 import TsconfigPathsPlugins from "tsconfig-paths-webpack-plugin";
+import { readFileSync } from "fs";
+
+const Externals: Record<string, string> =
+    JSON.parse(readFileSync("./Release/Application/package.json", { encoding: "utf-8" })).dependencies;
 
 export const BaseConfiguration: Configuration =
-{
-    externals: [ ...Object.keys(Externals || { }) ],
-    module:
     {
-        rules:
-        [
-            {
-                exclude: /node_modules/,
-                test: /\.[jt]sx?$/,
-                use:
+        externals: [ ...Object.keys(Externals || { }) ],
+        module:
+        {
+            rules:
+            [
                 {
-                    loader: "ts-loader",
-                    options:
+                    exclude: /node_modules/,
+                    test: /\.[jt]sx?$/,
+                    use:
                     {
-                        compilerOptions:
+                        loader: "ts-loader",
+                        options:
                         {
-                            allowImportingTsExtensions: true,
-                            module: "node16"
-                        },
-                        transpileOnly: false
+                            compilerOptions:
+                            {
+                                allowImportingTsExtensions: true,
+                                module: "node16"
+                            },
+                            transpileOnly: false
+                        }
                     }
                 }
-            }
-        ]
-    },
-    output:
-    {
-        /* https://github.com/webpack/webpack/issues/1114 */
-        library:
-        {
-            type: "commonjs2"
+            ]
         },
-        path: Paths.Source
-    },
-    plugins:
-    [
-        new EnvironmentPlugin({
-            NODE_ENV: "production"
-        })
-    ],
-    /** Determine the array of extensions that should be used to resolve modules. */
-    resolve:
-    {
-        extensions: [ ".js", ".jsx", ".json", ".ts", ".tsx" ],
-        modules: [ Paths.Source, "node_modules" ],
-        /* There is no need to add aliases here, the paths in tsconfig get mirrored. */
-        plugins: [ new TsconfigPathsPlugins() ]
-    },
-    stats: "errors-only"
-};
+        output:
+        {
+            /* https://github.com/webpack/webpack/issues/1114 */
+            library:
+            {
+                type: "commonjs2"
+            },
+            path: Paths.Source
+        },
+        plugins:
+        [
+            new EnvironmentPlugin({
+                NODE_ENV: "production"
+            })
+        ],
+        /** Determine the array of extensions that should be used to resolve modules. */
+        resolve:
+        {
+            extensions: [ ".js", ".jsx", ".json", ".ts", ".tsx" ],
+            modules: [ Paths.Source, "node_modules" ],
+            /* There is no need to add aliases here, the paths in tsconfig get mirrored. */
+            plugins: [ new TsconfigPathsPlugins() ]
+        },
+        stats: "errors-only"
+    };

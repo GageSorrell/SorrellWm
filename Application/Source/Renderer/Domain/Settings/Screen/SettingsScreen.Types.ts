@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { TPropsWithChildren } from "@/Utility";
+import type { TPropsWithChildren } from "@sorrell/react";
 
 export type PSettingsScreen =
     TPropsWithChildren &

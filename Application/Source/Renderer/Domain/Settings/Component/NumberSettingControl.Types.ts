@@ -5,13 +5,13 @@
  * @license   MIT
  */
 
-import type { THandler } from "@/Utility";
+import type { THandler } from "@sorrell/react";
 
 export type PNumberSettingControl =
-{
-    IsValueAllowed?: (NewValue: number) => boolean;
-    MaxValue?: number;
-    MinValue?: number;
-    OnChangeValue: THandler<number>;
-    Value: number;
-};
+    {
+        IsValueAllowed?: (NewValue: number) => boolean;
+        MaxValue?: number;
+        MinValue?: number;
+        OnChangeValue: THandler<number>;
+        Value: number;
+    };

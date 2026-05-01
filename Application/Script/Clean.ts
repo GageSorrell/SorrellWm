@@ -6,15 +6,14 @@
  */
 
 import * as Fs from "fs";
-import { Paths } from "../Configuration/Script";
+import { Paths } from "../Configuration/Script/Path.js";
 import { rimrafSync } from "rimraf";
 
 const FoldersToRemove: Array<string> =
-[
-    Paths.Distribution,
-    Paths.Build
-    // Paths.Distribution,
-];
+    [
+        Paths.Distribution || "",
+        Paths.Build || ""
+    ];
 
 FoldersToRemove.forEach((Folder: string): void =>
 {

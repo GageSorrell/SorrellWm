@@ -6,7 +6,7 @@
  */
 
 import type { StoreApi, UseBoundStore } from "zustand";
-import type { FHexColor } from "@sorrellwm/windows";
+import type { FHexColor } from "@sorrell/wm-windows";
 
 type TUnget<Type extends string> = Type extends `Set${ infer R }`
     ? R

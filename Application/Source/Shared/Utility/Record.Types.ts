@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-// import type { FRecord } from "@sorrellwm/windows";
+// import type { FRecord } from "@sorrell/wm-windows";
 // import type { SRecordInternal } from "./Record";
 
 // export type SRecord<KeyType extends string | symbol = string | symbol, PropertyType = unknown> =

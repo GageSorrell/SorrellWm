@@ -6,22 +6,36 @@
  */
 
 import { Body1Strong, tokens } from "@fluentui/react-components";
-import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, useState, useTransition } from "react";
+import {
+    type CSSProperties,
+    type ReactNode,
+    type RefObject,
+    useCallback,
+    useMemo,
+    useReducer,
+    useRef,
+    useState
+} from "react";
 import {
     CommandContainer,
     type FCommand,
     type FCompoundCommand,
-    type FSimpleCommand } from "@/Domain/Common/Component/Command";
+    type FSimpleCommand
+} from "@/Domain/Common/Component/Command";
 import type { FFocusData, FPanelFocusData, FWindowFocusData } from "../../../../Shared/Event/Focus.Types";
 import type { FLogger, FSimpleCallback } from "../../../../Shared";
-import { UseSendIpcEventDeferred, UseSendIpcEventState } from "@/Event";
 import { Action } from "@/Action";
 import type { FFocusChange } from "../../../../Shared/Tree.Types";
 import { GetLogger } from "@/Log";
-import type { TIpcState } from "@/Event.Types";
+import { UseSendIpcEventDeferred } from "@/Temp";
 import { WindowHeaderHorizontalRegular } from "@fluentui/react-icons";
-import { UsePromise } from "@/Utility";
-import type { ReadBookmark } from "electron";
+
+type TIpcState<Type> = any;
+
+function UsePromise<Type>(..._Arguments: Array<unknown>): any
+{
+    return undefined as any;
+};
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Focus");

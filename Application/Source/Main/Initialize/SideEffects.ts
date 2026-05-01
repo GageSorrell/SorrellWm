@@ -31,7 +31,8 @@ setTimeout(async (): Promise<void> =>
     Log(`${ C("await import") }ing ${ C("../Development/Log/Log") }...`);
     await import("../Development/Log/Log");
     Log(`${ C("await import") }ing ${ C("../Initialize/Initialize") }...`);
-    await import("./Initialize import") }ing ${ C("../Event/NodeIpc") }...`);
+    await import("./Initialize");
+    Log(`${ C("await import") }ing ${ C("../Event/NodeIpc") }...`);
     await import("../Event/NodeIpc");
     Log(`${ C("await import") }ing ${ C("../Keyboard/Keyboard") }...`);
     await import("../Keyboard/Keyboard");

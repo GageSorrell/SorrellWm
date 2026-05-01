@@ -1,12 +1,11 @@
 {
   "name": "@sorrellwm/clean-repo",
-  "packageManager": "yarn@4.14.1",
   "version": "1.0.0",
   "type": "module",
   "description": "Clean the repo, deleting cached files that can interfere with development.",
   "main": "./Distribution/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p ./tsconfig.json",
     "start": "node ./Distribution/index.js"
   },
   "author": {
@@ -17,7 +16,7 @@
   "license": "MIT",
   "devDependencies": {
     "@sorrellwm/script-utility": "*",
-    "@types/node": "^22.10.1",
+        "@types/node": "^24.12.2",
     "chalk": "^5.3.0",
     "concurrently": "^9.1.0",
     "nodemon": "^3.1.7",

@@ -12,7 +12,7 @@ import {
     GetFocusedWindow,
     GetWindowTitle,
     type HWindow,
-    UnblurBackground } from "@sorrellwm/windows";
+    UnblurBackground } from "@sorrell/wm-windows";
 import { type BrowserWindow, type Rectangle, screen } from "electron";
 import { type FDevSettings, GetDevSettings, GetLogger } from "#/Development";
 import type { FLogger, FNavigateRequest, FVertex } from "../../../Shared";

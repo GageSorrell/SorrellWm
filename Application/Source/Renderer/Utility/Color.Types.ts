@@ -5,6 +5,6 @@
  * @license   MIT
  */
 
-import type { FHexColor } from "@sorrellwm/windows";
+import type { FHexColor } from "@sorrell/wm-windows";
 
 export type FThemeColors = [ Background: FHexColor, Foreground: FHexColor ];

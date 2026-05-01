@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { HWindow } from "@sorrellwm/windows";
+import type { HWindow } from "@sorrell/wm-windows";
 
 export type FExternalWindowPlacement =
     | "Arranged"
@@ -13,15 +13,16 @@ export type FExternalWindowPlacement =
     | "Maximized"
     | "Restored";
 
+/**
+ * @property {boolean} IsMinMaxed - Is the window currently minimized, but will
+ * be maximized when restored?  A value of `true` is incompatible with
+ * `Placement !== Minimized`.
+ */
 export type FExternalWindow =
-{
-    Handle: HWindow;
+    {
+        Handle: HWindow;
 
-    /**
-     * Is the window currently minimized, but will be maximized when restored?
-     * A value of `true` is incompatible with `Placement !== Minimized`.
-     */
-    IsMinMaxed: boolean;
+        IsMinMaxed: boolean;
 
-    Placement: FExternalWindowPlacement;
-};
+        Placement: FExternalWindowPlacement;
+    };

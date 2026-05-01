@@ -203,15 +203,11 @@ export async function Main(): Promise<void>
     const ScriptBuildDirectoryPath: string =
         Path.resolve(ModuleDirectoryPath, "..", "Build");
 
-    const ApplicationWindowsDirectoryPath: string =
-        Path.resolve(ModuleDirectoryPath, "..", "..", "Application", "Windows");
-
     const ApplicationDirectoryPath: string =
         Path.resolve(ModuleDirectoryPath, "..", "..", "Application");
 
     await EnsureDirectoryExistsAsync(GrandfatherDirectoryPath);
     await EnsureDirectoryExistsAsync(ScriptBuildDirectoryPath);
-    await EnsureDirectoryExistsAsync(ApplicationWindowsDirectoryPath);
     await EnsureDirectoryExistsAsync(ApplicationDirectoryPath);
 
     console.log(`Grandfather directory: "${ GrandfatherDirectoryPath }"`);
@@ -225,7 +221,6 @@ export async function Main(): Promise<void>
 
     // await RunCommandOrThrowAsync("yarn", [ "install" ], GrandfatherDirectoryPath);
     // await RunCommandOrThrowAsync("yarn", [ "run", "build" ], ScriptBuildDirectoryPath);
-    // await RunCommandOrThrowAsync("npm", [ "install" ], ApplicationWindowsDirectoryPath);
     // await RunCommandOrThrowAsync("npm", [ "install" ], ApplicationDirectoryPath);
 }
 

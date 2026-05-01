@@ -21,14 +21,16 @@ import type {
     FMap,
     FPrimitive,
     FRecord,
+    FTypeof,
     FSetTypeName,
     TLogContainer,
     TLogPrimitive,
-    TLogValue } from "./LogFormat.Types";
-import type { FLogDigitSeparator, FLogQuoteStyle, FLogSettings, FTypeof } from "../../../Shared";
+    TLogValue
+} from "./LogFormat.Types";
+import type { FLogDigitSeparator, FLogQuoteStyle, FLogSettings } from "../../../Shared";
 import Chalk from "chalk";
 import { GetDevSettings } from "#/Development/DevSettings";
-import { Identity } from "../../../Shared";
+import { Identity } from "@sorrell/utilities/functional";
 
 Chalk.level = 3;
 

@@ -10,7 +10,8 @@ import {
     AreHandlesEqual,
     BoxToString,
     GetPngBase64,
-    PositionToString } from "#/Utility";
+    PositionToString
+} from "#/Utility";
 import {
     CaptureScreenSectionToTempPngFile,
     type FBox,
@@ -26,7 +27,8 @@ import {
     RestoreWindow,
     SetForegroundWindow,
     SetWindowPosition,
-    UpdateTiledList } from "@sorrellwm/windows";
+    UpdateTiledList
+} from "@sorrell/wm-windows";
 import type {
     FAnnotatedPanel,
     FCell,
@@ -39,22 +41,22 @@ import type {
     FPanelBase,
     FVertex } from "../../Shared";
 import { Format } from "#/Development";
+import { GetActiveWindow } from "#/Window/Overlay";
 import { GetMonitors } from "#/Monitor";
 import { GetSettings } from "#/Settings";
 import { GetTreeLogger } from "./Log";
-import { type TPredicate } from "@/Utility";
-import { GetActiveWindow } from "#/Window/Overlay";
 import { RegisterInitializationFunction } from "#/Initialize";
+import type { TPredicate } from "@sorrell/functional";
 
 const Log: FLogger = GetTreeLogger();
 
 const Forest: FForest = [ ];
 
-export const GetForest = (): FForest =>
+export function GetForest(): FForest
 {
     return Forest;
     // return [ ...Forest ];
-};
+}
 
 const GetDepth = (Vertex: FVertex): number =>
 {
@@ -161,7 +163,7 @@ async function InitializeTree(): Promise<void>
 
     // /** @TODO Consider changing this. */
     // RestoreAllWindows();
-    Log("INITIALIZED TREE.", new Date().getTime());
+    Log("INITIALIZED TREE.");
 };
 
 /**

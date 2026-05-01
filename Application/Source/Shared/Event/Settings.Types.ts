@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
+import type { EventDecl, RendererOwner } from "electron-reactive-event";
 import type { FExternalSetting, FSettings } from "../Settings";
-import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "electron-reactive-event";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FUpdateStatus =
@@ -20,33 +20,39 @@ export type FGetSettingErrorCode = TEventErrorCode<"">;
 export type FCheckForUpdatesErrorCode = TEventErrorCode<"">;
 export type FGetExternalSettingStateErrorCode = TEventErrorCode<"">;
 
-declare module "./Event.Types"
+declare module "electron-reactive-event/registrar"
 {
-    interface IFrontendEventRegistrar
+    /* eslint-disable-next-line @typescript-eslint/naming-convention */
+    interface Registrar
     {
-        GetExternalSettingState: TEventDecl<
+        GetExternalSettingState: EventDecl<
+            RendererOwner,
             FExternalSetting,
             FSettings[FExternalSetting],
             FGetExternalSettingStateErrorCode
         >;
-        GetSetting: TEventDecl<
+        GetSetting: EventDecl<
+            RendererOwner,
             keyof FSettings,
             FSettings[keyof FSettings],
             FGetSettingErrorCode
         >;
-        GetSettings: TEventDecl<
-            FRequestDeclNone,
+        GetSettings: EventDecl<
+            RendererOwner,
+            never,
             FSettings,
             FGetSettingsErrorCode
         >;
-        CheckForUpdates: TEventDecl<
-            FRequestDeclNone,
+        CheckForUpdates: EventDecl<
+            RendererOwner,
+            never,
             FUpdateStatus,
             FCheckForUpdatesErrorCode
         >;
-        UpdateSettings: TEventDecl<
+        UpdateSettings: EventDecl<
+            RendererOwner,
             FSettings,
-            FResponseDeclNone,
+            never,
             FUpdateSettingsErrorCode
         >;
     }

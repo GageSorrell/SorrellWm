@@ -354,8 +354,8 @@ async function HandleNpmIgnore(
 
 async function HandleInstall(LogStep: TFunction<string>): Promise<void>
 {
-    LogStep(`Running ${ Code("yarn install") }...`);
-    await Spawn("yarn", [ "install" ]).OnExit;
+    LogStep(`Running ${ Code("npm install") }...`);
+    await Spawn("npm", [ "install" ]).OnExit;
 }
 
 async function HandleReadMe(
@@ -363,7 +363,7 @@ async function HandleReadMe(
     Name: InitOptions["name"]
 ): Promise<void>
 {
-    LogStep(`Running ${ Code("yarn install") }...`);
+    LogStep(`Running ${ Code("npm install") }...`);
     await WriteFile(resolve("./ReadMe.md"), `# \`${ Name }\`\n`);
 }
 

@@ -6,7 +6,7 @@
  */
 
 import type { FLogSettings, FPanelDirection } from "../../Shared";
-import type { FBox } from "@sorrellwm/windows";
+import type { FBox } from "@sorrell/wm-windows";
 
 export type FDummyPanel =
 {

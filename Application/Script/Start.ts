@@ -5,9 +5,12 @@
  * @license   MIT
  */
 
-import * as FilteredLogStatements from "./FilteredLogStatements.json";
 import { type ChildProcess, spawn } from "child_process";
 import Chalk from "chalk";
+import { readFileSync } from "fs";
+
+const FilteredLogStatements: Array<string> =
+    JSON.parse(readFileSync("./Script/FilteredLogStatements.json", { encoding: "utf-8" })).Statements;
 
 const ModifyOutput = (Output: string): string =>
 {
@@ -79,7 +82,7 @@ const ModifyOutput = (Output: string): string =>
         }
 
         const HasExcludedStatement: boolean =
-            FilteredLogStatements.Statements.some((ExcludedStatement: string): boolean =>
+            FilteredLogStatements.some((ExcludedStatement: string): boolean =>
             {
                 return Line.includes(ExcludedStatement);
             });
@@ -176,7 +179,7 @@ const Start = async (): Promise<void> =>
         RegisterSignalHandlers();
 
         Child = spawn(
-            "npm run start-proper",
+            "npm run start:proper",
             {
                 shell: true,
                 stdio: [ "ignore", "pipe", "pipe" ]

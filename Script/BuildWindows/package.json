@@ -8,7 +8,7 @@
   },
   "types": "./Distribution/index.d.ts",
   "scripts": {
-    "build": "tsgo -p ./tsconfig.json",
+    "build": "tsc -p ./tsconfig.json",
     "start": "node ./Distribution/index.js"
   },
   "keywords": [
@@ -37,7 +37,7 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-    "@types/node": "^25.6.0"
+    "@types/node": "^24.12.2"
   },
   "dependencies": {
     "@effect/cli": "^0.75.1",

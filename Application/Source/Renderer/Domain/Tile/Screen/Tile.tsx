@@ -8,7 +8,7 @@
 import { Caption1, Title1 } from "@fluentui/react-components";
 import { CommandContainer, type FCommand } from "@/Domain/Common/Component/Command";
 import { type ReactElement, type ReactNode, useCallback, useMemo } from "react";
-import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
+// import { UseSendIpcEventDeferred, UseSendIpcEventStrict } from "@/Event";
 import { Action } from "@/Action";
 import type { FAnnotatedPanel } from "../../../../Shared/Tree.Types";
 import type { FLogger } from "../../../../Shared/Log.Types";
@@ -16,17 +16,22 @@ import type { FSimpleCallback } from "../../../../Shared/Utility";
 import { GetLogger } from "@/Log";
 import { GetPanelKey } from "@/Domain/Common/Component/Panel/Panel";
 import { Panel } from "@/Domain/Common/Component/Panel";
-import { UseIndex } from "@/Utility/Hook";
+import { SendIpcEvent } from "@/Temp";
+import { UseIndex } from "@sorrell/react";
 
 const Log: FLogger = GetLogger("Tile");
 
 const UseAnnotatedPanels = (): Readonly<[ TArray<FAnnotatedPanel> ]> =>
 {
-    const { Data: { AnnotatedPanels: AnnotatedPanelsBase } } =
-        UseSendIpcEventStrict("GetAnnotatedPanels", undefined, { AnnotatedPanels: [ ] });
+    // const { Data: { AnnotatedPanels: AnnotatedPanelsBase } } =
+    //     UseSendIpcEventStrict("GetAnnotatedPanels", undefined, { AnnotatedPanels: [ ] });
 
-    const { Data: { Screenshots } } =
-        UseSendIpcEventStrict("GetPanelScreenshots", undefined, { Screenshots: [ ] });
+    const AnnotatedPanelsBase: Array<FAnnotatedPanel> = [ ];
+
+    // const { Data: { Screenshots } } =
+    //     UseSendIpcEventStrict("GetPanelScreenshots", undefined, { Screenshots: [ ] });
+
+    const Screenshots: Array<string> = [ ];
 
     const AnnotatedPanels: TArray<FAnnotatedPanel> =
         useMemo((): TArray<FAnnotatedPanel> =>
@@ -50,7 +55,7 @@ export const Tile = (): ReactElement =>
 {
     const [ AnnotatedPanels ] = UseAnnotatedPanels();
 
-    const [ SendIpcEvent ] = UseSendIpcEventDeferred();
+    // const [ SendIpcEvent ] = UseSendIpcEventDeferred();
 
     // @TODO Make default option be the root panel of the monitor to which the floating window belongs.
     // const [ MonitorFocusedWindow ] =

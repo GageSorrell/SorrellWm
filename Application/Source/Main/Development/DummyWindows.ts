@@ -8,14 +8,17 @@
 import * as Path from "path";
 import { BringIntoPanel, GetForest, MakeSizesUniform, Publish } from "#/Tree/Tree";
 import type { FDummyConfiguration, FDummyConfigurationSchema, FDummyPanel } from "./DevSettings.Types";
-import { type FLogger, type FPanel, type TEventCallback } from "../../Shared";
-import { GetWindowByName, type HWindow } from "@sorrellwm/windows";
+import { type FLogger, type FPanel } from "../../Shared";
+import { GetWindowByName, type HWindow } from "@sorrell/wm-windows";
 import { CreateBrowserWindow } from "#/Window/BrowserWindow";
 import { promises as Fs } from "fs";
 import { GetDevSettings } from "./DevSettings";
 import { GetLogger } from "./Log/Log";
 import { RegisterInitializationFunction } from "#/Initialize/Initialize";
 import { RegisterIpcCallback } from "#/Event";
+
+// @TODO Temporary.
+type TEventCallback<Type> = (...Arguments: Array<unknown>) => Promise<any>;
 
 const Log: FLogger = GetLogger("DummyWindows");
 

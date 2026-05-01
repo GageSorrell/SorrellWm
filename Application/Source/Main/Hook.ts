@@ -5,6 +5,6 @@
  * @license   MIT
  */
 
-import { InitializeHooks } from "@sorrellwm/windows";
+import { InitializeHooks } from "@sorrell/wm-windows";
 
 InitializeHooks();

@@ -9,7 +9,7 @@ import { Body1, Body1Strong, Caption1, makeStyles, mergeClasses, tokens } from "
 import { type CSSProperties, type ReactNode, useCallback } from "react";
 import type { FUseKeybindStyles, FUseKeybindStylesInternal, PActiveEditingMessage } from "./Keybind.Types";
 import { type FluentIconsProps, WarningFilled } from "@fluentui/react-icons";
-import { GetFlexStyle, type TClassesFrom } from "@/Utility";
+import { GetFlexStyle, type TClassesFrom } from "@sorrell/react";
 import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
 import type { FSimpleCallback } from "../../../../../Shared";
 import { FriendlyNames } from "@/Keybind";

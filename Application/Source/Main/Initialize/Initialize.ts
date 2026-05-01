@@ -6,8 +6,9 @@
  */
 
 import type { FInitializer, FInitializers } from "./Initialize.Types";
-import type { FLogger, FRejectFunction, TPromiseThenFunction } from "../../Shared";
+import type { TReject, TThen } from "@sorrell/utilities/async";
 import { app as App } from "electron";
+import type { FLogger } from "../../Shared";
 import { GetLogger } from "#/Development/Log/Log";
 
 const InitializationFunctions: FInitializers = { };
@@ -36,14 +37,14 @@ export async function RegisterInitializationFunction(
     }
 
     const PartialInitializer: Partial<FInitializer> =
-    {
-        DependencyArray,
-        IsFulfilled: false
-    };
+        {
+            DependencyArray,
+            IsFulfilled: false
+        };
 
     const WrappedInitializer: Promise<void> = new Promise<void>((
-        Resolve: TPromiseThenFunction<void>,
-        Reject: FRejectFunction
+        Resolve: TThen<void>,
+        Reject: TReject
     ): void =>
     {
         let TimerId: NodeJS.Timeout | undefined = undefined;

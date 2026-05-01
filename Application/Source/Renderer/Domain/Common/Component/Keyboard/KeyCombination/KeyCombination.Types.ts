@@ -6,9 +6,9 @@
  */
 
 import type { FVirtualKey } from "../../../../../../Shared/Keyboard.Types";
-import type { TMaybeArray } from "../../../../../../Shared/Utility";
+import type { TMaybeArray } from "@sorrell/utilities/array";
 
 export type PKeyCombination =
-{
-    Keys: TMaybeArray<FVirtualKey>;
-};
+    {
+        Keys: TMaybeArray<FVirtualKey>;
+    };

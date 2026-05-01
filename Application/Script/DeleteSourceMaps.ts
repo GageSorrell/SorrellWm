@@ -6,25 +6,25 @@
  */
 
 import * as Fs from "fs";
-import { Paths } from "../Configuration/Script";
+import { Paths } from "../Configuration/Script/Path";
 import path from "path";
 import { rimrafSync } from "rimraf";
 
 export function DeleteSourceMaps()
 {
-    if (Fs.existsSync(Paths.DistributionMain))
+    if (Fs.existsSync(Paths.DistributionMain || ""))
     {
         rimrafSync(
-            path.join(Paths.DistributionMain, "*.js.map"),
+            path.join(Paths.DistributionMain || "", "*.js.map"),
             {
                 glob: true
             }
         );
     }
-    if (Fs.existsSync(Paths.DistributionRenderer))
+    if (Fs.existsSync(Paths.DistributionRenderer || ""))
     {
         rimrafSync(
-            path.join(Paths.DistributionRenderer, "*.js.map"),
+            path.join(Paths.DistributionRenderer || "", "*.js.map"),
             {
                 glob: true
             }

@@ -1,0 +1,59 @@
+{
+    "name": "@sorrell/react",
+    "private": false,
+    "version": "1.0.1",
+    "description": "TypeScript utilities for React.",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./Distribution/Types/index.d.mts",
+                "default": "./Distribution/index.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/index.d.cts",
+                "default": "./Distribution/index.cjs"
+            }
+        }
+    },
+    "scripts": {
+        "prepack": "npm run build",
+        "build:js": "node esbuild.config.mts",
+        "prebuild:types": "tsc -p ./tsconfig.script.json",
+        "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
+        "build": "npm run build:js && npm run build:types"
+    },
+    "keywords": [
+        "react",
+        "utilities",
+        "typescript",
+        "sorrell",
+        "functional",
+        "fp"
+    ],
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/React#ReadMe",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/React",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "license": "MIT",
+    "type": "module",
+    "devDependencies": {
+        "@types/react": "^19.2.5",
+        "@types/react-router-dom": "^5.3.3"
+    },
+    "dependencies": {
+        "@fluentui/react-components": "^9.73.8",
+        "@sorrell/utilities": "^1.2.1",
+        "react": "^19.2.5",
+        "react-router-dom": "^6.30.3"
+    }
+}

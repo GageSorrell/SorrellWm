@@ -31,9 +31,7 @@ if (
   !(fs.existsSync(webpackPaths.dllPath) && fs.existsSync(manifest))
 ) {
   console.log(
-    chalk.black.bgYellow.bold(
-      'The DLL files are missing. Sit back while we build them for you with "npm run build-dll"',
-    ),
+      `The DLL files are missing.  Building DLL files via ${ chalk.reset.red("npm run build:dll") }...`,
   );
   execSync('npm run postinstall');
 }

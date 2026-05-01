@@ -6,7 +6,7 @@
  */
 
 import type { FIpcCallback, FIpcCallbackSerialized } from "./NodeIpc.Types";
-import { InitializeIpc } from "@sorrellwm/windows";
+import { InitializeIpc } from "@sorrell/wm-windows";
 import { RegisterInitializationFunction } from "../Initialize/Initialize";
 
 let NextListenerId: number = 0;

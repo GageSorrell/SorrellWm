@@ -7,7 +7,7 @@
 
 /** This file must be side-effect imported by `Main`. */
 
-import { InitializeMessageLoop } from "@sorrellwm/windows";
+import { InitializeMessageLoop } from "@sorrell/wm-windows";
 
 const RunInitializeMessageLoop = (): void =>
 {

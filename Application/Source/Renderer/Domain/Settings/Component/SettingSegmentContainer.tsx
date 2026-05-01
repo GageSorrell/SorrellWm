@@ -7,21 +7,21 @@
 
 import { Body1Strong, tokens } from "@fluentui/react-components";
 import type { CSSProperties, ReactNode } from "react";
-import { GetFlexStyle } from "@/Utility";
+import { GetFlexStyle } from "@sorrell/react";
 import type { PSettingSegmentContainer } from "./SettingSegmentContainer.Types";
 
 export const SettingSegmentContainer = ({ Title, children }: PSettingSegmentContainer): ReactNode =>
 {
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("column", "flex-start", "stretch"),
-        gap: tokens.spacingVerticalXS
-    };
+        {
+            ...GetFlexStyle("column", "flex-start", "stretch"),
+            gap: tokens.spacingVerticalXS
+        };
 
     const TitleStyle: CSSProperties =
-    {
-        marginBottom: tokens.spacingVerticalXS
-    };
+        {
+            marginBottom: tokens.spacingVerticalXS
+        };
 
     return (
         <div style={ RootStyle }>

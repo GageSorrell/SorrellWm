@@ -7,7 +7,7 @@
 
 import type { CSSProperties, ChangeEvent, ReactNode } from "react";
 import { Switch, type SwitchOnChangeData } from "@fluentui/react-components";
-import { GetFlexStyle } from "@/Utility";
+import { GetFlexStyle } from "@sorrell/react";
 import type { PBooleanSettingControl } from "./BooleanSettingControl.Types";
 
 export const BooleanSettingControl = (

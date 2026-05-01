@@ -6,8 +6,8 @@
  */
 
 import type { FAnnotatedPanel, FPanel } from "../Tree.Types";
-import type { FHexColor, HMonitor } from "@sorrellwm/windows";
-import type { FRequestDeclNone, FResponseDeclNone, TEventDecl } from "electron-reactive-event";
+import type { FHexColor, HMonitor } from "@sorrell/wm-windows";
+import type { EventDecl } from "electron-reactive-event";
 import type { FExternalWindow } from "../Window/ExternalWindow.Types";
 import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
@@ -68,152 +68,180 @@ export type FGetIsElevatedErrorCode = TEventErrorCode<"">;
 
 export type FOpenWebPageErrorCode = TEventErrorCode<"">;
 
-declare module "./Event.Types"
+declare module "electron-reactive-event/registrar"
 {
-    interface IFrontendEventRegistrar
+    interface Registrar
     {
-        GetId: TEventDecl<
-            FRequestDeclNone,
+        GetId: EventDecl<
+            RendererOwner,
+            never,
             { Id: number | undefined; },
             FGetIdErrorCode
         >;
-        GetMonitorFromFocusedWindow: TEventDecl<
-            FRequestDeclNone,
+        GetMonitorFromFocusedWindow: EventDecl<
+            RendererOwner,
+            never,
             { Monitor: HMonitor; },
             FGetMonitorFromFocusedWindowErrorCode
         >;
-        GetAnnotatedPanels: TEventDecl<
-            FRequestDeclNone,
+        GetAnnotatedPanels: EventDecl<
+            RendererOwner,
+            never,
             { AnnotatedPanels: TArray<FAnnotatedPanel> },
             FGetAnnotatedPanelsErrorCode
         >;
-        GetCurrentPanel: TEventDecl<
-            FRequestDeclNone,
+        GetCurrentPanel: EventDecl<
+            RendererOwner,
+            never,
             FPanel,
             FGetCurrentPanelErrorCode
         >;
-        GetIsActiveWindowTiled: TEventDecl<
-            FRequestDeclNone,
+        GetIsActiveWindowTiled: EventDecl<
+            RendererOwner,
+            never,
             boolean,
             FGetCurrentPanelErrorCode
         >;
-        GetIsLightMode: TEventDecl<
-            FRequestDeclNone,
+        GetIsLightMode: EventDecl<
+            RendererOwner,
+            never,
             boolean,
             FGetIsLightModeErrorCode
         >;
-        Update: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        Update: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FUpdateErrorCode
         >;
-        OpenWebPage: TEventDecl<
+        OpenWebPage: EventDecl<
+            RendererOwner,
             string,
-            FResponseDeclNone,
+            never,
             FOpenWebPageErrorCode
         >;
-        GetIsElevated: TEventDecl<
-            FRequestDeclNone,
+        GetIsElevated: EventDecl<
+            RendererOwner,
+            never,
             { IsElevated: boolean; },
             FGetIsElevatedErrorCode
         >;
-        AllowActivation: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        AllowActivation: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FAllowActivationErrorCode
         >;
-        PreventActivation: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        PreventActivation: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FPreventActivationErrorCode
         >;
-        GetStore: TEventDecl<
-            FRequestDeclNone,
+        GetStore: EventDecl<
+            RendererOwner,
+            never,
             FStore,
             FGetStoreErrorCode
         >;
-        SetStore: TEventDecl<
+        SetStore: EventDecl<
+            RendererOwner,
             FStore,
-            FResponseDeclNone,
+            never,
             FSetStoreErrorCode
         >;
-        GetThemeColor: TEventDecl<
-            FRequestDeclNone,
+        GetThemeColor: EventDecl<
+            RendererOwner,
+            never,
             FHexColor,
             FGetThemeColorErrorCode
         >;
-        GetPanelScreenshots: TEventDecl<
-            FRequestDeclNone,
+        GetPanelScreenshots: EventDecl<
+            RendererOwner,
+            never,
             TArray<string>,
             FGetPanelScreenshotsErrorCode
         >;
-        GetExternalWindowState: TEventDecl<
-            FRequestDeclNone,
+        GetExternalWindowState: EventDecl<
+            RendererOwner,
+            never,
             FExternalWindow,
             FGetExternalWindowStateErrorCode
         >;
-        GetFloatingWindowState: TEventDecl<
-            FRequestDeclNone,
+        GetFloatingWindowState: EventDecl<
+            RendererOwner,
+            never,
             FFloatingWindow,
             FGetFloatingWindowStateErrorCode
         >;
-        GetInsertableWindowData: TEventDecl<
-            FRequestDeclNone,
+        GetInsertableWindowData: EventDecl<
+            RendererOwner,
+            never,
             { InsertableWindowData: TArray<FInsertableWindowData> },
             FGetInsertableWindowDataErrorCode
         >;
-        Log: TEventDecl<
+        Log: EventDecl<
+            RendererOwner,
             TArray<unknown>,
-            FResponseDeclNone,
+            never,
             FLogErrorCode
         >;
-        MaximizeFloatingWindow: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        MaximizeFloatingWindow: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FMaximizeFloatingWindowErrorCode
         >;
-        MinimizeFloatingWindow: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        MinimizeFloatingWindow: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FMinimizeFloatingWindowErrorCode
         >;
-        NotifyReady: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        NotifyReady: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FNotifyReadyErrorCode
         >;
-        ReadyForRoute: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        ReadyForRoute: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FReadyForRouteErrorCode
         >;
-        RestoreFloatingWindow: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        RestoreFloatingWindow: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FRestoreFloatingWindowErrorCode
         >;
-        RequestRestart: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        RequestRestart: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FRequestRestartErrorCode
         >;
-        RequestTearDown: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        RequestTearDown: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FRequestTearDownErrorCode
         >;
     }
 
-    interface IBackendEventRegistrar
+    interface Registrar
     {
-        Activate: TEventDecl<
+        Activate: EventDecl<
+            RendererOwner,
             boolean,
-            FResponseDeclNone,
+            never,
             FActivateErrorCode
         >;
-        TearDown: TEventDecl<
-            FRequestDeclNone,
-            FResponseDeclNone,
+        TearDown: EventDecl<
+            RendererOwner,
+            never,
+            never,
             FTearDownErrorCode
         >;
     }

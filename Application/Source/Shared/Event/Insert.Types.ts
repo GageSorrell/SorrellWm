@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { HWindow } from "@sorrellwm/windows";
+import type { HWindow } from "@sorrell/wm-windows";
 
 /**
  * When a new vertex is created within a panel, how should its size
@@ -16,8 +16,8 @@ export type FInsertSizingMethod =
     | "UniformResize";
 
 export type FInsertableWindowData =
-{
-    Handle: HWindow;
-    Icon: string;
-    Title: string;
-};
+    {
+        Handle: HWindow;
+        Icon: string;
+        Title: string;
+    };

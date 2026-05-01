@@ -16,7 +16,8 @@ import {
     DllReferencePlugin,
     EnvironmentPlugin,
     LoaderOptionsPlugin,
-    NoEmitOnErrorsPlugin } from "webpack";
+    NoEmitOnErrorsPlugin
+} from "webpack";
 import { Log, LogError } from "../Script/Common";
 import { BaseConfiguration } from "./Base";
 import { CheckNodeEnvironment } from "../../Script/CheckNodeEnvironment";
@@ -36,9 +37,10 @@ if (process.env.NODE_ENV === "production")
 
 const Port: number | string = process.env.PORT || 1212;
 const Manifest: string = Path.resolve(Paths.Intermediate, "renderer.json");
-const skipDLLs: boolean | undefined =
-  module.parent?.filename.includes("Renderer.Dev.Dll") ||
-  module.parent?.filename.includes("EsLint");
+const skipDLLs: boolean | undefined = (
+    module.parent?.filename.includes("Renderer.Dev.Dll") ||
+    module.parent?.filename.includes("EsLint")
+);
 
 /* Warn if the DLL is not built. */
 if (
@@ -46,8 +48,7 @@ if (
     !(Fs.existsSync(Paths.Intermediate) && Fs.existsSync(Manifest))
 )
 {
-    /* eslint-disable-next-line @stylistic/max-len */
-    Log(chalk.black.bgYellow.bold(`The DLL files are missing.  Sit back while we build them for you with ${ chalk.bgGray.white("npm run build-dll") }`));
+    Log(chalk.black.bgYellow.bold(`The DLL files are missing.  Sit back while we build them for you with ${ chalk.bgGray.white("npm run build:dll") }`));
     execSync("npm run postinstall");
 }
 

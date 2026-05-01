@@ -5,23 +5,30 @@
  * @license   MIT
  */
 
-import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain, ipcRenderer } from "electron";
+// @TODO Temporary
+/* eslint-disable jsdoc/require-jsdoc */
+
+import { type BrowserWindow, type IpcMainInvokeEvent, ipcMain } from "electron";
 import type {
-    FIpcBackendChannel,
-    FIpcFrontendChannel,
-    FIpcFrontendEvents,
     FLogger,
-    FPoorBackendEvents,
-    FPoorResponseAsSuccess,
     FRejectFunction,
-    TEventCallback,
-    TGetErrorCode,
-    TPoorResponseAsFailure,
-    TRequest,
-    TResolveFunction,
-    TResponse } from "../../Shared";
-import type { TIpcCallback, TPoorEventResponse } from "./Event.Types";
+    TResolveFunction
+} from "../../Shared";
 import { GetLogger } from "#/Development";
+
+// @TODO Temporary.
+type TEventCallback<Type> = (...Arguments: Array<unknown>) => Promise<any>;
+type TRequest<Type> = any;
+type TResponse<Type> = any;
+type TGetErrorCode<Type> = any;
+
+type FPoorResponseAsSuccess = any;
+type TPoorResponseAsFailure<Type> = any;
+type FPoorBackendEvents = any;
+type TPoorEventResponse<Type> = any;
+type FIpcBackendChannel = string;
+type FIpcFrontendEvents = any;
+type FIpcFrontendChannel = string;
 
 const Log: FLogger = GetLogger("Event");
 
@@ -74,10 +81,10 @@ export const RegisterIpcCallback = <ChannelType extends FIpcFrontendChannel>(
 
 export const RegisterIpcCallbacks = (
     BrowserWindow: BrowserWindow,
-    IpcCallbacks: Array<TIpcCallback> | Readonly<Array<TIpcCallback>>
+    IpcCallbacks: Array<any> | Readonly<Array<any>>
 ): void =>
 {
-    const Register = ({ Callback, Channel }: TIpcCallback): void =>
+    const Register = ({ Callback, Channel }: { Callback: any; Channel: any; }): void =>
     {
         RegisterIpcCallback(BrowserWindow, Channel, Callback);
     };
@@ -89,7 +96,7 @@ export const RegisterIpcCallbacks = (
 export const SendIpcEvent = <ChannelType extends FIpcBackendChannel>(
     BrowserWindow: BrowserWindow,
     Channel: ChannelType,
-    Request: TRequest<ChannelType>
+    _Request: TRequest<ChannelType>
 ): Promise<TResponse<ChannelType>> =>
 {
     return new Promise<TResponse<ChannelType>>(
@@ -119,7 +126,7 @@ export const SendIpcEvent = <ChannelType extends FIpcBackendChannel>(
              *     and `ipcRenderer.invoke` with this, the Id / GetId code can be removed, and the
              *     `UseTaggers` hook.
              */
-            const Listener = (_Event: Electron.IpcMainEvent, Response: T): void =>
+            const Listener = (_Event: Electron.IpcMainEvent, Response: any): void =>
             {
                 if (Response.RequestId !== RequestId)
                 {
@@ -139,13 +146,13 @@ export const SendIpcEvent = <ChannelType extends FIpcBackendChannel>(
 
             ipcMain.on(ResponseChannel, Listener);
 
-            const Request: IRendererRequest =
-            {
-                RequestId,
-                Payload
-            };
+            const Request: any =
+                {
+                    Payload: undefined as any,
+                    RequestId
+                };
 
-            Window.webContents.send(Channel, Request);
+            BrowserWindow.webContents.send(Channel, Request);
 
             // BrowserWindow.webContents.send(Channel, );
             // ipcRenderer. (

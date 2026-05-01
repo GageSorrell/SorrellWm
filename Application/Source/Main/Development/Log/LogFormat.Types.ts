@@ -5,7 +5,8 @@
  * @license   MIT
  */
 
-import type { TArrayNonempty, TIntegralRange } from "../../../Shared";
+import type { TIntegralRange } from "../../../Shared";
+import type { TNonemptyArray } from "@sorrell/utilities/array";
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
@@ -27,9 +28,12 @@ export type FValue =
     | FPrimitive
     | FObject;
 
-export type FLogStringArray = TArrayNonempty<FLogString>;
+export type FLogStringArray = TNonemptyArray<FLogString>;
 
-export type TContainer<Type = unknown, KeyType extends FPrimitive = FPrimitive> =
+export type TContainer<
+    Type = unknown,
+    KeyType extends FPrimitive = FPrimitive
+> =
     | Record<Extract<KeyType, PropertyKey>, Type>
     | TMap<KeyType, Type>
     | Set<Type>
@@ -94,14 +98,24 @@ export type FLogString =
     };
 
 export type FKeyValuePair =
-{
-    Depth: number;
-    Key: FPrimitive;
-    Value: FValue;
-};
+    {
+        Depth: number;
+        Key: FPrimitive;
+        Value: FValue;
+    };
 
 export type FLogValueType =
     | FValue
     | TContainer;
 
 export type TLogValue<Type extends FLogValueType = FLogValueType> = TLogBase<Type>;
+
+export type FTypeof =
+    | "object"
+    | "string"
+    | "number"
+    | "bigint"
+    | "boolean"
+    | "function"
+    | "symbol"
+    | "undefined";

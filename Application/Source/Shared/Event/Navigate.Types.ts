@@ -5,24 +5,25 @@
  * @license   MIT
  */
 
-import type { FResponseDeclNone, TEventDecl } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "electron-reactive-event";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FNavigateRequest =
-{
-    Route: string;
-    State?: Record<PropertyKey, unknown>;
-};
+    {
+        Route: string;
+        State?: Record<PropertyKey, unknown>;
+    };
 
 export type FNavigateErrorCode = TEventErrorCode<"">;
 
-declare module "./Event.Types"
+declare module "electron-reactive-event/registrar"
 {
-    interface IBackendEventRegistrar
+    interface Registrar
     {
-        Navigate: TEventDecl<
+        Navigate: EventDecl<
+            RendererOwner,
             FNavigateRequest,
-            FResponseDeclNone,
+            never,
             FNavigateErrorCode
         >;
 

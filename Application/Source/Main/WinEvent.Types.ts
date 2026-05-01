@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { HWindow } from "@sorrellwm/windows";
+import type { HWindow } from "@sorrell/wm-windows";
 
 export type FWinEventPayload =
 {

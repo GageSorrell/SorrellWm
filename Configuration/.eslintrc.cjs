@@ -24,6 +24,49 @@ module.exports = {
         {
             files:
             [
+                "Application/Source/**/*.ts",
+                "Application/Source/**/*.tsx"
+            ],
+            rules:
+            {
+                "@typescript-eslint/naming-convention":
+                [
+                    "error",
+                    {
+                        custom:
+                        {
+                            match: true,
+                            regex: "^[A-Z][a-z].+"
+                        },
+                        format: [ "PascalCase" ],
+                        selector: "typeParameter"
+                    },
+                    {
+                        custom:
+                        {
+                            match: true,
+                            regex: "^(?:Registrar|(?:H|F|I|P|T|S|A|Y|C|K|N|G)[A-Z][a-zA-Z0-9]+|[TUKYAHG])$",
+
+                        },
+                        format: [ "PascalCase" ],
+                        selector: "typeLike"
+                    },
+                    {
+                        format: [ "PascalCase", "camelCase" ],
+                        leadingUnderscore: "allow",
+                        selector: "parameter"
+                    },
+                    {
+                        format: [ "PascalCase", "camelCase" ],
+                        leadingUnderscore: "allow",
+                        selector: "variableLike"
+                    }
+                ]
+            }
+        },
+        {
+            files:
+            [
                 "Package/CliUtilities/Source/**/*.ts",
                 "Package/PipeOperator/Source/**/*.ts",
                 "Package/Listr/Source/**/*.ts",

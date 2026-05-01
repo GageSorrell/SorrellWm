@@ -22,48 +22,47 @@ if (process.env.NODE_ENV === "production")
 }
 
 const Configuration: Webpack.Configuration =
-{
-    devtool: "inline-source-map",
-    entry:
     {
-        main: Paths.EntryPoint,
-        preload: Path.join(Paths.Preload)
-    },
-    mode: "development",
-    /**
-     * Disables webpack processing of __dirname and __filename.
-     * If you run the bundle in node.js it falls back to these values of node.js.
-     * https://github.com/webpack/webpack/issues/2010
-     */
-    node:
-    {
-        __dirname: false,
-        __filename: false
-    },
-    output:
-    {
-        filename: "[name].bundle.dev.js",
-        library:
+        devtool: "inline-source-map",
+        entry:
         {
-            type: "umd"
+            main: Paths.EntryPoint,
+            preload: Path.join(Paths.Preload)
         },
-        path: Paths.Intermediate
-    },
-    plugins: [
-    /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-    /* @ts-ignore */
-        new BundleAnalyzerPlugin({
-            analyzerMode: process.env.ANALYZE === "true" ? "server" : "disabled",
-            analyzerPort: 8888
-        }),
-        // new NodePolyfillPlugin({
-        //     additionalAliases: [ "console", "fs", "path", "process", "stream", "util" ]
-        // }),
-        new Webpack.DefinePlugin({
-            "process.type": "\"browser\""
-        })
-    ],
-    target: "electron-main"
-};
+        mode: "development",
+        /* Disables webpack processing of __dirname and __filename.
+         * If you run the bundle in node.js it falls back to these values of node.js.
+         * https://github.com/webpack/webpack/issues/2010
+         */
+        node:
+        {
+            __dirname: false,
+            __filename: false
+        },
+        output:
+        {
+            filename: "[name].bundle.dev.js",
+            library:
+            {
+                type: "umd"
+            },
+            path: Paths.Intermediate
+        },
+        plugins: [
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /* @ts-ignore */
+            new BundleAnalyzerPlugin({
+                analyzerMode: process.env.ANALYZE === "true" ? "server" : "disabled",
+                analyzerPort: 8888
+            }),
+            // new NodePolyfillPlugin({
+            //     additionalAliases: [ "console", "fs", "path", "process", "stream", "util" ]
+            // }),
+            new Webpack.DefinePlugin({
+                "process.type": "\"browser\""
+            })
+        ],
+        target: "electron-main"
+    };
 
 export default merge(BaseConfiguration, Configuration);

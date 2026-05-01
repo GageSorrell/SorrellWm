@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { InitializeWindowTracker as InitializeWindowTrackerNative } from "@sorrellwm/windows";
+import { InitializeWindowTracker as InitializeWindowTrackerNative } from "@sorrell/wm-windows";
 import { RegisterInitializationFunction } from "./Initialize";
 
 const InitializeWindowTracker = async (): Promise<void> =>

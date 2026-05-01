@@ -7,5 +7,9 @@
 
 /* eslint-disable */
 
-var Out = require("./Build/Release/SorrellWm.node");
-module.exports = Out;
+import { createRequire } from "node:module";
+
+const Require = createRequire(import.meta.url);
+const SorrellWm = Require("./Build/Release/SorrellWmWindows.node");
+
+export default SorrellWm;

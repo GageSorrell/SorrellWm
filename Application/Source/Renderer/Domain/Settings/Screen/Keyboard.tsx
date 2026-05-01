@@ -30,6 +30,7 @@ import {
     type FSimpleCallback,
     type FSettings,
     GetPropertyFromPath } from "../../../../Shared";
+import type { TPath } from "../../../../Shared/Utility/Object.Types";
 import { UseSettings, UseUpdateSetting, UseUpdateSettings } from "@/Settings";
 import { Toast, type ToastProps, ToastTitle } from "@fluentui/react-components";
 import type { CKeyboardSettings } from "./Keyboard.Types";
@@ -41,19 +42,18 @@ import { KeyIds } from "../../../../Shared/Keyboard";
 import { KeybindSet } from "../Component/Keyboard/KeybindSet";
 import { SettingsScreen } from "./SettingsScreen";
 import { UseCommands } from "@/Command";
-import { UseSendIpcEventDeferred } from "@/Event";
+import { UseSendIpcEventDeferred } from "@/Temp";
 import { UseToaster } from "@/Toast";
-import type { TPath } from "../../../../Shared/Utility/Object.Types";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Keyboard");
 
 const EmptyContext: CKeyboardSettings =
-{
-    EditingKeybind: undefined,
-    RequestCancel: (_In: FActionKey) => false,
-    RequestEditKeybind: (_In: FActionKey) => false
-};
+    {
+        EditingKeybind: undefined,
+        RequestCancel: (_In: FActionKey) => false,
+        RequestEditKeybind: (_In: FActionKey) => false
+    };
 
 const KeyboardSettingsContext: Context<CKeyboardSettings> = createContext<CKeyboardSettings>(EmptyContext);
 
@@ -115,11 +115,11 @@ export const Keyboard = (): ReactElement =>
         }, [ EditingKeybind, SendIpcEvent, SetEditingKeybind ]);
 
     const value: CKeyboardSettings =
-    {
-        EditingKeybind,
-        RequestCancel,
-        RequestEditKeybind
-    };
+        {
+            EditingKeybind,
+            RequestCancel,
+            RequestEditKeybind
+        };
 
     const [ Settings ] = UseSettings();
 
@@ -156,108 +156,108 @@ export const Keyboard = (): ReactElement =>
         }, [ Settings.Keybinds ]);
 
     const DirectionKeybinds: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Direction.Left",
-            Caption: "Left",
-            KeyIds: Settings.Keybinds.Direction.Left
-        },
-        {
-            ActionKey: "Direction.Up",
-            Caption: "Up",
-            KeyIds: Settings.Keybinds.Direction.Up
-        },
-        {
-            ActionKey: "Direction.Down",
-            Caption: "Down",
-            KeyIds: Settings.Keybinds.Direction.Down
-        },
-        {
-            ActionKey: "Direction.Right",
-            Caption: "Right",
-            KeyIds: Settings.Keybinds.Direction.Right
-        }
-    ];
+        [
+            {
+                ActionKey: "Direction.Left",
+                Caption: "Left",
+                KeyIds: Settings.Keybinds.Direction.Left
+            },
+            {
+                ActionKey: "Direction.Up",
+                Caption: "Up",
+                KeyIds: Settings.Keybinds.Direction.Up
+            },
+            {
+                ActionKey: "Direction.Down",
+                Caption: "Down",
+                KeyIds: Settings.Keybinds.Direction.Down
+            },
+            {
+                ActionKey: "Direction.Right",
+                Caption: "Right",
+                KeyIds: Settings.Keybinds.Direction.Right
+            }
+        ];
 
     const PrimaryKeybinds: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Primary[0]",
-            Caption: "#1",
-            KeyIds: Settings.Keybinds.Primary[0]
-        },
-        {
-            ActionKey: "Primary[1]",
-            Caption: "#2",
-            KeyIds: Settings.Keybinds.Primary[1]
-        },
-        {
-            ActionKey: "Primary[2]",
-            Caption: "#3",
-            KeyIds: Settings.Keybinds.Primary[2]
-        },
-        {
-            ActionKey: "Primary[3]",
-            Caption: "#4",
-            KeyIds: Settings.Keybinds.Primary[3]
-        }
-    ];
+        [
+            {
+                ActionKey: "Primary[0]",
+                Caption: "#1",
+                KeyIds: Settings.Keybinds.Primary[0]
+            },
+            {
+                ActionKey: "Primary[1]",
+                Caption: "#2",
+                KeyIds: Settings.Keybinds.Primary[1]
+            },
+            {
+                ActionKey: "Primary[2]",
+                Caption: "#3",
+                KeyIds: Settings.Keybinds.Primary[2]
+            },
+            {
+                ActionKey: "Primary[3]",
+                Caption: "#4",
+                KeyIds: Settings.Keybinds.Primary[3]
+            }
+        ];
 
     const SecondaryKeybinds: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Secondary[0]",
-            Caption: "#1",
-            KeyIds: Settings.Keybinds.Secondary[0]
-        },
-        {
-            ActionKey: "Secondary[1]",
-            Caption: "#2",
-            KeyIds: Settings.Keybinds.Secondary[1]
-        },
-        {
-            ActionKey: "Secondary[2]",
-            Caption: "#3",
-            KeyIds: Settings.Keybinds.Secondary[2]
-        },
-        {
-            ActionKey: "Secondary[3]",
-            Caption: "#4",
-            KeyIds: Settings.Keybinds.Secondary[3]
-        }
-    ];
+        [
+            {
+                ActionKey: "Secondary[0]",
+                Caption: "#1",
+                KeyIds: Settings.Keybinds.Secondary[0]
+            },
+            {
+                ActionKey: "Secondary[1]",
+                Caption: "#2",
+                KeyIds: Settings.Keybinds.Secondary[1]
+            },
+            {
+                ActionKey: "Secondary[2]",
+                Caption: "#3",
+                KeyIds: Settings.Keybinds.Secondary[2]
+            },
+            {
+                ActionKey: "Secondary[3]",
+                Caption: "#4",
+                KeyIds: Settings.Keybinds.Secondary[3]
+            }
+        ];
 
     const PeekKeybind: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Miscellaneous.Peek",
-            KeyIds: Settings.Keybinds.Miscellaneous.Peek
-        }
-    ];
+        [
+            {
+                ActionKey: "Miscellaneous.Peek",
+                KeyIds: Settings.Keybinds.Miscellaneous.Peek
+            }
+        ];
 
     const FocusListKeybind: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Miscellaneous.FocusList",
-            KeyIds: Settings.Keybinds.Miscellaneous.FocusList
-        }
-    ];
+        [
+            {
+                ActionKey: "Miscellaneous.FocusList",
+                KeyIds: Settings.Keybinds.Miscellaneous.FocusList
+            }
+        ];
 
     const FocusTextInputKeybind: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Miscellaneous.FocusTextInput",
-            KeyIds: Settings.Keybinds.Miscellaneous.FocusTextInput
-        }
-    ];
+        [
+            {
+                ActionKey: "Miscellaneous.FocusTextInput",
+                KeyIds: Settings.Keybinds.Miscellaneous.FocusTextInput
+            }
+        ];
 
     const OpenSettingsKeybind: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Miscellaneous.Settings",
-            KeyIds: Settings.Keybinds.Miscellaneous.Settings
-        }
-    ];
+        [
+            {
+                ActionKey: "Miscellaneous.Settings",
+                KeyIds: Settings.Keybinds.Miscellaneous.Settings
+            }
+        ];
 
     const CancelSetKeybindCallback: FSimpleCallback = useCallback((): void =>
     {
@@ -378,12 +378,12 @@ export const Keyboard = (): ReactElement =>
     }, [ DispatchToast, EditingKeybind, GetActionFromKey, SetEditingKeybind, UpdateSetting, UpdateSettings ]);
 
     const ActivationKeybind: Array<FKeybindPair> =
-    [
-        {
-            ActionKey: "Activate",
-            KeyIds: Settings.Keybinds.Activate
-        }
-    ];
+        [
+            {
+                ActionKey: "Activate",
+                KeyIds: Settings.Keybinds.Activate
+            }
+        ];
 
     return (
         <KeyboardSettingsContext.Provider { ...{ value } }>

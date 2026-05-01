@@ -13,7 +13,7 @@ import type { FActionKey } from "../../../../../Shared/Settings";
 import type { FKeyId } from "../../../../../Shared/Keyboard.Types";
 import type { FSimpleCallback } from "../../../../../Shared";
 import { type FluentIconsProps } from "@fluentui/react-icons";
-import { GetFlexStyle } from "@/Utility";
+import { GetFlexStyle } from "@sorrell/react";
 import { Key } from "@/Domain/Common";
 import { UseKeyboardSettings } from "../../Screen/Keyboard";
 

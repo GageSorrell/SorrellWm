@@ -7,8 +7,16 @@
 
 import * as Fs from "fs";
 import chalk from "chalk";
-import { dependencies } from "../package.json";
 import { execSync } from "child_process";
+import { resolve } from "path";
+
+const PackageJsonPath: string =
+    Fs.existsSync(resolve("../Release/Application/package.json"))
+        ? resolve("../Release/Application/package.json")
+        : resolve("./Release/Application/package.json");
+
+const dependencies: Record<string, string> =
+    JSON.parse(Fs.readFileSync(PackageJsonPath, { encoding: "utf-8" })).dependencies;
 
 if (dependencies)
 {

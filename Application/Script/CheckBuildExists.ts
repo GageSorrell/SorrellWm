@@ -8,11 +8,11 @@
 
 import * as Fs from "fs";
 import * as Path from "path";
-import { Paths } from "../Configuration";
+import { Paths } from "../Configuration/Script/Path.js";
 import chalk from "chalk";
 
-const MainPath: string = Path.join(Paths.DistributionMain, "Main.js");
-const RendererPath: string = Path.join(Paths.DistributionRenderer, "Renderer.js");
+const MainPath: string = Path.join(Paths.DistributionMain || "", "Main.js");
+const RendererPath: string = Path.join(Paths.DistributionRenderer || "", "Renderer.js");
 
 if (!Fs.existsSync(MainPath))
 {

@@ -7,7 +7,7 @@
 
 import type { FSimpleCallback } from "../../../../Shared";
 import type { PSettingSegment } from "./SettingSegment.Types";
-import type { TPropsWithChildrenByProps } from "@/Utility";
+import type { TPropsWithChildrenByProps } from "@sorrell/react";
 
 export type CCompoundSettingSegment =
 {

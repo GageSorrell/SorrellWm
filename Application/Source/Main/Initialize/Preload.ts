@@ -1,13 +1,19 @@
-/* File:    Preload.ts
- * Author:  Gage Sorrell <gage@sorrell.sh>
- * License: MIT
+/**
+ * @file      Preload.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
  */
 
 /* eslint-disable */
 
 import { contextBridge, ipcRenderer } from "electron";
-import type { FIpcFrontendChannel, TEventCallback } from "../../Shared";
 // import { GetPreload } from "electron-reactive-event";
+
+// @TODO Temporary.
+type TEventCallback<Type> = (...Arguments: Array<unknown>) => Promise<any>;
+type FIpcFrontendChannel = string;
+type FIpcBackendChannel = string;
 
 const ElectronHandler =
 {

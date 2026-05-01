@@ -7,29 +7,29 @@
  *            do not otherwise have a good place to go.
  */
 
-import type { FRequestDeclNone, TEventDecl } from "electron-reactive-event";
-import type { FBox } from "@sorrellwm/windows";
+import type { EventDecl, RendererOwner } from "electron-reactive-event";
+import type { FBox } from "@sorrell/wm-windows";
 import type { FFocusChange } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FWindowFocusData =
-{
-    FocusedWindowTitle: string;
-};
+    {
+        FocusedWindowTitle: string;
+    };
 
 export type FPanelFocusData =
-{
-    NumVertices: number;
-};
+    {
+        NumVertices: number;
+    };
 
 export type FFocusDataBase =
-{
-    CanMoveWithinPanel: boolean;
-    CanStepUp: boolean;
-    CanStepDown: boolean;
-    Direction: "Horizontal" | "Vertical";
-    RealSize: FBox;
-};
+    {
+        CanMoveWithinPanel: boolean;
+        CanStepUp: boolean;
+        CanStepDown: boolean;
+        Direction: "Horizontal" | "Vertical";
+        RealSize: FBox;
+    };
 
 export type FFocusData =
     FFocusDataBase &
@@ -47,16 +47,18 @@ export type FGetFocusDataErrorCode = TEventErrorCode<
     | "FocusedVertexUndefined"
 >;
 
-declare module "./Event.Types"
+declare module "electron-reactive-event/registrar"
 {
-    interface IFrontendEventRegistrar
+    interface Registrar
     {
-        GetFocusData: TEventDecl<
-            FRequestDeclNone,
+        GetFocusData: EventDecl<
+            RendererOwner,
+            never,
             FFocusData,
             FGetFocusDataErrorCode
         >;
-        OnChangeFocus: TEventDecl<
+        OnChangeFocus: EventDecl<
+            RendererOwner,
             FFocusChange,
             FFocusData,
             FOnChangeFocusErrorCode

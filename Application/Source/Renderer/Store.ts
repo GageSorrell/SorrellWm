@@ -6,7 +6,7 @@
  */
 
 import type { FStore } from "../Shared/Store.Types";
-import { UseSendIpcEvent } from "./Event.tsx.old";
+import { UseSendIpcEvent } from "@/Temp";
 
 export const UseMainStore = (): Readonly<[ FStore | undefined ]> =>
 {

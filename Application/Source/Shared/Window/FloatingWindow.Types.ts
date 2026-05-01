@@ -10,6 +10,6 @@ import type { FExternalWindowPlacement } from "./ExternalWindow.Types";
 export type FFloatingWindowPlacement = Omit<FExternalWindowPlacement, "Arranged">;
 
 export type FFloatingWindow =
-{
-    Placement: FFloatingWindowPlacement;
-};
+    {
+        Placement: FFloatingWindowPlacement;
+    };

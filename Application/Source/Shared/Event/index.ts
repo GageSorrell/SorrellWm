@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-export * from "./Common.Types";
 export * from "./Focus.Types";
 export * from "./Insert.Types";
 export * from "./Move.Types";

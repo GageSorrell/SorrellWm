@@ -7,7 +7,7 @@
 
 import type { FColorKeywords, FLogColor, FLogStyleFunction } from "./LogStyle.Types";
 import Chalk from "chalk";
-import type { FHexColor } from "Windows";
+import type { FHexColor } from "@sorrell/wm-windows";
 
 export function Code(In: string): string
 {

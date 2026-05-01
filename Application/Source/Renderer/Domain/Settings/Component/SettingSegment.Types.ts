@@ -8,21 +8,21 @@
 import type { FSimpleCallback } from "../../../../Shared";
 import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
-import type { THandler } from "@/Utility";
+import type { THandler } from "@sorrell/react";
 
 export type PSettingSegment =
-{
-    Control: ReactNode;
+    {
+        Control: ReactNode;
 
-    Disabled?: boolean;
-    DisabledMessage?: ReactNode;
-    DisabledActionLabel?: string;
-    DisabledAction?: FSimpleCallback;
+        Disabled?: boolean;
+        DisabledMessage?: ReactNode;
+        DisabledActionLabel?: string;
+        DisabledAction?: FSimpleCallback;
 
-    Icon?: FluentIcon;
-    Subtitle: ReactNode;
-    Title: ReactNode;
-};
+        Icon?: FluentIcon;
+        Subtitle: ReactNode;
+        Title: ReactNode;
+    };
 
 export type PSettingSegmentBody =
     Pick<PSettingSegment, "Title"> &

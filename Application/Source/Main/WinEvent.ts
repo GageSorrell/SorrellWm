@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-// import { type FBox, GetWindowLocationAndSize, InitializeWinEvents } from "@sorrellwm/windows";
+// import { type FBox, GetWindowLocationAndSize, InitializeWinEvents } from "@sorrell/wm-windows";
 // import { type FLogger, GetLogger } from "./Development";
 // import { IsWindowTiled, Publish } from "./Tree";
 // import type { FWinEventPayload } from "./WinEvent.Types";
@@ -13,7 +13,7 @@
 // import { TDispatcher } from "./Core/Dispatcher";
 
 import type { FWinEventPayload } from "./WinEvent.Types";
-import { InitializeWinEvents as InitializeWinEventsNative } from "@sorrellwm/windows";
+import { InitializeWinEvents as InitializeWinEventsNative } from "@sorrell/wm-windows";
 import { IsWindowTiled } from "./Tree";
 import { RegisterInitializationFunction } from "./Initialize/Initialize";
 import { Subscribe } from "./Event/NodeIpc";

@@ -5,15 +5,15 @@
  * @license   MIT
  */
 
-import type { FResponseDeclNone, TEventDecl } from "electron-reactive-event";
-import type { TIpcFrontendEvent } from "Source/Shared";
+import type { EventDecl, RendererOwner } from "electron-reactive-event";
 
-declare module "../../Shared/Event/Event.Types.ts"
+declare module "electron-reactive-event/registrar"
 {
-    interface IFrontendEventRegistrar
+    interface Registrar
     {
-        GetIsDummyWindow: TEventDecl<
-            FResponseDeclNone,
+        GetIsDummyWindow: EventDecl<
+            RendererOwner,
+            never,
             boolean,
             "UnspecifiedError"
         >;

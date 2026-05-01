@@ -3,7 +3,7 @@
  * License: MIT
  */
 
-import type { FBox } from "@sorrellwm/windows";
+import type { FBox } from "@sorrell/wm-windows";
 import type { FLogger } from "../../Shared";
 import { promises as Fs } from "fs";
 import { GetLogger } from "#/Development";

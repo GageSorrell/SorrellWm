@@ -11,13 +11,14 @@ import { type CSSProperties, type ReactElement, type ReactNode } from "react";
 import {
     CompoundSettingSegmentBody,
     CompoundSettingSegmentHeader } from "../../Component/SettingSegment";
-import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Event";
+// import { UseSendIpcEvent, UseSendIpcEventDeferredCallback } from "@/Event";
 import { Button } from "@/Domain/Common";
 import { CompoundSettingSegment } from "../../Component/CompoundSettingSegment";
 import { CompoundSettingSegmentBodyContainer } from "../../Component/CompoundSettingSegmentBodyContainer";
 import { type FLogger } from "../../../../../Shared";
-import { GetFlexStyle } from "@/Utility";
+import { GetFlexStyle } from "@sorrell/react";
 import { GetLogger } from "@/Log";
+import { SendIpcEventDeferredCallback } from "@/Temp";
 import { UseMainStore } from "@/Store";
 import { UseSettingsState } from "@/Settings";
 
@@ -27,29 +28,30 @@ const UpdateReady = (): ReactNode =>
 {
     const [ Store ] = UseMainStore();
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("column", "flex-start", "stretch"),
-        backgroundColor: "#DFF6DD",
-        borderColor: "#DFE8DC",
-        borderRadius: tokens.borderRadiusMedium,
-        borderStyle: "solid",
-        borderWidth: 1,
-        gap: tokens.spacingHorizontalM,
-        padding: tokens.spacingHorizontalM
-    };
+        {
+            ...GetFlexStyle("column", "flex-start", "stretch"),
+            backgroundColor: "#DFF6DD",
+            borderColor: "#DFE8DC",
+            borderRadius: tokens.borderRadiusMedium,
+            borderStyle: "solid",
+            borderWidth: 1,
+            gap: tokens.spacingHorizontalM,
+            padding: tokens.spacingHorizontalM
+        };
 
-    const { Data } = UseSendIpcEvent("CheckForUpdates", undefined);
+    // const { Data } = UseSendIpcEvent("CheckForUpdates", undefined);
+    const Data: any = undefined;
 
     Log(`AvailableVersion: ${ Data?.AvailableVersion }.`);
 
     const TopRowStyle: CSSProperties =
-    {
-        ...GetFlexStyle("row", "justify-content", "center"),
-        flexWrap: "nowrap",
-        gap: tokens.spacingHorizontalM
-    };
+        {
+            ...GetFlexStyle("row", "justify-content", "center"),
+            flexWrap: "nowrap",
+            gap: tokens.spacingHorizontalM
+        };
 
-    const [ SendIpcEventDeferredCallback ] = UseSendIpcEventDeferredCallback();
+    // const [ SendIpcEventDeferredCallback ] = UseSendIpcEventDeferredCallback();
 
     if (Data?.AvailableVersion === undefined)
     {
@@ -149,7 +151,7 @@ export const VersionUpdates = (): ReactNode =>
 
         const ReleaseNotes = (): ReactNode =>
         {
-            const [ SendIpcEventDeferredCallback ] = UseSendIpcEventDeferredCallback();
+            // const [ SendIpcEventDeferredCallback ] = UseSendIpcEventDeferredCallback();
             /* eslint-disable @stylistic/max-len */
             return Store?.AppVersion !== undefined
                 ? (
@@ -172,15 +174,15 @@ export const VersionUpdates = (): ReactNode =>
     };
 
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("column", "flex-start", "stretch"),
-        gap: tokens.spacingVerticalXS
-    };
+        {
+            ...GetFlexStyle("column", "flex-start", "stretch"),
+            gap: tokens.spacingVerticalXS
+        };
 
     const TitleStyle: CSSProperties =
-    {
-        marginBottom: tokens.spacingVerticalXS
-    };
+        {
+            marginBottom: tokens.spacingVerticalXS
+        };
 
     const [ GetControlledProps ] = UseSettingsState();
 

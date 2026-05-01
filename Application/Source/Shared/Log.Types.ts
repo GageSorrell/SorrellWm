@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { FLogLevel, FLogOrigin } from "@sorrellwm/windows";
+import type { FLogLevel, FLogOrigin } from "@sorrell/wm-windows";
 import type chalk from "chalk";
 
 export type FChalkBackground = Extract<keyof typeof chalk, `bg${ string }`>;

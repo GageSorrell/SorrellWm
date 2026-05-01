@@ -5,19 +5,12 @@
  * @license   MIT
  */
 
-import type { FRecord } from "@sorrellwm/windows";
-// import type { TEitherRecord } from "./Record.Types";
-
-export type TIsNonNegativeInteger<ArraySize extends number> =
-    `${ ArraySize }` extends `-${ string }`
-        ? false
-        : `${ ArraySize }` extends `${ bigint }`
-            ? true
-            : false;
+import type { TNonemptyArray } from "@sorrell/utilities/array";
+import type { TIsNonNegativeInteger } from "@sorrell/utilities/math";
 
 type TBuildTuple<
     Length extends number,
-    Accumulator extends TArray<unknown> = []
+    Accumulator extends TArray<unknown> = [ ]
 > =
     Accumulator["length"] extends Length
         ? Accumulator
@@ -60,18 +53,8 @@ export type TIntegralRange<
                     : never
                 : never;
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export type FAnyFunction = (...Arguments: any) => any;
-
-export type TRecordNonNullable<RecordType extends FRecord> =
-{
-    [ Key in keyof RecordType ]: NonNullable<RecordType[Key]>;
-};
-
-export type TArrayNonempty<Type = unknown> = [ Type, ...TArray<Type> ];
-
 export type TMatrix<Type> = TArray<TArray<Type>>;
-export type TSafeMatrix<Type> = TArrayNonempty<TArrayNonempty<Type>>;
+export type TSafeMatrix<Type> = TNonemptyArray<TNonemptyArray<Type>>;
 
 export type FPathKey = number | string;
 export type FPathRecord = Record<FPathKey, unknown>;
@@ -167,17 +150,8 @@ type TStringToNum<Type> = Type extends keyof FStringNumMap
 // /* eslint-enable @stylistic/max-len */
 
 export type FColor = `#${ string }`;
-export type TRef<Type> = { Ref: Type | undefined };
 
-export type FTypeof =
-    | "object"
-    | "string"
-    | "number"
-    | "bigint"
-    | "boolean"
-    | "function"
-    | "symbol"
-    | "undefined";
+export type TRef<Type> = { Ref: Type | undefined };
 
 export type TMapRecordTransformer<KeyType extends PropertyKey, PropertyType, ElementType> =
     (Key: KeyType, Property: PropertyType, Index: number) => ElementType;

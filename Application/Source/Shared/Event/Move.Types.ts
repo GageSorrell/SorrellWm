@@ -5,16 +5,16 @@
  * @license   MIT
  */
 
-import type { FResponseDeclNone, TEventDecl } from "electron-reactive-event";
+import type { EventDecl } from "electron-reactive-event";
 import type { FAxis } from "../../Shared/Shared.Types";
 import type { FFocusDataBase } from "./Focus.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FTranslation =
-{
-    Direction: FAxis;
-    Distance: number;
-};
+    {
+        Direction: FAxis;
+        Distance: number;
+    };
 
 export type FPanelStep =
     | "Up"
@@ -25,28 +25,30 @@ export type FPanelStep =
 export type FTiledMoveData = Omit<FFocusDataBase, "CanMoveWithinPanel">;
 
 export type FTiledMoveTransaction =
-{
-    Step: FPanelStep;
-};
+    {
+        Step: FPanelStep;
+    };
 
 export type FTiledMoveResult =
-{
-    IsOnPanel: boolean;
-};
+    {
+        IsOnPanel: boolean;
+    };
 
 export type FMoveFloatingWindowErrorCode = TEventErrorCode<"">;
 
-declare module "./Old/Event.Types"
+declare module "electron-reactive-event/registrar"
 {
-    interface IFrontendEventRegistrar
+    interface Registrar
     {
-        MoveFloatingWindow: TEventDecl<
-            FTranslation,
-            FResponseDeclNone,
+        MoveFloatingWindow: EventDecl<
+            RendererOwner,
+FTranslation,
+            never,
             FMoveFloatingWindowErrorCode
         >;
-        MoveTiledWindow: TEventDecl<
-            FTiledMoveTransaction,
+        MoveTiledWindow: EventDecl<
+            RendererOwner,
+FTiledMoveTransaction,
             FTiledMoveResult,
             FMoveFloatingWindowErrorCode
         >;

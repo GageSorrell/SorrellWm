@@ -11,11 +11,11 @@
   },
   "homepage": "https://github.com/GageSorrell/SorrellWm#ReadMe",
   "bugs": {
-      "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
   "main": "./Distribution/Main/main.js",
   "scripts": {
@@ -24,6 +24,6 @@
     "link-modules": "node -r ts-node/register ../../Script/LinkModules.ts"
   },
   "dependencies": {
-    "@sorrell/wm-windows": "^1.0.0"
+    "@sorrell/wm-windows": "^1.0.7"
   }
 }

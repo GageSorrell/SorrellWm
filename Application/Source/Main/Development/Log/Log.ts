@@ -12,7 +12,7 @@ import type {
     FLogger,
     FLoggerInterim } from "../../../Shared";
 import type { FLogHandler, FShortTimestamp } from "./Log.Types";
-import type { FLogLevel, FLogOriginInternal } from "@sorrellwm/windows";
+import type { FLogLevel, FLogOriginInternal } from "@sorrell/wm-windows";
 import { Format, FormatBase64String, FormatInline } from "./LogFormat";
 import Chalk from "chalk";
 import type { FLogValueType } from "./LogFormat.Types";

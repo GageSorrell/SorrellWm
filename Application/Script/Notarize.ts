@@ -56,9 +56,9 @@ exports.default = async function notarizeMacos(Context: IContext)
     await notarize({
         appBundleId: build.appId,
         appPath: `${ appOutDir }/${ ApplicationName }.app`,
-        appleId: process.env.APPLE_ID,
-        appleIdPassword: process.env.APPLE_ID_PASS,
-        teamId: process.env.APPLE_TEAM_ID,
+        appleId: process.env.APPLE_ID || "",
+        appleIdPassword: process.env.APPLE_ID_PASS || "",
+        teamId: process.env.APPLE_TEAM_ID || "",
         tool: "notarytool"
     });
 };

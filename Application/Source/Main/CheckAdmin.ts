@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { GetIsElevated } from "@sorrellwm/windows";
+import { GetIsElevated } from "@sorrell/wm-windows";
 import { RegisterInitializationFunction } from "./Initialize/Initialize";
 
 RegisterInitializationFunction("CheckAdmin", async (): Promise<void> =>

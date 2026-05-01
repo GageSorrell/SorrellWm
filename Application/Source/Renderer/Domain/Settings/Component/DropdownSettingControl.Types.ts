@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { THandler } from "@/Utility";
+import type { THandler } from "@sorrell/react";
 
 export type PDropdownSettingControl =
 {

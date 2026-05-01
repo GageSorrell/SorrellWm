@@ -5,17 +5,18 @@
  * @license   MIT
  */
 
+import type { FBox, FRecord, TRecord } from "@sorrell/wm-windows";
+import type { FFunctionAny, TFunction } from "@sorrell/functional";
 import type {
-    FAnyFunction,
     FPathRecord,
     TFlatMapRecordTransformer,
     TMapRecordTransformer,
-    TRef } from "./Utility.Types";
-import type { FBox, FRecord, TRecord } from "@sorrellwm/windows";
+    TRef
+} from "./Utility.Types";
 import type { FRejectFunction, TResolveFunction } from "./Functional.Types";
+import type { TGetType, TPath } from "./Object.Types";
 import type { FLogger } from "../../Shared";
 import { GetLogger } from "@/Log";
-import type { TPath, TGetType } from "./Object.Types";
 
 const Log: FLogger = GetLogger("Utility");
 
@@ -27,14 +28,14 @@ type HWindow = {
     Handle: string;
 };
 
-export const GetEmptyMonitor = (): HMonitor =>
+export function GetEmptyMonitor(): HMonitor
 {
     return {
         Handle: -1
     };
 };
 
-export const GetEmptyWindow = (): HWindow =>
+export function GetEmptyWindow(): HWindow
 {
     return {
         Handle: ""
@@ -44,18 +45,20 @@ export const GetEmptyWindow = (): HWindow =>
 /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type, @stylistic/brace-style */
 const AsyncFunction: Function = (async function () { }).constructor;
 
-export function IsAsyncFunction(Value: unknown): Value is (...Arguments: TArray<unknown>) => Promise<unknown>
+export function IsAsyncFunction(
+    Value: unknown
+): Value is (...Arguments: TArray<unknown>) => Promise<unknown>
 {
     return typeof Value === "function" && Value.constructor === AsyncFunction;
 }
 
-export const CallMaybeAsync = async <
+export async function CallMaybeAsync<
     InReturnType,
-    InParameters extends Parameters<FAnyFunction>,
+    InParameters extends Parameters<FFunctionAny>,
     FunctionType extends ((...ArgumentVector: InParameters) => InReturnType)>(
     Function: FunctionType,
     ...ArgumentVector: InParameters
-): Promise<InReturnType> =>
+): Promise<InReturnType>
 {
     if (IsAsyncFunction(Function))
     {
@@ -65,22 +68,25 @@ export const CallMaybeAsync = async <
     {
         return Function(...ArgumentVector);
     }
-};
+}
 
-export const ZeroBox: FBox =
-{
-    Height: 0,
-    Width: 0,
-    X: 0,
-    Y: 0
-};
+export/**
+       * The {@link FBox} of zero width, height, positioned at the origin.
+       */
+const ZeroBox: FBox =
+    {
+        Height: 0,
+        Width: 0,
+        X: 0,
+        Y: 0
+    };
 
-export const ExtractFromRecordArray = <
+export function ExtractFromRecordArray<
     KeyType extends PropertyKey = PropertyKey,
     RecordType extends Record<KeyType, unknown> = Record<KeyType, unknown>>(
     Key: KeyType,
     InArray: TArray<RecordType>
-): TArray<RecordType[KeyType]> =>
+): TArray<RecordType[KeyType]>
 {
     return InArray.map((Record: RecordType): RecordType[KeyType] =>
     {
@@ -88,29 +94,32 @@ export const ExtractFromRecordArray = <
     });
 };
 
-export const GetByKey = <RecordType extends FRecord, KeyType extends keyof RecordType>(
+export function GetByKey<
+    RecordType extends FRecord,
+    KeyType extends keyof RecordType
+>(
     Key: KeyType
-): ((In: RecordType) => RecordType[KeyType]) =>
+): TFunction<[ RecordType ], RecordType[KeyType]>
 {
     return (Record: RecordType): RecordType[KeyType] =>
     {
         return Record[Key];
     };
-};
+}
 
-export const Delay = async (Duration: number): Promise<void> =>
+export async function Delay(Duration: number): Promise<void>
 {
     return new Promise<void>((Resolve: TResolveFunction<void>, _Reject: FRejectFunction): void =>
     {
         setTimeout(Resolve, Duration);
     });
-};
+}
 
-export const RetryUntilFulfilled = async <Type>(
+export async function RetryUntilFulfilled<Type>(
     In: (() => Promise<Type>),
     NumTries: number | undefined = undefined,
     DurationToTry: number | undefined = undefined
-): Promise<Type | undefined> =>
+): Promise<Type | undefined>
 {
     let StartTime: number | undefined = undefined;
 
@@ -162,14 +171,14 @@ export const RetryUntilFulfilled = async <Type>(
     return undefined;
 };
 
-export const SetPropertyFromPath = <
+export function SetPropertyFromPath<
     RecordType extends FPathRecord,
     PathType extends TPath<RecordType>
 >(
     ObjectRef: TRef<RecordType>,
     Path: PathType,
     Value: TGetType<RecordType, PathType>
-): void =>
+): void
 {
     type FProperty = TGetType<RecordType, PathType>;
 
@@ -226,13 +235,13 @@ export const SetPropertyFromPath = <
     (PropertyRef.Ref as TRecord<string, unknown>)[LastTyped] = Value;
 };
 
-export const GetPropertyFromPath = <
+export function GetPropertyFromPath<
     RecordType extends TRecord<string, unknown>,
     PathType extends TPath<RecordType>
 >(
     Record: RecordType,
     Path: PathType
-): TGetType<RecordType, PathType> =>
+): TGetType<RecordType, PathType>
 {
     if (Array.isArray(Path))
     {
@@ -267,17 +276,21 @@ export const GetPropertyFromPath = <
     return Recurrence(Record) as TGetType<RecordType, PathType>;
 };
 
-export const MakeRef = <Type>(): TRef<Type> =>
+export function MakeRef<Type>(): TRef<Type>
 {
     return {
         Ref: undefined
     } as TRef<Type>;
 };
 
-export const MapRecord = <KeyType extends PropertyKey, PropertyType, ElementType>(
+export function MapRecord<
+    KeyType extends PropertyKey,
+    PropertyType,
+    ElementType
+>(
     In: Record<KeyType, PropertyType>,
     Function: TMapRecordTransformer<KeyType, PropertyType, ElementType>
-): Array<ElementType> =>
+): Array<ElementType>
 {
     return Object.keys(In).map((InKey: string, Index: number): ElementType =>
     {
@@ -286,10 +299,14 @@ export const MapRecord = <KeyType extends PropertyKey, PropertyType, ElementType
     });
 };
 
-export const FlatMapRecord = <KeyType extends PropertyKey, PropertyType, ElementType>(
+export function FlatMapRecord<
+    KeyType extends PropertyKey,
+    PropertyType,
+    ElementType
+>(
     In: Record<KeyType, PropertyType>,
     Function: TFlatMapRecordTransformer<KeyType, PropertyType, ElementType>
-): Array<ElementType> =>
+): Array<ElementType>
 {
     return Object.keys(In).flatMap((InKey: string, Index: number): Array<ElementType> =>
     {

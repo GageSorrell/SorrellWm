@@ -5,8 +5,9 @@
  * @license   MIT
  */
 
-import type { TIntegralRange, TStaticArray } from "../../Shared/Utility";
 import type { FKeyId } from "../../Shared/Keyboard.Types";
+import type { TIntegralRange } from "../Utility";
+import type { TStaticArray } from "@sorrell/utilities/array";
 
 export type FKeybindDirection =
     | "Left"

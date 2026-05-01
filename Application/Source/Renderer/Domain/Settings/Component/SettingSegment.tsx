@@ -25,7 +25,7 @@ import type {
     PSettingSegmentHeader,
     PSettingSegmentInternal } from "./SettingSegment.Types";
 import type { FLogger } from "../../../../Shared";
-import { GetFlexStyle } from "@/Utility";
+import { GetFlexStyle } from "@sorrell/react";
 import { GetLogger } from "@/Log";
 import { Rotate } from "@fluentui/react-motion-components-preview";
 import { UseCompoundContext } from "./CompoundSettingSegment";
@@ -88,28 +88,28 @@ const SettingSegmentBase = (
     const Disabled: boolean = InDisabled !== undefined ? InDisabled : false;
 
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("row", "flex-start", "center"),
-        borderColor: "#DFE8DC",
-        borderStyle: "solid",
-        borderWidth: 1,
-        gap: tokens.spacingHorizontalM,
-        padding: tokens.spacingHorizontalM
-    };
+        {
+            ...GetFlexStyle("row", "flex-start", "center"),
+            borderColor: "#DFE8DC",
+            borderStyle: "solid",
+            borderWidth: 1,
+            gap: tokens.spacingHorizontalM,
+            padding: tokens.spacingHorizontalM
+        };
 
     const InnerStyle: CSSProperties =
-    {
-        ...GetFlexStyle("column", "flex-start", "flex-start"),
-        gap: tokens.spacingVerticalXS,
-        width: "100%"
-    };
+        {
+            ...GetFlexStyle("column", "flex-start", "flex-start"),
+            gap: tokens.spacingVerticalXS,
+            width: "100%"
+        };
 
     const InnerRow: CSSProperties =
-    {
-        ...GetFlexStyle("row", "flex-start", "center"),
-        gap: tokens.spacingHorizontalM,
-        width: "100%"
-    };
+        {
+            ...GetFlexStyle("row", "flex-start", "center"),
+            gap: tokens.spacingHorizontalM,
+            width: "100%"
+        };
 
     const TitleContainerStyle: CSSProperties = GetFlexStyle("column", "flex-start", "flex-start");
 
@@ -118,14 +118,14 @@ const SettingSegmentBase = (
         : Subtitle;
 
     const FillerStyle: CSSProperties =
-    {
-        flex: 1
-    };
+        {
+            flex: 1
+        };
 
     const IconStyle: FluentIconsProps["style"] =
-    {
-        fontSize: "1.5rem"
-    };
+        {
+            fontSize: "1.5rem"
+        };
 
     const { IsExpanded, OnChangeExpanded } = UseCompoundContext();
 
@@ -172,17 +172,17 @@ const SettingSegmentBase = (
         };
 
         const MessageRootStyle: CSSProperties =
-        {
-            ...GetFlexStyle("row", "flex-start", "center"),
-            gap: tokens.spacingHorizontalS,
-            width: "100%"
-        };
+            {
+                ...GetFlexStyle("row", "flex-start", "center"),
+                gap: tokens.spacingHorizontalS,
+                width: "100%"
+            };
 
         const LinkStyle: CSSProperties =
-        {
-            fontSize: "0.75rem",
-            fontWeight: "bold"
-        };
+            {
+                fontSize: "0.75rem",
+                fontWeight: "bold"
+            };
 
         return (
             <div style={ MessageRootStyle }>
@@ -252,15 +252,15 @@ export const CompoundSettingSegmentBody = (
     const Styles: Record<FSettingSegmentStyle, string> = UseSettingSegmentStyles();
 
     const RootStyle: CSSProperties =
-    {
-        ...GetFlexStyle("row", "flex-start", "center"),
-        borderColor: "#DFE8DC",
-        borderStyle: "solid",
-        borderWidth: 1,
-        gap: tokens.spacingHorizontalXXS,
-        padding: tokens.spacingHorizontalM,
-        paddingLeft: 42
-    };
+        {
+            ...GetFlexStyle("row", "flex-start", "center"),
+            borderColor: "#DFE8DC",
+            borderStyle: "solid",
+            borderWidth: 1,
+            gap: tokens.spacingHorizontalXXS,
+            padding: tokens.spacingHorizontalM,
+            paddingLeft: 42
+        };
 
     const TitleContainerStyle: CSSProperties = GetFlexStyle("column", "flex-start", "flex-start");
 
@@ -275,14 +275,14 @@ export const CompoundSettingSegmentBody = (
     };
 
     const CheckboxLabel: CheckboxProps["label"] =
-    (
-        <div style={ TitleContainerStyle }>
-            <Body1>
-                { Title }
-            </Body1>
-            { Caption }
-        </div>
-    );
+        (
+            <div style={ TitleContainerStyle }>
+                <Body1>
+                    { Title }
+                </Body1>
+                { Caption }
+            </div>
+        );
 
     return (
         <div

@@ -23,7 +23,7 @@ import type { FSimpleCallback, TSimpleFunction } from "../Shared/Utility/Functio
 import type { FActionKey } from "../Shared/Settings";
 import type { FLogger } from "../Shared";
 import { GetLogger } from "./Log";
-import { Identity } from "../Shared/Utility";
+import { Identity } from "@sorrell/utilities/functional";
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("Keybind");
@@ -74,14 +74,14 @@ export type FRegisterSequenceFunction = (
 
 /** Shortcut Render Props. */
 export type IShortcutProviderRenderProps =
-{
-    RegisterShortcut: FRegisterFunction;
-    RegisterSequenceShortcut: FRegisterSequenceFunction;
-    SetEnabled: TSimpleFunction<boolean>;
-    Shortcuts: IShortcutProviderState;
-    TriggerShortcut: TSimpleFunction<string, unknown>;
-    UnregisterShortcut: (Keys: TArray<string>, Sequence: boolean) => void;
-};
+    {
+        RegisterShortcut: FRegisterFunction;
+        RegisterSequenceShortcut: FRegisterSequenceFunction;
+        SetEnabled: TSimpleFunction<boolean>;
+        Shortcuts: IShortcutProviderState;
+        TriggerShortcut: TSimpleFunction<string, unknown>;
+        UnregisterShortcut: (Keys: TArray<string>, Sequence: boolean) => void;
+    };
 
 /** Listener Interface. */
 interface ISingleShortcutListener
@@ -104,14 +104,14 @@ type FKeyboardEventCallback = (Event: KeyboardEvent) => void;
 const IgnoreForTagNames: TArray<string> = [ "input", "textarea", "select" ];
 
 const EmptyProps: IShortcutProviderRenderProps =
-{
-    RegisterSequenceShortcut: Identity,
-    RegisterShortcut: Identity,
-    SetEnabled: Identity,
-    Shortcuts: [ ],
-    TriggerShortcut: Identity,
-    UnregisterShortcut: Identity
-};
+    {
+        RegisterSequenceShortcut: Identity,
+        RegisterShortcut: Identity,
+        SetEnabled: Identity,
+        Shortcuts: [ ],
+        TriggerShortcut: Identity,
+        UnregisterShortcut: Identity
+    };
 
 const ShortcutContext: Context<IShortcutProviderRenderProps> =
     createContext<IShortcutProviderRenderProps>(EmptyProps);
@@ -152,30 +152,30 @@ const transformKeys = (keys: TArray<string>) =>
 };
 
 type FShortcutProvider = React.MemoExoticComponent<
-    ({ children, ...Props }: PropsWithChildren<IShortcutProviderProps>) => JSX.Element
+    ({ children, ...Props }: PropsWithChildren<IShortcutProviderProps>) => React.JSX.Element
 >;
 
 export const FriendlyNames: Readonly<Record<FActionKey, string>> =
-{
-    Activate: "Activate",
-    Cancel: "Cancel",
-    "Direction.Down": "Direction (Down)",
-    "Direction.Left": "Direction (Left)",
-    "Direction.Right": "Direction (Right)",
-    "Direction.Up": "Direction (Up)",
-    "Miscellaneous.FocusList": "Focus List",
-    "Miscellaneous.FocusTextInput": "Focus Text Input",
-    "Miscellaneous.Peek": "Peek",
-    "Miscellaneous.Settings": "Open Settings",
-    "Primary[0]": "Primary Action (1)",
-    "Primary[1]": "Primary Action (2)",
-    "Primary[2]": "Primary Action (3)",
-    "Primary[3]": "Primary Action (4)",
-    "Secondary[0]": "Secondary Action (1)",
-    "Secondary[1]": "Secondary Action (2)",
-    "Secondary[2]": "Secondary Action (3)",
-    "Secondary[3]": "Secondary Action (4)"
-} as const;
+    {
+        Activate: "Activate",
+        Cancel: "Cancel",
+        "Direction.Down": "Direction (Down)",
+        "Direction.Left": "Direction (Left)",
+        "Direction.Right": "Direction (Right)",
+        "Direction.Up": "Direction (Up)",
+        "Miscellaneous.FocusList": "Focus List",
+        "Miscellaneous.FocusTextInput": "Focus Text Input",
+        "Miscellaneous.Peek": "Peek",
+        "Miscellaneous.Settings": "Open Settings",
+        "Primary[0]": "Primary Action (1)",
+        "Primary[1]": "Primary Action (2)",
+        "Primary[2]": "Primary Action (3)",
+        "Primary[3]": "Primary Action (4)",
+        "Secondary[0]": "Secondary Action (1)",
+        "Secondary[1]": "Secondary Action (2)",
+        "Secondary[2]": "Secondary Action (3)",
+        "Secondary[3]": "Secondary Action (4)"
+    } as const;
 
 /* eslint-disable-next-line @stylistic/max-len */
 export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }: PropsWithChildren<IShortcutProviderProps>) =>
@@ -515,15 +515,15 @@ export const ShortcutProvider: FShortcutProvider = memo(({ children, ...Props }:
 
         /* Create new shortcut. */
         const Shortcut: IShortcut =
-        {
-            Hold: false,
-            HoldDuration: 0,
-            Id: Date.now().toString(36),
-            Keys: Keys,
-            Method: Method,
-            Sequence: true,
-            Title: Title
-        };
+            {
+                Hold: false,
+                HoldDuration: 0,
+                Id: Date.now().toString(36),
+                Keys: Keys,
+                Method: Method,
+                Sequence: true,
+                Title: Title
+            };
 
         /* Check if we already have existing keys for the new keys being passed. */
         let Exists: boolean = false;

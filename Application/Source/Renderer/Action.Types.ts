@@ -6,9 +6,9 @@
  */
 
 import type { ReactNode } from "react";
-import type { TMaybeArray } from "../Shared/Utility";
+import type { TMaybeArray } from "@sorrell/utilities/array";
 
 export type PAction =
-{
-    children: TMaybeArray<ReactNode>;
-};
+    {
+        children: TMaybeArray<ReactNode>;
+    };

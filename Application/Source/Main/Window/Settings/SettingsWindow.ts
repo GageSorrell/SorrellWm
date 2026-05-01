@@ -12,23 +12,18 @@ import {
     app,
     shell } from "electron";
 import {
-    type FIpcBackendChannel,
-    type FIpcEvents,
     type FLogger,
     type FNavigateRequest,
     type FRejectFunction,
     type FSettings,
-    type TEventCallback,
-    type TGetResponse,
-    type TRequest,
-    type TResolveFunction,
-    type TResponse } from "../../../Shared";
+    type TResolveFunction
+} from "../../../Shared";
 import {
     GetIsElevated,
     GetRunOnStartup,
     GetWindowByName,
     type HWindow,
-    SetWindowPosition } from "@sorrellwm/windows";
+    SetWindowPosition } from "@sorrell/wm-windows";
 import {
     GetPoorResponse,
     SendIpcEvent as InSendIpcEvent,
@@ -36,7 +31,8 @@ import {
     PoorEventSuccess,
     RegisterCommonIpcCallbacks,
     RegisterIpcCallbacks,
-    type TIpcCallback } from "#/Event";
+    type TIpcCallback
+} from "#/Event";
 import { type ProgressInfo, type UpdateCheckResult, type UpdateInfo, autoUpdater } from "electron-updater";
 import { CreateBrowserWindow } from "../BrowserWindow";
 import { Delay } from "../../../Shared";
@@ -45,6 +41,16 @@ import { GetLogger } from "#/Development";
 import { RegisterInitializationFunction } from "#/Initialize/Initialize";
 import { SetShouldActivate } from "#/Window/Overlay";
 import { UpdateSettings } from "#/Settings";
+
+// @TODO Temporary.
+type TEventCallback<Type> = (...Arguments: Array<any>) => Promise<any>;
+
+type TRequest<Type> = any;
+type TResponse<Type> = any;
+type TGetResponse<Type> = any;
+
+type FIpcBackendChannel = string;
+type FIpcEvents = any;
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const Log: FLogger = GetLogger("SettingsWindow");
@@ -71,27 +77,27 @@ const CreateSettingsWindow = async (): Promise<void> =>
     const ShowOnLaunch: boolean = GetDevSettings().SettingsWindow.ShowOnLaunch.Enabled;
 
     const WindowOptions: BrowserWindowConstructorOptions =
-    {
-        autoHideMenuBar: true,
-        backgroundMaterial: "mica",
-        frame: true,
-        height: 900,
-        maximizable: true,
-        resizable: true,
-        show: false,
-        skipTaskbar: false,
-        title: "SorrellWM Settings",
-        titleBarOverlay:
+        {
+            autoHideMenuBar: true,
+            backgroundMaterial: "mica",
+            frame: true,
+            height: 900,
+            maximizable: true,
+            resizable: true,
+            show: false,
+            skipTaskbar: false,
+            title: "SorrellWM Settings",
+            titleBarOverlay:
         {
             color: "#00000000"
         },
-        titleBarStyle: "hidden",
-        webPreferences:
+            titleBarStyle: "hidden",
+            webPreferences:
         {
             devTools: ShowOnLaunch
         },
-        width: 1200
-    };
+            width: 1200
+        };
 
     const { Window, LoadFrontend } = await CreateBrowserWindow(WindowOptions);
 
@@ -104,221 +110,223 @@ const CreateSettingsWindow = async (): Promise<void> =>
         SettingsWindow?.hide();
     });
 
-    const IpcCallbacks: Array<TIpcCallback> =
-    [
-        {
-            Callback: async (InLink: unknown): ReturnType<TEventCallback<"OpenWebPage">> =>
+    const IpcCallbacks: Array<TIpcCallback<any>> =
+        [
             {
-                const Link: string | undefined = typeof InLink === "string"
-                    ? InLink
-                    : undefined;
-
-                if (Link !== undefined)
+                Callback: async (InLink: unknown): Promise<any> =>
                 {
-                    await shell.openExternal(Link);
-                    return PoorEventSuccess();
-                }
-                else
-                {
-                    return PoorEventFailureSimple();
-                }
-            },
-            Channel: "OpenWebPage"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"ReadyForRoute">> =>
-            {
-                const NavigateRequest: FNavigateRequest =
-                {
-                    Route: "/Settings"
-                };
+                    const Link: string | undefined = typeof InLink === "string"
+                        ? InLink
+                        : undefined;
 
-                await SendIpcEvent("Navigate", NavigateRequest);
-                return PoorEventSuccess();
-            },
-            Channel: "ReadyForRoute"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"RequestRestart">> =>
-            {
-                app.relaunch();
-                app.exit();
-
-                return {
-                    Data: undefined,
-                    Error: undefined
-                };
-            },
-            Channel: "RequestRestart"
-        },
-        {
-            Callback: async (InNewSettings: unknown): ReturnType<TEventCallback<"UpdateSettings">> =>
-            {
-                const NewSettings: FSettings = InNewSettings as FSettings;
-                const Success: boolean = await UpdateSettings(NewSettings);
-                return GetPoorResponse(Success);
-            },
-            Channel: "UpdateSettings"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"PreventActivation">> =>
-            {
-                SetShouldActivate(false);
-                return PoorEventSuccess();
-            },
-            Channel: "PreventActivation"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"AllowActivation">> =>
-            {
-                SetShouldActivate(true);
-                return PoorEventSuccess();
-            },
-            Channel: "AllowActivation"
-        },
-        {
-            Callback: async (
-                /** For now, there is only one external setting. */
-                _InExternalSetting: unknown
-            ): ReturnType<TEventCallback<"GetExternalSettingState">> =>
-            {
-                // const ExternalSetting: FExternalSetting = InExternalSetting as FExternalSetting;
-                type FResponse = TGetResponse<FIpcEvents["GetExternalSettingState"]["Response"]>;
-                return new Promise<FResponse>(
-                    (Resolve: TResolveFunction<FResponse>, _Reject: FRejectFunction): void =>
+                    if (Link !== undefined)
                     {
-                        GetRunOnStartup(process.execPath, (Exists: boolean): void =>
+                        await shell.openExternal(Link);
+                        return PoorEventSuccess();
+                    }
+                    else
+                    {
+                        return PoorEventFailureSimple();
+                    }
+                },
+                Channel: "OpenWebPage"
+            },
+            {
+                Callback: async (): ReturnType<TEventCallback<"ReadyForRoute">> =>
+                {
+                    const NavigateRequest: FNavigateRequest =
                         {
-                            Resolve({
-                                Data:
+                            Route: "/Settings"
+                        };
+
+                    await SendIpcEvent("Navigate", NavigateRequest);
+                    return PoorEventSuccess();
+                },
+                Channel: "ReadyForRoute"
+            },
+            {
+                Callback: async (): ReturnType<TEventCallback<"RequestRestart">> =>
+                {
+                    app.relaunch();
+                    app.exit();
+
+                    return {
+                        Data: undefined,
+                        Error: undefined
+                    };
+                },
+                Channel: "RequestRestart"
+            },
+            {
+                Callback: async (InNewSettings: unknown): ReturnType<TEventCallback<"UpdateSettings">> =>
+                {
+                    const NewSettings: FSettings = InNewSettings as FSettings;
+                    const Success: boolean = await UpdateSettings(NewSettings);
+                    return GetPoorResponse(Success);
+                },
+                Channel: "UpdateSettings"
+            },
+            {
+                Callback: async (): ReturnType<TEventCallback<"PreventActivation">> =>
+                {
+                    SetShouldActivate(false);
+                    return PoorEventSuccess();
+                },
+                Channel: "PreventActivation"
+            },
+            {
+                Callback: async (): ReturnType<TEventCallback<"AllowActivation">> =>
+                {
+                    SetShouldActivate(true);
+                    return PoorEventSuccess();
+                },
+                Channel: "AllowActivation"
+            },
+            {
+                Callback: async (
+                /** For now, there is only one external setting. */
+                    _InExternalSetting: unknown
+                ): ReturnType<TEventCallback<"GetExternalSettingState">> =>
+                {
+                // const ExternalSetting: FExternalSetting = InExternalSetting as FExternalSetting;
+                    type FResponse = TGetResponse<FIpcEvents["GetExternalSettingState"]["Response"]>;
+                    return new Promise<FResponse>(
+                        (Resolve: TResolveFunction<FResponse>, _Reject: FRejectFunction): void =>
+                        {
+                            GetRunOnStartup(process.execPath, (Exists: boolean): void =>
+                            {
+                                Resolve({
+                                    Data:
                                 {
                                     Setting: Exists
                                 },
-                                Error: undefined
+                                    Error: undefined
+                                });
                             });
-                        });
-                    }
-                );
+                        }
+                    );
+                },
+                Channel: "GetExternalSettingState"
             },
-            Channel: "GetExternalSettingState"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"GetIsElevated">> =>
             {
-                const IsElevated: boolean | undefined = GetIsElevated();
-
-                if (IsElevated !== undefined)
+                Callback: async (): ReturnType<TEventCallback<"GetIsElevated">> =>
                 {
-                    return {
-                        Data:
+                    const IsElevated: boolean | undefined = GetIsElevated();
+
+                    if (IsElevated !== undefined)
+                    {
+                        return {
+                            Data:
                         {
                             IsElevated
                         },
-                        Error: undefined
-                    };
-                }
-                else
-                {
-                    return {
-                        Data: undefined,
-                        Error: ""
-                    };
-                }
+                            Error: undefined
+                        };
+                    }
+                    else
+                    {
+                        return {
+                            Data: undefined,
+                            Error: ""
+                        };
+                    }
+                },
+                Channel: "GetIsElevated"
             },
-            Channel: "GetIsElevated"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"CheckForUpdates">> =>
             {
-                autoUpdater.autoDownload = false;
-
-                const Result: UpdateCheckResult | null = await autoUpdater.checkForUpdates();
-                const UpdateInfo: UpdateInfo | null = Result?.updateInfo ?? null;
-
-                if (UpdateInfo === null)
+                Callback: async (): ReturnType<TEventCallback<"CheckForUpdates">> =>
                 {
-                    return {
-                        Data: undefined,
-                        Error: ""
-                    };
-                }
+                    autoUpdater.autoDownload = false;
 
-                const IsUpdateAvailable: boolean = UpdateInfo?.version !== autoUpdater.currentVersion.version;
-                return {
-                    Data:
+                    const Result: UpdateCheckResult | null = await autoUpdater.checkForUpdates();
+                    const UpdateInfo: UpdateInfo | null = Result?.updateInfo ?? null;
+
+                    if (UpdateInfo === null)
+                    {
+                        return {
+                            Data: undefined,
+                            Error: ""
+                        };
+                    }
+
+                    const IsUpdateAvailable: boolean =
+                        UpdateInfo?.version !== autoUpdater.currentVersion.version;
+
+                    return {
+                        Data:
                     {
                         AvailableVersion: IsUpdateAvailable
                             ? UpdateInfo?.version || ""
                             : undefined
                     },
-                    Error: undefined
-                };
+                        Error: undefined
+                    };
+                },
+                Channel: "CheckForUpdates"
             },
-            Channel: "CheckForUpdates"
-        },
-        {
-            Callback: async (): ReturnType<TEventCallback<"Update">> =>
             {
-                autoUpdater.logger =
+                Callback: async (): ReturnType<TEventCallback<"Update">> =>
                 {
-                    debug: Log.Verbose,
-                    error: Log.Error,
-                    info: (...In: Array<unknown>): void => Log(...In),
-                    warn: Log.Warn
-                };
+                    autoUpdater.logger =
+                        {
+                            debug: Log.Verbose,
+                            error: Log.Error,
+                            info: (...In: Array<unknown>): void => Log(...In),
+                            warn: Log.Warn
+                        };
 
-                autoUpdater.autoDownload = true;
-                autoUpdater.autoInstallOnAppQuit = false;
+                    autoUpdater.autoDownload = true;
+                    autoUpdater.autoInstallOnAppQuit = false;
 
-                autoUpdater.on("checking-for-update", (): void =>
-                {
-                    Log("Checking for update...");
-                });
+                    autoUpdater.on("checking-for-update", (): void =>
+                    {
+                        Log("Checking for update...");
+                    });
 
-                autoUpdater.on("update-available", (UpdateInfo: UpdateInfo): void =>
-                {
-                    Log(`Update available: ${UpdateInfo.version}`);
-                });
+                    autoUpdater.on("update-available", (UpdateInfo: UpdateInfo): void =>
+                    {
+                        Log(`Update available: ${UpdateInfo.version}`);
+                    });
 
-                autoUpdater.on("update-not-available", (UpdateInfo: UpdateInfo): void =>
-                {
-                    Log(`No update available. Current/latest: ${UpdateInfo.version}`);
-                });
+                    autoUpdater.on("update-not-available", (UpdateInfo: UpdateInfo): void =>
+                    {
+                        Log(`No update available. Current/latest: ${UpdateInfo.version}`);
+                    });
 
-                autoUpdater.on("error", (ErrorValue: Error): void =>
-                {
-                    Log.Error("Auto-update error:", ErrorValue);
-                });
+                    autoUpdater.on("error", (ErrorValue: Error): void =>
+                    {
+                        Log.Error("Auto-update error:", ErrorValue);
+                    });
 
-                autoUpdater.on("download-progress", (ProgressValue: ProgressInfo): void =>
-                {
-                    Log(
-                        `Download speed=${ ProgressValue.bytesPerSecond } ` +
+                    autoUpdater.on("download-progress", (ProgressValue: ProgressInfo): void =>
+                    {
+                        Log(
+                            `Download speed=${ ProgressValue.bytesPerSecond } ` +
                         `percent=${ ProgressValue.percent } ` +
                         `transferred=${ ProgressValue.transferred } ` +
                         `total=${ ProgressValue.total }`
-                    );
-                });
+                        );
+                    });
 
-                autoUpdater.on("update-downloaded", (UpdateInfo: UpdateInfo): void =>
-                {
-                    Log(`Update downloaded: ${ UpdateInfo.version }.`);
+                    autoUpdater.on("update-downloaded", (UpdateInfo: UpdateInfo): void =>
+                    {
+                        Log(`Update downloaded: ${ UpdateInfo.version }.`);
 
-                    // Call this immediately, or wait until the user clicks "Restart to update".
-                    autoUpdater.quitAndInstall();
-                });
+                        // Call this immediately, or wait until the user clicks "Restart to update".
+                        autoUpdater.quitAndInstall();
+                    });
 
-                return {
-                    Data: undefined,
-                    Error: undefined
-                };
-            },
-            Channel: "Update"
-        }
-    ];
+                    return {
+                        Data: undefined,
+                        Error: undefined
+                    };
+                },
+                Channel: "Update"
+            }
+        ];
 
     RegisterCommonIpcCallbacks(SettingsWindow);
-    RegisterIpcCallbacks(SettingsWindow, IpcCallbacks);
+    RegisterIpcCallbacks(SettingsWindow, IpcCallbacks as any);
 
     SettingsWindow.on("focus", (): void =>
     {

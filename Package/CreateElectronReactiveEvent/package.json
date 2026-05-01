@@ -47,7 +47,7 @@
     "bin": "node ./Distribution/index.js"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^24.12.2",
     "typescript": "npm:tsover@^6.0.0"
   },
   "dependencies": {

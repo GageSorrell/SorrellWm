@@ -6,7 +6,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { TPropsWithChildren } from "@/Utility";
+import type { TPropsWithChildren } from "@sorrell/react";
 
 export type PSettingSegmentContainer =
     TPropsWithChildren<ReactNode | Array<ReactNode>> &
