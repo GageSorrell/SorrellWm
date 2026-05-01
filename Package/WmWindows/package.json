@@ -4,8 +4,8 @@
   "description": "The primary API through which SorrellWm interacts with the Windows API.",
   "private": false,
   "type": "module",
-   "main": "./index.cjs",
-    "types": "./index.d.cts",
+  "main": "./index.cjs",
+  "types": "./index.d.cts",
   "exports": {
     ".": {
       "import": {
@@ -50,7 +50,7 @@
     "name": "Gage Sorrell",
     "url": "https://sorrell.sh"
   },
-  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Windows#ReadMe",
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/WmWindows#ReadMe",
   "repository": {
     "directory": "Package/WmWindows",
     "type": "git",
