@@ -11,3 +11,5 @@ It makes use of the following plugins,
 * [`eslint-plugin-react`](https://www.npmjs.com/package/eslint-plugin-react)
 * [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)
 * [`eslint-plugin-tsdoc`](https://www.npmjs.com/package/eslint-plugin-tsdoc)
+
+which are listed in the [`package.json`](./package.json) as *peer dependencies*.
