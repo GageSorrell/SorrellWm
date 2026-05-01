@@ -192,6 +192,7 @@
   },
   "overrides": {
     "form-data": "^4.0.5",
+    "serialize-javascript": "^7.0.5",
     "typescript": "npm:tsover@^6.0.0"
   }
 }
