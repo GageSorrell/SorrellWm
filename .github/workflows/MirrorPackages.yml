@@ -1,8 +1,5 @@
 name: Mirror Packages
 
-env:
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
   push:
     branches:
@@ -50,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout the monorepo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
