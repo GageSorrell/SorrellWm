@@ -43,6 +43,16 @@
   "scripts": {
     "build": "tsc -p ./tsconfig.json"
   },
+    "overrides": {
+        "@vscode/test-cli":
+        {
+            "mocha":
+            {
+                "serialize-javascript": ">=7.0.5"
+            }
+        },
+        "serialize-javascript": ">=7.0.5"
+    },
   "devDependencies": {
     "@types/node": "^24.12.2",
     "@types/vscode": "^1.115.0",
