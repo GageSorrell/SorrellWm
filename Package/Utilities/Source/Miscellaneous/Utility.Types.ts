@@ -81,6 +81,11 @@ export type TOptions<OptionsType extends symbol = NoOptions> =
     | OptionsType
     | NoOptions;
 
+/**
+ * The opposite of {@link NonNullable}: the union of a given {@link Type}, `null`, and `undefined`.
+ *
+ * @template Type - The nontrivial type in this union.
+ */
 export type TNullable<Type> =
     | Type
     | null

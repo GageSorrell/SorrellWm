@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+        "$schema": {
+            "type": "string"
+        },
+        "Out": {
+            "type": "string"
+        },
+        "TagFiles": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        }
+    },
+    "type": "object"
+}
+

@@ -32,7 +32,7 @@ function GenerateHandler({
 
         const Config: FCliConfig = yield* GetConfig(Project);
 
-        const GeneratedModule: string = GetModuleContent(Tags);
+        const GeneratedModule: string = yield* GetModuleContent(Tags);
 
         /* eslint-disable-next-line @typescript-eslint/typedef */
         const Fs = yield* FileSystem.FileSystem;

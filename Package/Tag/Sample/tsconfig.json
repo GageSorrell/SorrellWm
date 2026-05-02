@@ -1,0 +1,47 @@
+{
+    "compilerOptions":
+    {
+        "ignoreDeprecations": "6.0",
+        "target": "es2023",
+        "module": "preserve",
+
+        "rootDir": "./Source",
+        "outDir": "./Distribution",
+
+        "lib":
+        [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ],
+
+        "jsx": "react-jsx",
+
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+
+        "strict": true,
+        "isolatedModules": true,
+
+        "types": [ "node" ],
+
+        "moduleResolution": "bundler",
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": true,
+        "useUnknownInCatchVariables": true,
+
+        "skipLibCheck": true,
+        "noEmitOnError": true,
+
+        "noEmit": false,
+
+        "rewriteRelativeImportExtensions": true,
+        "allowImportingTsExtensions": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [ "Source/**/*" ],
+    "exclude": [ "node_modules" ]
+}

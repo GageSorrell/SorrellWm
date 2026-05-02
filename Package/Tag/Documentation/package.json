@@ -1,28 +1,17 @@
 {
-  "name": "ts-tag",
-  "version": "1.0.2",
-  "private": false,
-  "description": "Type-safe hierarchical tags for TypeScript.",
-  "files": [
-    "./Distribution/**/*",
-    "./ReadMe.md",
-    "./package.json",
-    "!./Documentation",
-    "!./Documentation/**/*",
-    "!./Sample",
-    "!./Sample/**/*"
-  ],
+  "name": "ts-tag-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Documentation for ts-tag.",
   "os": [
     "darwin",
     "linux",
     "win32"
   ],
   "scripts": {
-    "prepack": "npm run build",
-    "build:js": "node esbuild.config.mts",
-    "prebuild:types": "tsc -p ./tsconfig.script.json",
-    "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
-    "build": "npm run build:js && npm run build:types"
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
   },
   "keywords": [
     "tag",
@@ -90,11 +79,15 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "ts-tag-cli": "^1.0.3",
+    "typescript": "^6.0.3",
+    "vitepress": "^2.0.0-alpha.17",
+    "vue": "^3.5.33"
   },
   "dependencies": {
     "@sorrell/utilities": "^1.2.7",
-    "effect": "^3.21.2"
+    "effect": "^3.21.2",
+    "ts-tag": "^1.0.2"
   },
   "main": "index.js"
 }

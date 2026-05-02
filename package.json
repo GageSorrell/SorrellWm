@@ -47,6 +47,8 @@
         "!Application/Release/Application",
         "Package/*",
         "Package/**/*",
+        "!Package/Tag/Documentation",
+        "!Package/Tag/Sample",
         "!Package/PipeOperator",
         "!Package/EffectCli",
         "!Package/EffectCli/dist",

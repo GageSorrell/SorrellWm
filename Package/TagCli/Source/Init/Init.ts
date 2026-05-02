@@ -8,7 +8,7 @@
 import { Console, Effect } from "effect";
 import { Code } from "@sorrell/cli-utilities/format";
 import { Command } from "@effect/cli";
-import type { FCliConfig } from "../Config/Config.Types.js";
+import type { FCliConfigSchema } from "../Config/Config.Internal.Types.js";
 import type { FInitOptions } from "./Init.Internal.Types.js";
 import { FileSystem } from "@effect/platform";
 import { InitConfig } from "./Init.Internal.js";
@@ -33,7 +33,10 @@ function InitHandler({
             );
         }
 
-        const Config: FCliConfig = { };
+        const Config: FCliConfigSchema =
+            {
+                $schema: "node_modules/ts-tag-cli/Resource/ts-tag.schema.json"
+            };
 
         if (Out !== "")
         {
@@ -42,7 +45,7 @@ function InitHandler({
 
         if (Files !== "" && Files.length > 0)
         {
-            Config.TagFiles = Files.map(([ Path, Content ]) => Path);
+            Config.TagFiles = Files.map((([ Path ]: readonly [ string, string ]) => Path));
         }
 
         yield* Fs.writeFileString(resolve(ConfigPath), JSON.stringify(Config, null, 4));

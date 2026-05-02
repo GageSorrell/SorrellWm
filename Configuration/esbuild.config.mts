@@ -123,14 +123,57 @@ async function CheckExports(Exports: FExports): Promise<boolean>
         throw new Error("No exports property was found in package.json!  Exiting...");
     }
 
-    const PackageJsonExports: ReadonlyArray<string> = Object.keys(PackageJsonParsed.exports);
+    // const PackageJsonExports: ReadonlyArray<string> = Object.keys(PackageJsonParsed.exports);
+    const PackageJsonExports: ReadonlyArray<string> = ((): ReadonlyArray<string> =>
+    {
+        const Raw: Array<string> = Object.keys(PackageJsonParsed.exports);
+        Raw.splice(Raw.indexOf("."), 1, "index");
+
+        return Raw.map((RawKey: string): string =>
+        {
+            return (RawKey.startsWith("./")
+                ? RawKey.slice(2)
+                : RawKey).replaceAll("/", "-");
+
+            return Out;
+        });
+    })();
 
     const ExportsKeys: ReadonlyArray<string> = Object.keys(Exports);
+    // const ExportsKeys: ReadonlyArray<string> = ((): ReadonlyArray<string> =>
+    // {
+    //     const Raw: Array<string> = Object.keys(Exports);
+    //     Raw.splice(Raw.indexOf("."), 1, "index");
 
-    return (
-        PackageJsonExports.every((Export: string) => ExportsKeys.includes(Export)) &&
+    //     return Raw.map((RawKey: string): string =>
+    //     {
+    //         return (RawKey.startsWith("./")
+    //             ? RawKey.slice(2)
+    //             : RawKey).replaceAll("/", "-");
+
+    //         return Out;
+    //     });
+    // })();
+
+    const ExportsMatch: boolean = (
+        ExportsKeys.length === PackageJsonExports.length &&
         ExportsKeys.every((Export: string) => PackageJsonExports.includes(Export))
     );
+
+    if (!ExportsMatch)
+    {
+        const Mismatches: Array<string> = ExportsKeys.filter((ExportKey: string): boolean =>
+        {
+            return !PackageJsonExports.includes(ExportKey);
+        });
+
+        throw new Error(
+            "The exports declared in this ESBuild config did not match the package's package.json!" +
+            "  They are,\n  * " + Mismatches.join("\n  * ") + "\nExiting..."
+        );
+    }
+
+    return true;
 }
 
 /**

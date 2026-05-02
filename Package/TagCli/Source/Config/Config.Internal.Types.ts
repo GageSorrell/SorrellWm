@@ -9,3 +9,10 @@ import type { Effect } from "effect";
 import type { TagDecl } from "ts-tag/internal";
 
 export type ETryParse = Effect.Effect<ReadonlyArray<TagDecl> | undefined, string>;
+
+export type FCliConfigSchema =
+    {
+        "$schema": string;
+        TagFiles?: Array<string>;
+        Out?: string;
+    };

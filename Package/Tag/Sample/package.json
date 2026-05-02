@@ -1,17 +1,8 @@
 {
-  "name": "ts-tag",
-  "version": "1.0.2",
-  "private": false,
-  "description": "Type-safe hierarchical tags for TypeScript.",
-  "files": [
-    "./Distribution/**/*",
-    "./ReadMe.md",
-    "./package.json",
-    "!./Documentation",
-    "!./Documentation/**/*",
-    "!./Sample",
-    "!./Sample/**/*"
-  ],
+  "name": "ts-tag-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sample project for ts-tag.",
   "os": [
     "darwin",
     "linux",
@@ -90,11 +81,13 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
+    "ts-tag-cli": "^1.0.3",
     "typescript": "^6.0.3"
   },
   "dependencies": {
     "@sorrell/utilities": "^1.2.7",
-    "effect": "^3.21.2"
+    "effect": "^3.21.2",
+    "ts-tag": "^1.0.2"
   },
   "main": "index.js"
 }

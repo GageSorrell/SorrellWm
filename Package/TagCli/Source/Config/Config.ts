@@ -45,6 +45,7 @@ export function GetProjectTags(
 
             type EToFileTuple = Effect.Effect<[ string, string ], PlatformError, FileSystem.FileSystem>;
 
+            /* eslint-disable-next-line @typescript-eslint/typedef */
             const Fs = yield* FileSystem.FileSystem;
 
             const TagFileTuples: ReadonlyArray<[ string, string ]> = yield* Effect.forEach(Config.TagFiles,

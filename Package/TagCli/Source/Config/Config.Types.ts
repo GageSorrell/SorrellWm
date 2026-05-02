@@ -5,8 +5,6 @@
  * @license   MIT
  */
 
-export type FCliConfig =
-    Partial<{
-        TagFiles: Array<string>;
-        Out: string;
-    }>;
+import type { FCliConfigSchema } from "./Config.Internal.Types.js";
+
+export type FCliConfig = Omit<FCliConfigSchema, "$schema">;

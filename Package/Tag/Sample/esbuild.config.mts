@@ -10,8 +10,5 @@
 import { Run } from "../../Configuration/esbuild.config.mts";
 
 await Run({
-    index: "./Source/index.ts",
-    internal: "./Source/Index.Internal.ts",
-    query: "Source/Query/index.ts",
-    registrar: "Source/Registrar/index.ts"
+    index: "./Source/index.ts"
 });

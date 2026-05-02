@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.4",
+    "version": "1.2.7",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -101,6 +101,26 @@
                 "default": "./Distribution/functional.cjs"
             }
         },
+        "./dependency": {
+            "import": {
+                "types": "./Distribution/Types/Dependency/index.d.mts",
+                "default": "./Distribution/dependency.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Dependency/index.d.cts",
+                "default": "./Distribution/dependency.cjs"
+            }
+        },
+        "./dependency/effect": {
+            "import": {
+                "types": "./Distribution/Types/Dependency/Index.Effect.d.mts",
+                "default": "./Distribution/dependency-effect.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Dependency/index.d.cts",
+                "default": "./Distribution/dependency.cjs"
+            }
+        },
         "./misc": {
             "import": {
                 "types": "./Distribution/Types/Miscellaneous/index.d.mts",
@@ -175,7 +195,6 @@
     },
     "types": "./Distribution/Types/index.d.ts",
     "scripts": {
-        "prepack": "npm run build",
         "build:js": "node esbuild.config.mts",
         "prebuild:types": "tsc -p ./tsconfig.script.json",
         "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",

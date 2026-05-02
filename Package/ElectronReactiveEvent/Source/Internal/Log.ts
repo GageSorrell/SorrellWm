@@ -5,32 +5,26 @@
  * @license   MIT
  */
 
+/* eslint-disable jsdoc/require-example */
+
 import type { LogLevel, LogOptions, LogStatements } from "./Log.Types";
 import { GetElectron } from "./Electron";
+import { IsRuntimeModeProduction } from "@sorrell/utilities/misc";
 import type { app } from "electron";
 
+/**
+ * Determines whether the dependent package is currently running in production mode.
+ *
+ * @returns {boolean} Whether the dependent package is currently running in production mode.
+ */
 function IsDependentModeProduction(): boolean
 {
     const App: typeof app | undefined = GetElectron("app");
 
-    const DebugEnvVar: "ELECTRON_REACTIVE_EVENT_DEBUG" = "ELECTRON_REACTIVE_EVENT_DEBUG" as const;
-    const NodeEnvVar: "NODE_ENV" = "NODE_ENV" as const;
-
     return (
-        !(
-            DebugEnvVar in process.env &&
-            process.env[DebugEnvVar] === "1"
-        ) &&
-        !(
-            NodeEnvVar in process.env &&
-            (
-                process.env[NodeEnvVar] === "1" ||
-                process.env[NodeEnvVar]?.toLowerCase() === "production" ||
-                process.env[NodeEnvVar]?.toLowerCase() === "prod"
-            )
-        ) &&
         App !== undefined &&
-        App.isPackaged
+        App.isPackaged &&
+        IsRuntimeModeProduction("ELECTRON_REACTIVE_EVENT_DEBUG")
     );
 }
 
@@ -39,8 +33,33 @@ const DefaultLogOptions: LogOptions =
         Level: "Info"
     };
 
+/**
+ * Log statements regarding `electron-reactive-event`.
+ * Logging is disabled when {@link IsDependentModeProduction} returns `true`.
+ *
+ * @param Options - The {@link LogOptions} object that customizes the behavior of this log operation.
+ * @param Statements - The statements to log.
+ */
 export function Log(Options: Partial<LogOptions>, ...Statements: LogStatements): void;
+
+/**
+ * Log statements regarding `electron-reactive-event`.
+ * Logging is disabled when {@link IsDependentModeProduction} returns `true`.
+ *
+ * @param Statements - The statements to log.
+ */
 export function Log(...Statements: LogStatements): void;
+
+/**
+ * Log statements regarding `electron-reactive-event`.
+ * It is first determined whether the zeroth element of the {@link ArgumentVector}, if one exists,
+ * is a {@link LogOptions} object.  If the zeroth element *is* a {@link LogOptions} object, then
+ * this will be used to customize the behavior of this log operation.
+ *
+ * Logging is disabled when {@link IsDependentModeProduction} returns `true`.
+ *
+ * @param ArgumentVector - The statements to log, and possibly a {@link LogOptions} at index `0`.
+ */
 export function Log(...ArgumentVector: Array<unknown>): void
 {
     if (IsDependentModeProduction())
