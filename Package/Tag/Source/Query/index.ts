@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
-export * as Query from "./Query/index.js";
-export * as Registrar from "./Registrar/index.js";
+export * from "./Query.js";
+export * from "./Query.Types.js";

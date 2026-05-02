@@ -43,6 +43,16 @@
         "default": "./Distribution/Index.Internal.cjs"
       }
     },
+    "./query": {
+      "import": {
+        "types": "./Distribution/Types/Query/index.d.mts",
+        "default": "./Distribution/query.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/Query/index.d.cts",
+        "default": "./Distribution/query.cjs"
+      }
+    },
     "./registrar": {
       "import": {
         "types": "./Distribution/Types/Registrar/index.d.mts",
