@@ -237,6 +237,13 @@ module.exports = {
             {
                 "no-console": "off"
             }
+        },
+        {
+            files: [ "Package/TagCli/**/*.ts" ],
+            rules:
+            {
+                "jsdoc/require-jsdoc": "off"
+            }
         }
     ],
     parser: "@typescript-eslint/parser",

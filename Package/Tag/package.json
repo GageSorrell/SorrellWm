@@ -1,0 +1,76 @@
+{
+  "name": "ts-tag",
+  "version": "1.0.2",
+  "private": false,
+  "description": "Type-safe hierarchical tags.",
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "scripts": {
+    "prepack": "npm run build",
+    "build:js": "node esbuild.config.mts",
+    "prebuild:types": "tsc -p ./tsconfig.script.json",
+    "build:types": "tsc -p ./tsconfig.types.json && node ./Intermediate/Script/CreateTypeDeclarations.js",
+    "build": "npm run build:js && npm run build:types"
+  },
+  "keywords": [
+    "tag",
+    "hierarchical",
+    "typescript",
+    "type-safe",
+    "ts"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./Distribution/Types/index.d.mts",
+        "default": "./Distribution/index.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/index.d.cts",
+        "default": "./Distribution/index.cjs"
+      }
+    },
+    "./internal": {
+      "import": {
+        "types": "./Distribution/Types/Index.Internal.d.mts",
+        "default": "./Distribution/Index.Internal.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/Index.Internal.d.cts",
+        "default": "./Distribution/Index.Internal.cjs"
+      }
+    },
+    "./registrar": {
+      "import": {
+        "types": "./Distribution/Types/Registrar/index.d.mts",
+        "default": "./Distribution/registrar.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/Registrar/index.d.cts",
+        "default": "./Distribution/registrar.cjs"
+      }
+    }
+  },
+  "homepage": "https://tag.sorrell.sh",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Tag",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

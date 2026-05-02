@@ -114,6 +114,7 @@
             "ERASEBKGND",
             "EXSTYLE",
             "fluentui",
+            "functors",
             "Gdiplus",
             "GHND",
             "HBITMAP",

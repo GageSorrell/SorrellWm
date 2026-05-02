@@ -1,0 +1,52 @@
+{
+  "name": "ts-tag-cli",
+  "version": "1.0.1",
+  "private": false,
+  "description": "The CLI for ts-tag.",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "bin": {
+    "ts-tag": "./Distribution/index.js"
+  },
+  "keywords": [
+    "tag",
+    "hierarchical",
+    "typescript",
+    "type-safe",
+    "ts",
+    "cli"
+  ],
+  "homepage": "https://tag.sorrell.sh",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/TagCli",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "create-ts-tag-cli": "^1.0.0",
+    "ts-tag": "^1.0.1",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@effect/cli": "^0.75.1",
+    "@effect/platform": "^0.96.1",
+    "@effect/platform-node": "^0.106.0",
+    "@sorrell/cli-utilities": "^1.0.43",
+    "@sorrell/utilities": "^1.2.4",
+    "csv-parse": "^6.2.1",
+    "effect": "^3.21.2",
+    "yaml": "^2.8.4"
+  }
+}

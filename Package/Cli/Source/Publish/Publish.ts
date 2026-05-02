@@ -5,6 +5,11 @@
  * @license   MIT
  */
 
+// @TODO This command should also allow for (specifying via the config file only)
+// specifying a map of ReadMe URLs, so that links to `ReadMe.md`'s and directories
+// of other packages in the monorepo can be replaced with their respective URLs on
+// https://npmjs.com
+
 // import * as Semver from "semver";
 // import {
 //     type ChildProcess,
