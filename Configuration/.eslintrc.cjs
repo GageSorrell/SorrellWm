@@ -22,6 +22,136 @@ module.exports = {
     overrides:
     [
         {
+            files: [ "*.json" ],
+            parser: "jsonc-eslint-parser",
+
+            plugins:
+            [
+                "package-json"
+            ],
+
+            extends:
+            [
+                "plugin:package-json/legacy-recommended"
+            ],
+
+            rules:
+            {
+                "package-json/bin-name-casing": "error",
+                "package-json/exports-subpaths-style": "error",
+                "package-json/no-empty-fields": "error",
+                "package-json/no-redundant-files": "error",
+                "package-json/no-redundant-publishConfig": "error",
+                "package-json/order-properties": "error",
+                "package-json/repository-shorthand": "error",
+                "package-json/require-attribution": "error",
+                "package-json/require-author": "error",
+                "package-json/require-bin": "error",
+                "package-json/require-bugs": "error",
+                "package-json/require-bundleDependencies": "error",
+                "package-json/require-contributors": "error",
+                "package-json/require-cpu": "error",
+                "package-json/require-dependencies": "error",
+                "package-json/require-description": "error",
+                "package-json/require-devDependencies": "error",
+                "package-json/require-devEngines": "error",
+                "package-json/require-directories": "error",
+                "package-json/require-engines": "error",
+                "package-json/require-exports": "error",
+                "package-json/require-files": "error",
+                "package-json/require-funding": "error",
+                "package-json/require-homepage": "error",
+                "package-json/require-keywords": "error",
+                "package-json/require-license": "error",
+                "package-json/require-main": "error",
+                "package-json/require-man": "error",
+                "package-json/require-module": "error",
+                "package-json/require-name": "error",
+                "package-json/require-optionalDependencies": "error",
+                "package-json/require-os": "error",
+                "package-json/require-packageManager": "error",
+                "package-json/require-peerDependencies": "error",
+                "package-json/require-private": "error",
+                "package-json/require-publishConfig": "error",
+                "package-json/require-repository": "error",
+                "package-json/require-scripts": "error",
+                "package-json/require-sideEffects": "error",
+                "package-json/require-type": "error",
+                "package-json/require-types": "error",
+                "package-json/require-version": "error",
+                "package-json/restrict-private-properties": "error",
+                "package-json/restrict-top-level-properties":
+                [
+                    "error",
+                    {
+                        ban:
+                        [
+                            "babel",
+                            "browserslist",
+                            "commitlint",
+                            "eslintConfig",
+                            "jest",
+                            "lint-staged",
+                            "pnpm",
+                            "prettier",
+                            "release-it",
+                            "renovate",
+                            "stylelint",
+                            "typedoc"
+                        ]
+                    }
+                ],
+                "package-json/scripts-name-casing": "error",
+                "package-json/sort-collections": "error",
+                "package-json/specify-peers-locally": "error",
+                "package-json/unique-dependencies": "error",
+                "package-json/valid-author": "error",
+                "package-json/valid-bin": "error",
+                "package-json/valid-bugs": "error",
+                "package-json/valid-bundleDependencies": "error",
+                "package-json/valid-config": "error",
+                "package-json/valid-contributors": "error",
+                "package-json/valid-cpu": "error",
+                "package-json/valid-dependencies": "error",
+                "package-json/valid-description": "error",
+                "package-json/valid-devDependencies": "error",
+                "package-json/valid-devEngines": "error",
+                "package-json/valid-directories": "error",
+                "package-json/valid-engines": "error",
+                "package-json/valid-exports": "error",
+                "package-json/valid-files": "error",
+                "package-json/valid-funding": "error",
+                "package-json/valid-homepage": "error",
+                "package-json/valid-keywords": "error",
+                "package-json/valid-license": "error",
+                "package-json/valid-main": "error",
+                "package-json/valid-man": "error",
+                "package-json/valid-module": "error",
+                "package-json/valid-name": "error",
+                "package-json/valid-optionalDependencies": "error",
+                "package-json/valid-os": "error",
+                "package-json/valid-package-definition": "warn",
+                "package-json/valid-packageManager": "error",
+                "package-json/valid-peerDependencies": "error",
+                "package-json/valid-private": "error",
+                "package-json/valid-publishConfig": "error",
+                "package-json/valid-repository": "error",
+                "package-json/valid-repository-directory": "error",
+                "package-json/valid-scripts": "error",
+                "package-json/valid-sideEffects": "error",
+                "package-json/valid-type": "error",
+                "package-json/valid-version": "error",
+                "package-json/valid-workspaces": "error"
+            },
+            settings:
+            {
+                packageJson:
+                {
+                    enforceForPrivate: true
+                }
+            }
+        },
+        {
             files:
             [
                 "Application/Source/**/*.ts",
@@ -45,7 +175,7 @@ module.exports = {
                         custom:
                         {
                             match: true,
-                            regex: "^(?:Registrar|(?:H|F|I|P|T|S|A|Y|C|K|N|G)[A-Z][a-zA-Z0-9]+|[TUKYAHG])$",
+                            regex: "^(?:Registrar|(?:H|F|I|P|T|S|A|Y|C|K|N|G)[A-Z][a-zA-Z0-9]+|[TUKYAHG])$"
 
                         },
                         format: [ "PascalCase" ],
@@ -126,8 +256,10 @@ module.exports = {
         "@typescript-eslint",
         "@stylistic",
         "jsdoc",
-        "tsdoc"
+        "tsdoc",
+        "package-json"
     ],
+    root: true,
     rules:
     {
         "jsdoc/check-access": "error",

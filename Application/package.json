@@ -67,6 +67,15 @@
   "browserslist": [
     "extends browserslist-config-erb"
   ],
+  "overrides": {
+    "form-data": "^4.0.5",
+    "serialize-javascript": "^7.0.5",
+    "typescript": "npm:tsover@^6.0.0"
+  },
+  "cpu": [ "x64" ],
+  "os": [
+    "win32"
+  ],
   "dependencies": {
     "@electron/notarize": "^2.3.2",
     "@fluentui/react-components": "^9.73.2",
@@ -189,10 +198,5 @@
       "Distribution/**"
     ],
     "logLevel": "info"
-  },
-  "overrides": {
-    "form-data": "^4.0.5",
-    "serialize-javascript": "^7.0.5",
-    "typescript": "npm:tsover@^6.0.0"
   }
 }
