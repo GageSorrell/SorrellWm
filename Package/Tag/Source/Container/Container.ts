@@ -5,17 +5,18 @@
  * @license   MIT
  */
 
-export class TagContainer
-{
+export const ContainerDummy: string = "";
+// export class TagContainer
+// {
 
-};
+// };
 
-export class TagContainerSingleton extends TagContainer
-{
+// export class TagContainerSingleton extends TagContainer
+// {
 
-};
+// };
 
-export class TagContainerRelated<CommonAncestorsType extends TagContainer> extends TagContainer
-{
+// export class TagContainerRelated<CommonAncestorsType extends TagContainer> extends TagContainer
+// {
 
-};
+// };

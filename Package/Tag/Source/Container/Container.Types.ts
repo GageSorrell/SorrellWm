@@ -5,4 +5,13 @@
  * @license   MIT
  */
 
-export const Dummy__Contiainer: string = "";
+export const Container__TYpes__SDummy: string = "";
+
+// import type { Tag } from "../Tag.js";
+
+// export type TagContainer<const TagType extends Tag> = ReadonlyArray<TagType>;
+
+// export type TagContainerSingleton<const TagType extends Tag> = readonly [ TagType ];
+
+// export class TagContainerRelated<const CommonAncestorsType extends TagContainer> = ReadonlyArray<>;
+

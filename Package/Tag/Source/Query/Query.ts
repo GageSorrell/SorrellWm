@@ -22,13 +22,23 @@ import type {
     TagQueryBuilderOptions,
     TagRegistryLike
 } from "./Query.Types.js";
+import {
+    CreateCountTagQuery,
+    DoesTagMatchAny,
+    EvaluateCountTagQuery,
+    EvaluateHasTagQuery,
+    EvaluateIsSubsetOfTagQuery
+} from "./Query.Internal.js";
 import type { Tag } from "../Tag/Tag.Types.js";
 
 export function CreateTagContainer<const TagsType extends ReadonlyArray<Tag>>(
-    Tags: TagsType
+    ...Tags: TagsType
 ): TagContainer<TagsType[number]>;
 export function CreateTagContainer<TagType extends Tag>(
     Tags: Iterable<TagType>
+): TagContainer<TagType>;
+export function CreateTagContainer<TagType extends Tag>(
+    ...Tags: Array<TagType>
 ): TagContainer<TagType>;
 export function CreateTagContainer<TagType extends Tag>(
     Tags: Iterable<TagType>
@@ -67,14 +77,14 @@ export function CreateTagContainer<TagType extends Tag>(
     };
 }
 
-export function IsTagInBranch(Tag: string, Branch: string): boolean
+export function IsTagInBranch(Tag: Tag, Branch: string): boolean
 {
-    return Tag === Branch || Tag.startsWith(`${Branch}.`);
+    return Tag === Branch || Tag.startsWith(`${ Branch }.`);
 }
 
 export function DoesTagMatch(
-    ExistingTag: string,
-    RequestedTag: string,
+    ExistingTag: Tag,
+    RequestedTag: Tag,
     Match: TagMatchMode
 ): boolean
 {
@@ -165,179 +175,6 @@ export function ToCoreTagQuery<TagType extends Tag>(
 
         default:
             return QueryInput;
-    }
-}
-
-function EvaluateHasTagQuery<TagType extends Tag>(
-    QueryInput: HasTagQuery<TagType>,
-    Container: TagContainerLike<TagType>
-): boolean
-{
-    if (QueryInput.Match === "Exact")
-    {
-        return Container.HasExact(QueryInput.Tag);
-    }
-
-    if (Container.Has !== undefined)
-    {
-        return Container.Has(QueryInput.Tag);
-    }
-
-    for (const ExistingTag of Container.GetExactTags())
-    {
-        if (IsTagInBranch(ExistingTag, QueryInput.Tag))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function EvaluateCountTagQuery<TagType extends Tag>(
-    QueryInput: CountTagQuery<TagType>,
-    Container: TagContainerLike<TagType>
-): boolean
-{
-    let MatchingCount: number = 0;
-
-    for (const Tag of QueryInput.Tags)
-    {
-        if (EvaluateHasTagQuery({
-            Kind: "Has",
-            Match: QueryInput.Match,
-            Tag
-        }, Container))
-        {
-            MatchingCount++;
-        }
-    }
-
-    switch (QueryInput.Operator)
-    {
-        case "Exactly":
-            return MatchingCount === QueryInput.Minimum;
-
-        case "AtLeast":
-            return MatchingCount >= QueryInput.Minimum!;
-
-        case "AtMost":
-            return MatchingCount <= QueryInput.Maximum!;
-
-        case "Between":
-            return MatchingCount >= QueryInput.Minimum! &&
-                MatchingCount <= QueryInput.Maximum!;
-    }
-
-    throw new Error(
-        "EvaluateCountTagQuery should have exhausted all possible choices, but failed to return a value."
-    );
-}
-
-function EvaluateIsSubsetOfTagQuery<TagType extends Tag>(
-    QueryInput: IsSubsetOfTagQuery<TagType>,
-    Container: TagContainerLike<TagType>
-): boolean
-{
-    for (const ExistingTag of Container.GetExactTags())
-    {
-        if (!DoesTagMatchAny(ExistingTag, QueryInput.Tags, QueryInput.Match))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function DoesTagMatchAny(
-    ExistingTag: string,
-    RequestedTags: ReadonlyArray<string>,
-    Match: TagMatchMode
-): boolean
-{
-    return RequestedTags.some((RequestedTag: string) =>
-        DoesTagMatch(ExistingTag, RequestedTag, Match)
-    );
-}
-
-function AssertNonNegativeInteger(Value: number, Name: string): void
-{
-    if (!Number.isInteger(Value) || Value < 0)
-    {
-        throw new TypeError(`${Name} must be a non-negative integer.`);
-    }
-}
-
-function CreateCountTagQuery<TagType extends Tag>(
-    Input: CountTagQueryInput<TagType>
-): CountTagQuery<TagType>
-{
-    const Match: TagMatchMode = Input.Match ?? "IncludingDescendants";
-
-    switch (Input.Operator)
-    {
-        case "Exactly":
-        case "AtLeast":
-        {
-            if (Input.Minimum === undefined)
-            {
-                throw new TypeError(`${Input.Operator} count queries require Minimum.`);
-            }
-
-            AssertNonNegativeInteger(Input.Minimum, "Minimum");
-
-            return {
-                Kind: "Count",
-                Match,
-                Minimum: Input.Minimum,
-                Operator: Input.Operator,
-                Tags: Input.Tags
-            };
-        }
-
-        case "AtMost":
-        {
-            if (Input.Maximum === undefined)
-            {
-                throw new TypeError("AtMost count queries require Maximum.");
-            }
-
-            AssertNonNegativeInteger(Input.Maximum, "Maximum");
-
-            return {
-                Kind: "Count",
-                Match,
-                Maximum: Input.Maximum,
-                Operator: Input.Operator,
-                Tags: Input.Tags
-            };
-        }
-
-        case "Between":
-        {
-            if (Input.Minimum === undefined || Input.Maximum === undefined)
-            {
-                throw new TypeError("Between count queries require Minimum and Maximum.");
-            }
-
-            AssertNonNegativeInteger(Input.Minimum, "Minimum");
-            AssertNonNegativeInteger(Input.Maximum, "Maximum");
-
-            if (Input.Minimum > Input.Maximum)
-            {
-                throw new RangeError("Minimum must be less than or equal to Maximum.");
-            }
-
-            return {
-                Kind: "Count",
-                Match,
-                Maximum: Input.Maximum,
-                Minimum: Input.Minimum,
-                Operator: "Between",
-                Tags: Input.Tags
-            };
-        }
     }
 }
 
@@ -494,7 +331,7 @@ export function HasAll<const TagsType extends ReadonlyArray<Tag>>(
 ): TagQuery<TagsType[number]>
 {
     return And(
-        ...Tags.map((Tag: string) => Has(Tag, Options))
+        ...Tags.map((Tag: Tag) => Has(Tag, Options))
     );
 }
 
@@ -504,7 +341,7 @@ export function HasAny<const TagsType extends ReadonlyArray<Tag>>(
 ): TagQuery<TagsType[number]>
 {
     return Or(
-        ...Tags.map((Tag: string) => Has(Tag, Options))
+        ...Tags.map((Tag: Tag) => Has(Tag, Options))
     );
 }
 
