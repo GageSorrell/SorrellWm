@@ -15,7 +15,7 @@ export class TagContainerSingleton extends TagContainer
 
 };
 
-export class TagContainerWithCommonAncestor extends TagContainer
+export class TagContainerRelated<CommonAncestorsType extends TagContainer> extends TagContainer
 {
 
 };

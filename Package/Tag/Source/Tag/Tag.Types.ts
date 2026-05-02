@@ -7,4 +7,7 @@
 
 import type { Registrar } from "../Registrar/Registrar.Types.ts";
 
-export type Tag = keyof Registrar;
+export type Tag =
+    [ keyof Registrar ] extends [ never ]
+        ? string
+        : keyof Registrar;

@@ -22,14 +22,15 @@ import type {
     TagQueryBuilderOptions,
     TagRegistryLike
 } from "./Query.Types.js";
+import type { Tag } from "../Tag/Tag.Types.js";
 
-export function CreateTagContainer<const TagsType extends ReadonlyArray<string>>(
+export function CreateTagContainer<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType
 ): TagContainer<TagsType[number]>;
-export function CreateTagContainer<TagType extends string>(
+export function CreateTagContainer<TagType extends Tag>(
     Tags: Iterable<TagType>
 ): TagContainer<TagType>;
-export function CreateTagContainer<TagType extends string>(
+export function CreateTagContainer<TagType extends Tag>(
     Tags: Iterable<TagType>
 ): TagContainer<TagType>
 {
@@ -85,7 +86,7 @@ export function DoesTagMatch(
     return IsTagInBranch(ExistingTag, RequestedTag);
 }
 
-export function EvaluateTagQuery<TagType extends string>(
+export function EvaluateTagQuery<TagType extends Tag>(
     QueryInput: TagQuery<TagType>,
     Container: TagContainerLike<TagType>
 ): boolean
@@ -126,7 +127,7 @@ export function EvaluateTagQuery<TagType extends string>(
     );
 }
 
-export function ToCoreTagQuery<TagType extends string>(
+export function ToCoreTagQuery<TagType extends Tag>(
     QueryInput: TagQuery<TagType>,
     Registry: TagRegistryLike<TagType>
 ): CoreTagQuery<TagType>
@@ -167,7 +168,7 @@ export function ToCoreTagQuery<TagType extends string>(
     }
 }
 
-function EvaluateHasTagQuery<TagType extends string>(
+function EvaluateHasTagQuery<TagType extends Tag>(
     QueryInput: HasTagQuery<TagType>,
     Container: TagContainerLike<TagType>
 ): boolean
@@ -193,7 +194,7 @@ function EvaluateHasTagQuery<TagType extends string>(
     return false;
 }
 
-function EvaluateCountTagQuery<TagType extends string>(
+function EvaluateCountTagQuery<TagType extends Tag>(
     QueryInput: CountTagQuery<TagType>,
     Container: TagContainerLike<TagType>
 ): boolean
@@ -233,7 +234,7 @@ function EvaluateCountTagQuery<TagType extends string>(
     );
 }
 
-function EvaluateIsSubsetOfTagQuery<TagType extends string>(
+function EvaluateIsSubsetOfTagQuery<TagType extends Tag>(
     QueryInput: IsSubsetOfTagQuery<TagType>,
     Container: TagContainerLike<TagType>
 ): boolean
@@ -268,7 +269,7 @@ function AssertNonNegativeInteger(Value: number, Name: string): void
     }
 }
 
-function CreateCountTagQuery<TagType extends string>(
+function CreateCountTagQuery<TagType extends Tag>(
     Input: CountTagQueryInput<TagType>
 ): CountTagQuery<TagType>
 {
@@ -350,7 +351,7 @@ export function Never(): NeverTagQuery
     return { Kind: "Never" };
 }
 
-export function Has<TagType extends string>(
+export function Has<TagType extends Tag>(
     Tag: TagType,
     Options: TagQueryBuilderOptions = { }
 ): HasTagQuery<TagType>
@@ -362,7 +363,7 @@ export function Has<TagType extends string>(
     };
 }
 
-export function HasExact<TagType extends string>(Tag: TagType): HasTagQuery<TagType>
+export function HasExact<TagType extends Tag>(Tag: TagType): HasTagQuery<TagType>
 {
     return {
         Kind: "Has",
@@ -371,7 +372,7 @@ export function HasExact<TagType extends string>(Tag: TagType): HasTagQuery<TagT
     };
 }
 
-export function Not<TagType extends string>(QueryInput: TagQuery<TagType>): TagQuery<TagType>
+export function Not<TagType extends Tag>(QueryInput: TagQuery<TagType>): TagQuery<TagType>
 {
     if (QueryInput.Kind === "Always")
     {
@@ -394,7 +395,7 @@ export function Not<TagType extends string>(QueryInput: TagQuery<TagType>): TagQ
     };
 }
 
-export function And<TagType extends string>(
+export function And<TagType extends Tag>(
     ...Queries: ReadonlyArray<TagQuery<TagType>>
 ): TagQuery<TagType>
 {
@@ -437,7 +438,7 @@ export function And<TagType extends string>(
     };
 }
 
-export function Or<TagType extends string>(
+export function Or<TagType extends Tag>(
     ...Queries: ReadonlyArray<TagQuery<TagType>>
 ): TagQuery<TagType>
 {
@@ -480,14 +481,14 @@ export function Or<TagType extends string>(
     };
 }
 
-export function Count<const TagsType extends ReadonlyArray<string>>(
+export function Count<const TagsType extends ReadonlyArray<Tag>>(
     Input: CountTagQueryInput<TagsType[number]>
 ): CountTagQuery<TagsType[number]>
 {
     return CreateCountTagQuery(Input);
 }
 
-export function HasAll<const TagsType extends ReadonlyArray<string>>(
+export function HasAll<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
 ): TagQuery<TagsType[number]>
@@ -497,7 +498,7 @@ export function HasAll<const TagsType extends ReadonlyArray<string>>(
     );
 }
 
-export function HasAny<const TagsType extends ReadonlyArray<string>>(
+export function HasAny<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
 ): TagQuery<TagsType[number]>
@@ -507,7 +508,7 @@ export function HasAny<const TagsType extends ReadonlyArray<string>>(
     );
 }
 
-export function HasNone<const TagsType extends ReadonlyArray<string>>(
+export function HasNone<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
 ): TagQuery<TagsType[number]>
@@ -515,28 +516,28 @@ export function HasNone<const TagsType extends ReadonlyArray<string>>(
     return Not(HasAny(Tags, Options));
 }
 
-export function HasAllExact<const TagsType extends ReadonlyArray<string>>(
+export function HasAllExact<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType
 ): TagQuery<TagsType[number]>
 {
     return HasAll(Tags, { Match: "Exact" });
 }
 
-export function HasAnyExact<const TagsType extends ReadonlyArray<string>>(
+export function HasAnyExact<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType
 ): TagQuery<TagsType[number]>
 {
     return HasAny(Tags, { Match: "Exact" });
 }
 
-export function HasNoneExact<const TagsType extends ReadonlyArray<string>>(
+export function HasNoneExact<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType
 ): TagQuery<TagsType[number]>
 {
     return HasNone(Tags, { Match: "Exact" });
 }
 
-export function AtLeast<const TagsType extends ReadonlyArray<string>>(
+export function AtLeast<const TagsType extends ReadonlyArray<Tag>>(
     MinimumCount: number,
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
@@ -561,7 +562,7 @@ export function AtLeast<const TagsType extends ReadonlyArray<string>>(
     }
 }
 
-export function AtMost<const TagsType extends ReadonlyArray<string>>(
+export function AtMost<const TagsType extends ReadonlyArray<Tag>>(
     MaximumCount: number,
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
@@ -586,7 +587,7 @@ export function AtMost<const TagsType extends ReadonlyArray<string>>(
     }
 }
 
-export function Exactly<const TagsType extends ReadonlyArray<string>>(
+export function Exactly<const TagsType extends ReadonlyArray<Tag>>(
     RequiredCount: number,
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
@@ -611,7 +612,7 @@ export function Exactly<const TagsType extends ReadonlyArray<string>>(
     }
 }
 
-export function Between<const TagsType extends ReadonlyArray<string>>(
+export function Between<const TagsType extends ReadonlyArray<Tag>>(
     MinimumCount: number,
     MaximumCount: number,
     Tags: TagsType,
@@ -639,7 +640,7 @@ export function Between<const TagsType extends ReadonlyArray<string>>(
     }
 }
 
-export function ExactlyOne<const TagsType extends ReadonlyArray<string>>(
+export function ExactlyOne<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
 ): CountTagQuery<TagsType[number]>
@@ -647,7 +648,7 @@ export function ExactlyOne<const TagsType extends ReadonlyArray<string>>(
     return Exactly(1, Tags, Options);
 }
 
-export function MutuallyExclusive<const TagsType extends ReadonlyArray<string>>(
+export function MutuallyExclusive<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { }
 ): CountTagQuery<TagsType[number]>
@@ -656,8 +657,8 @@ export function MutuallyExclusive<const TagsType extends ReadonlyArray<string>>(
 }
 
 export function Requires<
-    ConditionTagType extends string,
-    const RequiredTagsType extends ReadonlyArray<string>
+    ConditionTagType extends Tag,
+    const RequiredTagsType extends ReadonlyArray<Tag>
 >(
     ConditionTag: ConditionTagType,
     RequiredTags: RequiredTagsType,
@@ -671,8 +672,8 @@ export function Requires<
 }
 
 export function Forbids<
-    ConditionTagType extends string,
-    const ForbiddenTagsType extends ReadonlyArray<string>
+    ConditionTagType extends Tag,
+    const ForbiddenTagsType extends ReadonlyArray<Tag>
 >(
     ConditionTag: ConditionTagType,
     ForbiddenTags: ForbiddenTagsType,
@@ -685,14 +686,14 @@ export function Forbids<
     );
 }
 
-export function HasInBranch<BranchTagType extends string>(
+export function HasInBranch<BranchTagType extends Tag>(
     BranchTag: BranchTagType
 ): HasTagQuery<BranchTagType>
 {
     return Has(BranchTag, { Match: "IncludingDescendants" });
 }
 
-export function IsSubsetOf<const TagsType extends ReadonlyArray<string>>(
+export function IsSubsetOf<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { Match: "Exact" }
 ): IsSubsetOfTagQuery<TagsType[number]>
@@ -704,7 +705,7 @@ export function IsSubsetOf<const TagsType extends ReadonlyArray<string>>(
     };
 }
 
-export function Intersects<const TagsType extends ReadonlyArray<string>>(
+export function Intersects<const TagsType extends ReadonlyArray<Tag>>(
     Tags: TagsType,
     Options: TagQueryBuilderOptions = { Match: "Exact" }
 ): CountTagQuery<TagsType[number]>
