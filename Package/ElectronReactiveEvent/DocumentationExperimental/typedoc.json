@@ -1,0 +1,32 @@
+{
+    "$schema": "./node_modules/@sorrell/typedoc-vitepress-theme/typedoc-vitepress-theme.schema.json",
+
+    "plugin": [
+        "typedoc-plugin-markdown",
+        "@sorrell/typedoc-vitepress-theme"
+    ],
+
+    "entryPoints": [
+        "../Source/index.ts"
+    ],
+
+    "tsconfig": "./tsconfig.json",
+
+    "out": "./Source/Reference",
+    "docsRoot": "./",
+
+    "readme": "none",
+
+    "sidebar": {
+        "autoConfiguration": true,
+        "format": "vitepress",
+        "pretty": true,
+        "collapsed": true
+    },
+
+    "versions": {
+        "tags": "^v\\d+\\.\\d+\\.\\d+$",
+        "manifestPath": "./.vitepress/typedoc-versions.json",
+        "worktreeDirectory": ".typedoc-vitepress-version-worktrees"
+    }
+}

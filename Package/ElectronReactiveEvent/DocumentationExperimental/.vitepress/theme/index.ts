@@ -1,10 +1,12 @@
-/**
- * @file      index.ts
- * @author    Gage Sorrell <gage@sorrell.sh>
- * @copyright (c) 2026 Gage Sorrell
- * @license   MIT
- */
+// https://vitepress.dev/guide/custom-theme
+import Layout from './Layout.vue'
+import type { Theme } from 'vitepress'
+import './style.css'
 
-import { VPLTheme } from '@lando/vitepress-theme-default-plus';
+export default {
+  Layout,
+  enhanceApp({ app, router, siteData }) {
+    // ...
+  }
+} satisfies Theme
 
-export default VPLTheme;
