@@ -20,11 +20,7 @@
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
   "license": "MIT",
-  "author": {
-    "email": "gage@sorrell.sh",
-    "name": "Gage Sorrell",
-    "url": "https://sorrell.sh"
-  },
+  "author": "Gage Sorrell <gage@sorrell.sh> (https://sorrell.sh)",
   "type": "commonjs",
   "exports": {
     ".": "./Distribution/index.js",
@@ -36,12 +32,19 @@
   },
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
-    "postinstall": "echo \"Consider installing `electron-reactive-event-cli` for automatic project setup.\""
+    "postinstall": "echo 'Consider installing [`electron-reactive-event-cli`](https://www.npmjs.com/package/electron-reactive-event-cli) for automatic project setup.'",
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
   },
   "types": "./Distribution/index.d.ts",
   "files": [
     "./package.json",
     "./Distribution/**/*",
+    "!./Documentation",
+    "!./Documentation/**/*",
+    "!./DocumentationExperimental",
+    "!./DocumentationExperimental/**/*",
     "!./Sample",
     "!./Sample/**/*"
   ],
@@ -51,7 +54,8 @@
   "devDependencies": {
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.5",
-    "clipboardy": "^5.3.1"
+    "clipboardy": "^5.3.1",
+    "vue": "^3.5.33"
   },
   "peerDependencies": {
     "@types/react": "^19.2.14",
@@ -62,5 +66,6 @@
     "@sorrell/utilities": "^1.2.5",
     "ora": "^9.3.0",
     "typescript": "npm:tsover@^6.0.0"
-  }
+  },
+  "main": "index.js"
 }

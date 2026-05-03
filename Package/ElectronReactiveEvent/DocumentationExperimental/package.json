@@ -1,0 +1,20 @@
+{
+  "name": "documentationexperimental",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "mvb build .",
+    "docs:preview": "vitepress preview"
+  },
+  "keywords": [ ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@lando/vitepress-theme-default-plus": "^1.1.5",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.33"
+  }
+}
