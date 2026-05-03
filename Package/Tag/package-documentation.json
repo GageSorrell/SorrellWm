@@ -1,0 +1,93 @@
+{
+  "name": "ts-tag-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Documentation for ts-tag.",
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "keywords": [
+    "tag",
+    "hierarchical",
+    "typescript",
+    "type-safe",
+    "ts"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./Distribution/Types/index.d.mts",
+        "default": "./Distribution/index.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/index.d.cts",
+        "default": "./Distribution/index.cjs"
+      }
+    },
+    "./internal": {
+      "import": {
+        "types": "./Distribution/Types/Index.Internal.d.mts",
+        "default": "./Distribution/Index.Internal.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/Index.Internal.d.cts",
+        "default": "./Distribution/Index.Internal.cjs"
+      }
+    },
+    "./query": {
+      "import": {
+        "types": "./Distribution/Types/Query/index.d.mts",
+        "default": "./Distribution/query.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/Query/index.d.cts",
+        "default": "./Distribution/query.cjs"
+      }
+    },
+    "./registrar": {
+      "import": {
+        "types": "./Distribution/Types/Registrar/index.d.mts",
+        "default": "./Distribution/registrar.js"
+      },
+      "require": {
+        "types": "./Distribution/Types/Registrar/index.d.cts",
+        "default": "./Distribution/registrar.cjs"
+      }
+    }
+  },
+  "homepage": "https://tag.sorrell.sh",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Tag/Documentation",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "name": "Gage Sorrell",
+    "email": "gage@sorrell.sh",
+    "url": "https://github.com/GageSorrell"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "ts-tag-cli": "^1.0.3",
+    "typescript": "^6.0.3",
+    "vitepress": "^2.0.0-alpha.17",
+    "vue": "^3.5.33"
+  },
+  "dependencies": {
+    "@sorrell/utilities": "^1.2.7",
+    "effect": "^3.21.2",
+    "ts-tag": "^1.0.2"
+  },
+  "main": "index.js"
+}

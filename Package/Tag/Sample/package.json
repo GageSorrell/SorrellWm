@@ -69,7 +69,7 @@
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
-    "directory": "Package/Tag",
+    "directory": "Package/Tag/Sample",
     "type": "git",
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
