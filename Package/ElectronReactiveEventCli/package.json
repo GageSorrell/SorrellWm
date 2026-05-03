@@ -1,7 +1,7 @@
 {
   "name": "electron-reactive-event-cli",
-  "version": "1.0.116",
-  "description": "CLI utility for electron-reactive-event.",
+  "version": "1.0.118",
+  "description": "The CLI for electron-reactive-event.",
   "bin": {
     "electron-reactive-event-cli": "./Distribution/Bin.js",
     "electron-reactive-event-cli-setup": "./Distribution/Setup.Command.js",
@@ -9,6 +9,7 @@
   },
   "files": [
     "./package.json",
+    "./ReadMe.md",
     "./Distribution/**/*"
   ],
   "keywords": [
