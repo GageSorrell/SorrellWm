@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event-cli",
-  "version": "1.0.118",
+  "version": "1.0.119",
   "description": "The CLI for electron-reactive-event.",
   "bin": {
     "electron-reactive-event-cli": "./Distribution/Bin.js",

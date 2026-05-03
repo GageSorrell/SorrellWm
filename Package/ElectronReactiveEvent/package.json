@@ -1,6 +1,6 @@
 {
   "name": "electron-reactive-event",
-  "version": "0.0.57",
+  "version": "0.0.58",
   "description": "Type-safe Electron IPC functions, including modern React hooks.",
   "keywords": [
     "electron",

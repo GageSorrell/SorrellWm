@@ -31,7 +31,7 @@ This will install the CLI, and launch the interactive `setup` wizard.
 > [!NOTE]
 > See [the CLI introduction article](https://electron-reactive-event.sorrell.sh/1.0.0/cli/introduction) to learn more about using the CLI.
 
-> [!IMPORTANT]
+> [!TIP]
 > VS Code users can use [the Electron Reactive Event extension](https://github.com/GageSorrell/ElectronReactiveEventCodeExtension), which runs the CLI for you automatically when needed.
 
 ## Documentation
