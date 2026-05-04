@@ -1,5 +1,5 @@
 {
-  "name": "reactive-event-docs-landing",
+  "name": "reactive-event-landing",
   "packageManager": "npm@11.13.0",
   "private": true,
   "scripts": {

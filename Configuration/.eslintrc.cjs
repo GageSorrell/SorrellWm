@@ -22,6 +22,13 @@ module.exports = {
     overrides:
     [
         {
+            files: [ "Package/ReactiveEvent/Documentation/**/*.{ts,tsx}" ],
+            rules:
+            {
+                "jsdoc/require-jsdoc": "off"
+            }
+        },
+        {
             files: [ "**/*.*js" ],
             rules:
             {
