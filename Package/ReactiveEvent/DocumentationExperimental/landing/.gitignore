@@ -43,3 +43,5 @@ next-env.d.ts
 # contentlayer
 .contentlayer
 .yarn/cache
+
+.vercel
