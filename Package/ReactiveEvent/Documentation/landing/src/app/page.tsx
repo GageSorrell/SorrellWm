@@ -9,7 +9,7 @@ import { CTA } from "@/components/sections/cta";
 import { Community } from "@/components/sections/community";
 import { Complexity } from "@/components/sections/complexity";
 import { Examples } from "@/components/sections/examples";
-import { FAQ } from "@/components/sections/faq";
+import { Faq } from "@/components/sections/faq";
 import { Features } from "@/components/sections/features";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/sections/hero";
@@ -46,7 +46,7 @@ export default function HomePage()
                 <Screenshots />
                 {/* <Tweets /> */}
                 {/* <Catch /> */}
-                <FAQ />
+                <Faq />
                 {/* <Community /> */}
                 <CTA />
             </main>

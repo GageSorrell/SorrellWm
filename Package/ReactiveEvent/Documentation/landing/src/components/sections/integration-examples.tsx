@@ -41,7 +41,7 @@ export const IntegrationExamples = () => {
             className="grow p-4 pt-8 md:p-12 data-[state=inactive]:absolute"
           >
             <Code
-              tabs={tabs.map((tab) => ({
+              Tabs={tabs.map((tab) => ({
                 name: tab.name,
                 content: tab.code
               }))}
@@ -62,11 +62,11 @@ const examples = [
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -80,11 +80,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -103,11 +103,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -121,11 +121,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -144,11 +144,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -162,11 +162,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -185,11 +185,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -203,11 +203,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -226,11 +226,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -244,11 +244,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -267,11 +267,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -285,11 +285,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -308,11 +308,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -326,11 +326,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -349,11 +349,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -367,11 +367,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -390,11 +390,11 @@ class HttpError {
         name: "index.ts",
         code: `\
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 
@@ -408,11 +408,11 @@ class HttpError {
         code: `\
 //another-file.ts
 import { Effect } from "effect"
- 
+
 class HttpError {
   readonly _tag = "HttpError"
 }
- 
+
 // Effect<never, HttpError, never>
 const program = Effect.fail(new HttpError())
 

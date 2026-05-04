@@ -16,8 +16,10 @@ export function ReactiveEvent(): ReactNode
         };
 
     return (
-        <span style={ RootStyle }>
-            &nbsp;Reactive Event
+        <span
+            className="font-display text-2xl"
+            style={ RootStyle }>
+            Reactive Event
         </span>
 
     );

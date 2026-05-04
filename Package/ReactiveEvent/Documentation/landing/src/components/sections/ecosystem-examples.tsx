@@ -70,13 +70,13 @@ export const EcosystemExamples = () => {
                       Using {name}
                     </h4>
                     <Code
-                      tabs={[
+                      Tabs={[
                         {
-                          name: withoutEffect.fileName,
-                          content: withoutEffect.code
+                          Name: withoutEffect.fileName,
+                          Content: withoutEffect.code
                         }
                       ]}
-                      fixedHeight={400}
+                      FixedHeight={400}
                     />
                   </div>
                   <div className="flex flex-col items-center gap-6">
@@ -85,13 +85,13 @@ export const EcosystemExamples = () => {
                       <Logo className="h-7 inline-block ml-1 -mt-1" />
                     </h4>
                     <Code
-                      tabs={[
+                      Tabs={[
                         {
-                          name: withEffect.fileName,
-                          content: withEffect.code
+                          Name: withEffect.fileName,
+                          Content: withEffect.code
                         }
                       ]}
-                      fixedHeight={400}
+                      FixedHeight={400}
                     />
                   </div>
                 </Tabs.Content>

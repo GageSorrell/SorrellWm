@@ -14,6 +14,7 @@ import { Logo } from "../atoms/logo";
 import { LogoDark } from "../atoms/logo-dark";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { ReactiveEvent } from "../Miscellaneous/ReactiveEvent";
 
 type FMenuItem =
     {
@@ -79,7 +80,7 @@ const Socials: Array<FSocial> =
         }
     ];
 
-export function Footer()
+export function Footer(): ReactNode
 {
     const PathName: string = usePathname();
     const IsWide: boolean = PathName?.startsWith("/docs");
@@ -109,8 +110,9 @@ export function Footer()
                         "sm:px-8 lg:px-16 py-24 flex flex-col sm:flex-row gap-10 justify-between"
                     }>
                     <div>
-                        <Logo className="hidden dark:block h-7 sm:h-8" />
-                        <LogoDark className="dark:hidden h-7 sm:h-8" />
+                        <ReactiveEvent />
+                        {/* <Logo className="hidden dark:block h-7 sm:h-8" /> */}
+                        {/* <LogoDark className="dark:hidden h-7 sm:h-8" /> */}
                         <p className="leading-relaxed my-6">
                             MIT Licensed
                             <br />
@@ -142,8 +144,8 @@ export function Footer()
                                                 <span>{name}</span>
                                                 {href.startsWith("http") && (
                                                     <Icon
-                                                        name="arrow-up-right-light"
                                                         className="h-3 mt-0.5 ml-0.5"
+                                                        name="arrow-up-right-light"
                                                     />
                                                 )}
                                             </Link>

@@ -30,13 +30,13 @@ export function Complexity(): ReactNode
                             Without Reactive Event
                         </h3>
                         <Code
-                            fixedHeight={ 390 }
-                            tabs={ [ WithoutEffectExample ] }
+                            FixedHeight={ 390 }
+                            Tabs={ [ WithoutEffectExample ] }
                         />
                     </div>
                     <div className="flex flex-col items-center gap-6">
                         <h3 className="font-display text-2xl text-white">
-                            With <span className="sr-only">Effect</span>&nbsp;
+                            With <span className="sr-only">Effect</span>&nbsp;&nbsp;
                             <img
                                 className="h-7 inline-block"
                                 src="./images/logo.png"
@@ -46,8 +46,8 @@ export function Complexity(): ReactNode
                             <ReactiveEvent />
                         </h3>
                         <Code
-                            fixedHeight={ 390 }
-                            tabs={ [ { ...WithEffectExample, language: "typescript" } ] }
+                            FixedHeight={ 390 }
+                            Tabs={ [ { ...WithEffectExample, Language: "typescript" } ] }
                         />
                     </div>
                 </div>
@@ -83,29 +83,29 @@ const WithEffectCodeSnippet: string = `const getTodo = (
     Effect.andThen((response) => response.json)
   )`;
 
-const WithoutEffectExample: Parameters<typeof Code>[0]["tabs"][number] =
+const WithoutEffectExample: Parameters<typeof Code>[0]["Tabs"][number] =
     {
-        content: WithoutEffectCodeSnippet,
-        highlights:
+        Content: WithoutEffectCodeSnippet,
+        Highlights:
         [
             {
                 color: "#283413",
                 lines: [ 4, 5, 9, 10, 12, 13, 14, 15, 16, 17 ]
             }
         ],
-        name: "index.ts"
+        Name: "index.ts"
     };
 
-const WithEffectExample: Parameters<typeof Code>[0]["tabs"][number] =
+const WithEffectExample: Parameters<typeof Code>[0]["Tabs"][number] =
     {
-        content: WithEffectCodeSnippet,
-        highlights: [
+        Content: WithEffectCodeSnippet,
+        Highlights: [
             {
                 color: "#283413",
                 lines: [ 3 ]
             }
         ],
-        name: "index.ts"
+        Name: "index.ts"
     };
 
 /* eslint-disable-next-line @typescript-eslint/typedef */

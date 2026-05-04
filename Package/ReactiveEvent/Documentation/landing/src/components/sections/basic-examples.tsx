@@ -43,13 +43,13 @@ export const BasicExamples = () => {
                 Without Effect
               </h4>
               <Code
-                tabs={[
+                Tabs={[
                   {
-                    name: withoutEffect.fileName,
-                    content: withoutEffect.code
+                    Name: withoutEffect.fileName,
+                    Content: withoutEffect.code
                   }
                 ]}
-                terminal={{
+                Terminal={{
                   run: "Run snippet",
                   command: withoutEffect.command,
                   result: withoutEffect.result
@@ -62,10 +62,10 @@ export const BasicExamples = () => {
                 <Logo className="h-7 inline-block ml-1 -mt-1" />
               </h4>
               <Code
-                tabs={[
-                  { name: withEffect.fileName, content: withEffect.code }
+                Tabs={[
+                  { Name: withEffect.fileName, Content: withEffect.code }
                 ]}
-                terminal={{
+                Terminal={{
                   run: "Run snippet",
                   command: withEffect.command,
                   result: withEffect.result
