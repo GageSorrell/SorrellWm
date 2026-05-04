@@ -13,7 +13,7 @@ const config: Config = {
     favicon: "img/favicon.ico",
 
     // url: "https://reactive-event.sorrell.sh",
-    url: "http://localhost",
+    url: process.env["DOCS_ORIGIN"] ?? "http://localhost",
     baseUrl: "/docs/",
 
     organizationName: "GageSorrell",

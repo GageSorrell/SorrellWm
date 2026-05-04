@@ -27,8 +27,8 @@ const nextConfig = {
 
     async rewrites()
     {
-        // const DocsOrigin = process.env.DOCS_ORIGIN ?? "http://localhost:3001";
-        const DocsOrigin = "http://localhost:3001";
+        const DocsOrigin = process.env.DOCS_ORIGIN ?? "http://localhost:3001";
+        // const DocsOrigin = "http://localhost:3001";
 
         return [
             {
