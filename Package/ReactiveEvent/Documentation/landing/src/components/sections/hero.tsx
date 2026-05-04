@@ -108,7 +108,7 @@ export function Hero()
                             style={ { justifyContent: "center", marginTop: "-3rem" } }>
                             <img
                                 alt="Reactive Event Logo"
-                                src="/images/hero.png"
+                                src="/images/Hero.png"
                                 width="80%"
                             />
                         </div>
@@ -131,14 +131,12 @@ export function Hero()
                         style={ { alignItems: "flex-start", justifyContent: "center", marginTop: "-6rem" } }>
                         <img
                             alt="Reactive Event Logo"
-                            className="shrink grow"
-                            src="/images/hero.png"
-                            width="80%"
+                            src="/images/Hero.png"
                         />
                     </div>
                 </div>
             </div>
-            <Divider />
+            <Divider className="mt-8 md:-mt-8" />
         </section>
     );
 };

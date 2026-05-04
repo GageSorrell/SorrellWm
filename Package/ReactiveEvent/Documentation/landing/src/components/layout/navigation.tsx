@@ -7,14 +7,13 @@
 
 "use client";
 
-import React, { type FC, type ReactNode } from "react";
 import { Icon } from "../icons";
 import Link from "next/link";
-import { Logo } from "../atoms/logo";
-import { LogoDark } from "../atoms/logo-dark";
 import { MobileMenu } from "./mobile-menu";
+import { type ReactNode } from "react";
 import { ThemeSwitcher } from "../atoms/theme-switcher";
 import { usePathname } from "next/navigation";
+import { ReactiveEvent } from "../Miscellaneous/ReactiveEvent";
 
 export interface NavigationLink
 {
@@ -24,7 +23,7 @@ export interface NavigationLink
     readonly blank?: boolean
 }
 
-const links: Array<NavigationLink> =
+const Links: Array<NavigationLink> =
     [
         {
             href: "/docs/latest/article/introduction",
@@ -69,8 +68,8 @@ export function Navigation({
     return (
         <div className={ PathName === "/" ? "dark" : "" }>
             <header
-                className={`${ IsInline ? "relative" : "fixed top-0 inset-x-0"
-                } backdrop-blur z-30 bg-white/70 dark:bg-[#09090B]/70 text-zinc-700 dark:text-zinc-400`}
+                className={ `${ IsInline ? "relative" : "fixed top-0 inset-x-0"
+                } backdrop-blur z-30 bg-white/70 dark:bg-[#09090B]/70 text-zinc-700 dark:text-zinc-400` }
             >
                 <div
                     className={
@@ -85,11 +84,20 @@ export function Navigation({
                     <Link
                         className="z-50"
                         href="/">
-                        <Logo className="hidden dark:block h-7 sm:h-8" />
-                        <LogoDark className="dark:hidden h-7 sm:h-8" />
+                        <div className="flex flex-row gap-3">
+                            <img
+                                alt="Reactive Event Logo"
+                                height={ 32 }
+                                src="/images/Logo.png"
+                                width={ 32 }
+                            />
+                            <ReactiveEvent />
+                        </div>
+                        {/* <Logo className="hidden dark:block h-7 sm:h-8" />
+                        <LogoDark className="dark:hidden h-7 sm:h-8" /> */}
                     </Link>
                     <MobileMenu
-                        menu={ links }
+                        menu={ Links }
                         socials={ Socials }
                     />
                     <div className="hidden md:flex items-center gap-8">
@@ -116,7 +124,7 @@ export function Navigation({
 
 export function NavigationMenu()
 {
-    return <NavigationLinks links={ links } />;
+    return <NavigationLinks links={ Links } />;
 }
 
 const NavigationLinks: React.FC<{ links: ReadonlyArray<NavigationLink> }> = (

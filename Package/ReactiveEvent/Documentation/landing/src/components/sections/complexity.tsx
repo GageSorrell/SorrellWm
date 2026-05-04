@@ -19,7 +19,7 @@ export function Complexity(): ReactNode
         <section
             className="relative"
             ref={ SectionRef }>
-            <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-16 pt-24">
+            <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-16 pt-10 md:pt-16">
                 <h2 className="font-display mb-6 text-2xl sm:text-3xl lg:text-4xl text-white text-center">
                     { Content.heading }
                 </h2>
