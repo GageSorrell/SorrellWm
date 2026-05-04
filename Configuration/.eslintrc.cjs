@@ -22,6 +22,13 @@ module.exports = {
     overrides:
     [
         {
+            files: [ "**/*.*js" ],
+            rules:
+            {
+                "@typescript-eslint/typedef": "off"
+            }
+        },
+        {
             files: [ "*.json" ],
             parser: "jsonc-eslint-parser",
 
@@ -201,11 +208,11 @@ module.exports = {
                 "Package/PipeOperator/Source/**/*.ts",
                 "Package/Listr/Source/**/*.ts",
                 "Package/Utilities/Source/**/*.ts",
-                "Package/CreateElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.tsx",
-                "Package/ElectronReactiveEventCli/Source/**/*.ts",
-                "Package/ElectronReactiveEventCli/Source/**/*.tsx"
+                "Package/CreateReactiveEvent/Source/**/*.ts",
+                "Package/ReactiveEvent/Source/**/*.ts",
+                "Package/ReactiveEvent/Source/**/*.tsx",
+                "Package/ReactiveEventCli/Source/**/*.ts",
+                "Package/ReactiveEventCli/Source/**/*.tsx"
             ],
             rules:
             {
@@ -227,11 +234,11 @@ module.exports = {
                 "Configuration/**/*.cts",
                 "Package/Cli/Source/**/*.ts",
                 "Package/CliUtilities/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Source/**/*.ts",
-                "Package/ElectronReactiveEventCli/Source/**/*.ts",
-                "Package/ElectronReactiveEvent/Documentation/**/*.ts",
-                "Package/ElectronReactiveEvent/Sample/**/*.ts",
-                "Package/ElectronReactiveEvent/Sample/**/*.tsx"
+                "Package/ReactiveEvent/Source/**/*.ts",
+                "Package/ReactiveEventCli/Source/**/*.ts",
+                "Package/ReactiveEvent/Documentation/**/*.ts",
+                "Package/ReactiveEvent/Sample/**/*.ts",
+                "Package/ReactiveEvent/Sample/**/*.tsx"
             ],
             rules:
             {

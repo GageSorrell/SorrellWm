@@ -1,0 +1,61 @@
+{
+  "name": "reactive-event-extension",
+  "displayName": "Reactive Event",
+  "version": "0.0.1",
+  "description": "VS Code extension for `reactive-event`.",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "contributes": {},
+  "keywords": [
+    "electron",
+    "reactive",
+    "event",
+    "reactive-event",
+    "electron",
+    "react",
+    "typescript",
+    "ts",
+    "type-safe",
+    "type-safety"
+  ],
+  "homepage": "https://reactive-event.sorrell.sh",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/ReactiveEventCodeExtension",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "type": "commonjs",
+  "main": "./Distribution/index.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+    "overrides": {
+        "serialize-javascript": "^7.0.5"
+    },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "@types/vscode": "^1.115.0",
+    "@vscode/test-cli": "^0.0.12",
+    "package-json-type": "^1.1.2",
+    "typescript": "npm:tsover@^6.0.0"
+  },
+  "dependencies": {
+    "@sorrell/utilities": "^1.2.4",
+    "reactive-event-cli": "^1.0.116",
+    "ts-morph": "^28.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "$schema": "https://reactive-event.sorrell.sh/CliConfig.Schema.json",
+    "AugmentationModulePath": "E:\\SorrellWm\\Package\\ReactiveEvent\\Sample\\src\\Reactive.Events.Generated.Types.ts",
+    "PackageKey": "Reactiveeventsample",
+    "ScopedModulePath": "E:\\SorrellWm\\Package\\ReactiveEvent\\Sample\\src\\Reactive.Generated.ts",
+    "IpcModulePath":
+    {
+        "Main": "./src/Main.Generated.ts",
+        "Renderer": "./src/Renderer.Generated.ts"
+    }
+}

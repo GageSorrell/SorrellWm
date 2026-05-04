@@ -37,7 +37,11 @@ export function CreateDependencyLoggerLayer(
     SuppressLogEnvironmentVariable: string | undefined = undefined
 ): Layer.Layer<never, never, never>
 {
-    if (IsRuntimeModeProduction(SuppressLogEnvironmentVariable))
+    const IsProductionMode: boolean = SuppressLogEnvironmentVariable !== undefined
+        ? IsRuntimeModeProduction({ DebugEnvironmentVariable: SuppressLogEnvironmentVariable })
+        : IsRuntimeModeProduction();
+
+    if (IsProductionMode)
     {
         return Layer.empty;
     }

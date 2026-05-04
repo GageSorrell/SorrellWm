@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { EventDecl, RendererOwner } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "reactive-event";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
 export type FNavigateRequest =
@@ -16,7 +16,7 @@ export type FNavigateRequest =
 
 export type FNavigateErrorCode = TEventErrorCode<"">;
 
-declare module "electron-reactive-event/registrar"
+declare module "reactive-event/registrar"
 {
     interface Registrar
     {

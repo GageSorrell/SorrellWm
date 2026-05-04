@@ -8,10 +8,11 @@
 import Chalk from "chalk";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { IsRuntimeModeProduction } from "./Dependency.ts";
+import type { TRuntimeModeProductionOptions } from "./Dependency.Types.ts";
 
-export/**
-       * The default value of the `TruthyValues` argument of {@link IsRuntimeModeProduction}.
-       */
+/**
+ * The default value of the `TruthyValues` argument of {@link IsRuntimeModeProduction}.
+ */
 const DefaultTruthyValues: ReadonlyArray<string> =
     [
         "true",
@@ -20,6 +21,15 @@ const DefaultTruthyValues: ReadonlyArray<string> =
         "y",
         "on"
     ] as const;
+
+export /**
+        * The default options of {@link IsRuntimeModeProduction}.
+        */
+const DefaultOptions: TRuntimeModeProductionOptions<boolean> =
+    {
+        TruthyValues: DefaultTruthyValues,
+        UncertainValue: true
+    };
 
 /* eslint-disable jsdoc/require-example */
 

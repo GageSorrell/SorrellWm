@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { EventDecl } from "electron-reactive-event";
+import type { EventDecl } from "reactive-event";
 import type { FAxis } from "../../Shared/Shared.Types";
 import type { FFocusDataBase } from "./Focus.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
@@ -36,7 +36,7 @@ export type FTiledMoveResult =
 
 export type FMoveFloatingWindowErrorCode = TEventErrorCode<"">;
 
-declare module "electron-reactive-event/registrar"
+declare module "reactive-event/registrar"
 {
     interface Registrar
     {

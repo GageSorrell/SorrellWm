@@ -7,11 +7,29 @@
 
 /* eslint-disable jsdoc/require-example, jsdoc/match-description */
 
+import type { DependencyLogger, TRuntimeModeProductionOptions } from "./Dependency.Types.ts";
 import { type InspectOptions, format } from "node:util";
 import { Code } from "./Dependency.Internal.ts";
-import { DefaultTruthyValues } from "./Dependency.Internal.ts";
-import type { DependencyLogger } from "./Dependency.Types.ts";
-import { Layer } from "effect";
+import { DefaultOptions } from "./Dependency.Internal.ts";
+
+/**
+ * Guess whether the current session is in *production mode* by,
+ *
+ * 1. If the function did not already return in Step 1, then {@link process.env} is checked for
+ * a property with key `"NODE_ENV"`.
+ *     - If there exists a property with this key, and if `process.env["NODE_ENV"] === "production"`
+ *       (or similar; see below), then this returns `true`.
+ * 2. If the function did not already return in Step 2, then `true` is returned.
+ *
+ * @note If Step 2 is executed, then this returns `true` when `process.env["NODE_ENV"].toLowerCase()`
+ * is any one of,
+ * - `"production"`
+ * - `"prod"`
+ *
+ * @returns {boolean} Whether the current session is likely in *production mode*, or,
+ * if unsure, `true` is returned.
+ */
+export function IsRuntimeModeProduction(): boolean;
 
 /**
  * Guess whether the current session is in *production mode* by,
@@ -27,33 +45,36 @@ import { Layer } from "effect";
  * 3. If the function did not already return in Step 2, then {@link UncertainValue} is returned.
  * By default, this is `true`, but any value of any type can be used.
  *
+ * @template UncertainType - The type of the {@link UncertainValue}.  By default, this is `boolean`.
+ *
+ * @param Options - The {@link TRuntimeModeProductionOptions} options object.  All properties are optional.
+ *
  * @note If Step 2 is executed, then this returns `true` when `process.env["NODE_ENV"].toLowerCase()`
  * is any one of,
  * - `"production"`
  * - `"prod"`
  *
- * @param DebugEnvironmentVariable - If specified, then this environment variable will be checked for,
- * in addition to the other checks performed by this function to guess whether the current session is
- * in *production mode*.
- *
- * @param TruthyValues - If {@link DebugEnvironmentVariable} is specified, and if {@link process.env}
- * has a property with key {@link DebugEnvironmentVariable}, then this will return based on whether
- * ```
- * TruthyValues.map(TruthyWord => TruthyWord.toLowerCase()).includes(DebugEnvironmentVariable.toLowerCase());
- * ```
- *
- * @param UncertainValue - The value that is returned in Step 3—that is, if this function is uncertain whether
- * the current session is in *production mode.*  By default, this is `true`.
- *
  * @returns {boolean | typeof UncertainValue} Whether the current session is likely in *production mode*, or,
  * if unsure, the given {@link UncertainValue} is returned (by default, this is `true`).
  */
-export function IsRuntimeModeProduction(
-    DebugEnvironmentVariable: string | undefined = undefined,
-    TruthyValues: ReadonlyArray<string> = DefaultTruthyValues,
-    UncertainValue: unknown = true
-): boolean | typeof UncertainValue
+export function IsRuntimeModeProduction<UncertainType = boolean>(
+    Options: TRuntimeModeProductionOptions<UncertainType>
+): boolean | Exclude<typeof Options.UncertainValue, undefined>;
+
+export function IsRuntimeModeProduction<UncertainType = boolean>(
+    Options: TRuntimeModeProductionOptions<UncertainType> =
+        (DefaultOptions as TRuntimeModeProductionOptions<UncertainType>)
+): boolean | typeof Options.UncertainValue
 {
+    const {
+        DebugEnvironmentVariable,
+        UncertainValue,
+        TruthyValues
+    } = {
+        ...DefaultOptions,
+        ...Options
+    } as Required<TRuntimeModeProductionOptions<UncertainType>>;
+
     if (DebugEnvironmentVariable !== undefined)
     {
         if (DebugEnvironmentVariable in process.env)
@@ -102,7 +123,11 @@ export function GetDependencyLogger(
     SuppressLogEnvironmentVariable: string | undefined = undefined
 ): DependencyLogger
 {
-    if (IsRuntimeModeProduction(SuppressLogEnvironmentVariable))
+    const IsProductionMode: boolean = SuppressLogEnvironmentVariable !== undefined
+        ? IsRuntimeModeProduction({ DebugEnvironmentVariable: SuppressLogEnvironmentVariable })
+        : IsRuntimeModeProduction();
+
+    if (IsProductionMode)
     {
         return {
             debug(..._Statements: Array<unknown>): void { },

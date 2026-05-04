@@ -5,9 +5,9 @@
  * @license   MIT
  */
 
-import type { EventDecl, RendererOwner } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "reactive-event";
 
-declare module "electron-reactive-event/registrar"
+declare module "reactive-event/registrar"
 {
     interface Registrar
     {

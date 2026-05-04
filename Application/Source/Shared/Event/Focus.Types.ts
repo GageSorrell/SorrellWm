@@ -7,7 +7,7 @@
  *            do not otherwise have a good place to go.
  */
 
-import type { EventDecl, RendererOwner } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "reactive-event";
 import type { FBox } from "@sorrell/wm-windows";
 import type { FFocusChange } from "../Tree.Types";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
@@ -47,7 +47,7 @@ export type FGetFocusDataErrorCode = TEventErrorCode<
     | "FocusedVertexUndefined"
 >;
 
-declare module "electron-reactive-event/registrar"
+declare module "reactive-event/registrar"
 {
     interface Registrar
     {

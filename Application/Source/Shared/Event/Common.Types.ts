@@ -7,7 +7,7 @@
 
 import type { FAnnotatedPanel, FPanel } from "../Tree.Types";
 import type { FHexColor, HMonitor } from "@sorrell/wm-windows";
-import type { EventDecl } from "electron-reactive-event";
+import type { EventDecl } from "reactive-event";
 import type { FExternalWindow } from "../Window/ExternalWindow.Types";
 import type { FFloatingWindow } from "../Window/FloatingWindow.Types";
 import type { FInsertableWindowData } from "./Insert.Types";
@@ -68,7 +68,7 @@ export type FGetIsElevatedErrorCode = TEventErrorCode<"">;
 
 export type FOpenWebPageErrorCode = TEventErrorCode<"">;
 
-declare module "electron-reactive-event/registrar"
+declare module "reactive-event/registrar"
 {
     interface Registrar
     {

@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { EventDecl, RendererOwner } from "electron-reactive-event";
+import type { EventDecl, RendererOwner } from "reactive-event";
 import type { FExternalSetting, FSettings } from "../Settings";
 import type { TEventErrorCode } from "./ErrorCodes.Types";
 
@@ -20,7 +20,7 @@ export type FGetSettingErrorCode = TEventErrorCode<"">;
 export type FCheckForUpdatesErrorCode = TEventErrorCode<"">;
 export type FGetExternalSettingStateErrorCode = TEventErrorCode<"">;
 
-declare module "electron-reactive-event/registrar"
+declare module "reactive-event/registrar"
 {
     /* eslint-disable-next-line @typescript-eslint/naming-convention */
     interface Registrar

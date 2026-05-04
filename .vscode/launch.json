@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run electron-reactive-event Extension",
+      "name": "Run reactive-event Extension",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/Package/ElectronReactiveEventExtension"]
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/Package/ReactiveEventExtension"]
     },
     {
         "name": "Electron: Main",

@@ -15,17 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - local_path: "Package/ElectronReactiveEvent"
-            repository_name: "ElectronReactiveEvent"
+          - local_path: "Package/ReactiveEvent"
+            repository_name: "ReactiveEvent"
 
-          - local_path: "Package/ElectronReactiveEventCli"
-            repository_name: "ElectronReactiveEventCli"
+          - local_path: "Package/ReactiveEventCli"
+            repository_name: "ReactiveEventCli"
 
-          - local_path: "Package/CreateElectronReactiveEvent"
-            repository_name: "CreateElectronReactiveEvent"
+          - local_path: "Package/CreateReactiveEvent"
+            repository_name: "CreateReactiveEvent"
 
-          - local_path: "Package/ElectronReactiveEventCodeExtension"
-            repository_name: "ElectronReactiveEventCodeExtension"
+          - local_path: "Package/ReactiveEventCodeExtension"
+            repository_name: "ReactiveEventCodeExtension"
 
           - local_path: "Package/Utilities"
             repository_name: "Utilities"

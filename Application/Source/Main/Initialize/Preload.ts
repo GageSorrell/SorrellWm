@@ -8,7 +8,7 @@
 /* eslint-disable */
 
 import { contextBridge, ipcRenderer } from "electron";
-// import { GetPreload } from "electron-reactive-event";
+// import { GetPreload } from "reactive-event";
 
 // @TODO Temporary.
 type TEventCallback<Type> = (...Arguments: Array<unknown>) => Promise<any>;
