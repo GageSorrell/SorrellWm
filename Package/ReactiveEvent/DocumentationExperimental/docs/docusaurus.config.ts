@@ -12,9 +12,10 @@ const config: Config = {
     tagline: "Type-safe IPC functions for Electron, with React hooks.",
     favicon: "img/favicon.ico",
 
-    // url: "https://reactive-event.sorrell.sh",
-    url: process.env["DOCS_ORIGIN"] ?? "http://localhost",
-    baseUrl: "/docs/",
+    url: process.env["DOCS_ORIGIN"],
+    baseUrl: process.env["DOCS_ORIGIN"].includes("localhost")
+        ? "/docs/"
+        : "/",
 
     organizationName: "GageSorrell",
     projectName: "reactive-event",

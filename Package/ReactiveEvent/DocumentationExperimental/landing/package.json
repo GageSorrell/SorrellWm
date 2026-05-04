@@ -3,7 +3,7 @@
   "packageManager": "npm@11.13.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env DOCS_ORIGIN=\"http://localhost:3001\" next dev",
     "check": "tsc -b tsconfig.json",
     "build": "next build",
     "pull-env": "vercel env pull .env.local",
