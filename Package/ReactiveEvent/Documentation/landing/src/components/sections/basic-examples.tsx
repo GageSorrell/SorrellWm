@@ -1,121 +1,164 @@
-"use client"
+/**
+ * @file      basic-examples.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
 
-import * as Tabs from "@radix-ui/react-tabs"
-import { Divider } from "../layout/divider"
-import { Logo } from "../atoms/logo"
-import { Code } from "../layout/code"
+"use client";
 
-export const BasicExamples = () => {
-  return (
-    <div className="flex flex-col items-start md:items-center pt-8">
-      <p className="mt-6 mb-6 md:mb-10 px-4 md:text-center">
-        Effect helps you with handling errors, async code, concurrency,
-        streams and much more.
-      </p>
-      <Tabs.Root
-        defaultValue={examples[0].name}
-        className="w-full flex flex-col"
-      >
-        <div className="relative">
-          <Tabs.List className="flex relative z-10 items-center px-4 md:justify-center overflow-x-auto gap-4 -mb-px hide-scrollbar">
-            {examples.map(({ name }, index) => (
-              <Tabs.Trigger
-                key={index}
-                value={name}
-                className="border-b whitespace-nowrap border-transparent data-[state=active]:border-white data-[state=active]:text-white pb-2 tab-hover"
-              >
-                {name}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-          <Divider />
-          <div className="absolute inset-y-0 w-4 left-0 bg-gradient-to-r from-zinc-800 z-10" />
-          <div className="absolute inset-y-0 w-4 right-0 bg-gradient-to-l from-zinc-900 z-10" />
+import * as Tabs from "@radix-ui/react-tabs";
+import { Code } from "../layout/code";
+import { Divider } from "../layout/divider";
+import { Logo } from "../atoms/logo";
+import type { ReactNode } from "react";
+
+export function BasicExamples(): ReactNode
+{
+    const TabsListClass: string =
+        [
+            "flex",
+            "relative",
+            "z-10",
+            "items-center",
+            "px-4",
+            "md:justify-center",
+            "overflow-x-auto",
+            "gap-4",
+            "-mb-px",
+            "hide-scrollbar"
+        ].join(" ");
+
+    function ExampleTrigger({ Name }: typeof Examples[number], Index: number): ReactNode
+    {
+        const ExampleTriggerClass: string =
+            [
+                "border-b",
+                "whitespace-nowrap",
+                "border-transparent",
+                "data-[state=active]:border-white",
+                "data-[state=active]:text-white",
+                "pb-2",
+                "tab-hover"
+            ].join(" ");
+
+        return (
+            <Tabs.Trigger
+                className={ ExampleTriggerClass }
+                key={ Index }
+                value={ Name }>
+                { Name }
+            </Tabs.Trigger>
+        );
+    }
+
+    return (
+        <div className="flex flex-col items-start md:items-center pt-8">
+            <p className="mt-6 mb-6 md:mb-10 px-4 md:text-center">
+                Effect helps you with handling errors, async code, concurrency,
+                streams and much more.
+            </p>
+            <Tabs.Root
+                className="w-full flex flex-col"
+                defaultValue={ Examples[0].Name }>
+                <div className="relative">
+                    <Tabs.List className={ TabsListClass }>
+                        {
+                            Examples.map((Example: typeof Examples[number], Index: number) =>
+                                ExampleTrigger(Example, Index))
+                        }
+                    </Tabs.List>
+                    <Divider />
+                    <div className="absolute inset-y-0 w-4 left-0 bg-gradient-to-r from-zinc-800 z-10" />
+                    <div className="absolute inset-y-0 w-4 right-0 bg-gradient-to-l from-zinc-900 z-10" />
+                </div>
+                {Examples.map(({ name, withoutEffect, withEffect }, index) => (
+                    <Tabs.Content
+                        key={ index }
+                        value={ name }
+                        className="grow p-4 pt-8 md:p-12 grid grid-cols-1 gap-y-10 md:grid-cols-2 gap-6 data-[state=inactive]:absolute"
+                    >
+                        <div className="flex flex-col items-center gap-6">
+                            <h4 className="font-display text-2xl text-white">
+                                Without Effect
+                            </h4>
+                            <Code
+                                Tabs={ [
+                                    {
+                                        Content: withoutEffect.code,
+                                        Name: withoutEffect.fileName
+                                    }
+                                ] }
+                                Terminal={ {
+                                    command: withoutEffect.command,
+                                    result: withoutEffect.result,
+                                    run: "Run snippet"
+                                } }
+                            />
+                        </div>
+                        <div className="flex flex-col items-center gap-6">
+                            <h4 className="font-display text-2xl text-white">
+                  With <span className="sr-only">Effect</span>
+                                <Logo className="h-7 inline-block ml-1 -mt-1" />
+                            </h4>
+                            <Code
+                                Tabs={ [
+                                    { Content: withEffect.code, Name: withEffect.fileName }
+                                ] }
+                                Terminal={ {
+                                    run: "Run snippet",
+                                    command: withEffect.command,
+                                    result: withEffect.result
+                                } }
+                            />
+                        </div>
+                    </Tabs.Content>
+                ))}
+            </Tabs.Root>
         </div>
-        {examples.map(({ name, withoutEffect, withEffect }, index) => (
-          <Tabs.Content
-            key={index}
-            value={name}
-            className="grow p-4 pt-8 md:p-12 grid grid-cols-1 gap-y-10 md:grid-cols-2 gap-6 data-[state=inactive]:absolute"
-          >
-            <div className="flex flex-col items-center gap-6">
-              <h4 className="font-display text-2xl text-white">
-                Without Effect
-              </h4>
-              <Code
-                Tabs={[
-                  {
-                    Name: withoutEffect.fileName,
-                    Content: withoutEffect.code
-                  }
-                ]}
-                Terminal={{
-                  run: "Run snippet",
-                  command: withoutEffect.command,
-                  result: withoutEffect.result
-                }}
-              />
-            </div>
-            <div className="flex flex-col items-center gap-6">
-              <h4 className="font-display text-2xl text-white">
-                With <span className="sr-only">Effect</span>
-                <Logo className="h-7 inline-block ml-1 -mt-1" />
-              </h4>
-              <Code
-                Tabs={[
-                  { Name: withEffect.fileName, Content: withEffect.code }
-                ]}
-                Terminal={{
-                  run: "Run snippet",
-                  command: withEffect.command,
-                  result: withEffect.result
-                }}
-              />
-            </div>
-          </Tabs.Content>
-        ))}
-      </Tabs.Root>
-    </div>
-  )
+    );
+};
+
+function randomElement<ElementType>(array: Array<ElementType>): ElementType
+{
+    return array[Math.floor(Math.random() * array.length)];
 }
 
-function randomElement<A>(array: Array<A>): A {
-  return array[Math.floor(Math.random() * array.length)]
-}
-
-const examples = [
-  {
-    name: "Sync code",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const Examples =
+    [
+        {
+            Name: "Sync code",
+            withoutEffect: {
+                fileName: "index.ts",
+                code: `\
 const main = () => {
   console.log('Hello, World!')
 }
 
 main()\
       `,
-      command: "bun src/index.ts",
-      result: "Hello, World!"
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `\
+                command: "bun src/index.ts",
+                result: "Hello, World!"
+            },
+            withEffect: {
+                fileName: "index.ts",
+                code: `\
 import { Console, Effect } from 'effect'
 
 const main = Console.log('Hello, World!')
 
 Effect.runSync(main)\
       `,
-      command: "bun src/index.ts",
-      result: "Hello, World!"
-    }
-  },
-  {
-    name: "Async code",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+                command: "bun src/index.ts",
+                result: "Hello, World!"
+            }
+        },
+        {
+            Name: "Async code",
+            withoutEffect: {
+                fileName: "index.ts",
+                code: `\
 const sleep = (ms: number) =>
   new Promise((resolve) =>
     setTimeout(resolve, ms)
@@ -128,12 +171,12 @@ const main = async () => {
 
 main()\
       `,
-      command: "bun src/index.ts",
-      result: "Hello, World!"
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `\
+                command: "bun src/index.ts",
+                result: "Hello, World!"
+            },
+            withEffect: {
+                fileName: "index.ts",
+                code: `\
 import { Console, Effect } from 'effect'
 
 const main = Effect.sleep(1000).pipe(
@@ -142,15 +185,15 @@ const main = Effect.sleep(1000).pipe(
 
 Effect.runPromise(main)\
       `,
-      command: "bun src/index.ts",
-      result: "Hello, World!"
-    }
-  },
-  {
-    name: "Error Handling",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+                command: "bun src/index.ts",
+                result: "Hello, World!"
+            }
+        },
+        {
+            Name: "Error Handling",
+            withoutEffect: {
+                fileName: "index.ts",
+                code: `\
 class CustomError extends Error {
   constructor(readonly value: number) {}
 }
@@ -181,12 +224,12 @@ const main = () => {
 
 main()\
       `,
-      command: "bun src/index.ts",
-      result: randomElement(["Oops! Got value 0.7"])
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `\
+                command: "bun src/index.ts",
+                result: randomElement(["Oops! Got value 0.7"])
+            },
+            withEffect: {
+                fileName: "index.ts",
+                code: `\
 import { Console, Effect } from 'effect'
 
 class CustomError {
@@ -218,15 +261,15 @@ const main = maybeFail.pipe(
 
 Effect.runPromise(main)\
       `,
-      command: "bun src/index.ts",
-      result: randomElement(["Got value 0.3"])
-    }
-  },
-  {
-    name: "Interruption",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+                command: "bun src/index.ts",
+                result: randomElement(["Got value 0.3"])
+            }
+        },
+        {
+            Name: "Interruption",
+            withoutEffect: {
+                fileName: "index.ts",
+                code: `\
 const sleep = <A>(
   ms: number,
   signal: AbortSignal,
@@ -246,12 +289,12 @@ async function main() {
 
 main()\
       `,
-      command: "bun src/index.ts",
-      result: "Aborted!"
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `\
+            command: "bun src/index.ts",
+            result: "Aborted!"
+        },
+        withEffect: {
+            fileName: "index.ts",
+            code: `\
 import { Console, Effect } from "effect"
 
 const main = Effect.sleep(1000).pipe(
@@ -264,15 +307,15 @@ const main = Effect.sleep(1000).pipe(
 
 Effect.runPromise(main)\
       `,
-      command: "bun src/index.ts",
-      result: "Aborted!"
-    }
-  },
-  {
-    name: "Retry",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+            command: "bun src/index.ts",
+            result: "Aborted!"
+        }
+    },
+    {
+        Name: "Retry",
+        withoutEffect: {
+            fileName: "index.ts",
+            code: `\
 async function getUser(id: number, retries = 3) {
   try {
     const response = await fetch(\`/users/\${id}\`)
@@ -293,12 +336,12 @@ async function main() {
 
 main()
       `,
-      command: "bun src/index.ts",
-      result: "Got user { id: 1, name: 'John' }"
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `import { FetchHttpClient, HttpClient } from "@effect/platform"
+            command: "bun src/index.ts",
+            result: "Got user { id: 1, Name: 'John' }"
+        },
+        withEffect: {
+            fileName: "index.ts",
+            code: `import { FetchHttpClient, HttpClient } from "@effect/platform"
 import { Console, Effect, Layer } from "effect"
 
 const makeUsers = Effect.gen(function*() {
@@ -324,15 +367,15 @@ class Users extends Effect.Tag("Users")<Users, Effect.Effect.Success<typeof make
 const main = Users.findById(1).pipe(
   Effect.andThen((user) => Console.log("Got user", user))
 )`,
-      command: "bun src/index.ts",
-      result: "Got user { id: 1, name: 'John' }"
-    }
-  },
-  {
-    name: "Concurrency",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+            command: "bun src/index.ts",
+            result: "Got user { id: 1, Name: 'John' }"
+        }
+    },
+    {
+        Name: "Concurrency",
+        withoutEffect: {
+            fileName: "index.ts",
+            code: `\
 declare const getUser: (
   id: number,
 ) => Promise<unknown>
@@ -374,12 +417,12 @@ async function main() {
 
 main()\
       `,
-      command: "bun src/index.ts",
-      result: "Got users [ ... ]"
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `\
+            command: "bun src/index.ts",
+            result: "Got users [ ... ]"
+        },
+        withEffect: {
+            fileName: "index.ts",
+            code: `\
 import { Console, Effect } from "effect"
 
 declare const getUser: (
@@ -403,16 +446,16 @@ const main = Effect.forEach(
 
 Effect.runPromise(main)\
       `,
-      command: "bun src/index.ts",
-      result: "Got users [ ... ]"
-    }
-  },
-  {
+            command: "bun src/index.ts",
+            result: "Got users [ ... ]"
+        }
+    },
+    {
     // pipe, generators
-    name: "Composition",
-    withoutEffect: {
-      fileName: "index.ts",
-      code: `\
+        Name: "Composition",
+        withoutEffect: {
+            fileName: "index.ts",
+            code: `\
 // configuration has to be added to the type signature
 const getTodos = (
   ids: Iterable<number>,
@@ -542,12 +585,12 @@ function mergeAbortSignal(
 }
 
       `,
-      command: "bun src/index.ts",
-      result: "Got todos: [ ... ]"
-    },
-    withEffect: {
-      fileName: "index.ts",
-      code: `const makeTodos = Effect.gen(function*() {
+                command: "bun src/index.ts",
+                result: "Got todos: [ ... ]"
+            },
+            withEffect: {
+                fileName: "index.ts",
+                code: `const makeTodos = Effect.gen(function*() {
   const client = (yield* HttpClient.HttpClient).pipe(
     HttpClient.filterStatusOk,
     HttpClient.mapRequest(HttpClientRequest.prependUrl("https://jsonplaceholder.typicode.com"))
@@ -590,8 +633,8 @@ const main = Todos.list(Array.range(1, 10)).pipe(
   Effect.timeout("10 seconds"),
   Effect.andThen((todos) => Console.log("Got todos", todos))
 )`,
-      command: "bun src/index.ts",
-      result: "Got todos: [ ... ]"
-    }
-  }
-]
+                command: "bun src/index.ts",
+                result: "Got todos: [ ... ]"
+            }
+        }
+    ];

@@ -1,49 +1,71 @@
-import "@/styles/globals.css"
+/**
+ * @file      layout.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
 
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import localFont from "next/font/local"
-import { ReactNode } from "react"
-import { Providers } from "./providers"
+import "@/styles/globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter"
-})
+import { Analytics } from "@vercel/analytics/next";
+import { Inter } from "next/font/google";
+import type { Metadata } from "next";
+import type { NextFontWithVariable } from "next/dist/compiled/@next/font";
+import { Providers } from "./providers";
+import type { ReactNode } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import localFont from "next/font/local";
 
-const calSans = localFont({
-  src: "../assets/cal-sans-semibold.woff2",
-  weight: "600",
-  display: "swap",
-  variable: "--font-cal-sans"
-})
+const Inter: NextFontWithVariable = Inter({
+    display: "swap",
+    subsets: [ "latin" ],
+    variable: "--font-inter"
+});
 
-export const metadata: Metadata = {
-  title: "Effect – The best way to build robust apps in TypeScript",
-  description:
-    "Effect is a powerful TypeScript library designed to help developers easily create complex, synchronous, and asynchronous programs."
-}
+const CalSans: NextFontWithVariable = localFont({
+    display: "swap",
+    src: "../assets/cal-sans-semibold.woff2",
+    variable: "--font-cal-sans",
+    weight: "600"
+});
+
+export const metadata: Metadata =
+    {
+        description: (
+            "Reactive Event brings type-safe IPC and React hooks to Electron, helping you build safer \
+            main-to-renderer communication."
+        ),
+        title: "Reactive Event :: Type-safe IPC functions with modern React hooks."
+    };
+
+const BodyClass: string =
+    [
+        "relative",
+        "overflow-x-hidden",
+        "antialiased",
+        "font-light",
+        "bg-white",
+        "dark:bg-[#09090B]",
+        "text-zinc-700",
+        "dark:text-zinc-300"
+    ].join(" ");
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
-    <html
-      lang="en"
-      className={`relative ${inter.variable} ${calSans.variable}`}
-      suppressHydrationWarning
-    >
-      <body className="relative overflow-x-hidden antialiased font-light bg-white dark:bg-[#09090B] text-zinc-700 dark:text-zinc-300">
-        <Providers>
-          {children}
-          <Analytics />
-          <SpeedInsights
-            endpoint="/speed-insights/vitals"
-            scriptSrc="/speed-insights/script.js"
-          />
-        </Providers>
-      </body>
-    </html>
-  )
+    return (
+        <html
+            className={ `relative ${ Inter.variable } ${ CalSans.variable }` }
+            lang="en"
+            suppressHydrationWarning>
+            <body className={ BodyClass }>
+                <Providers>
+                    { children }
+                    <Analytics />
+                    <SpeedInsights
+                        endpoint="/speed-insights/vitals"
+                        scriptSrc="/speed-insights/script.js"
+                    />
+                </Providers>
+            </body>
+        </html>
+    );
 }

@@ -88,7 +88,7 @@ export function Navigation({
                             <img
                                 alt="Reactive Event Logo"
                                 height={ 32 }
-                                src="/images/Logo.png"
+                                src="/images/logo.png"
                                 width={ 32 }
                             />
                             <ReactiveEvent />
