@@ -33,17 +33,32 @@ const nextConfig = {
         return [
             {
                 source: "/docs",
-                destination: `${ DocsOrigin }/docs/`
+                destination: `${DocsOrigin}/docs/`
             },
             {
                 source: "/docs/",
-                destination: `${ DocsOrigin }/docs/`
+                destination: `${DocsOrigin}/docs/`
             },
             {
                 source: "/docs/:path*",
-                destination: `${ DocsOrigin }/docs/:path*`
+                destination: `${DocsOrigin}/docs/:path*`
             }
         ];
+
+        // return [
+        //     {
+        //         source: "/docs",
+        //         destination: `${ DocsOrigin }/`
+        //     },
+        //     {
+        //         source: "/docs/",
+        //         destination: `${ DocsOrigin }/`
+        //     },
+        //     {
+        //         source: "/docs/:path*",
+        //         destination: `${ DocsOrigin }/:path*`
+        //     }
+        // ];
     }
 };
 

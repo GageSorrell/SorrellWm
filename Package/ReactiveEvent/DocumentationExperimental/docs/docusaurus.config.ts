@@ -7,15 +7,18 @@
 
 import type { Config } from "@docusaurus/types";
 
-const config: Config = {
-    title: "Reactive Event",
-    tagline: "Type-safe IPC functions for Electron, with React hooks.",
-    favicon: "img/favicon.ico",
+const IsProduction: boolean = !(process.env?.["DOCS_ORIGIN"] || "localhost").includes("localhost");
 
+const config: Config = {
+    favicon: "img/favicon.ico",
+    tagline: "Type-safe IPC functions for Electron, with React hooks.",
+    title: "Reactive Event",
+
+    baseUrl: "/docs/",
+    // baseUrl: IsProduction
+    //     ? "/"
+    //     : "/docs/",
     url: process.env?.["DOCS_ORIGIN"] || "http://localhost:3001",
-    baseUrl: (process.env?.["DOCS_ORIGIN"] || "localhost").includes("localhost")
-        ? "/docs/"
-        : "/",
 
     organizationName: "GageSorrell",
     projectName: "reactive-event",
@@ -29,16 +32,18 @@ const config: Config = {
         [
             "classic",
             {
+                blog: false,
                 docs: {
                     path: "docs",
                     routeBasePath: "/",
+                    // routeBasePath: IsProduction ? "/docs/" : "/",
                     sidebarPath: require.resolve("./sidebars.ts")
                 },
-                blog: false,
                 theme: {
                     customCss: require.resolve("./src/css/custom.css")
                 }
-            } satisfies ClassicPresetOptions
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            } as any
         ]
     ]
 };

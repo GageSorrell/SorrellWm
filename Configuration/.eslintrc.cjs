@@ -273,7 +273,6 @@ module.exports = {
         "tsdoc",
         "package-json"
     ],
-    root: true,
     rules:
     {
         "jsdoc/check-access": "error",

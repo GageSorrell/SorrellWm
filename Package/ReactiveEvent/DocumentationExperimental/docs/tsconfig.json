@@ -5,6 +5,7 @@
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": [ "@docusaurus/types" ],
     "ignoreDeprecations": "6.0",
     "strict": true
   },
