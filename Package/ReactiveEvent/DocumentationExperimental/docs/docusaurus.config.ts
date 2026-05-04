@@ -12,8 +12,8 @@ const config: Config = {
     tagline: "Type-safe IPC functions for Electron, with React hooks.",
     favicon: "img/favicon.ico",
 
-    url: process.env["DOCS_ORIGIN"],
-    baseUrl: process.env["DOCS_ORIGIN"].includes("localhost")
+    url: process.env?.["DOCS_ORIGIN"] || "http://localhost:3001",
+    baseUrl: (process.env?.["DOCS_ORIGIN"] || "localhost").includes("localhost")
         ? "/docs/"
         : "/",
 
