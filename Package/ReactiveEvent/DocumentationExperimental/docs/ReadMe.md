@@ -1,17 +1,41 @@
-# Docs folder
+# Website
 
-The `/docs` folder houses all markdown files. The page structure loosely maps to the routing on the site since paths can be changed in the frontmatter.
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-## Versioning
+## Installation
 
-This folder can also contain components, assets, and whatever else is meant to be versioned when the docusaurus versioning script is run. For example, if there is a page component that is only relevant to the `layout` section in the current version of Ionic, it could be added to a `_components/` folder in `docs/layout/`. When the versioning script is run, the component will be copied to `versioned_docs/version-{X}/layout/_components/` and there will now be a separate component in `docs/layout/_components/` that can be deleted or updated to the latest version. The same concept applies to images and other files.
+```bash
+yarn
+```
 
-If components are meant to be shared across versions, they can be put in `src/components/`. If images and other served files are meant to be shared across versions they can be put in `static/`.
+## Local Development
 
-## Auto Generated Files
+```bash
+yarn start
+```
 
-All markdown files in these directories are generated from [scripts](/scripts):
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-- `docs/api/`
-- `docs/cli/commands/`
-- `docs/native/`
+## Build
+
+```bash
+yarn build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+## Deployment
+
+Using SSH:
+
+```bash
+USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```bash
+GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

@@ -1,0 +1,13 @@
+{
+    "entryPoints": ["../../Source/index.ts"],
+    "tsconfig": "../../tsconfig.json",
+    "out": "docs/api",
+    "plugin": [ "typedoc-plugin-markdown", "typedoc-docusaurus-theme" ],
+    "readme": "none",
+    "hideGenerator": true,
+    "cleanOutputDir": true,
+    "sidebar": {
+        "autoConfiguration": true,
+        "pretty": true
+    }
+}

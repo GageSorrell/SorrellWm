@@ -1,97 +1,13 @@
 {
-  "name": "reactive-event-docs",
-  "version": "0.0.0",
-  "private": true,
-  "homepage": "https://reactive-event.sorrell.sh",
-  "bugs": {
-    "url": "https://github.com/GageSorrell/SorrellWm/issues"
-  },
-  "repository": {
-    "directory": "Package/ReactiveEvent/Documentation",
-    "type": "git",
-    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "scripts": {
-    "start": "docusaurus start",
-    "prebuild": "npm run docs:api",
-    "build": "docusaurus build",
-    "serve": "docusaurus serve",
-    "clear": "docusaurus clear",
-    "spellcheck": "cspell --no-progress \"**/*.md\"",
-    "original:docs:api": "node scripts/BuildApiDocs.mjs",
-    "original:docs:version": "docusaurus docs:version",
-    "original:prebuild:old": "npm run generate-markdown; scripts/i18n.sh; if [ -n \"$CROWDIN_PERSONAL_TOKEN\" ]; then npm run crowdin:sync; fi",
-    "original:prebuild": "npm run generate-markdown",
-    "original:build": "npm run build:${VERCEL_ENV:-preview}",
-    "original:build:preview": "docusaurus build --locale en",
-    "original:build:production": "docusaurus build",
-    "original:clear": "docusaurus clear",
-    "original:crowdin:sync": "docusaurus write-translations && crowdin upload && crowdin download",
-    "original:deploy": "docusaurus deploy",
-    "original:docusaurus": "docusaurus",
-    "original:generate-markdown": "node scripts/native.mjs && concurrently \"node scripts/cli.mjs\" \"node scripts/release-notes.mjs\"",
-    "original:lint": "npm run prettier -- --write",
-    "original:serve": "docusaurus serve",
-    "original:playground:new": "hygen playground new",
-    "original:prestart": "npm run generate-markdown",
-    "original:prettier": "prettier \"./**/*.{html,ts,tsx,js,jsx,md}\" --cache",
-    "original:start": "docusaurus start",
-    "original:swizzle": "docusaurus swizzle"
-  },
-  "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "dependencies": {
-    "@docusaurus/core": "^3.7.0",
-    "@docusaurus/mdx-loader": "^3.7.0",
-    "@docusaurus/plugin-client-redirects": "^3.7.0",
-    "@docusaurus/preset-classic": "^3.10.1",
-    "@ionic-internal/ionic-ds": "^7.0.0",
-    "@mdx-js/react": "^3.0.0",
-    "@prismicio/client": "^6.4.2",
-    "@prismicio/react": "^2.2.0",
-    "@stackblitz/sdk": "^1.6.0",
-    "@tippyjs/react": "^4.2.6",
-    "clsx": "^1.1.1",
-    "concurrently": "^6.2.0",
-    "crowdin": "^3.5.0",
-    "docusaurus-plugin-module-alias": "^0.0.2",
-    "docusaurus-plugin-sass": "^0.2.6",
-    "fs-extra": "^9.1.0",
-    "modern-normalize": "^1.1.0",
-    "prism-react-renderer": "^2.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "remark-html": "^16.0.1",
-    "remark-parse": "^11.0.0",
-    "sass": "^1.44.0",
-    "semver": "^7.3.5"
-  },
-  "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.7.0",
-    "@docusaurus/tsconfig": "^3.7.0",
-    "@ionic/prettier-config": "^3.0.0",
-    "@types/react": "^18.2.29",
-    "cspell": "^6.31.3",
-    "html-loader": "^3.1.0",
-    "hygen": "^6.2.11",
-    "prettier": "^2.8.8",
-    "typedoc": "^0.28.19",
-    "typedoc-docusaurus-theme": "^1.4.2",
-    "typedoc-plugin-markdown": "^4.11.0",
-    "typescript": "^5.2.2"
-  },
-  "prettier": "@ionic/prettier-config"
+    "name": "reactive-event-website",
+    "private": true,
+    "scripts": {
+        "start": "concurrently -n landing,docs \"npm run dev -w reactive-event-docs-landing\" \"npm run start -w reactive-event-docs\"",
+        "dev": "concurrently -n landing,docs \"npm run dev -w reactive-event-docs-landing\" \"npm run dev -w reactive-event-docs\"",
+        "build:landing": "npm run build -w @sorrell/reactive-event-landing",
+        "build:docs": "npm run build -w @sorrell/reactive-event-docs"
+    },
+    "devDependencies": {
+        "concurrently": "^9.0.0"
+    }
 }
