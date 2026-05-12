@@ -5,6 +5,8 @@
  * @license   MIT
  */
 
+/* eslint-disable jsdoc/require-jsdoc */
+
 import type { ComponentType } from "react";
 import type { PCodeEditorAnimation } from "./CodeEditorAnimation.Types";
 import dynamic from "next/dynamic";

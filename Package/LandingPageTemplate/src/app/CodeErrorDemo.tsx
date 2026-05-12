@@ -10,7 +10,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { BuildCodeLines, CodeCard } from "./CodeErrorDemo.Internal";
-import { type FC, type PropsWithChildren, type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { UseSwitchOnTheme, UseTheme } from "@sorrell/react/client";
 import { AbsoluteFill } from "remotion";
 import type { FCodeLine } from "./CodeErrorDemo.Internal.Types";

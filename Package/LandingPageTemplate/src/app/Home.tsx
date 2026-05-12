@@ -9,13 +9,16 @@
 
 "use client";
 
-import { A, Div, Main } from "@sorrell/react/client";
+import { A, Div, Main, UseTheme } from "@sorrell/react/client";
 import { CodeEditorAnimationPlayer } from "./CodeEditorPlayer";
 import { CodeErrorDemo } from "./CodeErrorDemo";
+import GitHubDarkDefaultTheme from "@shikijs/themes/github-dark-default";
+import GitHubLightDefaultTheme from "@shikijs/themes/github-light-default";
 import Image from "next/image";
 import { Player } from "@remotion/player";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import type { ThemeRegistration } from "shiki";
 
 export default function Home(): ReactNode
 {
@@ -67,6 +70,57 @@ export default function Home(): ReactNode
             "md:w-[158px]"
         ] as const;
 
+    const { Theme } = UseTheme();
+
+    const EditorTheme: ThemeRegistration = Theme ===  "Dark"
+        ? GitHubDarkDefaultTheme
+        : GitHubLightDefaultTheme;
+
+    function InitialSuggestions(): ReactNode
+    {
+        return (
+            <div style={ { padding: 14 } }>
+                <div>handle(<b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>channel: string</b>, listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; (Promise&lt;any&gt;) | (any)): void</div>
+            </div>
+        );
+    }
+
+    function UpdatedSuggestions(): ReactNode
+    {
+        return (
+            <div style={ { padding: 14 } }>
+                <div>handle(<b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>channel: string</b>, listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; (Promise&lt;any&gt;) | (any)): void</div>
+            </div>
+        );
+    }
+
+    function ListenerIntellisense(): ReactNode
+    {
+        return (
+            <div style={ { padding: 14 } }>
+                <div>handle(channel: string, <b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; (Promise&lt;any&gt;) | (any)</b>): void</div>
+            </div>
+        );
+    }
+
+    function EventArgumentIntellisense(): ReactNode
+    {
+        return (
+            <div style={ { padding: 14 } }>
+                <div>listener(<b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>event: IpcMainInvokeEvent</b>, ...args: any[]): any</div>
+            </div>
+        );
+    }
+
+    function ArgumentsArgumentIntellisense(): ReactNode
+    {
+        return (
+            <div style={ { padding: 14 } }>
+                <div>listener(event: IpcMainInvokeEvent, <b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>...args: any[]</b>): any</div>
+            </div>
+        );
+    }
+
     return (
         <Div className={ RootStyle }>
             <ThemeToggle />
@@ -93,12 +147,61 @@ export default function Home(): ReactNode
                 <CodeEditorAnimationPlayer
                     Changes={ [
                         {
+                            Delay: 2000,
+                            Intellisense: UpdatedSuggestions,
                             Position: [ 0, "ipcMain.handle(".length ],
                             Text: "\"GetSettings\"",
                             Type: "Add"
+                        },
+                        {
+                            Intellisense: ListenerIntellisense,
+                            // Position: [ 0, "ipcMain.handle(\"GetSettings\"".length ],
+                            Position: [ 1, 0 ],
+                            Text: ", (",
+                            Type: "Add"
+                        },
+                        {
+                            Intellisense: EventArgumentIntellisense,
+                            LineIndex: 0,
+                            // Position: [ 0, "ipcMain.handle(\"GetSettings\", (".length ],
+                            // Text: "Event",
+                            Type: "AddLine"
+                        },
+                        {
+                            Intellisense: EventArgumentIntellisense,
+                            LineIndex: 0,
+                            // Position: [ 0, "ipcMain.handle(\"GetSettings\", (".length ],
+                            // Text: "Event",
+                            Type: "AddLine"
+                        },
+                        {
+                            Intellisense: EventArgumentIntellisense,
+                            Position: [ 0, 0 ],
+                            // Position: [ 0, "ipcMain.handle(\"GetSettings\", (".length ],
+                            Text: "import { ipcMain } from \"reactive-event\";",
+                            // Text: "Event",
+                            Type: "Add"
+                        },
+                        {
+                            Intellisense: EventArgumentIntellisense,
+                            Position: [ 0, "ipcMain.handle(\"GetSettings\"".length ],
+                            // Position: [ 0, "ipcMain.handle(\"GetSettings\", (".length ],
+                            Text: ", Event",
+                            // Text: "Event",
+                            Type: "Add"
+                        },
+                        {
+                            Intellisense: ArgumentsArgumentIntellisense,
+                            // Position: [ 0, "ipcMain.handle(\"GetSettings\", (Event".length ],
+                            Position: [ 0, "ipcMain.handle(\"GetSettings\", Event".length ],
+                            SpeedScalar: 0.5,
+                            Text: ", ...Arguments",
+                            Type: "Add"
                         }
                     ] }
+                    CursorPosition={ [ 0, "ipcMain.handle(".length ] }
                     InitialCode="ipcMain.handle("
+                    InitialIntellisense={ InitialSuggestions }
                 />
                 {/* <CodeEditorAnimationPlayer
                     Code={ [

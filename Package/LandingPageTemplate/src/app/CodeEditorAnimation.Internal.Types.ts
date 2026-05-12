@@ -7,49 +7,9 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
+import type { ComponentType, ReactNode } from "react";
 import type { BundledLanguage } from "shiki";
 import type { FCursorPosition } from "./CodeEditorAnimation.Types";
-
-export type FCodeToken =
-    {
-        Color?: string;
-        Text: string;
-    };
-
-export type FCodeLine =
-    {
-        Key: string;
-        Text: string;
-        Tokens: Array<FCodeToken>;
-    };
-
-export type FAddCodeChange =
-    {
-        Type: "Add";
-        Position: FCursorPosition;
-        Text: string;
-    };
-
-export type FCodeChange = FAddCodeChange;
-
-export type FCodeSnapshot =
-    {
-        Code: string;
-        CursorPosition?: FCursorPosition;
-        Lines: Array<FCodeLine>;
-    };
-
-export type FBuildCodeLinesOptions =
-    {
-        BaseKey: string;
-        Language?: BundledLanguage;
-    };
-
-export type FBuildCodeSnapshotsOptions =
-    FBuildCodeLinesOptions
-    & {
-        InitialCursorPosition?: FCursorPosition;
-    };
 
 export type PRenderCodeLine =
     {
@@ -67,6 +27,79 @@ export type PRenderCursor =
 export type PToken =
     {
         TokenValue: FCodeToken;
+    };
+
+export type FIntellisenseContent =
+    | ReactNode
+    | ComponentType<Record<string, never>>;
+
+export type FCodeToken =
+    {
+        Color?: string;
+        Text: string;
+    };
+
+export type FCodeLine =
+    {
+        Key: string;
+        Text: string;
+        Tokens: Array<FCodeToken>;
+    };
+
+export type FBaseCodeChange =
+    {
+        Delay?: number;
+        Intellisense?: FIntellisenseContent;
+        SpeedScalar?: number;
+    };
+
+export type FAddCodeChange =
+    FBaseCodeChange
+    & {
+        Position: FCursorPosition;
+        Text: string;
+        Type: "Add";
+    };
+
+export type FAddLineCodeChange =
+    FBaseCodeChange
+    & {
+        LineIndex: number;
+        Text?: string;
+        Type: "AddLine";
+    };
+
+export type FCodeChange =
+    | FAddCodeChange
+    | FAddLineCodeChange;
+
+export type FCodeSnapshot =
+    {
+        Code: string;
+        CursorPosition?: FCursorPosition;
+        Intellisense?: FIntellisenseContent;
+        Lines: Array<FCodeLine>;
+    };
+
+export type FBuildCodeLinesOptions =
+    {
+        BaseKey: string;
+        Language?: BundledLanguage;
+    };
+
+export type FBuildCodeSnapshotsOptions =
+    FBuildCodeLinesOptions
+    & {
+        InitialCursorPosition?: FCursorPosition;
+        InitialIntellisense?: FIntellisenseContent;
+    };
+
+export type PRenderIntellisenseWindow =
+    {
+        Code: string;
+        CursorPosition: FCursorPosition;
+        Intellisense: FIntellisenseContent;
+        Opacity: number;
     };
 
 export type PCodeCard =

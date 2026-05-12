@@ -5,6 +5,8 @@
  * @license   MIT
  */
 
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { CodeEditorAnimation } from "./CodeEditorAnimation";
 import type { PCodeEditorAnimation } from "./CodeEditorAnimation.Types";
 import { Player } from "@remotion/player";
@@ -21,9 +23,9 @@ export function CodeEditorPlayer(Props: PCodeEditorAnimation): ReactNode
                 () => <CodeEditorAnimation { ...Props } />
             }
             compositionHeight={ 912 }
-            compositionWidth={ 1516 }
+            compositionWidth={ 1_516 }
             controls={ false }
-            durationInFrames={ 180 }
+            durationInFrames={ 10_000 }
             fps={ 120 }
             initiallyMuted
             loop

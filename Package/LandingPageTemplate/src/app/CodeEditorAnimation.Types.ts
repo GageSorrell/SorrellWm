@@ -5,7 +5,9 @@
  * @license   MIT
  */
 
-import type { FCodeChange } from "./CodeEditorAnimation.Internal.Types";
+/* eslint-disable jsdoc/require-jsdoc */
+
+import type { FCodeChange, FIntellisenseContent } from "./CodeEditorAnimation.Internal.Types";
 
 export type FCursorPosition = readonly [ number, number ];
 
@@ -14,5 +16,7 @@ export type PCodeEditorAnimation =
         Changes?: ReadonlyArray<FCodeChange>;
         CursorPosition?: FCursorPosition;
         InitialCode: string;
+        InitialIntellisense?: FIntellisenseContent;
+        Intellisense?: FIntellisenseContent;
     };
 

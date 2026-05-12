@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-/* eslint-disable jsdoc/require-jsdoc */
+/* eslint-disable */
 
 import {
     type BundledLanguage,
@@ -16,7 +16,7 @@ import {
     type TokensResult,
     createHighlighter
 } from "shiki";
-import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import type {
     FBuildCodeLinesOptions,
     FCodeLine,

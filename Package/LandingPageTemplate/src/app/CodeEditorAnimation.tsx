@@ -10,9 +10,9 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { CodeCard, UseBuildCodeSnapshots } from "./CodeEditorAnimation.Internal";
+import type { FCodeSnapshot, FIntellisenseContent } from "./CodeEditorAnimation.Internal.Types";
 import { type ReactNode, useEffect, useState } from "react";
 import { cancelRender, continueRender, delayRender } from "remotion";
-import type { FCodeSnapshot } from "./CodeEditorAnimation.Internal.Types";
 import { LoadOperatorMonoFont } from "./Font";
 import type { PCodeEditorAnimation } from "./CodeEditorAnimation.Types";
 
@@ -66,14 +66,77 @@ import type { PCodeEditorAnimation } from "./CodeEditorAnimation.Types";
 //     );
 // }
 
+// export function CodeEditorAnimation({
+//     Changes = [ ],
+//     CursorPosition,
+//     InitialCode
+// }: PCodeEditorAnimation): ReactNode
+// {
+//     const [ Snapshots, SetSnapshots ] = useState<Array<FCodeSnapshot>>([ ]);
+//     const [ BuildCodeSnapshots ] = UseBuildCodeSnapshots();
+
+//     const [ RenderHandle ] = useState<number>(() =>
+//     {
+//         return delayRender("Loading highlighted code snapshots.");
+//     });
+
+//     useEffect(LoadOperatorMonoFont, [ ]);
+
+//     useEffect((): () => void =>
+//     {
+//         let IsActive: boolean = true;
+
+//         BuildCodeSnapshots(
+//             InitialCode,
+//             Changes,
+//             {
+//                 BaseKey: "code",
+//                 InitialCursorPosition: CursorPosition,
+//                 Language: "tsx"
+//             }
+//         ).then((NextSnapshots: Array<FCodeSnapshot>): void =>
+//         {
+//             if (IsActive === true)
+//             {
+//                 SetSnapshots(NextSnapshots);
+//             }
+
+//             continueRender(RenderHandle);
+//         }).catch((Error: unknown): void =>
+//         {
+//             cancelRender(Error);
+//         });
+
+//         return (): void =>
+//         {
+//             IsActive = false;
+//         };
+//     }, [
+//         BuildCodeSnapshots,
+//         Changes,
+//         CursorPosition,
+//         InitialCode,
+//         RenderHandle
+//     ]);
+
+//     return (
+//         <CodeCard { ...{ Changes, CursorPosition, InitialCode, Snapshots } } />
+//     );
+// }
+
 export function CodeEditorAnimation({
     Changes = [ ],
     CursorPosition,
-    InitialCode
+    InitialCode,
+    InitialIntellisense,
+    Intellisense
 }: PCodeEditorAnimation): ReactNode
 {
     const [ Snapshots, SetSnapshots ] = useState<Array<FCodeSnapshot>>([ ]);
     const [ BuildCodeSnapshots ] = UseBuildCodeSnapshots();
+
+    const StartingIntellisense: FIntellisenseContent | undefined =
+        InitialIntellisense ?? Intellisense;
 
     const [ RenderHandle ] = useState<number>(() =>
     {
@@ -92,6 +155,7 @@ export function CodeEditorAnimation({
             {
                 BaseKey: "code",
                 InitialCursorPosition: CursorPosition,
+                InitialIntellisense: StartingIntellisense,
                 Language: "tsx"
             }
         ).then((NextSnapshots: Array<FCodeSnapshot>): void =>
@@ -116,10 +180,16 @@ export function CodeEditorAnimation({
         Changes,
         CursorPosition,
         InitialCode,
-        RenderHandle
+        RenderHandle,
+        StartingIntellisense
     ]);
 
     return (
-        <CodeCard { ...{ Changes, CursorPosition, InitialCode, Snapshots } } />
+        <CodeCard
+            Changes={ Changes }
+            CursorPosition={ CursorPosition }
+            InitialCode={ InitialCode }
+            Snapshots={ Snapshots }
+        />
     );
 }
