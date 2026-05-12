@@ -6,8 +6,8 @@
  */
 
 import type { ErrorKey, RequestKey, ResponseKey } from "../Internal/Decl.Types";
-import type { Values } from "../Internal/Utility.Types";
 import type { EventOwner, FilterByOwner, Registrar, RendererOwner } from "../Registrar/Registrar.Types";
+import type { Values } from "../Internal/Utility.Types";
 
 type WithRequestHelper =
     {
@@ -56,10 +56,8 @@ export namespace Channel
     export namespace With
     {
         /**
-        * Channels whose event declarations define a response type.
-        *
-        * @template OwnerType - The owner of the event declarations identified by this type.
-        */
+         * Channels whose event declarations define a response type.
+         */
         export type Response =
             Exclude<
                 Channel<RendererOwner>,
@@ -68,8 +66,6 @@ export namespace Channel
 
         /**
          * Channels whose event declarations define an error type.
-         *
-         * @template OwnerType - The owner of the event declarations identified by this type.
          */
         export type Error =
             Extract<
@@ -128,8 +124,6 @@ export namespace Channel
     /**
      * Channels of event declarations that can be used via {@link Main.Send | send},
      * {@link Renderer.UseOnEvent | useOnEvent} *et al.*
-     *
-     * @template OwnerType - The owner of the event declarations identified by this type.
      */
     export type Handler =
         | Channel.With.Response
@@ -145,8 +139,6 @@ export namespace Channel
         {
             /**
              * {@link Handler} channels whose event declarations define a request type.
-             *
-             * @template OwnerType - The owner of the event declarations identified by this type.
              */
             export type Request =
                 Extract<
@@ -156,8 +148,6 @@ export namespace Channel
 
             /**
              * {@link Handler} channels whose event declarations define a response type.
-             *
-             * @template OwnerType - The owner of the event declarations identified by this type.
              */
             export type Response =
                 Extract<
@@ -167,8 +157,6 @@ export namespace Channel
 
             /**
              * {@link Handler} channels whose event declarations define an error type.
-             *
-             * @template OwnerType - The owner of the event declarations identified by this type.
              */
             export type Error =
                 Exclude<
@@ -181,8 +169,6 @@ export namespace Channel
         {
             /**
              * {@link Handler} channels whose event declarations do *not* define a request type.
-             *
-             * @template OwnerType - The owner of the event declarations identified by this type.
              */
             export type Request =
                 Extract<
@@ -195,8 +181,6 @@ export namespace Channel
              *
              * @note {@link Handler} events with no response type can still return data to the
              * `renderer` as an error type.
-             *
-             * @template OwnerType - The owner of the event declarations identified by this type.
              */
             export type Response =
                 Exclude<
@@ -206,8 +190,6 @@ export namespace Channel
 
             /**
              * {@link Handler} channels whose event declarations do *not* define an error type.
-             *
-             * @template OwnerType - The owner of the event declarations identified by this type.
              */
             export type Error =
                 Exclude<

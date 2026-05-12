@@ -19,11 +19,12 @@ import { EmptyOverloadParameterValue } from "../Listener/Listener.Internal";
  * @template ChannelType - The channel that uniquely identifies the desired
  * event declaration.
  *
- * @returns An object indicating that the {@link Handler} in which a call
+ * @returns {Success<ChannelType>} An object indicating that the {@link Handler} in which a call
  * to this function was returned completed successfully.
  */
 export function succeed<ChannelType extends Channel.Handler.Without.Response
 >(): Success<ChannelType>;
+
 /**
  * Return a call to this function in your {@link Handler | handlers}
  * when your event succeeds, such that the corresponding event declaration
@@ -35,13 +36,14 @@ export function succeed<ChannelType extends Channel.Handler.Without.Response
  * @param In - The response data of your event.  This is mapped to the
  * {@link ResultSuccess.data} property.
  *
- * @returns An object indicating that the {@link Handler} in which a call
+ * @returns {Success<ChannelType>} An object indicating that the {@link Handler} in which a call
  * to this function was returned completed successfully.
  */
 export function succeed<ChannelType extends Channel.Handler.With.Response
 >(
     In: Decl.Response<ChannelType>
 ): Success<ChannelType>;
+
 /**
  * Return a call to this function in your {@link Handler | handlers}
  * when your event succeeds.
@@ -54,7 +56,7 @@ export function succeed<ChannelType extends Channel.Handler.With.Response
  * If the event declaration defines a response type, then this is mapped to the
  * {@link ResultSuccess.data} property.
  *
- * @returns An object indicating that the {@link Handler} in which a call
+ * @returns {Success<ChannelType>} An object indicating that the {@link Handler} in which a call
  * to this function was returned completed successfully.
  */
 export function succeed<ChannelType extends Channel.Handler

@@ -16,7 +16,9 @@ const TypeScriptConfigPath: string = "tsconfig.esbuild.json";
 
 const EntryPoints: Record<string, string> =
     {
-        index: "./Source/index.ts"
+        index: "./Source/index.ts",
+
+        client: "./Source/Client/index.ts"
     } as const;
 
 type FPackageExport =

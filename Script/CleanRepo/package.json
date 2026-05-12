@@ -6,6 +6,7 @@
   "main": "./Distribution/index.js",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
+    "prestart": "npm run build",
     "start": "node ./Distribution/index.js"
   },
   "author": {

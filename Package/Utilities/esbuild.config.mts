@@ -5,11 +5,9 @@
  * @license   MIT
  */
 
-/* eslint-disable jsdoc/require-jsdoc */
+import { Run, type FExports } from "../../Configuration/esbuild.config.mts";
 
-import { Run } from "../../Configuration/esbuild.config.mts";
-
-const EntryPoints: Readonly<Record<string, string>> =
+const EntryPoints: FExports =
     {
         index: "./Source/index.ts",
 

@@ -91,7 +91,7 @@ function GetIpcMain(): IpcMain
 }
 
 /**
- * @inheritdoc Handle:Signature
+ * @inheritDoc Handle:Signature
  * @group Internal
  */
 export function handle<ChannelType extends Channel.Handler>(
@@ -103,7 +103,7 @@ export function handle<ChannelType extends Channel.Handler>(
 }
 
 /**
- * @inheritdoc RemoveHandler:Signature
+ * @inheritDoc RemoveHandler:Signature
  * @group Internal
  */
 export function removeHandler<ChannelType extends Channel.Handler>(
@@ -114,7 +114,7 @@ export function removeHandler<ChannelType extends Channel.Handler>(
 }
 
 /**
- * @inheritdoc HandleOnce:Signature
+ * @inheritDoc HandleOnce:Signature
  * @group Internal
  */
 export function handleOnce<
@@ -127,7 +127,7 @@ export function handleOnce<
 }
 
 /**
- * @inheritdoc Off:Signature
+ * @inheritDoc Off:Signature
  * @group Internal
  */
 export function off<ChannelType extends Channel.Listener<RendererOwner>>(
@@ -139,7 +139,7 @@ export function off<ChannelType extends Channel.Listener<RendererOwner>>(
 }
 
 /**
- * @inheritdoc RemoveAllListeners:Signature
+ * @inheritDoc RemoveAllListeners:Signature
  * @group Internal
  */
 export function removeAllListeners<ChannelType extends Channel.Listener<RendererOwner>

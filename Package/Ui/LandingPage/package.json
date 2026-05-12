@@ -1,0 +1,65 @@
+{
+  "name": "@sorrell/landing-page",
+  "version": "1.0.0",
+  "description": "UI components for creating landing pages under the Sorrell brand.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ui",
+    "next",
+    "react",
+    "template",
+    "components",
+    "blocks",
+    "library"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Ui/LandingPage#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Ui/LandingPage",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "name": "Gage Sorrell",
+    "email": "gage@sorrell.sh",
+    "url": "https://github.com/GageSorrell"
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./Source/index.ts",
+      "default": "./Source/index.ts"
+    },
+    "./client": {
+      "types": "./Source/Client.ts",
+      "default": "./Source/Client.ts"
+    },
+    "./styles.css": "./Source/Styles.css"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
+    "@remotion/fonts": "^4.0.459",
+    "@remotion/player": "^4.0.459",
+    "@sorrell/landing-page-template": "^0.1.0",
+    "@sorrell/react": "^1.0.13",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^1.14.0",
+    "remotion": "^4.0.459",
+    "tailwind-merge": "^2.6.1"
+  }
+}

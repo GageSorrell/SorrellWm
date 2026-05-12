@@ -17,12 +17,16 @@ module.exports = {
         "**/Distribution/*",
         "**/Intermediate/*",
         "**/webpack.*.js",
-        "!**/.vitepress/*"
+        "!**/.vitepress/*",
+        ".next/**",
+        "out/**",
+        "build/**",
+        "next-env.d.ts"
     ],
     overrides:
     [
         {
-            files: [ "Package/ReactiveEvent/Documentation/**/*.{ts,tsx}" ],
+            files: [ "Package/ReactiveEvent/Documentation/**/*.{ts,tsx}", "esbuild.config.mts" ],
             rules:
             {
                 "jsdoc/require-jsdoc": "off"

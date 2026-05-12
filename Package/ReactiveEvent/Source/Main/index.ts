@@ -24,5 +24,3 @@
 
 export * as ipcMain from "./Main";
 export * from "./Main.Types";
-export * from "./Main.Internal";
-export * from "./Main.Internal.Types";

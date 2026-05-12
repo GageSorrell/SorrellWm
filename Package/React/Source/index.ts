@@ -6,5 +6,6 @@
  */
 
 export * from "./Hook/index.js";
+export * from "./Client/index.js";
 export * from "./React.Types.js";
 export * from "./Style/index.js";
