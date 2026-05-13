@@ -9,48 +9,25 @@
 
 import type { ComponentType, ReactNode } from "react";
 import type { BundledLanguage } from "shiki";
-import type { FCursorPosition } from "./CodeEditorAnimation.Types";
-
-export type PRenderCodeLine =
-    {
-        Index: number;
-        Line: FCodeLine;
-    };
-
-export type PRenderCursor =
-    {
-        Code: string;
-        CursorOpacity: number;
-        CursorPosition: FCursorPosition;
-    };
-
-export type PToken =
-    {
-        TokenValue: FCodeToken;
-    };
+import type { FCursorPosition } from "./CodeEditor.Types";
+import type { FCodeLine } from "./Component.Internal.Types";
 
 export type FIntellisenseContent =
     | ReactNode
     | ComponentType<Record<string, never>>;
 
-export type FCodeToken =
-    {
-        Color?: string;
-        Text: string;
-    };
-
-export type FCodeLine =
-    {
-        Key: string;
-        Text: string;
-        Tokens: Array<FCodeToken>;
-    };
-
 export type FBaseCodeChange =
     {
-        Delay?: number;
+        // Delay?: number;
         Intellisense?: FIntellisenseContent;
         SpeedScalar?: number;
+    };
+
+export type FPauseCodeChange =
+    FBaseCodeChange &
+    {
+        Duration: number;
+        Type: "Pause";
     };
 
 export type FAddCodeChange =
@@ -71,7 +48,8 @@ export type FAddLineCodeChange =
 
 export type FCodeChange =
     | FAddCodeChange
-    | FAddLineCodeChange;
+    | FAddLineCodeChange
+    | FPauseCodeChange;
 
 export type FCodeSnapshot =
     {
@@ -94,7 +72,7 @@ export type FBuildCodeSnapshotsOptions =
         InitialIntellisense?: FIntellisenseContent;
     };
 
-export type PRenderIntellisenseWindow =
+export type PIntellisenseWindow =
     {
         Code: string;
         CursorPosition: FCursorPosition;
@@ -109,3 +87,5 @@ export type PCodeCard =
         InitialCode: string;
         Snapshots: ReadonlyArray<FCodeSnapshot>;
     };
+
+export type FCursorPositionResolved = readonly [ number, number ];

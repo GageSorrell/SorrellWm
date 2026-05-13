@@ -8,7 +8,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { ComponentType } from "react";
-import type { PCodeEditorAnimation } from "./CodeEditorAnimation.Types";
+import type { PCodeEditorAnimation } from "./CodeEditor.Types";
 import dynamic from "next/dynamic";
 
 export const CodeEditorAnimationPlayer: ComponentType<PCodeEditorAnimation> = dynamic(

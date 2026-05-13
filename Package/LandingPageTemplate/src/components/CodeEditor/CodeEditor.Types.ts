@@ -7,13 +7,13 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { FCodeChange, FIntellisenseContent } from "./CodeEditorAnimation.Internal.Types";
+import type { FCodeChangeResolved, FIntellisenseContent } from "./CodeEditor.Internal.Types";
 
-export type FCursorPosition = readonly [ number, number ];
+export type FCursorPosition = readonly [ number | "Current", number | "End" ];
 
 export type PCodeEditorAnimation =
     {
-        Changes?: ReadonlyArray<FCodeChange>;
+        Changes?: ReadonlyArray<FCodeChangeResolved>;
         CursorPosition?: FCursorPosition;
         InitialCode: string;
         InitialIntellisense?: FIntellisenseContent;

@@ -9,16 +9,12 @@
 
 "use client";
 
-import { A, Div, Main, UseTheme } from "@sorrell/react/client";
-import { CodeEditorAnimationPlayer } from "./CodeEditorPlayer";
-import { CodeErrorDemo } from "./CodeErrorDemo";
-import GitHubDarkDefaultTheme from "@shikijs/themes/github-dark-default";
-import GitHubLightDefaultTheme from "@shikijs/themes/github-light-default";
+import { A, Div, Main } from "@sorrell/react/client";
+import { CodeEditorAnimationPlayer } from "../components/CodeEditor/CodeEditorPlayer";
 import Image from "next/image";
-import { Player } from "@remotion/player";
+import { Intellisense } from "./Intellisense";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import type { ThemeRegistration } from "shiki";
 
 export default function Home(): ReactNode
 {
@@ -70,85 +66,36 @@ export default function Home(): ReactNode
             "md:w-[158px]"
         ] as const;
 
-    const { Theme } = UseTheme();
+    const InitialSuggestions: ReactNode = Intellisense({
+        Markdown: "handle(**channel: string**, listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; " +
+        "(Promise&lt;any&gt;) | (any)): void"
+    });
 
-    const EditorTheme: ThemeRegistration = Theme ===  "Dark"
-        ? GitHubDarkDefaultTheme
-        : GitHubLightDefaultTheme;
+    const ListenerIntellisense: ReactNode = Intellisense({
+        Markdown: "handle(channel: string, **listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; " +
+        "(Promise&lt;any&gt;) | (any)**): void"
+    });
 
-    function InitialSuggestions(): ReactNode
-    {
-        return (
-            <div style={ { padding: 14 } }>
-                <div>handle(<b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>channel: string</b>, listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; (Promise&lt;any&gt;) | (any)): void</div>
-            </div>
-        );
-    }
+    const EventArgumentIntellisense: ReactNode = Intellisense({
+        Markdown: "listener(**event: IpcMainInvokeEvent**, ...args: any[]): any"
+    });
 
-    function UpdatedSuggestions(): ReactNode
-    {
-        return (
-            <div style={ { padding: 14 } }>
-                <div>handle(<b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>channel: string</b>, listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; (Promise&lt;any&gt;) | (any)): void</div>
-            </div>
-        );
-    }
-
-    function ListenerIntellisense(): ReactNode
-    {
-        return (
-            <div style={ { padding: 14 } }>
-                <div>handle(channel: string, <b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>listener: (event: IpcMainInvokeEvent, ...args: any[]) =&gt; (Promise&lt;any&gt;) | (any)</b>): void</div>
-            </div>
-        );
-    }
-
-    function EventArgumentIntellisense(): ReactNode
-    {
-        return (
-            <div style={ { padding: 14 } }>
-                <div>listener(<b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>event: IpcMainInvokeEvent</b>, ...args: any[]): any</div>
-            </div>
-        );
-    }
-
-    function ArgumentsArgumentIntellisense(): ReactNode
-    {
-        return (
-            <div style={ { padding: 14 } }>
-                <div>listener(event: IpcMainInvokeEvent, <b style={ { color: EditorTheme.colors?.["list.highlightForeground"]  } }>...args: any[]</b>): any</div>
-            </div>
-        );
-    }
+    const ArgumentsArgumentIntellisense: ReactNode = Intellisense({
+        Markdown: "listener(event: IpcMainInvokeEvent, **...args: any[]**): any"
+    });
 
     return (
         <Div className={ RootStyle }>
             <ThemeToggle />
             <Main className={ MainStyle }>
-                <Player
-                    acknowledgeRemotionLicense
-                    autoPlay
-                    clickToPlay={ false }
-                    component={ CodeErrorDemo }
-                    compositionHeight={ 912 }
-                    compositionWidth={ 1516 }
-                    controls={ false }
-                    durationInFrames={ 180 }
-                    fps={ 120 }
-                    initiallyMuted
-                    loop
-                    playbackRate={ 0.5 }
-                    style={ {
-                        aspectRatio: "1516 / 912",
-                        // aspectRatio: "3 / 2",
-                        width: "100%"
-                    } }
-                />
                 <CodeEditorAnimationPlayer
                     Changes={ [
                         {
-                            Delay: 2000,
-                            Intellisense: UpdatedSuggestions,
+                            Duration: 2000,
+                            Type: "Pause"
+                        },
+                        {
+                            Intellisense: InitialSuggestions,
                             Position: [ 0, "ipcMain.handle(".length ],
                             Text: "\"GetSettings\"",
                             Type: "Add"

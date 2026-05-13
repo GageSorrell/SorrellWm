@@ -7,8 +7,8 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { CodeEditorAnimation } from "./CodeEditorAnimation";
-import type { PCodeEditorAnimation } from "./CodeEditorAnimation.Types";
+import { CodeEditorAnimation } from "./CodeEditor";
+import type { PCodeEditorAnimation } from "./CodeEditor.Types";
 import { Player } from "@remotion/player";
 import type { ReactNode } from "react";
 

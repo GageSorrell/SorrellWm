@@ -16,38 +16,32 @@ import {
     type TokensResult,
     createHighlighter
 } from "shiki";
+import {
+    ClampNumber,
+    GetNormalizedCursorPosition,
+    GetValidatedInsertionPosition,
+    GetValidatedLineInsertionIndex
+} from "./Math.Internal";
 import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import type {
     FBuildCodeLinesOptions,
     FBuildCodeSnapshotsOptions,
     FCodeChange,
-    FCodeLine,
     FCodeSnapshot,
-    FCodeToken,
     FIntellisenseContent,
     PCodeCard,
-    PRenderCodeLine,
-    PRenderCursor,
-    PRenderIntellisenseWindow,
-    PToken
-} from "./CodeEditorAnimation.Internal.Types";
+    PIntellisenseWindow
+} from "./CodeEditor.Internal.Types";
+import type { FCodeLine, FCodeToken, PCursor } from "./Component.Internal.Types";
 import { type ReactNode, useCallback } from "react";
-import type { FCursorPosition } from "./CodeEditorAnimation.Types";
+import { CodeLine } from "./Component.Internal";
+import type { FCursorPosition } from "./CodeEditor.Types";
+import { GetChangeIntellisense } from "./Intellisense.Internal";
 import GitHubDarkDefaultTheme from "@shikijs/themes/github-dark-default";
 import GitHubLightDefaultTheme from "@shikijs/themes/github-light-default";
-import { OperatorMonoLigFontFamily } from "./Font";
+import { OperatorMonoLigFontFamily } from "../../app/Font";
+import { Tokens } from "./Tokens";
 import { UseTheme } from "@sorrell/react/client";
-
-const CodeLineHeight: number = 48;
-const CodeFontSize: number = 35;
-const CodeFadeStartFrame: number = 12;
-const CodeFadeEndFrame: number = 42;
-const CodeDefaultTextColor: string = "#d5d9e2";
-const ChangeStartFrame: number = 58;
-const FramesPerAddedCharacter: number = 3;
-const CodeAreaWidth: number = 1200;
-const IntellisenseWindowWidth: number = 720;
-const IntellisenseWindowOffsetY: number = 8;
 
 function UseCodeTheme(): readonly [ BundledTheme ]
 {
@@ -88,103 +82,6 @@ function UseCodeHighlighter(): readonly [ Promise<Highlighter> ]
     return [ CodeHighlighterPromise ] as const;
 }
 
-function Token({ TokenValue }: PToken): ReactNode
-{
-    return (
-        <span
-            style={ {
-                color: TokenValue.Color ?? CodeDefaultTextColor
-            } }>
-            { TokenValue.Text }
-        </span>
-    );
-}
-
-function RenderCodeLine({ Index, Line }: PRenderCodeLine): ReactNode
-{
-    function TransformLineToken(TokenValue: FCodeToken, TokenIndex: number): ReactNode
-    {
-        return (
-            <Token
-                TokenValue={ TokenValue }
-                key={ `${ Line.Key }-${ TokenIndex }` }
-            />
-        );
-    }
-
-    return (
-        <div
-            style={ {
-                height: CodeLineHeight,
-                left: 0,
-                position: "absolute",
-                top: Index * CodeLineHeight,
-                whiteSpace: "pre"
-            } }>
-            { Line.Tokens.map(TransformLineToken) }
-        </div>
-    );
-}
-
-function ClampNumber(
-    Value: number,
-    Minimum: number,
-    Maximum: number
-): number
-{
-    return Math.max(Minimum, Math.min(Maximum, Value));
-}
-
-function GetNormalizedCursorPosition(
-    Code: string,
-    CursorPosition: FCursorPosition
-): FCursorPosition
-{
-    const RawLines: Array<string> = Code.split("\n");
-
-    const RequestedLineIndex: number = Math.trunc(CursorPosition[0]);
-    const LineIndex: number = ClampNumber(
-        RequestedLineIndex,
-        0,
-        Math.max(0, RawLines.length - 1)
-    );
-
-    const RawLine: string = RawLines[LineIndex] ?? "";
-    const RequestedColumnIndex: number = Math.trunc(CursorPosition[1]);
-    const ColumnIndex: number = ClampNumber(
-        RequestedColumnIndex,
-        0,
-        RawLine.length
-    );
-
-    return [ LineIndex, ColumnIndex ];
-}
-
-function GetValidatedInsertionPosition(
-    Code: string,
-    Position: FCursorPosition
-): FCursorPosition
-{
-    const CodeLines: Array<string> = Code.split("\n");
-
-    const LineIndex: number = Math.trunc(Position[0]);
-    const ColumnIndex: number = Math.trunc(Position[1]);
-
-    if (LineIndex < 0 || LineIndex > CodeLines.length)
-    {
-        throw new RangeError(`The insertion line ${ LineIndex } does not exist.`);
-    }
-
-    const LineText: string = CodeLines[LineIndex] ?? "";
-
-    if (ColumnIndex < 0 || ColumnIndex > LineText.length)
-    {
-        throw new RangeError(`The insertion position ${ ColumnIndex } is outside line ${ LineIndex }.`);
-    }
-
-    return [ LineIndex, ColumnIndex ];
-}
-
 function AddTextToCode(
     Code: string,
     Position: FCursorPosition,
@@ -203,25 +100,6 @@ function AddTextToCode(
         + LineText.slice(ColumnIndex);
 
     return CodeLines.join("\n");
-}
-
-function GetValidatedLineInsertionIndex(
-    Code: string,
-    LineIndex: number
-): number
-{
-    const CodeLines: Array<string> = Code.split("\n");
-    const NormalizedLineIndex: number = Math.trunc(LineIndex);
-
-    if (
-        NormalizedLineIndex < 0
-        || NormalizedLineIndex > CodeLines.length
-    )
-    {
-        throw new RangeError(`The line insertion index ${ NormalizedLineIndex } is outside the code.`);
-    }
-
-    return NormalizedLineIndex;
 }
 
 function AddLineToCode(
@@ -253,7 +131,7 @@ function GetCursorPositionAfterAddedLine(
 }
 
 function GetInitialCursorPositionForChange(
-    Change: FCodeChange | undefined
+    Change: FCodeChangeResolved | undefined
 ): FCursorPosition | undefined
 {
     if (Change === undefined)
@@ -269,16 +147,6 @@ function GetInitialCursorPositionForChange(
         case "AddLine":
             return [ Change.LineIndex, 0 ];
     }
-}
-
-function GetChangeIntellisense(
-    Change: FCodeChange,
-    CurrentIntellisense: FIntellisenseContent | undefined
-): FIntellisenseContent | undefined
-{
-    return Change.Intellisense === undefined
-        ? CurrentIntellisense
-        : Change.Intellisense;
 }
 
 function GetCursorPositionAfterAddedText(
@@ -330,13 +198,16 @@ function GetDisplayedSnapshot(
     return Snapshots[SnapshotIndex] ?? Snapshots[0];
 }
 
-function RenderCursor({
+function Cursor({
     Code,
     CursorOpacity,
     CursorPosition
-}: PRenderCursor): ReactNode
+}: PCursor): ReactNode
 {
     const Frame: number = useCurrentFrame();
+
+    // @TODO Here *et al. (?)*: Use new context to get current line index and "End"
+    // position value, if `CursorPosition` uses either of those.
 
     const [ LineIndex, ColumnIndex ] = GetNormalizedCursorPosition(
         Code,
@@ -366,11 +237,11 @@ function RenderCursor({
                     : "#000000",
                 borderRadius: 0,
                 boxShadow: `0 0 ${ 10 + BreathingProgress * 16 }px rgba(255, 255, 255, 0.24)`,
-                height: CodeLineHeight,
+                height: Tokens.CodeLineHeight,
                 left: `${ ColumnIndex }ch`,
                 opacity: CursorOpacity * BreathingOpacity,
                 position: "absolute",
-                top: LineIndex * CodeLineHeight,
+                top: LineIndex * Tokens.CodeLineHeight,
                 width: "0.62em"
             } }
         />
@@ -392,12 +263,12 @@ function RenderIntellisenseContent(
     return Intellisense;
 }
 
-function RenderIntellisenseWindow({
+export function IntellisenseWindow({
     Code,
     CursorPosition,
     Intellisense,
     Opacity
-}: PRenderIntellisenseWindow): ReactNode
+}: PIntellisenseWindow): ReactNode
 {
     const [ LineIndex, ColumnIndex ] = GetNormalizedCursorPosition(
         Code,
@@ -423,15 +294,14 @@ function RenderIntellisenseWindow({
                     "0 18px 24px rgba(0, 0, 0, 0.24)",
                     "0 4px 8px rgba(0, 0, 0, 0.18)"
                 ].join(", "),
-                // color: EditorTheme.colors?.["editorSuggestWidget.foreground"],
                 color: EditorTheme.colors?.["panelTitle.activeForeground"],
-                left: `clamp(0px, ${ ColumnIndex }ch, calc(100% - ${ IntellisenseWindowWidth }px))`,
+                left: `clamp(0px, ${ ColumnIndex }ch, calc(100% - ${ Tokens.IntellisenseWindowWidth }px))`,
                 maxWidth: "100%",
                 opacity: Opacity,
                 overflow: "hidden",
                 position: "absolute",
-                top: ((LineIndex + 1) * CodeLineHeight) + IntellisenseWindowOffsetY,
-                width: IntellisenseWindowWidth,
+                top: ((LineIndex + 1) * Tokens.CodeLineHeight) + Tokens.IntellisenseWindowOffsetY,
+                width: Tokens.IntellisenseWindowWidth,
                 zIndex: 4
             } }>
             { RenderIntellisenseContent(Intellisense) }
@@ -477,7 +347,7 @@ export function CodeCard({
 
     const CodeOpacity: number = interpolate(
         Frame,
-        [ CodeFadeStartFrame, CodeFadeEndFrame ],
+        [ Tokens.CodeFadeStartFrame, Tokens.CodeFadeEndFrame ],
         [ 0, 1 ],
         {
             easing: Easing.out(Easing.cubic),
@@ -488,7 +358,7 @@ export function CodeCard({
 
     const CodeTranslateY: number = interpolate(
         Frame,
-        [ CodeFadeStartFrame, CodeFadeEndFrame ],
+        [ Tokens.CodeFadeStartFrame, Tokens.CodeFadeEndFrame ],
         [ 14, 0 ],
         {
             easing: Easing.out(Easing.cubic),
@@ -510,7 +380,8 @@ export function CodeCard({
                 opacity: CardEntrance,
                 padding: 16,
                 position: "absolute",
-                transform: `scale(${ interpolate(CardEntrance, [ 0, 1 ], [ 0.985, 1 ]) })`
+                transform: `scale(${ interpolate(CardEntrance, [ 0, 1 ], [ 0.985, 1 ]) })`,
+                userSelect: "none"
             } }>
             <div
                 style={ {
@@ -536,22 +407,22 @@ export function CodeCard({
 
                 <div
                     style={ {
-                        color: CodeDefaultTextColor,
+                        color: Tokens.CodeDefaultTextColor,
                         fontFamily: OperatorMonoLigFontFamily,
-                        fontSize: CodeFontSize,
+                        fontSize: Tokens.CodeFontSize,
                         height: 620,
                         left: 136,
-                        lineHeight: `${ CodeLineHeight }px`,
+                        lineHeight: `${ Tokens.CodeLineHeight }px`,
                         opacity: CodeOpacity,
                         position: "absolute",
                         top: 150,
                         transform: `translateY(${ CodeTranslateY }px)`,
-                        width: CodeAreaWidth
+                        width: Tokens.CodeAreaWidth
                     } }>
                     { DisplayedSnapshot.Lines.map((Line: FCodeLine, Index: number): ReactNode =>
                     {
                         return (
-                            <RenderCodeLine
+                            <CodeLine
                                 Index={ Index }
                                 Line={ Line }
                                 key={ Line.Key }
@@ -562,7 +433,7 @@ export function CodeCard({
                     { DisplayedCursorPosition === undefined
                         ? null
                         : (
-                            <RenderCursor
+                            <Cursor
                                 Code={ DisplayedSnapshot.Code }
                                 CursorOpacity={ CodeOpacity }
                                 CursorPosition={ DisplayedCursorPosition }
@@ -610,7 +481,7 @@ export function UseBuildCodeSnapshots(
 ): readonly [
     (
         InitialCode: string,
-        Changes: ReadonlyArray<FCodeChange>,
+        Changes: ReadonlyArray<FCodeChangeResolved>,
         Options: FBuildCodeSnapshotsOptions
     ) => Promise<Array<FCodeSnapshot>>
 ]
@@ -620,7 +491,7 @@ export function UseBuildCodeSnapshots(
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const BuildCodeSnapshotsCallback = useCallback(async function(
         InitialCode: string,
-        Changes: ReadonlyArray<FCodeChange>,
+        Changes: ReadonlyArray<FCodeChangeResolved>,
         Options: FBuildCodeSnapshotsOptions
     ): Promise<Array<FCodeSnapshot>>
     {
@@ -637,7 +508,7 @@ export function UseBuildCodeSnapshots(
 
 async function BuildCodeSnapshots(
     InitialCode: string,
-    Changes: ReadonlyArray<FCodeChange>,
+    Changes: ReadonlyArray<FCodeChangeResolved>,
     Options: FBuildCodeSnapshotsOptions,
     BuildCodeLines: (Code: string, Options: FBuildCodeLinesOptions) => Promise<Array<FCodeLine>>
 ): Promise<Array<FCodeSnapshot>>
@@ -648,7 +519,7 @@ async function BuildCodeSnapshots(
     let CurrentIntellisense: FIntellisenseContent | undefined = Options.InitialIntellisense;
     let SnapshotIndex: number = 0;
 
-    const FirstChange: FCodeChange | undefined = Changes[0];
+    const FirstChange: FCodeChangeResolved | undefined = Changes[0];
 
     Snapshots.push({
         Code: CurrentCode,
@@ -772,91 +643,10 @@ async function BuildCodeSnapshots(
         }
     }
 
-    // for (const Change of Changes)
-    // {
-    //     switch (Change.Type)
-    //     {
-    //         case "Add":
-    //         {
-    //             const InsertionPosition: FCursorPosition = GetValidatedInsertionPosition(
-    //                 CurrentCode,
-    //                 Change.Position
-    //             );
-
-    //             const ChangeIntellisense: FIntellisenseContent | undefined =
-    //                 Change.Intellisense === undefined
-    //                     ? CurrentIntellisense
-    //                     : Change.Intellisense;
-
-    //             for (
-    //                 let CharacterCount: number = 1;
-    //                 CharacterCount <= Change.Text.length;
-    //                 CharacterCount++
-    //             )
-    //             {
-    //                 const AddedText: string = Change.Text.slice(0, CharacterCount);
-
-    //                 const NextCode: string = AddTextToCode(
-    //                     CurrentCode,
-    //                     InsertionPosition,
-    //                     AddedText
-    //                 );
-
-    //                 Snapshots.push({
-    //                     Code: NextCode,
-    //                     CursorPosition: GetCursorPositionAfterAddedText(
-    //                         InsertionPosition,
-    //                         AddedText
-    //                     ),
-    //                     Intellisense: ChangeIntellisense,
-    //                     Lines: await BuildCodeLines(
-    //                         NextCode,
-    //                         {
-    //                             BaseKey: `${ Options.BaseKey }-${ SnapshotIndex }`,
-    //                             Language: Options.Language
-    //                         }
-    //                     )
-    //                 });
-
-    //                 SnapshotIndex++;
-    //             }
-
-    //             CurrentCode = AddTextToCode(
-    //                 CurrentCode,
-    //                 InsertionPosition,
-    //                 Change.Text
-    //             );
-
-    //             CurrentIntellisense = ChangeIntellisense;
-
-    //             break;
-    //         }
-    //     }
-    // }
-
     return Snapshots;
 }
 
-// function GetDelayFrameCount(
-//     DelayInMilliseconds: number | undefined,
-//     Fps: number
-// ): number
-// {
-//     if (
-//         DelayInMilliseconds === undefined
-//         || Number.isFinite(DelayInMilliseconds) === false
-//         || DelayInMilliseconds <= 0
-//     )
-//     {
-//         return 0;
-//     }
-
-//     return Math.ceil((DelayInMilliseconds / 1000) * Fps);
-// }
-
-function GetNormalizedSpeedScalar(
-    SpeedScalar: number | undefined
-): number
+function GetNormalizedSpeedScalar(SpeedScalar: number | undefined): number
 {
     if (
         SpeedScalar === undefined
@@ -870,42 +660,34 @@ function GetNormalizedSpeedScalar(
     return SpeedScalar;
 }
 
-// function GetFramesPerAddedCharacter(
-//     Change: FCodeChange
-// ): number
-// {
-//     const SpeedScalar: number = GetNormalizedSpeedScalar(Change.SpeedScalar);
-
-//     return FramesPerAddedCharacter / SpeedScalar;
-// }
-
 function GetFramesPerSnapshot(
-    Change: FCodeChange
+    Change: FCodeChangeResolved
 ): number
 {
     const SpeedScalar: number = GetNormalizedSpeedScalar(Change.SpeedScalar);
 
-    return FramesPerAddedCharacter / SpeedScalar;
+    return Tokens.FramesPerAddedCharacter / SpeedScalar;
 }
 
 function GetChangeFrameCount(
-    Change: FCodeChange
+    Change: FCodeChangeResolved
 ): number
 {
     switch (Change.Type)
     {
         case "Add":
             return Math.ceil(Change.Text.length * GetFramesPerSnapshot(Change));
-
         case "AddLine":
             return Math.ceil(GetFramesPerSnapshot(Change));
+        case "Pause":
+            return 0;
     }
 }
 
 function GetAppliedSnapshotCount(
     Frame: number,
     ChangeStartFrame: number,
-    Change: FCodeChange
+    Change: FCodeChangeResolved
 ): number
 {
     switch (Change.Type)
@@ -920,7 +702,6 @@ function GetAppliedSnapshotCount(
                 Change.Text.length
             );
         }
-
         case "AddLine":
         {
             const FramesPerSnapshot: number = GetFramesPerSnapshot(Change);
@@ -931,147 +712,25 @@ function GetAppliedSnapshotCount(
                 1
             );
         }
+        case "Pause":
+            return 0;
     }
 }
 
 function GetChangeSnapshotCount(
-    Change: FCodeChange
+    Change: FCodeChangeResolved
 ): number
 {
     switch (Change.Type)
     {
         case "Add":
             return Change.Text.length;
-
         case "AddLine":
             return 1;
+        case "Pause":
+            return 0;
     }
 }
-
-// function GetChangeFrameCount(
-//     Change: FCodeChange
-// ): number
-// {
-//     switch (Change.Type)
-//     {
-//         case "Add":
-//             return Math.ceil(Change.Text.length * GetFramesPerAddedCharacter(Change));
-//     }
-// }
-
-// function GetAddedCharacterCount(
-//     Frame: number,
-//     ChangeStartFrame: number,
-//     Change: FCodeChange
-// ): number
-// {
-//     switch (Change.Type)
-//     {
-//         case "Add":
-//         {
-//             const FramesPerCharacter: number = GetFramesPerAddedCharacter(Change);
-
-//             return ClampNumber(
-//                 Math.floor((Frame - ChangeStartFrame) / FramesPerCharacter),
-//                 0,
-//                 Change.Text.length
-//             );
-//         }
-//     }
-// }
-
-// function GetChangeSnapshotCount(
-//     Change: FCodeChange
-// ): number
-// {
-//     switch (Change.Type)
-//     {
-//         case "Add":
-//             return Change.Text.length;
-//     }
-// }
-
-// function GetSnapshotIndex(
-//     Frame: number,
-//     Fps: number,
-//     Changes: ReadonlyArray<FCodeChange>,
-//     Snapshots: ReadonlyArray<FCodeSnapshot>
-// ): number
-// {
-//     let CurrentFrame: number = ChangeStartFrame;
-//     let SnapshotIndex: number = 0;
-
-//     for (
-//         let ChangeIndex: number = 0;
-//         ChangeIndex < Changes.length;
-//         ChangeIndex++
-//     )
-//     {
-//         const Change: FCodeChange = Changes[ChangeIndex];
-
-//         const ChangeFrameCount: number = GetChangeFrameCount(Change);
-//         const ChangeEndFrame: number = CurrentFrame + ChangeFrameCount;
-
-//         if (Frame < ChangeEndFrame)
-//         {
-//             const AppliedSnapshotCount: number = GetAppliedSnapshotCount(
-//                 Frame,
-//                 CurrentFrame,
-//                 Change
-//             );
-
-//             return ClampNumber(
-//                 SnapshotIndex + AppliedSnapshotCount,
-//                 0,
-//                 Math.max(0, Snapshots.length - 1)
-//             );
-
-//             // const AddedCharacterCount: number = GetAddedCharacterCount(
-//             //     Frame,
-//             //     CurrentFrame,
-//             //     Change
-//             // );
-
-//             // return ClampNumber(
-//             //     SnapshotIndex + AddedCharacterCount,
-//             //     0,
-//             //     Math.max(0, Snapshots.length - 1)
-//             // );
-//         }
-
-//         SnapshotIndex += GetChangeSnapshotCount(Change);
-//         CurrentFrame = ChangeEndFrame;
-
-//         if (ChangeIndex < Changes.length - 1)
-//         {
-//             const DelayFrameCount: number = GetDelayFrameCount(
-//                 Change.Delay,
-//                 Fps
-//             );
-
-//             const DelayEndFrame: number = CurrentFrame + DelayFrameCount;
-
-//             if (Frame < DelayEndFrame)
-//             {
-//                 return ClampNumber(
-//                     SnapshotIndex,
-//                     0,
-//                     Math.max(0, Snapshots.length - 1)
-//                 );
-//             }
-
-//             CurrentFrame = DelayEndFrame;
-//         }
-//     }
-
-//     return ClampNumber(
-//         SnapshotIndex,
-//         0,
-//         Math.max(0, Snapshots.length - 1)
-//     );
-// }
-
-//////////////////////////////////////////////////////////
 
 function GetDelayFrameCount(
     DelayInMilliseconds: number | undefined,
@@ -1090,27 +749,14 @@ function GetDelayFrameCount(
     return Math.ceil((DelayInMilliseconds / 1000) * Fps);
 }
 
-// function GetAddedCharacterCount(
-//     Frame: number,
-//     ChangeStartFrame: number,
-//     CharacterCount: number
-// ): number
-// {
-//     return ClampNumber(
-//         Math.floor((Frame - ChangeStartFrame) / FramesPerAddedCharacter),
-//         0,
-//         CharacterCount
-//     );
-// }
-
 function GetSnapshotIndex(
     Frame: number,
     Fps: number,
-    Changes: ReadonlyArray<FCodeChange>,
+    Changes: ReadonlyArray<FCodeChangeResolved>,
     Snapshots: ReadonlyArray<FCodeSnapshot>
 ): number
 {
-    let CurrentFrame: number = ChangeStartFrame;
+    let CurrentFrame: number = Tokens.ChangeStartFrame;
     let SnapshotIndex: number = 0;
 
     for (
@@ -1119,7 +765,7 @@ function GetSnapshotIndex(
         ChangeIndex++
     )
     {
-        const Change: FCodeChange = Changes[ChangeIndex];
+        const Change: FCodeChangeResolved = Changes[ChangeIndex];
 
         const ChangeFrameCount: number = GetChangeFrameCount(Change);
         const ChangeEndFrame: number = CurrentFrame + ChangeFrameCount;
@@ -1155,10 +801,17 @@ function GetSnapshotIndex(
 
         if (ChangeIndex < Changes.length - 1)
         {
-            const DelayFrameCount: number = GetDelayFrameCount(
-                Change.Delay,
-                Fps
-            );
+            // const DelayFrameCount: number = GetDelayFrameCount(
+            //     Change.Delay,
+            //     Fps
+            // );
+
+            const DelayFrameCount: number = "Duration" in Change
+                ? GetDelayFrameCount(
+                    Change.Duration,
+                    Fps
+                )
+                : 0;
 
             const DelayEndFrame: number = CurrentFrame + DelayFrameCount;
 
@@ -1181,96 +834,6 @@ function GetSnapshotIndex(
         Math.max(0, Snapshots.length - 1)
     );
 }
-
-// function GetSnapshotIndex(
-//     Frame: number,
-//     Fps: number,
-//     Changes: ReadonlyArray<FCodeChange>,
-//     Snapshots: ReadonlyArray<FCodeSnapshot>
-// ): number
-// {
-//     let CurrentFrame: number = ChangeStartFrame;
-//     let SnapshotIndex: number = 0;
-
-//     for (
-//         let ChangeIndex: number = 0;
-//         ChangeIndex < Changes.length;
-//         ChangeIndex++
-//     )
-//     {
-//         const Change: FCodeChange = Changes[ChangeIndex];
-
-//         switch (Change.Type)
-//         {
-//             case "Add":
-//             {
-//                 const CharacterCount: number = Change.Text.length;
-//                 const ChangeEndFrame: number =
-//                     CurrentFrame + (CharacterCount * FramesPerAddedCharacter);
-
-//                 if (Frame < ChangeEndFrame)
-//                 {
-//                     // const AddedCharacterCount: number = GetAddedCharacterCount(
-//                     //     Frame,
-//                     //     CurrentFrame,
-//                     //     CharacterCount
-//                     // );
-
-//                     // return ClampNumber(
-//                     //     SnapshotIndex + AddedCharacterCount,
-//                     //     0,
-//                     //     Math.max(0, Snapshots.length - 1)
-//                     // );
-//                     const AppliedSnapshotCount: number = GetAppliedSnapshotCount(
-//                         Frame,
-//                         CurrentFrame,
-//                         Change
-//                     );
-
-//                     return ClampNumber(
-//                         SnapshotIndex + AppliedSnapshotCount,
-//                         0,
-//                         Math.max(0, Snapshots.length - 1)
-//                     );
-//                 }
-
-//                 SnapshotIndex += CharacterCount;
-//                 CurrentFrame = ChangeEndFrame;
-
-//                 if (ChangeIndex < Changes.length - 1)
-//                 {
-//                     const DelayFrameCount: number = GetDelayFrameCount(
-//                         Change.Delay,
-//                         Fps
-//                     );
-
-//                     const DelayEndFrame: number = CurrentFrame + DelayFrameCount;
-
-//                     if (Frame < DelayEndFrame)
-//                     {
-//                         return ClampNumber(
-//                             SnapshotIndex,
-//                             0,
-//                             Math.max(0, Snapshots.length - 1)
-//                         );
-//                     }
-
-//                     CurrentFrame = DelayEndFrame;
-//                 }
-
-//                 break;
-//             }
-//         }
-//     }
-
-//     return ClampNumber(
-//         SnapshotIndex,
-//         0,
-//         Math.max(0, Snapshots.length - 1)
-//     );
-// }
-
-/////////////////////////////////////////////////////////
 
 async function BuildCodeLines(
     Code: string,
