@@ -1,0 +1,54 @@
+{
+  "name": "@sorrell/code-hike",
+  "version": "1.0.0",
+  "description": "A helper library for making animations with Code Hike.",
+  "main": "./Distribution/index.js",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render",
+    "upgrade": "remotion upgrade"
+  },
+  "keywords": [
+    "code-hike",
+    "code",
+    "hike",
+    "sorrell",
+    "react",
+    "remotion",
+    "next"
+  ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeHike#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/CodeHike",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@mdx-js/loader": "^3.1.1",
+    "@types/node": "^25.8.0",
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@mdx-js/react": "^3.1.1",
+    "@remotion/cli": "4.0.461",
+    "@remotion/fonts": "4.0.461",
+    "@remotion/google-fonts": "4.0.461",
+    "@remotion/zod-types": "4.0.461",
+    "codehike": "^1.1.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "remotion": "4.0.461",
+    "twoslash-cdn": "^0.3.8",
+    "zod": "4.3.6"
+  }
+}

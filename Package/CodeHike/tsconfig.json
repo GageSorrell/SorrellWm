@@ -1,0 +1,38 @@
+{
+    "compilerOptions":
+    {
+        "target": "ES2022",
+        "module": "Preserve",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+
+        "lib": [ "ES2022", "DOM", "DOM.Iterable" ],
+        "types": [ "react" ],
+
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    },
+    "include":
+    [
+        "Source",
+        "./Source/Declarations.d.ts"
+    ],
+    "exclude":
+    [
+        "node_modules",
+        "public",
+        "out",
+        "dist",
+        "build"
+    ]
+}
