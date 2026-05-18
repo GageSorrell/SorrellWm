@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-import * as Fs from "fs/promises";
 import {
     BuildDeletionPlan,
     CreateTerminalDeleteProgressRenderer,
@@ -17,6 +16,7 @@ import type {
     FTerminalDeleteProgressRenderer
 } from "./FileSystem.Internal.Types.js";
 import type { FDeleteWithProgressOptions } from "./FileSystem.Types.js";
+import { promises as Fs } from "fs";
 
 /* eslint-disable jsdoc/require-example */
 

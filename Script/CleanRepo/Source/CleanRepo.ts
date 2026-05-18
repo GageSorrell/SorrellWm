@@ -279,5 +279,5 @@ function CreateErrorMessage(ErrorValue: unknown): string
 
 export async function Main(): Promise<void>
 {
-    await DeleteNodeGeneratedArtifacts(Path.resolve(__dirname, "..", ".."));
+    await DeleteNodeGeneratedArtifacts(Path.resolve("..", ".."));
 }
