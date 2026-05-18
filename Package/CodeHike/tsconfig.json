@@ -1,38 +1,41 @@
 {
-    "compilerOptions":
-    {
-        "target": "ES2022",
-        "module": "Preserve",
-        "moduleResolution": "Bundler",
-        "jsx": "react-jsx",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
 
-        "strict": true,
-        "noEmit": true,
-        "skipLibCheck": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "jsx": "react-jsx",
 
-        "lib": [ "ES2022", "DOM", "DOM.Iterable" ],
-        "types": [ "react" ],
+    "strict": true,
 
-        "allowSyntheticDefaultImports": true,
-        "resolveJsonModule": true,
-        "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
 
-        "noUnusedLocals": true,
-        "noUnusedParameters": true
-    },
-    "include":
-    [
-        "Source",
-        "./Source/Declarations.d.ts"
-    ],
-    "exclude":
-    [
-        "node_modules",
-        "public",
-        "out",
-        "dist",
-        "build"
-    ]
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+        "rootDir": "./Source",
+        "outDir": "./Distribution",
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "Source/**/*.ts",
+    "Source/**/*.tsx",
+    "Source/**/*.d.ts"
+  ],
+  "exclude": [
+    "Distribution",
+    "Script",
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "remotion.config.ts"
+  ]
 }

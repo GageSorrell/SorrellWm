@@ -1,12 +1,11 @@
 {
   "name": "@sorrell/code-hike",
-  "version": "1.0.0",
+  "private": false,
+  "version": "1.0.21",
   "description": "A helper library for making animations with Code Hike.",
-  "main": "./Distribution/index.js",
   "scripts": {
-    "start": "remotion studio",
-    "build": "remotion render",
-    "upgrade": "remotion upgrade"
+    "build": "tsc -p ./tsconfig.json",
+    "postbuild": "ts-node --project ./tsconfig.script.json ./Script/AppendMarkdownModule.ts"
   },
   "keywords": [
     "code-hike",
@@ -18,6 +17,7 @@
     "next"
   ],
   "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeHike#ReadMe",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
@@ -32,23 +32,45 @@
     "url": "https://sorrell.sh"
   },
   "license": "MIT",
+  "peerDependencies": {
+    "remotion": "4.0.177"
+  },
+  "peerDependenciesMeta": {
+    "remotion": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@mdx-js/loader": "^3.1.1",
-    "@types/node": "^25.8.0",
-    "@types/react": "^19.2.14",
+    "@types/react": "^18.0.0",
+    "remotion": "4.0.177",
+    "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   },
+  "files": [
+    "Distribution",
+    "Distribution/**/*",
+    "Remotion.js",
+    "Remotion.d.ts",
+    "tsconfig.remotion.json"
+  ],
+  "types": "./Distribution/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./tsconfig": "./tsconfig.remotion.json",
+    "./remotion": "./Remotion.js"
+  },
   "dependencies": {
-    "@mdx-js/react": "^3.1.1",
-    "@remotion/cli": "4.0.461",
-    "@remotion/fonts": "4.0.461",
-    "@remotion/google-fonts": "4.0.461",
-    "@remotion/zod-types": "4.0.461",
-    "codehike": "^1.1.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "remotion": "4.0.461",
-    "twoslash-cdn": "^0.3.8",
-    "zod": "4.3.6"
+    "@mdx-js/loader": "",
+    "@mdx-js/react": "",
+    "@remotion/cli": "4.0.177",
+    "@remotion/zod-types": "4.0.177",
+    "codehike": "1.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "twoslash-cdn": "^0.2.9",
+    "zod": "^3.21.4"
   }
 }

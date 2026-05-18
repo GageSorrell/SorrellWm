@@ -1,0 +1,8 @@
+node_modules
+dist
+Distribution
+.DS_Store
+.env
+public/Operator
+
+out

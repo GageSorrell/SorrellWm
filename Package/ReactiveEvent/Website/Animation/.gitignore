@@ -1,0 +1,7 @@
+node_modules
+dist
+public/Operator
+.DS_Store
+.env
+
+out

@@ -1,0 +1,7 @@
+{
+    "extends": "@sorrell/code-hike/tsconfig",
+    "compilerOptions": {
+        "types": [ "@sorrell/code-hike" ]
+    },
+    "include": [ "Source" ]
+}

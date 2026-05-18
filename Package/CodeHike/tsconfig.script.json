@@ -1,0 +1,12 @@
+{
+    "compilerOptions":
+    {
+        "target": "esnext",
+        "module": "nodenext",
+        "strict": true,
+        "types": [ "node" ],
+        "skipLibCheck": true
+    },
+    "include": [ "Script" ]
+}
+

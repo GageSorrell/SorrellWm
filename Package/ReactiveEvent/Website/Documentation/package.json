@@ -1,6 +1,6 @@
 {
   "name": "reactive-event-docs",
-  "packageManager": "npm@11.13.0",
+  "packageManager": "npm@11.14.1",
   "version": "0.0.0",
   "private": true,
   "scripts": {

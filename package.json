@@ -28,7 +28,7 @@
         "name": "Gage Sorrell",
         "url": "https://sorrell.sh"
     },
-    "packageManager": "npm@11.13.0",
+    "packageManager": "npm@11.14.1",
     "engines": {
         "node": ">=24.14.0 <25",
         "npm": ">=11.0.0"
@@ -65,6 +65,7 @@
         "Package/ReactiveEvent/Documentation/docs",
         "Package/ReactiveEvent/Documentation/landing",
         "!Package/ReactiveEvent/Sample",
+        "!Package/ReactiveEvent/Website/Animation",
         "!Package/ReactiveEvent/Sample/**/*",
         "!Package/ReactiveEvent/DocumentationOld",
         "!Package/ReactiveEvent/DocumentationOld/**/*",

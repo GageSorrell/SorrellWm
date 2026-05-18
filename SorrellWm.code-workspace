@@ -5,6 +5,8 @@
 		}
 	],
 	"settings": {
+        "npm.enableScriptExplorer": true,
+        "npm.exclude": [ "**/Distribution", "**/Distribution/**", "**/node_modules/**" ],
 		"files.associations": {
 			".eslintrc": "jsonc",
 			".eslintignore": "ignore",
@@ -84,9 +86,6 @@
 			"span": "cpp",
 			"*.rh": "cpp"
 		},
-		"javascript.validate.enable": false,
-		"javascript.format.enable": false,
-		"typescript.format.enable": false,
 		"cSpell.words": [
             "allman",
             "autodocs",
@@ -112,6 +111,7 @@
             "dwmapi",
             "DWMWA",
             "Edata",
+            "effectful",
             "electronmon",
             "ERASEBKGND",
             "EXSTYLE",
@@ -139,6 +139,7 @@
             "iomanip",
             "isalpha",
             "isnumeric",
+            "josetr",
             "jsxdev",
             "KBDLLHOOKSTRUCT",
             "Keybind",

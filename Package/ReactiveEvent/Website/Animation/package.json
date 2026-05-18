@@ -1,0 +1,21 @@
+{
+  "name": "reactive-event-landing-animation",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Animations for the landing page of the reactive-event website.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "remotion studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@sorrell/code-hike": "^1.0.20"
+  },
+  "devDependencies": {
+    "remotion": "4.0.177",
+    "typescript": "npm:tsover@^6.0.1"
+  }
+}

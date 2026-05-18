@@ -1,6 +1,6 @@
 {
   "name": "reactive-event-landing",
-  "packageManager": "npm@11.13.0",
+  "packageManager": "npm@11.14.1",
   "private": true,
   "scripts": {
     "dev": "cross-env DOCS_ORIGIN=\"http://localhost:3001\" next dev",
