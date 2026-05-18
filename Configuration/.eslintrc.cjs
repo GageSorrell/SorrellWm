@@ -5,6 +5,38 @@
  * @license   MIT
  */
 
+/**
+ * For each `string` glob in {@link Globs}, if the glob ends with a `.`, then
+ * append the glob specifier that permits any one of the JS, TS, JSX, or TSX
+ * modules.
+ *
+ * @param {ReadonlyArray<string>} Globs - The `string` globs to possibly append
+ * with module file extensions.
+ *
+ * @returns {ReadonlyArray<string>} The given {@link Globs}, with file extensions
+ * appended, where appropriate.
+ */
+function FileGlobs(Globs)
+{
+    /** @type ReadonlyArray<string> */
+    const Extensions =
+        [
+            "js",
+            "ts",
+            "tsx",
+            "jsx",
+            "mjs",
+            "mts",
+            "cjs",
+            "cts"
+        ];
+
+    /** @type string */
+    const ExtensionsSelector = `{${ Extensions.join(",") }}`;
+
+    return Globs.map(Glob => Glob + (Glob.endsWith(".") ? ExtensionsSelector : ""));
+}
+
 /* eslint-disable-next-line no-undef */
 module.exports = {
     extends:
@@ -261,6 +293,13 @@ module.exports = {
             rules:
             {
                 "jsdoc/require-jsdoc": "off"
+            }
+        },
+        {
+            files: FileGlobs([ "**/*.Internal.", "**/*.Internal.Types." ]),
+            rules:
+            {
+                "jsdoc/require-example": "off"
             }
         }
     ],

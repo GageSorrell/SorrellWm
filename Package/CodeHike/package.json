@@ -1,9 +1,10 @@
 {
   "name": "@sorrell/code-hike",
   "private": false,
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "A helper library for making animations with Code Hike.",
   "scripts": {
+    "dev": "remotion studio",
     "build": "tsc -p ./tsconfig.json",
     "postbuild": "ts-node --project ./tsconfig.script.json ./Script/AppendMarkdownModule.ts"
   },

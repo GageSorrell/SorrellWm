@@ -1,0 +1,21 @@
+/**
+ * @file      CleanRepo.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+export type FDeletionStats =
+    {
+        DeletedNodeModulesCount: number;
+        DeletedTsBuildInfoCount: number;
+    };
+
+export type FDirectoryEntry =
+    {
+        name: string;
+        isDirectory: () => boolean;
+        isFile: () => boolean;
+        isSymbolicLink: () => boolean;
+    };
+

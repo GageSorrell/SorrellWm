@@ -7,8 +7,12 @@
   "scripts": {
     "dev": "remotion studio"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [ ],
+  "author": {
+    "name": "Gage Sorrell",
+    "email": "gage@sorrell.sh",
+    "url": "https://github.com/GageSorrell"
+  },
   "license": "MIT",
   "type": "module",
   "dependencies": {

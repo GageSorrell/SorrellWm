@@ -178,3 +178,192 @@ export async function WriteTextFile(Path: string, Contents: string): Promise<voi
 {
     await Fs.writeFile(Path, Contents, { encoding: "utf-8" });
 }
+
+import * as FileSystem from "node:fs/promises";
+import * as Path from "node:path";
+import * as Readline from "node:readline";
+
+type DeletePhase = "Scanning" | "Deleting" | "Done";
+
+type DeleteEntryKind = "File" | "Directory" | "Other";
+
+type DeleteEntry = {
+    EntryPath: string;
+    Kind: DeleteEntryKind;
+    Size: number;
+};
+
+type DeleteProgress = {
+    Phase: DeletePhase;
+    CurrentPath: string | null;
+    DiscoveredEntries: number;
+    TotalEntries: number;
+    DeletedEntries: number;
+    TotalBytes: number;
+    DeletedBytes: number;
+};
+
+type DeleteWithProgressOptions = {
+    OnProgress?: (Progress: DeleteProgress) => void;
+    Signal?: AbortSignal;
+};
+
+function IsMissingFileError(ErrorValue: unknown): boolean
+{
+    return (
+        typeof ErrorValue === "object" &&
+        ErrorValue !== null &&
+        "code" in ErrorValue &&
+        ErrorValue.code === "ENOENT"
+    );
+}
+
+function CloneProgress(Progress: DeleteProgress): DeleteProgress
+{
+    return { ...Progress };
+}
+
+async function BuildDeletionPlan(
+    RootPath: string,
+    Progress: DeleteProgress,
+    Options: DeleteWithProgressOptions
+): Promise<DeleteEntry[]>
+{
+    const Entries: DeleteEntry[] = [];
+
+    async function Visit(CurrentPath: string): Promise<void>
+    {
+        Options.Signal?.throwIfAborted();
+
+        Progress.Phase = "Scanning";
+        Progress.CurrentPath = CurrentPath;
+        Options.OnProgress?.(CloneProgress(Progress));
+
+        let Stats;
+
+        try
+        {
+            Stats = await FileSystem.lstat(CurrentPath);
+        }
+        catch (ErrorValue)
+        {
+            if (IsMissingFileError(ErrorValue))
+            {
+                return;
+            }
+
+            throw ErrorValue;
+        }
+
+        if (Stats.isDirectory())
+        {
+            const Children = await FileSystem.readdir(CurrentPath, {
+                withFileTypes: true
+            });
+
+            for (const Child of Children)
+            {
+                await Visit(Path.join(CurrentPath, Child.name));
+            }
+
+            Entries.push({
+                EntryPath: CurrentPath,
+                Kind: "Directory",
+                Size: 0
+            });
+        }
+        else
+        {
+            const Size = Stats.isFile() ? Stats.size : 0;
+
+            Entries.push({
+                EntryPath: CurrentPath,
+                Kind: Stats.isFile() ? "File" : "Other",
+                Size
+            });
+
+            Progress.TotalBytes += Size;
+        }
+
+        Progress.DiscoveredEntries = Entries.length;
+        Options.OnProgress?.(CloneProgress(Progress));
+    }
+
+    await Visit(RootPath);
+
+    return Entries;
+}
+
+export async function DeleteWithProgress(
+    RootPath: string,
+    Options: DeleteWithProgressOptions = {}
+): Promise<void>
+{
+    const Progress: DeleteProgress = {
+        Phase: "Scanning",
+        CurrentPath: null,
+        DiscoveredEntries: 0,
+        TotalEntries: 0,
+        DeletedEntries: 0,
+        TotalBytes: 0,
+        DeletedBytes: 0
+    };
+
+    const Entries = await BuildDeletionPlan(RootPath, Progress, Options);
+
+    Progress.Phase = "Deleting";
+    Progress.TotalEntries = Entries.length;
+    Progress.CurrentPath = null;
+    Options.OnProgress?.(CloneProgress(Progress));
+
+    for (const Entry of Entries)
+    {
+        Options.Signal?.throwIfAborted();
+
+        Progress.CurrentPath = Entry.EntryPath;
+        Options.OnProgress?.(CloneProgress(Progress));
+
+        try
+        {
+            if (Entry.Kind === "Directory")
+            {
+                await FileSystem.rmdir(Entry.EntryPath);
+            }
+            else
+            {
+                await FileSystem.unlink(Entry.EntryPath);
+            }
+        }
+        catch (ErrorValue)
+        {
+            if (!IsMissingFileError(ErrorValue))
+            {
+                throw ErrorValue;
+            }
+        }
+
+        Progress.DeletedEntries += 1;
+        Progress.DeletedBytes += Entry.Size;
+
+        Options.OnProgress?.(CloneProgress(Progress));
+    }
+
+    Progress.Phase = "Done";
+    Progress.CurrentPath = null;
+    Options.OnProgress?.(CloneProgress(Progress));
+}
+
+function FormatBytes(Bytes: number): string
+{
+    const Units = ["B", "KB", "MB", "GB", "TB"];
+    let Value = Bytes;
+    let UnitIndex = 0;
+
+    while (Value >= 1024 && UnitIndex < Units.length - 1)
+    {
+        Value /= 1024;
+        UnitIndex += 1;
+    }
+
+    return `${Value.toFixed(UnitIndex === 0 ? 0 : 1)} ${Units[UnitIndex]}`;
+}

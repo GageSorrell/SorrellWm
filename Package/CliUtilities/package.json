@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "description": "Utilities developing CLI tools with TypeScript.",
   "keywords": [
     "cli",
@@ -40,6 +40,12 @@
       "require": "./Distribution/Format/index.js",
       "types": "./Distribution/Format/index.d.ts"
     },
+    "./fs": {
+      "default": "./Distribution/FileSystem/index.js",
+      "import": "./Distribution/FileSystem/index.js",
+      "require": "./Distribution/FileSystem/index.js",
+      "types": "./Distribution/FileSystem/index.d.ts"
+    },
     "./inquirer": {
       "default": "./Distribution/Inquirer/index.js",
       "import": "./Distribution/Inquirer/index.js",
@@ -65,8 +71,6 @@
       "types": "./Distribution/PseudoTerminal/index.d.ts"
     }
   },
-  "main": "./Distribution/index.js",
-  "types": "./Distribution/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
@@ -75,6 +79,7 @@
     "package-json-type": "^1.1.2"
   },
   "dependencies": {
+    "@clack/prompts": "^1.4.0",
     "@effect/platform": "^0.96.0",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
     "@sorrell/utilities": "^1.2.4",
