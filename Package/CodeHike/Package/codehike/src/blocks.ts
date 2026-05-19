@@ -5,11 +5,11 @@
  * @license   MIT
  */
 
-import type { MDXProps } from "mdx/types.js";
-import type { ReactNode } from "react";
-import { z } from "zod";
+import type { JSX, ReactNode } from "react";
 import type { HighlightedCode } from "./code/types.js";
+import type { MDXProps } from "mdx/types.js";
 import { parse } from "./index.js";
+import { z } from "zod";
 
 type MDXContent = (Properties: MDXProps) => JSX.Element;
 
