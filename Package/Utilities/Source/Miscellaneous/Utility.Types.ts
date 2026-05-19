@@ -6,7 +6,6 @@
  */
 
 import type { NoOptions } from "./Utility.Internal.ts";
-import type TypeScript from "typescript";
 
 /**
  * @deprecated Use {@link TMutable} instead.
@@ -100,91 +99,6 @@ export class AbstractMethodCallError extends Error
     }
 }
 
-/** The type corresponding to the schema of `tsconfig.json`. */
-export interface FTsConfig
-{
-    extends?: string | Array<string>;
-    files?: Array<string>;
-    include?: Array<string>;
-    exclude?: Array<string>;
-    references?: Array<TypeScript.ProjectReference>;
-    compilerOptions?: FCompilerOptions;
-    watchOptions?: TypeScript.WatchOptions;
-    typeAcquisition?: TypeScript.TypeAcquisition;
-    compileOnSave?: boolean;
-}
-
-type FOverriddenCompilerOptions =
-    | "jsx"
-    | "lib"
-    | "module"
-    | "moduleResolution"
-    | "target";
-
-type FCompilerOptions =
-    Omit<TypeScript.server.protocol.CompilerOptions, FOverriddenCompilerOptions> &
-    Partial<{
-        jsx: JsxEmit;
-        lib: Array<string>;
-        module: FModuleKind;
-        moduleResolution: FModuleResolutionKind;
-        target: FTarget;
-    }>;
-
-type JsxEmit =
-    | "none"
-    | "preserve"
-    | "react-native"
-    | "react"
-    | "react-jsx"
-    | "react-jsxdev";
-
-type FModuleKind =
-    | "none"
-    | "commonjs"
-    | "amd"
-    | "umd"
-    | "system"
-    | "es6"
-    | "es2015"
-    | "es2020"
-    | "es2022"
-    | "esnext"
-    | "node16"
-    | "node18"
-    | "node20"
-    | "nodenext"
-    | "preserve";
-
-type FModuleResolutionKind =
-    | "classic"
-    | "node"
-    | "node"
-    | "node10"
-    | "node16"
-    | "nodenext"
-    | "bundler";
-
-type FTarget =
-    | "es3"
-    | "es5"
-    | "es6"
-    | "es2015"
-    | "es2016"
-    | "es2017"
-    | "es2018"
-    | "es2019"
-    | "es2020"
-    | "es2021"
-    | "es2022"
-    | "es2023"
-    | "es2024"
-    | "es2025"
-    | "esnext"
-    | "json"
-    | "esnext"
-    | "es2025";
-
 /**
  * Maps a given {@link RecordLike} type to an identical {@link Record} type, but
  * the properties are wrapped with {@link NonNullable}.
@@ -195,3 +109,21 @@ export type TRecordNonNullable<RecordLike> =
     {
         [ Key in keyof RecordLike ]: NonNullable<RecordLike[Key]>;
     };
+
+/**
+ * A "safe" intersection of two types, such that if exactly one
+ * of the two types is `never`, then this evaluates to the other type.
+ * This evaluates to the intersection of the two types iff *both*
+ * type parameters.
+ *
+ * @template LeftType - The first type parameter.
+ * @template RightType - The second type parameter.
+ */
+export type TSafeIntersection<LeftType, RightType> =
+    [ LeftType ] extends [ never ]
+        ? [ RightType ] extends [ never ]
+            ? never
+            : RightType
+        : [ RightType ] extends [ never ]
+            ? LeftType
+            : (LeftType & RightType);

@@ -5,6 +5,8 @@
  * @license   MIT
  */
 
+import type { EnsureCustomOptions } from "./Config.Internal.Types.js";
+
 /* eslint-disable @typescript-eslint/naming-convention */
 
 /** The formatters supported by the {@link BaseConfig!DisableFormatter} feature. */
@@ -12,10 +14,6 @@ export type Formatter =
     | "eslint"
     | "ox"
     | "prettier";
-
-// WHERE TO PICK BACK UP:
-//
-// ONLY ALLOW CUSTOM OPTIONS AT THE PACKAGE LEVEL.
 
 /**
  * The base config type, which is used globally, and at the package and module level.
@@ -89,18 +87,19 @@ export type ModuleDeclarationRecord<OptionsType extends Record<string, unknown> 
  * to the package having these options will be relative.  If not specified, then this will be the name of
  * the package.
  */
-export type ProviderOptions<CustomOptionsType extends Record<string, unknown> = never> =
+export type ProviderOptionsBase =
     BaseConfig &
     Readonly<{
         BaseDirectory?: string;
-    } & (
-        [ CustomOptionsType ] extends [ never ]
-            /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-            ? { }
-            : {
-                Custom: CustomOptionsType;
-            }
-    )>;
+    }>;
+
+export type ProviderOptions<CustomOptionsType extends Record<string, unknown> = never> =
+    EnsureCustomOptions<keyof ProviderOptionsBase, CustomOptionsType> extends never
+        ? ProviderOptionsBase
+        : (
+            ProviderOptionsBase &
+            CustomOptionsType
+        );
 
 /**
  * The consumer-facing type for setting options for a given package, and fine-grained options
@@ -108,7 +107,7 @@ export type ProviderOptions<CustomOptionsType extends Record<string, unknown> = 
  */
 export type ProviderConfig<CustomOptionsType extends Record<string, unknown> = never> =
     Readonly<{
-        Options?: ProviderOptions<CustomOptionsType>;
+        Options?: ProviderOptionsBase<CustomOptionsType>;
         Modules?: Record<string, ModuleOptions>;
     }>;
 
@@ -117,7 +116,7 @@ export type ProviderDeclaration<
     ModuleOptionsType extends ModuleOptions = ModuleOptions
 > =
     Readonly<{
-        DefaultOptions?: ProviderOptions<ProviderOptionsType>;
+        DefaultOptions?: ProviderOptionsBase<ProviderOptionsType>;
         Modules: ReadonlyArray<string | ModuleDeclarationRecord<ModuleOptionsType>>;
     }>;
 

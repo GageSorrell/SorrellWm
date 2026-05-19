@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Run, type FExports } from "../../Configuration/esbuild.config.mts";
+import { type FExports, Run } from "../../Configuration/esbuild.config.mts";
 
 const EntryPoints: FExports =
     {
@@ -19,12 +19,15 @@ const EntryPoints: FExports =
         effect: "./Source/Effect/index.ts",
         fs: "./Source/FileSystem/index.ts",
         functional: "./Source/Functional/index.ts",
+        "higher-kind": "./Source/HigherKind/index.ts",
         math: "./Source/Math/index.ts",
         misc: "./Source/Miscellaneous/index.ts",
         npm: "./Source/Npm/index.ts",
         "npm-effect": "./Source/Npm/Index.Effect.ts",
         path: "./Source/Path/index.ts",
-        record: "./Source/Record/index.ts"
+        record: "./Source/Record/index.ts",
+        string: "./Source/String/index.ts",
+        tsconfig: "./Source/TsConfig/index.ts"
     } as const;
 
 await Run(EntryPoints);

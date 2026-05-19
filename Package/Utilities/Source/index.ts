@@ -23,3 +23,4 @@ export * as Miscellaneous from "./Miscellaneous/index.ts";
 export * as Npm from "./Npm/index.ts";
 export * as Path from "./Path/index.ts";
 export * as String from "./String/index.ts";
+export * as TsConfig from "./TsConfig/index.ts";

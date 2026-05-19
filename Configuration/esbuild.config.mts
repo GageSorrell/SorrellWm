@@ -134,8 +134,6 @@ async function CheckExports(Exports: FExports): Promise<boolean>
             return (RawKey.startsWith("./")
                 ? RawKey.slice(2)
                 : RawKey).replaceAll("/", "-");
-
-            return Out;
         });
     })();
 

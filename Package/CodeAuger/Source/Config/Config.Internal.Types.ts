@@ -5,6 +5,11 @@
  * @license   MIT
  */
 
-import type { ProviderConfig } from "./Config.Types.js";
+export type EnsureCustomOptions<
+    KeyType extends string,
+    OptionsType extends Record<string, unknown>
+> =
+    Extract<keyof OptionsType, KeyType> extends never
+        ? OptionsType
+        : never;
 
-export type ProviderRecord<ProvidersType extends Array<ProviderConfig>> =

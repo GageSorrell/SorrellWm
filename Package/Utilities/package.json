@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.9",
+    "version": "1.2.10",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -32,9 +32,11 @@
     },
     "type": "module",
     "files": [
-        "./Distribution/**/*",
-        "./ReadMe.md",
-        "./package.json"
+        "Distribution",
+        "Distribution/**/*",
+        "ReadMe.md",
+        "License.md",
+        "package.json"
     ],
     "exports": {
         ".": {
@@ -105,6 +107,16 @@
             "require": {
                 "types": "./Distribution/Types/Functional/index.d.cts",
                 "default": "./Distribution/functional.cjs"
+            }
+        },
+        "./higher-kind": {
+            "import": {
+                "types": "./Distribution/Types/HigherKind/index.d.mts",
+                "default": "./Distribution/higher-kind.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/HigherKind/index.d.cts",
+                "default": "./Distribution/higher-kind.cjs"
             }
         },
         "./dependency": {
@@ -185,6 +197,26 @@
             "require": {
                 "types": "./Distribution/Types/Record/index.d.cts",
                 "default": "./Distribution/record.cjs"
+            }
+        },
+        "./string": {
+            "import": {
+                "types": "./Distribution/Types/String/index.d.mts",
+                "default": "./Distribution/string.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/String/index.d.cts",
+                "default": "./Distribution/string.cjs"
+            }
+        },
+        "./tsconfig": {
+            "import": {
+                "types": "./Distribution/Types/TsConfig/index.d.mts",
+                "default": "./Distribution/tsconfig.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/TsConfig/index.d.cts",
+                "default": "./Distribution/tsconfig.cjs"
             }
         }
     },

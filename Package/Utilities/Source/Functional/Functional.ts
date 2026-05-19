@@ -5,11 +5,19 @@
  * @license   MIT
  */
 
-import { CurriedArgument } from "./Functional.Internal";
-import type { FCurriedArgument } from "./Functional.Internal.Types";
-import type { TFunction } from "./Functional.Types";
+/* eslint-disable jsdoc/require-example */
 
-export function Identity<Type>(...Arguments: Array<Type>)
+/**
+ * The identity mapping, for some {@link Array} of {@link ArgumentVector | given arguments}.
+ *
+ * @param ArgumentVector - The {@link Array} of given arguments.
+ * @returns {typeof ArgumentVector} The {@link Array} of given arguments.
+ */
+export function Identity<ArgumentType>(
+    ...ArgumentVector: Array<ArgumentType>
+): typeof ArgumentVector
 {
-    return Arguments;
+    return ArgumentVector;
 }
+
+/* eslint-enable jsdoc/require-example */
