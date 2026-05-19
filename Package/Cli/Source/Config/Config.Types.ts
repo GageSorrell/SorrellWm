@@ -9,7 +9,6 @@ import type { Command, Options } from "@effect/cli";
 import type { ConfigSchema } from "./Config.Internal.js";
 import type { FConfigBase } from "./Config.Internal.Types.js";
 import type { FGlobalOptions } from "../Options/Options.Types.js";
-import type { Simplify } from "effect/Types";
 
 export type TConfigBase<BaseType extends FConfigBase> =
     [ Extract<keyof BaseType, keyof FGlobalOptions> ] extends [ never ]

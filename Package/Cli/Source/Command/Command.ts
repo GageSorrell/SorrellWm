@@ -73,13 +73,13 @@ export function MakeCommand<
 
     type ThisErrorType =
         | ErrorType
-        |ValidationError.ValidationError
-        |And
-        |Or
-        |InvalidData
-        |MissingData
-        |SourceUnavailable
-        |Unsupported;
+        | ValidationError.ValidationError
+        | And
+        | Or
+        | InvalidData
+        | MissingData
+        | SourceUnavailable
+        | Unsupported;
 
     type ThisEffect = Effect.Effect<
         void,

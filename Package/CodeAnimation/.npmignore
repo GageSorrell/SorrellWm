@@ -1,5 +1,7 @@
 Source
 !Distribution
 Intermediate
+!remotion.config.exported.cjs
+remotion.config.exported.cts
 *.otf
 *.ttf

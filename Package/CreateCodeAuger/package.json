@@ -1,0 +1,47 @@
+{
+  "name": "create-code-auger",
+  "version": "0.1.0",
+  "description": "The init utility for code-auger.",
+  "bin": {
+    "create-code-auger": "./Distribution/Bin/Bin.js"
+  },
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "keywords": [
+    "code-gen",
+    "code-generation",
+    "cli",
+    "augmentation",
+    "auger",
+    "module-augmentation",
+    "typescript",
+    "ts"
+  ],
+  "files": [
+    "Distribution",
+    "package.json",
+    "License.md",
+    "ReadMe.md"
+  ],
+  "homepage": "https://code-auger.sorrell.sh",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/CreateCodeAuger",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@sorrell/cli-utilities": "1.0.47",
+    "@sorrell/utilities": "1.2.9"
+  }
+}
