@@ -1,92 +1,117 @@
-import { MDXProps } from "mdx/types.js"
-import { ZodTypeDef, z, type ZodType } from "zod"
-import { HighlightedCode } from "./code/types.js"
-import { parse } from "./index.js"
-import type { $ZodTypeInternals, output } from "zod/v4/core"
+/**
+ * @file      blocks.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
 
-type MDXContent = (props: MDXProps) => JSX.Element
+import type { MDXProps } from "mdx/types.js";
+import type { ReactNode } from "react";
+import { z } from "zod";
+import type { HighlightedCode } from "./code/types.js";
+import { parse } from "./index.js";
 
-export function parseRoot<Output, Def extends ZodTypeDef, Input>(
-  Content: MDXContent,
-  Schema?: undefined,
-  props?: MDXProps,
+type MDXContent = (Properties: MDXProps) => JSX.Element;
+
+export function parseRoot(
+    Content: MDXContent,
+    Schema?: undefined,
+    Properties?: MDXProps,
+): unknown;
+
+export function parseRoot<SchemaType extends z.ZodType>(
+    Content: MDXContent,
+    Schema: SchemaType,
+    Properties?: MDXProps,
+): z.output<SchemaType>;
+
+export function parseRoot<SchemaType extends z.ZodType>(
+    Content: MDXContent,
+    Schema?: SchemaType,
+    Properties: MDXProps = {},
 ): unknown
-export function parseRoot<Output, Def extends ZodTypeDef, Input>(
-  Content: MDXContent,
-  Schema: z.ZodType<Output, Def, Input>,
-  props?: MDXProps,
-): Output
-export function parseRoot<Output, Def extends ZodTypeDef, Input>(
-  Content: MDXContent,
-  Schema: z.ZodType<Output, Def, Input> | undefined,
-  props: MDXProps = {},
-) {
-  const data = parse(Content, props || {})
-  if (Schema) {
-    return parseProps(data, Schema)
-  }
-  return data
+{
+    const Data = parse(Content, Properties || {});
+
+    if (Schema)
+    {
+        return parseProps(Data, Schema);
+    }
+
+    return Data;
 }
 
 export const Block = z.object({
-  title: z.string().optional(),
-  children: z.custom<React.ReactNode>(),
-})
+    title: z.string().optional(),
+    children: z.custom<ReactNode>(),
+});
 
 export const CodeBlock = z.object({
-  meta: z.string(),
-  value: z.string(),
-  lang: z.string(),
-})
+    meta: z.string(),
+    value: z.string(),
+    lang: z.string(),
+});
 
 export const HighlightedCodeBlock = CodeBlock.extend({
-  code: z.string(),
-  tokens: z.custom<HighlightedCode["tokens"]>(),
-  annotations: z.custom<HighlightedCode["annotations"]>(),
-  themeName: z.string(),
-  style: z.custom<HighlightedCode["style"]>(),
-})
+    code: z.string(),
+    tokens: z.custom<HighlightedCode["tokens"]>(),
+    annotations: z.custom<HighlightedCode["annotations"]>(),
+    themeName: z.string(),
+    style: z.custom<HighlightedCode["style"]>(),
+});
 
 export const ImageBlock = z.object({
-  url: z.string(),
-  alt: z.string(),
-  title: z.string(),
-})
+    url: z.string(),
+    alt: z.string(),
+    title: z.string(),
+});
 
-export function parseProps<Output extends output<ZodType<Output, Def, Input>>, Def extends ZodTypeDef, Input extends $ZodTypeInternals<Output, Def>>(
-  content: unknown,
-  Schema: z.ZodType<Output, Def, Input>
-): output<ZodType<Output, Def, Input>>
+export function parseProps<SchemaType extends z.ZodType>(
+    Content: unknown,
+    Schema: SchemaType,
+): z.output<SchemaType>
 {
-  if ((content as any)?.__hike) {
-    throw new Error(
-      "Code Hike Error: can't parse component content. Looks like you are missing CodeHike's recma plugin or the framework you are using doesn't support it.",
-    )
-  }
-
-  const result = Schema.safeParse(content)
-  if (result.success) {
-    return result.data;
-  }
-
-  const error = result.error;
-
-  let p = error.path.slice()
-  let block = content as any
-  let location = ""
-  while (p.length) {
-    const key = p.shift()!
-    block = block[key]
-    if (block?._data?.header) {
-      location += `\n${block._data.header}`
+    if ((Content as any)?.__hike)
+    {
+        throw new Error(
+            "Code Hike Error: can't parse component content. Looks like you are missing CodeHike's recma plugin or the framework you are using doesn't support it.",
+        );
     }
-  }
 
-  const { path, code, message, ...rest } = error
-  const name = path[path.length - 1]
+    const Result = Schema.safeParse(Content);
 
-  throw new Error(`at ${location || "root"}
-Error for \`${name}\`: ${message}
-${JSON.stringify(rest, null, 2)}
-  `)
+    if (Result.success)
+    {
+        return Result.data;
+    }
+
+    const Issue = Result.error.issues[0];
+
+    if (!Issue)
+    {
+        throw new Error("Code Hike Error: failed to parse component content.");
+    }
+
+    const Path = Issue.path.slice();
+    let Block = Content as any;
+    let Location = "";
+
+    while (Path.length)
+    {
+        const Key = Path.shift()!;
+        Block = Block?.[Key];
+
+        if (Block?._data?.header)
+        {
+            Location += `\n${Block._data.header}`;
+        }
+    }
+
+    const { path, code, message, ...Rest } = Issue;
+    const Name = path[path.length - 1];
+
+    throw new Error(`at ${ Location || "root" }
+Error for \`${String(Name)}\`: ${message}
+${JSON.stringify(Rest, null, 2)}
+  `);
 }
