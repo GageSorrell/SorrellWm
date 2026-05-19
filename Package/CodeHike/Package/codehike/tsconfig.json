@@ -19,8 +19,9 @@
     "lib": ["dom", "es2019"],
     "module": "NodeNext",
     "target": "es2019",
+    "rootDir": "./",
     "outDir": "dist"
   },
-  "include": ["src"],
+  "include": [ "src" ],
   "exclude": ["node_modules"]
 }

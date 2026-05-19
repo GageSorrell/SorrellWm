@@ -1,7 +1,8 @@
 import { MDXProps } from "mdx/types.js"
-import { ZodTypeDef, z } from "zod"
+import { ZodTypeDef, z, type ZodType } from "zod"
 import { HighlightedCode } from "./code/types.js"
 import { parse } from "./index.js"
+import type { $ZodTypeInternals, output } from "zod/v4/core"
 
 type MDXContent = (props: MDXProps) => JSX.Element
 
@@ -52,10 +53,11 @@ export const ImageBlock = z.object({
   title: z.string(),
 })
 
-export function parseProps<Output, Def extends ZodTypeDef, Input>(
+export function parseProps<Output extends output<ZodType<Output, Def, Input>>, Def extends ZodTypeDef, Input extends $ZodTypeInternals<Output, Def>>(
   content: unknown,
-  Schema: z.ZodType<Output, Def, Input>,
-): Output {
+  Schema: z.ZodType<Output, Def, Input>
+): output<ZodType<Output, Def, Input>>
+{
   if ((content as any)?.__hike) {
     throw new Error(
       "Code Hike Error: can't parse component content. Looks like you are missing CodeHike's recma plugin or the framework you are using doesn't support it.",
@@ -64,10 +66,10 @@ export function parseProps<Output, Def extends ZodTypeDef, Input>(
 
   const result = Schema.safeParse(content)
   if (result.success) {
-    return result.data
+    return result.data;
   }
 
-  const error = result.error.errors[0]
+  const error = result.error;
 
   let p = error.path.slice()
   let block = content as any

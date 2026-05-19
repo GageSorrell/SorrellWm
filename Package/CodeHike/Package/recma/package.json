@@ -6,6 +6,6 @@
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
-    "@sorrell/codehike": "*"
+    "@sorrell/codehike": "file:../CodeHike"
   }
 }
