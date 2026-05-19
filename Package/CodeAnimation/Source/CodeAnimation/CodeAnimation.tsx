@@ -1,22 +1,21 @@
 /**
- * @file      CodePresentation.tsx
+ * @file      CodeAnimation.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-import { type CalculateMetadataFunction, Composition, type CompositionProps } from "remotion";
-import { type FC, type ReactNode, useCallback, useMemo } from "react";
-import type { FMarkdownSteps, PVideo } from "./CodePresentation.Internal.Types.js";
-import type { FResolution, PCodePresentation } from "./CodePresentation.Types.js";
+import { type CalculateMetadataFunction, Composition } from "remotion";
+import type { FMarkdownSteps, PVideo } from "./CodeAnimation.Internal.Types.js";
+import type { FResolution, PCodeAnimation } from "./CodeAnimation.Types.js";
 import {
     GetTotalDurationInFrames,
     MarkdownSchema,
     Video
-} from "./CodePresentation.Internal.js";
-import { TokenTransitions, UseTokenTransitions } from "./TokenTransitions.js";
+} from "./CodeAnimation.Internal.js";
+import { type ReactNode, useCallback, useMemo } from "react";
 import type { AnnotationHandler } from "@sorrell/codehike/code";
-import type { ZodObject } from "zod";
+import { TokenTransition } from "../TokenTransition/TokenTransition.js";
 import { parseRoot } from "@sorrell/codehike/blocks";
 
 /**
@@ -24,19 +23,18 @@ import { parseRoot } from "@sorrell/codehike/blocks";
  *
  * @param Props - The sequence of {@link FStep | steps} that defines an animation.
  *
- * @throws {Error} If {@link PCodePresentation!Durations} is an {@link Array} and there is not
+ * @throws {Error} If {@link PCodeAnimation!Durations} is an {@link Array} and there is not
  * precisely one duration assigned to every step, then this will throw.
  *
  * @returns {ReactNode} A {@link Composition} with default values for
  * important props, suitable for code animations.
  */
-export function CodePresentation(Props: PCodePresentation): ReactNode
+export function CodeAnimation(Props: PCodeAnimation): ReactNode
 {
     const {
         Content,
         FrameRate = 90,
         Handlers: InHandlers,
-        Hook = UseTokenTransitions,
         Name,
         Resolution = "1920x1280",
         style = { }
@@ -46,11 +44,11 @@ export function CodePresentation(Props: PCodePresentation): ReactNode
     {
         if (InHandlers === undefined)
         {
-            return [ TokenTransitions ] as const;
+            return [ TokenTransition ] as const;
         }
-        else if (!InHandlers.includes(TokenTransitions))
+        else if (!InHandlers.includes(TokenTransition))
         {
-            return [ ...InHandlers, TokenTransitions ] as const;
+            return [ ...InHandlers, TokenTransition ] as const;
         }
         else
         {
@@ -78,9 +76,15 @@ export function CodePresentation(Props: PCodePresentation): ReactNode
         {
             FrameRate,
             Handlers,
-            Hook,
             Resolution,
-            Steps,
+            Steps: Steps.map((Step: FMarkdownSteps["steps"][number]) =>
+            {
+                const { children: _, ...Out } = Step;
+                return {
+                    ...Out,
+                    children: undefined
+                };
+            }),
             style
         };
 
@@ -112,10 +116,8 @@ export function CodePresentation(Props: PCodePresentation): ReactNode
         };
     }, [ FrameRate, Resolution, Resolutions ]);
 
-    const CompComponent: FC<CompositionProps<ZodObject<any, any>, PVideo>> = Composition as FC;
-
     return (
-        <CompComponent
+        <Composition
             calculateMetadata={ Metadata }
             component={ Video }
             defaultProps={ VideoProps }
@@ -127,7 +129,7 @@ export function CodePresentation(Props: PCodePresentation): ReactNode
         />
     );
 }
-// export function CodePresentation(Props: PCodePresentation): ReactNode
+// export function CodeAnimation(Props: PCodeAnimation): ReactNode
 // {
 //     const {
 //         Content,

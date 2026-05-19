@@ -1,7 +1,9 @@
 {
-    "extends": "@sorrell/code-hike/tsconfig",
+    "extends": "@sorrell/code-animation/tsconfig",
     "compilerOptions": {
-        "types": [ "@sorrell/code-hike" ]
+        "outDir": "./Intermediate",
+        "rootDir": "./Source",
+        "types": [ "react", "@sorrell/codehike", "@sorrell/code-animation" ]
     },
-    "include": [ "Source" ]
+    "include": [ "./Source" ]
 }

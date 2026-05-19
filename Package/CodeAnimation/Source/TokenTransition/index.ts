@@ -5,6 +5,4 @@
  * @license   MIT
  */
 
-export * from "./CodePresentation.js";
-export * from "./CodePresentation.Types.js";
-export * from "./TokenTransitions.js";
+export * from "./TokenTransition.js";

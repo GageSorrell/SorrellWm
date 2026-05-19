@@ -32,6 +32,7 @@
     "Distribution",
     "Script",
     "node_modules",
+    "Source/Development",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",

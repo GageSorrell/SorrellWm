@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "remotion studio"
   },
-  "keywords": [ ],
+  "keywords": [],
   "author": {
     "name": "Gage Sorrell",
     "email": "gage@sorrell.sh",
@@ -16,10 +16,19 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@sorrell/code-hike": "^1.0.20"
+    "@sorrell/code-animation": "^1.0.28",
+    "@sorrell/codehike": "^1.1.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "twoslash-cdn": "^0.2.9",
+    "zod": "4.3.6"
   },
   "devDependencies": {
+    "@remotion/cli": "4.0.462",
+    "@remotion/zod-types": "4.0.462",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
     "remotion": "4.0.462",
-    "typescript": "npm:tsover@^6.0.1"
+    "typescript": "^6.0.3"
   }
 }

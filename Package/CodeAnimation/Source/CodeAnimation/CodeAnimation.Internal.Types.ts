@@ -1,5 +1,5 @@
 /**
- * @file      CodePresentation.Internal.Types.ts
+ * @file      CodeAnimation.Internal.Types.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -10,20 +10,18 @@
 import type {
     FHandlers,
     FSteps,
-    FTokenTransitionsHook,
-    PCodePresentation
-} from "./CodePresentation.Types.js";
+    PCodeAnimation
+} from "./CodeAnimation.Types.js";
 import type { HighlightedCode } from "@sorrell/codehike/code";
-import type { MarkdownSchema } from "./CodePresentation.Internal.js";
+import type { MarkdownSchema } from "./CodeAnimation.Internal.js";
 import type { ReactNode } from "react";
 import type { z } from "zod";
 
 export type PVideo =
     Required<Pick<
-        PCodePresentation,
+        PCodeAnimation,
         | "FrameRate"
         | "Resolution"
-        | "Hook"
         | "Handlers"
         | "style"
     >> &
@@ -47,7 +45,6 @@ export type FVideoStepInherited =
         PVideo,
         | "FrameRate"
         | "Handlers"
-        | "Hook"
         | "Resolution"
         | "Steps"
         | "style"
@@ -57,7 +54,7 @@ export type FToVideoStep = (Step: FStepInternal, Index: number) => ReactNode;
 
 export type PCode =
     Required<Pick<
-        PCodePresentation,
+        PCodeAnimation,
         | "FrameRate"
         | "Resolution"
         | "style"
@@ -66,5 +63,4 @@ export type PCode =
         OldCode?: HighlightedCode | undefined;
         NewCode: HighlightedCode;
         Handlers: FHandlers;
-        Hook: FTokenTransitionsHook;
     };

@@ -6,6 +6,15 @@
  */
 
 import { ReactiveEventIntro } from "./ReactiveEventIntro";
-import { RunStudio } from "@sorrell/code-hike";
+import { registerRoot } from "remotion";
 
-RunStudio(ReactiveEventIntro);
+function Animations(): ReactNode
+{
+    return (
+        <>
+            <ReactiveEventIntro />
+        </>
+    );
+}
+
+registerRoot(Animations);

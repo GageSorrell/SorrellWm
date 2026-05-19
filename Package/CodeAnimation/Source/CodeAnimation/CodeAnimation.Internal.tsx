@@ -1,5 +1,5 @@
 /**
- * @file      CodePresentation.Internal.tsx
+ * @file      CodeAnimation.Internal.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -7,8 +7,8 @@
 
 import { AbsoluteFill, Sequence, type SequenceProps } from "remotion";
 import { Block, HighlightedCodeBlock } from "@sorrell/codehike/blocks";
-import { type CSSProperties, type FC, type HTMLProps, type ReactNode } from "react";
-import type { FResolution, FStep } from "./CodePresentation.Types.js";
+import { type CSSProperties, type FC, type ReactNode } from "react";
+import type { FResolution, FStep } from "./CodeAnimation.Types.js";
 import type {
     FStepInternal,
     FToVideoStep,
@@ -16,8 +16,9 @@ import type {
     PCode,
     PVideo,
     PVideoStep
-} from "./CodePresentation.Internal.Types.js";
+} from "./CodeAnimation.Internal.Types.js";
 import { Pre } from "@sorrell/codehike/code";
+import { UseTokenTransition } from "../TokenTransition/TokenTransition.js";
 import { z } from "zod";
 
 /* eslint-disable @typescript-eslint/typedef, @typescript-eslint/no-unused-vars, jsdoc/require-jsdoc */
@@ -32,9 +33,9 @@ export const MarkdownSchema = Block.extend({ steps: z.array(StepSchema) });
 
 /* eslint-enable @typescript-eslint/typedef, @typescript-eslint/no-unused-vars */
 
-function Code({ FrameRate, Handlers, Hook, OldCode, NewCode, Resolution, style }: PCode): ReactNode
+function Code({ FrameRate, Handlers, OldCode, NewCode, Resolution, style }: PCode): ReactNode
 {
-    const { Code, Ref } = Hook(OldCode, NewCode, FrameRate);
+    const { Code, Ref } = UseTokenTransition(OldCode, NewCode, FrameRate);
 
     const BaseFontSizeRem: number = 2.5;
     const FontSizeScalars: Record<FResolution, number> =
@@ -65,7 +66,6 @@ function VideoStep(Props: PVideoStep): ReactNode
     const {
         FrameRate,
         Handlers,
-        Hook,
         Index,
         Resolution,
         Steps,
@@ -85,7 +85,7 @@ function VideoStep(Props: PVideoStep): ReactNode
             <Code
                 NewCode={ Step.code }
                 OldCode={ Steps[Index - 1]?.code }
-                { ...{ FrameRate, Handlers, Hook, Resolution, style } }
+                { ...{ FrameRate, Handlers, Resolution, style } }
             />
         </SequenceComponent>
     );
@@ -120,9 +120,6 @@ function MakeToVideoStep(InheritedProps: FVideoStepInherited): FToVideoStep
 
 export function Video(Props: PVideo): ReactNode
 {
-    const AbsoluteFillComponent: FC<HTMLProps<HTMLDivElement>> =
-        AbsoluteFill as FC<HTMLProps<HTMLDivElement>>;
-
     return (
         <AbsoluteFill
             style={ {
@@ -155,18 +152,17 @@ export function MakeStepSequence(
     Steps: ReadonlyArray<FStep>
 ): (Step: FStep, Index: number) => ReactNode
 {
-    const SequenceComponent: FC<SequenceProps> = Sequence as FC<SequenceProps>;
     return function ToStepSequence(Step: FStep, StepIndex: number): ReactNode
     {
         return (
-            <SequenceComponent
+            <Sequence
                 durationInFrames={ Step.Duration ?? FrameRate }
                 from={ GetStartFrame(FrameRate, Steps, StepIndex) }
                 key={ StepIndex }
                 layout="none"
                 name={ Step.title }>
                 { Step.children }
-            </SequenceComponent>
+            </Sequence>
         );
     };
 }

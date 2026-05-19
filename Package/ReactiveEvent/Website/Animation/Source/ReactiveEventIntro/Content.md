@@ -1,9 +1,8 @@
 ## !!steps One
 
-!Duration 1000
-!Delay 1000
+!Delay 0
 
-```typescript !
+```ts !
 ipcMain.handle("GetPlayerData", async (event, ...args) =>
 {
 
@@ -12,10 +11,9 @@ ipcMain.handle("GetPlayerData", async (event, ...args) =>
 
 ## !!steps Two
 
-!Duration 100
-!Delay 50
+!Delay 0
 
-```typescript !
+```ts !
 ipcMain.handle("GetPlayerData", async (event, ...args) =>
 {
     const Player = args.length > 0;
@@ -24,9 +22,11 @@ ipcMain.handle("GetPlayerData", async (event, ...args) =>
 
 ## !!steps Three
 
-```typescript !
+!Delay 0
+
+```ts !
 ipcMain.handle("GetPlayerData", async (event, ...args) =>
 {
-    const Player = args.length > 0;
+    // const Player = args.length > 0;
 });
 ```

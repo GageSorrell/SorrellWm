@@ -6,19 +6,19 @@
  */
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import type { CodePresentation } from "./CodePresentation/index.js";
+import type { CodeAnimation } from "./CodeAnimation/index.js";
 import type { FC } from "react";
 import { registerRoot } from "remotion";
 
 /**
  * This should be called in the Remotion entrypoint, so that Remotion Studio
- * will open the given {@link CodePresentation} component.
+ * will open the given {@link CodeAnimation} component.
  *
- * @param PresentationComponent - The component to open in Remotion Studio.
+ * @param AnimationComponent - The component to open in Remotion Studio.
  */
-export function RunStudio(PresentationComponent: FC): void
+export function RunStudio(AnimationComponent: FC): void
 {
-    registerRoot(PresentationComponent);
+    registerRoot(AnimationComponent);
 }
 
-export * from "./CodePresentation/index.js";
+export * from "./CodeAnimation/index.js";

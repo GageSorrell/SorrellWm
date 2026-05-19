@@ -31,9 +31,10 @@ function FileGlobs(Globs)
             "cts"
         ];
 
-    /** @type string */
+    /** @type {string} */
     const ExtensionsSelector = `{${ Extensions.join(",") }}`;
 
+    /* eslint-disable-next-line @stylistic/arrow-parens */
     return Globs.map(Glob => Glob + (Glob.endsWith(".") ? ExtensionsSelector : ""));
 }
 
@@ -53,7 +54,8 @@ module.exports = {
         ".next/**",
         "out/**",
         "build/**",
-        "next-env.d.ts"
+        "next-env.d.ts",
+        "Package/CodeAnimation/remotion.config.exported.js"
     ],
     overrides:
     [

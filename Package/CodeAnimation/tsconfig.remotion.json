@@ -43,16 +43,12 @@
         "allowJs": false,
         "checkJs": false
     },
-    "include":
-    [
-        "./Source/**/*.ts",
-        "./Source/**/*.tsx",
-        "./Source/Development/**/*.md"
-    ],
+    "include": [ "./Source" ],
     "exclude":
     [
         "Distribution",
         "Intermediate",
+        "!Source/Development",
         "node_modules"
     ]
 }

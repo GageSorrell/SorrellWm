@@ -1,5 +1,5 @@
 /**
- * @file      remotion.config.ts
+ * @file      remotion.config.exported.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -13,7 +13,7 @@ import { Config, type WebpackConfiguration } from "@remotion/cli/config";
 import type { CodeHikeConfig } from "@sorrell/codehike/mdx";
 import type { RuleSetRule } from "webpack";
 
-const DefaultCodeHikeConfig: CodeHikeConfig =
+export const DefaultCodeHikeConfig: CodeHikeConfig =
     {
         syntaxHighlighting:
         {
@@ -21,11 +21,11 @@ const DefaultCodeHikeConfig: CodeHikeConfig =
         }
     };
 
-const TsConfigPath = Path.resolve(process.cwd(), "tsconfig.json");
-const TsConfigRaw = JSON.parse(Fs.readFileSync(TsConfigPath, "utf-8"));
+const TsConfigPath: string = Path.resolve(process.cwd(), "tsconfig.json");
+const TsConfigRaw: unknown = JSON.parse(Fs.readFileSync(TsConfigPath, "utf-8"));
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-async function EnableMdx(CurrentConfiguration: WebpackConfiguration): Promise<WebpackConfiguration>
+export async function EnableMdx(CurrentConfiguration: WebpackConfiguration): Promise<WebpackConfiguration>
 {
     const { remarkCodeHike, recmaCodeHike } = await import("@sorrell/codehike/mdx");
 
@@ -113,6 +113,14 @@ async function EnableMdx(CurrentConfiguration: WebpackConfiguration): Promise<We
     };
 };
 
-Config.overrideWebpackConfig(EnableMdx);
-Config.setVideoImageFormat("jpeg");
-Config.setEntryPoint("./Intermediate/Development/index.js");
+export function ApplyBaseConfig(): void
+{
+    Config.overrideWebpackConfig(EnableMdx);
+}
+
+export function ApplyDefaultConfig(EntryPoint: string = "./Source/index.tsx"): void
+{
+    ApplyBaseConfig();
+    Config.setVideoImageFormat("jpeg");
+    Config.setEntryPoint(EntryPoint);
+}

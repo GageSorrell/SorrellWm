@@ -5,22 +5,22 @@
  * @license   MIT
  */
 
-import { CodePresentation } from "../CodePresentation/index.js";
-import Content from "./Content.md";
+import { CodeAnimation } from "../CodeAnimation/index.js";
+import Content from "./Content.Old.md";
 import type { ReactNode } from "react";
 import { registerRoot } from "remotion";
 
 /* eslint-disable-next-line jsdoc/require-jsdoc */
-function TestPresentation(): ReactNode
+function TestAnimation(): ReactNode
 {
     return (
         <>
-            <CodePresentation
-                Name="TestPresentation"
+            <CodeAnimation
+                Name="TestAnimation"
                 { ...{ Content } }
             />
         </>
     );
 }
 
-registerRoot(TestPresentation);
+registerRoot(TestAnimation);

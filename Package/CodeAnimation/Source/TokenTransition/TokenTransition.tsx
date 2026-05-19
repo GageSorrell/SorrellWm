@@ -21,21 +21,27 @@ import {
     useRef,
     useState
 } from "react";
-import { Easing, continueRender, delayRender, useCurrentFrame } from "remotion";
 import {
-    type TokenTransition,
+    Easing,
+    continueRender,
+    delayRender,
+    interpolate,
+    interpolateColors,
+    useCurrentFrame
+} from "remotion";
+import {
+    type TokenTransition as FTokenTransition,
     type TokenTransitionsSnapshot,
     calculateTransitions,
     getStartingSnapshot
 } from "@sorrell/codehike/utils/token-transitions";
-import { interpolate, interpolateColors } from "remotion";
-import type { FTokenTransitionsHook } from "./CodePresentation.Types.js";
+import type { FTokenTransitionHook } from "./TokenTransition.Types.js";
 
-export function UseTokenTransitions(
+export function UseTokenTransition(
     OldCode: HighlightedCode | undefined,
     NewCode: HighlightedCode,
     FrameRate: number
-): ReturnType<FTokenTransitionsHook>
+): ReturnType<FTokenTransitionHook>
 {
     const Frame: number = useCurrentFrame();
     const Ref: RefObject<HTMLPreElement | null> = useRef<HTMLPreElement>(null);
@@ -53,9 +59,9 @@ export function UseTokenTransitions(
             return;
         }
 
-        const Transitions: Array<TokenTransition> = calculateTransitions(Ref.current!, Snapshot);
+        const Transitions: Array<FTokenTransition> = calculateTransitions(Ref.current!, Snapshot);
 
-        function ApplyTransition({ element, keyframes, options }: TokenTransition): void
+        function ApplyTransition({ element, keyframes, options }: FTokenTransition): void
         {
             interpolateStyle(
                 element,
@@ -78,7 +84,7 @@ export function UseTokenTransitions(
     return { Code, Ref };
 }
 
-export const TokenTransitions: AnnotationHandler =
+export const TokenTransition: AnnotationHandler =
     {
         Pre: (Props: ComponentProps<typeof InnerPre>["merge"]): ReactNode => (
             <InnerPre
@@ -97,7 +103,7 @@ export const TokenTransitions: AnnotationHandler =
 
 function interpolateStyle(
     Element: HTMLElement,
-    Keyframes: TokenTransition["keyframes"],
+    Keyframes: FTokenTransition["keyframes"],
     Frame: number,
     Delay: number,
     Duration: number

@@ -1,14 +1,18 @@
 {
   "name": "@sorrell/code-animation",
   "private": false,
-  "version": "1.0.22",
+  "version": "1.0.28",
   "description": "A helper library for making animations with Code Hike.",
   "scripts": {
-    "predev": "shx mkdir -p ./Intermediate/Development/ && copyfiles -u 1 \"Source/**/*.md\" Intermediate",
-    "dev:build": "tsc -p ./tsconfig.remotion.json",
-    "dev": "concurrently \"npm run dev:build\" \"npm run dev:studio\"",
-    "dev:studio": "remotion studio --log=verbose --config=./remotion.config.ts",
-    "build": "tsc -p ./tsconfig.json",
+    "copy-markdown": "shx mkdir -p ./Intermediate/Development/ && copyfiles -u 1 \"Source/**/*.md\" Intermediate",
+    "dev:build": "tsc -w -p ./tsconfig.remotion.json",
+    "dev:watch": "chokidar \"Source/**/*.md\" -c \"npm run copy-markdown\"",
+    "dev": "concurrently -n tsc,remotion,chokidar \"npm run dev:build\" \"npm run dev:studio\" \"npm run dev:watch\"",
+    "predev:studio": "npm run copy-markdown",
+    "dev:studio": "remotion studio --log=verbose --no-open --config=./remotion.config.ts",
+    "build": "concurrently -n main,config \"npm run build:main\" \"npm run build:config\"",
+    "build:main": "tsc -p ./tsconfig.json",
+    "build:config": "esbuild ./remotion.config.exported.cts --bundle --platform=node --format=cjs --target=node20 --packages=external --outfile=remotion.config.exported.cjs",
     "postbuild": "ts-node --project ./tsconfig.script.json ./Script/AppendMarkdownModule.ts"
   },
   "keywords": [
@@ -53,7 +57,10 @@
     "@remotion/cli": "4.0.462",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "chokidar-cli": "3.0.0",
+    "concurrently": "8.2.2",
     "copyfiles": "^2.4.1",
+    "esbuild": "0.28.0",
     "remotion": "4.0.462",
     "shx": "^0.4.0",
     "ts-node": "^10.9.2",
@@ -64,7 +71,7 @@
     "Distribution/**/*",
     "ReadMe.md",
     "License.md",
-    "Remotion.js",
+    "remotion.config.exported.cjs",
     "Remotion.d.ts",
     "tsconfig.remotion.json"
   ],
@@ -75,13 +82,13 @@
       "types": "./Distribution/index.d.ts"
     },
     "./tsconfig": "./tsconfig.remotion.json",
-    "./remotion": "./Remotion.js"
+    "./remotion": "./remotion.config.exported.cjs"
   },
   "dependencies": {
     "@mdx-js/loader": "",
     "@mdx-js/react": "",
     "@remotion/zod-types": "4.0.462",
-    "@sorrell/codehike": "^1.1.3",
+    "@sorrell/codehike": "^1.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "twoslash-cdn": "^0.2.9",

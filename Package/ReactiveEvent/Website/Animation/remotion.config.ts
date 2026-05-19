@@ -5,6 +5,6 @@
  * @license   MIT
  */
 
-import { ApplyDefaultConfig } from "@sorrell/code-hike/remotion";
+import { ApplyDefaultConfig } from "@sorrell/code-animation/remotion";
 
 ApplyDefaultConfig();
