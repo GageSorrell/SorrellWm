@@ -1,7 +1,7 @@
 {
-  "name": "codehike",
+  "name": "@sorrell/codehike",
   "version": "1.1.0",
-  "description": "Build rich content websites with Markdown and React",
+  "description": "Build rich content websites with Markdown and React.",
   "keywords": [
     "react",
     "markdown",
@@ -10,15 +10,23 @@
     "rsc",
     "code blocks"
   ],
-  "homepage": "https://codehike.org",
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeHike#ReadMe",
   "bugs": {
-    "url": "https://github.com/code-hike/codehike/issues"
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
-  "author": "Rodrigo Pombo",
+  "repository": {
+    "directory": "Package/CodeHike",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
-  "repository": "code-hike/codehike",
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/code-hike"
@@ -71,12 +79,12 @@
     "@vitest/ui": "^2.0.3",
     "front-matter": "^4.0.2",
     "mdast-util-from-markdown": "^2.0.0",
-    "react": "18.3.0-canary-c5b937576-20231219",
-    "react-dom": "18.3.0-canary-c5b937576-20231219",
-    "typescript": "^5.3.3",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "typescript": "^6.0.3",
     "unified": "^11.0.4",
     "vitest": "^2.0.3",
-    "zod": "^3.22.4"
+    "zod": "4.3.6"
   },
   "publishConfig": {
     "access": "public"

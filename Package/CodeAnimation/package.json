@@ -21,13 +21,13 @@
     "presentation",
     "next"
   ],
-  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeHike#ReadMe",
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeAnimation#ReadMe",
   "type": "module",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
-    "directory": "Package/CodeHike",
+    "directory": "Package/CodeAnimation",
     "type": "git",
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
