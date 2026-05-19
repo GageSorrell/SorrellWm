@@ -50,12 +50,12 @@
     }
   },
   "devDependencies": {
-    "shx": "^0.4.0",
     "@remotion/cli": "4.0.462",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "copyfiles": "^2.4.1",
     "remotion": "4.0.462",
+    "shx": "^0.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   },
@@ -81,9 +81,9 @@
     "@mdx-js/loader": "",
     "@mdx-js/react": "",
     "@remotion/zod-types": "4.0.462",
-    "@sorrell/codehike": "1.1.1",
+    "@sorrell/codehike": "^1.1.3",
     "react": "19.2.3",
-	"react-dom": "19.2.3",
+    "react-dom": "19.2.3",
     "twoslash-cdn": "^0.2.9",
     "zod": "4.3.6"
   }

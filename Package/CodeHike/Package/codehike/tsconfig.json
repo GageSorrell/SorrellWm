@@ -17,10 +17,10 @@
     "skipLibCheck": true,
     "strict": true,
     "jsx": "react-jsx",
-    "lib": ["dom", "es2019"],
+    "lib": [ "DOM", "ES2019" ],
     "module": "NodeNext",
     "target": "es2019",
-    "rootDir": "./",
+    "rootDir": "./src",
     "outDir": "dist"
   },
   "include": [ "src" ],
