@@ -4,6 +4,7 @@
     "compilerOptions":
     {
         "outDir": "./Distribution",
+        "types": [ "node" ],
         "rootDir": "./Source"
     },
     "include": [ "Source" ],

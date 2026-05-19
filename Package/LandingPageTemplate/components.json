@@ -3,7 +3,8 @@
   "style": "radix-nova",
   "rsc": true,
   "tsx": true,
-  "tailwind": {
+  "tailwind":
+  {
     "config": "",
     "css": "src/app/globals.css",
     "baseColor": "neutral",
@@ -14,14 +15,16 @@
   "rtl": false,
   "menuColor": "default",
   "menuAccent": "subtle",
-  "aliases": {
+  "aliases":
+  {
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {
+  "registries":
+  {
     "@magicui": "https://magicui.design/r/{name}"
   }
 }

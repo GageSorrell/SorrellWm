@@ -1,0 +1,57 @@
+// {
+//     "compilerOptions":
+//     {
+//         "target": "ES2018",
+//         "module": "commonjs",
+//         "jsx": "react-jsx",
+//         "strict": true,
+//         "noEmit": true,
+//         "lib": [ "es2016", "DOM" ],
+//         "esModuleInterop": true,
+//         "skipLibCheck": true,
+//         "forceConsistentCasingInFileNames": true,
+//         "noUnusedLocals": true
+//     },
+//     "include": [ "Source" ],
+//     "exclude": [ "Distribution", "remotion.config.ts" ]
+// }
+{
+    "compilerOptions":
+    {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+        "lib":
+        [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "rootDir": "./Source",
+        "outDir": "./Intermediate",
+        "strict": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "declaration": false,
+        "declarationMap": false,
+        "noEmit": false,
+        "noEmitOnError": true,
+        "allowJs": false,
+        "checkJs": false
+    },
+    "include":
+    [
+        "./Source/**/*.ts",
+        "./Source/**/*.tsx",
+        "./Source/Development/**/*.md"
+    ],
+    "exclude":
+    [
+        "Distribution",
+        "Intermediate",
+        "node_modules"
+    ]
+}

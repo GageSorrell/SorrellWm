@@ -34,17 +34,24 @@
         "npm": ">=11.0.0"
     },
     "type": "module",
+    "scripts": {
+        "clean": "npm run start -w @sorrellwm/clean-repo",
+        "clean:install": "npm run start:install -w @sorrellwm/clean-repo",
+        "clean:i": "npm run start:i -w @sorrellwm/clean-repo"
+    },
     "overrides": {
         "@tootallnate/once": "^3.0.1",
         "serialize-javascript": "^7.0.5",
         "tar": "^7.5.13",
         "uuid": "^14.0.0",
-        "vite": "^8.0.10"
+        "vite": "^8.0.10",
+        "zod": "^3.22.4"
     },
     "workspaces": [
         "Application",
         "!Application/Release/Application",
         "Package/*",
+        "!Package/CodeHike",
         "Package/**/*",
         "Package/Ui/*",
         "!Package/Tag/Documentation",

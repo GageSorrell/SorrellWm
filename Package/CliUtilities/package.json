@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "description": "Utilities developing CLI tools with TypeScript.",
   "keywords": [
     "cli",
@@ -8,9 +8,12 @@
     "utilities",
     "typescript",
     "ts",
+    "sorrell",
     "inquirer",
     "ora",
-    "commander"
+    "commander",
+    "clack",
+    "prompts"
   ],
   "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CliUtilities",
   "bugs": {
@@ -45,6 +48,12 @@
       "import": "./Distribution/FileSystem/index.js",
       "require": "./Distribution/FileSystem/index.js",
       "types": "./Distribution/FileSystem/index.d.ts"
+    },
+    "./git": {
+      "default": "./Distribution/Git/index.js",
+      "import": "./Distribution/Git/index.js",
+      "require": "./Distribution/Git/index.js",
+      "types": "./Distribution/Git/index.d.ts"
     },
     "./inquirer": {
       "default": "./Distribution/Inquirer/index.js",

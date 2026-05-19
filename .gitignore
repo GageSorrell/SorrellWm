@@ -16,10 +16,6 @@ node_modules
 # OSX
 .DS_Store
 
-Application/Release/Application/Distribution
-Application/Release/Build
-Application/Distribution
-
 Distribution
 
 .idea
@@ -33,3 +29,5 @@ Application/Windows/node_modules
 Application/Intermediate
 
 .env*
+*.tsbuildinfo
+.turbo

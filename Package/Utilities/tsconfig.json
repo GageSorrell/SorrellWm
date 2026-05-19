@@ -2,8 +2,8 @@
     "compilerOptions":
     {
         "ignoreDeprecations": "6.0",
-        "target": "es2023",
-        "module": "preserve",
+        "target": "ES2023",
+        "module": "Preserve",
 
         "rootDir": "./Source",
         "outDir": "./Distribution",

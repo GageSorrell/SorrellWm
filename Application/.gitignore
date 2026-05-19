@@ -3,3 +3,7 @@ Configuration/Development/DevSettings.json
 Configuration/Development/Dummy.*.json
 !Configuration/Development/Dummy.*.Schema.json
 EslintReport.html
+
+Release/Application/Distribution
+Release/Build
+Distribution

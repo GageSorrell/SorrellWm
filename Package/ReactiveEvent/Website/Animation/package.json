@@ -19,7 +19,7 @@
     "@sorrell/code-hike": "^1.0.20"
   },
   "devDependencies": {
-    "remotion": "4.0.177",
+    "remotion": "4.0.462",
     "typescript": "npm:tsover@^6.0.1"
   }
 }

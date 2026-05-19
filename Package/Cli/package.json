@@ -65,6 +65,6 @@
     "open": "^11.0.0",
     "semver": "^7.7.4",
     "terminal-image": "^4.3.0",
-    "tsover-runtime": "^0.0.6"
+    "tsover-runtime": "^0.0.7"
   }
 }

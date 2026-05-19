@@ -46,20 +46,20 @@
     "./styles.css": "./Source/Styles.css"
   },
   "peerDependencies": {
-    "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
-    "@remotion/fonts": "^4.0.459",
-    "@remotion/player": "^4.0.459",
+    "@remotion/fonts": "4.0.462",
+    "@remotion/player": "4.0.462",
     "@sorrell/landing-page-template": "^0.1.0",
     "@sorrell/react": "^1.0.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",
     "lucide-react": "^1.14.0",
-    "remotion": "^4.0.459",
+    "remotion": "4.0.462",
     "tailwind-merge": "^2.6.1"
   }
 }

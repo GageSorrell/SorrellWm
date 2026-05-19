@@ -5,9 +5,9 @@
   "description": "Clean the repo, deleting cached files that can interfere with development.",
   "main": "./Distribution/index.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.json",
-    "prestart": "npm run build",
-    "start": "node ./Distribution/index.js"
+    "start": "ts-node --project ./tsconfig.json ./Distribution/index.js",
+    "start:install": "npm run start && npm install",
+    "start:i": "npm run start && npm install --ignore-scripts"
   },
   "author": {
     "email": "gage@sorrell.sh",
@@ -18,11 +18,7 @@
   "devDependencies": {
     "@sorrellwm/script-utility": "*",
     "@types/node": "^24.12.2",
-    "chalk": "^5.3.0",
-    "concurrently": "^9.1.0",
-    "nodemon": "^3.1.7",
-    "ora": "^8.1.1",
-    "typescript": "npm:tsover@^6.0.0"
+    "typescript": "^6.0.3"
   },
   "private": true,
   "dependencies": {

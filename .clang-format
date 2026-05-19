@@ -10,5 +10,4 @@ PenaltyBreakAssignment: 10000
 AlignAfterOpenBracket: DontAlign
 BinPackArguments: false
 BreakBeforeBraces: Allman
-cppcoreguidelines-pro-bounds-pointer-arithmetic
 ---

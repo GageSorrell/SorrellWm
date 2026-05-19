@@ -46,6 +46,6 @@
     "typescript": "npm:tsover@^6.0.0"
   },
   "dependencies": {
-    "tsover-runtime": "^0.0.6"
+    "tsover-runtime": "^0.0.7"
   }
 }

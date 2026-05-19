@@ -1,77 +1,42 @@
 {
-  "name": "@sorrell/code-hike",
-  "private": false,
-  "version": "1.0.22",
-  "description": "A helper library for making animations with Code Hike.",
+  "private": true,
   "scripts": {
-    "dev": "remotion studio",
-    "build": "tsc -p ./tsconfig.json",
-    "postbuild": "ts-node --project ./tsconfig.script.json ./Script/AppendMarkdownModule.ts"
-  },
-  "keywords": [
-    "code-hike",
-    "code",
-    "hike",
-    "sorrell",
-    "react",
-    "remotion",
-    "next"
-  ],
-  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeHike#ReadMe",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/GageSorrell/SorrellWm/issues"
-  },
-  "repository": {
-    "directory": "Package/CodeHike",
-    "type": "git",
-    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
-  },
-  "author": {
-    "email": "gage@sorrell.sh",
-    "name": "Gage Sorrell",
-    "url": "https://sorrell.sh"
-  },
-  "license": "MIT",
-  "peerDependencies": {
-    "remotion": "4.0.177"
-  },
-  "peerDependenciesMeta": {
-    "remotion": {
-      "optional": true
-    }
+    "build": "turbo build --filter=codehike...",
+    "web": "turbo dev --filter=web --filter=codehike... ",
+    "test": "turbo test",
+    "clean": "turbo clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,mdx}\"",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "canary": "pkg-pr-new publish --json=canary.json --comment=off --compact './packages/codehike'"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "remotion": "4.0.177",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "@changesets/read": "0.6.1",
+    "@changesets/cli": "2.27.1",
+    "@changesets/changelog-github": "0.5.0",
+    "@octokit/action": "7.0.0",
+    "@octokit/rest": "21.0.2",
+    "@actions/exec": "1.1.1",
+    "@actions/github": "6.0.0",
+    "prettier": "^3.1.1",
+    "turbo": "^1.11.2",
+    "pkg-pr-new": "0.0.24",
+    "human-id": "4.1.1",
+    "unified": "11.0.5",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "mdast-util-to-string": "4.0.0"
   },
-  "files": [
-    "Distribution",
-    "Distribution/**/*",
-    "Remotion.js",
-    "Remotion.d.ts",
-    "tsconfig.remotion.json"
-  ],
-  "types": "./Distribution/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./Distribution/index.js",
-      "types": "./Distribution/index.d.ts"
+  "packageManager": "pnpm@11.1.3",
+    "homepage": "https://codehike.sorrell.sh",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
-    "./tsconfig": "./tsconfig.remotion.json",
-    "./remotion": "./Remotion.js"
-  },
-  "dependencies": {
-    "@mdx-js/loader": "",
-    "@mdx-js/react": "",
-    "@remotion/cli": "4.0.177",
-    "@remotion/zod-types": "4.0.177",
-    "codehike": "1.0.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "twoslash-cdn": "^0.2.9",
-    "zod": "^3.21.4"
-  }
+    "repository": {
+        "directory": "Package/Utilities",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT"
 }

@@ -1,20 +1,22 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "module": "preserve",
-        "moduleResolution": "bundler",
+        "module": "Preserve",
+        "moduleResolution": "Bundler",
         "types": [ "node" ],
-        "lib": [
-            "ES2021",
-            "tsover"
+        "lib":
+        [
+            "tsover",
+            "ES2021"
         ],
         "declaration": true,
         "declarationMap": true,
         "emitDeclarationOnly": true,
-        "declarationDir": "Distribution/Types",
+        "declarationDir": "./Distribution/Types",
         "noEmit": false
     },
-    "include": [
+    "include":
+    [
         "Source/**/*.ts",
         "Source/**/*.tsx"
     ]

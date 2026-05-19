@@ -1,0 +1,90 @@
+{
+  "name": "@sorrell/code-animation",
+  "private": false,
+  "version": "1.0.22",
+  "description": "A helper library for making animations with Code Hike.",
+  "scripts": {
+    "predev": "shx mkdir -p ./Intermediate/Development/ && copyfiles -u 1 \"Source/**/*.md\" Intermediate",
+    "dev:build": "tsc -w -p ./tsconfig.remotion.json",
+    "dev": "concurrently \"npm run dev:build\" \"npm run dev:studio\"",
+    "dev:studio": "remotion studio --log=verbose --config=./remotion.config.ts",
+    "build": "tsc -p ./tsconfig.json",
+    "postbuild": "ts-node --project ./tsconfig.script.json ./Script/AppendMarkdownModule.ts"
+  },
+  "keywords": [
+    "codehike",
+    "sorrell",
+    "react",
+    "remotion",
+    "animation",
+    "code",
+    "presentation",
+    "next"
+  ],
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CodeHike#ReadMe",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/CodeHike",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@remotion/cli": "4.0.462",
+    "remotion": "4.0.462"
+  },
+  "peerDependenciesMeta": {
+    "remotion": {
+      "optional": true
+    },
+    "@remotion/cli": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "shx": "^0.4.0",
+    "@remotion/cli": "4.0.462",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "copyfiles": "^2.4.1",
+    "remotion": "4.0.462",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  },
+  "files": [
+    "Distribution",
+    "Distribution/**/*",
+    "ReadMe.md",
+    "License.md",
+    "Remotion.js",
+    "Remotion.d.ts",
+    "tsconfig.remotion.json"
+  ],
+  "types": "./Distribution/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./tsconfig": "./tsconfig.remotion.json",
+    "./remotion": "./Remotion.js"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "",
+    "@mdx-js/react": "",
+    "@remotion/zod-types-v3": "4.0.462",
+    "codehike": "1.1.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "twoslash-cdn": "^0.2.9",
+    "zod": "^3.22.4"
+  }
+}

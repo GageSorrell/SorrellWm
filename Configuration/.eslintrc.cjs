@@ -18,7 +18,7 @@
  */
 function FileGlobs(Globs)
 {
-    /** @type ReadonlyArray<string> */
+    /** @type {ReadonlyArray<string>} */
     const Extensions =
         [
             "js",
