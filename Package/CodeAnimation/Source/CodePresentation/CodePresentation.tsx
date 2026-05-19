@@ -15,9 +15,9 @@ import {
     Video
 } from "./CodePresentation.Internal.js";
 import { TokenTransitions, UseTokenTransitions } from "./TokenTransitions.js";
-import type { AnnotationHandler } from "codehike/code";
-import type { AnyZodObject } from "zod";
-import { parseRoot } from "codehike/blocks";
+import type { AnnotationHandler } from "@sorrell/codehike/code";
+import type { ZodObject } from "zod";
+import { parseRoot } from "@sorrell/codehike/blocks";
 
 /**
  * An animation, made up of {@link FStep | steps}, to explain code.
@@ -112,7 +112,7 @@ export function CodePresentation(Props: PCodePresentation): ReactNode
         };
     }, [ FrameRate, Resolution, Resolutions ]);
 
-    const CompComponent: FC<CompositionProps<AnyZodObject, PVideo>> = Composition as FC;
+    const CompComponent: FC<CompositionProps<ZodObject<any, any>, PVideo>> = Composition as FC;
 
     return (
         <CompComponent

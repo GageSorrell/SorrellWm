@@ -6,7 +6,7 @@
  */
 
 import { AbsoluteFill, Sequence, type SequenceProps } from "remotion";
-import { Block, HighlightedCodeBlock } from "codehike/blocks";
+import { Block, HighlightedCodeBlock } from "@sorrell/codehike/blocks";
 import { type CSSProperties, type FC, type HTMLProps, type ReactNode } from "react";
 import type { FResolution, FStep } from "./CodePresentation.Types.js";
 import type {
@@ -17,7 +17,7 @@ import type {
     PVideo,
     PVideoStep
 } from "./CodePresentation.Internal.Types.js";
-import { Pre } from "codehike/code";
+import { Pre } from "@sorrell/codehike/code";
 import { z } from "zod";
 
 /* eslint-disable @typescript-eslint/typedef, @typescript-eslint/no-unused-vars, jsdoc/require-jsdoc */
@@ -124,14 +124,14 @@ export function Video(Props: PVideo): ReactNode
         AbsoluteFill as FC<HTMLProps<HTMLDivElement>>;
 
     return (
-        <AbsoluteFillComponent
+        <AbsoluteFill
             style={ {
                 alignItems: "center",
                 background: "#0D1117",
                 fontSize: 24
             } }>
             { Props.Steps.map(MakeToVideoStep(Props)) }
-        </AbsoluteFillComponent>
+        </AbsoluteFill>
     );
 }
 

@@ -13,7 +13,7 @@ import type {
     FTokenTransitionsHook,
     PCodePresentation
 } from "./CodePresentation.Types.js";
-import type { HighlightedCode } from "codehike/code";
+import type { HighlightedCode } from "@sorrell/codehike/code";
 import type { MarkdownSchema } from "./CodePresentation.Internal.js";
 import type { ReactNode } from "react";
 import type { z } from "zod";

@@ -12,7 +12,7 @@ import {
     type HighlightedCode,
     InnerPre,
     InnerToken
-} from "codehike/code";
+} from "@sorrell/codehike/code";
 import {
     type ComponentProps,
     type ReactNode,
@@ -27,7 +27,7 @@ import {
     type TokenTransitionsSnapshot,
     calculateTransitions,
     getStartingSnapshot
-} from "codehike/utils/token-transitions";
+} from "@sorrell/codehike/utils/token-transitions";
 import { interpolate, interpolateColors } from "remotion";
 import type { FTokenTransitionsHook } from "./CodePresentation.Types.js";
 
@@ -38,7 +38,7 @@ export function UseTokenTransitions(
 ): ReturnType<FTokenTransitionsHook>
 {
     const Frame: number = useCurrentFrame();
-    const Ref: RefObject<HTMLPreElement> = useRef<HTMLPreElement>(null);
+    const Ref: RefObject<HTMLPreElement | null> = useRef<HTMLPreElement>(null);
     const [ Snapshot, SetSnapshot ] = useState<TokenTransitionsSnapshot>();
     const [ Handle ] = useState(() => delayRender());
 

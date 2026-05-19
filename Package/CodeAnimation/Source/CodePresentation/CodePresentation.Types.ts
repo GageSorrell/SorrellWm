@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { AnnotationHandler, BlockAnnotation, HighlightedCode } from "codehike/code";
+import type { AnnotationHandler, BlockAnnotation, HighlightedCode } from "@sorrell/codehike/code";
 import type { CSSProperties, PropsWithChildren, RefObject } from "react";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { CodePresentation } from "./CodePresentation.js";
@@ -64,7 +64,7 @@ export type FTokenTransitionsHook = (
     Duration: number
 ) => {
     Code: HighlightedCode;
-    Ref: RefObject<HTMLPreElement>;
+    Ref: RefObject<HTMLPreElement | null>;
 };
 
 /** The props type for defining {@link AnnotationHandler | AnnotationHandlers}. */

@@ -10,7 +10,7 @@
 import * as Fs from "fs";
 import * as Path from "path";
 import { Config, type WebpackConfiguration } from "@remotion/cli/config";
-import type { CodeHikeConfig } from "codehike/mdx";
+import type { CodeHikeConfig } from "@sorrell/codehike/mdx";
 import type { RuleSetRule } from "webpack";
 
 export const DefaultCodeHikeConfig: CodeHikeConfig =
@@ -27,7 +27,7 @@ const TsConfigRaw = JSON.parse(Fs.readFileSync(TsConfigPath, "utf-8"));
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 async function EnableMdx(CurrentConfiguration: WebpackConfiguration): Promise<WebpackConfiguration>
 {
-    const { remarkCodeHike, recmaCodeHike } = await import("codehike/mdx");
+    const { remarkCodeHike, recmaCodeHike } = await import("@sorrell/codehike/mdx");
 
     type FRule =
         | false

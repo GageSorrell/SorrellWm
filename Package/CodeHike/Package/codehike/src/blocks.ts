@@ -111,7 +111,7 @@ export function parseProps<SchemaType extends z.ZodType>(
     const Name = path[path.length - 1];
 
     throw new Error(`at ${ Location || "root" }
-Error for \`${String(Name)}\`: ${message}
-${JSON.stringify(Rest, null, 2)}
+Error for \`${ String(Name) }\`: ${ message }
+${ JSON.stringify(Rest, null, 2) }
   `);
 }
