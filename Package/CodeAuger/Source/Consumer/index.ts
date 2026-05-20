@@ -5,5 +5,4 @@
  * @license   MIT
  */
 
-export * from "./Config.Command.js";
-export * from "./Config.Types.js";
+export * from "./Config/index.js";

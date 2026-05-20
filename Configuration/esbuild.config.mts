@@ -123,10 +123,12 @@ async function CheckExports(Exports: FExports): Promise<boolean>
         throw new Error("No exports property was found in package.json!  Exiting...");
     }
 
+    const ExportsRecord: Record<string, unknown> = PackageJsonParsed.exports as Record<string, unknown>;
+
     // const PackageJsonExports: ReadonlyArray<string> = Object.keys(PackageJsonParsed.exports);
     const PackageJsonExports: ReadonlyArray<string> = ((): ReadonlyArray<string> =>
     {
-        const Raw: Array<string> = Object.keys(PackageJsonParsed.exports);
+        const Raw: Array<string> = Object.keys(ExportsRecord);
         Raw.splice(Raw.indexOf("."), 1, "index");
 
         return Raw.map((RawKey: string): string =>
@@ -138,20 +140,6 @@ async function CheckExports(Exports: FExports): Promise<boolean>
     })();
 
     const ExportsKeys: ReadonlyArray<string> = Object.keys(Exports);
-    // const ExportsKeys: ReadonlyArray<string> = ((): ReadonlyArray<string> =>
-    // {
-    //     const Raw: Array<string> = Object.keys(Exports);
-    //     Raw.splice(Raw.indexOf("."), 1, "index");
-
-    //     return Raw.map((RawKey: string): string =>
-    //     {
-    //         return (RawKey.startsWith("./")
-    //             ? RawKey.slice(2)
-    //             : RawKey).replaceAll("/", "-");
-
-    //         return Out;
-    //     });
-    // })();
 
     const ExportsMatch: boolean = (
         ExportsKeys.length === PackageJsonExports.length &&
@@ -189,7 +177,9 @@ export async function Run(
     Options: Partial<FBuildOptions> = DefaultOptions
 ): Promise<void>
 {
-    const { OutDir, TypeScriptConfigPath, ...BuildOptions } = { ...DefaultOptions, ...Options };
+    const { OutDir, TypeScriptConfigPath, ...InBuildOptions } = { ...DefaultOptions, ...Options };
+
+    const BuildOptions: FSorrellBuildOptions = InBuildOptions as FSorrellBuildOptions;
 
     await Fs.rm(
         OutDir,

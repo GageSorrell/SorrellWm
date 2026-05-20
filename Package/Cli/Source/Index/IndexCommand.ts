@@ -34,7 +34,7 @@ const Config: IndexConfig = MakeConfig({
 export/**
        * The `index` command of `@sorrell/cli`.
        */
-const IndexCommand: FIndexCommand = MakeCommand("index", Config, Main);
+const IndexCommand: FIndexCommand = MakeCommand("index", Config, HandleIndexCommand);
 
 function HandleFileCreation(
     { extension, internal, name }: TLocalOptions<IndexConfig>
@@ -154,7 +154,7 @@ function HandleDirectory(Name: TOptions<IndexConfig>["name"]): Effect.Effect<boo
     });
 }
 
-function Main(InOptions: TOptions<IndexConfig>): FIndexEffect
+function HandleIndexCommand(InOptions: TOptions<IndexConfig>): FIndexEffect
 {
     const { name } = InOptions;
 

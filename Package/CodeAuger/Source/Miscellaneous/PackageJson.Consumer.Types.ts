@@ -1,0 +1,34 @@
+/**
+ * @file      PackageJson.Consumer.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import type { IPackageJsonBase } from "./PackageJson.Internal.Types.js";
+
+/**
+ * The optional settings for a package that uses `code-auger`,
+ * specified in that package's `package.json` file under the
+ * property `"code-auger"`.
+ *
+ * @property {string} config - The path to the `code-auger` config file.
+ * If this is not specified, then the default path `./code-auger.config.ts` is used (relative to
+ * the directory containing the `package.json` file).
+ */
+export type CodeAugerPackageConfig =
+    Partial<{
+        config: string;
+    }>;
+
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
+/**
+ * The type of `package.json`, with an additional *optional* field
+ * `"code-auger"`, to support basic settings for `code-auger`.
+ */
+export interface IPackageJson extends IPackageJsonBase<CodeAugerPackageConfig> { }
+
+/* eslint-enable @typescript-eslint/no-empty-object-type */
+
+export default IPackageJson;

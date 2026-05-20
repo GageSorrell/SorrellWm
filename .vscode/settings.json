@@ -27,6 +27,8 @@
     ],
     "files.exclude":
     {
+        "**/Distribution/**": true,
+        "**/Intermediate/**": true,
         "**/node_modules/**": true
     },
     "search.useIgnoreFiles": false,

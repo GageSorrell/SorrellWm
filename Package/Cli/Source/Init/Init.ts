@@ -52,7 +52,7 @@ const Config: InitConfig = MakeConfig({
 export/**
        * The `init` command of `@sorrell/cli`.
        */
-const InitCommand: InitCommandType = MakeCommand("init", Config, Main);
+const InitCommand: InitCommandType = MakeCommand("init", Config, HandleInitCommand);
 
 async function GetTsConfig({
     packageType,
@@ -367,7 +367,7 @@ async function HandleReadMe(
     await WriteFile(resolve("./ReadMe.md"), `# \`${ Name }\`\n`);
 }
 
-function Main(Options: InitOptions): TSubCommandEffect<InitError>
+function HandleInitCommand(Options: InitOptions): TSubCommandEffect<InitError>
 {
     // const LogStep: ((Message: string) => void) = GetLogStep(silent);
 

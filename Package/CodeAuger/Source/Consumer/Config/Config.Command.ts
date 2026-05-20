@@ -5,17 +5,31 @@
  * @license   MIT
  */
 
-import { Args, Command } from "@effect/cli";
+import { Args, Command, Options } from "@effect/cli";
 import type { FConfigCommand, FConfigCommandConfig } from "./Config.Command.Internal.Types.js";
+import Chalk from "chalk";
+import { Code } from "@sorrell/cli-utilities/format";
 import { HandleConfigCommand } from "./Config.Command.Internal.js";
 import { pipe } from "effect";
+
+export/** The default file name of the (consumer) config file. */
+const DefaultConfigFileName: string = "code-auger.config.ts";
 
 const ConfigCommandConfig: FConfigCommandConfig =
     {
         Out: pipe(
             Args.file({ exists: "no", name: "out" }),
-            Args.withDefault("code-auger.config.ts"),
+            Args.withDefault(DefaultConfigFileName),
             Args.withDescription("The path to where the config file will be written.")
+        ),
+        PackageJson: pipe(
+            Options.boolean("package-json", { aliases: [ "p" ] }),
+            Options.withDefault(false),
+            Options.withDescription(
+                `Whether to add/update a custom ${ Code("\"code-auger\"") } field in your ` +
+                `package's ${ Code("project.json") }.  If not specified, then this is done iff the ` +
+                `${ Code("\"out\"") } file path is ${ Chalk.italic("not") } the default value.`
+            )
         )
     };
 

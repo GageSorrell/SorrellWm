@@ -5,10 +5,16 @@
  * @license   MIT
  */
 
-import type { Formatter } from "./Config.Types.js";
+import type { Formatter } from "../../Consumer/Config/Config.Types.js";
 import { GetPackageJson } from "@sorrell/utilities/npm";
 import type { IPackageJson } from "package-json-type";
 
+/**
+ * Get the {@link Formatter | formatters} currently installed by the consumer, if any.
+ *
+ * @returns {Promise<ReadonlyArray<Formatter>>} The {@link Formatter | formatters} currently
+ * installed by the consumer.
+ */
 export async function GetInstalledFormatters(): Promise<ReadonlyArray<Formatter>>
 {
     const PackageJson: IPackageJson = await GetPackageJson();

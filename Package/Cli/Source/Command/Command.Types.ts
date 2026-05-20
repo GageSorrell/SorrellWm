@@ -16,56 +16,6 @@ import type { Simplify } from "effect/Types";
 import type { TEffectError } from "./Command.Internal.Types.js";
 import type { ValidationError } from "@effect/cli/ValidationError";
 
-// import type { Effect, Types } from "effect";
-// import type { Command } from "@effect/cli";
-// import type { ConfigError } from "effect/ConfigError";
-// import type { FStepService } from "../Effect/Effect.js";
-// import type { UnknownException } from "effect/Cause";
-
-// export type TCommand<
-//     NameType extends string,
-//     ConfigType extends Command.Command.Config,
-//     RequirementsType,
-//     ErrorType = UnknownException
-// > =
-//     [ ErrorType ] extends [ never ]
-//         ? Command.Command<
-//             NameType,
-//             never,
-//             ErrorType | ConfigError,
-//             TRequirements<ConfigType> | RequirementsType
-//         >
-//         : Command.Command<
-//             NameType,
-//             never,
-//             ErrorType | ConfigError,
-//             TRequirements<ConfigType> | RequirementsType
-//         >;
-
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-
-// export type FCommandAny = Command.Command<any, any, any, any>;
-
-// export type TCommandError<CommandType extends TCommandEffect<any>> =
-//     CommandType extends Command.Command<any, any, infer E, any>
-//         ? E
-//         : never;
-
-// /* eslint-enable @typescript-eslint/no-explicit-any */
-
-// export type TProvidedOptions<ConfigType extends Command.Command.Config> =
-//     Types.Simplify<Command.Command.ParseConfig<ConfigType>>;
-
-// export type TRequirements<ConfigType extends Command.Command.Config> =
-//     | TProvidedOptions<ConfigType>
-//     | FStepService;
-
-// export type TCommandEffect<ConfigType extends Command.Command.Config, ErrorType, R> =
-//     Effect.Effect<void, ErrorType | ConfigError, TRequirements<ConfigType> | R>;
-
-// export type TMainFunction<ConfigType extends Command.Command.Config, ErrorType, R> =
-//     (Options: TProvidedOptions<ConfigType>) => TCommandEffect<ConfigType, ErrorType, R>;
-
 export type TSubCommandFunction<ErrorType> =
     (Arguments: ReadonlyArray<string>) => TSubCommandEffect<ErrorType>;
 
@@ -77,7 +27,7 @@ export type TSubCommandEffect<ErrorType, RequirementsType = never> =
         | FileSystem.FileSystem | FStepService | NodeContext.NodeContext | CommandExecutor.CommandExecutor
     >;
 
-export type TCommandMain<
+export type TCommandHandler<
     ConfigType extends Command.Command.Config & FGlobalConfig,
     ErrorType,
     RequirementsType = never

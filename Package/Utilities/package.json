@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.10",
+    "version": "1.2.11",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [

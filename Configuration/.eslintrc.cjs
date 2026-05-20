@@ -303,6 +303,13 @@ module.exports = {
             {
                 "jsdoc/require-example": "off"
             }
+        },
+        {
+            files: [ "Package/CodeAuger/Source/**/*.ts", "Package/Create/CodeAuger/Source/**/*.ts" ],
+            rules:
+            {
+                "@typescript-eslint/naming-convention": "off"
+            }
         }
     ],
     parser: "@typescript-eslint/parser",

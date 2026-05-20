@@ -30,7 +30,7 @@
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
   "repository": {
-    "directory": "Package/CreateCodeAuger",
+    "directory": "Package/Create/CodeAuger",
     "type": "git",
     "url": "git+https://github.com/GageSorrell/SorrellWm.git"
   },
@@ -41,7 +41,14 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@sorrell/cli-utilities": "1.0.47",
-    "@sorrell/utilities": "1.2.9"
+    "@clack/prompts": "1.4.0",
+    "@sorrell/cli-utilities": "1.0.48",
+    "@sorrell/utilities": "1.2.11",
+    "chalk": "4.1.2",
+    "code-auger": "0.1.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "package-json-type": "1.1.2"
   }
 }

@@ -8,7 +8,7 @@
 import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
 import { type CliApp, Command, type ValidationError } from "@effect/cli";
 import { FStepService, GetWithStep } from "../Effect/Effect.js";
-import type { TCommand, TCommandMain } from "./Command.Types.js";
+import type { TCommand, TCommandHandler } from "./Command.Types.js";
 import { ConfigProvider } from "../Config/Config.js";
 import { Effect } from "effect";
 import type { FGlobalConfig } from "../Config/Config.Types.js";
@@ -16,44 +16,16 @@ import type { FGlobalOptions } from "../Options/Options.Types.js";
 import { NodeContext } from "@effect/platform-node";
 import type { Simplify } from "effect/Types";
 
-// function GetCommandMain<
-//     ConfigType extends Command.Command.Config,
-//     ErrorType,
-//     RequirementsType
-// >(
-//     Main: TMainFunction<ConfigType, ErrorType, RequirementsType>
-// ): TMainFunction<ConfigType, ErrorType, RequirementsType>
-// {
-//     type ThisEffect = ReturnType<TMainFunction<ConfigType, ErrorType, RequirementsType>>;
-//     return function(Options: TProvidedOptions<ConfigType>): ThisEffect
-//     {
-//         return Effect.withConfigProvider(Main(Options), ConfigProvider);
-//     };
-// }
-
-// export/**
-//        * All CLI commands have `version` that is this package's version.
-//        *
-//        * @throws {Error} If it cannot find or get a valid semver from this package's `package.json`.
-//        */
-// function MakeCommand<
-//     NameType extends string,
-//     ConfigType extends Command.Command.Config,
-//     RequirementsType,
-//     ErrorType
-// >(
-//     Name: NameType,
-//     Config: ConfigType,
-//     MainFunction: TMainFunction<typeof Config, ErrorType, RequirementsType>
-// ): TCommand<typeof Name, typeof Config, ErrorType, RequirementsType>
-// {
-//     return Command.make(
-//         Name,
-//         Config,
-//         GetCommandMain<typeof Config, ErrorType, RequirementsType>(MainFunction)
-//     );
-// }
-
+/**
+ * A wrapper for {@link Command.make} that imposes sensible defaults.
+ *
+ * @param Name - The name of the command to make.
+ * @param Config - The {@link Command.Command.Config | configuration} object for the
+ * command to be made.
+ * @param Handler - The foo.
+ * @returns {TCommand<typeof Name, typeof Config, ErrorType, RequirementsType>} The
+ * {@link TCommand | command} constructed by passing the given arguments to {@link Command.make}.
+ */
 export function MakeCommand<
     NameType extends string,
     ConfigType extends Command.Command.Config & FGlobalConfig,
@@ -62,7 +34,7 @@ export function MakeCommand<
 >(
     Name: NameType,
     Config: ConfigType,
-    Main: TCommandMain<ConfigType, ErrorType, RequirementsType>
+    Handler: TCommandHandler<ConfigType, ErrorType, RequirementsType>
 ): TCommand<typeof Name, typeof Config, ErrorType, RequirementsType>
 {
     type ThisOptions = Simplify<
@@ -95,7 +67,7 @@ export function MakeCommand<
             return Effect.withConfigProvider(
                 Effect.provide(
                     Effect.provideService(
-                        Main(Options),
+                        Handler(Options),
                         FStepService,
                         {
                             Log: GetWithStep((Options as FGlobalOptions).silent)

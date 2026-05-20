@@ -57,6 +57,7 @@
         "Package/*",
         "!Package/CodeHike",
         "Package/**/*",
+        "Package/Create/*",
         "Package/Ui/*",
         "!Package/Tag/Documentation",
         "!Package/Tag/Documentation/**/*",

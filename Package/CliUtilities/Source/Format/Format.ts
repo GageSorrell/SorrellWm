@@ -7,17 +7,20 @@
  *            to the user with consistent and aesthetic formatting.
  */
 
+/* eslint-disable jsdoc/require-example */
+
 import type { FormatRules, Formatter } from "./Format.Types.js";
 import Chalk from "chalk";
 import type { FormatRulesParsed } from "./Format.Internal.Types.js";
 import { ParseFormatRules } from "./Format.Internal.js";
+import TerminalLink from "terminal-link";
 
 /**
  * The base function for all functions exported by this module.
  *
  * @param Message - The input of the function in which this is called.
  *
- * @returns The given {@link Message} with base formatting applied.
+ * @returns {string} The given {@link Message} with base formatting applied.
  */
 function FormatBase(Message: string): string
 {
@@ -25,11 +28,25 @@ function FormatBase(Message: string): string
 }
 
 /**
+ * Formats a given {@link DisplayText} `string` *and* equips it with the given {@link Url}
+ * to create a hyperlink.
+ *
+ * @param DisplayText - The given text to display for the hyperlink.
+ * @param Url - The given URL to which the {@link DisplayText} will link.
+ *
+ * @returns {string} A hyperlink of the given {@link DisplayText} that directs to the given {@link Url}.
+ */
+export function Link(DisplayText: string, Url: string): string
+{
+    return TerminalLink(FormatBase(Chalk.underline(Chalk.cyan(DisplayText))), Url);
+}
+
+/**
  * Formats a given {@link Message} as code.
  *
  * @param Message - The given message to format.
  *
- * @returns The given {@link Message}, formatted to convey that it is code.
+ * @returns {string} The given {@link Message}, formatted to convey that it is code.
  */
 export function Code(Message: string): string
 {
@@ -43,7 +60,7 @@ export function Code(Message: string): string
  *
  * @param Path - The path to format.
  *
- * @returns The given {@link Path}, formatted to convey that it is a path.
+ * @returns {string} The given {@link Path}, formatted to convey that it is a path.
  */
 export function Path(Path: string): string
 {
@@ -56,7 +73,7 @@ export function Path(Path: string): string
  * @param Message - The message to format.
  * @param Rules - The {@link FormatRules} describing the transformations that should be made.
  *
- * @returns The formatted {@link Message}, such that every matched substring in {@link Rules}
+ * @returns {string} The formatted {@link Message}, such that every matched substring in {@link Rules}
  * is formatted by the corresponding {@link Formatter}.
  */
 export function Format(
@@ -84,7 +101,7 @@ export function Format(
  * multiple {@link Rules} share a given key, then the respective formatter functions
  * will be composed in the order of the given {@link Rules} objects.
  *
- * @returns A function that will format the `Message` passed to it according to the
+ * @returns {Formatter} A function that will format the `Message` passed to it according to the
  * {@link Rules} passed to this function.
  */
 export function MakeFormatter(...Rules: [ FormatRules ] | Array<FormatRules>): Formatter

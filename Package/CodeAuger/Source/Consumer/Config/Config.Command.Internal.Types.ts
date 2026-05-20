@@ -7,26 +7,64 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { Args, Command } from "@effect/cli";
+import type { Args, Command, Options } from "@effect/cli";
+import type { FileSystem, Path } from "@effect/platform";
+import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
 import type { Effect } from "effect";
-import type { FileSystem } from "@effect/platform";
+import type { PlatformError } from "@effect/platform/Error";
 
 export type FConfigCommandConfig =
     {
         Out: Args.Args<string>;
+        PackageJson: Options.Options<boolean>;
     };
 
 export type FConfigCommandOptions =
     Readonly<{
         Out: string;
+        PackageJson: boolean;
     }>;
+
+export type GetBaseConfigFileTemplateEffect =
+    Effect.Effect<
+        string,
+        PlatformError,
+        | Path.Path
+        | FileSystem.FileSystem
+    >;
+
+export type WriteConfigManifestsTypeEffect =
+    Effect.Effect<
+        string,
+        PlatformError,
+        | Path.Path
+        | FileSystem.FileSystem
+    >;
+
+export type GetConfigPathEffect =
+    Effect.Effect<
+        string,
+        RootDirectoryNotFoundError,
+        Path.Path
+    >;
 
 export type FConfigCommand =
     Command.Command<
         "init-config",
-        FConfigCommandConfig,
-        never,
+        | Path.Path
+        | FileSystem.FileSystem,
+        | PlatformError
+        | RootDirectoryNotFoundError
+        | PackageJsonParseError,
         FConfigCommandOptions
     >;
 
-export type ConfigCommandEffect = Effect.Effect<void, never, FileSystem.FileSystem>;
+export type ConfigCommandEffect =
+    Effect.Effect<
+        void,
+        | PlatformError
+        | RootDirectoryNotFoundError
+        | PackageJsonParseError,
+        | Path.Path
+        | FileSystem.FileSystem
+    >;

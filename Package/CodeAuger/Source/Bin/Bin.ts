@@ -7,6 +7,10 @@
  * @license   MIT
  */
 
+import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import { Command } from "@effect/cli";
+import { Effect } from "effect";
+
 /** The entry-point for commands provided by this package. */
 async function Main(): Promise<void>
 {
@@ -23,13 +27,14 @@ async function Main(): Promise<void>
 
     const SubCommands =
         [
-            CreateConfigCommand,
-            GenerateCommand
+            // CreateConfigCommand,
+            // GenerateCommand
         ] as const;
 
     const CliFn =
         Command.run(
-            MainCommand.pipe(Command.withSubcommands(SubCommands)),
+            MainCommand,
+            // MainCommand.pipe(Command.withSubcommands(SubCommands)),
             {
                 name: "code-auger",
                 version

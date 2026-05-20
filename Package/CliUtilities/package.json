@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "description": "Utilities developing CLI tools with TypeScript.",
   "keywords": [
     "cli",
@@ -100,6 +100,7 @@
     "en-inflectors": "^1.0.12",
     "listr2": "^10.2.1",
     "node-pty": "^1.1.0",
-    "ora": "^9.3.0"
+    "ora": "^9.3.0",
+    "terminal-link": "5.0.0"
   }
 }
