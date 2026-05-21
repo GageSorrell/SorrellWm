@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
-export * from "effect";
-export * as Effect from "./Effect.Types.ts";
+export * from "./Test.Types.ts";
+export * from "./Utility.Types.ts";

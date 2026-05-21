@@ -48,6 +48,8 @@ export type GetConfigPathEffect =
         Path.Path
     >;
 
+function GetNodeModulesPath(InTestPath?: string): Effect.Effect<string, PlatformError | RootDirectoryNotFoundError, EffectPath.Path | FileSystem.FileSystem>
+
 export type FConfigCommand =
     Command.Command<
         "init-config",

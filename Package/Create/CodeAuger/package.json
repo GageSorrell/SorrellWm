@@ -43,7 +43,7 @@
   "dependencies": {
     "@clack/prompts": "1.4.0",
     "@sorrell/cli-utilities": "1.0.48",
-    "@sorrell/utilities": "1.2.11",
+    "@sorrell/utilities": "1.2.12",
     "chalk": "4.1.2",
     "code-auger": "0.1.6"
   },

@@ -6,7 +6,7 @@
  */
 
 import type { DefinedOnlyOption, MaybeDefinedOption, ReadonlyOption } from "./Array.Internal.ts";
-import type { NoOptions, TOptions } from "../Miscellaneous/Utility.Types.ts";
+import type { NoOptions } from "../Option/Option.Types.ts";
 import type { TBuildStaticTArray } from "./Array.Internal.Types.ts";
 import type { TIsNonNegativeInteger } from "../Math/Math.Types.ts";
 
@@ -48,7 +48,7 @@ export type TArray<
  */
 export type TArrayType<
     ElementType = unknown,
-    OptionsType extends Options = NoOptions,
+    OptionsType extends Options = Value,
     ArraySize extends number = number
 > =
     | TArray<ElementType, OptionsType>
@@ -70,7 +70,7 @@ export type TArrayType<
  */
 export type TArrayTypeUnsafe<
     ElementType,
-    OptionsType extends Options = NoOptions,
+    OptionsType extends Options = Value,
     ArraySize extends number = number
 > =
     | TArrayType<ElementType, OptionsType, ArraySize>
@@ -84,7 +84,7 @@ export type TArrayTypeUnsafe<
  */
 export type TMaybeArray<
     ElementType,
-    OptionsType extends Options = NoOptions
+    OptionsType extends Options = Value
 > =
     | ElementType
     | TArray<ElementType, OptionsType>;
@@ -100,7 +100,7 @@ export type TMaybeArray<
 export type TStaticArray<
     ElementType,
     ArraySize extends number,
-    OptionsType extends Options = NoOptions
+    OptionsType extends Options = Value
 > =
     ArraySize extends ArraySize
         ? number extends ArraySize
@@ -118,7 +118,7 @@ export type TStaticArray<
  */
 export type TNonemptyArray<
     ElementType,
-    OptionsType extends Options = NoOptions
+    OptionsType extends Options = Value
 > =
     Options.DefinedOnly extends OptionsType
         ? Options.MaybeDefined extends OptionsType
@@ -161,7 +161,8 @@ export namespace Options
     /** Specifies that the given `ElementType` must *not* include `undefined`. */
     export type DefinedOnly = typeof DefinedOnlyOption;
 
-    export type None = NoOptions;
+    /** @see {@link Value} */
+    export type None = Value;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

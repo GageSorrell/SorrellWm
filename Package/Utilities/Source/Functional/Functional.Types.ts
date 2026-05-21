@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { TMaybeAsync } from "../Async/Async.Types.ts";
+import type { TOrAsync } from "../Async/Async.Types.ts";
 
 export type TExtractFunction<Type> =
     Type extends { (...ArgumentVector: infer ArgumentVectorType): infer ReturnType }
@@ -26,15 +26,12 @@ export type TFunction<ArgumentType = never, ReturnType = void> =
         ? {
             (): ReturnType;
         }
-        : ArgumentType extends Array<unknown>
+        : ArgumentType extends Array<unknown> | ReadonlyArray<unknown>
             ? (...ArgumentVector: ArgumentType) => ReturnType
             : (Argument: ArgumentType) => ReturnType;
 
 export namespace TFunction
 {
-    export type MaybeAsync<
-        ArgumentVectorType extends Array<unknown> = [ ],
-        ReturnType = void
-    > =
-        TMaybeAsync<TFunction<ArgumentVectorType, ReturnType>>;
+    export type OrAsync<ArgumentType = never, ReturnType = void> =
+        TOrAsync<TFunction<ArgumentType, ReturnType>>;
 }

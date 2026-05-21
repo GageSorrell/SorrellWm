@@ -6,7 +6,7 @@
  */
 
 import type { FilteredArray, Options, TArrayType } from "./Array.Types.ts";
-import type { NoOptions } from "../Miscellaneous/Utility.Types.ts";
+import type { Value } from "../Option/Option.Types.ts";
 
 /**
  * Filter out all instances of `undefined` from a given {@link Array:param}.
@@ -31,7 +31,7 @@ import type { NoOptions } from "../Miscellaneous/Utility.Types.ts";
  */
 export function FilterDefined<
     ElementType,
-    OptionsType extends Options = NoOptions,
+    OptionsType extends Options = Value,
     ArraySize extends number = number
 >(
     Array: TArrayType<
@@ -42,7 +42,7 @@ export function FilterDefined<
 ): FilteredArray<ElementType>;
 export function FilterDefined<
     ElementType,
-    OptionsType extends Options = NoOptions,
+    OptionsType extends Options = Value,
     ArraySize extends number = number
 >(
     Array: TArrayType<
@@ -53,7 +53,7 @@ export function FilterDefined<
 ): FilteredArray<ElementType>;
 export function FilterDefined<
     ElementType,
-    OptionsType extends Options = NoOptions,
+    OptionsType extends Options = Value,
     ArraySize extends number = number
 >(
     Array: TArrayType<
@@ -64,7 +64,7 @@ export function FilterDefined<
 ): FilteredArray<ElementType>;
 export function FilterDefined<
     ElementType,
-    OptionsType extends Options = NoOptions,
+    OptionsType extends Options = Value,
     ArraySize extends number = number
 >(
     Array: TArrayType<

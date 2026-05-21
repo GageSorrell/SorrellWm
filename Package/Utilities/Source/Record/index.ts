@@ -6,4 +6,5 @@
  */
 
 export * from "./Record.ts";
+export type { RecordNonNullable as NonNullable } from "./Record.Meta.ts";
 export * from "./Record.Types.ts";

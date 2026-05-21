@@ -11,7 +11,7 @@ import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.t
 import { dirname, join } from "path";
 import { Effect } from "effect";
 import { HasErrorCode } from "./Npm.Effect.Internal.ts";
-import type { IBase } from "package-json-type";
+import type { IPackageJson } from "package-json-type";
 import Process from "process";
 
 /**
@@ -47,13 +47,13 @@ export function GetPackageJson(Path?: string): EGetPackageJson
             Effect.catchAll((Cause: unknown) => Effect.die(Cause))
         );
 
-        const PackageJson: IBase = yield* Effect.try({
+        const PackageJson: IPackageJson = yield* Effect.try({
             catch: (Cause: unknown) =>
                 new PackageJsonParseError({
                     Cause,
                     Path: PackageJsonPath
                 }),
-            try: () => JSON.parse(FileContents) as IBase
+            try: () => JSON.parse(FileContents) as IPackageJson
         });
 
         return PackageJson;

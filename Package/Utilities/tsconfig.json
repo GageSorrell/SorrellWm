@@ -1,8 +1,7 @@
 {
     "compilerOptions":
     {
-        "ignoreDeprecations": "6.0",
-        "target": "ES2023",
+        "target": "ES2025",
         "module": "Preserve",
 
         "rootDir": "./Source",
@@ -11,7 +10,7 @@
         "lib":
         [
             "tsover",
-            "ES2022",
+            "ES2025",
             "DOM",
             "DOM.Iterable"
         ],

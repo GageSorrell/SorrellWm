@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
-export * from "effect";
-export * as Effect from "./Effect.Types.ts";
+export type { IterableContainer as Iterable } from "./Container.Meta.Types.ts";
+export * from "./Container.Types.ts";

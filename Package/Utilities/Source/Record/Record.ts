@@ -6,12 +6,13 @@
  */
 
 import type {
-    TFlatMapRecordTransformer,
-    TFromPath,
-    TMapRecordTransformer,
-    TPath,
-    TRef
+    FlatMapper,
+    FromPath,
+    Mapper,
+    Path,
+    Walkable
 } from "./Record.Types.ts";
+import type { Ref } from "../Miscellaneous/Utility.Types.ts";
 
 // @TODO Write example for `SetPropertyFromPath`.
 /* eslint-disable jsdoc/require-example */
@@ -29,15 +30,15 @@ import type {
  * `.`-delimited `string`.
  */
 export function SetPropertyFromPath<
-    RecordType extends Record<string | number, unknown>,
-    PathType extends TPath<RecordType>
+    RecordType extends Walkable,
+    PathType extends Path<RecordType>
 >(
     InRecord: RecordType,
     Path: PathType,
-    Value: TFromPath<RecordType, PathType>
+    Value: FromPath<RecordType, PathType>
 ): void
 {
-    type FProperty = TFromPath<RecordType, PathType>;
+    type FProperty = FromPath<RecordType, PathType>;
 
     if (Array.isArray(Path))
     {
@@ -79,7 +80,7 @@ export function SetPropertyFromPath<
         }
     };
 
-    const PropertyRef: TRef<FProperty> = Recurrence(InRecord) as TRef<FProperty>;
+    const PropertyRef: Ref<FProperty> = Recurrence(InRecord) as Ref<FProperty>;
     const LastTyped: string | number = isNaN(parseInt(Last))
         ? Last
         : parseInt(Last);
@@ -102,15 +103,15 @@ export function SetPropertyFromPath<
  * @throws {Error} An {@link Error} iff the given {@link Path} is an {@link Array}, rather than a
  * `.`-delimited `string`.
  *
- * @returns {TFromPath<RecordType, PathType>} The value in the {@link InRecord} at the given {@link Path}.
+ * @returns {FromPath<RecordType, PathType>} The value in the {@link InRecord} at the given {@link Path}.
  */
 export function GetPropertyFromPath<
     RecordType extends Record<string, unknown>,
-    PathType extends TPath<RecordType>
+    PathType extends Path<RecordType>
 >(
     InRecord: RecordType,
     Path: PathType
-): TFromPath<RecordType, PathType>
+): FromPath<RecordType, PathType>
 {
     if (Array.isArray(Path))
     {
@@ -142,24 +143,24 @@ export function GetPropertyFromPath<
         }
     };
 
-    return Recurrence(InRecord) as TFromPath<RecordType, PathType>;
+    return Recurrence(InRecord) as FromPath<RecordType, PathType>;
 };
 
 /* eslint-enable jsdoc/require-example */
 
 /**
- * Creates a {@link TRef} of a given {@link Type}.  Useful for passing
+ * Creates a {@link Ref} of a given {@link Type}.  Useful for passing
  * primitives to functions by-reference.
  *
- * @template Type - The type of the value wrapped by the returned {@link TRef}.
+ * @template Type - The type of the value wrapped by the returned {@link Ref}.
  *
- * @returns {TRef<Type>} A {@link TRef} of the given {@link Type}.
+ * @returns {Ref<Type>} A {@link Ref} of the given {@link Type}.
  */
-export function MakeRef<Type>(): TRef<Type>
+export function MakeRef<Type>(): Ref<Type>
 {
     return {
         Ref: undefined
-    } as TRef<Type>;
+    } as Ref<Type>;
 };
 
 // @TODO Write example for `MapRecord`.
@@ -169,18 +170,18 @@ export function MakeRef<Type>(): TRef<Type>
  * Maps a {@link Record} to an {@link Array}.
  *
  * @param InRecord - The {@link Record} over which this function maps.
- * @param InFunction - The {@link TFlatMapRecordTransformer | transformer} that maps
+ * @param InFunction - The {@link FlatMapTransformer | transformer} that maps
  * the record to an {@link Array}.
  *
  * @returns {Array<ElementType>} An {@link Array} of elements, mapped from the given {@link InRecord}.
  */
-export function MapRecord<
+export function Map<
     KeyType extends PropertyKey,
     PropertyType,
     ElementType
 >(
     InRecord: Record<KeyType, PropertyType>,
-    InFunction: TMapRecordTransformer<KeyType, PropertyType, ElementType>
+    InFunction: Mapper<KeyType, PropertyType, ElementType>
 ): Array<ElementType>
 {
     return Object.keys(InRecord).map((InKey: string, Index: number): ElementType =>
@@ -192,25 +193,25 @@ export function MapRecord<
 
 /* eslint-enable jsdoc/require-example */
 
-// @TODO Write example for `FlatMapRecord`.
+// @TODO Write example for `FlatMap`.
 /* eslint-disable jsdoc/require-example */
 
 /**
  * Maps a {@link Record} to an {@link Array}.
  *
  * @param InRecord - The {@link Record} over which this function maps.
- * @param InFunction - The {@link TFlatMapRecordTransformer | transformer} that maps
+ * @param InFunction - The {@link FlatMapTransformer | transformer} that maps
  * the record to an {@link Array}.
  *
  * @returns {Array<ElementType>} An {@link Array} of elements, mapped from the given {@link InRecord}.
  */
-export function FlatMapRecord<
+export function FlatMap<
     KeyType extends PropertyKey,
     PropertyType,
     ElementType
 >(
     InRecord: Record<KeyType, PropertyType>,
-    InFunction: TFlatMapRecordTransformer<KeyType, PropertyType, ElementType>
+    InFunction: FlatMapper<KeyType, PropertyType, ElementType>
 ): Array<ElementType>
 {
     return Object.keys(InRecord).flatMap((InKey: string, Index: number): Array<ElementType> =>

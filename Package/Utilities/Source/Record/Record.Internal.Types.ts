@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { TPath } from "./Record.Types.ts";
+import type { Path } from "./Record.Types.ts";
 
 type FDepthMap =
     {
@@ -23,16 +23,16 @@ type TDepthMinusOne<DepthType extends FDepth> = DepthType extends FValidDepth
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-export type TFromPathInternal<
+export type FromPathInternal<
     RecordType,
-    PathType extends TPath<RecordType>,
+    PathType extends Path<RecordType>,
     DepthType extends FDepth = 3
 > =
     DepthType extends FValidDepth
         ? PathType extends `${ infer HeadType }.${ infer RemainingPathType }`
             ? HeadType extends keyof RecordType
                 ? RemainingPathType extends keyof RecordType[HeadType]
-                    ? TFromPathInternal<
+                    ? FromPathInternal<
                         RecordType[HeadType],
                         Extract<RemainingPathType, string>,
                         TDepthMinusOne<DepthType>
@@ -54,7 +54,7 @@ export type TFromPathInternal<
  * @template ParentKey - The use of this parameter--for reasons that I do not
  * understand--prevent an error regarding stack depth when evaluating this type.
  */
-export type TPathInternal<
+export type PathInternal<
     RecordType,
     ParentKey extends string | undefined = undefined
 > =
@@ -81,5 +81,5 @@ type TGetRecordKeys<RecordType> = keyof TGetRecordProperties<RecordType>;
 type TMapToPath<RecordType> =
     {
         [ Key in Extract<TGetRecordKeys<RecordType>, string> ]:
-        `${ Key }.${ TPathInternal<TGetRecordProperties<RecordType>[Key]> }`;
+        `${ Key }.${ PathInternal<TGetRecordProperties<RecordType>[Key]> }`;
     };

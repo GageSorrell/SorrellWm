@@ -27,7 +27,9 @@ const EntryPoints: FExports =
         path: "./Source/Path/index.ts",
         record: "./Source/Record/index.ts",
         string: "./Source/String/index.ts",
-        tsconfig: "./Source/TsConfig/index.ts"
+        tsconfig: "./Source/TsConfig/index.ts",
+        tuple: "./Source/Tuple/index.ts",
+        type: "./Source/Type/index.ts"
     } as const;
 
 await Run(EntryPoints);

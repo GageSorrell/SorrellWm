@@ -8,7 +8,7 @@
 import { promises as Fs, constants as FsConstants } from "fs";
 import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import { dirname, join } from "path";
-import type { IBase } from "package-json-type";
+import type { IPackageJson } from "package-json-type";
 import Process from "process";
 
 /**
@@ -21,7 +21,7 @@ import Process from "process";
  * describing either failure to identify a root directory, or failing to
  * parse the discovered `package.json`.
  *
- * @returns {Promise<IBase>} The {@link IBase} of {@link Path}
+ * @returns {Promise<IPackageJson>} The {@link IPackageJson} of {@link Path}
  * if provided, otherwise of `process.cwd()`.
  *
  * @example
@@ -31,18 +31,18 @@ import Process from "process";
  * // `PackageJson` <- *The parsed `package.json` of `MyPackage`.*
  * ```
  */
-export async function GetPackageJson(Path?: string): Promise<IBase>
+export async function GetPackageJson(Path?: string): Promise<IPackageJson>
 {
     const RootDirectory: string = await GetPackageRootDirectory(Path);
     const PackageJsonPath: string = join(RootDirectory, "package.json");
 
     const FileContents: string = await Fs.readFile(PackageJsonPath, "utf-8");
 
-    const PackageJson: IBase = await (async (): Promise<IBase> =>
+    const PackageJson: IPackageJson = await (async (): Promise<IPackageJson> =>
     {
         try
         {
-            return JSON.parse(FileContents) as IBase;
+            return JSON.parse(FileContents) as IPackageJson;
         }
         catch (Cause: unknown)
         {

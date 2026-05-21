@@ -7,11 +7,11 @@
 
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import type { Effect } from "effect";
-import type { IBase } from "package-json-type";
+import type { IPackageJson } from "package-json-type";
 
 export type EGetPackageJson =
     Effect.Effect<
-        IBase,
+        IPackageJson,
         PackageJsonParseError | RootDirectoryNotFoundError,
         never
     >;

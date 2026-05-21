@@ -148,6 +148,10 @@ async function GetDependencies(): Promise<ReadonlyArray<string>>
     ] as const;
 }
 
+/**
+ * @deprecated This will be replaced with a better function under `code-auger`'s
+ * "init-config" command.
+ */
 async function FindProviders(): Promise<ReadonlyArray<string>>
 {
     async function Task(): Promise<ReadonlyArray<string>>

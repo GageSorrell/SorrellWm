@@ -153,10 +153,31 @@ async function CheckExports(Exports: FExports): Promise<boolean>
             return !PackageJsonExports.includes(ExportKey);
         });
 
+        const OtherMismatches: Array<string> = PackageJsonExports.filter((PackageJsonExport: string): boolean =>
+        {
+            return !ExportsKeys.includes(PackageJsonExport);
+        });
+
         throw new Error(
-            "The exports declared in this ESBuild config did not match the package's package.json!" +
-            "  They are,\n  * " + Mismatches.join("\n  * ") + "\nExiting..."
+            "The exports declared in this ESBuild config did not match the package's package.json!\n\n" +
+            (Mismatches.length > 0
+                ? "Mismatches were,\n\n" + Mismatches.map(M => `  * "${ M }"`).join("\n") + "\n\n"
+                : ""
+            ) +
+            "Missing PackageJsonExports were,\n\n" + OtherMismatches.map(M => `  * "${ M }"`).join("\n")
         );
+
+        // throw new Error(
+        //     "The exports declared in this ESBuild config did not match the package's package.json!\n\n" +
+        //     (Mismatches.length > 0
+        //         ? "The mismatches are,\n  * " + Mismatches.map(Mismatch => `"${ Mismatch }"`).join("\n  * ")
+        //         : "Ther "
+        //     ) +
+        //     "\n  * " +
+        //      +
+        //     "\nAnd ExportsKeys were,\n  * " +
+        //     ExportsKeys.join("\n  * ") + "\nExiting..."
+        // );
     }
 
     return true;

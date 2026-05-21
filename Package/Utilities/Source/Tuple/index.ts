@@ -5,5 +5,4 @@
  * @license   MIT
  */
 
-export * from "effect";
-export * as Effect from "./Effect.Types.ts";
+export * from "./Tuple.Types.ts";

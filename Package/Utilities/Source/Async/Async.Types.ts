@@ -62,6 +62,8 @@ export type TThen<
 export type TPromiseCatchFunction<Type = unknown> =
     Parameters<TExtractFunction<Promise<Type>["catch"]>>[0];
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Maps a function type to union of two functions, each with the original
  * argument vector type.  One return type is wrapped with `Promise`, and
@@ -81,8 +83,8 @@ export type TPromiseCatchFunction<Type = unknown> =
  * Promise<unknown>`, then the {@link FunctionType} will be treated as the synchronous
  * form, and the other type in this union will return a `Promise<Promise<infer ResolveType>>`.
  */
-export type TMaybeAsync<
-    FunctionType extends TFunction,
+export type TOrAsync<
+    FunctionType extends TFunction<any, any>,
     RetainPromiseFlag extends boolean = false
 > =
     FunctionType extends TFunction<infer ArgumentVectorType, infer ReturnType>
@@ -95,6 +97,8 @@ export type TMaybeAsync<
                 | TFunction<ArgumentVectorType, Promise<ReturnType>>
             )
         : never;
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * A function that is an argument of a given {@link PromiseConstructorLike}`, which is called when

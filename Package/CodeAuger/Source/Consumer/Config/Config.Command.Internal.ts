@@ -58,7 +58,8 @@ function HandlePackageJson(ConfigPath: string, UpdatePackageJson: boolean): Effe
             if (IsConfigFileNameDefault)
             {
                 const IsConfigPathInRootDirectory: boolean =
-                    Path.normalize(Path.resolve(Path.dirname(ConfigPath))) === Path.normalize(Path.resolve(RootDirectory));
+                    Path.normalize(Path.resolve(Path.dirname(ConfigPath))) ===
+                    Path.normalize(Path.resolve(RootDirectory));
 
                 if (IsConfigPathInRootDirectory)
                 {
@@ -80,7 +81,6 @@ function HandlePackageJson(ConfigPath: string, UpdatePackageJson: boolean): Effe
             PackageJson["code-auger"].config = ConfigPath
         }
 
-
         const PackageJsonPath: string = Path.resolve(RootDirectory, "package.json");
 
         yield* Fs.writeFileString(PackageJsonPath, JSON.stringify(PackageJson, null, 2));
@@ -98,7 +98,11 @@ function GetConfigPath({ Out }: FConfigCommandOptions): GetConfigPathEffect
     });
 }
 
-function WriteConfigManifestsType(BaseConfig: string): WriteConfigManifestsTypeEffect
+function WriteConfigManifestsType(
+    BaseConfig: string,
+    Providers: ReadonlyArray<string>,
+    NodeModulesPath: string
+): WriteConfigManifestsTypeEffect
 {
     return Effect.gen(function* ()
     {

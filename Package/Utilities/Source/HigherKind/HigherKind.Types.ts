@@ -5,190 +5,120 @@
  * @license   MIT
  */
 
-import type * as Registrar from "./HigherKind.Registrar.Types.ts";
-import type { Keyof } from "./HigherKind.Internal.Types.ts";
+import type { HigherArgumentVector } from "../Tuple";
+
+/** The type that all function types extend. */
+export type AnyFunction = (...ArgumentVector: Array<never>) => unknown;
 
 /**
- * Apply a higher-kind type of one type parameter.
+ * Define {@link https://en.wikipedia.org/wiki/Kind_(type_theory) | higher-kinded types }
+ * by extending this class (see the example below).
  *
- * @template ParameterOneType - The first type parameter.
+ * @template ArgumentVectorType - The `readonly` tuple-type that defines the type parameter
+ * signature of the resulting generic type.  Please note that the `readonly` keyword *must*
+ * be used when defining a higher-kind type with this.
+ *
+ * @example Map a tuple-type to a union of its element types.
+ * ```typescript
+ * interface TupleToUnion extends HigherKind<ReadonlyArray<unknown>>
+ * {
+ *     new: () => this["ArgumentVector"][number];
+ * }
+ *
+ * type A = Apply<TupleToUnion, [ string, number, boolean ]>;
+ * //   ^? string | number | boolean
+ * ```
+ *
+ * @example A constrained higher-kinded type.
+ * ```typescript
+ * interface FooWithNumberTail extends HigherKind<ReadonlyArray<number>>
+ * {
+ *     new: () => this["ArgumentVector"];
+ * }
+ *
+ * // ✓ Good
+ * type A = Apply<FooWithNumberTail, [ ]>;
+ * //   ^? [ "Foo" ]
+ *
+ * // ✓ Good
+ * type B = Apply<FooWithNumberTail, [ 1, 2, 3 ]>;
+ * //   ^? [ "Foo", 1, 2, 3 ]
+ *
+ * // (To define the constants below)
+ * type C = Apply<FooWithNumberTail, [ number, number ]>;
+ *
+ * // ✓ Good
+ * const Bar: C = [ "Foo", 3, 2 ];
+ * //    ^? [ "Foo", 3, 2 ]
+ *
+ * // ✗ Bad
+ * const Baz: C = [ "Foo", 3, 4, 5 ];
+ * //                          ^^^ Error
+ *
+ * // ✗ Bad
+ * type D = Apply<FooWithNumberTail, [ 4, 5, 6, "Bar" ]>;
+ * //                                         ^^^^^^^ Error
+ * ```
  */
-export type OneParam<
-    HigherKindType extends Keyof.OneParam,
-    ParameterOneType
-> = Registrar.OneParam<ParameterOneType>[HigherKindType];
+export abstract class HigherKind<
+    ArgumentVectorType extends ReadonlyArray<unknown> = ReadonlyArray<unknown>
+>
+{
+    declare readonly ArgumentVector: ArgumentVectorType;
+
+    declare new: AnyFunction;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * Apply a higher-kind type of two type parameters.
+ * Get the argument vector type of a given {@link HigherKind | higher-kinded type}.
  *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
+ *
+ * @template HigherKindType - The {@link HigherKind | higher-kinded type} whose
+ * argument vector type will be inferred.
  */
-export type TwoParams<
-    HigherKindType extends Keyof.TwoParams,
-    ParameterOneType,
-    ParameterTwoType
+export type ArgumentsOf<HigherKindType extends HigherKind<any>> =
+    HigherKindType extends HigherKind<infer OutType>
+        ? OutType
+        : never;
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+const AssertTupleFailure: unique symbol = Symbol("__AssertTupleFailure__");
+
+export type AssertTuple<
+    LeftType extends ReadonlyArray<unknown>,
+    RightType extends ReadonlyArray<unknown>
 > =
-    Registrar.TwoParams<
-        ParameterOneType,
-        ParameterTwoType
-    >[HigherKindType];
+    typeof AssertTupleFailure extends (
+    {
+        [ Index in number ]: LeftType[Index] extends RightType[Index]
+            ? LeftType[Index]
+            : typeof AssertTupleFailure;
+    }[number])
+        ? never
+        : LeftType;
 
 /**
- * Apply a higher-kind type of three type parameters.
+ * Define a type from a {@link HigherKind | higher-kinded type}, optionally
+ * with a constrained {@link ArgumentVectorType}.
  *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
- * @template ParameterThreeType - The third type parameter.
- */
-export type ThreeParams<
-    HigherKindType extends Keyof.ThreeParams,
-    ParameterOneType,
-    ParameterTwoType,
-    ParameterThreeType
-> =
-    Registrar.ThreeParams<
-        ParameterOneType,
-        ParameterTwoType,
-        ParameterThreeType
-    >[HigherKindType];
-
-/**
- * Apply a higher-kind type of four type parameters.
+ * @see {@link HigherKind}
  *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
- * @template ParameterThreeType - The third type parameter.
- * @template ParameterFourType - The fourth type parameter.
+ * @template HigherKindType - The {@link | higher-kinded type} to apply.
+ * @template ArgumentVectorType - The type parameter vector that is passed to
+ * the given {@link HigherKindType}.
  */
-export type FourParams<
-    HigherKindType extends Keyof.FourParams,
-    ParameterOneType,
-    ParameterTwoType,
-    ParameterThreeType,
-    ParameterFourType
+export type Apply<
+    HigherKindType extends HigherKind<ReadonlyArray<any>>,
+    ArgumentVectorType extends ArgumentsOf<HigherKindType> = ArgumentsOf<HigherKindType>
 > =
-    Registrar.FourParams<
-        ParameterOneType,
-        ParameterTwoType,
-        ParameterThreeType,
-        ParameterFourType
-    >[HigherKindType];
-
-/**
- * Apply a higher-kind type of five type parameters.
- *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
- * @template ParameterThreeType - The third type parameter.
- * @template ParameterFourType - The fourth type parameter.
- * @template ParameterFiveType - The fifth type parameter.
- */
-export type FiveParams<
-    HigherKindType extends Keyof.FiveParams,
-    ParameterOneType,
-    ParameterTwoType,
-    ParameterThreeType,
-    ParameterFourType,
-    ParameterFiveType
-> =
-    Registrar.FiveParams<
-        ParameterOneType,
-        ParameterTwoType,
-        ParameterThreeType,
-        ParameterFourType,
-        ParameterFiveType
-    >[HigherKindType];
-
-/**
- * Apply a higher-kind type of six type parameters.
- *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
- * @template ParameterThreeType - The third type parameter.
- * @template ParameterFourType - The fourth type parameter.
- * @template ParameterFiveType - The fifth type parameter.
- * @template ParameterSixType - The sixth type parameter.
- */
-export type SixParams<
-    HigherKindType extends Keyof.SixParams,
-    ParameterOneType,
-    ParameterTwoType,
-    ParameterThreeType,
-    ParameterFourType,
-    ParameterFiveType,
-    ParameterSixType
-> =
-    Registrar.SixParams<
-        ParameterOneType,
-        ParameterTwoType,
-        ParameterThreeType,
-        ParameterFourType,
-        ParameterFiveType,
-        ParameterSixType
-    >[HigherKindType];
-
-/**
- * Apply a higher-kind type of seven type parameters.
- *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
- * @template ParameterThreeType - The third type parameter.
- * @template ParameterFourType - The fourth type parameter.
- * @template ParameterFiveType - The fifth type parameter.
- * @template ParameterSixType - The sixth type parameter.
- * @template ParameterSevenType - The seventh type parameter.
- */
-export type SevenParams<
-    HigherKindType extends Keyof.SevenParams,
-    ParameterOneType,
-    ParameterTwoType,
-    ParameterThreeType,
-    ParameterFourType,
-    ParameterFiveType,
-    ParameterSixType,
-    ParameterSevenType
-> =
-    Registrar.SevenParams<
-        ParameterOneType,
-        ParameterTwoType,
-        ParameterThreeType,
-        ParameterFourType,
-        ParameterFiveType,
-        ParameterSixType,
-        ParameterSevenType
-    >[HigherKindType];
-
-/**
- * Apply a higher-kind type of eight type parameters.
- *
- * @template ParameterOneType - The first type parameter.
- * @template ParameterTwoType - The second type parameter.
- * @template ParameterThreeType - The third type parameter.
- * @template ParameterFourType - The fourth type parameter.
- * @template ParameterFiveType - The fifth type parameter.
- * @template ParameterSixType - The sixth type parameter.
- * @template ParameterSevenType - The seventh type parameter.
- * @template ParameterEightType - The eighth type parameter.
- */
-export type EightParams<
-    HigherKindType extends Keyof.EightParams,
-    ParameterOneType,
-    ParameterTwoType,
-    ParameterThreeType,
-    ParameterFourType,
-    ParameterFiveType,
-    ParameterSixType,
-    ParameterSevenType,
-    ParameterEightType
-> =
-    Registrar.EightParams<
-        ParameterOneType,
-        ParameterTwoType,
-        ParameterThreeType,
-        ParameterFourType,
-        ParameterFiveType,
-        ParameterSixType,
-        ParameterSevenType,
-        ParameterEightType
-    >[HigherKindType];
+    ReturnType<
+        (
+            HigherKindType &
+            {
+                readonly ArgumentVector: ArgumentVectorType;
+            }
+        )["new"]
+    >;

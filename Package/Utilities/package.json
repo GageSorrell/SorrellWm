@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.11",
+    "version": "1.2.12",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -207,6 +207,26 @@
             "require": {
                 "types": "./Distribution/Types/String/index.d.cts",
                 "default": "./Distribution/string.cjs"
+            }
+        },
+        "./type": {
+            "import": {
+                "types": "./Distribution/Types/Type/index.d.mts",
+                "default": "./Distribution/type.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Type/index.d.cts",
+                "default": "./Distribution/type.cjs"
+            }
+        },
+        "./tuple": {
+            "import": {
+                "types": "./Distribution/Types/Tuple/index.d.mts",
+                "default": "./Distribution/tuple.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Tuple/index.d.cts",
+                "default": "./Distribution/tuple.cjs"
             }
         },
         "./tsconfig": {
