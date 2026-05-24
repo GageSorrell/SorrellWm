@@ -15,9 +15,14 @@ import type { IPackageJson } from "package-json-type";
  * @template ConfigType - The type of the `"code-auger"` object in the `"config"`
  * object.
  */
-export interface IPackageJsonBase<ConfigType extends Record<string, unknown>> extends IPackageJson
+export interface IPackageJsonBase<ConfigType extends Record<string, unknown>> extends
+    Omit<IPackageJson, "config">
 {
-    "code-auger"?: ConfigType;
+    config?:
+        IPackageJson["config"] &
+        {
+            "code-auger"?: ConfigType;
+        };
 }
 
 /* eslint-enable @typescript-eslint/no-empty-object-type */

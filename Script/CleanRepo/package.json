@@ -23,6 +23,6 @@
   "private": true,
   "dependencies": {
     "@clack/prompts": "^1.4.0",
-    "@sorrell/cli-utilities": "^1.0.46"
+    "@sorrell/cli-utilities": "1.0.60"
   }
 }

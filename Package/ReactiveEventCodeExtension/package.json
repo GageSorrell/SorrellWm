@@ -54,7 +54,7 @@
     "typescript": "npm:tsover@^6.0.0"
   },
   "dependencies": {
-    "@sorrell/utilities": "^1.2.4",
+    "@sorrell/utilities": "1.2.15",
     "reactive-event-cli": "^1.0.116",
     "ts-morph": "^28.0.0"
   }

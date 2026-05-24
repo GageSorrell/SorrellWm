@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export * from "./PackageConfig.js";
+export * from "./Consumer.js";

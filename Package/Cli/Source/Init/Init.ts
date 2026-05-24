@@ -6,12 +6,11 @@
  */
 
 import { Args, Options } from "@effect/cli";
-import type { FTsConfig, TMutable } from "@sorrell/utilities/misc";
 import { promises as Fs, existsSync } from "fs";
 import {
     type InitCommandType,
     type InitConfig,
-    type InitEffect,
+    // type InitEffect,
     type InitError,
     type InitOptions,
     InitPlainError,
@@ -21,15 +20,17 @@ import {
 import { Code } from "@sorrell/cli-utilities/format";
 import { Console } from "effect";
 import { Effect } from "effect";
+import { FStepService } from "../Effect/Effect.js";
 import type { IPackageJson } from "package-json-type";
 import { MakeCommand } from "../Command/Command.js";
 import { MakeConfig } from "../Config/Config.js";
+import type { Mutable } from "@sorrell/utilities/record";
 import { Spawn } from "@sorrell/cli-utilities/pty";
 import type { TFunction } from "@sorrell/utilities/functional";
 import type { TLocalOptions } from "../Options/Options.Types.js";
-import { resolve } from "path";
 import type { TSubCommandEffect } from "../Command/Command.Types.js";
-import { FStepService } from "../Effect/Effect.js";
+import type { TsConfigSchema } from "@sorrell/utilities/tsconfig";
+import { resolve } from "path";
 
 function GetLogStep(silent: InitOptions["silent"]): ((Message: string) => void)
 {
@@ -57,15 +58,15 @@ const InitCommand: InitCommandType = MakeCommand("init", Config, HandleInitComma
 async function GetTsConfig({
     packageType,
     tsover
-}: Omit<InitOptions, "internal" | "isPrivate" | "name" | "silent">): Promise<FTsConfig>
+}: Omit<InitOptions, "internal" | "isPrivate" | "name" | "silent">): Promise<TsConfigSchema>
 {
-    const BaseBase: FTsConfig =
+    const BaseBase: TsConfigSchema =
         {
             exclude: [ "Distribution", "node_modules" ],
             include: [ "Source/**/*" ]
         };
 
-    const ScriptBase: FTsConfig =
+    const ScriptBase: TsConfigSchema =
         {
             compilerOptions:
             {
@@ -92,7 +93,7 @@ async function GetTsConfig({
             ...BaseBase
         };
 
-    const ElectronBase: FTsConfig =
+    const ElectronBase: TsConfigSchema =
         {
             compilerOptions:
             {
@@ -113,7 +114,7 @@ async function GetTsConfig({
             ...BaseBase
         };
 
-    const NoneBase: FTsConfig =
+    const NoneBase: TsConfigSchema =
         {
             compilerOptions:
             {
@@ -139,14 +140,14 @@ async function GetTsConfig({
             ...BaseBase
         };
 
-    const Bases: Record<PackageType, FTsConfig> =
+    const Bases: Record<PackageType, TsConfigSchema> =
         {
             electron: ElectronBase,
             none: NoneBase,
             script: ScriptBase
         };
 
-    const Out: FTsConfig = Bases[packageType as PackageType];
+    const Out: TsConfigSchema = Bases[packageType as PackageType];
 
     if (tsover)
     {
@@ -245,7 +246,7 @@ async function GetPackageJson({
                 build: "tsc -p ./tsconfig.json"
             };
 
-    const Out: TMutable<IPackageJson, false> =
+    const Out: Mutable<IPackageJson, false> =
         {
             author: {
                 email: "gage@sorrell.sh",

@@ -12,8 +12,8 @@
     "preview": "vitepress preview --host"
   },
   "devDependencies": {
-    "@sorrell/cli-utilities": "^1.0.43",
-    "@sorrell/utilities": "^1.2.4",
+    "@sorrell/cli-utilities": "1.0.60",
+    "@sorrell/utilities": "1.2.15",
     "@types/node": "^24.12.2",
     "@types/semver": "^7.7.1",
     "@vercel/config": "^0.2.0",

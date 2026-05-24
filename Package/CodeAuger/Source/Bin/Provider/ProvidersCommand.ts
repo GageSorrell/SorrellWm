@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { RunCli, type MainCommand } from "@sorrell/cli-utilities/command";
+import { Command } from "@sorrell/cli-utilities/command";
 import { ValidateCommand } from "./Validate.js";
 
-export const ProvidersCommand: MainCommand = RunCli("provider", [ ValidateCommand ]);
+export const ProvidersCommand: Command.Main = Command.GetMain("provider", [ ValidateCommand ]);

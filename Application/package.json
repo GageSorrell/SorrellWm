@@ -85,7 +85,7 @@
     "@fluentui/react-motion-components-preview": "^0.15.2",
     "@sorrell/functional": "^1.0.13",
     "@sorrell/react": "^1.0.1",
-    "@sorrell/utilities": "^1.2.4",
+    "@sorrell/utilities": "1.2.15",
     "dot-prop": "^10.1.0",
     "effect": "^3.21.2",
     "electron-debug": "^4.1.0",

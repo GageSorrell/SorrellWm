@@ -7,35 +7,11 @@
  * @license   MIT
  */
 
-import { Command } from "@effect/cli";
-import { Effect } from "effect";
-import { GetCliRunner } from "@sorrell/cli-utilities/command";
+import { Command } from "@sorrell/cli-utilities/command";
+import { ConsumerCommands } from "./Consumer/Consumer.js";
 import { ProvidersCommand } from "./Provider/ProvidersCommand.js";
+import { Version } from "./Version.js";
 
-/** The entry-point for commands provided by this package. */
-async function Main(): Promise<void>
-{
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    const MainCommand: Command.Command<"@sorrell/cli", never, never, { }> =
-        Command.make("@sorrell/cli", { }, (_: object): Effect.Effect<void, never, never> =>
-        {
-            return Effect.succeed(undefined);
-        });
-
-    const version: string = "v0.1.8";
-
-    /* eslint-disable @typescript-eslint/typedef */
-
-    const CliFn =
-        Command.run(
-        );
-
-    /* eslint-enable @typescript-eslint/typedef */
-
-    CliFn(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);
-
-    GetCliRunner("code-auger", version, [ ...ConsumerCommands, ProvidersCommand ])();
-}
-
-Main();
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+Command.RunCli("code-auger", Version, [ ...ConsumerCommands, ProvidersCommand ] as any);
 

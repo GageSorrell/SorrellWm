@@ -6,11 +6,11 @@
  */
 
 import { Config, type ConfigProvider as EffectConfigProvider, Option } from "effect";
-import type { FCliConfigSchema, FGlobalConfig, TConfigBase, TConfig } from "./Config.Types.js";
+import type { FCliConfigSchema, FGlobalConfig, TConfig, TConfigBase } from "./Config.Types.js";
 import { ConfigSchema } from "./Config.Internal.js";
 import type { FConfigBase } from "./Config.Internal.Types.js";
+import type { Mutable } from "@sorrell/utilities/record";
 import { PackageConfig } from "@sorrell/cli-utilities";
-import type { TMutable } from "@sorrell/utilities/misc";
 import { silent } from "../Options/Options.js";
 
 export const GlobalConfig: FGlobalConfig = { silent };
@@ -60,7 +60,7 @@ const IndexConfig: Config.Config<FCliConfigSchema["Index"]> =
         })
         .pipe(Config.map((Index: FCliConfigSchema["Index"]) =>
         {
-            const Result: TMutable<FCliConfigSchema["Index"], false> = { };
+            const Result: Mutable<FCliConfigSchema["Index"], false> = { };
 
             if (Index.Extension !== undefined)
             {

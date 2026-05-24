@@ -1,8 +1,7 @@
 {
   "name": "@sorrell/cli",
-  "version": "0.0.12",
+  "version": "0.0.14",
   "bin": {
-    "@sorrell/cli": "./Distribution/Bin/Bin.js",
     "sorrell": "./Distribution/Bin/Bin.js"
   },
   "description": "General-purpose commands for NodeJS development.",
@@ -57,8 +56,8 @@
     "@effect/cli": "^0.75.1",
     "@effect/platform": "^0.96.1",
     "@effect/platform-node": "^0.106.0",
-    "@sorrell/cli-utilities": "^1.0.43",
-    "@sorrell/utilities": "^1.2.4",
+    "@sorrell/cli-utilities": "1.0.60",
+    "@sorrell/utilities": "1.2.15",
     "effect": "^3.21.1",
     "listr2": "^10.2.1",
     "node-pty": "^1.1.0",

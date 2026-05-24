@@ -9,6 +9,8 @@ import type { Command } from "@effect/cli";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { GetMain } from "./Command.js";
 import type { Option } from "effect/Option";
+import type { Effect, Types } from "effect";
+import type { ParseConfig, ParseConfigValue } from "./Command.Internal.Types.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,7 +22,7 @@ export type Any = Command.Command<any, any, any, any>;
  *
  * @template NameType - The type of the name of the command having this type.
  */
-export type MainCommand<NameType extends string = string> =
+export type Main<NameType extends string = string> =
     Command.Command<
         NameType,
         any,

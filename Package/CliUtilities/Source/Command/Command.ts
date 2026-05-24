@@ -5,10 +5,10 @@
  * @license   MIT
  */
 
-import type { Any, MainCommand } from "./Command.Types.js";
+import type { Any, Handler, Main } from "./Command.Types.js";
+import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { Command } from "@effect/cli";
-import { Effect } from "effect";
 import type { NonEmptyArray } from "effect/Array";
 
 /**
@@ -53,13 +53,13 @@ export function GetCommandName(PlainName: string): string
  *
  * @param SubCommands - The subcommands of the {@link Command.Command | command} that this returns.
  *
- * @returns {MainCommand<typeof Name>} The "empty" command of the given {@link Name}, and
+ * @returns {Main<typeof Name>} The "empty" command of the given {@link Name}, and
  * given {@link SubCommands}.
  */
 export function GetMain(
     Name: string,
     SubCommands: NonEmptyArray<Any>
-): MainCommand<typeof Name>
+): Main<typeof Name>
 {
     /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
     const MainCommand: Command.Command<typeof Name, any, any, { }> =
@@ -81,7 +81,7 @@ export function GetMain(
 export function RunCli(
     Name: string,
     Version: string,
-    SubCommands: NonEmptyArray<Any>
+    SubCommands: NonEmptyArray<any>
 ): void
 {
     /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
@@ -92,7 +92,7 @@ export function RunCli(
         Command.run(
             MainCommand.pipe(Command.withSubcommands(SubCommands)),
             {
-                name: "code-auger",
+                name: Name,
                 version: Version
             }
         );
