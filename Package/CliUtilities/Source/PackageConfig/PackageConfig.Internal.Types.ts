@@ -8,7 +8,7 @@
 import type { ConfigError, Effect, ConfigProvider as EffectConfigProvider } from "effect";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { ConfigProvider } from "./PackageConfig.js";
-import type { IBase } from "package-json-type";
+import type { IPackageJson } from "package-json-type";
 
 /**
  * The base type for the `Record-like` of the desired
@@ -28,6 +28,6 @@ export type ELoadResolvedProvider =
 /* eslint-disable-next-line jsdoc/require-jsdoc */
 export type EReadPackageJson =
     Effect.Effect<
-        IBase,
+        IPackageJson,
         ConfigError.ConfigError
     >;

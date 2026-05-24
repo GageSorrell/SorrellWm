@@ -10,7 +10,7 @@ import type { EReadPackageJson, FSettingsRecord } from "./PackageConfig.Internal
 import { GetPackageJson, type RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
 import Fs from "fs/promises";
 import { GetPackageRootDirectory } from "@sorrell/utilities/npm/effect";
-import type { IBase } from "package-json-type";
+import type { IPackageJson } from "package-json-type";
 import type { ParseError } from "effect/ParseResult";
 import Path from "path";
 
@@ -131,15 +131,15 @@ export function BuildResolvedProviderEffect<
 {
     return Effect.gen(function*()
     {
-        const PackageJson: IBase = yield* ReadPackageJsonEffect(PackageName);
+        const PackageJson: IPackageJson = yield* ReadPackageJsonEffect(PackageName);
         const PackageJsonPath: string = yield* GetPackageRootDirectory();
         const PackageJsonDirectory: string = Path.dirname(PackageJsonPath);
 
-        const ConfigSection: IBase["config"] = PackageJson.config;
+        const ConfigSection: IPackageJson["config"] = PackageJson.config;
 
         if (IsRecordLike(ConfigSection) && Object.hasOwn(ConfigSection, PackageName))
         {
-            const PackageConfigValue: string | undefined = ConfigSection[PackageName];
+            const PackageConfigValue: string | undefined = ConfigSection[PackageName] as string | undefined;
 
             if (typeof PackageConfigValue === "string")
             {

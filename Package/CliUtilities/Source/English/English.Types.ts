@@ -6,7 +6,7 @@
  */
 
 import type { Inflectors } from "en-inflectors";
-import type { TValues } from "@sorrell/utilities/misc";
+import type { Values } from "@sorrell/utilities/record";
 
 type InflectorFunctions =
     {
@@ -26,10 +26,10 @@ type InflectorFunctionsNoArgument =
         Key;
     };
 
-export type InflectorFunction = TValues<InflectorFunctions>;
+export type InflectorFunction = Values<InflectorFunctions>;
 
 export namespace InflectorFunction
 {
-    export type WithArgument = TValues<InflectorFunctionsWithArgument>;
-    export type NoArgument = TValues<InflectorFunctionsNoArgument>;
+    export type WithArgument = Values<InflectorFunctionsWithArgument>;
+    export type NoArgument = Values<InflectorFunctionsNoArgument>;
 }

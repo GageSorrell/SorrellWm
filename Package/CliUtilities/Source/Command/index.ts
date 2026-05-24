@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export * from "./Command.js";
+export * as Command from "./Command.Barrel.js";

@@ -6,7 +6,7 @@
  */
 
 import type { Options, TArrayType } from "./Array.Types.ts";
-import type { Value } from "../Option/Option.Types.ts";
+import type { NoOptions } from "../Option/Option.Types.ts";
 
 /**
  * @module Array.Internal
@@ -63,7 +63,7 @@ export type TBuildStaticTArrayBase<
 export type TBuildStaticTArray<
     ElementType,
     ArraySize extends number,
-    OptionsType extends Options = Value
+    OptionsType extends Options = NoOptions
 > =
     Options.DefinedOnly extends OptionsType
         ? Options.MaybeDefined extends OptionsType

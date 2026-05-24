@@ -7,7 +7,7 @@
         "lib":
         [
             "tsover",
-            "ES2021"
+            "ES2025"
         ],
         "declaration": true,
         "declarationMap": true,

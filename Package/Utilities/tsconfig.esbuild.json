@@ -1,14 +1,14 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "target": "ES2021",
+        "target": "ES2025",
         "module": "Preserve",
         "types": [ "node" ],
         "moduleResolution": "Bundler",
         "lib":
         [
             "tsover",
-            "ES2021"
+            "ES2025"
         ],
         "declaration": false,
         "declarationMap": false,
