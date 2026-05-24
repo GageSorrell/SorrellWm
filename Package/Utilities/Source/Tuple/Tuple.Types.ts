@@ -46,12 +46,6 @@ export type UnionToReadonlySingletonTuple<Union> =
         ? readonly [Union]
         : never;
 
-type MyOther = HigherArgumentVector<ArgumentsOf<TestKind>>;
-
-type MyArgsTest = ArgumentsOf<TestKind>;
-
-type MyOthertests = Apply<TestKind, readonly [ "F" ]>;
-
 export type Map<
     TupleType extends ReadonlyArray<ArgumentsOf<HigherKindType>[keyof ArgumentsOf<HigherKindType>]>,
     HigherKindType extends HigherKind
