@@ -5,12 +5,15 @@
  * @license   MIT
  */
 
-import type { Command } from "@sorrell/cli-utilities/command";
+import type { Command } from "@sorrell/cli-utilities/cli";
 import { GenerateCommand } from "./Generate.js";
 import { InitCommand } from "./Init.js";
 import { RefreshCommand } from "./Refresh.js";
 
-export const ConsumerCommands: ReadonlyArray<Command.Any> =
+export/**
+       * The commands available to consumers.
+       */
+const ConsumerCommands: ReadonlyArray<Command.Any> =
     [
         InitCommand,
         GenerateCommand,

@@ -6,11 +6,13 @@
  */
 
 import { Command } from "@effect/cli";
+import type { Handler } from "@sorrell/cli-utilities/cli";
 import { Effect } from "effect";
+import type { MasterConfig } from "../Shared/Master.Command.Types.js";
 
 function HandleGenerate()
 {
-    return Effect.gen(function* ()
+    return Effect.flatMap(({ Silent }: Handler.Argument<MasterConfig>)
     {
 
     });

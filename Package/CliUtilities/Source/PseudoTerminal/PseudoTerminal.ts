@@ -12,7 +12,7 @@ import {
     type IWindowsPtyForkOptions,
     spawn } from "node-pty";
 import type { TReject, TResolve } from "@sorrell/utilities/async";
-import { GetCommandName } from "../Command/Command.js";
+import { GetCommandName } from "../Cli/Command/Command.js";
 
 /**
  * This function wraps {@link spawn} and provides sensible default options.

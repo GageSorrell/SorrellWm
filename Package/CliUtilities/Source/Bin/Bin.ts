@@ -7,8 +7,8 @@
  * @license   MIT
  */
 
-import { RunCli } from "../Command/Command.js";
+import { RunCli } from "../Cli/Command/Command.js";
 import { Version } from "./Version.js";
 import { WriteVersionCommand } from "./WriteVersionCommand.js";
 
-RunCli("@sorrell/cli-utilities", Version, [ WriteVersionCommand ]);
+RunCli("cli-utilities", Version, [ WriteVersionCommand ]);

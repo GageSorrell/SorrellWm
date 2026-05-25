@@ -8,26 +8,29 @@
 import type { Command } from "@effect/cli";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { GetMain } from "./Command.js";
-import type { Option } from "effect/Option";
-import type { Effect, Types } from "effect";
-import type { ParseConfig, ParseConfigValue } from "./Command.Internal.Types.js";
+import type { Argument } from "../Handler/Handler.Types.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** The type representing any {@link Command!Command | command}. */
 export type Any = Command.Command<any, any, any, any>;
 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
 /**
- * The type of the command returned by {@link GetMain}.
- *
- * @template NameType - The type of the name of the command having this type.
+ * The type of {@link Command!Command | command} returned by {@link GetMain}.
  */
-export type Main<NameType extends string = string> =
+export type Main<
+    NameType extends string,
+    ConfigType extends Command.Command.Config
+> =
     Command.Command<
         NameType,
-        any,
-        any,
-        Readonly<{ subcommand: Option<any> }>
+        never,
+        never,
+        Argument<ConfigType>
     >;
+
+/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 /* eslint-enable @typescript-eslint/no-explicit-any */

@@ -5,9 +5,10 @@
  * @license   MIT
  */
 
-import type { Any, Handler, Main } from "./Command.Types.js";
+import type { Any, Main } from "./Command.Types.js";
 import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import type { Argument } from "../Handler/Handler.Types.js";
 import { Command } from "@effect/cli";
 import type { NonEmptyArray } from "effect/Array";
 
@@ -46,26 +47,19 @@ export function GetCommandName(PlainName: string): string
 /* eslint-disable @typescript-eslint/no-explicit-any, jsdoc/require-example */
 
 /**
- * Get an "empty" command, with your application's commands piped to it as subcommands.
+ * Get an "empty" command of a given {@link Name} and {@link Config}, to be equipped
+ * with subcommands.
  *
- * @param Name - The name of the main command.  This should be the name of the `"bin"` entry
- * in your `package.json`.
- *
- * @param SubCommands - The subcommands of the {@link Command.Command | command} that this returns.
- *
- * @returns {Main<typeof Name>} The "empty" command of the given {@link Name}, and
- * given {@link SubCommands}.
+ * @param Name - The name of the command.
+ * @param Config - The config, to be shared with subcommands.
+ * @returns {Main<typeof Name, typeof Config>} An "empty" command of a given {@link Config}.
  */
-export function GetMain(
-    Name: string,
-    SubCommands: NonEmptyArray<Any>
-): Main<typeof Name>
+export function GetMain<const NameType extends string, const ConfigType extends Command.Command.Config>(
+    Name: NameType,
+    Config: ConfigType
+): Main<typeof Name, typeof Config>
 {
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    const MainCommand: Command.Command<typeof Name, any, any, { }> =
-        Command.make(Name, { }, (_: object): Effect.Effect<void, any, any> => Effect.succeed(undefined));
-
-    return MainCommand.pipe(Command.withSubcommands(SubCommands));
+    return Command.make(Name, Config, (_: Argument<typeof Config>) => Effect.succeed(undefined));
 }
 
 /**
@@ -76,21 +70,67 @@ export function GetMain(
  *
  * @param Version - The semver of your CLI tool.
  *
- * @param SubCommands - The commands of your application.
+ * @param RootCommand - The root command of your application.
+ *
+ * @param SubCommands - The optional subcommands to equip your root command with.
+ *
+ * @see {@link GetMain} The utility function {@link GetMain} may be used for creating
+ * the {@link RootCommand} argument.
  */
 export function RunCli(
     Name: string,
     Version: string,
-    SubCommands: NonEmptyArray<any>
+    RootCommand: Any
+): void;
+
+export function RunCli(
+    Name: string,
+    Version: string,
+    SubCommands: ReadonlyArray<Any>
+): void;
+
+export function RunCli(
+    Name: string,
+    Version: string,
+    RootCommand: Any,
+    SubCommands: ReadonlyArray<Any>
+): void;
+
+export function RunCli(
+    Name: string,
+    Version: string,
+    RootCommandOrSubCommands: Any | ReadonlyArray<Any> = [ ] as const,
+    SubCommands: ReadonlyArray<Any> = [ ] as const
 ): void
 {
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    const MainCommand: Command.Command<typeof Name, any, any, { }> =
-        Command.make(Name, { }, (_: object): Effect.Effect<void, any, any> => Effect.succeed(undefined));
+    const Out: Any = ((): Any =>
+    {
+        if (Array.isArray(RootCommandOrSubCommands))
+        {
+            return pipe(
+                GetMain(Name, { }),
+                Command.withSubcommands(RootCommandOrSubCommands as NonEmptyArray<Any>)
+            );
+        }
+        else
+        {
+            if (SubCommands.length > 0)
+            {
+                return pipe(
+                    RootCommandOrSubCommands as Any,
+                    Command.withSubcommands(SubCommands as NonEmptyArray<Any>)
+                );
+            }
+            else
+            {
+                return RootCommandOrSubCommands as Any;
+            }
+        }
+    })();
 
     const CliRunnable: (ArgumentVector: ReadonlyArray<string>) => Effect.Effect<void, any, any> =
         Command.run(
-            MainCommand.pipe(Command.withSubcommands(SubCommands)),
+            Out,
             {
                 name: Name,
                 version: Version

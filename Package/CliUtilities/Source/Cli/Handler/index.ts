@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export * as Command from "./Command.Barrel.js";
+export * from "./Handler.Types.js";

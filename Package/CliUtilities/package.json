@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.60",
+  "version": "1.0.80",
   "bin": {
     "cli-utilities": "./Distribution/Bin/Bin.js"
   },
@@ -39,6 +39,12 @@
       "import": "./Distribution/index.js",
       "require": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
+    },
+    "./cli": {
+      "default": "./Distribution/Cli/index.js",
+      "import": "./Distribution/Cli/index.js",
+      "require": "./Distribution/Cli/index.js",
+      "types": "./Distribution/Cli/index.d.ts"
     },
     "./format": {
       "default": "./Distribution/Format/index.js",

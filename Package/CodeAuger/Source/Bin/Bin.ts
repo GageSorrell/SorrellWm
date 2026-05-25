@@ -7,11 +7,10 @@
  * @license   MIT
  */
 
-import { Command } from "@sorrell/cli-utilities/command";
+import { Command } from "@sorrell/cli-utilities/cli";
 import { ConsumerCommands } from "./Consumer/Consumer.js";
-import { ProvidersCommand } from "./Provider/ProvidersCommand.js";
+import { ConfigMaster } from "./Shared/Master.Command.js";
+import { ProvidersCommand } from "./Provider/Providers.Command.js";
 import { Version } from "./Version.js";
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-Command.RunCli("code-auger", Version, [ ...ConsumerCommands, ProvidersCommand ] as any);
-
+Command.RunCli("code-auger", Version, [ ...ConsumerCommands, ProvidersCommand ], ConfigMaster);

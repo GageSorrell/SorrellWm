@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
-import { Command } from "@effect/cli";
 import { Effect, pipe } from "effect";
+import { Command } from "@effect/cli";
 
 function HandleRefresh()
 {

@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-export * as Command from "./Command/index.js";
+export * as Cli from "./Cli/index.js";
 export * as English from "./English/index.js";
 export * as PackageConfig from "./PackageConfig/index.js";
 export * as Listr from "./Listr/index.js";

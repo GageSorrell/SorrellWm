@@ -1,8 +1,8 @@
 /**
- * @file      Version.ts
+ * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-export const Version: string = "v1.0.80";
+export * from "./Config.Types.js";
