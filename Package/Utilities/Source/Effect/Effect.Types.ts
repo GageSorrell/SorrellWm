@@ -5,6 +5,7 @@
  * @license   MIT
  */
 
+import type { Path as EffectPath, FileSystem } from "@effect/platform";
 import type { Effect } from "effect";
 import type { TFunction } from "../Functional/index.ts";
 
@@ -42,6 +43,52 @@ export namespace From
                 : never
         >;
 }
+
+/* eslint-disable @stylistic/max-len */
+
+/**
+ * Types having to do with
+ * {@link https://effect.website/docs/getting-started/the-effect-type/#type-parameters:~:text=type%20never.-,Requirements,the%20effect%20has%20no%20requirements%20and%20the%20Context%20collection%20is%20empty.,-Type%20Parameter%20Abbreviations | requirements}
+ * in {@link Effect.Effect | effects}.
+ */
+export namespace Requirements
+{
+    /* eslint-enable @stylistic/max-len */
+
+    /**
+     * The {@link FileSystem} and {@link EffectPath | Path} requirement types.
+     *
+     * This is motivated by the observation that these are typically used together,
+     * and by the inconvenience of otherwise having to import {@link EffectPath | Path} as
+     * `EffectPath` to conform to the
+     * {@link https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EsLintConfigSorrell#ReadMe |
+     * Sorrell style guide}.
+     */
+    export type FsPath =
+        | FileSystem.FileSystem
+        | EffectPath.Path;
+}
+
+/**
+ * Given a {@link BaseEffectType}, define a new {@link Effect.Effect | effect} type
+ * whose type parameters are the respective unions formed by appending {@link A}, {@link E},
+ * and {@link R} to their respective type parameters in the base effect type.
+ *
+ * @template BaseEffectType - The {@link Effect.Effect | effect} type whose type parameters are
+ * appended with the other type parameters in this type.
+ *
+ * @template A - The `A` type to append to the `A` type of the given {@link BaseEffectType}.
+ * @template E - The `E` type to append to the `E` type of the given {@link BaseEffectType}.
+ * @template R - The `R` type to append to the `R` type of the given {@link BaseEffectType}.
+ */
+export type Append<BaseEffectType extends Any, A = never, E = never, R = never> =
+    BaseEffectType extends Effect.Effect<infer InA, infer InE, infer InR>
+        ? Effect.Effect<
+            InA | A,
+            InE | E,
+            InR | R
+        >
+        : never;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

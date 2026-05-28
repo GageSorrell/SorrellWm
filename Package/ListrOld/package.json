@@ -68,7 +68,7 @@
     "idle"
   ],
   "dependencies": {
-    "@sorrell/utilities": "1.2.15",
+    "@sorrell/utilities": "1.2.20",
     "cli-truncate": "^5.2.0",
     "en-inflectors": "^1.0.12",
     "eventemitter3": "^5.0.4",

@@ -1,0 +1,64 @@
+{
+  "name": "create-code-auger",
+  "version": "0.1.8",
+  "description": "Easily add code-auger to your package with this simple CLI wizard.",
+  "scripts": {
+    "prebuild": "cli-utilities write-version ./Source/Bin/Version.ts",
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "exports": null,
+  "files": [
+    "Distribution",
+    "package.json",
+    "License.md",
+    "ReadMe.md",
+    "Resource"
+  ],
+  "keywords": [
+    "code-gen",
+    "code-generation",
+    "cli",
+    "create",
+    "init",
+    "augmentation",
+    "auger",
+    "module-augmentation",
+    "typescript",
+    "ts"
+  ],
+  "homepage": "https://code-auger.sorrell.sh",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/CodeAuger/Create",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "bin": {
+    "create-code-auger": "./Distribution/Bin/Bin.js"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.2",
+    "package-json-type": "1.1.2"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.4.0",
+    "@effect/cli": "0.75.1",
+    "@effect/platform": "0.96.1",
+    "@effect/platform-node": "0.106.0",
+    "@sorrell/cli-utilities": "1.0.80",
+    "@sorrell/utilities": "1.2.20",
+    "c12": "4.0.0-beta.5",
+    "code-auger": "0.1.8",
+    "effect": "3.21.2",
+    "typescript": "6.0.3"
+  }
+}

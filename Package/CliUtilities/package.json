@@ -101,7 +101,7 @@
     "@effect/cli": "0.75.1",
     "@effect/platform": "^0.96.0",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
-    "@sorrell/utilities": "1.2.15",
+    "@sorrell/utilities": "1.2.20",
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",
     "clipboardy": "^5.3.1",

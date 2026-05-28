@@ -18,6 +18,8 @@ const EntryPoints: FExports =
         "dependency-effect": "./Source/Dependency/Index.Effect.ts",
         effect: "./Source/Effect/index.ts",
         fs: "./Source/FileSystem/index.ts",
+        "fs-effect": "./Source/FileSystem/Effect/index.ts",
+        "fs-module": "./Source/FileSystem/Module/index.ts",
         functional: "./Source/Functional/index.ts",
         "higher-kind": "./Source/HigherKind/index.ts",
         math: "./Source/Math/index.ts",

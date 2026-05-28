@@ -7,3 +7,4 @@
 
 export * from "./FileSystem.ts";
 export * from "./FileSystem.Types.ts";
+export * as Module from "./Module/index.ts";

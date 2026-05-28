@@ -1,5 +1,5 @@
 {
-  "name": "create-code-auger",
+  "name": "create-code-auger-old",
   "version": "0.1.0",
   "description": "The init utility for code-auger.",
   "bin": {
@@ -43,7 +43,7 @@
   "dependencies": {
     "@clack/prompts": "1.4.0",
     "@sorrell/cli-utilities": "1.0.60",
-    "@sorrell/utilities": "1.2.15",
+    "@sorrell/utilities": "1.2.20",
     "chalk": "4.1.2",
     "code-auger": "0.1.6"
   },

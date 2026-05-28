@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.15",
+    "version": "1.2.20",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -97,6 +97,26 @@
             "require": {
                 "types": "./Distribution/Types/FileSystem/index.d.cts",
                 "default": "./Distribution/fs.cjs"
+            }
+        },
+        "./fs/effect": {
+            "import": {
+                "types": "./Distribution/Types/FileSystem/Effect/index.d.mts",
+                "default": "./Distribution/fs-effect.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/FileSystem/Effect/index.d.cts",
+                "default": "./Distribution/fs-effect.cjs"
+            }
+        },
+        "./fs/module": {
+            "import": {
+                "types": "./Distribution/Types/FileSystem/Module/index.d.mts",
+                "default": "./Distribution/module.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/FileSystem/Module/index.d.cts",
+                "default": "./Distribution/module.cjs"
             }
         },
         "./functional": {

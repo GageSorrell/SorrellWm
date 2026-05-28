@@ -5,5 +5,6 @@
  * @license   MIT
  */
 
+export * from "./Test.ts";
 export * from "./Test.Types.ts";
 export * from "./Utility.Types.ts";

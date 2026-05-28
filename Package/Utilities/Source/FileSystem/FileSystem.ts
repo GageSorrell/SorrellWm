@@ -5,6 +5,12 @@
  * @license   MIT
  */
 
+// @TODO TEMPORARY
+/* eslint-disable jsdoc/require-jsdoc */
+
+import * as FileSystem from "node:fs/promises";
+import * as Path from "node:path";
+import type { Dirent, Stats } from "node:fs";
 import { basename, dirname, extname, join } from "path";
 import { type FFileExtension } from "./FileSystem.Types.ts";
 import { type FileHandle } from "fs/promises";
@@ -12,6 +18,14 @@ import { promises as Fs } from "fs";
 import { constants as FsConstants } from "fs";
 import os from "os";
 
+/* eslint-disable jsdoc/require-example */
+
+/**
+ * Determine whether an object exists at the given {@link Path}.
+ *
+ * @param Path - The path to check for the existence of an object within the current file system.
+ * @returns {Promise<boolean>} Whether there is an object at the given {@link Path}.
+ */
 async function PathExists(Path: string): Promise<boolean>
 {
     try
@@ -26,8 +40,10 @@ async function PathExists(Path: string): Promise<boolean>
 }
 
 /**
- * @param Extension - The file extension that you wish to test.
- * @returns Whether the file extension is valid on the current platform.
+ * Determine whether the given {@link Extension | file extension} is valid on the current platform.
+ *
+ * @param Extension - The {@link FFileExtension | file extension} to test.
+ * @returns {boolean} Whether the file extension is valid on the current platform.
  */
 export function IsSupportedFileExtension(Extension: FFileExtension): boolean
 {
@@ -75,6 +91,11 @@ export function IsSupportedFileExtension(Extension: FFileExtension): boolean
  * path already exists, and if so, then append `(${ number })` before the file
  * extension, consistent with the Windows Explorer handles conflicting file
  * names when pasting files.
+ *
+ * @param InPath - The path from which a safe path is derived.
+ *
+ * @returns {Promise<string>} The path derived from the given {@link InPath | path}
+ * at which no object yet exists.
  */
 export async function GetSafeNewPath(InPath: string): Promise<string>
 {
@@ -99,21 +120,57 @@ export async function GetSafeNewPath(InPath: string): Promise<string>
     return CandidatePath;
 }
 
+/* eslint-disable-next-line @typescript-eslint/typedef */
+export const ReservedWindowsFileNames =
+    [
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4",
+        "COM5",
+        "COM6",
+        "COM7",
+        "COM8",
+        "COM9",
+        "LPT1",
+        "LPT2",
+        "LPT3",
+        "LPT4",
+        "LPT5",
+        "LPT6",
+        "LPT7",
+        "LPT8",
+        "LPT9"
+    ] as const;
+
+/* eslint-disable no-control-regex */
+
+export/** A regular expression describing the characters that are not permitted in file names. */
+const InvalidCharacters: RegExp = /[<>:"/\\|?*\u0000-\u001F]/u;
+
+/* eslint-enable no-control-regex */
+
 /**
- * @param DirectoryPath - The path to the directory in which you wish to check.
- * @param FileName - The desired file name.
- * @param PersistNewFile - *(Optional)* Whether to keep the otherwise-temporary
- *                         file created at the desired path.
- * @param Extension - *(Optional)* If provided, the function will only return `true`
- *                    if `FileName.endsWith(Extension)` *and* the `Extension` is a valid
- *                    file extension.
- * @returns Whether a file of the given `FileName` can be created in `DirectoryPath`.
+ * Determines whether the given {@link FileName} is valid within the given {@link DirectoryPath}.
  *
  * @remarks This *does* attempt to create a file at the desired path.  The file is
- *       temporary iff `!PersistNewFile`, and is never created when this function
- *       returns `false`.
+ * temporary iff `!PersistNewFile`, and is never created when this function
+ * returns `false`.
+ *
+ * @param DirectoryPath - The path to the directory in which you wish to check.
+ * @param FileName - The desired file name.
+ * @param PersistNewFile - If specified, whether to keep the otherwise-temporary file
+ * created at the desired path.  This defaults to `false`.
+ * @param Extension - If provided, the function will only return `true` if
+ * `FileName.endsWith(Extension)` *and* the `Extension` is a valid file extension.
+ *
+ * @returns {Promise<boolean>} Whether a file of the given `FileName` can be created in `DirectoryPath`.
  */
-export async function IsValidFileName(
+export async function IsValidFileNameOnSystem(
     DirectoryPath: string,
     FileName: string,
     PersistNewFile: boolean = false,
@@ -179,10 +236,6 @@ export async function WriteTextFile(Path: string, Contents: string): Promise<voi
     await Fs.writeFile(Path, Contents, { encoding: "utf-8" });
 }
 
-import * as FileSystem from "node:fs/promises";
-import * as Path from "node:path";
-import * as Readline from "node:readline";
-
 type DeletePhase = "Scanning" | "Deleting" | "Done";
 
 type DeleteEntryKind = "File" | "Directory" | "Other";
@@ -227,10 +280,11 @@ async function BuildDeletionPlan(
     RootPath: string,
     Progress: DeleteProgress,
     Options: DeleteWithProgressOptions
-): Promise<DeleteEntry[]>
+): Promise<Array<DeleteEntry>>
 {
-    const Entries: DeleteEntry[] = [];
+    const Entries: Array<DeleteEntry> = [ ];
 
+    /* eslint-disable-next-line jsdoc/require-jsdoc */
     async function Visit(CurrentPath: string): Promise<void>
     {
         Options.Signal?.throwIfAborted();
@@ -239,7 +293,7 @@ async function BuildDeletionPlan(
         Progress.CurrentPath = CurrentPath;
         Options.OnProgress?.(CloneProgress(Progress));
 
-        let Stats;
+        let Stats: Stats;
 
         try
         {
@@ -257,7 +311,7 @@ async function BuildDeletionPlan(
 
         if (Stats.isDirectory())
         {
-            const Children = await FileSystem.readdir(CurrentPath, {
+            const Children: Array<Dirent<string>> = await FileSystem.readdir(CurrentPath, {
                 withFileTypes: true
             });
 
@@ -274,7 +328,7 @@ async function BuildDeletionPlan(
         }
         else
         {
-            const Size = Stats.isFile() ? Stats.size : 0;
+            const Size: number = Stats.isFile() ? Stats.size : 0;
 
             Entries.push({
                 EntryPath: CurrentPath,
@@ -296,20 +350,21 @@ async function BuildDeletionPlan(
 
 export async function DeleteWithProgress(
     RootPath: string,
-    Options: DeleteWithProgressOptions = {}
+    Options: DeleteWithProgressOptions = { }
 ): Promise<void>
 {
-    const Progress: DeleteProgress = {
-        Phase: "Scanning",
-        CurrentPath: null,
-        DiscoveredEntries: 0,
-        TotalEntries: 0,
-        DeletedEntries: 0,
-        TotalBytes: 0,
-        DeletedBytes: 0
-    };
+    const Progress: DeleteProgress =
+        {
+            CurrentPath: null,
+            DeletedBytes: 0,
+            DeletedEntries: 0,
+            DiscoveredEntries: 0,
+            Phase: "Scanning",
+            TotalBytes: 0,
+            TotalEntries: 0
+        };
 
-    const Entries = await BuildDeletionPlan(RootPath, Progress, Options);
+    const Entries: Array<DeleteEntry> = await BuildDeletionPlan(RootPath, Progress, Options);
 
     Progress.Phase = "Deleting";
     Progress.TotalEntries = Entries.length;
@@ -353,17 +408,146 @@ export async function DeleteWithProgress(
     Options.OnProgress?.(CloneProgress(Progress));
 }
 
-function FormatBytes(Bytes: number): string
-{
-    const Units = ["B", "KB", "MB", "GB", "TB"];
-    let Value = Bytes;
-    let UnitIndex = 0;
+const TypeScriptOrJavaScriptExtensions = new Set([
+    ".ts",
+    ".tsx",
+    ".mts",
+    ".cts",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs"
+]);
 
-    while (Value >= 1024 && UnitIndex < Units.length - 1)
+export function IsValidFileSubpath(
+    DirectoryPath: string,
+    FilePath: string
+): boolean
+{
+    if (IsValidDirectoryPath(DirectoryPath) === false)
     {
-        Value /= 1024;
-        UnitIndex += 1;
+        return false;
     }
 
-    return `${Value.toFixed(UnitIndex === 0 ? 0 : 1)} ${Units[UnitIndex]}`;
-}
+    if (IsValidExtensionlessFilePath(FilePath) === false)
+    {
+        return false;
+    }
+
+    if (Path.isAbsolute(FilePath) === false)
+    {
+        return true;
+    }
+
+    return IsPathContainedUnderDirectory(DirectoryPath, FilePath);
+};
+
+const IsValidDirectoryPath = (DirectoryPath: string): boolean =>
+{
+    if (DirectoryPath.trim() === "")
+    {
+        return false;
+    }
+
+    const NormalizedDirectoryPath = Path.normalize(DirectoryPath);
+    const DirectoryBaseName = Path.basename(NormalizedDirectoryPath);
+
+    return IsValidPathSegment(DirectoryBaseName);
+};
+
+const IsValidExtensionlessFilePath = (FilePath: string): boolean =>
+{
+    if (FilePath.trim() === "")
+    {
+        return false;
+    }
+
+    const NormalizedFilePath = Path.normalize(FilePath);
+
+    if (NormalizedFilePath.endsWith(Path.sep))
+    {
+        return false;
+    }
+
+    const FileName = Path.basename(NormalizedFilePath);
+
+    if (IsValidFileName(FileName) === false)
+    {
+        return false;
+    }
+
+    const Extension = Path.extname(FileName).toLowerCase();
+
+    return TypeScriptOrJavaScriptExtensions.has(Extension) === false;
+};
+
+export function IsPathContainedUnderDirectory(
+    ParentPath: string,
+    ChildPath: string
+): boolean
+{
+    const ResolvedParentPath: string = Path.resolve(ParentPath);
+    const ResolvedChildPath: string = Path.resolve(ChildPath);
+
+    const RelativePath: string = Path.relative(
+        ResolvedParentPath,
+        ResolvedChildPath
+    );
+
+    if (RelativePath === "")
+    {
+        return false;
+    }
+
+    if (RelativePath === "..")
+    {
+        return false;
+    }
+
+    if (RelativePath.startsWith(`..${Path.sep}`))
+    {
+        return false;
+    }
+
+    return Path.isAbsolute(RelativePath) === false;
+};
+
+function IsValidFileName(FileName: string): boolean
+{
+    if (IsValidPathSegment(FileName) === false)
+    {
+        return false;
+    }
+
+    if (FileName === "." || FileName === "..")
+    {
+        return false;
+    }
+
+    return true;
+};
+
+const IsValidPathSegment = (PathSegment: string): boolean =>
+{
+    if (PathSegment.trim() === "")
+    {
+        return false;
+    }
+
+    if (/[<>:"/\\|?*\x00-\x1F]/u.test(PathSegment))
+    {
+        return false;
+    }
+
+    if (/[. ]$/u.test(PathSegment))
+    {
+        return false;
+    }
+
+    return ReservedWindowsFileNames.every((Reserved: string): boolean =>
+    {
+        return !PathSegment.includes(Reserved);
+    });
+};
+
+/* eslint-enable jsdoc/require-example */

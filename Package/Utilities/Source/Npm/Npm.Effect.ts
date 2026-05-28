@@ -5,12 +5,24 @@
  * @license   MIT
  */
 
-import type { EGetPackageJson, EGetPackageRootDirectory } from "./Npm.Effect.Types.ts";
+import { BadArgument, SystemError } from "@effect/platform/Error";
+import type {
+    EGetDependencyPackage,
+    EGetNodeModulesPath,
+    EGetPackage,
+    EGetPackageRootDirectory
+} from "./Npm.Effect.Types.ts";
+import { Effect, Schema } from "effect";
+import { Path as EffectPath, FileSystem } from "@effect/platform";
+import {
+    FindNearestNodeModulesDirectory,
+    FindNearestPackageDirectory,
+    GetPathType,
+    HasErrorCode
+} from "./Npm.Effect.Internal.ts";
 import { promises as Fs, constants as FsConstants } from "fs";
 import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import { dirname, join } from "path";
-import { Effect } from "effect";
-import { HasErrorCode } from "./Npm.Effect.Internal.ts";
 import type { IPackageJson } from "package-json-type";
 import Process from "process";
 
@@ -20,7 +32,7 @@ import Process from "process";
  *
  * @param Path - The given path from which to look for a root directory.
  *
- * @returns {EGetPackageJson} An Effect that succeeds with the parsed `package.json`, or fails
+ * @returns {EGetPackage} An Effect that succeeds with the parsed `package.json`, or fails
  * with {@link RootDirectoryNotFoundError} or {@link PackageJsonParseError}.
  *
  * @example
@@ -33,7 +45,7 @@ import Process from "process";
  * }
  * ```
  */
-export function GetPackageJson(Path?: string): EGetPackageJson
+export function GetPackageJson(Path?: string): EGetPackage
 {
     return Effect.gen(function* ()
     {
@@ -169,3 +181,132 @@ export function GetPackageRootDirectory(Path?: string): EGetPackageRootDirectory
         }
     });
 }
+
+/* eslint-disable jsdoc/require-example */
+
+/**
+ * For a given `npm` package, identified by a {@link Directory} path contained by the `npm` package,
+ * get the path to the `node_modules` directory that contains the dependencies of the package.
+ *
+ * @note This supports `npm` workspaces, and has not been tested with packages that are workspaces
+ * of packages handled by *other* package managers.
+ *
+ * @param Directory - The path of a directory within an `npm` package (possibly
+ * the root directory of the package).
+ *
+ * @returns {EGetNodeModulesPath} An {@link Effect.Effect | effect} that finds the
+ * `node_modules` directory of an `npm` package that contains the given {@link Directory}.
+ */
+export function GetNodeModulesDirectory(
+    Directory: string = process.cwd()
+): EGetNodeModulesPath
+{
+    return Effect.gen(function* ()
+    {
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+        const Path: EffectPath.Path = yield* EffectPath.Path;
+
+        const ResolvedDirectory: string = Path.resolve(Directory);
+        const ResolvedDirectoryType: FileSystem.File.Type | undefined =
+            yield* GetPathType(
+                Fs,
+                ResolvedDirectory
+            );
+
+        if (ResolvedDirectoryType !== "Directory")
+        {
+            return yield* Effect.fail(
+                new BadArgument({
+                    description: `Expected a directory path, but received "${ ResolvedDirectory }"`,
+                    method: "GetNodeModulesDirectory",
+                    module: "FileSystem"
+                })
+            );
+        }
+
+        const RealDirectory: string = yield* Fs.realPath(ResolvedDirectory);
+
+        const PackageDirectory: string | undefined = yield* FindNearestPackageDirectory(
+            Fs,
+            Path,
+            RealDirectory
+        );
+
+        if (PackageDirectory === undefined)
+        {
+            return yield* Effect.fail(
+                new SystemError({
+                    description: "Could not find a package.json in this directory or any ancestor directory.",
+                    method: "GetNodeModulesDirectory",
+                    module: "FileSystem",
+                    pathOrDescriptor: RealDirectory,
+                    reason: "NotFound"
+                })
+            );
+        }
+
+        const NodeModulesDirectory: string | undefined = yield* FindNearestNodeModulesDirectory(
+            Fs,
+            Path,
+            PackageDirectory
+        );
+
+        if (NodeModulesDirectory === undefined)
+        {
+            return yield* Effect.fail(
+                new SystemError({
+                    description:
+                        "Could not find a node_modules directory for this package " +
+                        "or any ancestor workspace/package directory.",
+                    method: "GetNodeModulesDirectory",
+                    module: "FileSystem",
+                    pathOrDescriptor: PackageDirectory,
+                    reason: "NotFound"
+                })
+            );
+        }
+
+        return NodeModulesDirectory;
+    });
+}
+
+/**
+ * For a given `npm` package, identified by a {@link Directory} path contained by the `npm` package
+ * and whose dependencies are installed on the current file system, and for a given {@link Dependency}
+ * of that package, get the {@link IPackageJson | package.json} of the given dependency in the `node_modules`
+ * directory that contains the dependencies of the given package.
+ *
+ * @note This supports `npm` workspaces, and has not been tested with packages that are workspaces
+ * of packages handled by *other* package managers.
+ *
+ * @param Dependency - The name of the dependency whose {@link IPackageJson | package.json} is returned
+ * by this.
+ *
+ * @param Directory - The path of a directory within an `npm` package (possibly
+ * the root directory of the package).
+ *
+ * @returns {EGetDependencyPackage} An {@link Effect.Effect | effect} that returns
+ * the {@link IPackageJson | package.json} of the given {@link Dependency}, for
+ * the `npm` package identified by the given {@link Directory}.
+ */
+export function GetDependencyPackage(
+    Dependency: string,
+    Directory: string = process.cwd()
+): EGetDependencyPackage
+{
+    return Effect.gen(function* ()
+    {
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+        const Path: EffectPath.Path = yield* EffectPath.Path;
+
+        const NodeModulesPath: string = yield* GetNodeModulesDirectory(Directory);
+
+        const PackageJsonPath: string = Path.resolve(NodeModulesPath, "package.json");
+
+        const PackageJsonContents: string = yield* Fs.readFileString(PackageJsonPath);
+
+        return (yield* Schema.decodeUnknown(Schema.parseJson())(PackageJsonContents)) as IPackageJson;
+    });
+}
+
+/* eslint-enable jsdoc/require-example */

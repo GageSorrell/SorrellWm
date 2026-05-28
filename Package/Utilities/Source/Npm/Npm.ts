@@ -9,6 +9,7 @@ import { promises as Fs, constants as FsConstants } from "fs";
 import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
 import { dirname, join } from "path";
 import type { IPackageJson } from "package-json-type";
+import { IsValidDependencyImportSpecifierParts } from "./Npm.Internal.ts";
 import Process from "process";
 
 /**
@@ -150,3 +151,59 @@ export async function GetPackageRootDirectory(Path?: string): Promise<string>
         CurrentDirectory = ParentDirectory;
     }
 }
+
+/* eslint-disable jsdoc/require-example */
+
+/**
+ * Determine whether a given {@link ImportSpecifier} is valid.  That is, whether
+ * it consists of a valid package name, possibly followed by a `/`-delimited path
+ * that may be specified by the package's `"exports"` property in its `package.json`.
+ *
+ * @param ImportSpecifier - The `import` specifier `string` to test.
+ *
+ * @returns {boolean} Whether the given {@link ImportSpecifier} is a valid `string`
+ * to use in an `import` statement.
+ */
+export function IsValidDependencyImportSpecifier(ImportSpecifier: string): boolean
+{
+    if (ImportSpecifier.length === 0)
+    {
+        return false;
+    }
+
+    if (ImportSpecifier.trim() !== ImportSpecifier)
+    {
+        return false;
+    }
+
+    if (ImportSpecifier.includes("\\"))
+    {
+        return false;
+    }
+
+    if (ImportSpecifier.startsWith(".") || ImportSpecifier.startsWith("/"))
+    {
+        return false;
+    }
+
+    if (ImportSpecifier.includes(":"))
+    {
+        return false;
+    }
+
+    if (ImportSpecifier.includes("//"))
+    {
+        return false;
+    }
+
+    const ImportSpecifierParts: ReadonlyArray<string> = ImportSpecifier.split("/");
+
+    if (ImportSpecifier.startsWith("@"))
+    {
+        return IsValidDependencyImportSpecifierParts(ImportSpecifierParts, true);
+    }
+
+    return IsValidDependencyImportSpecifierParts(ImportSpecifierParts, false);
+};
+
+/* eslint-enable jsdoc/require-example */

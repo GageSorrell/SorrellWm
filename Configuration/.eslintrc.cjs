@@ -60,6 +60,13 @@ module.exports = {
     overrides:
     [
         {
+            files: [ "Package/CodeAuger/**/*.ts" ],
+            rules:
+            {
+                "@typescript-eslint/naming-convention": "off"
+            }
+        },
+        {
             files: [ "Package/ReactiveEvent/Documentation/**/*.{ts,tsx}", "esbuild.config.mts" ],
             rules:
             {
@@ -86,7 +93,6 @@ module.exports = {
             [
                 "plugin:package-json/legacy-recommended"
             ],
-
             rules:
             {
                 "package-json/bin-name-casing": "error",

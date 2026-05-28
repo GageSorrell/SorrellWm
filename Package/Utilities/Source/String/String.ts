@@ -115,3 +115,8 @@ export function Dedent(Content: string, IndentLength?: number): string
 
     return Content.replaceAll(WhitespaceSubstring, "");
 }
+
+export function GetUtf8ByteLength(Text: string): number
+{
+    return new TextEncoder().encode(Text).length;
+}
