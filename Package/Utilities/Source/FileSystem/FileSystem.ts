@@ -408,7 +408,7 @@ export async function DeleteWithProgress(
     Options.OnProgress?.(CloneProgress(Progress));
 }
 
-const TypeScriptOrJavaScriptExtensions = new Set([
+const TsJsExtensions: Set<string> = new Set([
     ".ts",
     ".tsx",
     ".mts",
@@ -449,8 +449,8 @@ const IsValidDirectoryPath = (DirectoryPath: string): boolean =>
         return false;
     }
 
-    const NormalizedDirectoryPath = Path.normalize(DirectoryPath);
-    const DirectoryBaseName = Path.basename(NormalizedDirectoryPath);
+    const NormalizedDirectoryPath: string = Path.normalize(DirectoryPath);
+    const DirectoryBaseName: string = Path.basename(NormalizedDirectoryPath);
 
     return IsValidPathSegment(DirectoryBaseName);
 };
@@ -462,23 +462,23 @@ const IsValidExtensionlessFilePath = (FilePath: string): boolean =>
         return false;
     }
 
-    const NormalizedFilePath = Path.normalize(FilePath);
+    const NormalizedFilePath: string = Path.normalize(FilePath);
 
     if (NormalizedFilePath.endsWith(Path.sep))
     {
         return false;
     }
 
-    const FileName = Path.basename(NormalizedFilePath);
+    const FileName: string = Path.basename(NormalizedFilePath);
 
     if (IsValidFileName(FileName) === false)
     {
         return false;
     }
 
-    const Extension = Path.extname(FileName).toLowerCase();
+    const Extension: string = Path.extname(FileName).toLowerCase();
 
-    return TypeScriptOrJavaScriptExtensions.has(Extension) === false;
+    return TsJsExtensions.has(Extension) === false;
 };
 
 export function IsPathContainedUnderDirectory(
@@ -534,6 +534,7 @@ const IsValidPathSegment = (PathSegment: string): boolean =>
         return false;
     }
 
+    /* eslint-disable-next-line no-control-regex */
     if (/[<>:"/\\|?*\x00-\x1F]/u.test(PathSegment))
     {
         return false;

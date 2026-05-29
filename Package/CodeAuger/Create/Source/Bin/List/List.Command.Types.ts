@@ -8,7 +8,7 @@
 import type { Effect } from "effect";
 import type { Requirements } from "@sorrell/utilities/effect";
 
-export type EListProviders =
+export type EGetProviders =
     Effect.Effect<
         void,
         never,

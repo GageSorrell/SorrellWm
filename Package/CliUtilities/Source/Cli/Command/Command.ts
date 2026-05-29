@@ -6,6 +6,7 @@
  */
 
 import type { Any, Main } from "./Command.Types.js";
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import type { Argument } from "../Handler/Handler.Types.js";
@@ -71,8 +72,6 @@ export function GetMain<const NameType extends string, const ConfigType extends 
  * @param Version - The semver of your CLI tool.
  *
  * @param RootCommand - The root command of your application.
- *
- * @param SubCommands - The optional subcommands to equip your root command with.
  *
  * @see {@link GetMain} The utility function {@link GetMain} may be used for creating
  * the {@link RootCommand} argument.

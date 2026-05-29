@@ -85,7 +85,7 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@sorrell/utilities": "1.2.20",
+    "@sorrell/utilities": "1.2.27",
     "effect": "^3.21.2",
     "ts-tag": "^1.0.2"
   },

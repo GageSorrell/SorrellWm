@@ -5,10 +5,10 @@
  * @license   MIT
  */
 
+import type { Argument } from "../Handler/Handler.Types.js";
 import type { Command } from "@effect/cli";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { GetMain } from "./Command.js";
-import type { Argument } from "../Handler/Handler.Types.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

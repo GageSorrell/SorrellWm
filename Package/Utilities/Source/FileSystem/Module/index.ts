@@ -5,5 +5,5 @@
  * @license   MIT
  */
 
+export * as Extension from "./Extension.ts";
 export * from "./Module.ts";
-export * from "./Module.Types.ts";

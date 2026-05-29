@@ -63,13 +63,13 @@
     "@types/node": "24.12.2"
   },
   "dependencies": {
-    "c12": "4.0.0-beta.5",
     "@clack/prompts": "1.4.0",
     "@effect/cli": "0.75.1",
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.106.0",
-    "@sorrell/cli-utilities": "1.0.80",
-    "@sorrell/utilities": "1.2.20",
+    "@sorrell/cli-utilities": "1.0.86",
+    "@sorrell/utilities": "1.2.27",
+    "c12": "4.0.0-beta.5",
     "effect": "3.21.2",
     "typescript": "6.0.3"
   }

@@ -5,6 +5,9 @@
  * @license   MIT
  */
 
+import { dfs } from "effect/Graph";
+import { FilterDefined } from "../Array";
+
 /**
  * @module String
  * Functions for manipulating strings.
@@ -114,6 +117,27 @@ export function Dedent(Content: string, IndentLength?: number): string
     })();
 
     return Content.replaceAll(WhitespaceSubstring, "");
+}
+
+/**
+ * Given a {@link ReadonlyArray} of `string`s (and possibly `undefined`), join the `string`s
+ * with a given {@link Separator} `string`.
+ * 
+ * @param StringArray - The {@link ReadonlyArray} of `string`s, and possibly `undefined`.
+ * @param Separator - The `string` passed to {@link Array.join} on the filtered {@link StringArray}.
+ * 
+ * @returns {string} The joined `string`s in the given {@link StringArray}, separated by
+ * the given {@link Separator}.
+ */
+export function JoinDefined<ElementType extends string | undefined>(
+    StringArray: ReadonlyArray<ElementType>,
+    Separator: string
+): string
+{
+    const IsDefined = <Type>(Element: Type): boolean => Element !== undefined;
+    const DefinedOnly: ReadonlyArray<string> = StringArray.filter(IsDefined) as ReadonlyArray<string>;
+
+    return DefinedOnly.join(Separator);
 }
 
 export function GetUtf8ByteLength(Text: string): number

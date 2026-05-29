@@ -5,8 +5,8 @@
  * @license   MIT
  */
 
-import { IsValidTypeName } from "@sorrell/utilities/type";
 import type { Config } from "./Config.Types.js";
+import { IsValidTypeName } from "@sorrell/utilities/type";
 
 /**
  * Determine whether a given {@link CodeAugerProperty} of a provider's `package.json` is valid.

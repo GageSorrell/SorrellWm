@@ -53,8 +53,8 @@
   },
   "dependencies": {
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
-    "@sorrell/cli-utilities": "1.0.60",
-    "@sorrell/utilities": "1.2.20",
+    "@sorrell/cli-utilities": "1.0.86",
+    "@sorrell/utilities": "1.2.27",
     "listr2": "^10.2.1"
   }
 }

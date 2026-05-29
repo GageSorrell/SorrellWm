@@ -6,8 +6,8 @@
  */
 
 import type { Command } from "@sorrell/cli-utilities/cli";
-import { GenerateCommand } from "./Generate.Command.js";
-import { ValidateCommand } from "../Provider/Validate.js";
+import { GenerateCommand } from "./Generate/index.js";
+import { ValidateCommand } from "./Validate/index.js";
 
 export/**
        * The commands available to consumers.

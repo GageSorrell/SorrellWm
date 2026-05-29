@@ -7,15 +7,16 @@
 
 import { Path as EffectPath, FileSystem } from "@effect/platform";
 import { Command } from "@effect/cli";
-import type { EListProviders } from "./List.Command.Types.js";
+import type { EGetProviders } from "./List.Command.Types.js";
 import { Effect } from "effect";
 import { GetDependencyNames } from "./List.Command.Internal.js";
+import { GetNodeModulesDirectory } from "@sorrell/utilities/npm/effect";
 
 export/**
        * For the package in which {@link process!cwd} resides, print
        * a list of installed providers to the terminal.
        */
-const ListProviders: EListProviders = Effect.gen(function* ()
+const GetProviders: EGetProviders = Effect.gen(function* ()
 {
     const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
     const Path: EffectPath.Path = yield* EffectPath.Path;
@@ -31,6 +32,7 @@ const ListProviders: EListProviders = Effect.gen(function* ()
             "package.json"
         ));
 
+    const 
 
 });
 
@@ -54,7 +56,7 @@ const ListCommand: ListCommand =
     Command.make(
         "ls",
         { },
-        (_: { }): EListProviders => ListProviders
+        (_: { }): EGetProviders => GetProviders
     );
 
 /* eslint-enable @typescript-eslint/no-empty-object-type */

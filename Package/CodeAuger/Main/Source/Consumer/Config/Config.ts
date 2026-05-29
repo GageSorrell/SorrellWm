@@ -13,7 +13,7 @@ import { IsConfigValid, IsProvider } from "./Config.Internal.js";
 
 /**
  * Determine whether a given consumer {@link Config} is valid.  This performs checks on
- * the current filesystem, to check that provider dependencies are valid, *etc.*
+ * the current filesystem, to check that provider dependencies are valid, *etc*.
  *
  * @param Argument - The `"code-auger"` property of a provider's `package.json`.
  *

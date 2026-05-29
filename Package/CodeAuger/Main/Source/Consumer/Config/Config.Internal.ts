@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { CodeFormatter, Config, Provider } from "./Config.Types.js";
+import type { Config, Provider } from "./Config.Types.js";
 import { CodeFormatters } from "./Config.js";
 
 export function IsProvider(Argument: unknown): Argument is Provider
@@ -32,6 +32,13 @@ export function IsConfigValid(Argument: unknown): Argument is Config
         Argument !== null &&
         "BasePath" in Argument &&
         typeof Argument.BasePath === "string" &&
+        (
+            !("TsConfigPath" in Argument) ||
+            (
+                "TsConfigPath" in Argument &&
+                typeof Argument.TsConfigPath === "string"
+            )
+        ) &&
         (
             !("DisabledFormatters" in Argument) ||
             (

@@ -53,6 +53,8 @@
     },
     "workspaces": [
         "!Package/Create/CodeAuger",
+        "Package/CodeAuger/Main",
+        "Package/CodeAuger/Create",
         "Application",
         "!Application/Release/Application",
         "Package/*",
