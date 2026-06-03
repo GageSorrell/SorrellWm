@@ -6,13 +6,14 @@
  */
 
 import type { Options, TArrayType } from "./Array.Types.ts";
-import type { NoOptions } from "../Option/Option.Types.ts";
+import type { NoOptions } from "../Generic/Option/Option.Types.ts";
 
 /**
- * @module Array.Internal
  * Internal types for the {@link Array} module.
  *
  * @internal
+ *
+ * @module Array.Internal
  */
 
 type TBuildStaticTArrayReadonly<
@@ -42,7 +43,7 @@ export type TBuildStaticTArrayMutable<
         >;
 
 /**
- * Used to define {@link Array.TStaticArray}.
+ * Used to define {@link \@sorrell/utilities/array!TStaticArray}.
  * @template ElementType - The type of this, or the type of this `Array`.
  * @template ArraySize - The number of {@link ElementType | ElementTypes} in this `Array`.  The
  * @template ReadonlyType - Whether the built {@link Array} type will be `readonly`.

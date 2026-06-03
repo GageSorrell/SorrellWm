@@ -37,8 +37,8 @@
     "@effect/platform": "^0.96.1",
     "@effect/platform-node": "^0.106.0",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
-    "@sorrell/cli-utilities": "1.0.86",
-    "@sorrell/utilities": "1.2.27",
+    "@sorrell/cli-utilities": "1.0.94",
+    "@sorrell/utilities": "1.2.31",
     "effect": "^3.21.2",
     "listr2": "^10.2.1"
   },

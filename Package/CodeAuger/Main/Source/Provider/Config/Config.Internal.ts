@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { ExportedType } from "./Config.Types.js";
+import type { ExportedType } from "./Config.js";
 import { IsValidDependencyImportSpecifier } from "@sorrell/utilities/npm";
 import { IsValidTypeName } from "@sorrell/utilities/type";
 

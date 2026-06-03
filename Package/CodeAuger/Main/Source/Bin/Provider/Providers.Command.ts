@@ -6,9 +6,10 @@
  */
 
 import * as Sorrell from "@sorrell/cli-utilities/cli";
-import { type Option, pipe } from "effect";
+import { Effect, type Option, pipe } from "effect";
 import { Command } from "@effect/cli";
-import { ValidateCommand } from "./Validate.js";
+import { InitCommand } from "./Init/Init.Command.js";
+import { ValidateCommand } from "./Validate/index.js";
 
 type ProvidersCommand =
     Command.Command<
@@ -18,11 +19,17 @@ type ProvidersCommand =
         Readonly<{ subcommand: Option.Option<{ }>; }>
     >;
 
+/* eslint-disable @typescript-eslint/typedef */
+
 export/**
        * The commands available to provider packages.
        */
-const ProvidersCommand: ProvidersCommand =
+const ProvidersCommand =
     pipe(
-        Sorrell.Command.GetMain("provider", { }),
-        Command.withSubcommands([ ValidateCommand ])
+        Command.make(
+            "provider",
+            { },
+            (_: { }) => Effect.succeed(undefined)
+        ),
+        Command.withSubcommands([ InitCommand, ValidateCommand ])
     );

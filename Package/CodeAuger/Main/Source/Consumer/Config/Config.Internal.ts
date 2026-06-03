@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { Config, Provider } from "./Config.Types.js";
+import type { Config, Provider } from "./Config.js";
 import { CodeFormatters } from "./Config.js";
 
 export function IsProvider(Argument: unknown): Argument is Provider
@@ -20,8 +20,13 @@ export function IsProvider(Argument: unknown): Argument is Provider
                 typeof Argument.Disabled === "boolean"
             )
         ) &&
-        "Path" in Argument &&
-        typeof Argument.Path === "string"
+        (
+            !("NoWatch" in Argument) ||
+            (
+                "NoWatch" in Argument &&
+                typeof Argument.NoWatch === "boolean"
+            )
+        )
     );
 }
 

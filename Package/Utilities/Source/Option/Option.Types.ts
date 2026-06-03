@@ -5,25 +5,31 @@
  * @license   MIT
  */
 
-import type { NoOptionsValue } from "./Options.Internal.ts";
-
-/** The type used in `OptionsType`s when no options are specified. */
-export type NoOptions = typeof NoOptionsValue;
-
 /**
- * Define options for a given type as a union of `unique symbol` types.
- * All options must be *optional* by the type that uses these options.
- * The type that uses these options should have a type parameter `OptionsType`
- * defined with `OptionsType extends TOptions = NoOptions`.  You will have to import
- * {@link Value}, but this should be done anyway, since making all options types
- * optional should be optional.  For this reason {@link Value} is exported from the
- * same module as this type.
+ * For a given {@link ObjectType} containing some optional properties whose keys belong
+ * to {@link KeyType}, transform the {@link ObjectType} such that *at least one* of the
+ * properties whose keys belong to {@link KeyType} are made *not* optional.  That is,
+ * this produces an `object` union of all possible forms where at least one of the
+ * properties with key in {@link KeyType} is made not optional.
  *
- * @template OptionsType - The `unique symbol` types that act as options.
+ * @template ObjectType - The `object` type that is transformed such that at least one
+ * of the properties whose respective keys belong to {@link KeyType} is required in this type.
  *
- * @example * See the {@link Array.Options:type} type as an example.
+ * @template KeyType - The keys of {@link ObjectType} of which at least one of the
+ * corresponding properties in {@link ObjectType} is required in this type.
+ *
+ * @note While it is not enforced in this type's definition, this type is a no-op on
+ * the {@link ObjectType} if the properties in the {@link ObjectType} whose keys belong
+ * to {@link KeyType} are *not* optional.  That is, you likely want *all* properties in
+ * the {@link ObjectType} whose keys belong to {@link KeyType} to be optional.
  */
-export type TOptions<OptionsType extends symbol = NoOptions> =
-    | OptionsType
-    | NoOptions;
-
+export type AtLeastOne<
+    ObjectType,
+    KeyType extends keyof ObjectType = keyof ObjectType
+> =
+    Omit<ObjectType, KeyType> &
+    {
+        [ Key in KeyType ]-?:
+            Required<Pick<ObjectType, Key>> &
+            Partial<Omit<Pick<ObjectType, KeyType>, Key>>;
+    }[KeyType];

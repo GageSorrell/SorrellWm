@@ -6,6 +6,8 @@
  */
 
 import type { Path as EffectPath, FileSystem } from "@effect/platform";
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+import { CliApp } from "@effect/cli/CliApp";
 import type { Effect } from "effect";
 import type { TFunction } from "../Functional/index.ts";
 
@@ -63,6 +65,8 @@ export namespace Requirements
      * `EffectPath` to conform to the
      * {@link https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EsLintConfigSorrell#ReadMe |
      * Sorrell style guide}.
+     *
+     * @deprecated Use {@link CliApp.Environment} instead.
      */
     export type FsPath =
         | FileSystem.FileSystem

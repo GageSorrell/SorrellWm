@@ -5,6 +5,4 @@
  * @license   MIT
  */
 
-export * from "./LoadConfig.js";
-export * from "./Clack.js";
-export * from "./Clack.Types.js";
+export * as LoadConfig from "./LoadConfig.js";

@@ -6,7 +6,7 @@
  */
 
 import type { DefinedOnlyOption, MaybeDefinedOption, ReadonlyOption } from "./Array.Internal.ts";
-import type { NoOptions, TOptions } from "../Option/Option.Types.ts";
+import type { NoOptions, TOptions } from "../Generic/Option/Option.Types.ts";
 import type { TBuildStaticTArray } from "./Array.Internal.Types.ts";
 import type { TIsNonNegativeInteger } from "../Math/Math.Types.ts";
 

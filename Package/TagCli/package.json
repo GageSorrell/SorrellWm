@@ -54,8 +54,8 @@
     "@effect/cli": "^0.75.1",
     "@effect/platform": "^0.96.1",
     "@effect/platform-node": "^0.106.0",
-    "@sorrell/cli-utilities": "1.0.86",
-    "@sorrell/utilities": "1.2.27",
+    "@sorrell/cli-utilities": "1.0.94",
+    "@sorrell/utilities": "1.2.31",
     "csv-parse": "^6.2.1",
     "effect": "^3.21.2",
     "yaml": "^2.8.4"

@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.27",
+    "version": "1.2.31",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -89,6 +89,16 @@
                 "default": "./Distribution/effect.cjs"
             }
         },
+        "./effect/platform": {
+            "import": {
+                "types": "./Distribution/Types/Effect/Platform/index.d.mts",
+                "default": "./Distribution/effect-platform.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Effect/Platform/index.d.cts",
+                "default": "./Distribution/effect-platform.cjs"
+            }
+        },
         "./fs": {
             "import": {
                 "types": "./Distribution/Types/FileSystem/index.d.mts",
@@ -97,6 +107,36 @@
             "require": {
                 "types": "./Distribution/Types/FileSystem/index.d.cts",
                 "default": "./Distribution/fs.cjs"
+            }
+        },
+        "./generic": {
+            "import": {
+                "types": "./Distribution/Types/Generic/index.d.mts",
+                "default": "./Distribution/generic.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Generic/index.d.cts",
+                "default": "./Distribution/generic.cjs"
+            }
+        },
+        "./option": {
+            "import": {
+                "types": "./Distribution/Types/Option/index.d.mts",
+                "default": "./Distribution/option.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Option/index.d.cts",
+                "default": "./Distribution/option.cjs"
+            }
+        },
+        "./generic/option": {
+            "import": {
+                "types": "./Distribution/Types/Generic/Option/index.d.mts",
+                "default": "./Distribution/generic-option.js"
+            },
+            "require": {
+                "types": "./Distribution/Types/Generic/Option/index.d.cts",
+                "default": "./Distribution/generic-option.cjs"
             }
         },
         "./fs/effect": {
@@ -151,11 +191,11 @@
         },
         "./dependency/effect": {
             "import": {
-                "types": "./Distribution/Types/Dependency/Index.Effect.d.mts",
+                "types": "./Distribution/Types/Dependency/Effect/index.d.mts",
                 "default": "./Distribution/dependency-effect.js"
             },
             "require": {
-                "types": "./Distribution/Types/Dependency/index.d.cts",
+                "types": "./Distribution/Types/Dependency/Effect/index.d.cts",
                 "default": "./Distribution/dependency.cjs"
             }
         },
@@ -264,6 +304,9 @@
         "typescript": "npm:tsover@^6.0.0"
     },
     "peerDependenciesMeta": {
+        "typescript": {
+            "optional": true
+        },
         "tsover": {
             "optional": true
         },
@@ -290,11 +333,11 @@
     },
     "dependencies": {
         "chalk": "^5.6.2",
-        "effect": "^3.21.1",
-        "typescript": "npm:tsover@^6.0.0"
+        "effect": "^3.21.1"
     },
     "peerDependencies": {
         "tsover": "^6.0.0",
-        "tsover-runtime": "^0.0.7"
+        "tsover-runtime": "^0.0.7",
+        "typescript": "npm:tsover@^6.0.0"
     }
 }

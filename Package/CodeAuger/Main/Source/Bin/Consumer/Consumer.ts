@@ -5,18 +5,21 @@
  * @license   MIT
  */
 
-import type { Command } from "@sorrell/cli-utilities/cli";
 import { GenerateCommand } from "./Generate/index.js";
+import { InitCommand } from "./Init/index.js";
+import { ListCommand } from "./List/List.Command.js";
 import { ValidateCommand } from "./Validate/index.js";
+
+/* eslint-disable @typescript-eslint/typedef */
 
 export/**
        * The commands available to consumers.
        */
-const ConsumerCommands: ReadonlyArray<Command.Any> =
+const ConsumerCommands =
     [
         GenerateCommand,
-        ValidateCommand
-        // InitCommand,
-        // GenerateCommand,
+        ValidateCommand,
+        InitCommand,
+        ListCommand
         // RefreshCommand
     ] as const;

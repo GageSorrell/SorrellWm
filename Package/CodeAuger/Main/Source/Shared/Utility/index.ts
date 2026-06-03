@@ -5,4 +5,5 @@
  * @license   MIT
  */
 
+export * from "./Dependent.Types.js";
 export * from "./PackageJson.Types.js";

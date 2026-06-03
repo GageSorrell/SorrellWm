@@ -5,29 +5,30 @@
  * @license   MIT
  */
 
-import type * as Consumer from "../../../Consumer/Config/Config.Types.js";
+import type * as Consumer from "../../../Consumer/Config/index.js";
 import type * as Provider from "../../../Provider/index.js";
+import type { FileSystem, Path } from "@effect/platform";
+import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
+import type { ConfigError } from "effect/ConfigError";
+import type { CliApp, ConfigFile } from "@sorrell/effect-cli";
 import type { Effect } from "effect";
 import type { GenerateConfig } from "./Generate.Command.js";
-import type { Path } from "@effect/platform";
 import type { PlatformError } from "@effect/platform/Error";
 import type { Requirements } from "@sorrell/utilities/effect";
-import type { RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
-import type { SubCommand } from "../../Shared/SubCommand.Types.js";
+import type { Subcommand } from "../../Shared/SubCommand.Types.js";
 
 export type GenerateCommandEffect =
     Effect.Effect<
         void,
         any,
-        Requirements.FsPath
+        CliApp.CliApp.Environment
     >;
 
 export type GenerateCommandType =
-    SubCommand<
+    Subcommand<
         "generate",
         typeof GenerateConfig,
-        Requirements.FsPath,
-        any
+        Requirements.FsPath
     >;
 
 export type GenerateConfigPart =
@@ -42,8 +43,18 @@ export type EGetGenerateConfig =
     Effect.Effect<
         GenerateConfigRecord,
         | RootDirectoryNotFoundError
-        | PlatformError,
-        Requirements.FsPath
+        | PackageJsonParseError
+        | PlatformError
+        | ConfigError
+        | ConfigFile.ConfigFileError,
+        CliApp.CliApp.Environment
     >;
 
-export type GetOutPathFn = (PackageName: string) => Effect.Effect<string, never, Path.Path>;
+export type GetOutPathFn =
+    (PackageName: string) => Effect.Effect<
+        string,
+        | PlatformError
+        | RootDirectoryNotFoundError,
+        | Path.Path
+        | FileSystem.FileSystem
+    >;

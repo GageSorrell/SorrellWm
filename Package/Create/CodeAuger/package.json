@@ -42,8 +42,8 @@
   "license": "MIT",
   "dependencies": {
     "@clack/prompts": "1.4.0",
-    "@sorrell/cli-utilities": "1.0.86",
-    "@sorrell/utilities": "1.2.27",
+    "@sorrell/cli-utilities": "1.0.94",
+    "@sorrell/utilities": "1.2.31",
     "chalk": "4.1.2",
     "code-auger": "0.1.6"
   },

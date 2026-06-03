@@ -1,21 +1,38 @@
 /**
+ * General-purpose utility types and functions.  You may import modules
+ * directly from here, or you may use the corresponding scoped export path.
+ * For example, to import the {@link \@sorrell/utilities/dependency} module, you
+ * may use either of,
+ *
+ * ```typescript
+ * import { Dependency } from "@sorrell/utilities";
+ * import * as Dependency from "@sorrell/utilities/dependency";
+ * ```
+ *
+ * This module only exports the top-level modules of this package, however there
+ * exists a scoped export path for *every* module in this package.  For example,
+ * to import the {@link \@sorrell/utilities/generic/option} module, you must use
+ * either of the scoped paths containing the module,
+ *
+ * ```typescript
+ * import { Option } from "@sorrell/utilities/generic";
+ * import * as Option from "@sorrell/utilities/generic/option";
+ * ```
+ *
+ * @module @sorrell/utilities
+ */
+
+/**
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-/**
- * @module
- * General-purpose utility types and functions.
- * This module barrel-exports each scoped export of this package.
- * Use the scoped exports of this package to access only specific
- * utilities (*e.g.*, `async`, `npm`, *etc.*).
- */
-
 export * as Array from "./Array/index.ts";
 export * as Async from "./Async/index.ts";
 export * as Complex from "./Math/Complex.ts";
+export * as Effect from "./Effect/index.ts";
 export * as FileSystem from "./FileSystem/index.ts";
 export * as Functional from "./Functional/index.ts";
 export * as Math from "./Math/index.ts";

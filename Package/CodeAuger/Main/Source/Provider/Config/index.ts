@@ -14,4 +14,3 @@
  */
 
 export * from "./Config.js";
-export * from "./Config.Types.js";

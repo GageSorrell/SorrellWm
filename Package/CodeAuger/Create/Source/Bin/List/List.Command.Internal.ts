@@ -5,17 +5,16 @@
  * @license   MIT
  */
 
-import { Path as EffectPath, FileSystem } from "@effect/platform";
-import type { EGetDependencyNames } from "./List.Command.Internal.Types.js";
 import { Effect } from "effect";
 import { GetPackageJson } from "@sorrell/utilities/npm/effect";
 import type { IPackageJson } from "package-json-type";
 
-export const GetDependencyNames: EGetDependencyNames = Effect.gen(function* ()
-{
-    const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
-    const Path: EffectPath.Path = yield* EffectPath.Path;
+/* eslint-disable @typescript-eslint/typedef */
 
+export/** Get the installed dependencies of the package that contains the current work directory. */
+const GetDependencyNames = Effect.gen(function* ()
+{
+    /* eslint-enable @typescript-eslint/typedef */
     const PackageJson: IPackageJson = yield* GetPackageJson();
 
     return [

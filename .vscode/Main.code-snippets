@@ -1,4 +1,8 @@
 {
+    "EffectGen":{
+        "body": "Effect.gen(function* ()\n{\n    $0\n});",
+        "prefix": "_EffectGen"
+    },
     "UseState":
     {
         "body": "const [ ${1:Name}, Set${1:Name} ] = useState<${2:Type}>(${3:Default});",

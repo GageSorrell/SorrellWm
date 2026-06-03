@@ -1,10 +1,10 @@
 {
   "name": "@sorrell/cli-utilities",
-  "version": "1.0.86",
+  "version": "1.0.94",
   "bin": {
     "cli-utilities": "./Distribution/Bin/Bin.js"
   },
-  "description": "Utilities developing CLI tools with TypeScript.",
+  "description": "Utilities for developing CLI tools with TypeScript.",
   "keywords": [
     "cli",
     "utility",
@@ -45,6 +45,42 @@
       "import": "./Distribution/Cli/index.js",
       "require": "./Distribution/Cli/index.js",
       "types": "./Distribution/Cli/index.d.ts"
+    },
+    "./cli/args": {
+      "default": "./Distribution/Cli/Args/index.js",
+      "import": "./Distribution/Cli/Args/index.js",
+      "require": "./Distribution/Cli/Args/index.js",
+      "types": "./Distribution/Cli/Args/index.d.ts"
+    },
+    "./cli/choice": {
+      "default": "./Distribution/Cli/Choice/index.js",
+      "import": "./Distribution/Cli/Choice/index.js",
+      "require": "./Distribution/Cli/Choice/index.js",
+      "types": "./Distribution/Cli/Choice/index.d.ts"
+    },
+    "./cli/command": {
+      "default": "./Distribution/Cli/Command/index.js",
+      "import": "./Distribution/Cli/Command/index.js",
+      "require": "./Distribution/Cli/Command/index.js",
+      "types": "./Distribution/Cli/Command/index.d.ts"
+    },
+    "./cli/options": {
+      "default": "./Distribution/Cli/Options/index.js",
+      "import": "./Distribution/Cli/Options/index.js",
+      "require": "./Distribution/Cli/Options/index.js",
+      "types": "./Distribution/Cli/Options/index.d.ts"
+    },
+    "./cli/handler": {
+      "default": "./Distribution/Cli/Handler/index.js",
+      "import": "./Distribution/Cli/Handler/index.js",
+      "require": "./Distribution/Cli/Handler/index.js",
+      "types": "./Distribution/Cli/Handler/index.d.ts"
+    },
+    "./cli/subcommand": {
+      "default": "./Distribution/Cli/Subcommand/index.js",
+      "import": "./Distribution/Cli/Subcommand/index.js",
+      "require": "./Distribution/Cli/Subcommand/index.js",
+      "types": "./Distribution/Cli/Subcommand/index.d.ts"
     },
     "./format": {
       "default": "./Distribution/Format/index.js",
@@ -87,10 +123,36 @@
       "import": "./Distribution/PseudoTerminal/index.js",
       "require": "./Distribution/PseudoTerminal/index.js",
       "types": "./Distribution/PseudoTerminal/index.d.ts"
+    },
+    "./platform": {
+      "default": "./Distribution/Platform/index.js",
+      "import": "./Distribution/Platform/index.js",
+      "require": "./Distribution/Platform/index.js",
+      "types": "./Distribution/Platform/index.d.ts"
+    },
+    "./platform/runtime": {
+      "default": "./Distribution/Platform/Runtime/index.js",
+      "import": "./Distribution/Platform/Runtime/index.js",
+      "require": "./Distribution/Platform/Runtime/index.js",
+      "types": "./Distribution/Platform/Runtime/index.d.ts"
+    },
+    "./runtime": {
+      "default": "./Distribution/Runtime/index.js",
+      "import": "./Distribution/Runtime/index.js",
+      "require": "./Distribution/Runtime/index.js",
+      "types": "./Distribution/Runtime/index.d.ts"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "peerDependenciesMeta": {
+    "simple-git": {
+      "optional": true
+    }
+  },
+  "peerDependencies": {
+    "simple-git": "3.36.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
@@ -101,7 +163,7 @@
     "@effect/cli": "0.75.1",
     "@effect/platform": "^0.96.0",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
-    "@sorrell/utilities": "1.2.27",
+    "@sorrell/utilities": "1.2.31",
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",
     "clipboardy": "^5.3.1",

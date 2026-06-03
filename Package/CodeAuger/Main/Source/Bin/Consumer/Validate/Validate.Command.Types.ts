@@ -9,7 +9,7 @@
 
 import type { Effect } from "effect";
 import type { Requirements } from "@sorrell/utilities/effect";
-import type { SubCommand } from "../../Shared/SubCommand.Types.js";
+import type { Subcommand } from "../../Shared/SubCommand.Types.js";
 import type { ValidateConfig } from "./Validate.Command.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -24,11 +24,10 @@ export type ValidateCommandEffect =
 
 /** The type of the `validate` command. */
 export type ValidateCommandType =
-    SubCommand<
+    Subcommand<
         "validate",
         typeof ValidateConfig,
-        Requirements.FsPath,
-        any
+        Requirements.FsPath
     >;
 
 /* eslint-enable @typescript-eslint/no-explicit-any */

@@ -5,42 +5,67 @@
  * @license   MIT
  */
 
-import type { Append, Requirements } from "../Effect/Effect.Types.ts";
-import type {
-    PackageJsonParseError,
-    RootDirectoryNotFoundError
-} from "./Npm.Error.ts";
+import type { FileSystem, Path } from "@effect/platform";
+import type { CliApp } from "@effect/cli";
 import type { Effect } from "effect";
 import type { IPackageJson } from "package-json-type";
-import type { PlatformError } from "@effect/platform/Error";
 import type { ParseError } from "effect/ParseResult";
+import type { PlatformError } from "@effect/platform/Error";
+import type { SearchExhaustedError } from "../Effect/Platform";
 
-export type EGetPackage =
+export type EGetPackageJson =
     Effect.Effect<
         IPackageJson,
-        | PackageJsonParseError
-        | RootDirectoryNotFoundError,
-        never
+        | SearchExhaustedError
+        | PlatformError
+        | ParseError,
+        | Path.Path
+        | FileSystem.FileSystem
     >;
 
 export type EGetNodeModulesPath =
     Effect.Effect<
         string,
-        PlatformError,
-        Requirements.FsPath
+        | SearchExhaustedError
+        | PlatformError,
+        | Path.Path
+        | FileSystem.FileSystem
     >;
 
 export type EGetDependencyPackage =
     Effect.Effect<
         IPackageJson,
+        | SearchExhaustedError
         | PlatformError
         | ParseError,
-        Requirements.FsPath
+        | Path.Path
+        | FileSystem.FileSystem
     >;
 
 export type EGetPackageRootDirectory =
     Effect.Effect<
         string,
-        RootDirectoryNotFoundError,
-        never
+        | SearchExhaustedError
+        | PlatformError,
+        | Path.Path
+        | FileSystem.FileSystem
     >;
+
+export type EGetDependencies =
+    Effect.Effect<
+        ReadonlyArray<string>,
+        | SearchExhaustedError
+        | PlatformError
+        | ParseError,
+        | Path.Path
+        | FileSystem.FileSystem
+    >;
+
+/** The different "types" of dependencies that a `package.json` can specify. */
+export type PackageDependency =
+    | "dependencies"
+    | "devDependencies"
+    | "peerDependencies"
+    | "optionalDependencies"
+    | "bundleDependencies"
+    | "bundledDependencies";

@@ -54,9 +54,9 @@ const IsValidRegExp: RegExp = /\.(ts|tsx|mts|cts|d\.ts|d\.mts|d\.cts)$/iu;
 
 /**
  * Determine whether a given {@link In | string} is a {@link Any | valid TypeScript module extension}.
- * 
+ *
  * @param In - The string to test.
- * 
+ *
  * @returns {In is Any} Whether the given {@link In | string} is a valid TypeScript module extension.
  */
 export function IsValid(In: string): In is Any

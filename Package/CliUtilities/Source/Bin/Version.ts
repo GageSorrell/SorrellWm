@@ -5,4 +5,4 @@
  * @license   MIT
  */
 
-export const Version: string = "v1.0.86";
+export const Version: string = "v1.0.94";

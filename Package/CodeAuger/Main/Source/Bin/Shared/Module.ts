@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-import Chalk from "chalk";
 import { Code } from "@sorrell/cli-utilities/format";
 import { Effect } from "effect";
 import type { ModuleGenerator } from "./Module.Types.js";
@@ -28,8 +27,9 @@ export function GetModuleGenerator(
         if (typeof GeneratorModule[Name] !== "function")
         {
             throw new Error(
-                `Module at ${ Path } exports a value named ${ Name }, ` +
-                `but it is ${ Chalk.italic("not") } a ${ Code("function") }.`
+                ""
+                // `Module at ${ Path } exports a value named ${ Name }, ` +
+                // `but it is ${ Chalk.italic("not") } a ${ Code("function") }.`
             );
         }
 

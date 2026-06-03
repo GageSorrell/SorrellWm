@@ -5,34 +5,33 @@
  * @license   MIT
  */
 
+import * as Platform from "@effect/platform";
+import { Array, Effect, Predicate, Record, Schema, pipe } from "effect";
 import { BadArgument, SystemError } from "@effect/platform/Error";
 import type {
+    EGetDependencies,
     EGetDependencyPackage,
     EGetNodeModulesPath,
-    EGetPackage,
-    EGetPackageRootDirectory
+    EGetPackageJson,
+    EGetPackageRootDirectory,
+    PackageDependency
 } from "./Npm.Effect.Types.ts";
-import { Effect, Schema } from "effect";
-import { Path as EffectPath, FileSystem } from "@effect/platform";
 import {
     FindNearestNodeModulesDirectory,
     FindNearestPackageDirectory,
-    GetPathType,
-    HasErrorCode
+    GetPathType
 } from "./Npm.Effect.Internal.ts";
-import { promises as Fs, constants as FsConstants } from "fs";
-import { PackageJsonParseError, RootDirectoryNotFoundError } from "./Npm.Error.ts";
-import { dirname, join } from "path";
-import type { IPackageJson } from "package-json-type";
-import Process from "process";
+import type { IDependencyMap, IPackageJson } from "package-json-type";
+import { SearchExhaustedError } from "../Effect/Platform/Platform.ts";
+import process from "process";
 
 /**
  * Get the `package.json` of the Node.js project in which the
  * given path, or the current working directory, resides.
  *
- * @param Path - The given path from which to look for a root directory.
+ * @param SearchStart - The given path from which to look for a root directory.
  *
- * @returns {EGetPackage} An Effect that succeeds with the parsed `package.json`, or fails
+ * @returns {EGetPackageJson} An Effect that succeeds with the parsed `package.json`, or fails
  * with {@link RootDirectoryNotFoundError} or {@link PackageJsonParseError}.
  *
  * @example
@@ -45,30 +44,19 @@ import Process from "process";
  * }
  * ```
  */
-export function GetPackageJson(Path?: string): EGetPackage
+export function GetPackageJson(SearchStart?: string): EGetPackageJson
 {
     return Effect.gen(function* ()
     {
-        const RootDirectory: string = yield* GetPackageRootDirectory(Path);
-        const PackageJsonPath: string = join(RootDirectory, "package.json");
+        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
+        const Path: Platform.Path.Path = yield* Platform.Path.Path;
 
-        const FileContents: string = yield* Effect.tryPromise({
-            catch: (Cause: unknown) => Cause,
-            try: () => Fs.readFile(PackageJsonPath, "utf-8")
-        }).pipe(
-            Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-        );
+        const RootDirectory: string = yield* GetPackageRootDirectory(SearchStart);
+        const PackageJsonPath: string = Path.join(RootDirectory, "package.json");
 
-        const PackageJson: IPackageJson = yield* Effect.try({
-            catch: (Cause: unknown) =>
-                new PackageJsonParseError({
-                    Cause,
-                    Path: PackageJsonPath
-                }),
-            try: () => JSON.parse(FileContents) as IPackageJson
-        });
+        const FileContents: string = yield* Fs.readFileString(PackageJsonPath);
 
-        return PackageJson;
+        return Schema.decodeUnknownSync(Schema.parseJson())(FileContents) as IPackageJson;
     });
 }
 
@@ -76,7 +64,8 @@ export function GetPackageJson(Path?: string): EGetPackage
  * Get the root directory of the Node.js project in which the
  * current working directory resides.
  *
- * @param Path - *(Optional)* The given path from which to look for a root directory.
+ * @param SearchStart - If specified, this is the given path from which to look for a root directory.
+ * Otherwise, the search is started from {@link process.cwd}.
  *
  * @returns {EGetPackageRootDirectory} An Effect that succeeds with the package root
  * directory, or fails with {@link RootDirectoryNotFoundError}.
@@ -135,46 +124,39 @@ export function GetPackageJson(Path?: string): EGetPackage
  * // `Root` <- `undefined`
  * ```
  */
-export function GetPackageRootDirectory(Path?: string): EGetPackageRootDirectory
+export function GetPackageRootDirectory(SearchStart?: string): EGetPackageRootDirectory
 {
     return Effect.gen(function* ()
     {
-        let CurrentDirectory: string = yield* Effect.tryPromise({
-            catch: (Cause: unknown) => Cause,
-            try: () => Fs.realpath(Path ?? Process.cwd())
-        }).pipe(
-            Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-        );
+        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
+        const Path: Platform.Path.Path = yield* Platform.Path.Path;
+
+        const StartPath: string = yield* Fs.realPath(SearchStart ?? process.cwd());
+        let CurrentDirectory: string = StartPath;
 
         while (true)
         {
-            const PackageJsonPath: string = join(CurrentDirectory, "package.json");
+            const PackageJsonPath: string = Path.join(CurrentDirectory, "package.json");
 
-            const PackageJsonExists: boolean = yield* Effect.tryPromise({
-                catch: (Cause: unknown) => Cause,
-                try: () => Fs.access(PackageJsonPath, FsConstants.F_OK)
-            }).pipe(
-                Effect.as(true),
-                Effect.catchIf(
-                    (Cause: unknown): Cause is { readonly code: string } =>
-                        HasErrorCode(Cause) && Cause.code === "ENOENT",
-                    () => Effect.succeed(false)
-                ),
-                Effect.catchAll((Cause: unknown) => Effect.die(Cause))
-            );
+            const PackageJsonExists: boolean = yield* Fs.exists(PackageJsonPath);
 
             if (PackageJsonExists)
             {
                 return CurrentDirectory;
             }
 
-            const ParentDirectory: string = dirname(CurrentDirectory);
+            const ParentDirectory: string = Path.dirname(CurrentDirectory);
 
             if (ParentDirectory === CurrentDirectory)
             {
-                return yield* Effect.fail(
-                    new RootDirectoryNotFoundError({ Path })
-                );
+                return yield* Effect.fail(new SearchExhaustedError({
+                    Criteria: (
+                        "A directory containing a package.json file, of which the given SearchStart " +
+                        `parameter was "${ SearchStart }".`
+                    ),
+                    Kind: "Directory",
+                    LastSearchResult: CurrentDirectory
+                }));
             }
 
             CurrentDirectory = ParentDirectory;
@@ -185,29 +167,27 @@ export function GetPackageRootDirectory(Path?: string): EGetPackageRootDirectory
 /* eslint-disable jsdoc/require-example */
 
 /**
- * For a given `npm` package, identified by a {@link Directory} path contained by the `npm` package,
+ * For a given `npm` package, identified by a {@link Cwd} path contained by the `npm` package,
  * get the path to the `node_modules` directory that contains the dependencies of the package.
  *
  * @note This supports `npm` workspaces, and has not been tested with packages that are workspaces
  * of packages handled by *other* package managers.
  *
- * @param Directory - The path of a directory within an `npm` package (possibly
+ * @param Cwd - The path of a directory within an `npm` package (possibly
  * the root directory of the package).
  *
  * @returns {EGetNodeModulesPath} An {@link Effect.Effect | effect} that finds the
- * `node_modules` directory of an `npm` package that contains the given {@link Directory}.
+ * `node_modules` directory of an `npm` package that contains the given {@link Cwd}.
  */
-export function GetNodeModulesDirectory(
-    Directory: string = process.cwd()
-): EGetNodeModulesPath
+export function GetNodeModulesDirectory(Cwd?: string): EGetNodeModulesPath
 {
     return Effect.gen(function* ()
     {
-        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
-        const Path: EffectPath.Path = yield* EffectPath.Path;
+        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
+        const Path: Platform.Path.Path = yield* Platform.Path.Path;
 
-        const ResolvedDirectory: string = Path.resolve(Directory);
-        const ResolvedDirectoryType: FileSystem.File.Type | undefined =
+        const ResolvedDirectory: string = Path.resolve(Cwd ?? process.cwd());
+        const ResolvedDirectoryType: Platform.FileSystem.File.Type | undefined =
             yield* GetPathType(
                 Fs,
                 ResolvedDirectory
@@ -296,8 +276,8 @@ export function GetDependencyPackage(
 {
     return Effect.gen(function* ()
     {
-        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
-        const Path: EffectPath.Path = yield* EffectPath.Path;
+        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
+        const Path: Platform.Path.Path = yield* Platform.Path.Path;
 
         const NodeModulesPath: string = yield* GetNodeModulesDirectory(Directory);
 
@@ -306,6 +286,71 @@ export function GetDependencyPackage(
         const PackageJsonContents: string = yield* Fs.readFileString(PackageJsonPath);
 
         return (yield* Schema.decodeUnknown(Schema.parseJson())(PackageJsonContents)) as IPackageJson;
+    });
+}
+
+/**
+ * For a NodeJS project containing {@link SearchStart | a given directory}, get the names of its dependencies.
+ *
+ * @param Dependencies - If specified, then the "types" of dependencies to include, where each "type"
+ * is identified by its key in the `package.json` file.  Otherwise, this is `"dependencies"` and
+ * `"devDependencies"`.
+ *
+ * @param SearchStart - If specified, the path from which the search for the `package.json` will begin.
+ * Otherwise, it is {@link process!cwd}.
+ *
+ * @returns {EGetDependencies} An {@link Effect!Effect | effect} that returns the dependencies
+ * of the package containing the given {@link SearchStart}
+ */
+export function GetDependencies(
+    Dependencies: ReadonlyArray<PackageDependency> = [ "dependencies", "devDependencies" ] as const,
+    SearchStart: string = process.cwd()
+): EGetDependencies
+{
+    return Effect.gen(function* ()
+    {
+        const PackageJson: IPackageJson = yield* GetPackageJson(SearchStart);
+
+        function IsInDependencies(Key: string): Key is PackageDependency
+        {
+            return Dependencies.includes(Key as PackageDependency);
+        }
+
+        function GetNamesFromProperty(
+            Value: IDependencyMap | ReadonlyArray<string>,
+            _Index: number
+        ): ReadonlyArray<string>
+        {
+            if (Array.isArray(Value))
+            {
+                return Value as ReadonlyArray<string>;
+            }
+            else
+            {
+                return Record.keys(Value as Record<string, string>);
+            }
+        }
+
+        function IsDependencyProperty(
+            Value: unknown,
+            Key: string
+        ): Value is ReadonlyArray<string> | IDependencyMap
+        {
+            return (
+                IsInDependencies(Key) &&
+                (
+                    Predicate.isRecord(Value) ||
+                    Array.isArray(Value)
+                )
+            );
+        }
+
+        return pipe(
+            PackageJson,
+            Record.filter(IsDependencyProperty),
+            Record.values,
+            Array.flatMap(GetNamesFromProperty)
+        );
     });
 }
 

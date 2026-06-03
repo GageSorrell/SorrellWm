@@ -5,9 +5,9 @@
  * @license   MIT
  */
 
+import type * as Shared from "../Choice/index.js";
 import { Internal } from "../Internal/index.js";
 import { Options } from "@effect/cli";
-import type { Choice as Shared } from "../Choice/index.js";
 import type { TMapper } from "@sorrell/utilities/functional";
 import { pipe } from "effect";
 

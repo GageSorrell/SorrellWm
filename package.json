@@ -53,8 +53,13 @@
     },
     "workspaces": [
         "!Package/Create/CodeAuger",
+        "Package/Effect/Cli",
+        "Package/Effect/Platform",
+        "Package/Effect/Theme",
+        "Package/Effect/PrinterAnsi",
         "Package/CodeAuger/Main",
         "Package/CodeAuger/Create",
+        "Package/CodeAuger/Development",
         "Application",
         "!Application/Release/Application",
         "Package/*",

@@ -1,0 +1,30 @@
+{
+  "name": "@code-auger/development-consumer",
+  "private": "true",
+  "version": "0.0.1",
+  "description": "A test consumer project for developing code-auger.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+    "repository": {
+        "directory": "Package/CodeAuger/Development/Consumer",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "devDependencies": {
+    "typescript": "6.0.3"
+    },
+    "dependencies": {
+        "@code-auger/development-provider": "0.0.1",
+        "code-auger": "0.1.8"
+    },
+  "keywords": [ ],
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+  "type": "module",
+  "license": "MIT"
+}

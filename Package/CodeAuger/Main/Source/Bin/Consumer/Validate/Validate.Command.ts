@@ -5,15 +5,16 @@
  * @license   MIT
  */
 
-import * as Sorrell from "@sorrell/cli-utilities/cli";
 import * as Validate from "./Validate.Command.Internal.js";
 import { Args, Command, Options } from "@effect/cli";
 import { Effect, pipe } from "effect";
 import type { ValidateCommandEffect, ValidateCommandType } from "./Validate.Command.Types.js";
+import { Cli } from "@sorrell/cli-utilities";
 import type { Handler } from "@sorrell/cli-utilities/cli";
 import type { Internal } from "./Validate.Command.Internal.Types.js";
+import { MakeConfig } from "../../Shared/SubCommand.js";
 
-const ValidatorDescriptions: Sorrell.Choice.Choice.DescriptionRecord<Internal.Validator.Choice> =
+const ValidatorDescriptions: Cli.Choice.DescriptionRecord<Internal.Validator.Choice> =
     {
         "config-not-missing-providers":
             "Determine whether the consumer's config has an entry for every installed provider.",
@@ -40,45 +41,44 @@ export const FixCategories =
     ] as const;
 
 /* eslint-disable-next-line @typescript-eslint/typedef, jsdoc/require-jsdoc */
-export const ValidateConfig =
-    {
-        Fix: pipe(
-            Sorrell.Options.Choice.Choice(
-                "fix",
-                FixCategories,
+export const ValidateConfig = MakeConfig({
+    Fix: pipe(
+        Cli.Options.Choice.Choice(
+            "fix",
+            FixCategories,
+            {
+                Base: "@TODO",
+                Choices:
                 {
-                    Base: "@TODO",
-                    Choices:
-                    {
-                        all: "@TODO",
-                        error: "@TODO",
-                        recommended: "@TODO",
-                        ...ValidatorDescriptions
-                    }
+                    all: "@TODO",
+                    error: "@TODO",
+                    recommended: "@TODO",
+                    ...ValidatorDescriptions
                 }
-            ),
-            Options.withDefault([ "all" ]),
-            Options.optional
+            }
         ),
-        Validators: pipe(
-            Sorrell.Args.Choice.Choice(
-                Validate.Choices,
+        Options.withDefault([ "all" ]),
+        Options.optional
+    ),
+    Validators: pipe(
+        Cli.Args.Choice.Choice(
+            Validate.Choices,
+            {
+                Description:
                 {
-                    Description:
-                    {
-                        Base:
-                            "The validators to run when calling this command.  " +
-                            "Specifying none will cause all validators to run.  \n" +
-                            "Please note that some validators check for recommended " +
-                            "usage of code-auger, and these recommendations are not required.",
-                        Choices: ValidatorDescriptions
-                    },
-                    name: "validators"
-                }
-            ),
-            Args.repeated
-        )
-    };
+                    Base:
+                        "The validators to run when calling this command.  " +
+                        "Specifying none will cause all validators to run.  \n" +
+                        "Please note that some validators check for recommended " +
+                        "usage of code-auger, and these recommendations are not required.",
+                    Choices: ValidatorDescriptions
+                },
+                name: "validators"
+            }
+        ),
+        Args.repeated
+    )
+});
 
 /* eslint-disable-next-line jsdoc/require-jsdoc */
 function HandleValidate(

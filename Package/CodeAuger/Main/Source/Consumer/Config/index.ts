@@ -13,4 +13,5 @@
  * consumers via the {@link ../Provider/Config/index.ts | module}.
  */
 
+export * from "./Config.js";
 export * from "./Config.Types.js";

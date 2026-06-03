@@ -6,7 +6,7 @@
  */
 
 import type { FilteredArray, Options, TArrayType } from "./Array.Types.ts";
-import type { NoOptions } from "../Option/Option.Types.ts";
+import type { NoOptions } from "../Generic/Option/Option.Types.ts";
 
 /**
  * Filter out all instances of `undefined` from a given {@link Array:param}.

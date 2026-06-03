@@ -5,13 +5,18 @@
  * @license   MIT
  */
 
-import type { Any, Main } from "./Command.Types.js";
+import type { Any, CommandWithSubcommands, Main } from "./Command.Types.js";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import type { SubcommandArray, WithFunction } from "../Subcommand/Subcommand.Types.js";
 import type { Argument } from "../Handler/Handler.Types.js";
 import { Command } from "@effect/cli";
 import type { NonEmptyArray } from "effect/Array";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+//@ts-expect-error This type is imported to satisfy a TypeDoc `@link`.
+import type { Transformer } from "../Subcommand/Subcommand.Types.js";
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * For a given command, get the name of that command, such that it will
@@ -140,6 +145,71 @@ export function RunCli(
         Effect.provide(NodeContext.layer) as any,
         NodeRuntime.runMain
     );
+}
+
+/**
+ * Use {@link Command!withSubcommands} while constraining the {@link E | error} and
+ * {@link R | requirements} types of the subcommands.
+ *
+ * @note Due to the design choices of TypeScript regarding generic functions, this
+ * function is a *factory* for the function that allows you to supply a command
+ * with constrained subcommands.
+ *
+ * @template E - The error type of the command.
+ * @template R - The requirements type of the command.
+ *
+ * @returns {WithFunction<E, R>} A function analogous to {@link Command.withSubcommands},
+ * with the error and requirements types constrained by the type parameters set when
+ * calling this.
+ */
+export function WithSubcommands<E, R>(): WithFunction<E, R>
+{
+    /**
+     * Equip a command with subcommands, whose {@link E | error} and
+     * {@link R | requirements} types are constrained by the factory of this.
+     *
+     * @template SubcommandsType - The subcommands whose {@link E | error} and
+     * {@link R | requirements} types are constrained by the factory of this.
+     *
+     * @template SubcommandsType - The type of the {@link SubcommandArray}, whose error
+     * and requirements types are constrained.
+     *
+     * @param ConstrainedSubcommands - The subcommands to equip another command
+     * with, constrained in their error and requirements types.
+     *
+     * @returns {Transformer<SubcommandsType>} The function that equips a command
+     * with the given {@link ConstrainedSubcommands}.
+     */
+    return function<const SubcommandsType extends SubcommandArray<E, R>>(
+        ConstrainedSubcommands: SubcommandsType
+    )
+    {
+        /**
+         * Equip a given {@link Self | command} with the subcommands passed
+         * to the function that returned this.
+         *
+         * @template Name - The name of the given command.
+         * @template Requirements - The requirements type of the given command.
+         * @template Error - The error type of the given command.
+         * @template Parsed - The parsed config type of the given command.
+         *
+         * @param Self - The command to equip with the subcommands passed
+         * to the function that returned this.
+         *
+         * @returns {CommandWithSubcommands<Name, Requirements, Error, Parsed, SubcommandsType>} The
+         * {@link Self | given command}, equipped with the subcommands passed to the function
+         * that returned this.
+         */
+        return function<Name extends string, Requirements, Error, Parsed>(
+            Self: Command.Command<Name, Requirements, Error, Parsed>
+        ): CommandWithSubcommands<Name, Requirements, Error, Parsed, SubcommandsType>
+        {
+            return pipe(
+                Self,
+                Command.withSubcommands(ConstrainedSubcommands)
+            );
+        };
+    };
 }
 
 /* eslint-enable jsdoc/require-example */

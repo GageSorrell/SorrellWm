@@ -54,11 +54,12 @@
     "@effect/cli": "0.75.1",
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.106.0",
-    "@sorrell/cli-utilities": "1.0.86",
-    "@sorrell/utilities": "1.2.27",
+    "@sorrell/cli-utilities": "1.0.94",
+    "@sorrell/utilities": "1.2.31",
     "c12": "4.0.0-beta.5",
     "code-auger": "0.1.8",
     "effect": "3.21.2",
+    "jsonc-parser": "3.3.1",
     "typescript": "6.0.3"
   }
 }

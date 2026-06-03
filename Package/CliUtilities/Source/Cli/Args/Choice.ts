@@ -5,10 +5,10 @@
  * @license   MIT
  */
 
+import type * as Shared from "../Choice/index.js";
 import type { Config, Tuple } from "./Choice.Types.js";
 import { Args } from "@effect/cli";
 import { Internal } from "../Internal/index.js";
-import type { Choice as Shared } from "../Choice/index.js";
 import type { TMapper } from "@sorrell/utilities/functional";
 import { pipe } from "effect";
 

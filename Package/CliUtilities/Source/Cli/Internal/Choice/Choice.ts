@@ -7,8 +7,8 @@
 
 /* eslint-disable jsdoc/require-example */
 
+import type * as Shared from "../../Choice/index.js";
 import { Record } from "effect";
-import type { Choice as Shared } from "../../Choice/index.js";
 
 /**
  * Get a formatted description of a choice argument whose choices are of a given {@link ChoiceType},

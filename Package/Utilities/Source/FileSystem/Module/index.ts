@@ -1,4 +1,10 @@
 /**
+ * Utilities for working JavaScript/TypeScript module files.
+ *
+ * @module @sorrell/utilities/fs/module
+ */
+
+/**
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell

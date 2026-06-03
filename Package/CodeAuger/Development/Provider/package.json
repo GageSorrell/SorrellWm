@@ -1,0 +1,35 @@
+{
+  "name": "@code-auger/development-provider",
+  "private": "true",
+  "version": "0.0.1",
+  "description": "A test provider project for developing code-auger.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+    "repository": {
+        "directory": "Package/CodeAuger/Development/Provider",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "peerDependenciesMeta": {
+        "code-auger":{
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "code-auger": "0.1.8",
+    "typescript": "6.0.3"
+    },
+    "peerDependencies": {
+        "code-auger": "0.1.8"
+    },
+  "keywords": [ ],
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+  "type": "module",
+  "license": "MIT"
+}
