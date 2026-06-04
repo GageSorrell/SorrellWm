@@ -6,7 +6,7 @@
  */
 
 import type { FileSystem, Path } from "@effect/platform";
-import type { CliApp } from "@effect/cli";
+import type { CliApp } from "@sorrell/effect/unstable/cli";
 import type { Effect } from "effect";
 import type { IPackageJson } from "package-json-type";
 import type { ParseError } from "effect/ParseResult";

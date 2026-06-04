@@ -1,0 +1,19 @@
+/**
+ * @file      PackageJson.Types.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+import type { IPackageJson } from "package-json-type";
+/**
+ * The base type for the `package.json` types that `code-auger` provides.
+ *
+ * @template ConfigType - The type of the `"code-auger"` object in the `"config"`
+ * object.
+ */
+export interface IPackageJsonBase<ConfigType extends Record<string, unknown>> extends Omit<IPackageJson, "config"> {
+    config?: IPackageJson["config"] & {
+        "code-auger"?: ConfigType;
+    };
+}
+//# sourceMappingURL=PackageJson.Types.d.ts.map

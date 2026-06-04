@@ -10,7 +10,7 @@
 import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { Code } from "@sorrell/cli-utilities/format";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import { CreateCommand } from "./Create/Create.Command.js";
 import { ListCommand } from "./List/index.js";
 import { Version } from "./Version.js";

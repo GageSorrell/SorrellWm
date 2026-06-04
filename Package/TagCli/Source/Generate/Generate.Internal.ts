@@ -11,7 +11,7 @@ import type { FGenerateConfig } from "./Generate.Internal.Types.js";
 import { GetPackageJson } from "@sorrell/utilities/npm/effect";
 import type { IPackageJson } from "package-json-type";
 import { MakeConfig } from "../Command/Command.js";
-import { Options } from "@effect/cli";
+import { Options } from "@sorrell/effect/unstable/cli";
 import type { TagDecl } from "ts-tag/internal";
 
 export const GenerateConfig: FGenerateConfig =

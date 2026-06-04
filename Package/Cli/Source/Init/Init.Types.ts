@@ -8,9 +8,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import type { TCommand, TSubCommandEffect } from "../Command/Command.Types.js";
-import type { Args } from "@effect/cli/Args";
+import type { Args } from "@sorrell/effect/unstable/cli/Args";
 import { Data } from "effect";
-import type { Options } from "@effect/cli/Options";
+import type { Options } from "@sorrell/effect/unstable/cli/Options";
 import type { TConfig } from "../Config/Config.Types.js";
 import type { TOptions } from "../Options/Options.Types.js";
 

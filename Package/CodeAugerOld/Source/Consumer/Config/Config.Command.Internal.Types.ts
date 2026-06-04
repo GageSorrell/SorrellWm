@@ -7,7 +7,7 @@
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { Args, Command, Options } from "@effect/cli";
+import type { Args, Command, Options } from "@sorrell/effect/unstable/cli";
 import type { FileSystem, Path } from "@effect/platform";
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
 import type { Effect } from "effect";

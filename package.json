@@ -28,9 +28,9 @@
         "name": "Gage Sorrell",
         "url": "https://sorrell.sh"
     },
-    "packageManager": "npm@11.14.1",
+    "packageManager": "npm@11.16.0",
     "engines": {
-        "node": ">=24.14.0 <25",
+        "node": ">=24.15.0 <25",
         "npm": ">=11.0.0"
     },
     "type": "module",
@@ -38,12 +38,10 @@
         "clean": "npm run start -w @sorrellwm/clean-repo",
         "clean:install": "npm run start:install -w @sorrellwm/clean-repo",
         "clean:i": "npm run start:i -w @sorrellwm/clean-repo",
-        "build:effect-platform": "npm run build --workspace=@effect/platform",
-        "build:effect-printer-ansi": "npm run build --workspace=@effect/printer-ansi",
-        "build:effect-cli": "npm run build --workspace=@effect/cli",
-        "build:effect:all": "npm run build:effect-platform && npm run build:effect-printer-ansi && npm run build:effect-cli"
+        "build:effect": "npm run build -w @sorrell/effect"
     },
     "overrides": {
+        "effect@^4.0.0-beta.78": "file:E:\\SorrellWm\\Package\\Effect",
         "@tootallnate/once": "^3.0.1",
         "serialize-javascript": "^7.0.5",
         "tar": "^7.5.13",
@@ -57,19 +55,17 @@
     },
     "workspaces": [
         "!Package/Create/CodeAuger",
-        "Package/Effect/Cli",
-        "Package/Effect/Platform",
-        "Package/Effect/Theme",
-        "Package/Effect/PrinterAnsi",
+        "Package/Effect",
+        "!Package/EffectOld",
         "Package/CodeAuger/Main",
-        "Package/CodeAuger/Create",
+        "!Package/CodeAuger/Create",
         "Package/CodeAuger/Development",
         "Application",
         "!Application/Release/Application",
         "Package/*",
         "!Package/CodeHike",
         "Package/**/*",
-        "Package/Create/*",
+        "!Package/Create/*",
         "Package/Ui/*",
         "!Package/Tag/Documentation",
         "!Package/Tag/Documentation/**/*",
@@ -78,6 +74,7 @@
         "!Package/EffectCli",
         "!Package/EffectCli/dist",
         "!Package/Listr",
+        "!Package/ListrOld",
         "!Template",
         "!Template/**/*",
         "!Package/Listr/**/*",
@@ -98,7 +95,7 @@
     "devDependencies": {
         "@eslint/js": "^9.39.4",
         "@stylistic/eslint-plugin": "^5.10.0",
-        "@types/node": "^24.12.2",
+        "@types/node": "24.13.0",
         "clipboardy": "^5.3.1",
         "cross-env": "^10.1.0",
         "eslint": "^9.39.4",

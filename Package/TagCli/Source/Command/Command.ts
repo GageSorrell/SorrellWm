@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Args, type Command, Options } from "@effect/cli";
+import { Args, type Command, Options } from "@sorrell/effect/unstable/cli";
 import type { TConfig } from "./Command.Types.js";
 import { pipe } from "effect";
 

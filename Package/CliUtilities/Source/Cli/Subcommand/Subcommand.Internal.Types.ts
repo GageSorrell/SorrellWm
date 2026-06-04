@@ -6,7 +6,7 @@
  */
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import type { Command, CommandDescriptor } from "@effect/cli";
+import type { Command, CommandDescriptor } from "@sorrell/effect/unstable/cli";
 import type { Effect } from "effect/Effect";
 import type { Option } from "effect";
 import type { SubcommandArray } from "./Subcommand.Types.js";

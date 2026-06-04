@@ -6,7 +6,7 @@
  */
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import type { Args, Options } from "@effect/cli";
+import type { Args, Options } from "@sorrell/effect/unstable/cli";
 import type { ReadonlyRecord } from "effect/Record";
 
 /**

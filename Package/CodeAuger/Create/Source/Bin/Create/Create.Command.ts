@@ -19,7 +19,7 @@ import { Console, Data, Effect, pipe } from "effect";
 import { Path as EffectPath, FileSystem } from "@effect/platform";
 import { cancel, confirm, intro, isCancel, outro, text } from "@clack/prompts";
 import { Code } from "@sorrell/cli-utilities/format";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { PlatformError } from "@effect/platform/Error";
 import type { Requirements } from "@sorrell/utilities/effect";
 

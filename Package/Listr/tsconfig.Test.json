@@ -1,9 +1,0 @@
-{
-    "compilerOptions":
-    {
-        "outDir": "./Binaries" },
-        "rootDir": "./Source"
-    },
-    "extends": "./tsconfig.Base.json",
-    "include": [ "./Source/**/*.Test.ts" ]
-}

@@ -7,7 +7,7 @@
 
 import type { FileSystem, Path } from "@effect/platform";
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
-import type { Command } from "@effect/cli";
+import type { Command } from "@sorrell/effect/unstable/cli";
 import type { Effect } from "effect";
 import type { PlatformError } from "@effect/platform/Error";
 import type { Requirements } from "@sorrell/utilities/effect";

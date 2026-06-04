@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Args, Command } from "@effect/cli";
+import { Args, Command } from "@sorrell/effect/unstable/cli";
 import { Console, Effect, pipe } from "effect";
 import { Path as EffectPath, FileSystem } from "@effect/platform";
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";

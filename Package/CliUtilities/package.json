@@ -155,20 +155,18 @@
     "simple-git": "3.36.0"
   },
   "devDependencies": {
-    "@types/node": "^24.12.2",
+    "@types/node": "24.13.0",
     "package-json-type": "^1.1.2"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
-    "@sorrell/effect-cli": "*",
-    "@sorrell/effect-platform": "*",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
     "@sorrell/utilities": "1.2.31",
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",
     "clipboardy": "^5.3.1",
     "commander": "^14.0.3",
-    "effect": "^3.21.1",
+    "effect": "4.0.0-beta.78",
     "en-inflectors": "^1.0.12",
     "listr2": "^10.2.1",
     "node-pty": "^1.1.0",

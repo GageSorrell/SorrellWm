@@ -40,7 +40,7 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-        "@types/node": "^24.12.2",
+        "@types/node": "24.13.0",
     "cmake-js": "^8.0.0",
     "node-api-headers": "^1.8.0",
     "typescript": "npm:tsover@^6.0.0"

@@ -79,7 +79,7 @@
                 "default": "./Distribution/complex.cjs"
             }
         },
-        "./effect": {
+        "./effect-foo": {
             "import": {
                 "types": "./Distribution/Types/Effect/index.d.mts",
                 "default": "./Distribution/effect.js"
@@ -322,7 +322,7 @@
         "build": "npm run build:js && npm run build:types"
     },
     "devDependencies": {
-        "@types/node": "^24.12.2",
+        "@types/node": "24.13.0",
         "clipboardy": "^5.3.1",
         "esbuild": "^0.28.0",
         "package-json-type": "^1.1.2",
@@ -333,7 +333,7 @@
     },
     "dependencies": {
         "chalk": "^5.6.2",
-        "effect": "^3.21.1"
+        "effect": "4.0.0-beta.78"
     },
     "peerDependencies": {
         "tsover": "^6.0.0",

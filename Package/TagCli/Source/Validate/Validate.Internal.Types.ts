@@ -6,7 +6,7 @@
  */
 
 import type { TConfig, TOptions } from "../Command/Command.Types.js";
-import type { Args } from "@effect/cli";
+import type { Args } from "@sorrell/effect/unstable/cli";
 
 export type FValidateConfig =
     TConfig<{

@@ -7,7 +7,7 @@
 
 import { Console, Effect } from "effect";
 import { Code } from "@sorrell/cli-utilities/format";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { FCliConfigSchema } from "../Config/Config.Internal.Types.js";
 import type { FInitOptions } from "./Init.Internal.Types.js";
 import { FileSystem } from "@effect/platform";

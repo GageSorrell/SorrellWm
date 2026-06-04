@@ -8,7 +8,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { Console, Effect } from "effect";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { FValidateOptions } from "./Validate.Internal.Types.js";
 import { ValidateConfig } from "./Validate.Internal.js";
 

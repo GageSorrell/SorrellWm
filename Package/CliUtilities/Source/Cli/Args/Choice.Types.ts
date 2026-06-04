@@ -6,7 +6,7 @@
  */
 
 import type * as Shared from "../Choice/index.js";
-import type { Args } from "@effect/cli";
+import type { Args } from "@sorrell/effect/unstable/cli";
 
 /**
  * A tuple constructed from a given {@link ChoiceType}, used by some functions

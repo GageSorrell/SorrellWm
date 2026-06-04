@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Args, Options } from "@effect/cli";
+import { Args, Options } from "@sorrell/effect/unstable/cli";
 import { promises as Fs, existsSync } from "fs";
 import {
     type InitCommandType,

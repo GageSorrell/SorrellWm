@@ -43,21 +43,17 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-    "@types/node": "24.12.2",
-    "create-ts-tag-cli": "^1.0.0",
+    "@types/node": "24.13.0",
     "package-json-type": "^1.1.2",
     "ts-tag": "^1.0.1",
     "typescript": "^6.0.3",
     "typescript-json-schema": "^0.67.1"
   },
   "dependencies": {
-    "@sorrell/effect-cli": "*",
-    "@sorrell/effect-platform": "*",
-    "@effect/platform-node": "0.106.0",
     "@sorrell/cli-utilities": "1.0.94",
     "@sorrell/utilities": "1.2.31",
     "csv-parse": "^6.2.1",
-    "effect": "3.21.2",
+    "effect": "4.0.0-beta.78",
     "yaml": "^2.8.4"
   }
 }

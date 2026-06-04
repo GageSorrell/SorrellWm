@@ -8,7 +8,7 @@
  */
 
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import { Effect } from "effect";
 import { GetVersion } from "../Command/Command.js";
 import { IndexCommand } from "../Index/IndexCommand.js";

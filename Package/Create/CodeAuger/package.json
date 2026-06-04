@@ -48,7 +48,7 @@
     "code-auger": "0.1.6"
   },
   "devDependencies": {
-    "@types/node": "^24.12.2",
+    "@types/node": "24.13.0",
     "package-json-type": "1.1.2"
   }
 }

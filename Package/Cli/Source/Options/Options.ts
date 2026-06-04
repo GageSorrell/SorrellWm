@@ -6,7 +6,7 @@
  */
 
 import type { Options as ArrayOptions, TArray } from "@sorrell/utilities/array";
-import { Options } from "@effect/cli";
+import { Options } from "@sorrell/effect/unstable/cli";
 
 /**
  * @module Options

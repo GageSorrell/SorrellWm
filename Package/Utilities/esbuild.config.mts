@@ -16,7 +16,7 @@ const EntryPoints: FExports =
         complex: "./Source/Math/Complex.ts",
         dependency: "./Source/Dependency/index.ts",
         "dependency-effect": "./Source/Dependency/Effect/index.ts",
-        effect: "./Source/Effect/index.ts",
+        "effect-foo": "./Source/Effect/index.ts",
         "effect-platform": "./Source/Effect/Platform/index.ts",
         fs: "./Source/FileSystem/index.ts",
         "fs-effect": "./Source/FileSystem/Effect/index.ts",

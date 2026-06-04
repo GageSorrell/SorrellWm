@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Args } from "@effect/cli";
+import { Args } from "@sorrell/effect/unstable/cli";
 import type { FValidateConfig } from "./Validate.Internal.Types.js";
 import { MakeConfig } from "../Command/Command.js";
 import { pipe } from "effect";

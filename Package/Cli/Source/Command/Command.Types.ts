@@ -6,7 +6,7 @@
  */
 
 import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
-import type { CliApp, Command } from "@effect/cli";
+import type { CliApp, Command } from "@sorrell/effect/unstable/cli";
 import type { CommandExecutor, FileSystem } from "@effect/platform";
 import type { Effect } from "effect";
 import type { FGlobalConfig } from "../Config/Config.Types.js";
@@ -14,7 +14,7 @@ import type { FStepService } from "../Effect/Effect.js";
 import type { NodeContext } from "@effect/platform-node";
 import type { Simplify } from "effect/Types";
 import type { TEffectError } from "./Command.Internal.Types.js";
-import type { ValidationError } from "@effect/cli/ValidationError";
+import type { ValidationError } from "@sorrell/effect/unstable/cli/ValidationError";
 
 export type TSubCommandFunction<ErrorType> =
     (Arguments: ReadonlyArray<string>) => TSubCommandEffect<ErrorType>;

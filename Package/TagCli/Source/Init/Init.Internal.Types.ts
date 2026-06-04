@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { Args, Options } from "@effect/cli";
+import type { Args, Options } from "@sorrell/effect/unstable/cli";
 import type { TConfig, TOptions } from "../Command/Command.Types.js";
 
 export type FInitConfig =

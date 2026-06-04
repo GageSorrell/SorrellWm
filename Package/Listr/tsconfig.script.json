@@ -1,6 +1,0 @@
-{
-    "compilerOptions": { "outDir": "./Binaries" },
-    "extends": "./tsconfig.Base.json",
-    "include": [ "./Script/**/*" ],
-    "exclude": [ "./Source/**/*" ]
-}

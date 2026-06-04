@@ -6,14 +6,14 @@
  */
 
 import type { Argument } from "../Handler/Handler.Types.js";
-import type { CliApp } from "@effect/cli/CliApp";
-import type { Command } from "@effect/cli";
+import type { CliApp } from "@sorrell/effect/unstable/cli/CliApp";
+import type { Command } from "@sorrell/effect/unstable/cli";
 import type { Effect } from "effect";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { GetMain } from "./Command.js";
 import type { Subcommand } from "../Subcommand/Internal.js";
 import type { TFunction } from "@sorrell/utilities/functional";
-import type { ValidationError } from "@effect/cli/ValidationError";
+import type { ValidationError } from "@sorrell/effect/unstable/cli/ValidationError";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

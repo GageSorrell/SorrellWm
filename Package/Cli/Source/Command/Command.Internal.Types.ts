@@ -6,7 +6,7 @@
  */
 
 import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
-import type { ValidationError } from "@effect/cli/ValidationError";
+import type { ValidationError } from "@sorrell/effect/unstable/cli/ValidationError";
 
 export type TEffectError<ErrorType> =
     | ErrorType

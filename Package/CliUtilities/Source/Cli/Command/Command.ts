@@ -11,7 +11,7 @@ import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import type { SubcommandArray, WithFunction } from "../Subcommand/Subcommand.Types.js";
 import type { Argument } from "../Handler/Handler.Types.js";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { NonEmptyArray } from "effect/Array";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 //@ts-expect-error This type is imported to satisfy a TypeDoc `@link`.

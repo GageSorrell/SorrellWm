@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { Args, Command, Options } from "@effect/cli";
+import type { Args, Command, Options } from "@sorrell/effect/unstable/cli";
 
 export type TOptionsBase<InnerConfigType extends Command.Command.Config> =
     {

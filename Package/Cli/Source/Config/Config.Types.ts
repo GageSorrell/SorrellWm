@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { Command, Options } from "@effect/cli";
+import type { Command, Options } from "@sorrell/effect/unstable/cli";
 import type { ConfigSchema } from "./Config.Internal.js";
 import type { FConfigBase } from "./Config.Internal.Types.js";
 import type { FGlobalOptions } from "../Options/Options.Types.js";

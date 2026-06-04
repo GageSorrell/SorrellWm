@@ -6,7 +6,7 @@
  */
 
 import type { TConfig, TOptions } from "../Command/Command.Types.js";
-import type { Options } from "@effect/cli";
+import type { Options } from "@sorrell/effect/unstable/cli";
 
 export type FGenerateConfig =
     TConfig<{

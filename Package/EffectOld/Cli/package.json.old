@@ -1,0 +1,86 @@
+{
+  "name": "@sorrell/effect-cli",
+  "version": "0.75.2",
+  "type": "module",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "description": "A wrapper for @effect/cli that adds niceties, including better prompting tools.",
+  "homepage": "https://effect.sorrell.sh",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Effect/Cli",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "tags": [
+    "cli",
+    "typescript",
+    "algebraic-data-types",
+    "functional-programming"
+  ],
+  "keywords": [
+    "cli",
+    "typescript",
+    "algebraic-data-types",
+    "functional-programming",
+    "sorrell",
+    "prompts",
+    "prompting"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "directory": "dist",
+    "linkDirectory": false
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts",
+    "./internal/*": null
+  },
+  "scripts": {
+    "codegen": "build-utils prepare-v3",
+    "build": "npm run build-esm && npm run build-annotate && npm run build-cjs && build-utils pack-v3",
+    "test": "vitest",
+    "coverage": "vitest --coverage",
+    "build-esm": "tsc -b tsconfig.build.json",
+    "build-cjs": "babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps",
+    "build-annotate": "babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps",
+    "check": "tsc -b tsconfig.json"
+  },
+  "peerDependencies": {
+    "@sorrell/effect-platform": "*",
+    "@effect/printer": "0.49.0",
+    "@sorrell/effect-printer-ansi": "*",
+    "effect": "3.21.2",
+    "@sorrell/effect-color": "*"
+  },
+  "devDependencies": {
+    "@sorrell/effect-platform": "*",
+    "@effect/platform-node": "0.106.0",
+    "@effect/printer": "0.49.0",
+    "@types/ini": "^4.1.1",
+    "effect": "3.21.2",
+    "@sorrell/effect-color": "*"
+  },
+  "dependencies": {
+    "ini": "^4.1.3",
+    "toml": "^3.0.0",
+    "yaml": "^2.5.0",
+    "@clack/prompts": "1.4.0"
+  },
+  "effect": {
+    "generateIndex": {
+      "include": [
+        "**/*"
+      ]
+    }
+  }
+}

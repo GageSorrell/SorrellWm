@@ -7,7 +7,7 @@
 
 import { Effect, pipe } from "effect";
 import { Path as EffectPath, FileSystem } from "@effect/platform";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { CommandList } from "./List.Command.Types.js";
 import { GetDependencyNames } from "./List.Command.Internal.js";
 import { GetNodeModulesDirectory } from "@sorrell/utilities/npm/effect";

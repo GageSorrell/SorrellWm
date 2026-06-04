@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Args, Command, Options } from "@effect/cli";
+import { Args, Command, Options } from "@sorrell/effect/unstable/cli";
 import type { FConfigCommand, FConfigCommandConfig } from "./Config.Command.Internal.Types.js";
 import Chalk from "chalk";
 import { Code } from "@sorrell/cli-utilities/format";

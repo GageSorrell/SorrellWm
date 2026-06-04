@@ -7,7 +7,7 @@
 
 import type { Path as EffectPath, FileSystem } from "@effect/platform";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import { CliApp } from "@effect/cli/CliApp";
+import { CliApp } from "@sorrell/effect/unstable/cli/CliApp";
 import type { Effect } from "effect";
 import type { TFunction } from "../Functional/index.ts";
 

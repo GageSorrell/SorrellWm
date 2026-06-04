@@ -1,0 +1,69 @@
+{
+  "name": "@sorrell/effect-color",
+  "version": "1.0.0",
+  "description": "Define and manipulate colors the Effect way, with theme support as well.  This is largely a port of @thi.ng/color.",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./ValidationError": {
+      "default": "./Distribution/ValidationError.js",
+      "import": "./Distribution/ValidationError.js",
+      "types": "./Distribution/ValidationError.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "Distribution",
+    "package.json",
+    "License.md",
+    "ReadMe.md",
+    "Resource"
+  ],
+  "keywords": [
+    "effect",
+    "cli",
+    "sorrell",
+    "type-safety",
+    "prompts",
+    "prompting"
+  ],
+  "homepage": "https://effect.sorrell.sh",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Effect/Color",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@thi.ng/color-palettes": "1.5.59"
+  },
+  "peerDependenciesMeta": {
+    "@thi.ng/color-palettes": {
+        "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "24.12.2",
+    "@thi.ng/color-palettes": "1.5.59",
+    "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@sorrell/cli-utilities": "1.0.94",
+    "@sorrell/utilities": "1.2.31",
+    "effect": "3.21.2"
+  }
+}

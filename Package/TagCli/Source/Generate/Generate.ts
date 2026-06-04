@@ -10,7 +10,7 @@
 import { Console, Effect } from "effect";
 import { GenerateConfig, GetModuleContent } from "./Generate.Internal.js";
 import { Code } from "@sorrell/cli-utilities/format";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { FCliConfig } from "../Config/Config.Types.js";
 import type { FGenerateOptions } from "./Generate.Internal.Types.js";
 import { FileSystem } from "@effect/platform";

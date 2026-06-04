@@ -14,7 +14,7 @@ export const UpdateExport: string = "";
 
 // import * as Process from "node:process";
 // import * as PseudoTerminal from "node-pty";
-// import { Args, Command, Options } from "@effect/cli";
+// import { Args, Command, Options } from "@sorrell/effect/unstable/cli";
 // import { Console, Effect, pipe } from "effect";
 // import { FilterDefined, type TArray } from "@sorrell/utilities/array";
 // import { InvalidSaveModeError, NpmError } from "./Update.Internal.js";

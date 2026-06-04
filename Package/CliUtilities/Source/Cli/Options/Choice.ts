@@ -7,7 +7,7 @@
 
 import type * as Shared from "../Choice/index.js";
 import { Internal } from "../Internal/index.js";
-import { Options } from "@effect/cli";
+import { Options } from "@sorrell/effect/unstable/cli";
 import type { TMapper } from "@sorrell/utilities/functional";
 import { pipe } from "effect";
 

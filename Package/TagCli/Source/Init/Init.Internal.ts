@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Args, Options } from "@effect/cli";
+import { Args, Options } from "@sorrell/effect/unstable/cli";
 import type { FInitConfig } from "./Init.Internal.Types.js";
 import { MakeConfig } from "../Command/Command.js";
 import { pipe } from "effect";

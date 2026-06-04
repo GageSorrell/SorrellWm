@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { Command } from "@effect/cli";
+import type { Command } from "@sorrell/effect/unstable/cli";
 import type { CommandWithSubcommands } from "../Command/Command.Types.js";
 import type { NonEmptyArray } from "effect/Array";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */

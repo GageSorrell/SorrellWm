@@ -67,7 +67,7 @@
     "code-auger": "./Distribution/Bin/Bin.js"
   },
   "devDependencies": {
-    "@types/node": "24.12.2",
+    "@types/node": "24.13.0",
     "package-json-type": "1.1.2",
     "typescript": "6.0.3"
   },

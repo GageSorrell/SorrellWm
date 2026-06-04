@@ -10,7 +10,7 @@
 import type * as Sorrell from "../../Cli/index.js";
 import { Effect, pipe } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
-import { Command } from "@effect/cli";
+import { Command } from "@sorrell/effect/unstable/cli";
 import type { RunOptions } from "./Runtime.Types.js";
 
 /**

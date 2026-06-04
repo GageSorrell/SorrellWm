@@ -7,7 +7,7 @@
 
 import type * as Shared from "../Choice/index.js";
 import type { Config, Tuple } from "./Choice.Types.js";
-import { Args } from "@effect/cli";
+import { Args } from "@sorrell/effect/unstable/cli";
 import { Internal } from "../Internal/index.js";
 import type { TMapper } from "@sorrell/utilities/functional";
 import { pipe } from "effect";

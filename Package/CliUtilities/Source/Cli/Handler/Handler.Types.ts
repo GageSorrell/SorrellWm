@@ -6,7 +6,7 @@
  */
 
 import type * as SorrellCommand from "../Command/index.js";
-import type { CliApp, Command } from "@effect/cli";
+import type { CliApp, Command } from "@sorrell/effect/unstable/cli";
 import type { Effect as TheEffect } from "effect";
 import type { Types } from "effect";
 

@@ -6,7 +6,7 @@
  */
 
 import type { And, InvalidData, MissingData, Or, SourceUnavailable, Unsupported } from "effect/ConfigError";
-import { type CliApp, Command, type ValidationError } from "@effect/cli";
+import { type CliApp, Command, type ValidationError } from "@sorrell/effect/unstable/cli";
 import { FStepService, GetWithStep } from "../Effect/Effect.js";
 import type { TCommand, TCommandHandler } from "./Command.Types.js";
 import { ConfigProvider } from "../Config/Config.js";

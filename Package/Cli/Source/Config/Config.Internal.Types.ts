@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { Args, Options } from "@effect/cli";
+import type { Args, Options } from "@sorrell/effect/unstable/cli";
 
 export type FConfigBase =
     Record<

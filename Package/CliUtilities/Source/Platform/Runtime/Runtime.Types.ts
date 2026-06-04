@@ -6,7 +6,7 @@
  */
 
 import type { Handler, Subcommand } from "../../Cli/index.js";
-import type { Command } from "@effect/cli";
+import type { Command } from "@sorrell/effect/unstable/cli";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { Run } from "./Runtime.js";
 import type { RunMain } from "@effect/platform/Runtime";
