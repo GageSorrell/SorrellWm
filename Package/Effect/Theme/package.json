@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/effect-theme",
-  "version": "1.0.9",
+  "version": "1.0.0",
   "description": "Theme support for @sorrell/effect-cli/HelpDoc and @sorrell/effect-platform/Terminal.",
   "scripts": {
     "build": "tsc -p ./tsconfig.json"

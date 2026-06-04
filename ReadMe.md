@@ -17,7 +17,7 @@ Install the required packages, then clone this repo.
 
 ### Required Packages
 
-| Package | Version     |
-|--------:|:------------|
-|  [CMake](https://cmake.org/)  | `^4.0.0`    |
-| [NodeJS](https://nodejs.org/en)  | `>=24.14.0` |
+|                         Package | Version         |
+|--------------------------------:|:----------------|
+|     [CMake](https://cmake.org/) | `^4.0.0`        |
+| [NodeJS](https://nodejs.org/en) | `>=24.14.0 <25` |

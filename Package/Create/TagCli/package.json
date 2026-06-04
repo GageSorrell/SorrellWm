@@ -33,9 +33,9 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@effect/cli": "^0.75.1",
-    "@effect/platform": "^0.96.1",
-    "@effect/platform-node": "^0.106.0",
+    "@sorrell/effect-cli": "*",
+    "@sorrell/effect-platform": "*",
+    "@effect/platform-node": "0.106.0",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
     "@sorrell/cli-utilities": "1.0.94",
     "@sorrell/utilities": "1.2.31",
@@ -43,7 +43,7 @@
     "listr2": "^10.2.1"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "24.12.2",
     "ts-node": "^10.9.2",
     "ts-tag-cli": "^1.0.0"
   }

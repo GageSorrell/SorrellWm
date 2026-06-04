@@ -37,7 +37,11 @@
     "scripts": {
         "clean": "npm run start -w @sorrellwm/clean-repo",
         "clean:install": "npm run start:install -w @sorrellwm/clean-repo",
-        "clean:i": "npm run start:i -w @sorrellwm/clean-repo"
+        "clean:i": "npm run start:i -w @sorrellwm/clean-repo",
+        "build:effect-platform": "npm run build --workspace=@effect/platform",
+        "build:effect-printer-ansi": "npm run build --workspace=@effect/printer-ansi",
+        "build:effect-cli": "npm run build --workspace=@effect/cli",
+        "build:effect:all": "npm run build:effect-platform && npm run build:effect-printer-ansi && npm run build:effect-cli"
     },
     "overrides": {
         "@tootallnate/once": "^3.0.1",

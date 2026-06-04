@@ -160,8 +160,8 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
-    "@effect/cli": "0.75.1",
-    "@effect/platform": "^0.96.0",
+    "@sorrell/effect-cli": "*",
+    "@sorrell/effect-platform": "*",
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
     "@sorrell/utilities": "1.2.31",
     "chalk": "^5.6.2",
