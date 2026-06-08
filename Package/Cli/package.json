@@ -45,7 +45,7 @@
   "devDependencies": {
     "@types/node": "24.13.0",
     "@types/semver": "^7.7.1",
-    "chalk": "^5.6.2",
+    "chalk": "5.6.2",
     "esbuild": "^0.28.0",
     "package-json-type": "^1.1.2",
     "ts-node": "^10.9.2",
@@ -53,8 +53,8 @@
     "typescript": "npm:tsover@^6.0.0"
   },
   "dependencies": {
-    "@sorrell/cli-utilities": "1.0.94",
-    "@sorrell/utilities": "1.2.31",
+    "@sorrell/cli-utilities": "1.0.95",
+    "@sorrell/utilities": "1.2.33",
     "listr2": "^10.2.1",
     "node-pty": "^1.1.0",
     "open": "^11.0.0",

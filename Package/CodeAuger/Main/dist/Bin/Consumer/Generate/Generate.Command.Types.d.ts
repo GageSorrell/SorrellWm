@@ -6,22 +6,19 @@
  */
 import type * as Consumer from "../../../Consumer/Config/index.js";
 import type * as Provider from "../../../Provider/index.js";
-import type { FileSystem, Path } from "@effect/platform";
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
-import type { ConfigError } from "effect/ConfigError";
-import type { CliApp, ConfigFile } from "@sorrell/effect/unstable/cli";
-import type { Effect } from "effect";
+import type { Environment } from "effect/unstable/cli/Prompt";
+import type { Effect, PlatformError } from "effect";
 import type { GenerateConfig } from "./Generate.Command.js";
-import type { PlatformError } from "@effect/platform/Error";
-import type { Requirements } from "@sorrell/utilities/effect";
 import type { Subcommand } from "../../Shared/SubCommand.Types.js";
-export type GenerateCommandEffect = Effect.Effect<void, any, CliApp.CliApp.Environment>;
-export type GenerateCommandType = Subcommand<"generate", typeof GenerateConfig, Requirements.FsPath>;
+import type { Command } from "effect/unstable/cli";
+export type GenerateCommandEffect = Effect.Effect<void, any, Environment | Command.CommandContext<"code-auger">>;
+export type GenerateCommandType = Subcommand<"generate", typeof GenerateConfig>;
 export type GenerateConfigPart = Readonly<{
-    Consumer: Consumer.Provider;
+    Consumer: boolean | typeof Consumer.Provider.Type;
     Provider: Provider.Config;
 }>;
 export type GenerateConfigRecord = Readonly<Record<string, GenerateConfigPart>>;
-export type EGetGenerateConfig = Effect.Effect<GenerateConfigRecord, RootDirectoryNotFoundError | PackageJsonParseError | PlatformError | ConfigError | ConfigFile.ConfigFileError, CliApp.CliApp.Environment>;
-export type GetOutPathFn = (PackageName: string) => Effect.Effect<string, PlatformError | RootDirectoryNotFoundError, Path.Path | FileSystem.FileSystem>;
+export type EGetGenerateConfig = Effect.Effect<GenerateConfigRecord, RootDirectoryNotFoundError | PackageJsonParseError | PlatformError.PlatformError, Environment>;
+export type GetOutPathFn = (PackageName: string) => Effect.Effect<string, PlatformError.PlatformError | RootDirectoryNotFoundError, Environment>;
 //# sourceMappingURL=Generate.Command.Types.d.ts.map

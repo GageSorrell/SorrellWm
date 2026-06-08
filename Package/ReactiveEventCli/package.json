@@ -48,9 +48,9 @@
   },
   "dependencies": {
     "@listr2/prompt-adapter-enquirer": "^4.2.1",
-    "@sorrell/cli-utilities": "1.0.94",
-    "@sorrell/utilities": "1.2.31",
-    "chalk": "^5.6.2",
+    "@sorrell/cli-utilities": "1.0.95",
+    "@sorrell/utilities": "1.2.33",
+    "chalk": "5.6.2",
     "degit": "^2.8.4",
     "listr2": "^10.2.1",
     "open": "^11.0.0",

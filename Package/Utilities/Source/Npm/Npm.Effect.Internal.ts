@@ -5,9 +5,9 @@
  * @license   MIT
  */
 
-import type { Path as EffectPath, FileSystem } from "@effect/platform";
-import type { PlatformError, SystemError } from "@effect/platform/Error";
-import { Effect } from "effect";
+import type { Path as EffectPath, FileSystem } from "@sorrell/effect";
+import type * as PlatformError from "@sorrell/effect/PlatformError";
+import { Effect, pipe } from "@sorrell/effect";
 
 /* eslint-disable jsdoc/require-example */
 
@@ -33,14 +33,14 @@ export function HasErrorCode(Value: unknown): Value is { readonly code: string }
  * @param Fs - The {@link FileSystem.FileSystem} service.
  * @param Path - The {@link EffectPath.Path | Path} service.
  * @param Directory - The path of the directory from which this begins to search.
- * @returns {Effect.Effect<string | undefined, PlatformError>} An {@link Effect.Effect | effect} which
+ * @returns {Effect.Effect<string | undefined, PlatformError.PlatformError>} An {@link Effect.Effect | effect} which
  * finds the nearest package directory.
  */
 export function FindNearestPackageDirectory(
     Fs: FileSystem.FileSystem,
     Path: EffectPath.Path,
     Directory: string
-): Effect.Effect<string | undefined, PlatformError>
+): Effect.Effect<string | undefined, PlatformError.PlatformError>
 {
     return Effect.gen(function* ()
     {
@@ -82,7 +82,7 @@ export function FindNearestNodeModulesDirectory(
     Fs: FileSystem.FileSystem,
     Path: EffectPath.Path,
     Directory: string
-): Effect.Effect<string | undefined, PlatformError>
+): Effect.Effect<string | undefined, PlatformError.PlatformError>
 {
     return Effect.gen(function* ()
     {
@@ -125,19 +125,12 @@ export function FindNearestNodeModulesDirectory(
 export function GetPathType(
     Fs: FileSystem.FileSystem,
     Path: string
-): Effect.Effect<FileSystem.File.Type | undefined, PlatformError>
+): Effect.Effect<FileSystem.File.Type, PlatformError.PlatformError>
 {
-    return Fs.stat(Path).pipe(
-        Effect.map((FileInformation: FileSystem.File.Info) => FileInformation.type),
-        Effect.catchTag("SystemError", (ErrorValue: SystemError) =>
-        {
-            if (ErrorValue.reason === "NotFound")
-            {
-                return Effect.succeed(undefined);
-            }
-
-            return Effect.fail(ErrorValue);
-        })
+    return pipe(
+        Path,
+        Fs.stat,
+        Effect.map((FileInformation: FileSystem.File.Info) => FileInformation.type)
     );
 }
 

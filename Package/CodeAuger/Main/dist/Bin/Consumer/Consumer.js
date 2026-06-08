@@ -7,6 +7,7 @@
 import { GenerateCommand } from "./Generate/index.js";
 import { InitCommand } from "./Init/index.js";
 import { ListCommand } from "./List/List.Command.js";
+import { SchemaCommand } from "./Schema/Schema.Command.js";
 import { ValidateCommand } from "./Validate/index.js";
 /* eslint-disable @typescript-eslint/typedef */
 export /**
@@ -15,7 +16,8 @@ export /**
     GenerateCommand,
     ValidateCommand,
     InitCommand,
-    ListCommand
+    ListCommand,
+    SchemaCommand
     // RefreshCommand
 ];
 //# sourceMappingURL=Consumer.js.map

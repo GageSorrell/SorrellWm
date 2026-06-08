@@ -1,1 +1,1 @@
-{"version":3,"file":"Consumer.d.ts","sourceRoot":"","sources":["../../../src/Bin/Consumer/Consumer.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AASH,eAGA,MAAM,gBAAgB;;;;;;;iBAOR,CAAC"}
+{"version":3,"file":"Consumer.d.ts","sourceRoot":"","sources":["../../../src/Bin/Consumer/Consumer.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAEH,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,qBAAqB,CAAC;AASnD,eAGA,MAAM,gBAAgB,EAAE,aAAa,CAAC,OAAO,CAAC,OAAO,CAAC,GAAG,CAQ3C,CAAC"}

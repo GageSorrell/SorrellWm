@@ -18,11 +18,11 @@
         }
     },
     "devDependencies": {
-        "code-auger": "0.1.8",
+        "code-auger": "0.1.9",
     "typescript": "6.0.3"
     },
     "peerDependencies": {
-        "code-auger": "0.1.8"
+        "code-auger": "0.1.9"
     },
   "keywords": [ ],
     "author": {

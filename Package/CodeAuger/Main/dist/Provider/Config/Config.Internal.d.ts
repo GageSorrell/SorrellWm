@@ -4,7 +4,6 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-import type { ExportedType } from "./Config.js";
 /**
  * Determine whether a given {@link Argument} is an {@link ExportedType}.
  *
@@ -12,5 +11,5 @@ import type { ExportedType } from "./Config.js";
  *
  * @returns {In is ExportedType} Whether the given {@link Argument | argument} is an {@link ExportedType}.
  */
-export declare function IsExportedType(Argument: unknown): Argument is ExportedType;
+export declare function IsExportedTypeValid(Argument: unknown): boolean;
 //# sourceMappingURL=Config.Internal.d.ts.map

@@ -6,6 +6,6 @@
  */
 import { Effect } from "effect";
 import type { ModuleGenerator } from "./Module.Types.js";
-import type { UnknownException } from "effect/Cause";
-export declare function GetModuleGenerator(Name: string, Path: string): Effect.Effect<ModuleGenerator, UnknownException, never>;
+import type { UnknownError } from "effect/Cause";
+export declare function GetModuleGenerator(Name: string, Path: string): Effect.Effect<ModuleGenerator, UnknownError, never>;
 //# sourceMappingURL=Module.d.ts.map

@@ -63,7 +63,7 @@
     "react": "^19.2.5"
   },
   "dependencies": {
-    "@sorrell/utilities": "1.2.31",
+    "@sorrell/utilities": "1.2.33",
     "ora": "^9.3.0",
     "typescript": "npm:tsover@^6.0.0"
   },

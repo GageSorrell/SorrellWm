@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Data } from "effect";
+import { Data } from "@sorrell/effect";
 
 /**
  * An error describing that {@link GetPackageJson} failed to parse the discovered `package.json` file.

@@ -4,13 +4,10 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-import { Command } from "@sorrell/effect/unstable/cli";
+import { Flag } from "@sorrell/effect/unstable/cli";
 import type { GenerateCommandType } from "./Generate.Command.Types.js";
 export declare const GenerateConfig: {
-    Watch: Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any> | readonly (Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any>)[];
-} & {
-    Cwd: Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any> | readonly (Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any>)[];
-    Silent: Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any> | readonly (Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any>)[];
+    Watch: Flag.Flag<boolean>;
 };
 export declare const GenerateCommand: GenerateCommandType;
 //# sourceMappingURL=Generate.Command.d.ts.map

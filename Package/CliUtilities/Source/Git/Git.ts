@@ -6,7 +6,8 @@
  */
 
 import { Data, Effect } from "effect";
-import { Command } from "@effect/platform";
+import { ChildProcess } from "@sorrell/effect/unstable/process";
+import { ChildProcessSpawner } from "@sorrell/effect/unstable/process/ChildProcessSpawner";
 import type { ERequireCleanRepo } from "./Git.Types.js";
 import type { FRepoNotCleanErrorData } from "./Git.Internal.Types.js";
 
@@ -30,27 +31,51 @@ export function RequireCleanGitRepository(RepositoryPath?: string): ERequireClea
 {
     return Effect.gen(function* ()
     {
-        if (RepositoryPath === undefined)
+        return Effect.gen(function* ()
         {
-            RepositoryPath = process.cwd();
-        }
+            const EffectiveRepositoryPath: string = RepositoryPath ?? process.cwd();
 
-        const StatusCommand: Command.Command =
-            Command
-                .make("git", "status", "--porcelain=v1")
-                .pipe(Command.workingDirectory(RepositoryPath));
+            const StatusCommand: ChildProcess.Command =
+                ChildProcess.make(
+                    "git",
+                    [ "status", "--porcelain=v1" ],
+                    { cwd: EffectiveRepositoryPath }
+                );
 
-        const StatusOutput: string = yield* Command.string(StatusCommand);
+            const Spawner: typeof ChildProcessSpawner.Service = yield* ChildProcessSpawner;
+            const StatusOutput: string = yield* Spawner.string(StatusCommand);
 
-        if (StatusOutput.trim().length > 0)
-        {
-            return yield* Effect.fail(
-                new RepoNotCleanError({
-                    RepositoryPath,
-                    StatusOutput
-                })
-            );
-        }
+            if (StatusOutput.trim().length > 0)
+            {
+                return yield* Effect.fail(
+                    new RepoNotCleanError({
+                        RepositoryPath: EffectiveRepositoryPath,
+                        StatusOutput
+                    })
+                );
+            }
+        });
+
+        // if (RepositoryPath === undefined)
+        // {
+        //     RepositoryPath = process.cwd();
+        // }
+
+        // const StatusCommand: Process.ChildProcess.Command =
+        //     Process.ChildProcess
+        //         .make("git", [ "status", "--porcelain=v1" ], { cwd: RepositoryPath });
+
+        // const StatusOutput: string = (yield* StatusCommand).stdout
+
+        // if (StatusOutput.trim().length > 0)
+        // {
+        //     return yield* Effect.fail(
+        //         new RepoNotCleanError({
+        //             RepositoryPath,
+        //             StatusOutput
+        //         })
+        //     );
+        // }
     });
 }
 

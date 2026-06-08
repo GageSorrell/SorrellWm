@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Layer, Logger } from "effect";
+import { Layer, Logger, pipe } from "@sorrell/effect";
 import { Code } from "../Dependency.Internal.ts";
 import { IsRuntimeModeProduction } from "../Dependency.ts";
 
@@ -59,25 +59,28 @@ export function CreateDependencyLoggerLayer(
 
     let LoggedStatementCount: number = 0;
 
-    const PrefixedLogger: Logger.Logger<unknown, void> = Logger.stringLogger.pipe(
-        Logger.map((Line: string) =>
+    const HandleStatement = (Line: string) =>
+    {
+        LoggedStatementCount++;
+
+        const PrefixedLine: string = `${ Prefix } ${ Line }`;
+
+        if (
+            SuppressLoggerFrequency > 0 &&
+            LoggedStatementCount % SuppressLoggerFrequency === 0
+        )
         {
-            LoggedStatementCount++;
+            return `${ PrefixedLine }\n${ LogSuppressionStatement }`;
+        }
 
-            const PrefixedLine: string = `${ Prefix } ${ Line }`;
+        return PrefixedLine;
+    };
 
-            if (
-                SuppressLoggerFrequency > 0 &&
-                LoggedStatementCount % SuppressLoggerFrequency === 0
-            )
-            {
-                return `${ PrefixedLine }\n${ LogSuppressionStatement }`;
-            }
-
-            return PrefixedLine;
-        }),
+    const PrefixedLogger: Logger.Logger<unknown, void> = pipe(
+        Logger.formatSimple,
+        Logger.map(HandleStatement),
         Logger.withLeveledConsole
     );
 
-    return Logger.replace(Logger.defaultLogger, PrefixedLogger);
+    return Logger.layer([ PrefixedLogger ]);
 }

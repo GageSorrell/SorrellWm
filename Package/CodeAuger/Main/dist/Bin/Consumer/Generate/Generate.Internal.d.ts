@@ -20,7 +20,7 @@ import type { ExportedType } from "../../../Provider/Config/index.js";
  * paths to the descendant types exported locally by the consumer, with which the provider's
  * export registry interface will be augmented.
  */
-export declare function GetDescendantTypes(TsConfigPath: string, GenericType: ExportedType): Effect.Effect<ReadonlyArray<ExportedType>, never, never>;
+export declare function GetDescendantTypes(TsConfigPath: string, GenericType: typeof ExportedType.Type): Effect.Effect<ReadonlyArray<typeof ExportedType.Type>, never, never>;
 /**
  * For a given module at path {@link OutPath}, and for each absolute module path in {@link Modules},
  * get the import path that can be used in the module at path {@link OutPath} to import from the respective

@@ -3,7 +3,8 @@
   "extends": "../../Effect/tsconfig.base.json",
   "include": ["src"],
   "compilerOptions": {
-    "types": ["node"]
+    "rootDir": "./src",
+    "types": [ "node" ]
   },
   "references": [ { "path": "../../Effect/tsconfig.json" } ]
 }

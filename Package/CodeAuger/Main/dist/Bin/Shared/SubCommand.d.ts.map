@@ -1,1 +1,0 @@
-{"version":3,"file":"SubCommand.d.ts","sourceRoot":"","sources":["../../../src/Bin/Shared/SubCommand.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAEH,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,8BAA8B,CAAC;AAE5D,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,2BAA2B,CAAC;AAE9D,wBAAgB,UAAU,CAAC,UAAU,SAAS,OAAO,CAAC,OAAO,CAAC,MAAM,EAChE,EAAE,EAAE,UAAU,GACf,UAAU,GAAG,YAAY,CAM3B"}

@@ -4,12 +4,6 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-export declare const ConsumerCommands: readonly [import("./Generate/Generate.Command.Types.ts").GenerateCommandType, import("./Validate/Validate.Command.Types.ts").ValidateCommandType, import("effect/unstable/cli/Command").Command<"init", {
-    readonly Cwd: any;
-    readonly Silent: any;
-}, {}, never, never>, import("effect/unstable/cli/Command").Command<"ls", {
-    readonly Rich: any;
-    readonly Cwd: any;
-    readonly Silent: any;
-}, {}, any, any>];
+import type { Command } from "effect/unstable/cli";
+export declare const ConsumerCommands: ReadonlyArray<Command.Command.Any>;
 //# sourceMappingURL=Consumer.d.ts.map

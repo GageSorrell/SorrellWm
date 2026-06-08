@@ -5,9 +5,16 @@
  * @license   MIT
  */
 
-import * as Platform from "@effect/platform";
-import { Array, Effect, Predicate, Record, Schema, pipe } from "effect";
-import { BadArgument, SystemError } from "@effect/platform/Error";
+import {
+    Array,
+    Effect,
+    FileSystem, Path as PathService,
+    PlatformError,
+    Predicate,
+    Record,
+    Schema,
+    pipe
+} from "@sorrell/effect";
 import type {
     EGetDependencies,
     EGetDependencyPackage,
@@ -48,15 +55,18 @@ export function GetPackageJson(SearchStart?: string): EGetPackageJson
 {
     return Effect.gen(function* ()
     {
-        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
-        const Path: Platform.Path.Path = yield* Platform.Path.Path;
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+        const Path: PathService.Path = yield* PathService.Path;
 
         const RootDirectory: string = yield* GetPackageRootDirectory(SearchStart);
         const PackageJsonPath: string = Path.join(RootDirectory, "package.json");
 
         const FileContents: string = yield* Fs.readFileString(PackageJsonPath);
 
-        return Schema.decodeUnknownSync(Schema.parseJson())(FileContents) as IPackageJson;
+        return (yield* pipe(
+            FileContents,
+            Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)
+        )) as IPackageJson;
     });
 }
 
@@ -79,7 +89,7 @@ export function GetPackageJson(SearchStart?: string): EGetPackageJson
  * then,
  *
  * ```typescript
- * import { Effect } from "effect";
+ * import { Effect } from "@sorrell/effect";
  * const Root: string = await Effect.runPromise(GetPackageRootDirectory());
  * // `Root` <- `"/home/alex/myPackage"`
  * ```
@@ -89,7 +99,7 @@ export function GetPackageJson(SearchStart?: string): EGetPackageJson
  * (of course, neither are `/home/alex` or `/home`).  Then,
  *
  * ```typescript
- * import { Effect } from "effect";
+ * import { Effect } from "@sorrell/effect";
  * const TestPath: string = "/home/alex/Documents";
  * let Root: string | undefined = undefined;
  * try
@@ -111,7 +121,7 @@ export function GetPackageJson(SearchStart?: string): EGetPackageJson
  * (of course, neither are `/home/alex` or `/home`).  Then,
  *
  * ```typescript
- * import { Effect } from "effect";
+ * import { Effect } from "@sorrell/effect";
  * let Root: string | undefined = undefined;
  * try
  * {
@@ -128,8 +138,8 @@ export function GetPackageRootDirectory(SearchStart?: string): EGetPackageRootDi
 {
     return Effect.gen(function* ()
     {
-        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
-        const Path: Platform.Path.Path = yield* Platform.Path.Path;
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+        const Path: PathService.Path = yield* PathService.Path;
 
         const StartPath: string = yield* Fs.realPath(SearchStart ?? process.cwd());
         let CurrentDirectory: string = StartPath;
@@ -183,11 +193,11 @@ export function GetNodeModulesDirectory(Cwd?: string): EGetNodeModulesPath
 {
     return Effect.gen(function* ()
     {
-        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
-        const Path: Platform.Path.Path = yield* Platform.Path.Path;
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+        const Path: PathService.Path = yield* PathService.Path;
 
         const ResolvedDirectory: string = Path.resolve(Cwd ?? process.cwd());
-        const ResolvedDirectoryType: Platform.FileSystem.File.Type | undefined =
+        const ResolvedDirectoryType: FileSystem.File.Type | undefined =
             yield* GetPathType(
                 Fs,
                 ResolvedDirectory
@@ -196,7 +206,7 @@ export function GetNodeModulesDirectory(Cwd?: string): EGetNodeModulesPath
         if (ResolvedDirectoryType !== "Directory")
         {
             return yield* Effect.fail(
-                new BadArgument({
+                new PlatformError.BadArgument({
                     description: `Expected a directory path, but received "${ ResolvedDirectory }"`,
                     method: "GetNodeModulesDirectory",
                     module: "FileSystem"
@@ -215,33 +225,34 @@ export function GetNodeModulesDirectory(Cwd?: string): EGetNodeModulesPath
         if (PackageDirectory === undefined)
         {
             return yield* Effect.fail(
-                new SystemError({
+                new PlatformError.SystemError({
+                    _tag: "NotFound",
                     description: "Could not find a package.json in this directory or any ancestor directory.",
                     method: "GetNodeModulesDirectory",
                     module: "FileSystem",
-                    pathOrDescriptor: RealDirectory,
-                    reason: "NotFound"
+                    pathOrDescriptor: RealDirectory
                 })
             );
         }
 
-        const NodeModulesDirectory: string | undefined = yield* FindNearestNodeModulesDirectory(
-            Fs,
-            Path,
-            PackageDirectory
-        );
+        const NodeModulesDirectory: string | undefined =
+            yield* FindNearestNodeModulesDirectory(
+                Fs,
+                Path,
+                PackageDirectory
+            );
 
         if (NodeModulesDirectory === undefined)
         {
             return yield* Effect.fail(
-                new SystemError({
+                new PlatformError.SystemError({
+                    _tag: "NotFound",
                     description:
                         "Could not find a node_modules directory for this package " +
                         "or any ancestor workspace/package directory.",
                     method: "GetNodeModulesDirectory",
                     module: "FileSystem",
-                    pathOrDescriptor: PackageDirectory,
-                    reason: "NotFound"
+                    pathOrDescriptor: PackageDirectory
                 })
             );
         }
@@ -276,8 +287,8 @@ export function GetDependencyPackage(
 {
     return Effect.gen(function* ()
     {
-        const Fs: Platform.FileSystem.FileSystem = yield* Platform.FileSystem.FileSystem;
-        const Path: Platform.Path.Path = yield* Platform.Path.Path;
+        const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
+        const Path: PathService.Path = yield* PathService.Path;
 
         const NodeModulesPath: string = yield* GetNodeModulesDirectory(Directory);
 
@@ -285,7 +296,10 @@ export function GetDependencyPackage(
 
         const PackageJsonContents: string = yield* Fs.readFileString(PackageJsonPath);
 
-        return (yield* Schema.decodeUnknown(Schema.parseJson())(PackageJsonContents)) as IPackageJson;
+        return (yield* pipe(
+            PackageJsonContents,
+            Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)
+        )) as IPackageJson;
     });
 }
 
@@ -311,11 +325,13 @@ export function GetDependencies(
     {
         const PackageJson: IPackageJson = yield* GetPackageJson(SearchStart);
 
+        /* eslint-disable-next-line jsdoc/require-jsdoc */
         function IsInDependencies(Key: string): Key is PackageDependency
         {
             return Dependencies.includes(Key as PackageDependency);
         }
 
+        /* eslint-disable-next-line jsdoc/require-jsdoc */
         function GetNamesFromProperty(
             Value: IDependencyMap | ReadonlyArray<string>,
             _Index: number
@@ -331,6 +347,7 @@ export function GetDependencies(
             }
         }
 
+        /* eslint-disable-next-line jsdoc/require-jsdoc */
         function IsDependencyProperty(
             Value: unknown,
             Key: string
@@ -338,10 +355,7 @@ export function GetDependencies(
         {
             return (
                 IsInDependencies(Key) &&
-                (
-                    Predicate.isRecord(Value) ||
-                    Array.isArray(Value)
-                )
+                Predicate.isObjectOrArray(Value)
             );
         }
 

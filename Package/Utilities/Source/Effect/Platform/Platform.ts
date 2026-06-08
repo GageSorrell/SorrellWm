@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { Data } from "effect";
+import { Data } from "@sorrell/effect";
 import type { Kind } from "../../FileSystem/FileSystem.Types.ts";
 
 /**

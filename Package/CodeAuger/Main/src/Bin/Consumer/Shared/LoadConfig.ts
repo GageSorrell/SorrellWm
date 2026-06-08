@@ -5,63 +5,52 @@
  * @license   MIT
  */
 
-import type { FileSystem, Path } from "@effect/platform";
-import { Config } from "../../../Consumer/Config/Config.js";
-import type { ConfigError } from "effect/ConfigError";
-import { ConfigFile } from "@sorrell/effect/unstable/cli";
-import { Effect } from "effect";
-import { Path as EffectPath } from "@effect/platform";
-import { GetPackageRootDirectory } from "@sorrell/utilities/npm/effect";
-import type { PlatformError } from "@effect/platform/Error";
-import { Config as ProviderConfig } from "../../../Provider/Config/Config.js";
-import type { SearchExhaustedError } from "@sorrell/utilities/effect/platform";
+import * as ProviderConfig from "../../../Provider/Config/Config.js";
+import { Effect, type FileSystem, Path as PathService } from "effect";
+import { $SchemaKey } from "../../../Shared/Config/Config.ts";
+import { Primitive } from "@sorrell/effect/unstable/cli";
+import { ProviderConfigFileName } from "../../Provider/Providers.Command.ts";
 
 /**
- * Load a given consumer's config file.
+ * For a given consumer, load an installed provider's config file, given its {@link PackageName | name}
+ * and the path to the consumer's {@link NodeModulesDirectory | node_modules directory}.
  *
- * @param Cwd - The value of the `cwd` option.
+ * @param PackageName - The name of the provider.  This must be its `"name"` in the provider's `package.json`.
+ * @param NodeModulesDirectory - The path to the `node_modules` directory for the given consumer.
  *
- * @returns {Effect.Effect<Config>} The {@link Effect.Effect | effect} that
- * retrieves the consumer's config.
+ * @returns {Effect.Effect<ProviderConfig.Config, string, PathService.Path | FileSystem.FileSystem>} The
+ * {@link ProviderConfig.Config | config} of {@link PackageName | the given provider}.
  */
-export function Consumer(
-    Cwd?: string | undefined
-): Effect.Effect<
-    Config,
-    | ConfigError
-    | ConfigFile.ConfigFileError
-    | SearchExhaustedError
-    | PlatformError,
-    | Path.Path
-    | FileSystem.FileSystem
->
-{
-    return Effect.gen(function* ()
-    {
-        const RootPath: string = yield* GetPackageRootDirectory(Cwd);
-
-        return yield* ConfigFile.load<Config>("code-auger.config", RootPath, Config);
-    });
-}
-
-/* eslint-disable-next-line jsdoc/require-jsdoc */
 export function Provider(
     PackageName: string,
     NodeModulesDirectory: string
 ): Effect.Effect<
-    ProviderConfig,
-    | ConfigError
-    | ConfigFile.ConfigFileError,
-    | Path.Path
+    ProviderConfig.Config,
+    string,
+    | PathService.Path
     | FileSystem.FileSystem
 >
 {
     return Effect.gen(function* ()
     {
-        const Path: EffectPath.Path = yield* EffectPath.Path;
+        const Path: PathService.Path = yield* PathService.Path;
+        const ProviderPath: string = Path.resolve(
+            NodeModulesDirectory,
+            PackageName,
+            ProviderConfigFileName
+        );
 
-        const ProviderPath: string = Path.resolve(NodeModulesDirectory, PackageName);
+        type Parser = (FilePath: string) => Effect.Effect<
+            typeof ProviderConfig.Schema.Type,
+            string,
+            | PathService.Path
+            | FileSystem.FileSystem
+        >;
 
-        return yield* ConfigFile.load<ProviderConfig>("code-auger.provider", ProviderPath, ProviderConfig);
+        const Parser: Parser = Primitive.fileSchema(ProviderConfig.Schema).parse;
+
+        const { [ $SchemaKey ]: _, ...Out } = yield* Parser(ProviderPath);
+
+        return Out;
     });
 }

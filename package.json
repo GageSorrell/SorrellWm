@@ -41,7 +41,9 @@
         "build:effect": "npm run build -w @sorrell/effect"
     },
     "overrides": {
-        "effect@^4.0.0-beta.78": "file:E:\\SorrellWm\\Package\\Effect",
+        "@effect/platform-node": "npm:@effect/platform-node@4.0.0-beta.78",
+        "effect@^4.0.0-beta.78": "file:E:\\SorrellWm\\Package\\Effect\\Effect",
+        "@sorrell/effect@^4.0.0-beta.78": "file:E:\\SorrellWm\\Package\\Effect\\Effect",
         "@tootallnate/once": "^3.0.1",
         "serialize-javascript": "^7.0.5",
         "tar": "^7.5.13",
@@ -51,11 +53,12 @@
         "@types/react": "19.2.14",
         "@types/react-dom": "19.2.3",
         "react": "19.2.3",
-	    "react-dom": "19.2.3"
+        "react-dom": "19.2.3"
     },
     "workspaces": [
         "!Package/Create/CodeAuger",
-        "Package/Effect",
+        "Package/Effect/Effect",
+        "Package/Effect/Ink",
         "!Package/EffectOld",
         "Package/CodeAuger/Main",
         "!Package/CodeAuger/Create",
@@ -107,5 +110,21 @@
         "jsonc-eslint-parser": "^3.1.0",
         "ts-node": "^10.9.2",
         "typescript-eslint": "^8.57.2"
+    },
+    "allowScripts": {
+        "core-js@3.49.0": true,
+        "core-js-pure@3.49.0": true,
+        "electron@41.4.0": true,
+        "electron-winstaller@5.4.0": true,
+        "esbuild@0.28.0": true,
+        "esbuild@0.14.47": true,
+        "esbuild@0.27.7": true,
+        "msgpackr-extract@3.0.4": true,
+        "msw@2.14.6": true,
+        "node-pty@1.1.0": true,
+        "sharp@0.34.5": true,
+        "unrs-resolver@1.12.2": true,
+        "@parcel/watcher@2.5.6": true,
+        "@swc/core@1.15.40": true
     }
 }

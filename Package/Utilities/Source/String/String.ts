@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import { dfs } from "effect/Graph";
+import { dfs } from "@sorrell/effect/Graph";
 import { FilterDefined } from "../Array";
 
 /**
@@ -122,10 +122,10 @@ export function Dedent(Content: string, IndentLength?: number): string
 /**
  * Given a {@link ReadonlyArray} of `string`s (and possibly `undefined`), join the `string`s
  * with a given {@link Separator} `string`.
- * 
+ *
  * @param StringArray - The {@link ReadonlyArray} of `string`s, and possibly `undefined`.
  * @param Separator - The `string` passed to {@link Array.join} on the filtered {@link StringArray}.
- * 
+ *
  * @returns {string} The joined `string`s in the given {@link StringArray}, separated by
  * the given {@link Separator}.
  */

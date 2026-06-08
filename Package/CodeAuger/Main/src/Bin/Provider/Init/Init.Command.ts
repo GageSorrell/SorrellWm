@@ -5,25 +5,24 @@
  * @license   MIT
  */
 
-import { Path as EffectPath, FileSystem } from "@effect/platform";
+import { Effect, Path as EffectPath, FileSystem } from "@sorrell/effect";
 import type { InitCommandEffect, InitCommandType } from "./Init.Command.Types.js";
 import { Command } from "@sorrell/effect/unstable/cli";
-import { Effect } from "effect";
 import { GetPackageRootDirectory } from "@sorrell/utilities/npm/effect";
 import type { Handler } from "@sorrell/cli-utilities/cli";
-import { MakeConfig } from "../../Shared/SubCommand.js";
+import { RootCommand } from "../../Shared/Master.Command.ts";
 
 /* eslint-disable-next-line @typescript-eslint/typedef, jsdoc/require-jsdoc */
-export const InitConfig = MakeConfig({ });
+export const InitConfig = { };
 
 /* eslint-disable-next-line jsdoc/require-jsdoc */
 function HandleInit(
-    Options: Handler.Argument<typeof InitConfig>
+    _Options: Handler.Argument<typeof InitConfig>
 ): InitCommandEffect
 {
     return Effect.gen(function* ()
     {
-        const { Cwd } = Options;
+        const { Cwd } = yield* RootCommand;
         const RootDirectory: string = yield* GetPackageRootDirectory(Cwd);
 
         const Fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;

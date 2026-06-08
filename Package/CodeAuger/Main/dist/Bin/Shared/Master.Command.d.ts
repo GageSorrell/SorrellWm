@@ -4,13 +4,58 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-import { Command } from "@sorrell/effect/unstable/cli";
-export declare const ConfigMaster: {
-    Cwd: Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any> | readonly (Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any>)[];
-    Silent: Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any> | readonly (Command.Command.Config | import("effect/unstable/cli/Param").Param<import("effect/unstable/cli/Param").ParamKind, any>)[];
+import { Command, Flag } from "@sorrell/effect/unstable/cli";
+export declare const SharedFlags: {
+    Config: Flag.Flag<{
+        readonly $Schema: "code-auger/schema";
+        readonly BasePath: string;
+        readonly Providers: {
+            readonly [x: string]: boolean | {
+                readonly Enabled: boolean;
+                readonly Watch?: boolean;
+            };
+        };
+        readonly TsConfigPath: string;
+        readonly DisabledFormatters?: readonly import("../../Consumer/Config/Config.Types.ts").CodeFormatter[];
+        readonly PrependedLines?: readonly string[];
+        readonly PrependedLinesOrder?: "before" | "after";
+    } | "code-auger.config">;
+    Cwd: Flag.Flag<string>;
+    Silent: Flag.Flag<boolean>;
 };
 export declare const RootCommand: Command.Command<"code-auger", {
-    readonly Cwd: any;
-    readonly Silent: any;
-}, {}, never, never>;
+    readonly Config: {
+        readonly $Schema: "code-auger/schema";
+        readonly BasePath: string;
+        readonly Providers: {
+            readonly [x: string]: boolean | {
+                readonly Enabled: boolean;
+                readonly Watch?: boolean;
+            };
+        };
+        readonly TsConfigPath: string;
+        readonly DisabledFormatters?: readonly import("../../Consumer/Config/Config.Types.ts").CodeFormatter[];
+        readonly PrependedLines?: readonly string[];
+        readonly PrependedLinesOrder?: "before" | "after";
+    } | "code-auger.config";
+    readonly Cwd: string;
+    readonly Silent: boolean;
+}, {
+    readonly Config: {
+        readonly $Schema: "code-auger/schema";
+        readonly BasePath: string;
+        readonly Providers: {
+            readonly [x: string]: boolean | {
+                readonly Enabled: boolean;
+                readonly Watch?: boolean;
+            };
+        };
+        readonly TsConfigPath: string;
+        readonly DisabledFormatters?: readonly import("../../Consumer/Config/Config.Types.ts").CodeFormatter[];
+        readonly PrependedLines?: readonly string[];
+        readonly PrependedLinesOrder?: "before" | "after";
+    } | "code-auger.config";
+    readonly Cwd: string;
+    readonly Silent: boolean;
+}, never, never>;
 //# sourceMappingURL=Master.Command.d.ts.map

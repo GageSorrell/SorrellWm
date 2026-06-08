@@ -1,6 +1,6 @@
 {
     "name": "@sorrell/utilities",
-    "version": "1.2.31",
+    "version": "1.2.33",
     "private": false,
     "description": "Various TypeScript utilities.",
     "keywords": [
@@ -332,8 +332,8 @@
         "tsover-runtime": "0.0.7"
     },
     "dependencies": {
-        "chalk": "^5.6.2",
-        "effect": "4.0.0-beta.78"
+        "chalk": "5.6.2",
+        "@sorrell/effect": "4.0.0-beta.78"
     },
     "peerDependencies": {
         "tsover": "^6.0.0",

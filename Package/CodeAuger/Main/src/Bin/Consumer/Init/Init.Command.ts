@@ -6,15 +6,12 @@
  */
 
 import { Command } from "@sorrell/effect/unstable/cli";
-import { MakeConfig } from "../../Shared/SubCommand.js";
-import type { Handler } from "@sorrell/cli-utilities/cli";
 import { Effect } from "effect";
+import type { Handler } from "@sorrell/cli-utilities/cli";
 
-const InitConfig = MakeConfig({
+const InitConfig = { };
 
-});
-
-function HandleInit(Options: Handler.Argument<typeof InitConfig>)
+function HandleInit(_Options: Handler.Argument<typeof InitConfig>)
 {
     return Effect.gen(function* ()
     {

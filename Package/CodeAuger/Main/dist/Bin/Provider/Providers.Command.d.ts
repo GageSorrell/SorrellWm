@@ -4,6 +4,7 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-import { Command } from "@sorrell/effect/unstable/cli";
-export declare const ProvidersCommand: Command.Command<"provider", {} | {}, {}, any, never>;
+import { type Subcommand } from "../Shared/index.ts";
+export declare const ProviderConfigFileName: string;
+export declare const ProvidersCommand: Subcommand<"provider", {}>;
 //# sourceMappingURL=Providers.Command.d.ts.map

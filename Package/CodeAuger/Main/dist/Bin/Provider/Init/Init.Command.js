@@ -4,17 +4,16 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-import { Path as EffectPath, FileSystem } from "@effect/platform";
+import { Effect, Path as EffectPath, FileSystem } from "@sorrell/effect";
 import { Command } from "@sorrell/effect/unstable/cli";
-import { Effect } from "effect";
 import { GetPackageRootDirectory } from "@sorrell/utilities/npm/effect";
-import { MakeConfig } from "../../Shared/SubCommand.js";
+import { RootCommand } from "../../Shared/Master.Command.js";
 /* eslint-disable-next-line @typescript-eslint/typedef, jsdoc/require-jsdoc */
-export const InitConfig = MakeConfig({});
+export const InitConfig = {};
 /* eslint-disable-next-line jsdoc/require-jsdoc */
-function HandleInit(Options) {
+function HandleInit(_Options) {
     return Effect.gen(function* () {
-        const { Cwd } = Options;
+        const { Cwd } = yield* RootCommand;
         const RootDirectory = yield* GetPackageRootDirectory(Cwd);
         const Fs = yield* FileSystem.FileSystem;
         const Path = yield* EffectPath.Path;

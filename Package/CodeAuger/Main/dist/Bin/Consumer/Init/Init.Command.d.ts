@@ -5,8 +5,5 @@
  * @license   MIT
  */
 import { Command } from "@sorrell/effect/unstable/cli";
-export declare const InitCommand: Command.Command<"init", {
-    readonly Cwd: any;
-    readonly Silent: any;
-}, {}, never, never>;
+export declare const InitCommand: Command.Command<"init", {}, {}, never, never>;
 //# sourceMappingURL=Init.Command.d.ts.map

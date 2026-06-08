@@ -11,9 +11,7 @@
  * @license   MIT
  */
 
-export * as Args from "./Args/index.js";
-export * as Choice from "./Choice/index.js";
+export * as Argument from "./Argument/index.js";
 export * as Command from "./Command/index.js";
-export * as Options from "./Options/index.js";
+export * as Flag from "./Flag/index.js";
 export * as Handler from "./Handler/index.js";
-export * as Subcommand from "./Subcommand/index.js";

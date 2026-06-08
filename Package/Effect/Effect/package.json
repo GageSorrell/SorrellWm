@@ -1,0 +1,147 @@
+{
+  "name": "@sorrell/effect",
+  "type": "module",
+  "version": "4.0.0-beta.78",
+  "description": "The missing standard library for TypeScript, for writing production-grade software.",
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Effect/Effect",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "homepage": "https://effect.sorrell.sh",
+  "tags": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "keywords": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "sideEffects": [],
+  "exports": {
+      "./package.json": "./package.json",
+      ".": "./Distribution/index.js",
+      "./testing": {
+        "import": "./Distribution/testing/index.js",
+        "types": "./Distribution/testing/index.d.ts"
+      },
+      "./unstable/ai": {
+            "import": "./Distribution/unstable/ai/index.js",
+            "types": "./Distribution/unstable/ai/index.d.ts"    },
+      "./unstable/cli": {
+            "import": "./Distribution/unstable/cli/index.js",
+            "types": "./Distribution/unstable/cli/index.d.ts"    },
+      "./unstable/cluster": {
+            "import": "./Distribution/unstable/cluster/index.js",
+            "types": "./Distribution/unstable/cluster/index.d.ts"    },
+      "./unstable/devtools": {
+            "import": "./Distribution/unstable/devtools/index.js",
+            "types": "./Distribution/unstable/devtools/index.d.ts"    },
+      "./unstable/encoding": {
+            "import": "./Distribution/unstable/encoding/index.js",
+            "types": "./Distribution/unstable/encoding/index.d.ts"    },
+      "./unstable/eventlog": {
+            "import": "./Distribution/unstable/eventlog/index.js",
+            "types": "./Distribution/unstable/eventlog/index.d.ts"    },
+      "./unstable/http": {
+            "import": "./Distribution/unstable/http/index.js",
+            "types": "./Distribution/unstable/http/index.d.ts"    },
+      "./unstable/httpapi": {
+            "import": "./Distribution/unstable/httpapi/index.js",
+            "types": "./Distribution/unstable/httpapi/index.d.ts"    },
+      "./unstable/observability": {
+            "import": "./Distribution/unstable/observability/index.js",
+            "types": "./Distribution/unstable/observability/index.d.ts"    },
+      "./unstable/persistence": {
+            "import": "./Distribution/unstable/persistence/index.js",
+            "types": "./Distribution/unstable/persistence/index.d.ts"    },
+      "./unstable/process": {
+            "import": "./Distribution/unstable/process/index.js",
+            "types": "./Distribution/unstable/process/index.d.ts"    },
+      "./unstable/reactivity": {
+            "import": "./Distribution/unstable/reactivity/index.js",
+            "types": "./Distribution/unstable/reactivity/index.d.ts"    },
+      "./unstable/rpc": {
+            "import": "./Distribution/unstable/rpc/index.js",
+            "types": "./Distribution/unstable/rpc/index.d.ts"    },
+      "./unstable/schema": {
+            "import": "./Distribution/unstable/schema/index.js",
+            "types": "./Distribution/unstable/schema/index.d.ts"    },
+      "./unstable/socket": {
+            "import": "./Distribution/unstable/socket/index.js",
+            "types": "./Distribution/unstable/socket/index.d.ts"    },
+      "./unstable/sql": {
+            "import": "./Distribution/unstable/sql/index.js",
+            "types": "./Distribution/unstable/sql/index.d.ts"    },
+      "./unstable/workflow": {
+            "import": "./Distribution/unstable/workflow/index.js",
+            "types": "./Distribution/unstable/workflow/index.d.ts"    },
+      "./unstable/workers": {
+            "import": "./Distribution/unstable/workers/index.js",
+            "types": "./Distribution/unstable/workers/index.d.ts"
+    },
+      "./*": {
+        "import": "./Distribution/*.js",
+        "types": "./Distribution/*.d.ts"
+      },
+      "./internal/*": null,
+      "./unstable/cli/internal/*": null,
+      "./unstable/cluster/internal/*": null,
+      "./*/index": null
+  },
+  "files": [
+    "Source/**/*.ts",
+    "Distribution/**/*.js",
+    "Distribution/**/*.js.map",
+    "Distribution/**/*.d.ts",
+    "Distribution/**/*.d.ts.map"
+  ],
+  "scripts": {
+    "codegen": "effect-utils codegen",
+    "build": "tsc -b tsconfig.json && npm run babel",
+    "babel": "babel Distribution --plugins annotate-pure-calls --out-dir Distribution --source-maps",
+    "check": "tsc -b tsconfig.json",
+    "test": "vitest --sequence.concurrent=false",
+    "coverage": "vitest --run --coverage --sequence.concurrent=false"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/plugin-transform-export-namespace-from": "^7.27.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.28.6",
+    "babel-plugin-annotate-pure-calls": "^0.5.0",
+    "@types/ini": "^4.1.1",
+    "@types/node": "^25.7.0",
+    "ajv": "^8.20.0",
+    "arktype": "^2.2.0",
+    "ast-types": "^0.14.2",
+    "immer": "^11.1.8",
+    "tinybench": "^6.0.1",
+    "valibot": "^1.4.0"
+  },
+  "dependencies": {
+    "@standard-schema/spec": "^1.1.0",
+    "fast-check": "^4.8.0",
+    "find-my-way-ts": "^0.1.6",
+    "ini": "^7.0.0",
+    "kubernetes-types": "^1.30.0",
+    "msgpackr": "^2.0.1",
+    "multipasta": "^0.2.7",
+    "toml": "^4.1.1",
+    "uuid": "^14.0.0",
+    "yaml": "^2.9.0"
+  }
+}

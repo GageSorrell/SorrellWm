@@ -5,9 +5,10 @@
  * @license   MIT
  */
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { ExportedType } from "./Config.js";
-import { IsValidDependencyImportSpecifier } from "@sorrell/utilities/npm";
-import { IsValidTypeName } from "@sorrell/utilities/type";
+// import { IsValidDependencyImportSpecifier } from "@sorrell/utilities/npm";
+// import { IsValidTypeName } from "@sorrell/utilities/type";
 
 /**
  * Determine whether a given {@link Argument} is an {@link ExportedType}.
@@ -16,7 +17,7 @@ import { IsValidTypeName } from "@sorrell/utilities/type";
  *
  * @returns {In is ExportedType} Whether the given {@link Argument | argument} is an {@link ExportedType}.
  */
-export function IsExportedType(Argument: unknown): Argument is ExportedType
+export function IsExportedTypeValid(Argument: unknown): boolean
 {
     return (
         typeof Argument === "object" &&
@@ -24,8 +25,8 @@ export function IsExportedType(Argument: unknown): Argument is ExportedType
         "Name" in Argument &&
         "Path" in Argument &&
         typeof Argument.Name === "string" &&
-        typeof Argument.Path === "string" &&
-        IsValidTypeName(Argument.Name) &&
-        IsValidDependencyImportSpecifier(Argument.Path)
+        typeof Argument.Path === "string"
+        // IsValidTypeName(Argument.Name) &&
+        // IsValidDependencyImportSpecifier(Argument.Path)
     );
 }

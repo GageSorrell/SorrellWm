@@ -8,12 +8,12 @@
 import { Code } from "@sorrell/cli-utilities/format";
 import { Effect } from "effect";
 import type { ModuleGenerator } from "./Module.Types.js";
-import type { UnknownException } from "effect/Cause";
+import type { UnknownError } from "effect/Cause";
 
 export function GetModuleGenerator(
     Name: string,
     Path: string
-): Effect.Effect<ModuleGenerator, UnknownException, never>
+): Effect.Effect<ModuleGenerator, UnknownError, never>
 {
     return Effect.tryPromise(async () =>
     {

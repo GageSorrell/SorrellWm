@@ -5,22 +5,20 @@
  * @license   MIT
  */
 
-import type { CliApp } from "@sorrell/effect/unstable/cli/CliApp";
 import type { Command } from "@sorrell/effect/unstable/cli";
-import type { Handler } from "@sorrell/cli-utilities/cli";
-import type { MasterConfig } from "./Master.Command.Types.js";
-import type { TaskError } from "./Error.js";
+import type { Environment } from "@sorrell/effect/unstable/cli/Prompt";
+import type { PlatformError } from "effect/PlatformError";
 
 export type Subcommand<
     NameType extends string,
-    ConfigType extends Command.Command.Config,
-    R = never
+    ConfigType extends Command.Command.Config
 > =
     Command.Command<
         NameType,
-        | Command.Command.Context<"code-auger">
-        | CliApp.Environment
-        | R,
-        TaskError,
-        Handler.Argument<MasterConfig & ConfigType>
+        Command.Command.Config.Infer<ConfigType>,
+        /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
+        { },
+        PlatformError,
+        | Environment
+        | Command.CommandContext<"code-auger">
     >;

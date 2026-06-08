@@ -1,0 +1,14 @@
+/**
+ * @file      Header.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import type { HeaderProps } from "../Base/Header.Types.ts";
+import type { ReactNode } from "react";
+
+export function Header(_props: HeaderProps): ReactNode
+{
+    return undefined;
+}

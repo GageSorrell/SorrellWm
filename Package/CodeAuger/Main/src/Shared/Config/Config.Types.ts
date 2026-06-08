@@ -5,14 +5,12 @@
  * @license   MIT
  */
 
-export type ConfigRecord = Record<string, unknown>;
+import type { $SchemaKey } from "./Config.ts";
 
-export type WithCustomOptions<BaseType, OptionsType extends ConfigRecord> =
-    [ OptionsType ] extends [ never ]
-        ? BaseType
-        : (
-            BaseType &
-            Readonly<{
-                Options: OptionsType;
-            }>
-        );
+/**
+ * The config type of a given {@link SchemaType}, with the {@link $SchemaKey | "$schema"} omitted.
+ *
+ * @template SchemaType - The `typeof` the `.Type` property of the schema from which the resulting
+ * config type is produced.
+ */
+export type ConfigSchema<SchemaType> = Omit<SchemaType, $SchemaKey>;

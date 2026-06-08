@@ -5,5 +5,4 @@
  * @license   MIT
  */
 export {};
-/* eslint-enable @typescript-eslint/no-explicit-any */
 //# sourceMappingURL=Init.Command.Types.js.map

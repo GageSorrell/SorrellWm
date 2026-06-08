@@ -93,7 +93,7 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@sorrell/utilities": "1.2.31",
+    "@sorrell/utilities": "1.2.33",
     "effect": "4.0.0-beta.78"
   },
   "main": "index.js"

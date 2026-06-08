@@ -29,8 +29,8 @@ import type { TFunction } from "@sorrell/utilities/functional";
  */
 export function GetDescendantTypes(
     TsConfigPath: string,
-    GenericType: ExportedType
-): Effect.Effect<ReadonlyArray<ExportedType>, never, never>
+    GenericType: typeof ExportedType.Type
+): Effect.Effect<ReadonlyArray<typeof ExportedType.Type>, never, never>
 {
     return Effect.gen(function* ()
     {
@@ -73,7 +73,7 @@ export function GetDescendantTypes(
             ParsedTypeScriptConfig.fileNames.map(GetCanonicalFileName)
         );
 
-        const Results: Array<ExportedType> = [ ];
+        const Results: Array<typeof ExportedType.Type> = [ ];
         const SeenResults: Set<string> = new Set<string>();
 
         for (const SourceFile of Program.getSourceFiles())

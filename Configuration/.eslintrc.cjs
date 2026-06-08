@@ -60,7 +60,7 @@ module.exports = {
     overrides:
     [
         {
-            files: [ "Package/Effect/Cli/**/*.ts" ],
+            files: [ "Package/Effect/**/*.ts", "Package/Effect/**/*.tsx" ],
             rules:
             {
                 "@typescript-eslint/naming-convention": "off",

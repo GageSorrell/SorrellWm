@@ -5,10 +5,8 @@
  * @license   MIT
  */
 
-import type { Path as EffectPath, FileSystem } from "@effect/platform";
+import type { Effect } from "@sorrell/effect";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import { CliApp } from "@sorrell/effect/unstable/cli/CliApp";
-import type { Effect } from "effect";
 import type { TFunction } from "../Functional/index.ts";
 
 export namespace From
@@ -47,31 +45,6 @@ export namespace From
 }
 
 /* eslint-disable @stylistic/max-len */
-
-/**
- * Types having to do with
- * {@link https://effect.website/docs/getting-started/the-effect-type/#type-parameters:~:text=type%20never.-,Requirements,the%20effect%20has%20no%20requirements%20and%20the%20Context%20collection%20is%20empty.,-Type%20Parameter%20Abbreviations | requirements}
- * in {@link Effect.Effect | effects}.
- */
-export namespace Requirements
-{
-    /* eslint-enable @stylistic/max-len */
-
-    /**
-     * The {@link FileSystem} and {@link EffectPath | Path} requirement types.
-     *
-     * This is motivated by the observation that these are typically used together,
-     * and by the inconvenience of otherwise having to import {@link EffectPath | Path} as
-     * `EffectPath` to conform to the
-     * {@link https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EsLintConfigSorrell#ReadMe |
-     * Sorrell style guide}.
-     *
-     * @deprecated Use {@link CliApp.Environment} instead.
-     */
-    export type FsPath =
-        | FileSystem.FileSystem
-        | EffectPath.Path;
-}
 
 /**
  * Given a {@link BaseEffectType}, define a new {@link Effect.Effect | effect} type

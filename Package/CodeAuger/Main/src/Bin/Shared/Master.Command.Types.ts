@@ -5,10 +5,7 @@
  * @license   MIT
  */
 
-import type { ConfigMaster } from "./Master.Command.js";
+import type { SharedFlags } from "./Master.Command.js";
 
-/**
- * The type of the {@link ConfigMaster} that is passed on
- * to all subcommands.
- */
-export type MasterConfig = typeof ConfigMaster;
+/** The type of the {@link SharedFlags} that is passed on to all subcommands. */
+export type SharedConfig = typeof SharedFlags;

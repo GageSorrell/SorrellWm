@@ -1,0 +1,107 @@
+{
+  "name": "@sorrell/effect-ink",
+  "version": "4.0.0-beta.78",
+  "description": "Use Ink with Effect, including with the effect/cli/Prompt module.",
+  "scripts": {
+    "codegen": "effect-utils codegen",
+    "build": "tsc -b tsconfig.json && npm run babel",
+    "babel": "babel Distribution --plugins annotate-pure-calls --out-dir Distribution --source-maps",
+    "check": "tsc -b tsconfig.json",
+    "test": "vitest --sequence.concurrent=false",
+    "prestart": "npm run build",
+    "start": "node ./Distribution/Playground.js",
+    "coverage": "vitest --run --coverage --sequence.concurrent=false"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/plugin-transform-export-namespace-from": "^7.27.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.28.6",
+    "babel-plugin-annotate-pure-calls": "^0.5.0",
+    "@types/ini": "^4.1.1",
+    "@types/node": "^25.7.0",
+    "ajv": "^8.20.0",
+    "arktype": "^2.2.0",
+    "ast-types": "^0.14.2",
+    "immer": "^11.1.8",
+    "tinybench": "^6.0.1",
+    "valibot": "^1.4.0",
+    "typescript": "6.0.3",
+    "effect": "^4.0.0-beta.78",
+    "@effect/platform-node": "^4.0.0-beta.78",
+    "react-devtools": "^7.0.1",
+		"react-devtools-core": "^7.0.1",
+		"react-router": "^7.14.0"
+  },
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Effect/Ink",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "homepage": "https://effect.sorrell.sh",
+  "tags": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "keywords": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "sideEffects": [ ],
+  "exports": {
+      "./package.json": "./package.json",
+      ".": "./Distribution/index.js",
+      "./*": {
+        "import": "./Distribution/*.js",
+        "types": "./Distribution/*.d.ts"
+      },
+      "./internal/*": null,
+      "./unstable/cli/internal/*": null,
+      "./unstable/cluster/internal/*": null,
+      "./*/index": null
+  },
+  "files": [
+    "Source/**/*.ts",
+    "Distribution/**/*.js",
+    "Distribution/**/*.js.map",
+    "Distribution/**/*.d.ts",
+    "Distribution/**/*.d.ts.map"
+  ],
+  "overrides": {
+    "effect@^4.0.0-beta.78": "@sorrell/effect"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0-beta.78",
+		"@types/react": ">=19.2.0",
+		"react": ">=19.2.0",
+		"react-devtools-core": ">=6.1.2"
+  },
+  "dependencies": {
+    "ink": "7.0.5"
+  },
+"peerDependenciesMeta": {
+    "effect": {
+        "optional": false
+    },
+		"@types/react": {
+			"optional": true
+		},
+		"react-devtools-core": {
+			"optional": true
+		}
+	}
+}

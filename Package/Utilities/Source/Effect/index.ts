@@ -12,7 +12,7 @@
  */
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import type { Effect } from "effect/Effect";
+import type { Effect } from "@sorrell/effect/Effect";
 
 export * from "./Effect.ts";
 export * from "./Effect.Types.ts";

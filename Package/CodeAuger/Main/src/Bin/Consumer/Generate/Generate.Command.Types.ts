@@ -7,33 +7,30 @@
 
 import type * as Consumer from "../../../Consumer/Config/index.js";
 import type * as Provider from "../../../Provider/index.js";
-import type { FileSystem, Path } from "@effect/platform";
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
-import type { ConfigError } from "effect/ConfigError";
-import type { CliApp, ConfigFile } from "@sorrell/effect/unstable/cli";
-import type { Effect } from "effect";
+import type { Environment } from "effect/unstable/cli/Prompt";
+import type { Effect, PlatformError } from "effect";
 import type { GenerateConfig } from "./Generate.Command.js";
-import type { PlatformError } from "@effect/platform/Error";
-import type { Requirements } from "@sorrell/utilities/effect";
 import type { Subcommand } from "../../Shared/SubCommand.Types.js";
+import type { Command } from "effect/unstable/cli";
 
 export type GenerateCommandEffect =
     Effect.Effect<
         void,
         any,
-        CliApp.CliApp.Environment
+        | Environment
+        | Command.CommandContext<"code-auger">
     >;
 
 export type GenerateCommandType =
     Subcommand<
         "generate",
-        typeof GenerateConfig,
-        Requirements.FsPath
+        typeof GenerateConfig
     >;
 
 export type GenerateConfigPart =
     Readonly<{
-        Consumer: Consumer.Provider;
+        Consumer: boolean | typeof Consumer.Provider.Type;
         Provider: Provider.Config;
     }>;
 
@@ -44,17 +41,14 @@ export type EGetGenerateConfig =
         GenerateConfigRecord,
         | RootDirectoryNotFoundError
         | PackageJsonParseError
-        | PlatformError
-        | ConfigError
-        | ConfigFile.ConfigFileError,
-        CliApp.CliApp.Environment
+        | PlatformError.PlatformError,
+        Environment
     >;
 
 export type GetOutPathFn =
     (PackageName: string) => Effect.Effect<
         string,
-        | PlatformError
+        | PlatformError.PlatformError
         | RootDirectoryNotFoundError,
-        | Path.Path
-        | FileSystem.FileSystem
+        Environment
     >;

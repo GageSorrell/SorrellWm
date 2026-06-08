@@ -13,4 +13,3 @@
  */
 
 export * from "./Command.js";
-export * from "./Command.Types.js";

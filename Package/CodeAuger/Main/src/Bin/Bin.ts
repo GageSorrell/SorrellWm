@@ -7,15 +7,13 @@
  * @license   MIT
  */
 
-import PackageJson from "../../package.json" with { type: "json" };
-import type * as Sorrell from "@sorrell/cli-utilities";
-import { CatchTaskErrors, type TaskError } from "./Shared/Error.js";
-import { CodeAuger, CodeAuger as name } from "./Shared/Utility.js";
-import { ConfigFile, HelpDoc, Span, ValidationError } from "@sorrell/effect/unstable/cli";
-import { Config, Effect, pipe } from "effect";
-import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import { Effect, pipe } from "effect";
+// import { CodeAuger, CodeAuger as name } from "./Shared/Utility.js";
 import { Command } from "@sorrell/effect/unstable/cli";
 import { ConsumerCommands } from "./Consumer/index.js";
+import { NodeRuntime } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
+import PackageJson from "../../package.json" with { type: "json" };
 import { ProvidersCommand } from "./Provider/Providers.Command.js";
 import { RootCommand } from "./Shared/Master.Command.js";
 
@@ -26,7 +24,7 @@ const ApplicationCommand = pipe(
 );
 
 // const Cli: Sorrell.Cli.Command.Cli<TaskError> =
-const Cli: Effect.Effect<void, any, any> =
+const Cli =
     Command.run(
         ApplicationCommand,
         {
@@ -35,43 +33,7 @@ const Cli: Effect.Effect<void, any, any> =
     );
 
 pipe(
-    Cli(process.argv),
-    CatchTaskErrors,
-    Effect.provide(
-        ConfigFile.layer(
-            `${ CodeAuger }.config`,
-            {
-                formats: [ "json", "yaml" ],
-                searchPaths:
-                [
-                    ".",
-                    "./config",
-                    "./.config",
-                    "./Configuration",
-                    "./Config",
-                    "./.Config"
-                ]
-            }
-        )
-    ),
-    Effect.provide(
-        ConfigFile.layer(
-            `${ CodeAuger }.provider`,
-            {
-                formats: [ "json", "yaml" ],
-                searchPaths:
-                [
-                    ".",
-                    "./config",
-                    "./.config",
-                    "./Configuration",
-                    "./Config",
-                    "./.Config"
-                ]
-            }
-        )
-    ),
-    Effect.provide(ConfigFile.layer(`${ CodeAuger }.provider`)),
-    Effect.provide(NodeContext.layer),
+    Cli,
+    Effect.provide(NodeServices.layer),
     NodeRuntime.runMain
 );

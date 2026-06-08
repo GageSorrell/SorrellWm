@@ -7,9 +7,10 @@
 
 /* eslint-disable jsdoc/informative-docs */
 
+import type { FileSystem, Path } from "effect";
+import type { Command } from "effect/unstable/cli";
 import type { Effect } from "effect";
 import type { InitConfig } from "./Init.Command.js";
-import type { Requirements } from "@sorrell/utilities/effect";
 import type { Subcommand } from "../../Shared/SubCommand.Types.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -19,15 +20,12 @@ export type InitCommandEffect =
     Effect.Effect<
         void,
         any,
-        Requirements.FsPath
-    >;
-
-/** The type of the `init` command. */
-export type InitCommandType =
-    Subcommand<
-        "init",
-        typeof InitConfig,
-        Requirements.FsPath
+        | FileSystem.FileSystem
+        | Path.Path
+        | Command.CommandContext<"code-auger">
     >;
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+/** The type of the `init` command. */
+export type InitCommandType = Subcommand<"init", typeof InitConfig>;

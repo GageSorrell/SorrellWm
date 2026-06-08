@@ -5,7 +5,8 @@
   "description": "A test consumer project for developing code-auger.",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.json"
+    "build": "tsc -p ./tsconfig.json",
+    "ls": "code-auger ls"
   },
     "repository": {
         "directory": "Package/CodeAuger/Development/Consumer",
@@ -13,11 +14,11 @@
         "url": "git+https://github.com/GageSorrell/SorrellWm.git"
     },
     "devDependencies": {
-    "typescript": "6.0.3"
+        "typescript": "6.0.3"
     },
     "dependencies": {
         "@code-auger/development-provider": "0.0.1",
-        "code-auger": "0.1.8"
+        "code-auger": "0.1.9"
     },
   "keywords": [ ],
     "author": {

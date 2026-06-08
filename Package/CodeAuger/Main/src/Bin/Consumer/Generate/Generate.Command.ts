@@ -11,7 +11,7 @@ import type * as Consumer from "../../../Consumer/Config/index.js";
 import * as LoadConfig from "../Shared/LoadConfig.js";
 import type * as Provider from "../../../Provider/index.js";
 import * as TypeScript from "typescript";
-import { Command, Options } from "@sorrell/effect/unstable/cli";
+import { Command, Flag } from "@sorrell/effect/unstable/cli";
 import type {
     EGetGenerateConfig,
     GenerateCommandEffect,
@@ -20,49 +20,51 @@ import type {
     GenerateConfigRecord,
     GetOutPathFn
 } from "./Generate.Command.Types.js";
-import { Effect, Option, Record, pipe } from "effect";
-import { Path as EffectPath, FileSystem } from "@effect/platform";
+import { Effect, FileSystem, Path as PathService, Record, pipe } from "effect";
 import { GetDescendantTypes, MapRecordEntriesEffect } from "./Generate.Internal.js";
 import type { PackageJsonParseError, RootDirectoryNotFoundError } from "@sorrell/utilities/npm";
-import type { CliApp } from "@sorrell/effect/unstable/cli";
-import type { ConfigError } from "effect/ConfigError";
-import type { ConfigFileError } from "@sorrell/effect/unstable/cli/ConfigFile";
+import { $SchemaKey } from "../../../Shared/Config/Config.ts";
+import type { Environment } from "effect/unstable/cli/Prompt";
 import { GetNodeModulesDirectory } from "@sorrell/utilities/npm/effect";
 import { GetPackageNameSafe } from "../../Shared/Config.js";
 import { GetPackageRootDirectory } from "@sorrell/utilities/npm/effect";
 import type { Handler } from "@sorrell/cli-utilities/cli";
-import { MakeConfig } from "../../Shared/SubCommand.js";
-import type { PlatformError } from "@effect/platform/Error";
-import type { Requirements } from "@sorrell/utilities/effect";
+import type { PlatformError } from "effect/PlatformError";
+import { RootCommand } from "../../Shared/Master.Command.ts";
 
 /* eslint-disable-next-line @typescript-eslint/typedef, jsdoc/require-jsdoc */
-export const GenerateConfig = MakeConfig({
-    Watch: pipe(
-        Options.boolean("watch", { aliases: [ "w" ] }),
-        Options.withDefault(false),
-        Options.withDescription(
-            "Watch the codebase, and regenerate modules when a file in the codebase is saved."
+export const GenerateConfig =
+    {
+        Watch: pipe(
+            Flag.boolean("watch"),
+            Flag.withAlias("w"),
+            Flag.withDefault(false),
+            Flag.withDescription(
+                "Watch the codebase, and regenerate modules when a file in the codebase is saved."
+            )
         )
-    )
-});
+    };
 
-function GetGenerateConfig(Cwd: string): EGetGenerateConfig
+function GetGenerateConfig(Cwd: string, ConsumerConfig: Consumer.Config): EGetGenerateConfig
 {
     return Effect.gen(function* ()
     {
-        const { Providers: ConsumerPart } = yield* LoadConfig.Consumer(Cwd);
+        const { Providers: ConsumerPart } = ConsumerConfig;
 
         const IsProviderEnabled = (Provider: string): boolean => (
             ConsumerPart !== undefined &&
             ConsumerPart !== null &&
-            Provider in ConsumerPart &&
             (
-                ConsumerPart[Provider] === true ||
+                typeof ConsumerPart !== "boolean" &&
+                Provider in ConsumerPart &&
                 (
-                    typeof ConsumerPart[Provider] === "object" &&
-                    "Enabled" in ConsumerPart[Provider] &&
-                    typeof ConsumerPart[Provider].Enabled === "boolean" &&
-                    ConsumerPart[Provider].Enabled === true
+                    ConsumerPart[Provider] === true ||
+                    (
+                        typeof ConsumerPart[Provider] === "object" &&
+                        "Enabled" in ConsumerPart[Provider] &&
+                        typeof ConsumerPart[Provider].Enabled === "boolean" &&
+                        ConsumerPart[Provider].Enabled === true
+                    )
                 )
             )
         );
@@ -75,11 +77,10 @@ function GetGenerateConfig(Cwd: string): EGetGenerateConfig
         type ToEntryEffect =
             Effect.Effect<
                 [ string, GenerateConfigPart ],
+                | string
                 | PackageJsonParseError
-                | ConfigError
-                | ConfigFileError
                 | RootDirectoryNotFoundError,
-                CliApp.CliApp.Environment
+                Environment
             >;
 
         const ToEntry = (PackageName: string): ToEntryEffect => Effect.gen(function* ()
@@ -90,7 +91,7 @@ function GetGenerateConfig(Cwd: string): EGetGenerateConfig
             return [
                 PackageName,
                 {
-                    Consumer: ConsumerPart[PackageName] as Consumer.Provider,
+                    Consumer: ConsumerPart[PackageName],
                     Provider: ProviderPart
                 }
             ];
@@ -110,18 +111,22 @@ function GetGenerateConfig(Cwd: string): EGetGenerateConfig
  * @param Cwd - The `cwd` option value.
  * @param InPath - The path to handle.
  *
- * @returns {Effect.Effect<string, PlatformError, EffectPath.Path>} The given {@link InPath | path},
+ * @returns {Effect.Effect<string, PlatformError, PathService.Path>} The given {@link InPath | path},
  * made absolute, relative to the package root directory of the given {@link Cwd}, if not already absolute.
  */
 function GetConsumerPath(
     Cwd: string,
     InPath: string
-): Effect.Effect<string, any | PlatformError | RootDirectoryNotFoundError, EffectPath.Path | FileSystem.FileSystem>
-// ): Effect.Effect<string, PlatformError | RootDirectoryNotFoundError, EffectPath.Path>
+): Effect.Effect<
+    string,
+    | PlatformError
+    | RootDirectoryNotFoundError,
+    Environment
+>
 {
     return Effect.gen(function* ()
     {
-        const Path: EffectPath.Path = yield* EffectPath.Path;
+        const Path: PathService.Path = yield* PathService.Path;
 
         const ConsumerRoot: string = yield* GetPackageRootDirectory(Cwd);
 
@@ -137,12 +142,12 @@ function GetConsumerPath(
  * @param Cwd - The `cwd` option.
  * @param BasePath - The base path config setting.
  *
- * @returns {Effect.Effect<void, never, Requirements.FsPath>} The effect that performs this task.
+ * @returns {Effect.Effect<void, never, Environment>} The effect that performs this task.
  */
 function EnsureBasePath(
     Cwd: string,
     BasePath: string
-): Effect.Effect<void, PlatformError | RootDirectoryNotFoundError, Requirements.FsPath>
+): Effect.Effect<void, PlatformError | RootDirectoryNotFoundError, Environment>
 {
     return Effect.gen(function* ()
     {
@@ -158,11 +163,11 @@ function EnsureBasePath(
 //     BasePath: string,
 //     PackageName: string,
 //     Provider: Consumer.Provider
-// ): Effect.Effect<string, never, EffectPath.Path>
+// ): Effect.Effect<string, never, PathService.Path>
 // {
 //     return Effect.gen(function* ()
 //     {
-//         const Path: EffectPath.Path = yield* EffectPath.Path;
+//         const Path: PathService.Path = yield* PathService.Path;
 
 //         const ProviderPath: string = Provider.Path || `./${ PackageName }`;
 
@@ -174,47 +179,49 @@ function EnsureBasePath(
 
 function GetModuleContentsFactory(
     ConsumerConfig: Consumer.Config
-): (GenerateConfigPart: GenerateConfigPart) => Effect.Effect<string, RootDirectoryNotFoundError, EffectPath.Path | FileSystem.FileSystem>
+): (GenerateConfigPart: GenerateConfigPart) => Effect.Effect<
+    string,
+    RootDirectoryNotFoundError,
+    Environment
+>
 {
     return function(
         GenerateConfigPart: GenerateConfigPart
-    ): Effect.Effect<string, RootDirectoryNotFoundError, EffectPath.Path | FileSystem.FileSystem>
+    ): Effect.Effect<string, RootDirectoryNotFoundError, PathService.Path | FileSystem.FileSystem>
     {
         return Effect.gen(function* ()
         {
-            const ConsumerTypes: ReadonlyArray<Provider.ExportedType> = [ ];
-            const ToPropertyDeclaration = ({ Name }: Provider.ExportedType): string =>
+            const ConsumerTypes: ReadonlyArray<typeof Provider.ExportedType.Type> = [ ];
+            const ToPropertyDeclaration = ({ Name }: typeof Provider.ExportedType.Type): string =>
                 `${ Name }: ${ Name };`;
 
-            const PrependedLines: string = Option.match(
-                ConsumerConfig.PrependedLines,
-                {
-                    onNone: () => "",
-                    onSome: (Value: ReadonlyArray<string>) =>
-                    {
-                        return Value.join("\n") + "\n\n";
-                    }
-                });
+            const PrependedLines: string = ConsumerConfig.PrependedLines !== undefined
+                ? ConsumerConfig.PrependedLines.join("\n") + "\n\n"
+                : "";
 
             const DisableFormatterComments: string | undefined =
-                Option.match(ConsumerConfig.DisabledFormatters, {
-                    onNone: () => undefined,
-                    onSome: (Value: ReadonlyArray<Consumer.CodeFormatter>) =>
+                ConsumerConfig.DisabledFormatters !== undefined
+                    ? ((): string | undefined =>
                     {
-                        if (Value.includes("eslint") || Value.includes("ox"))
+                        const UsesEsLintOrOx: boolean | undefined = (
+                            ConsumerConfig.DisabledFormatters?.includes("eslint") ||
+                            ConsumerConfig.DisabledFormatters?.includes("ox")
+                        );
+
+                        if (UsesEsLintOrOx)
                         {
                             return "/* eslint-disable */";
                         }
 
                         return undefined;
-                    }
-                });
+                    })()
+                    : undefined;
 
             const PropertyDeclarations: string = ConsumerTypes.map(ToPropertyDeclaration).join("\n    ");
 
-            const { Provider } = GenerateConfigPart;
+            const { Provider: ProviderPart } = GenerateConfigPart;
 
-            const ProviderImport: string = `import "${ Provider.Interface.Path }";`;
+            const ProviderImport: string = `import "${ ProviderPart.Interface.Path }";`;
 
             const TsConfigPath: string | undefined = TypeScript.findConfigFile(
                 yield* GetPackageRootDirectory(),
@@ -224,13 +231,13 @@ function GetModuleContentsFactory(
 
             if (TsConfigPath === undefined)
             {
-                return yield* Effect.dieMessage(
+                return yield* Effect.die(
                     "Could not find your package's TypeScript config file!  Exiting..."
                 );
             }
 
-            const DescendantTypes: ReadonlyArray<Provider.ExportedType> =
-                yield* GetDescendantTypes(TsConfigPath, Provider.GenericProperty);
+            const DescendantTypes: ReadonlyArray<typeof Provider.ExportedType.Type> =
+                yield* GetDescendantTypes(TsConfigPath, ProviderPart.GenericProperty);
 
             type DescendantModule =
                 Readonly<{
@@ -242,7 +249,7 @@ function GetModuleContentsFactory(
                 `import type ${ Types.join(", ") } from "${ Path }";`;
 
             const DescendantModuleNames: Set<string> = new Set<string>(
-                DescendantTypes.map((Descendant: Provider.ExportedType): string =>
+                DescendantTypes.map((Descendant: typeof Provider.ExportedType.Type): string =>
                 {
                     return Descendant.Path;
                 }));
@@ -251,10 +258,10 @@ function GetModuleContentsFactory(
             {
                 return {
                     Path: ModulePath,
-                    Types: DescendantTypes.filter((Descendant: Provider.ExportedType): boolean =>
+                    Types: DescendantTypes.filter((Descendant: typeof Provider.ExportedType.Type): boolean =>
                     {
                         return Descendant.Path === ModulePath;
-                    }).map((Descendant: Provider.ExportedType): string => Descendant.Name)
+                    }).map((Descendant: typeof Provider.ExportedType.Type): string => Descendant.Name)
                 } as const;
             };
 
@@ -263,9 +270,9 @@ function GetModuleContentsFactory(
 
             const ConsumerImports: string = DescendantModules.map(GetImportStatement).join("\n");
 
-            const ModuleDeclaration: string = `declare module "${ Provider.Interface.Path }"
+            const ModuleDeclaration: string = `declare module "${ ProviderPart.Interface.Path }"
 {
-    interface ${ Provider.Interface.Name }
+    interface ${ ProviderPart.Interface.Name }
     {
         ${ PropertyDeclarations }
     }
@@ -292,11 +299,16 @@ function MakeGetOutPath(Cwd: string, BasePath: string): GetOutPathFn
 {
     return function GetOutPath(
         PackageName: string
-    ): Effect.Effect<string, PlatformError | RootDirectoryNotFoundError, EffectPath.Path | FileSystem.FileSystem>
+    ): Effect.Effect<
+        string,
+        | PlatformError
+        | RootDirectoryNotFoundError,
+        Environment
+    >
     {
         return Effect.gen(function* ()
         {
-            const Path: EffectPath.Path = yield* EffectPath.Path;
+            const Path: PathService.Path = yield* PathService.Path;
 
             const PackageNameSafe: string = GetPackageNameSafe(PackageName) + ".ts";
 
@@ -332,20 +344,36 @@ function WatchGenerate(
 
 /* eslint-disable-next-line jsdoc/require-jsdoc */
 function RunGenerate(
-    Options: Omit<Handler.Argument<typeof GenerateConfig>, "Watch">
+    _Options: Omit<Handler.Argument<typeof GenerateConfig>, "Watch">
 ): GenerateCommandEffect
 {
     return Effect.gen(function* ()
     {
-        const { Cwd } = Options;
-        const GenerateConfig: GenerateConfigRecord = yield* GetGenerateConfig(Cwd);
+        const { Config, Cwd } = yield* RootCommand;
+        if (typeof Config === "string")
+        {
+            return yield* Effect.die("@TODO");
+        }
+        const GenerateConfig: GenerateConfigRecord = yield* GetGenerateConfig(Cwd, Config);
 
-        const ConsumerConfig: Consumer.Config = yield* LoadConfig.Consumer(Cwd);
+        const ConfigBase: string | typeof Consumer.Schema.Type = (yield* RootCommand).Config;
+        if (typeof ConfigBase === "string")
+        {
+            // @TODO
+            yield* Effect.succeed(undefined as void);
+        }
+        const ConsumerConfig: Consumer.Config = (() =>
+        {
+            const { [ $SchemaKey ]: _, ...ConsumerConfig } = ConfigBase as typeof Consumer.Schema.Type;
+            return ConsumerConfig;
+        })();
 
         yield* EnsureBasePath(Cwd, ConsumerConfig.BasePath);
 
-        type EGetModuleContents = (GenerateConfigPart: GenerateConfigPart) =>
-        Effect.Effect<string, RootDirectoryNotFoundError, EffectPath.Path | FileSystem.FileSystem>;
+        type EGetModuleContents = (GenerateConfigPart: Readonly<{
+            Consumer: boolean | typeof Consumer.Provider.Type;
+            Provider: Provider.Config;
+        }>) => Effect.Effect<string, RootDirectoryNotFoundError, Environment>;
 
         const GetModuleContents: EGetModuleContents = GetModuleContentsFactory(ConsumerConfig);
 
@@ -359,8 +387,7 @@ function RunGenerate(
                 readonly [ string, string ],
                 | PlatformError
                 | RootDirectoryNotFoundError,
-                | EffectPath.Path
-                | FileSystem.FileSystem
+                Environment
             >;
 
         const SwapNameWithPath = (Contents: string, PackageName: string): ESwapNameWithPath =>

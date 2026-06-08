@@ -5,14 +5,13 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-import PackageJson from "../../package.json" with { type: "json" };
-import { CatchTaskErrors } from "./Shared/Error.js";
-import { CodeAuger, CodeAuger as name } from "./Shared/Utility.js";
-import { ConfigFile, HelpDoc, Span, ValidationError } from "@sorrell/effect/unstable/cli";
-import { Config, Effect, pipe } from "effect";
-import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import { Effect, pipe } from "effect";
+// import { CodeAuger, CodeAuger as name } from "./Shared/Utility.js";
 import { Command } from "@sorrell/effect/unstable/cli";
 import { ConsumerCommands } from "./Consumer/index.js";
+import { NodeRuntime } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
+import PackageJson from "../../package.json" with { type: "json" };
 import { ProvidersCommand } from "./Provider/Providers.Command.js";
 import { RootCommand } from "./Shared/Master.Command.js";
 /* eslint-disable @typescript-eslint/typedef */
@@ -21,25 +20,5 @@ const ApplicationCommand = pipe(RootCommand, Command.withSubcommands([...Consume
 const Cli = Command.run(ApplicationCommand, {
     version: PackageJson.version
 });
-pipe(Cli(process.argv), CatchTaskErrors, Effect.provide(ConfigFile.layer(`${CodeAuger}.config`, {
-    formats: ["json", "yaml"],
-    searchPaths: [
-        ".",
-        "./config",
-        "./.config",
-        "./Configuration",
-        "./Config",
-        "./.Config"
-    ]
-})), Effect.provide(ConfigFile.layer(`${CodeAuger}.provider`, {
-    formats: ["json", "yaml"],
-    searchPaths: [
-        ".",
-        "./config",
-        "./.config",
-        "./Configuration",
-        "./Config",
-        "./.Config"
-    ]
-})), Effect.provide(ConfigFile.layer(`${CodeAuger}.provider`)), Effect.provide(NodeContext.layer), NodeRuntime.runMain);
+pipe(Cli, Effect.provide(NodeServices.layer), NodeRuntime.runMain);
 //# sourceMappingURL=Bin.js.map
