@@ -56,3 +56,56 @@
 //         Effect.provide(layerLive)
 //     )
 // );
+
+import {
+    All,
+    ConfirmPrompt,
+    Run,
+    SelectPrompt,
+    TextPrompt
+} from "./Prompt/Prompt.tsx";
+import { Console, Effect, pipe } from "effect";
+
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const Program = All({
+    Name: TextPrompt({
+        Message: "Name?",
+        Placeholder: "Gage",
+        Validate: (Value: string) =>
+        {
+            return Value.trim().length > 0;
+        }
+    }),
+
+    PackageManager: SelectPrompt({
+        Choices: [
+            {
+                Label: "npm",
+                Value: "npm"
+            },
+            {
+                Label: "pnpm",
+                Value: "pnpm"
+            },
+            {
+                Label: "yarn",
+                Value: "yarn"
+            }
+        ] as const,
+        Message: "Package manager?"
+    }),
+
+    Confirmed: ConfirmPrompt({
+        InitialValue: true,
+        Message: "Continue?"
+    })
+});
+
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const Main = pipe(
+    Run(Program),
+    /* eslint-disable-next-line @typescript-eslint/typedef */
+    Effect.flatMap(Console.log)
+);
+
+Effect.runPromise(Main);

@@ -12,7 +12,7 @@ import type { Effect as TheEffect } from "effect";
 export type Plan<A, E, R> =
     | Succeed<A>
     | Effect<A, E, R>
-    | SuspendPlan<A, E, R>
+    | Suspend<A, E, R>
     | SuspendEffect<A, E, R>
     | Field<A, E, R>
     | Struct<A, E, R>
@@ -36,7 +36,7 @@ export interface Effect<A, E, R>
     readonly Effect: TheEffect.Effect<A, E, R>;
 }
 
-export interface SuspendPlan<A, E, R>
+export interface Suspend<A, E, R>
 {
     readonly _tag: "Suspend";
     readonly Evaluate: () => Prompt<A, E, R>;

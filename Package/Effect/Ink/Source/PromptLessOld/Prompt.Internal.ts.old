@@ -1,0 +1,68 @@
+/**
+ * @file      Prompt.Internal.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import type * as Input from "./Input.ts";
+import type { Data, Option, Record } from "effect";
+import type { Options } from "./Prompt.ts";
+
+export namespace Frame
+{
+    /** The interface for the frontend to interact with the prompt session data. */
+    export interface Store
+    {
+        readonly GetCurrent: () => Data;
+        readonly Subscribe: (Listener: () => void) => (() => void);
+    }
+
+    export interface Data
+    {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        readonly States: Record.ReadonlyRecord<string, State.State<any>>;
+    }
+}
+
+export namespace State
+{
+    export interface State<A>
+    {
+        readonly Value: Option.Option<A>;
+        readonly ErrorMessage: Option.Option<string>;
+    }
+
+    export namespace Handlers
+    {
+        export type Handlers<
+            OptionsType extends Options.PromptBase,
+            StateType extends State<unknown>
+        > =
+            Readonly<{
+                Create: Create<OptionsType, StateType>;
+                Reduce: Reduce<StateType>;
+                SetError: SetError<StateType>;
+            }>;
+
+        export type Create<
+            OptionsType extends Options.PromptBase,
+            StateType extends State<unknown>
+        > = (Options: OptionsType) => StateType;
+
+        export type Reduce<StateType extends State<unknown>> = (
+            Current: StateType,
+            Command: Input.Command
+        ) => typeof Current;
+
+        export type SetError<StateType extends State<unknown>> = (
+            In: StateType,
+            ErrorMessage: Option.Option<string>
+        ) => typeof In;
+    }
+
+    export interface Text extends State<string>
+    {
+        CursorIndex: number;
+    }
+}

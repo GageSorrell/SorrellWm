@@ -1,0 +1,258 @@
+/**
+ * @file      Prompt.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import {
+    Effect,
+    Effectable,
+    type FileSystem,
+    type Option,
+    type Path,
+    type Record,
+    type Terminal
+} from "effect";
+import type { Covariant } from "effect/Types";
+import type { Ink } from "../Ink/Ink.tsx";
+import type { MaybeEffect } from "../Utility/Utility.Types.ts";
+import type { State } from "./Prompt.Internal.ts.old";
+
+const PromptTypeId: unique symbol = Symbol.for("@sorrell/effect-ink/Prompt");
+
+/** Determines the overall interaction model used to present and edit prompt values. */
+export namespace Layout
+{
+    /** {@inheritDoc Wizard:type} */
+    export const Wizard: unique symbol = Symbol.for("@sorrell/effect-ink/Prompt!Layout!Wizard");
+
+    /** {@inheritDoc Inspector:type} */
+    export const Inspector: unique symbol = Symbol.for("@sorrell/effect-ink/Prompt!Layout!Inspector");
+
+    /**
+     * A layout in which values in the form are displayed in a "summary" format,
+     * and the controls to edit any given value is hidden until that value is selected
+     * for editing.
+     */
+    export type Inspector = typeof Inspector;
+
+    /**
+     * A straight-forward layout in which values and controls are displayed
+     * alongside each other.  This is heavily inspired by
+     * {@link https://github.com/bombshell-dev/clack | \@clack/prompts}.
+     */
+    export type Wizard = typeof Wizard;
+
+    /**
+     * The layout of a prompt determines the overall interaction model used to present and
+     * edit prompt values.
+     */
+    export type Layout =
+        | Inspector
+        | Wizard;
+}
+
+export type Environment =
+    | Ink
+    | FileSystem.FileSystem
+    | Path.Path
+    | Terminal.Terminal;
+
+export namespace Validator
+{
+    /**
+     * Validate a value of a given prompt item.
+     *
+     * @template A - The type of the value and corresponding prompt item.
+     *
+     * @param TestValue - The value to validate.
+     *
+     * @returns {MaybeEffect<boolean>} Whether the value is valid.
+     */
+    export type Validator<A> = (TestValue: A) => MaybeEffect<boolean>;
+
+    /**
+     * A validator that is defined as the conjunction of a set of named validators.
+     */
+    export type Conjunction<A> =
+        {
+            [ Key: string ]: Validator<A>;
+        };
+
+    /**
+     * For a given prompt item belonging to a given prompt, validate the value of the
+     * given prompt item as a function of the current values of all other prompt items
+     * that have been completed.
+     *
+     * @template A - The type of the value and corresponding prompt item.
+     *
+     * @param TestValue - The value to validate.
+     * @param CurrentState - A {@link Conjunction} of all prompt items in the collection, represented
+     * as {@link Option!Option | Options}.  Properties of this record {@link Option!isSome | are some}
+     * precisely when the prompt item has been completed (that is, iff the {@link Layout!Layout} is
+     * {@link Layout!Wizard}).
+     *
+     * @returns {MaybeEffect<boolean>} Whether the value is valid.
+     */
+    export type WithCurrent<A> = (
+        TestValue: A,
+        CurrentState: Record.ReadonlyRecord<string, Option.Option<unknown>>
+    ) => MaybeEffect<boolean>;
+
+    export type Any<A> =
+        | Validator<A>
+        | WithCurrent<A>;
+}
+
+export namespace Options
+{
+    export interface Run
+    {
+        readonly Layout?: Layout.Layout;
+    }
+
+    export namespace Trait
+    {
+        export interface Initializable<A>
+        {
+            readonly InitialValue?: A;
+        }
+    }
+
+    /**
+     * @property {string} Message - The message to display under the name of the field.
+     * @property {string} Hint - The message displayed
+     * @property {Completion} NegateCompletion - Whether the field's completion type (optional or required)
+     * is the *opposite* of the default completion type for this prompt.
+     */
+    export interface PromptBase
+    {
+        readonly Message: string;
+        readonly Hint?: string;
+        readonly NegateCompletion?: boolean;
+    }
+
+    export interface Text extends PromptBase, Trait.Initializable<string>
+    {
+        readonly Validator: Validator.Any<string>;
+    }
+}
+
+export interface Prompt<A, E = never, R = never>
+    extends Effect.Effect<A, E | Terminal.QuitError, R | Environment>
+{
+    readonly [ PromptTypeId ]:
+    {
+        readonly _A: Covariant<A>;
+        readonly _E: Covariant<E>;
+        readonly _R: Covariant<R>;
+    };
+}
+
+export const run: <A, E = never, ExtraEnvironment = never>(
+    Self: Prompt<A, E, ExtraEnvironment>
+) => Effect.Effect<
+    A,
+    E | Terminal.QuitError,
+    ExtraEnvironment | Environment
+> = Effect.fnUntraced(
+    function*<A, E = never, ExtraEnvironment = never>(_Self: Prompt<A, E, ExtraEnvironment>)
+    {
+        return yield* undefined as unknown as Effect.Effect<
+            A, E | Terminal.QuitError, ExtraEnvironment | Environment
+        >;
+        // const input = yield* terminal.readInput;
+        // return yield* runWithInput(Self, terminal, input);
+    },
+    Effect.scoped
+);
+
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const Prototype =
+    {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        ...Effectable.Prototype<Prompt<any>>({
+            evaluate()
+            {
+                return run(this);
+            },
+            label: "Prompt"
+        }),
+        [ PromptTypeId ]:
+        {
+            _A: (_: never) => _,
+            _E: (_: never) => _,
+            _R: (_: never) => _
+        }
+    };
+
+export type Value<Self> =
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    Self extends Prompt<infer A, any, any>
+        ? A
+        : never;
+
+export type Error<Self> =
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    Self extends Prompt<any, infer E, any>
+        ? E
+        : never;
+
+export type Requirements<Self> =
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    Self extends Prompt<any, any, infer R>
+        ? R
+        : never;
+
+export const Text = (Name: string, Options?: Options.Text) =>
+{
+    return Object.create();
+};
+
+const BasePrompt = <A, OptionsType extends Options.PromptBase>(
+    Name: string,
+    Options: OptionsType
+): Prompt<A> =>
+{
+    const Out = Object.create(Prototype);
+    op._tag = "Loop";
+    op.initialState = initialState;
+    op.render = handlers.render;
+    op.process = handlers.process;
+    op.clear = handlers.clear;
+    return op;
+};
+
+type Operation<Tag extends string, Body = { }> =
+    Prompt<never> &
+    Body &
+    {
+        readonly _tag: Tag;
+    };
+
+type PromptPrimitive =
+    | Loop
+    | OnSuccess
+    | Succeed;
+
+interface Loop extends Operation<
+    "Loop",
+    Readonly<{
+        InitialState: MaybeEffect<unknown, never, Environment>;
+        Handlers: State.Handlers.Handlers<Options.PromptBase, State.State<unknown>>;
+    }>
+> { }
+
+export interface OnSuccess extends Operation<
+    "OnSuccess",
+    {
+        readonly Prompt: PromptPrimitive
+        readonly OnSuccess: (value: unknown) => Prompt<unknown, unknown, unknown>
+    }
+> { }
+
+interface Succeed extends Operation<
+    "Succeed",
+    { readonly Value: unknown; }
+> { }

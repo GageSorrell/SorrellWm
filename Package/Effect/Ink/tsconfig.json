@@ -4,6 +4,7 @@
     "include": [ "Source" ],
     "compilerOptions":
     {
+        "erasableSyntaxOnly": false,
         "types": [ "node" ]
     }
 }

@@ -46,14 +46,14 @@ export interface RunOptions
     readonly InspectorDynamicPolicy?: InspectorDynamicPolicy;
 }
 
-export interface Prompt<A, E = never, R = never>
-    extends Effect.Effect<A, E | Terminal.QuitError, R | Environment>
+export interface Prompt<A, E = never, ExtraEnvironment = never>
+    extends Effect.Effect<A, E | Terminal.QuitError, ExtraEnvironment | Environment>
 {
     readonly [ PromptTypeId ]:
     {
         readonly _A: Covariant<A>;
         readonly _E: Covariant<E>;
-        readonly _R: Covariant<R>;
+        readonly _ExtraEnvironment: Covariant<ExtraEnvironment>;
     };
 }
 
