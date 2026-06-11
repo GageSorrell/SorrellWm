@@ -60,11 +60,14 @@
 import {
     All,
     ConfirmPrompt,
+    type PromptRunError,
     Run,
     SelectPrompt,
     TextPrompt
 } from "./Prompt/Prompt.tsx";
-import { Console, Effect, pipe } from "effect";
+import { Console, Effect, type PlatformError } from "effect";
+// import { Console, Effect, pipe } from "effect";
+import { NodeRuntime, NodeTerminal } from "@effect/platform-node";
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
 const Program = All({
@@ -73,13 +76,16 @@ const Program = All({
         Placeholder: "Gage",
         Validate: (Value: string) =>
         {
-            return Value.trim().length > 0;
+            return Value.trim().length > 0
+                ? true
+                : "String must be non-empty.";
         }
     }),
 
     PackageManager: SelectPrompt({
         Choices: [
             {
+                Hint: "NodeJS Package Manager",
                 Label: "npm",
                 Value: "npm"
             },
@@ -90,7 +96,8 @@ const Program = All({
             {
                 Label: "yarn",
                 Value: "yarn"
-            }
+            },
+            ...Array.from({ length: 50 }, (_: unknown, Index: number) => ({ Label: "Foo", Value: "Foo" + Index.toString() }))
         ] as const,
         Message: "Package manager?"
     }),
@@ -101,11 +108,49 @@ const Program = All({
     })
 });
 
-/* eslint-disable-next-line @typescript-eslint/typedef */
-const Main = pipe(
-    Run(Program),
-    /* eslint-disable-next-line @typescript-eslint/typedef */
-    Effect.flatMap(Console.log)
-);
+// /* eslint-disable-next-line @typescript-eslint/typedef */
+// const Main = pipe(
+//     Run(Program),
+//     /* eslint-disable-next-line @typescript-eslint/typedef */
+//     Effect.match({
+//         onFailure: Console.log,
+//         onSuccess: Console.log
+//     })
+//     // Effect.flatMap(Console.log)
+// );
 
-Effect.runPromise(Main);
+// eslint-disable-next-line @typescript-eslint/typedef
+const Foo = Effect.gen(function* ()
+{
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const Out = Run(Program);
+
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const Bar = Effect.matchEffect(Out, {
+        onFailure: (Value: PromptRunError | PlatformError.PlatformError) =>
+        {
+            return Effect.gen(function* ()
+            {
+                yield* Console.log("Foo\n".repeat(10));
+                yield* Console.dir(Value);
+            });
+        },
+        onSuccess: (Value: unknown) =>
+        {
+            return Effect.gen(function* ()
+            {
+                yield* Console.log("Foo\n".repeat(10));
+                yield* Console.dir(Value);
+            });
+        }
+    });
+
+    yield* Bar;
+    // Effect.flatMap(Console.log)
+});
+
+// Effect.runPromise(Main);
+// Effect.runPromise(Foo);
+NodeRuntime.runMain(
+    Effect.provide(Foo, NodeTerminal.layer)
+);
