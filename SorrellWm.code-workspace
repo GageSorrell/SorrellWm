@@ -177,6 +177,7 @@
             "oxlint",
             "PAINTSTRUCT",
             "Pipeable",
+            "Positionable",
             "recma",
             "RENDERFULLCONTENT",
             "Responseful",

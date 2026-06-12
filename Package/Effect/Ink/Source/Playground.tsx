@@ -60,12 +60,11 @@
 import {
     All,
     ConfirmPrompt,
-    type PromptRunError,
     Run,
     SelectPrompt,
     TextPrompt
 } from "./Prompt/Prompt.tsx";
-import { Console, Effect, type PlatformError } from "effect";
+import { Array, Console, Effect, pipe } from "effect";
 // import { Console, Effect, pipe } from "effect";
 import { NodeRuntime, NodeTerminal } from "@effect/platform-node";
 
@@ -97,7 +96,9 @@ const Program = All({
                 Label: "yarn",
                 Value: "yarn"
             },
-            ...Array.from({ length: 50 }, (_: unknown, Index: number) => ({ Label: "Foo", Value: "Foo" + Index.toString() }))
+            ...Array.range(0, 49)
+                .map((Value: number) => `Entry #${ Value }`)
+                .map((Value: string) => ({ Label: Value, Value }))
         ] as const,
         Message: "Package manager?"
     }),
@@ -108,49 +109,13 @@ const Program = All({
     })
 });
 
-// /* eslint-disable-next-line @typescript-eslint/typedef */
-// const Main = pipe(
-//     Run(Program),
-//     /* eslint-disable-next-line @typescript-eslint/typedef */
-//     Effect.match({
-//         onFailure: Console.log,
-//         onSuccess: Console.log
-//     })
-//     // Effect.flatMap(Console.log)
-// );
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const Main = pipe(
+    Run(Program),
+    Effect.map(Console.log)
+);
 
 // eslint-disable-next-line @typescript-eslint/typedef
-const Foo = Effect.gen(function* ()
-{
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const Out = Run(Program);
-
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const Bar = Effect.matchEffect(Out, {
-        onFailure: (Value: PromptRunError | PlatformError.PlatformError) =>
-        {
-            return Effect.gen(function* ()
-            {
-                yield* Console.log("Foo\n".repeat(10));
-                yield* Console.dir(Value);
-            });
-        },
-        onSuccess: (Value: unknown) =>
-        {
-            return Effect.gen(function* ()
-            {
-                yield* Console.log("Foo\n".repeat(10));
-                yield* Console.dir(Value);
-            });
-        }
-    });
-
-    yield* Bar;
-    // Effect.flatMap(Console.log)
-});
-
-// Effect.runPromise(Main);
-// Effect.runPromise(Foo);
 NodeRuntime.runMain(
-    Effect.provide(Foo, NodeTerminal.layer)
+    Effect.provide(Main, NodeTerminal.layer)
 );

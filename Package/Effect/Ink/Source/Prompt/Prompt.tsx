@@ -19,7 +19,19 @@ import {
     useBoxMetrics,
     useInput
 } from "ink";
-import { Data, Effect, Predicate, type PlatformError, type Record, type Terminal } from "effect";
+import {
+    Array,
+    Data,
+    Effect,
+    Effectable,
+    Option,
+    type PlatformError,
+    Predicate,
+    type Record,
+    type Terminal,
+    flow,
+    pipe
+} from "effect";
 import {
     type ReactElement,
     type ReactNode,
@@ -30,6 +42,7 @@ import {
     useRef,
     useState
 } from "react";
+import type { Covariant } from "effect/Types";
 import type { ForegroundColor } from "chalk";
 
 export interface Input
@@ -88,7 +101,7 @@ export function Submit<A>(Value: A): Action.Submit<A>
     };
 }
 
-export interface LoopDefinition<StateType, A>
+export interface LoopDecl<StateType, A>
 {
     readonly InitialState: StateType;
     readonly Render: (State: StateType) => ReactNode;
@@ -98,7 +111,7 @@ export interface LoopDefinition<StateType, A>
     ) => Effect.Effect<Action.Action<StateType, A>>;
 }
 
-export interface LoopPrompt<A>
+export interface LoopPrompt<A> extends PromptImplBase
 {
     readonly _tag: "Loop";
     readonly InitialState: unknown;
@@ -109,74 +122,161 @@ export interface LoopPrompt<A>
     ) => Effect.Effect<Action.Action<unknown, A>>;
 }
 
-export interface SucceedPrompt<A>
+export interface SucceedPrompt<A> extends PromptImplBase
 {
     readonly _tag: "Succeed";
     readonly Value: A;
 }
 
-export interface OnSuccessPrompt<A>
+export interface OnSuccessPrompt<A> extends PromptImplBase
 {
     readonly _tag: "OnSuccess";
-    readonly Prompt: Prompt<unknown>;
-    readonly OnSuccess: (Value: unknown) => Prompt<A>;
+    readonly Prompt: PromptImpl<unknown>;
+    readonly OnSuccess: (Value: unknown) => PromptImpl<A>;
 }
 
-export type Prompt<A> =
+export interface PromptImplBase
+{
+    readonly Prose?: ReadonlyArray<Prose.Prose>;
+}
+
+export type PromptImpl<A> =
     | LoopPrompt<A>
     | SucceedPrompt<A>
     | OnSuccessPrompt<A>;
 
-export type PromptOutput<SelfType> =
-    SelfType extends Prompt<infer A>
+export const TypeId: unique symbol = Symbol.for("@sorrell/effect-ink/Prompt");
+
+export interface Prompt<A> extends Effect.Effect<
+    A,
+    | PlatformError.PlatformError
+    | Terminal.QuitError
+    | PromptRunError,
+    | Terminal.Terminal
+>
+{
+    readonly [ TypeId ]:
+    {
+        readonly _A: Covariant<A>;
+    };
+}
+
+/* eslint-disable-next-line @typescript-eslint/typedef */
+const Prototype =
+    {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        ...Effectable.Prototype<Prompt<any>>({
+            evaluate()
+            {
+                return Run(this);
+            },
+            label: "InkPrompt"
+        }),
+        [ TypeId ]:
+        {
+            _A: (_: never) => _,
+            _E: (_: never) => _,
+            _R: (_: never) => _
+        }
+    };
+
+export type Result<SelfType> =
+    SelfType extends PromptImpl<infer A>
         ? A
         : never;
 
 export function Loop<StateType, A>(
-    Definition: LoopDefinition<StateType, A>
+    Definition: LoopDecl<StateType, A>
 ): Prompt<A>
 {
-    return {
-        _tag: "Loop",
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const Out: any = Object.create(Prototype);
+    Out._tag = "Loop";
 
-        InitialState: Definition.InitialState,
-        Process: (Input: Input, State: unknown) =>
-        {
-            return Definition.Process(
-                Input,
-                State as StateType
-            ) as Effect.Effect<Action.Action<unknown, A>>;
-        },
-        Render: (State: unknown) =>
-        {
-            return Definition.Render(State as StateType);
-        }
+    Out.InitialState = Definition.InitialState;
+
+    Out.Process = (Input: Input, State: unknown) =>
+    {
+        return Definition.Process(
+            Input,
+            State as StateType
+        ) as Effect.Effect<Action.Action<unknown, A>>;
     };
+
+    Out.Render = (State: unknown) =>
+    {
+        return Definition.Render(State as StateType);
+    };
+
+    return Out;
 }
 
+/**
+ * Construct a {@link PromptImpl} that succeeds upon interpretation.
+ *
+ * @category Constructor
+ *
+ * @template A - The success value type of this.
+ *
+ * @param Value - The value to which this {@link PromptImpl} immediately resolves.
+ * @returns {PromptImpl<A>} A {@link PromptImpl} that succeeds upon interpretation.
+ */
 export function Succeed<A>(Value: A): Prompt<A>
 {
-    return {
-        _tag: "Succeed",
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const Out: any = Object.create(Prototype);
+    Out._tag = "Succeed";
+    Out.Value = Value;
 
-        Value
-    };
+    return Out;
 }
+
+export const WithHeader = <A,>(
+    Title: string,
+    Options?: Options.Header
+): ((Self: PromptImpl<A>) => PromptImpl<A>) =>
+{
+    return (Self: PromptImpl<A>): PromptImpl<A> =>
+    {
+        const Header: Prose.Prose = Prose.Prose.Header({ Title, ...Options });
+
+        if (Self.Prose !== undefined)
+        {
+            const OutProse: ReadonlyArray<Prose.Prose> = pipe(
+                Self.Prose,
+                Array.findFirstIndex(Predicate.isTagged("Header")),
+                Option.match<Option.Option<ReadonlyArray<Prose.Prose>>, number>({
+                    onNone: () => Option.some([ ...(Self.Prose ?? [ ]), Header ]),
+                    onSome: (Index: number) => Array.replace(Self.Prose ?? [ ], Index, Header)
+                }),
+                Option.getOrElse(() => [ Header ])
+            );
+
+            return {
+                ...Self,
+                Prose: OutProse
+            };
+        }
+
+        return {
+            ...Self,
+            Prose: [ Header ]
+        };
+    };
+};
 
 export function FlatMap<A, A2>(
     Self: Prompt<A>,
     OnSuccess: (Value: A) => Prompt<A2>
 ): Prompt<A2>
 {
-    return {
-        _tag: "OnSuccess",
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const Out: any = Object.create(Prototype);
+    Out._tag = "OnSuccess";
+    Out.OnSuccess = OnSuccess as (Value: unknown) => Prompt<A2>;
+    Out.Prompt = Self;
 
-        OnSuccess: (Value: unknown) =>
-        {
-            return OnSuccess(Value as A);
-        },
-        Prompt: Self as Prompt<unknown>
-    };
+    return Out as Prompt<A2>;
 }
 
 export function Map<A, A2>(
@@ -184,19 +284,16 @@ export function Map<A, A2>(
     Function: (Value: A) => A2
 ): Prompt<A2>
 {
-    return FlatMap(Self, (Value: A) =>
-    {
-        return Succeed(Function(Value));
-    });
+    return FlatMap(Self, flow(Function, Succeed));
 }
 
 export function All<const Prompts extends ReadonlyArray<Prompt<unknown>>>(
     Prompts: Prompts
-): Prompt<{ readonly [ Key in keyof Prompts ]: PromptOutput<Prompts[Key]> }>;
+): Prompt<{ readonly [ Key in keyof Prompts ]: Result<Prompts[Key]>; }>;
 
 export function All<const PromptRecord extends Readonly<Record<string, Prompt<unknown>>>>(
     Prompts: PromptRecord
-): Prompt<{ readonly [ Key in keyof PromptRecord ]: PromptOutput<PromptRecord[Key]> }>;
+): Prompt<{ readonly [ Key in keyof PromptRecord ]: Result<PromptRecord[Key]>; }>;
 
 export function All(
     Prompts:
@@ -204,22 +301,24 @@ export function All(
         | Readonly<Record<string, Prompt<unknown>>>
 ): Prompt<unknown>
 {
-    if (Array.isArray(Prompts))
+    if (globalThis.Array.isArray(Prompts))
     {
         let Accumulator: Prompt<ReadonlyArray<unknown>> = Succeed([ ]);
 
         for (const CurrentPrompt of Prompts)
         {
-            Accumulator = FlatMap(Accumulator, (Values: ReadonlyArray<unknown>) =>
-            {
-                return Map(CurrentPrompt, (Value: unknown) =>
+            Accumulator = FlatMap(
+                Accumulator,
+                (Values: ReadonlyArray<unknown>) =>
                 {
-                    return [
-                        ...Values,
-                        Value
-                    ];
+                    return Map(CurrentPrompt, (Value: unknown) =>
+                    {
+                        return [
+                            ...Values,
+                            Value
+                        ];
+                    });
                 });
-            });
         }
 
         return Accumulator;
@@ -235,7 +334,7 @@ export function All(
             {
                 return {
                     ...Values,
-                    [Key]: Value
+                    [ Key ]: Value
                 };
             });
         });
@@ -267,6 +366,15 @@ export type PromptRunError =
 //     return new PromptFailed({ Cause });
 // }
 
+export namespace Options
+{
+    export interface Header
+    {
+        readonly Body?: string;
+        readonly IsCompact?: boolean;
+    }
+}
+
 export interface RunOptions
 {
     readonly InkOptions?: RenderOptions;
@@ -283,7 +391,7 @@ interface ActiveLoopState
 
 interface PromptAppProps<A>
 {
-    readonly Prompt: Prompt<A>;
+    readonly Prompt: PromptImpl<A>;
 
     readonly Cancel: (Message?: string) => void;
     readonly Fail: (Reason: { Cause?: unknown; Message?: string; }) => void;
@@ -299,7 +407,7 @@ type RunLoopFunction = <A>(
 ) => Promise<A>;
 
 async function InterpretPromptProgram<A>(
-    Prompt: Prompt<A>,
+    Prompt: PromptImpl<A>,
     RunLoop: RunLoopFunction
 ): Promise<A>
 {
@@ -359,11 +467,7 @@ export function FlowBrace({ BoxReference, End, Middle, Start }: FlowBraceProps):
                 return [ ];
             }
 
-            return Array.from(
-                { length: Height },
-                // { length: 3 },
-                (_: unknown, Index: number) => Index
-            );
+            return Array.range(0, Height - 1);
         },
         [ Height, HasMeasured ]
     );
@@ -714,9 +818,9 @@ function PromptApp<A>(
 //     Options: RunOptions
 // ): Promise<A>
 function RunPromptAsPromise<A>(
-    Prompt: Prompt<A>,
+    Prompt: PromptImpl<A>,
     Options: RunOptions
-): Effect.Effect<A, PromptRunError>
+): Effect.Effect<A, PromptRunError | Terminal.QuitError>
 {
     return Effect.callback((
         Resume: (Out: Effect.Effect<A, PromptRunError>) => void,
@@ -844,13 +948,19 @@ function RunPromptAsPromise<A>(
     // });
 }
 
-export function Run<A>(
-    Prompt: Prompt<A>,
-    Options: RunOptions = { }
-): Effect.Effect<A, PromptRunError | PlatformError.PlatformError, Terminal.Terminal>
+export type PromptEffect<A> =
+    Effect.Effect<
+        A,
+        | Terminal.QuitError
+        | PromptRunError
+        | PlatformError.PlatformError,
+        Terminal.Terminal
+    >;
+
+export const Run = <A,>(Prompt: Prompt<A>, Options: RunOptions = { }): PromptEffect<A> =>
 {
-    return RunPromptAsPromise(Prompt, Options);
-}
+    return RunPromptAsPromise(Prompt as unknown as PromptImpl<A>, Options);
+};
 
 export namespace Validator
 {
@@ -1267,6 +1377,32 @@ export interface SelectChoice<A>
     readonly Value: A;
 }
 
+export namespace Prose
+{
+    type Positionable =
+        {
+            readonly IsAfter?: boolean;
+        };
+
+    export type Prose = Data.TaggedEnum<{
+        Header:
+            Positionable &
+            Options.Header &
+            {
+                readonly Title: ReactNode;
+            };
+
+        Exposition:
+            Positionable &
+            {
+                readonly Status: "Normal" | "Warn" | "Error";
+                readonly Content: ReactNode;
+            };
+    }>;
+
+    export const Prose: Data.TaggedEnum.Constructor<Prose> = Data.taggedEnum<Prose>();
+}
+
 export interface SelectPromptOptions<A>
 {
     readonly Message: ReactNode;
@@ -1370,9 +1506,12 @@ export function SelectPrompt<A>(
             const DisplayedChoices: ReadonlyArray<SelectChoice<A>> =
                 Options.Choices.slice(NumDisplay * State.Page, NumDisplay * (State.Page + 1));
 
+            const NumEmptyLines: number = NumDisplay - DisplayedChoices.length;
+
             const PaginatedIndex: number = State.Index % NumDisplay;
 
-            // @TODO Pagination component at the bottom.
+            // @TODO Left/right arrows to move between pages.
+            // @TODO When no longer active, just show selected choice (and no caret or hint).
 
             return (
                 <Box flexDirection="column">
@@ -1396,8 +1535,21 @@ export function SelectPrompt<A>(
                             );
                         })
                     }
+                    {
+                        NumEmptyLines > 0 &&
+                        Array.range(1, NumEmptyLines).map(() => <Text>{" "}</Text>)
+                    }
+                    {
+                        Options.Choices.length > NumDisplay &&
+                        <>
+                            <Text>{" "}</Text>
+                            <Text dimColor>
+                                Page { State.Page + 1 } of { Math.ceil(Options.Choices.length / NumDisplay) }
+                            </Text>
+                        </>
+                    }
                 </Box>
             );
         }
-    });
+    }) as unknown as Prompt<A>;
 }
