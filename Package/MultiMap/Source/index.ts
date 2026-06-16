@@ -1,7 +1,7 @@
 /**
- * Utility types and other helpers.
+ * An implementation of the multimap structure, for effect.
  *
- * @module @sorrell/effect-ink/Utility
+ * @module @sorrell/multimap
  */
 
 /**
@@ -11,4 +11,4 @@
  * @license   MIT
  */
 
-export * from "./Utility.Types.ts";
+export * as MultiMap from "./MultiMap.js";

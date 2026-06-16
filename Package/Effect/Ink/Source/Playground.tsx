@@ -63,7 +63,7 @@ import {
     Run,
     SelectPrompt,
     TextPrompt
-} from "./Prompt/Prompt.tsx";
+} from "./Prompt.tsx";
 import { Array, Console, Effect, pipe } from "effect";
 // import { Console, Effect, pipe } from "effect";
 import { NodeRuntime, NodeTerminal } from "@effect/platform-node";

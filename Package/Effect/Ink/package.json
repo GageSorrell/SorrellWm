@@ -17,21 +17,21 @@
     "@babel/core": "^7.29.0",
     "@babel/plugin-transform-export-namespace-from": "^7.27.1",
     "@babel/plugin-transform-modules-commonjs": "^7.28.6",
-    "babel-plugin-annotate-pure-calls": "^0.5.0",
+    "@effect/platform-node": "^4.0.0-beta.78",
     "@types/ini": "^4.1.1",
     "@types/node": "^25.7.0",
     "ajv": "^8.20.0",
     "arktype": "^2.2.0",
     "ast-types": "^0.14.2",
-    "immer": "^11.1.8",
-    "tinybench": "^6.0.1",
-    "valibot": "^1.4.0",
-    "typescript": "6.0.3",
+    "babel-plugin-annotate-pure-calls": "^0.5.0",
     "effect": "^4.0.0-beta.78",
-    "@effect/platform-node": "^4.0.0-beta.78",
+    "immer": "^11.1.8",
     "react-devtools": "^7.0.1",
-		"react-devtools-core": "^7.0.1",
-		"react-router": "^7.14.0"
+    "react-devtools-core": "^7.0.1",
+    "react-router": "^7.14.0",
+    "tinybench": "^6.0.1",
+    "typescript": "6.0.3",
+    "valibot": "^1.4.0"
   },
   "type": "module",
   "license": "MIT",
@@ -61,18 +61,18 @@
     "concurrency",
     "observability"
   ],
-  "sideEffects": [ ],
+  "sideEffects": [],
   "exports": {
-      "./package.json": "./package.json",
-      ".": "./Distribution/index.js",
-      "./*": {
-        "import": "./Distribution/*.js",
-        "types": "./Distribution/*.d.ts"
-      },
-      "./internal/*": null,
-      "./unstable/cli/internal/*": null,
-      "./unstable/cluster/internal/*": null,
-      "./*/index": null
+    "./package.json": "./package.json",
+    ".": "./Distribution/index.js",
+    "./*": {
+      "import": "./Distribution/*.js",
+      "types": "./Distribution/*.d.ts"
+    },
+    "./internal/*": null,
+    "./unstable/cli/internal/*": null,
+    "./unstable/cluster/internal/*": null,
+    "./*/index": null
   },
   "files": [
     "Source/**/*.ts",
@@ -85,23 +85,32 @@
     "effect@^4.0.0-beta.78": "@sorrell/effect"
   },
   "peerDependencies": {
+    "@types/react": ">=19.2.0",
     "effect": "^4.0.0-beta.78",
-		"@types/react": ">=19.2.0",
-		"react": ">=19.2.0",
-		"react-devtools-core": ">=6.1.2"
+    "ink-markdown": "^1.0.4",
+    "ink-picture": "^2.0.0",
+    "react": ">=19.2.0",
+    "react-devtools-core": ">=6.1.2"
   },
   "dependencies": {
+    "@sorrell/multimap": "1.0.7",
     "ink": "7.0.5"
   },
-"peerDependenciesMeta": {
+  "peerDependenciesMeta": {
     "effect": {
-        "optional": false
+      "optional": false
     },
-		"@types/react": {
-			"optional": true
-		},
-		"react-devtools-core": {
-			"optional": true
-		}
-	}
+    "@types/react": {
+      "optional": true
+    },
+    "react-devtools-core": {
+      "optional": true
+    },
+    "ink-markdown": {
+      "optional": true
+    },
+    "ink-picture": {
+      "optional": true
+    }
+  }
 }

@@ -1,10 +1,18 @@
 /**
+ * Low-level tooling for building prompts.  This can be used by dependents
+ * to build custom prompts.
+ *
+ * @module @sorrell/effect-ink/Prompt
+ */
+
+/**
  * @file      Prompt.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
+import * as Impl from "./PromptImpl.ts";
 import {
     type AppProps,
     Box,
@@ -32,6 +40,7 @@ import {
     flow,
     pipe
 } from "effect";
+import { PromptCanceled, PromptFailed, type PromptRunError } from "./Error.ts";
 import {
     type ReactElement,
     type ReactNode,
@@ -44,106 +53,7 @@ import {
 } from "react";
 import type { Covariant } from "effect/Types";
 import type { ForegroundColor } from "chalk";
-
-export interface Input
-{
-    readonly Text: string;
-    readonly Key: InkKey;
-}
-
-export namespace Action
-{
-    export interface Beep
-    {
-        readonly _tag: "Beep";
-    }
-
-    export interface NextFrame<StateType>
-    {
-        readonly _tag: "NextFrame";
-        readonly State: StateType;
-    }
-
-    export interface Submit<A>
-    {
-        readonly _tag: "Submit";
-        readonly Value: A;
-    }
-
-    export type Action<StateType, A> =
-        | Beep
-        | NextFrame<StateType>
-        | Submit<A>;
-}
-
-export function Beep(): Action.Beep
-{
-    return {
-        _tag: "Beep"
-    };
-}
-
-export function NextFrame<StateType>(State: StateType): Action.NextFrame<StateType>
-{
-    return {
-        _tag: "NextFrame",
-
-        State
-    };
-}
-
-export function Submit<A>(Value: A): Action.Submit<A>
-{
-    return {
-        _tag: "Submit",
-
-        Value
-    };
-}
-
-export interface LoopDecl<StateType, A>
-{
-    readonly InitialState: StateType;
-    readonly Render: (State: StateType) => ReactNode;
-    readonly Process: (
-        Input: Input,
-        State: StateType
-    ) => Effect.Effect<Action.Action<StateType, A>>;
-}
-
-export interface LoopPrompt<A> extends PromptImplBase
-{
-    readonly _tag: "Loop";
-    readonly InitialState: unknown;
-    readonly Render: (State: unknown) => ReactNode;
-    readonly Process: (
-        Input: Input,
-        State: unknown
-    ) => Effect.Effect<Action.Action<unknown, A>>;
-}
-
-export interface SucceedPrompt<A> extends PromptImplBase
-{
-    readonly _tag: "Succeed";
-    readonly Value: A;
-}
-
-export interface OnSuccessPrompt<A> extends PromptImplBase
-{
-    readonly _tag: "OnSuccess";
-    readonly Prompt: PromptImpl<unknown>;
-    readonly OnSuccess: (Value: unknown) => PromptImpl<A>;
-}
-
-export interface PromptImplBase
-{
-    readonly Prose?: ReadonlyArray<Prose.Prose>;
-}
-
-export type PromptImpl<A> =
-    | LoopPrompt<A>
-    | SucceedPrompt<A>
-    | OnSuccessPrompt<A>;
+import type { PromptInput } from "./Input.ts";
 
 export const TypeId: unique symbol = Symbol.for("@sorrell/effect-ink/Prompt");
 
@@ -152,7 +62,7 @@ export interface Prompt<A> extends Effect.Effect<
     | PlatformError.PlatformError
     | Terminal.QuitError
     | PromptRunError,
-    | Terminal.Terminal
+    Terminal.Terminal
 >
 {
     readonly [ TypeId ]:
@@ -181,7 +91,7 @@ const Prototype =
     };
 
 export type Result<SelfType> =
-    SelfType extends PromptImpl<infer A>
+    SelfType extends Impl.PromptImpl<infer A>
         ? A
         : never;
 
@@ -195,7 +105,7 @@ export function Loop<StateType, A>(
 
     Out.InitialState = Definition.InitialState;
 
-    Out.Process = (Input: Input, State: unknown) =>
+    Out.Process = (Input: PromptInput, State: unknown) =>
     {
         return Definition.Process(
             Input,
@@ -212,14 +122,14 @@ export function Loop<StateType, A>(
 }
 
 /**
- * Construct a {@link PromptImpl} that succeeds upon interpretation.
+ * Construct a {@link Impl.PromptImpl} that succeeds upon interpretation.
  *
  * @category Constructor
  *
  * @template A - The success value type of this.
  *
- * @param Value - The value to which this {@link PromptImpl} immediately resolves.
- * @returns {PromptImpl<A>} A {@link PromptImpl} that succeeds upon interpretation.
+ * @param Value - The value to which this {@link Impl.PromptImpl} immediately resolves.
+ * @returns {Impl.PromptImpl<A>} A {@link Impl.PromptImpl} that succeeds upon interpretation.
  */
 export function Succeed<A>(Value: A): Prompt<A>
 {
@@ -234,9 +144,9 @@ export function Succeed<A>(Value: A): Prompt<A>
 export const WithHeader = <A,>(
     Title: string,
     Options?: Options.Header
-): ((Self: PromptImpl<A>) => PromptImpl<A>) =>
+): ((Self: Impl.PromptImpl<A>) => Impl.PromptImpl<A>) =>
 {
-    return (Self: PromptImpl<A>): PromptImpl<A> =>
+    return (Self: Impl.PromptImpl<A>): Impl.PromptImpl<A> =>
     {
         const Header: Prose.Prose = Prose.Prose.Header({ Title, ...Options });
 
@@ -343,29 +253,6 @@ export function All(
     return Accumulator;
 }
 
-export class PromptCanceled extends Data.TaggedError("PromptCanceled")<{ readonly Message?: string; }> { }
-
-export class PromptFailed extends Data.TaggedError("PromptFailed")<
-    Readonly<{
-        Cause?: unknown;
-        Message?: string;
-    }>
-> { }
-
-export type PromptRunError =
-    | PromptCanceled
-    | PromptFailed;
-
-// function ToPromptRunError(Cause: unknown): PromptRunError
-// {
-//     if (Predicate.isTagged(Cause, "PromptCanceled") || Predicate.isTagged(Cause, "PromptFailed"))
-//     {
-//         return Cause as PromptRunError;
-//     }
-
-//     return new PromptFailed({ Cause });
-// }
-
 export namespace Options
 {
     export interface Header
@@ -381,17 +268,9 @@ export interface RunOptions
     readonly OnBeep?: () => void;
 }
 
-interface ActiveLoopState
-{
-    readonly Loop: LoopPrompt<unknown>;
-    readonly State: unknown;
-    readonly Resolve: (Value: unknown) => void;
-    readonly Reject: (Cause: unknown) => void;
-}
-
 interface PromptAppProps<A>
 {
-    readonly Prompt: PromptImpl<A>;
+    readonly Prompt: Impl.PromptImpl<A>;
 
     readonly Cancel: (Message?: string) => void;
     readonly Fail: (Reason: { Cause?: unknown; Message?: string; }) => void;
@@ -402,12 +281,10 @@ interface PromptAppProps<A>
     readonly OnBeep?: () => void;
 }
 
-type RunLoopFunction = <A>(
-    Loop: LoopPrompt<A>
-) => Promise<A>;
+type RunLoopFunction = <A>(Loop: Impl.LoopPrompt<A>) => Promise<A>;
 
 async function InterpretPromptProgram<A>(
-    Prompt: PromptImpl<A>,
+    Prompt: Impl.PromptImpl<A>,
     RunLoop: RunLoopFunction
 ): Promise<A>
 {
@@ -513,15 +390,15 @@ function PromptApp<A>(
 {
     const App: AppProps = useApp();
 
-    const [ ActiveLoop, SetActiveLoop ] = useState<ActiveLoopState | undefined>(undefined);
+    const [ ActiveLoop, SetActiveLoop ] = useState<Impl.ActiveLoopState | undefined>(undefined);
 
     type RenderState =
-        Pick<LoopPrompt<unknown>, "Render"> &
-        Pick<ActiveLoopState, "State">;
+        Pick<Impl.LoopPrompt<unknown>, "Render"> &
+        Pick<Impl.ActiveLoopState, "State">;
 
     const [ SubmittedFields, SetSubmittedFields ] = useState<ReadonlyArray<RenderState>>([ ]);
     /* eslint-disable-next-line @typescript-eslint/typedef */
-    const PushSubmitted = useCallback((Loop: ActiveLoopState): void =>
+    const PushSubmitted = useCallback((Loop: Impl.ActiveLoopState): void =>
     {
         SetSubmittedFields((Old: ReadonlyArray<RenderState>): ReadonlyArray<RenderState> =>
         {
@@ -539,15 +416,15 @@ function PromptApp<A>(
         });
     }, [  ]);
 
-    const ActiveLoopRef: RefObject<ActiveLoopState | undefined> =
-        useRef<ActiveLoopState | undefined>(undefined);
+    const ActiveLoopRef: RefObject<Impl.ActiveLoopState | undefined> =
+        useRef<Impl.ActiveLoopState | undefined>(undefined);
 
     const IsProcessingRef: RefObject<boolean> = useRef(false);
     const IsCompleteRef: RefObject<boolean> = useRef(false);
 
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const SetCurrentActiveLoop = useCallback(
-        (NextActiveLoop: ActiveLoopState | undefined) =>
+        (NextActiveLoop: Impl.ActiveLoopState | undefined) =>
         {
             ActiveLoopRef.current = NextActiveLoop;
             SetActiveLoop(NextActiveLoop);
@@ -557,14 +434,14 @@ function PromptApp<A>(
 
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const RunLoop = useCallback(
-        <LoopOutput,>(Loop: LoopPrompt<LoopOutput>): Promise<LoopOutput> =>
+        <LoopOutput,>(Loop: Impl.LoopPrompt<LoopOutput>): Promise<LoopOutput> =>
         {
             /* eslint-disable-next-line @typescript-eslint/typedef */
             return new Promise<LoopOutput>((Resolve, Reject) =>
             {
-                const NextActiveLoop: ActiveLoopState =
+                const NextActiveLoop: Impl.ActiveLoopState =
                     {
-                        Loop: Loop as LoopPrompt<unknown>,
+                        Loop: Loop as Impl.LoopPrompt<unknown>,
                         Reject,
                         Resolve: Resolve as (Value: unknown) => void,
                         State: Loop.InitialState
@@ -591,7 +468,7 @@ function PromptApp<A>(
                     }
 
                     IsCompleteRef.current = true;
-                    Props.Submit(Value);
+                    Props.Impl.Submit(Value);
                     // Props.Resolve(Value);
                     App.exit();
                 },
@@ -619,7 +496,7 @@ function PromptApp<A>(
 
                 IsCompleteRef.current = true;
 
-                const CurrentActiveLoop: ActiveLoopState | undefined = ActiveLoopRef.current;
+                const CurrentActiveLoop: Impl.ActiveLoopState | undefined = ActiveLoopRef.current;
 
                 if (CurrentActiveLoop !== undefined)
                 {
@@ -635,7 +512,7 @@ function PromptApp<A>(
 
     useInput((TextInput: string, Key: InkKey) =>
     {
-        const CurrentActiveLoop: ActiveLoopState | undefined = ActiveLoopRef.current;
+        const CurrentActiveLoop: Impl.ActiveLoopState | undefined = ActiveLoopRef.current;
 
         if (CurrentActiveLoop === undefined)
         {
@@ -649,7 +526,7 @@ function PromptApp<A>(
 
         IsProcessingRef.current = true;
 
-        const Input: Input =
+        const Input: PromptInput =
             {
                 Key,
                 Text: TextInput
@@ -671,9 +548,9 @@ function PromptApp<A>(
                         return;
                     }
 
-                    case "NextFrame":
+                    case "Impl.NextFrame":
                     {
-                        const NextActiveLoop: ActiveLoopState =
+                        const NextActiveLoop: Impl.ActiveLoopState =
                             {
                                 ...CurrentActiveLoop,
                                 State: Action.State
@@ -818,7 +695,7 @@ function PromptApp<A>(
 //     Options: RunOptions
 // ): Promise<A>
 function RunPromptAsPromise<A>(
-    Prompt: PromptImpl<A>,
+    Prompt: Impl.PromptImpl<A>,
     Options: RunOptions
 ): Effect.Effect<A, PromptRunError | Terminal.QuitError>
 {
@@ -959,7 +836,7 @@ export type PromptEffect<A> =
 
 export const Run = <A,>(Prompt: Prompt<A>, Options: RunOptions = { }): PromptEffect<A> =>
 {
-    return RunPromptAsPromise(Prompt as unknown as PromptImpl<A>, Options);
+    return RunPromptAsPromise(Prompt as unknown as Impl.PromptImpl<A>, Options);
 };
 
 export namespace Validator
@@ -1014,56 +891,60 @@ export namespace State
 }
 
 function InsertIntoTextPromptState(
-    State: State.Text,
     Text: string
-): State.Text
+): (State: State.Text) => State.Text
 {
-    const BeforeCursor: string = State.Value.slice(
-        0,
-        State.CursorIndex
-    );
+    return function (State: State.Text)
+    {
+        const BeforeCursor: string = State.Value.slice(
+            0,
+            State.CursorIndex
+        );
 
-    const AfterCursor: string = State.Value.slice(State.CursorIndex);
+        const AfterCursor: string = State.Value.slice(State.CursorIndex);
 
-    return {
-        ...State,
-        CursorIndex: State.CursorIndex + Text.length,
-        IsActive: State.IsActive,
-        Value: `${ BeforeCursor }${ Text }${ AfterCursor }`
+        return {
+            ...State,
+            CursorIndex: State.CursorIndex + Text.length,
+            IsActive: State.IsActive,
+            Value: `${ BeforeCursor }${ Text }${ AfterCursor }`
+        };
     };
 }
 
 function SetErrorMessage<StateType extends State.Internal>(
-    State: StateType,
     Validation:
         | true
         | string
         | { ErrorMessage: string; FailedKeys: ReadonlyArray<string>; }
-): StateType
+): (State: StateType) => StateType
 {
-    if (Validation === true)
+    return function (State: StateType): StateType
     {
-        return {
-            ...State,
-            ErrorMessage: undefined,
-            FailedKeys: [ ]
-        };
-    }
-    else if (typeof Validation === "string")
-    {
-        return {
-            ...State,
-            ErrorMessage: Validation,
-            FailedKeys: [ ]
-        };
-    }
-    else
-    {
-        return {
-            ...State,
-            ...Validation
-        };
-    }
+        if (Validation === true)
+        {
+            return {
+                ...State,
+                ErrorMessage: undefined,
+                FailedKeys: [ ]
+            };
+        }
+        else if (typeof Validation === "string")
+        {
+            return {
+                ...State,
+                ErrorMessage: Validation,
+                FailedKeys: [ ]
+            };
+        }
+        else
+        {
+            return {
+                ...State,
+                ...Validation
+            };
+        }
+    };
 }
 
 function RemoveBeforeCursor(
@@ -1100,22 +981,22 @@ function RemoveAtCursor(
     };
 }
 
-function MoveCursor(
-    State: State.Text,
-    CursorIndex: number
-): State.Text
+function MoveCursor(CursorIndex: number): (State: State.Text) => State.Text
 {
-    const NextCursorIndex: number = Math.max(
-        0,
-        Math.min(
-            CursorIndex,
-            State.Value.length
-        )
-    );
+    return function (State: State.Text): State.Text
+    {
+        const NextCursorIndex: number = Math.max(
+            0,
+            Math.min(
+                CursorIndex,
+                State.Value.length
+            )
+        );
 
-    return {
-        ...State,
-        CursorIndex: NextCursorIndex
+        return {
+            ...State,
+            CursorIndex: NextCursorIndex
+        };
     };
 }
 
@@ -1192,8 +1073,11 @@ export function TextPrompt(
             IsActive: true,
             Value: InitialValue
         },
-        Process: (Input: Input, State: State.Text) =>
+        Process: (Input: PromptInput, State: State.Text) =>
         {
+            /* eslint-disable-next-line @typescript-eslint/typedef */
+            const GetNextFrame = Impl.NextFrame(State);
+
             // @TODO If return is pressed and value is empty, then use placeholder.
             if (Input.Key.return)
             {
@@ -1203,50 +1087,50 @@ export function TextPrompt(
 
                 if (Validation === true)
                 {
-                    return Effect.succeed(Submit(State.Value));
+                    return Effect.succeed(Impl.Submit(State.Value));
                 }
                 else
                 {
-                    return Effect.succeed(NextFrame(SetErrorMessage(State, Validation)));
+                    return GetNextFrame(SetErrorMessage<State.Text>(Validation));
                 }
             }
 
             if (Input.Key.backspace)
             {
-                return Effect.succeed(NextFrame(RemoveBeforeCursor(State)));
+                return GetNextFrame(RemoveBeforeCursor);
             }
 
             if (Input.Key.delete)
             {
-                return Effect.succeed(NextFrame(RemoveAtCursor(State)));
+                return GetNextFrame(RemoveAtCursor);
             }
 
             if (Input.Key.leftArrow)
             {
-                return Effect.succeed(NextFrame(MoveCursor(State, State.CursorIndex - 1)));
+                return GetNextFrame(MoveCursor(State.CursorIndex - 1));
             }
 
             if (Input.Key.rightArrow)
             {
-                return Effect.succeed(NextFrame(MoveCursor(State, State.CursorIndex + 1)));
+                return GetNextFrame(MoveCursor(State.CursorIndex + 1));
             }
 
             if (Input.Key.home)
             {
-                return Effect.succeed(NextFrame(MoveCursor(State, 0)));
+                return GetNextFrame(MoveCursor(0));
             }
 
             if (Input.Key.end)
             {
-                return Effect.succeed(NextFrame(MoveCursor(State, State.Value.length)));
+                return GetNextFrame(MoveCursor(State.Value.length));
             }
 
             if (Input.Text.length > 0 && !Input.Key.ctrl && !Input.Key.meta)
             {
-                return Effect.succeed(NextFrame(InsertIntoTextPromptState(State, Input.Text)));
+                return GetNextFrame(InsertIntoTextPromptState(Input.Text));
             }
 
-            return Effect.succeed(Beep());
+            return Effect.succeed(Impl.Beep());
         },
         Render: (State: State.Text) =>
         {
@@ -1323,11 +1207,14 @@ export function ConfirmPrompt(
         InitialState: {
             Value: Options.InitialValue ?? true
         },
-        Process: (Input: Input, State: ConfirmPromptState) =>
+        Process: (Input: PromptInput, State: ConfirmPromptState) =>
         {
+            /* eslint-disable-next-line @typescript-eslint/typedef */
+            const GetNextFrame = Impl.NextFrame(State);
+
             if (Input.Key.return)
             {
-                return Effect.succeed(Submit(State.Value));
+                return Effect.succeed(Impl.Submit(State.Value));
             }
 
             if (
@@ -1336,7 +1223,7 @@ export function ConfirmPrompt(
                 Input.Key.rightArrow
             )
             {
-                return Effect.succeed(NextFrame({ Value: true }));
+                return GetNextFrame({ Value: true });
             }
 
             if (
@@ -1345,15 +1232,15 @@ export function ConfirmPrompt(
                 Input.Key.leftArrow
             )
             {
-                return Effect.succeed(NextFrame({ Value: false }));
+                return GetNextFrame({ Value: false });
             }
 
             if (Input.Text === " ")
             {
-                return Effect.succeed(NextFrame({ Value: !State.Value }));
+                return GetNextFrame({ Value: !State.Value });
             }
 
-            return Effect.succeed(Beep());
+            return Effect.succeed(Impl.Beep());
         },
         Render: (State: ConfirmPromptState) =>
         {
@@ -1413,29 +1300,31 @@ export interface SelectPromptOptions<A>
 }
 
 function MoveSelectIndex(
-    State: State.Select,
     NumDisplay: number,
     Length: number,
     Amount: number
-): State.Select
+): (State: State.Select) => State.Select
 {
-    const NextIndex: number = (State.Index + Amount + Length) % Length;
-    const Page: number = ((): number =>
+    return function (State: State.Select): State.Select
     {
-        let Out: number = 0;
-
-        while (Out * NumDisplay < NextIndex + 1)
+        const NextIndex: number = (State.Index + Amount + Length) % Length;
+        const Page: number = ((): number =>
         {
-            Out++;
-        }
+            let Out: number = 0;
 
-        return Out - 1;
-    })();
+            while (Out * NumDisplay < NextIndex + 1)
+            {
+                Out++;
+            }
 
-    return {
-        ...State,
-        Index: NextIndex,
-        Page
+            return Out - 1;
+        })();
+
+        return {
+            ...State,
+            Index: NextIndex,
+            Page
+        };
     };
 }
 
@@ -1471,35 +1360,36 @@ export function SelectPrompt<A>(
                     : 0
             )
         },
-        Process: (Input: Input, State: State.Select) =>
+        Process: (Input: PromptInput, State: State.Select) =>
         {
+            /* eslint-disable-next-line @typescript-eslint/typedef */
+            const GetNextFrame = Impl.NextFrame(State);
+
             if (Input.Key.return)
             {
                 // @TODO Implement Validation
-                return Effect.succeed(Submit(Options.Choices[State.Index]!.Value));
+                return Effect.succeed(Impl.Submit(Options.Choices[State.Index]!.Value));
             }
 
             if (Input.Key.upArrow || Input.Text === "k")
             {
-                return Effect.succeed(NextFrame(MoveSelectIndex(
-                    State,
+                return GetNextFrame(MoveSelectIndex(
                     NumDisplay,
                     Options.Choices.length,
                     -1
-                )));
+                ));
             }
 
             if (Input.Key.downArrow || Input.Text === "j")
             {
-                return Effect.succeed(NextFrame(MoveSelectIndex(
-                    State,
+                return GetNextFrame(MoveSelectIndex(
                     NumDisplay,
                     Options.Choices.length,
                     1
-                )));
+                ));
             }
 
-            return Effect.succeed(Beep());
+            return Effect.succeed(Impl.Beep());
         },
         Render: (State: State.Select) =>
         {

@@ -168,6 +168,7 @@
             "minisearch",
             "mspaint",
             "MSVC",
+            "multimap",
             "Napi",
             "nlohmann",
             "NODELIB",

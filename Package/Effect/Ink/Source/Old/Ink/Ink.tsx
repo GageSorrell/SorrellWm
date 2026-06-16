@@ -19,7 +19,7 @@ import { Context, Effect, Layer, type Scope } from "effect";
 import type {
     InkExitError,
     InkRenderError
-} from "../Error/Error.ts";
+} from "../../Error.ts";
 import type { ReactNode } from "react";
 import { RuntimeProvider } from "../React/index.ts";
 

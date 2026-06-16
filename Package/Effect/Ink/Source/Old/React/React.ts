@@ -36,7 +36,7 @@ import {
     InkComponentEffectError,
     InkRuntimeProviderMissingError,
     inkRuntimeProviderMissing
-} from "../Error/Error.ts";
+} from "../../Error.ts";
 
 const EmptyDependencies: DependencyList = [ ];
 

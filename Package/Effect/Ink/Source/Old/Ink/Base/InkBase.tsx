@@ -6,7 +6,7 @@
  */
 
 import { Context, Effect, Layer, type Scope } from "effect";
-import { InkAlreadyUnmountedError, InkExitError, InkRenderError } from "../../Error/Error.ts";
+import { InkAlreadyUnmountedError, InkExitError, InkRenderError } from "../../../Error.ts";
 import type { InkBaseInstance, RenderOptions } from "./InkBase.Types.ts";
 import { type Instance as InkNativeInstance, render as InkRender } from "ink";
 import type { ReactNode } from "react";

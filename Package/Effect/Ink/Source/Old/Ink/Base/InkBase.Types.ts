@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-import type { InkAlreadyUnmountedError, InkExitError, InkRenderError } from "../../Error/Error.ts";
+import type { InkAlreadyUnmountedError, InkExitError, InkRenderError } from "../../../Error.ts";
 import type { Effect } from "effect";
 import type { ReactNode } from "react";
 export type { RenderOptions } from "ink";

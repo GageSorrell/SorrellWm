@@ -609,7 +609,7 @@ module.exports = {
             "error",
             {
                 argsIgnorePattern: "^_",
-                varsIgnorePattern: "^_$"
+                varsIgnorePattern: "^_"
             }
         ],
         "@typescript-eslint/typedef":

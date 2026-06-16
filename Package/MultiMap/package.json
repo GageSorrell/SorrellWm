@@ -1,0 +1,71 @@
+{
+  "name": "@sorrell/multimap",
+  "version": "1.0.8",
+  "description": "An implementation of the multimap structure, for effect.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "play": "node ./Distribution/Playground.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "typescript": "6.0.3"
+  },
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/MultiMap",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "homepage": "https://multimap.sorrell.sh",
+  "tags": [
+    "typescript",
+    "effect",
+    "multimap",
+    "multi-map",
+    "sorrell",
+    "stucture",
+    "data-structure"
+  ],
+  "keywords": [
+    "typescript",
+    "effect",
+    "multimap",
+    "multi-map",
+    "sorrell",
+    "stucture",
+    "data-structure"
+  ],
+  "sideEffects": [],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./Distribution/index.js",
+    "./MultiMap": {
+      "import": "./Distribution/MultiMap.js",
+      "types": "./Distribution/MultiMap.d.ts"
+    }
+  },
+  "files": [
+    "Source/**/*.ts",
+    "Distribution/**/*.js",
+    "Distribution/**/*.js.map",
+    "Distribution/**/*.d.ts",
+    "Distribution/**/*.d.ts.map"
+  ],
+  "peerDependencies": {
+    "effect": "^4.0.0-beta.78"
+  },
+  "peerDependenciesMeta": {
+    "effect": {
+      "optional": false
+    }
+  }
+}

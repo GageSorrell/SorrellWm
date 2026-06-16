@@ -53,7 +53,7 @@
     "@sorrell/cli-utilities": "1.0.95",
     "@sorrell/utilities": "1.2.33",
     "csv-parse": "^6.2.1",
-    "effect": "4.0.0-beta.78",
+    "effect": "^4.0.0-beta.78",
     "yaml": "^2.8.4"
   }
 }

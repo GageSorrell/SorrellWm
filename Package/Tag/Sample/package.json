@@ -86,7 +86,7 @@
   },
   "dependencies": {
     "@sorrell/utilities": "1.2.33",
-    "effect": "4.0.0-beta.78",
+    "effect": "^4.0.0-beta.78",
     "ts-tag": "^1.0.2"
   },
   "main": "index.js"

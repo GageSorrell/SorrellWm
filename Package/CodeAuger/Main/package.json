@@ -64,10 +64,10 @@
     "@types/node": "24.13.0"
   },
   "dependencies": {
-    "@effect/platform-node": "4.0.0-beta.78",
+    "@effect/platform-node": "^4.0.0-beta.78",
     "@clack/prompts": "1.4.0",
     "@sorrell/cli-utilities": "1.0.95",
-    "@sorrell/effect": "4.0.0-beta.78",
+    "@sorrell/effect": "^4.0.0-beta.78",
     "@sorrell/utilities": "1.2.33",
     "cli-table3": "0.6.5",
     "typescript": "6.0.3"
