@@ -5,6 +5,7 @@
   "scripts": {
     "codegen": "effect-utils codegen",
     "build": "tsc -b tsconfig.json && npm run babel",
+    "build:simple": "tsc -b tsconfig.json",
     "babel": "babel Distribution --plugins annotate-pure-calls --out-dir Distribution --source-maps",
     "check": "tsc -b tsconfig.json",
     "test": "vitest --sequence.concurrent=false",
@@ -93,8 +94,9 @@
     "react-devtools-core": ">=6.1.2"
   },
   "dependencies": {
-    "@sorrell/multimap": "1.0.7",
-    "ink": "7.0.5"
+    "@sorrell/effect-rational": "1.0.1",
+    "@sorrell/multimap": "1.0.9",
+    "ink": "7.1.0"
   },
   "peerDependenciesMeta": {
     "effect": {

@@ -1,5 +1,5 @@
 {
-    "File Header (JavaScript / TypeScript)":
+    "Copyright Header (JavaScript / TypeScript)":
     {
         "prefix": "CopyrightHeader",
         "body":
@@ -15,7 +15,7 @@
         "description": "Inserts license information.",
         "scope": "javascript,typescript,javascriptreact,typescriptreact,cpp"
     },
-    "File Header (Vue)":
+    "Copyright Header (Vue)":
     {
         "prefix": "CopyrightHeader",
         "body":

@@ -1,0 +1,92 @@
+{
+  "name": "@sorrell/effect-number",
+  "version": "4.0.0-beta.78",
+  "description": "Data structures for the common number sets, to use with effect.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "play": "node ./Distribution/Playground.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "effect": "4.0.0-beta.78"
+  },
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Effect/Number",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "homepage": "https://number.sorrell.sh",
+  "tags": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "keywords": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "sideEffects": [ ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./Distribution/index.js",
+    "./BigRational": {
+      "import": "./Distribution/BigRational.js",
+      "types": "./Distribution/BigRational.d.ts"
+    },
+    "./Irrational": {
+      "import": "./Distribution/Irrational.js",
+      "types": "./Distribution/Irrational.d.ts"
+    },
+    "./Natural": {
+      "import": "./Distribution/Natural.js",
+      "types": "./Distribution/Natural.d.ts"
+    },
+    "./Rational": {
+      "import": "./Distribution/Rational.js",
+      "types": "./Distribution/Rational.d.ts"
+    },
+    "./Real": {
+      "import": "./Distribution/Real.js",
+      "types": "./Distribution/Real.d.ts"
+    },
+    "./UnsignedInt": {
+      "import": "./Distribution/Rational.js",
+      "types": "./Distribution/Rational.d.ts"
+    },
+    "./Int": {
+      "import": "./Distribution/Rational.js",
+      "types": "./Distribution/Rational.d.ts"
+    }
+  },
+  "files": [
+    "Source/**/*.ts",
+    "Distribution/**/*.js",
+    "Distribution/**/*.js.map",
+    "Distribution/**/*.d.ts",
+    "Distribution/**/*.d.ts.map"
+  ],
+  "overrides": {
+    "effect@^4.0.0-beta.78": "@sorrell/effect"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0-beta.78"
+  },
+  "peerDependenciesMeta": {
+    "effect": {
+      "optional": false
+    }
+  }
+}

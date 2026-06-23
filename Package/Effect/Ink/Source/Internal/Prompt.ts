@@ -1,7 +1,8 @@
 /**
- * Internal tools for the {@link \@sorrell/effect-ink/Prompt} module.
+ * Internal tooling for the {@link \@sorrell/effect-ink/Prompt | Prompt} module.
  *
  * @module @sorrell/effect-ink/Internal/Prompt
+ * @internal
  */
 
 /**
@@ -10,4 +11,3 @@
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-

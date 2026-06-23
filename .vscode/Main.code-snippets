@@ -1,11 +1,27 @@
 {
-    "EffectGen":{
+    "Effect.gen":
+    {
         "body": "Effect.gen(function* ()\n{\n    $0\n});",
         "prefix": "_EffectGen"
     },
-    "UseState":
+    "Module Header":
+    {
+        "body": "/**\n *$0\n * \n * @module @sorrell/${1:Name}\n */\n",
+        "prefix": "_Module",
+        "description": "A TypeDoc containing a `@module` tag, to give a documentation-generator--compatible description of the module.",
+        "scope": "javascript,typescript,javascriptreact,typescriptreact"
+    },
+    "useState":
     {
         "body": "const [ ${1:Name}, Set${1:Name} ] = useState<${2:Type}>(${3:Default});",
         "prefix": "_UseState"
+    },
+    "Named Barrel Export Statement":
+    {
+        "body": "export * as ${1:Name} from \"./$1.ts\";",
+        "include": "**/index.ts",
+        "prefix": "_Export",
+        "description": "A TypeDoc containing a `@module` tag, to give a documentation-generator--compatible description of the module.",
+        "scope": "javascript,typescript"
     }
 }

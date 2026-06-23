@@ -1,0 +1,41 @@
+{
+    "@sorrell/effect-ink Module Header":
+    {
+        "prefix": "_Ink",
+        "include":
+        [
+            "**/Package/Effect/Ink/**/*.ts",
+            "**/Package/Effect/Ink/**/*.tsx"
+        ],
+        "body":
+        [
+            "/**",
+            " * $0",
+            " *",
+            " * @module @sorrell/effect-ink/${1:ModulePath}",
+            " */",
+            "",
+            "/**",
+            " * @file      $TM_FILENAME",
+	        " * @author    Gage Sorrell <gage@sorrell.sh>",
+            " * @copyright (c) 2026 Gage Sorrell",
+	        " * @license   MIT",
+            " */",
+            ""
+        ],
+        "description": "A `@module` header comment, and the copyright header.",
+        "scope": "javascript,typescript,javascriptreact,typescriptreact"
+    },
+    "@sorrell/effect-ink Module `@link` tag.":
+    {
+        "prefix": "_Link",
+        "include":
+        [
+            "**/Package/Effect/Ink/**/*.ts",
+            "**/Package/Effect/Ink/**/*.tsx"
+        ],
+        "body": "{@link \\@sorrell/effect-ink/${1:ModulePath}}",
+        "description": "A TypeDoc `@link` to a module in @sorrell/effect-ink.",
+        "scope": "javascript,typescript,javascriptreact,typescriptreact"
+    }
+}

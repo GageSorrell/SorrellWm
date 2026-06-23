@@ -12,3 +12,4 @@
  */
 
 export * as MultiMap from "./MultiMap.js";
+export * as MutableMultiMap from "./MutableMultiMap.js";

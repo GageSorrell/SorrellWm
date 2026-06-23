@@ -1,6 +1,6 @@
 {
   "name": "@sorrell/multimap",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "An implementation of the multimap structure, for effect.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -51,6 +51,10 @@
     "./MultiMap": {
       "import": "./Distribution/MultiMap.js",
       "types": "./Distribution/MultiMap.d.ts"
+    },
+    "./MutableMultiMap": {
+      "import": "./Distribution/MutableMultiMap.js",
+      "types": "./Distribution/MutableMultiMap.d.ts"
     }
   },
   "files": [

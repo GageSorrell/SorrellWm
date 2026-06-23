@@ -1,0 +1,68 @@
+{
+  "name": "@sorrell/effect-rational",
+  "version": "1.0.1",
+  "description": "Data structure for the rational numbers, to use with effect.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "play": "node ./Distribution/Playground.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "effect": "4.0.0-beta.78"
+  },
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Effect/Rational",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "homepage": "https://rational.sorrell.sh",
+  "tags": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "keywords": [
+    "typescript",
+    "error-handling",
+    "concurrency",
+    "observability"
+  ],
+  "sideEffects": [],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./Distribution/index.js",
+    "./Rational": {
+      "import": "./Distribution/Rational.js",
+      "types": "./Distribution/Rational.d.ts"
+    }
+  },
+  "files": [
+    "Source/**/*.ts",
+    "Distribution/**/*.js",
+    "Distribution/**/*.js.map",
+    "Distribution/**/*.d.ts",
+    "Distribution/**/*.d.ts.map"
+  ],
+  "overrides": {
+    "effect@^4.0.0-beta.78": "@sorrell/effect"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0-beta.78"
+  },
+  "peerDependenciesMeta": {
+    "effect": {
+      "optional": false
+    }
+  }
+}

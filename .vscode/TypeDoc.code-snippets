@@ -1,0 +1,18 @@
+{
+    "@link":
+    {
+        "include":
+        [
+            "*.ts",
+            "*.tsx",
+            "*.js",
+            "*.jsx",
+            "!**/Package/Effect/Ink/Source/*.ts",
+            "!**/Package/Effect/Ink/Source/*.tsx"
+        ],
+        "prefix": "_LinkFull",
+        "body": "{@link ${1:URL} | ${2:DisplayText}}",
+        "description": "A TypeDoc `@link`.",
+        "scope": "javascript,typescript,javascriptreact,typescriptreact"
+    }
+}

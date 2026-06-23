@@ -8,45 +8,28 @@
  * and transforming prompt output, and support for running prompts through the
  * `Terminal` service.
  *
- * @module @sorrell/effect/unstable/cli/Prompt
  * @since 4.0.0
  */
+import * as Arr from "../../Array.ts"
+import type { NoSuchElementError } from "../../Cause.ts"
+import type * as Cause from "../../Cause.ts"
+import * as Data from "../../Data.ts"
+import * as Effect from "../../Effect.ts"
+import * as Effectable from "../../Effectable.ts"
+import * as FileSystem from "../../FileSystem.ts"
+import { dual, pipe } from "../../Function.ts"
+import * as EffectNumber from "../../Number.ts"
+import * as Option from "../../Option.ts"
+import * as Path from "../../Path.ts"
+import * as Predicate from "../../Predicate.ts"
+import * as Queue from "../../Queue.ts"
+import * as Redacted from "../../Redacted.ts"
+import * as Terminal from "../../Terminal.ts"
+import type { Covariant } from "../../Types.ts"
+import * as Ansi from "./internal/ansi.ts"
+import type * as Primitive from "./Primitive.ts"
 
-/**
- * @file      Prompt.ts
- * @author    Gage Sorrell <gage@sorrell.sh>
- * @copyright (c) 2026 Gage Sorrell
- * @license   MIT
- */
-
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-object-type */
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-namespace */
-/* eslint-disable @typescript-eslint/typedef, jsdoc/require-jsdoc, jsdoc/require-param */
-/* eslint-disable jsdoc/require-returns, prefer-rest-params */
-
-import * as Ansi from "./internal/ansi.ts";
-import * as Arr from "../../Array.ts";
-import type * as Cause from "../../Cause.ts";
-import * as Data from "../../Data.ts";
-import * as Effect from "../../Effect.ts";
-import * as EffectNumber from "../../Number.ts";
-import * as Effectable from "../../Effectable.ts";
-import * as FileSystem from "../../FileSystem.ts";
-import * as Option from "../../Option.ts";
-import * as Path from "../../Path.ts";
-import * as Predicate from "../../Predicate.ts";
-import type * as Primitive from "./Primitive.ts";
-import * as Queue from "../../Queue.ts";
-import * as Redacted from "../../Redacted.ts";
-import * as Stream from "../../Stream.ts";
-import * as Terminal from "../../Terminal.ts";
-import type { Duration, Scope } from "../../index.ts";
-import { dual, pipe } from "../../Function.ts";
-import type { ChildProcessSpawner } from "../process/index.ts";
-import type { Covariant } from "../../Types.ts";
-import type { PlatformError } from "../../PlatformError.ts";
-
-const TypeId = "~effect/cli/Prompt";
+const TypeId = "~effect/cli/Prompt"
 
 /**
  * Represents an interactive terminal prompt that produces an `Output` value.
@@ -60,17 +43,10 @@ const TypeId = "~effect/cli/Prompt";
  * @category models
  * @since 4.0.0
  */
-export interface Prompt<Output, Error = never, ExtraEnvironment = never> extends Effect.Effect<
-    Output,
-    Terminal.QuitError | Error,
-    Environment | ExtraEnvironment
->
-{
-    readonly [TypeId]: {
-        readonly _Output: Covariant<Output>
-        readonly _Error: Covariant<Error>
-        readonly _ExtraEnvironment: Covariant<ExtraEnvironment>
-    }
+export interface Prompt<Output> extends Effect.Effect<Output, Terminal.QuitError, Environment> {
+  readonly [TypeId]: {
+    readonly _Output: Covariant<Output>
+  }
 }
 
 /**
@@ -79,7 +55,7 @@ export interface Prompt<Output, Error = never, ExtraEnvironment = never> extends
  * @category guards
  * @since 4.0.0
  */
-export const isPrompt = (u: unknown): u is Prompt<unknown> => Predicate.hasProperty(u, TypeId);
+export const isPrompt = (u: unknown): u is Prompt<unknown> => Predicate.hasProperty(u, TypeId)
 
 /**
  * Represents the services available to a custom `Prompt`.
@@ -87,20 +63,20 @@ export const isPrompt = (u: unknown): u is Prompt<unknown> => Predicate.hasPrope
  * @category models
  * @since 4.0.0
  */
-export type Environment = FileSystem.FileSystem | Path.Path | Terminal.Terminal;
+export type Environment = FileSystem.FileSystem | Path.Path | Terminal.Terminal
 
 /**
- * Represents the action that should be taken by a `Prompt` based upon the
- * user input received during the current frame.
+ * Represents the action that should be taken by a `Prompt` based upon user
+ * input or an external event received during the current frame.
  *
  * @category models
  * @since 4.0.0
  */
 export type Action<State, Output> = Data.TaggedEnum<{
-    readonly Beep: {}
-    readonly NextFrame: { readonly state: State }
-    readonly Submit: { readonly value: Output }
-}>;
+  readonly Beep: {}
+  readonly NextFrame: { readonly state: State }
+  readonly Submit: { readonly value: Output }
+}>
 
 /**
  * Type-level definition for the tagged `Prompt.Action` variants.
@@ -114,8 +90,20 @@ export type Action<State, Output> = Data.TaggedEnum<{
  * @since 4.0.0
  */
 export interface ActionDefinition extends Data.TaggedEnum.WithGenerics<2> {
-    readonly taggedEnum: Action<this["A"], this["B"]>
+  readonly taggedEnum: Action<this["A"], this["B"]>
 }
+
+/**
+ * Represents the input that should be processed by a `Prompt` based upon user
+ * input or an external event received during the current frame.
+ *
+ * @category models
+ * @since 4.0.0
+ */
+export type ProcessInput<A> = Data.TaggedEnum<{
+  readonly Input: { readonly input: Terminal.UserInput }
+  readonly Event: { readonly value: A }
+}>
 
 /**
  * Represents the set of handlers used by a `Prompt`.
@@ -128,32 +116,30 @@ export interface ActionDefinition extends Data.TaggedEnum.WithGenerics<2> {
  * @category models
  * @since 4.0.0
  */
-export interface Handlers<State, Output> {
-    /**
-     * A function that is called to render the current frame of the `Prompt`.
-     */
-    readonly render: (
-        state: State,
-        action: Action<State, Output>
-    ) => Effect.Effect<string, never, Environment>
-
-    /**
-     * A function that is called to process user input and determine the next
-     * `Prompt.Action` that should be taken.
-     */
-    readonly process: (
-        input: Terminal.UserInput,
-        state: State
-    ) => Effect.Effect<Action<State, Output>, never, Environment>
-
-    /**
-     * A function that is called to clear the terminal screen before rendering
-     * the next frame of the `Prompt`.
-     */
-    readonly clear: (
-        state: State,
-        action: Action<State, Output>
-    ) => Effect.Effect<string, never, Environment>
+export interface Handlers<State, Output, Input = Terminal.UserInput> {
+  /**
+   * A function that is called to render the current frame of the `Prompt`.
+   */
+  readonly render: (
+    state: State,
+    action: Action<State, Output>
+  ) => Effect.Effect<string, never, Environment>
+  /**
+   * A function that is called to process user input and determine the next
+   * `Prompt.Action` that should be taken.
+   */
+  readonly process: (
+    input: Input,
+    state: State
+  ) => Effect.Effect<Action<State, Output>, never, Environment>
+  /**
+   * A function that is called to clear the terminal screen before rendering
+   * the next frame of the `Prompt`.
+   */
+  readonly clear: (
+    state: State,
+    action: Action<State, Output>
+  ) => Effect.Effect<string, never, Environment>
 }
 
 /**
@@ -164,49 +150,42 @@ export interface Handlers<State, Output> {
  * @since 4.0.0
  */
 export interface ConfirmOptions {
+  /**
+   * The message to display in the prompt.
+   */
+  readonly message: string
+  /**
+   * The initial value of the confirm prompt (defaults to `false`).
+   */
+  readonly initial?: boolean
+  /**
+   * The label to display after a user has responded to the prompt.
+   */
+  readonly label?: {
     /**
-     * The message to display in the prompt.
+     * The label used if the prompt is confirmed (defaults to `"yes"`).
      */
-    readonly message: string
-
+    readonly confirm: string
     /**
-     * The initial value of the confirm prompt (defaults to `false`).
+     * The label used if the prompt is not confirmed (defaults to `"no"`).
      */
-    readonly initial?: boolean
-
+    readonly deny: string
+  }
+  /**
+   * The placeholder to display when a user is responding to the prompt.
+   */
+  readonly placeholder?: {
     /**
-     * The label to display after a user has responded to the prompt.
+     * The placeholder to use if the `initial` value of the prompt is `true`
+     * (defaults to `"(Y/n)"`).
      */
-    readonly label?:
-    {
-        /**
-         * The label used if the prompt is confirmed (defaults to `"yes"`).
-         */
-        readonly confirm: string
-
-        /**
-         * The label used if the prompt is not confirmed (defaults to `"no"`).
-         */
-        readonly deny: string
-    }
-
+    readonly defaultConfirm?: string
     /**
-     * The placeholder to display when a user is responding to the prompt.
+     * The placeholder to use if the `initial` value of the prompt is `false`
+     * (defaults to `"(y/N)"`).
      */
-    readonly placeholder?:
-    {
-        /**
-         * The placeholder to use if the `initial` value of the prompt is `true`
-         * (defaults to `"(Y/n)"`).
-         */
-        readonly defaultConfirm?: string
-
-        /**
-         * The placeholder to use if the `initial` value of the prompt is `false`
-         * (defaults to `"(y/N)"`).
-         */
-        readonly defaultDeny?: string
-    }
+    readonly defaultDeny?: string
+  }
 }
 
 /**
@@ -216,83 +195,72 @@ export interface ConfirmOptions {
  * @category options
  * @since 4.0.0
  */
-export interface DateOptions
-{
+export interface DateOptions {
+  /**
+   * The message to display in the prompt.
+   */
+  readonly message: string
+  /**
+   * The initial date value to display in the prompt (defaults to the current
+   * date).
+   */
+  readonly initial?: globalThis.Date
+  /**
+   * The format mask of the date (defaults to `YYYY-MM-DD HH:mm:ss`).
+   */
+  readonly dateMask?: string
+  /**
+   * An effectful function that can be used to validate the value entered into
+   * the prompt before final submission.
+   */
+  readonly validate?: (value: globalThis.Date) => Effect.Effect<globalThis.Date, string>
+  /**
+   * Custom locales that can be used in place of the defaults.
+   */
+  readonly locales?: {
     /**
-     * The message to display in the prompt.
+     * The full names of each month of the year.
      */
-    readonly message: string
-
+    readonly months: [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string
+    ]
     /**
-     * The initial date value to display in the prompt (defaults to the current
-     * date).
+     * The short names of each month of the year.
      */
-    readonly initial?: globalThis.Date
-
+    readonly monthsShort: [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string
+    ]
     /**
-     * The format mask of the date (defaults to `YYYY-MM-DD HH:mm:ss`).
+     * The full names of each day of the week.
      */
-    readonly dateMask?: string
-
+    readonly weekdays: [string, string, string, string, string, string, string]
     /**
-     * An effectful function that can be used to validate the value entered into
-     * the prompt before final submission.
+     * The short names of each day of the week.
      */
-    readonly validate?: (value: globalThis.Date) => Effect.Effect<globalThis.Date, string>
-
-    /**
-     * Custom locales that can be used in place of the defaults.
-     */
-    readonly locales?:
-    {
-        /**
-         * The full names of each month of the year.
-         */
-        readonly months:
-        [
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string
-        ]
-
-        /**
-         * The short names of each month of the year.
-         */
-        readonly monthsShort:
-        [
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string
-        ]
-
-        /**
-         * The full names of each day of the week.
-         */
-        readonly weekdays: [ string, string, string, string, string, string, string ];
-
-        /**
-         * The short names of each day of the week.
-         */
-        readonly weekdaysShort: [ string, string, string, string, string, string, string ];
-    };
+    readonly weekdaysShort: [string, string, string, string, string, string, string]
+  }
 }
 
 /**
@@ -302,45 +270,38 @@ export interface DateOptions
  * @category options
  * @since 4.0.0
  */
-export interface IntegerOptions
-{
-    /**
-     * The message to display in the prompt.
-     */
-    readonly message: string
-
-    /**
-     * The default value of the integer prompt.
-     */
-    readonly default?: number
-
-    /**
-     * The minimum value that can be entered by the user (defaults to `-Infinity`).
-     */
-    readonly min?: number
-
-    /**
-     * The maximum value that can be entered by the user (defaults to `Infinity`).
-     */
-    readonly max?: number
-
-    /**
-     * The value that will be used to increment the prompt value when using the
-     * up arrow key (defaults to `1`).
-     */
-    readonly incrementBy?: number
-
-    /**
-     * The value that will be used to decrement the prompt value when using the
-     * down arrow key (defaults to `1`).
-     */
-    readonly decrementBy?: number
-
-    /**
-     * An effectful function that can be used to validate the value entered into
-     * the prompt before final submission.
-     */
-    readonly validate?: (value: number) => Effect.Effect<number, string>
+export interface IntegerOptions {
+  /**
+   * The message to display in the prompt.
+   */
+  readonly message: string
+  /**
+   * The default value of the integer prompt.
+   */
+  readonly default?: number
+  /**
+   * The minimum value that can be entered by the user (defaults to `-Infinity`).
+   */
+  readonly min?: number
+  /**
+   * The maximum value that can be entered by the user (defaults to `Infinity`).
+   */
+  readonly max?: number
+  /**
+   * The value that will be used to increment the prompt value when using the
+   * up arrow key (defaults to `1`).
+   */
+  readonly incrementBy?: number
+  /**
+   * The value that will be used to decrement the prompt value when using the
+   * down arrow key (defaults to `1`).
+   */
+  readonly decrementBy?: number
+  /**
+   * An effectful function that can be used to validate the value entered into
+   * the prompt before final submission.
+   */
+  readonly validate?: (value: number) => Effect.Effect<number, string>
 }
 
 /**
@@ -354,12 +315,11 @@ export interface IntegerOptions
  * @category options
  * @since 4.0.0
  */
-export interface FloatOptions extends IntegerOptions
-{
-    /**
-     * The precision to use for the floating point value (defaults to `2`).
-     */
-    readonly precision?: number
+export interface FloatOptions extends IntegerOptions {
+  /**
+   * The precision to use for the floating point value (defaults to `2`).
+   */
+  readonly precision?: number
 }
 
 /**
@@ -369,12 +329,11 @@ export interface FloatOptions extends IntegerOptions
  * @category options
  * @since 4.0.0
  */
-export interface ListOptions extends TextOptions
-{
-    /**
-     * The delimiter that separates list entries.
-     */
-    readonly delimiter?: string
+export interface ListOptions extends TextOptions {
+  /**
+   * The delimiter that separates list entries.
+   */
+  readonly delimiter?: string
 }
 
 /**
@@ -388,39 +347,33 @@ export interface ListOptions extends TextOptions
  * @category options
  * @since 4.0.0
  */
-export interface FileOptions
-{
-    /**
-     * The path type that will be selected, defaulting to `"file"`.
-     */
-    readonly type?: Primitive.PathType
-
-    /**
-     * The message to display in the prompt, defaulting to `"Choose a file"`.
-     */
-    readonly message?: string
-
-    /**
-     * Where the user will initially be prompted to select files from, defaulting
-     * to the current working directory.
-     */
-    readonly startingPath?: string
-
-    /**
-     * The default path to select when the prompt is first displayed.
-     */
-    readonly default?: string
-
-    /**
-     * The number of choices to display at one time, defaulting to `10`.
-     */
-    readonly maxPerPage?: number
-
-    /**
-     * A predicate or effect that keeps a file in the prompt when it returns
-     * `true`, defaulting to returning all files.
-     */
-    readonly filter?: (file: string) => boolean | Effect.Effect<boolean, never, Environment>
+export interface FileOptions {
+  /**
+   * The path type that will be selected, defaulting to `"file"`.
+   */
+  readonly type?: Primitive.PathType
+  /**
+   * The message to display in the prompt, defaulting to `"Choose a file"`.
+   */
+  readonly message?: string
+  /**
+   * Where the user will initially be prompted to select files from, defaulting
+   * to the current working directory.
+   */
+  readonly startingPath?: string
+  /**
+   * The default path to select when the prompt is first displayed.
+   */
+  readonly default?: string
+  /**
+   * The number of choices to display at one time, defaulting to `10`.
+   */
+  readonly maxPerPage?: number
+  /**
+   * A predicate or effect that keeps a file in the prompt when it returns
+   * `true`, defaulting to returning all files.
+   */
+  readonly filter?: (file: string) => boolean | Effect.Effect<boolean, never, Environment>
 }
 
 /**
@@ -431,20 +384,18 @@ export interface FileOptions
  * @since 4.0.0
  */
 export interface SelectOptions<A> {
-    /**
-     * The message to display in the prompt.
-     */
-    readonly message: string
-
-    /**
-     * The choices to display to the user.
-     */
-    readonly choices: ReadonlyArray<SelectChoice<A>>
-
-    /**
-     * The number of choices to display at one time (defaults to `10`).
-     */
-    readonly maxPerPage?: number
+  /**
+   * The message to display in the prompt.
+   */
+  readonly message: string
+  /**
+   * The choices to display to the user.
+   */
+  readonly choices: ReadonlyArray<SelectChoice<A>>
+  /**
+   * The number of choices to display at one time (defaults to `10`).
+   */
+  readonly maxPerPage?: number
 }
 
 /**
@@ -455,20 +406,18 @@ export interface SelectOptions<A> {
  * @since 4.0.0
  */
 export interface AutoCompleteOptions<A> extends SelectOptions<A> {
-    /**
-     * The label used for the filter display (defaults to "filter").
-     */
-    readonly filterLabel?: string
-
-    /**
-     * The placeholder shown when the filter is empty (defaults to "type to filter").
-     */
-    readonly filterPlaceholder?: string
-
-    /**
-     * The message displayed when no choices match (defaults to "No matches").
-     */
-    readonly emptyMessage?: string
+  /**
+   * The label used for the filter display (defaults to "filter").
+   */
+  readonly filterLabel?: string
+  /**
+   * The placeholder shown when the filter is empty (defaults to "type to filter").
+   */
+  readonly filterPlaceholder?: string
+  /**
+   * The message displayed when no choices match (defaults to "No matches").
+   */
+  readonly emptyMessage?: string
 }
 
 /**
@@ -479,30 +428,26 @@ export interface AutoCompleteOptions<A> extends SelectOptions<A> {
  * @since 4.0.0
  */
 export interface MultiSelectOptions {
-    /**
-     * Text for the "Select All" option (defaults to "Select All").
-     */
-    readonly selectAll?: string
-
-    /**
-     * Text for the "Select None" option (defaults to "Select None").
-     */
-    readonly selectNone?: string
-
-    /**
-     * Text for the "Inverse Selection" option (defaults to "Inverse Selection").
-     */
-    readonly inverseSelection?: string
-
-    /**
-     * The minimum number of choices that must be selected.
-     */
-    readonly min?: number
-
-    /**
-     * The maximum number of choices that can be selected.
-     */
-    readonly max?: number
+  /**
+   * Text for the "Select All" option (defaults to "Select All").
+   */
+  readonly selectAll?: string
+  /**
+   * Text for the "Select None" option (defaults to "Select None").
+   */
+  readonly selectNone?: string
+  /**
+   * Text for the "Inverse Selection" option (defaults to "Inverse Selection").
+   */
+  readonly inverseSelection?: string
+  /**
+   * The minimum number of choices that must be selected.
+   */
+  readonly min?: number
+  /**
+   * The maximum number of choices that can be selected.
+   */
+  readonly max?: number
 }
 
 /**
@@ -512,33 +457,28 @@ export interface MultiSelectOptions {
  * @category models
  * @since 4.0.0
  */
-export interface SelectChoice<A>
-{
-    /**
-     * The name of the select option that is displayed to the user.
-     */
-    readonly title: string
-
-    /**
-     * The underlying value of the select option.
-     */
-    readonly value: A
-
-    /**
-     * An optional description for the select option which will be displayed
-     * to the user.
-     */
-    readonly description?: string
-
-    /**
-     * Whether or not this select option is disabled.
-     */
-    readonly disabled?: boolean
-
-    /**
-     * Whether this option should be selected by default (only used by MultiSelect).
-     */
-    readonly selected?: boolean
+export interface SelectChoice<A> {
+  /**
+   * The name of the select option that is displayed to the user.
+   */
+  readonly title: string
+  /**
+   * The underlying value of the select option.
+   */
+  readonly value: A
+  /**
+   * An optional description for the select option which will be displayed
+   * to the user.
+   */
+  readonly description?: string
+  /**
+   * Whether or not this select option is disabled.
+   */
+  readonly disabled?: boolean
+  /**
+   * Whether this option should be selected by default (only used by MultiSelect).
+   */
+  readonly selected?: boolean
 }
 
 /**
@@ -549,21 +489,19 @@ export interface SelectChoice<A>
  * @since 4.0.0
  */
 export interface TextOptions {
-    /**
-     * The message to display in the prompt.
-     */
-    readonly message: string
-
-    /**
-     * The default value of the text option.
-     */
-    readonly default?: string
-
-    /**
-     * An effectful function that can be used to validate the value entered into
-     * the prompt before final submission.
-     */
-    readonly validate?: (value: string) => Effect.Effect<string, string>
+  /**
+   * The message to display in the prompt.
+   */
+  readonly message: string
+  /**
+   * The default value of the text option.
+   */
+  readonly default?: string
+  /**
+   * An effectful function that can be used to validate the value entered into
+   * the prompt before final submission.
+   */
+  readonly validate?: (value: string) => Effect.Effect<string, string>
 }
 
 /**
@@ -573,75 +511,66 @@ export interface TextOptions {
  * @category options
  * @since 4.0.0
  */
-export interface ToggleOptions
-{
-    /**
-     * The message to display in the prompt.
-     */
-    readonly message: string
-
-    /**
-     * The initial value of the toggle prompt (defaults to `false`).
-     */
-    readonly initial?: boolean
-
-    /**
-     * The text to display when the toggle is in the active state (defaults to
-     * `on`).
-     */
-    readonly active?: string
-
-    /**
-     * The text to display when the toggle is in the inactive state (defaults to
-     * `off`).
-     */
-    readonly inactive?: string
+export interface ToggleOptions {
+  /**
+   * The message to display in the prompt.
+   */
+  readonly message: string
+  /**
+   * The intitial value of the toggle prompt (defaults to `false`).
+   */
+  readonly initial?: boolean
+  /**
+   * The text to display when the toggle is in the active state (defaults to
+   * `on`).
+   */
+  readonly active?: string
+  /**
+   * The text to display when the toggle is in the inactive state (defaults to
+   * `off`).
+   */
+  readonly inactive?: string
 }
 
-/* eslint-disable sort-keys */
-const defaultFigures =
-    {
-        arrowUp: "↑",
-        arrowDown: "↓",
-        arrowLeft: "←",
-        arrowRight: "→",
-        radioOn: "◉",
-        radioOff: "◯",
-        checkboxOn: "☒",
-        checkboxOff: "☐",
-        tick: "✔",
-        cross: "✖",
-        ellipsis: "…",
-        pointerSmall: "›",
-        line: "─",
-        pointer: "❯"
-    };
+const defaultFigures = {
+  arrowUp: "↑",
+  arrowDown: "↓",
+  arrowLeft: "←",
+  arrowRight: "→",
+  radioOn: "◉",
+  radioOff: "◯",
+  checkboxOn: "☒",
+  checkboxOff: "☐",
+  tick: "✔",
+  cross: "✖",
+  ellipsis: "…",
+  pointerSmall: "›",
+  line: "─",
+  pointer: "❯"
+}
 
-const windowsFigures =
-    {
-        arrowUp: defaultFigures.arrowUp,
-        arrowDown: defaultFigures.arrowDown,
-        arrowLeft: defaultFigures.arrowLeft,
-        arrowRight: defaultFigures.arrowRight,
-        radioOn: "(*)",
-        radioOff: "( )",
-        checkboxOn: "[*]",
-        checkboxOff: "[ ]",
-        tick: "√",
-        cross: "×",
-        ellipsis: "...",
-        pointerSmall: "»",
-        line: "─",
-        pointer: ">"
-    };
-
-/* eslint-enable sort-keys */
+const windowsFigures = {
+  arrowUp: defaultFigures.arrowUp,
+  arrowDown: defaultFigures.arrowDown,
+  arrowLeft: defaultFigures.arrowLeft,
+  arrowRight: defaultFigures.arrowRight,
+  radioOn: "(*)",
+  radioOff: "( )",
+  checkboxOn: "[*]",
+  checkboxOff: "[ ]",
+  tick: "√",
+  cross: "×",
+  ellipsis: "...",
+  pointerSmall: "»",
+  line: "─",
+  pointer: ">"
+}
 
 /** @internal */
 export const platformFigures = Effect.map(
-    Effect.sync(() => process.platform === "win32"),
-    (isWindows) => isWindows ? windowsFigures : defaultFigures
-);
+  Effect.sync(() => process.platform === "win32"),
+  (isWindows) => isWindows ? windowsFigures : defaultFigures
+)
 
 /**
  * Type alias for any `Prompt`, regardless of its output type.
@@ -649,69 +578,66 @@ export const platformFigures = Effect.map(
  * @category utility types
  * @since 4.0.0
  */
-export type Any = Prompt<unknown, any, any>;
+export type Any = Prompt<unknown>
 
 /**
  * Namespace containing return-type helpers for `Prompt.all`.
  *
  * @since 4.0.0
  */
-export declare namespace All
-{
-    /**
-     * Computes the prompt returned by `Prompt.all` for an iterable of prompts.
-     *
-     * **Details**
-     *
-     * The resulting prompt produces an array of each prompt's output value.
-     *
-     * @category utility types
-     * @since 4.0.0
-     */
-    export type ReturnIterable<T extends Iterable<Any>> =
-        [T] extends [Iterable<Prompt<infer A>>]
-            ? Prompt<Array<A>>
-            : never;
+export declare namespace All {
+  /**
+   * Computes the prompt returned by `Prompt.all` for an iterable of prompts.
+   *
+   * **Details**
+   *
+   * The resulting prompt produces an array of each prompt's output value.
+   *
+   * @category utility types
+   * @since 4.0.0
+   */
+  export type ReturnIterable<T extends Iterable<Any>> = [T] extends [Iterable<Prompt<infer A>>] ? Prompt<Array<A>>
+    : never
 
-    /**
-     * Computes the prompt returned by `Prompt.all` for a readonly tuple or array
-     * of prompts, preserving tuple positions in the output type.
-     *
-     * @category utility types
-     * @since 4.0.0
-     */
-    export type ReturnTuple<T extends ReadonlyArray<unknown>> = Prompt<
-        T[number] extends never ? []
-            : { -readonly [K in keyof T]: [T[K]] extends [Prompt<infer _A>] ? _A : never }
-    > extends infer X ? X : never;
+  /**
+   * Computes the prompt returned by `Prompt.all` for a readonly tuple or array
+   * of prompts, preserving tuple positions in the output type.
+   *
+   * @category utility types
+   * @since 4.0.0
+   */
+  export type ReturnTuple<T extends ReadonlyArray<unknown>> = Prompt<
+    T[number] extends never ? []
+      : { -readonly [K in keyof T]: [T[K]] extends [Prompt<infer _A>] ? _A : never }
+  > extends infer X ? X : never
 
-    /**
-     * Computes the prompt returned by `Prompt.all` for a record of prompts,
-     * preserving the record keys and replacing each prompt with its output type.
-     *
-     * @category utility types
-     * @since 4.0.0
-     */
-    export type ReturnObject<T> = [T] extends [{ [K: string]: Any }] ? Prompt<
-        {
-            -readonly [K in keyof T]: [T[K]] extends [Prompt<infer _A>] ? _A : never
-        }
+  /**
+   * Computes the prompt returned by `Prompt.all` for a record of prompts,
+   * preserving the record keys and replacing each prompt with its output type.
+   *
+   * @category utility types
+   * @since 4.0.0
+   */
+  export type ReturnObject<T> = [T] extends [{ [K: string]: Any }] ? Prompt<
+      {
+        -readonly [K in keyof T]: [T[K]] extends [Prompt<infer _A>] ? _A : never
+      }
     >
-        : never;
+    : never
 
-    /**
-     * Computes the return prompt type for `Prompt.all` based on the input
-     * structure.
-     *
-     * @category constructors
-     * @since 4.0.0
-     */
-    export type Return<
-        Arg extends Iterable<Any> | Record<string, Any>
-    > = [Arg] extends [ReadonlyArray<Any>] ? ReturnTuple<Arg>
-        : [Arg] extends [Iterable<Any>] ? ReturnIterable<Arg>
-            : [Arg] extends [Record<string, Any>] ? ReturnObject<Arg>
-                : never;
+  /**
+   * Computes the return prompt type for `Prompt.all` based on the input
+   * structure.
+   *
+   * @category constructors
+   * @since 4.0.0
+   */
+  export type Return<
+    Arg extends Iterable<Any> | Record<string, Any>
+  > = [Arg] extends [ReadonlyArray<Any>] ? ReturnTuple<Arg>
+    : [Arg] extends [Iterable<Any>] ? ReturnIterable<Arg>
+    : [Arg] extends [Record<string, Any>] ? ReturnObject<Arg>
+    : never
 }
 
 /**
@@ -726,8 +652,8 @@ export declare namespace All
  * **Example** (Collecting prompt results)
  *
  * ```ts
- * import { Effect } from "@sorrell/effect"
- * import { Prompt } from "@sorrell/effect/unstable/cli"
+ * import { Effect } from "effect"
+ * import { Prompt } from "effect/unstable/cli"
  *
  * const username = Prompt.text({
  *   message: "Enter your username: "
@@ -750,48 +676,38 @@ export declare namespace All
  * @since 4.0.0
  */
 export const all: <
-    const Arg extends Iterable<Prompt<any>> | Record<string, Prompt<any>>
->(arg: Arg) => All.Return<Arg> = function()
-{
-    if (arguments.length === 1)
-    {
-        if (isPrompt(arguments[0]))
-        {
-            return map(arguments[0], (x) => [ x ]) as any;
-        }
-        else if (Array.isArray(arguments[0]))
-        {
-            return allTupled(arguments[0]) as any;
-        }
-        else
-        {
-            const entries = Object.entries(arguments[0] as Readonly<{ [K: string]: Prompt<any> }>);
-            let result = map(entries[0][1], (value) => ({ [entries[0][0]]: value }));
-            if (entries.length === 1)
-            {
-                return result as any;
-            }
-            const rest = entries.slice(1);
-            for (const [ key, prompt ] of rest)
-            {
-                result = result.pipe(
-                    flatMap((record) =>
-                        prompt.pipe(map((value) => ({
-                            ...record,
-                            [key]: value
-                        })))
-                    )
-                );
-            }
-            return result as any;
-        }
+  const Arg extends Iterable<Prompt<any>> | Record<string, Prompt<any>>
+>(arg: Arg) => All.Return<Arg> = function() {
+  if (arguments.length === 1) {
+    if (isPrompt(arguments[0])) {
+      return map(arguments[0], (x) => [x]) as any
+    } else if (Array.isArray(arguments[0])) {
+      return allTupled(arguments[0]) as any
+    } else {
+      const entries = Object.entries(arguments[0] as Readonly<{ [K: string]: Prompt<any> }>)
+      let result = map(entries[0][1], (value) => ({ [entries[0][0]]: value }))
+      if (entries.length === 1) {
+        return result as any
+      }
+      const rest = entries.slice(1)
+      for (const [key, prompt] of rest) {
+        result = result.pipe(
+          flatMap((record) =>
+            prompt.pipe(map((value) => ({
+              ...record,
+              [key]: value
+            })))
+          )
+        )
+      }
+      return result as any
     }
-    return allTupled(arguments[0]) as any;
-};
+  }
+  return allTupled(arguments[0]) as any
+}
 
-const annotateLine = (line: string): string => Ansi.annotate(line, Ansi.bold);
-const annotateErrorLine =
-    (line: string): string => Ansi.annotate(line, Ansi.combine(Ansi.italicized, Ansi.red));
+const annotateLine = (line: string): string => Ansi.annotate(line, Ansi.bold)
+const annotateErrorLine = (line: string): string => Ansi.annotate(line, Ansi.combine(Ansi.italicized, Ansi.red))
 
 /**
  * Creates a confirmation prompt that asks the user to choose a boolean yes/no
@@ -811,32 +727,28 @@ const annotateErrorLine =
  * @category constructors
  * @since 4.0.0
  */
-export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
-{
-    const opts: Required<ConfirmOptions> = {
-        initial: false,
-        ...options,
-        label: {
-            confirm: "yes",
-            deny: "no",
-            ...options.label
-        },
-        placeholder: {
-            defaultConfirm: "(Y/n)",
-            defaultDeny: "(y/N)",
-            ...options.placeholder
-        }
-    };
-    const initialState: ConfirmState = { value: opts.initial };
-    return custom(
-        initialState,
-        {
-            clear: handleConfirmClear(opts),
-            process: (input) => handleConfirmProcess(input, opts.initial),
-            render: handleConfirmRender(opts)
-        }
-    );
-};
+export const confirm = (options: ConfirmOptions): Prompt<boolean> => {
+  const opts: Required<ConfirmOptions> = {
+    initial: false,
+    ...options,
+    label: {
+      confirm: "yes",
+      deny: "no",
+      ...options.label
+    },
+    placeholder: {
+      defaultConfirm: "(Y/n)",
+      defaultDeny: "(y/N)",
+      ...options.placeholder
+    }
+  }
+  const initialState: ConfirmState = { value: opts.initial }
+  return custom(initialState, {
+    render: handleConfirmRender(opts),
+    process: (input) => handleConfirmProcess(input, opts.initial),
+    clear: handleConfirmClear(opts)
+  })
+}
 
 /**
  * Creates a custom `Prompt` from the specified initial state and handlers.
@@ -851,22 +763,43 @@ export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
  * next prompt action, and `clear` returns ANSI output used to clear the previous
  * frame.
  *
+ * Optionally, an external `events` dequeue can be provided as the third
+ * argument. When present, the render loop will race user input against events
+ * from the dequeue, allowing background events to trigger re-renders without
+ * waiting for a keypress. When an event is received from the dequeue, the
+ * `receive` handler is called instead of `process`.
+ *
  * @category constructors
  * @since 4.0.0
  */
-export const custom = <State, Output>(
+export const custom: {
+  <State, Output>(
     initialState: State | Effect.Effect<State, never, Environment>,
     handlers: Handlers<State, Output>
-): Prompt<Output> =>
-{
-    const op = Object.create(proto);
-    op._tag = "Loop";
-    op.initialState = initialState;
-    op.render = handlers.render;
-    op.process = handlers.process;
-    op.clear = handlers.clear;
-    return op;
-};
+  ): Prompt<Output>
+  <State, Output, A>(
+    initialState: State | Effect.Effect<State, never, Environment>,
+    events: Queue.Dequeue<A, never>,
+    handlers: Handlers<State, Output, ProcessInput<A>>
+  ): Prompt<Output>
+} = <State, Output, A>(
+  initialState: State | Effect.Effect<State, never, Environment>,
+  ...args:
+    | [handlers: Handlers<State, Output, Terminal.UserInput>]
+    | [events: Queue.Dequeue<A, never>, handlers: Handlers<State, Output, ProcessInput<A>>]
+): Prompt<Output> => {
+  const [events, handlers] = args.length === 1
+    ? [undefined, args[0]] as const
+    : [args[0], args[1]] as const
+  const op = Object.create(proto)
+  op._tag = "Loop"
+  op.initialState = initialState
+  op.render = handlers.render
+  op.process = handlers.process
+  op.clear = handlers.clear
+  op.events = events
+  return op
+}
 
 /**
  * Creates a date prompt that lets the user edit a formatted date value and
@@ -889,37 +822,32 @@ export const custom = <State, Output>(
  * @category constructors
  * @since 4.0.0
  */
-export const date = (options: DateOptions): Prompt<Date> =>
-{
-    const opts: Required<DateOptions> = {
-        dateMask: "YYYY-MM-DD HH:mm:ss",
-        initial: new Date(),
-        validate: Effect.succeed,
-        ...options,
-        locales: {
-            ...defaultLocales,
-            ...options.locales
-        }
-    };
-    const dateParts = makeDateParts(opts.dateMask, opts.initial, opts.locales);
-    const initialCursorPosition = dateParts.findIndex((part) => !part.isToken());
-    const initialState: DateState = {
-        cursor: initialCursorPosition,
-        dateParts,
-        error: Option.none(),
-        typed: "",
-        value: opts.initial
-    };
-
-    return custom(
-        initialState,
-        {
-            clear: handleDateClear(opts),
-            process: handleDateProcess(opts),
-            render: handleDateRender(opts)
-        }
-    );
-};
+export const date = (options: DateOptions): Prompt<Date> => {
+  const opts: Required<DateOptions> = {
+    initial: new Date(),
+    dateMask: "YYYY-MM-DD HH:mm:ss",
+    validate: Effect.succeed,
+    ...options,
+    locales: {
+      ...defaultLocales,
+      ...options.locales
+    }
+  }
+  const dateParts = makeDateParts(opts.dateMask, opts.initial, opts.locales)
+  const initialCursorPosition = dateParts.findIndex((part) => !part.isToken())
+  const initialState: DateState = {
+    dateParts,
+    typed: "",
+    cursor: initialCursorPosition,
+    value: opts.initial,
+    error: Option.none()
+  }
+  return custom(initialState, {
+    render: handleDateRender(opts),
+    process: handleDateProcess(opts),
+    clear: handleDateClear(opts)
+  })
+}
 
 /**
  * Creates a file-system selection prompt and returns the selected path.
@@ -932,844 +860,44 @@ export const date = (options: DateOptions): Prompt<Date> =>
  * @category constructors
  * @since 4.0.0
  */
-export const file = (options: FileOptions = {}): Prompt<string> =>
-{
-    const opts: FileOptionsReq = {
-        default: Option.fromUndefinedOr(options.default),
-        filter: options.filter ?? (() => Effect.succeed(true)),
-        maxPerPage: options.maxPerPage ?? 10,
-        message: options.message ?? "Choose a file",
-        startingPath: Option.fromUndefinedOr(options.startingPath),
-        type: options.type ?? "file"
-    };
-    const initialState: Effect.Effect<
-        FileState,
-        never,
-        Environment
-    > = Effect.gen(function*()
-    {
-        const currentPath = yield* resolveCurrentPath(Option.none(), opts);
-        const path = yield* Path.Path;
-        const defaultPath = Option.map(
-            opts.default,
-            (defaultValue) => path.resolve(currentPath, defaultValue)
-        );
-        const initialPath = Option.match(defaultPath, {
-            onNone: () => currentPath,
-            onSome: (defaultPath) => path.dirname(defaultPath)
-        });
-        const files = yield* getFileList(initialPath, opts);
-        const cursor = Option.match(defaultPath, {
-            onNone: () => 0,
-            onSome: (defaultPath) =>
-            {
-                const index = files.indexOf(path.basename(defaultPath));
-                return index === -1 ? 0 : index;
-            }
-        });
-        const confirm = Confirm.Hide();
-        return {
-            allFiles: files,
-            confirm,
-            cursor,
-            files,
-            path: Option.map(defaultPath, path.dirname),
-            query: ""
-        };
-    });
-    return custom(initialState, {
-        clear: handleFileClear(opts),
-        process: handleFileProcess(opts),
-        render: handleFileRender(opts)
-    });
-};
-
-export const program = <Output, Error = never, ExtraEnvironment = never>(
-    EffectValue: Effect.Effect<Output, Terminal.QuitError | Error, Environment | ExtraEnvironment>
-): Prompt<Output, Error, ExtraEnvironment> =>
-{
-    const Operation = Object.create(proto);
-
-    Operation._tag = "Program";
-    Operation.effect = EffectValue;
-
-    return Operation;
-};
-
-export type TemporaryFileProgramSelection =
-    | "first-available"
-    | "prompt";
-
-export type TemporaryFileCleanupPolicy =
-    | "never"
-    | "on-cancel"
-    | "on-failure";
-
-export type TemporaryFileProgramAvailabilityEnvironment =
-    | FileSystem.FileSystem
-    | Path.Path
-    | ChildProcessSpawner.ChildProcessSpawner;
-
-export type TemporaryFileProgramEnvironment =
-    | FileSystem.FileSystem
-    | Path.Path
-    | Terminal.Terminal
-    | ChildProcessSpawner.ChildProcessSpawner
-    | Scope.Scope;
-
-export interface TemporaryFileOptions
-{
-    readonly message?: string
-    readonly prefix?: string
-    readonly suffix?: string
-    readonly directory?: string
-    readonly initialContent?: string
-    readonly programs: ReadonlyArray<TemporaryFileProgram>
-    readonly selectProgram?: TemporaryFileProgramSelection
-    readonly programMessage?: string
-    readonly maxProgramsPerPage?: number
-    readonly cleanup?: TemporaryFileCleanupPolicy
+export const file = (options: FileOptions = {}): Prompt<string> => {
+  const opts: FileOptionsReq = {
+    type: options.type ?? "file",
+    message: options.message ?? `Choose a file`,
+    startingPath: Option.fromUndefinedOr(options.startingPath),
+    default: Option.fromUndefinedOr(options.default),
+    maxPerPage: options.maxPerPage ?? 10,
+    filter: options.filter ?? (() => Effect.succeed(true))
+  }
+  const initialState: Effect.Effect<
+    FileState,
+    never,
+    Environment
+  > = Effect.gen(function*() {
+    const currentPath = yield* resolveCurrentPath(Option.none(), opts)
+    const path = yield* Path.Path
+    const defaultPath = Option.map(opts.default, (defaultValue) => path.resolve(currentPath, defaultValue))
+    const initialPath = Option.match(defaultPath, {
+      onNone: () => currentPath,
+      onSome: (defaultPath) => path.dirname(defaultPath)
+    })
+    const files = yield* getFileList(initialPath, opts)
+    const cursor = Option.match(defaultPath, {
+      onNone: () => 0,
+      onSome: (defaultPath) => {
+        const index = files.indexOf(path.basename(defaultPath))
+        return index === -1 ? 0 : index
+      }
+    })
+    const confirm = Confirm.Hide()
+    return { cursor, files, allFiles: files, query: "", path: Option.map(defaultPath, path.dirname), confirm }
+  })
+  return custom(initialState, {
+    render: handleFileRender(opts),
+    process: handleFileProcess(opts),
+    clear: handleFileClear(opts)
+  })
 }
-
-export interface TemporaryFileProgram
-{
-    readonly name: string
-    readonly description?: string
-    readonly priority?: number
-
-    readonly isAvailable?: Effect.Effect<
-        boolean,
-        unknown,
-        TemporaryFileProgramAvailabilityEnvironment
-    >
-
-    readonly open: (
-        temporaryFilePath: string
-    ) => Effect.Effect<
-        TemporaryFileSession,
-        unknown,
-        TemporaryFileProgramEnvironment
-    >
-}
-
-export type TemporaryFileSession =
-    | {
-        readonly _tag: "WaitForExit"
-        readonly handle: ChildProcessSpawner.ChildProcessHandle
-        readonly acceptExitCode?: (exitCode: ChildProcessSpawner.ExitCode) => boolean
-    }
-    | {
-        readonly _tag: "WaitForSave"
-        readonly debounce?: Duration.Input
-    }
-    | {
-        readonly _tag: "WaitForExitOrSave"
-        readonly handle: ChildProcessSpawner.ChildProcessHandle
-        readonly debounce?: Duration.Input
-        readonly acceptExitCode?: (exitCode: ChildProcessSpawner.ExitCode) => boolean
-    }
-    | {
-        readonly _tag: "Manual"
-        readonly message?: string
-    };
-
-export type TemporaryFileCompletion =
-    | {
-        readonly _tag: "Exit"
-        readonly exitCode: ChildProcessSpawner.ExitCode
-    }
-    | {
-        readonly _tag: "Save"
-    }
-    | {
-        readonly _tag: "Manual"
-    };
-
-const TemporaryFilePromptErrorTypeId = "~sorrell/cli/TemporaryFilePromptError" as const;
-
-interface TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId]: typeof TemporaryFilePromptErrorTypeId
-}
-
-export type TemporaryFileSaveDetectionPhase =
-    | "watching-for-save"
-    | "verifying-file-after-save";
-
-export class NoTemporaryFileProgramAvailable extends Data.TaggedError("NoTemporaryFileProgramAvailable")<{
-    readonly programNames: ReadonlyArray<string>
-}> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return this.programNames.length === 0
-            ? "No temporary file programs were provided."
-            : `No temporary file program was available. Tried: ${this.programNames.join(", ")}.`;
-    }
-}
-
-export class TemporaryFileProgramAvailabilityFailed extends
-    Data.TaggedError("TemporaryFileProgramAvailabilityFailed")<{
-        readonly programName: string
-        readonly cause: unknown
-    }> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return `Could not check whether temporary file program "${this.programName}" is available.`;
-    }
-}
-
-export class TemporaryFileProgramFailed extends Data.TaggedError("TemporaryFileProgramFailed")<{
-    readonly programName: string
-    readonly cause: unknown
-}> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return `Temporary file program "${this.programName}" failed.`;
-    }
-}
-
-export class TemporaryFileProgramExitedWithInvalidCode extends
-    Data.TaggedError("TemporaryFileProgramExitedWithInvalidCode")<{
-        readonly exitCode: ChildProcessSpawner.ExitCode
-    }> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return `Temporary file program exited with invalid exit code ${Number(this.exitCode)}.`;
-    }
-}
-
-export class TemporaryFileSaveDetectionFailed extends Data.TaggedError("TemporaryFileSaveDetectionFailed")<{
-    readonly path: string
-    readonly watchedPath: string
-    readonly phase: TemporaryFileSaveDetectionPhase
-    readonly cause: unknown
-}> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return `Could not detect whether the temporary file was saved while ${this.phase}: ${this.path}.`;
-    }
-}
-
-export class TemporaryFileWasRemoved extends Data.TaggedError("TemporaryFileWasRemoved")<{
-    readonly path: string
-}> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return `Temporary file was removed before the prompt completed: ${this.path}.`;
-    }
-}
-
-export class TemporaryFilePromptCancelled extends Data.TaggedError("TemporaryFilePromptCancelled")<{
-    readonly reason?: string | undefined
-}> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return this.reason === undefined
-            ? "Temporary file prompt was cancelled."
-            : `Temporary file prompt was cancelled: ${this.reason}.`;
-    }
-}
-
-export class TemporaryFilePromptFailed extends Data.TaggedError("TemporaryFilePromptFailed")<{
-    readonly operation: string
-    readonly path?: string | undefined
-    readonly cause: unknown
-}> implements TemporaryFilePromptErrorBase
-{
-    readonly [TemporaryFilePromptErrorTypeId] = TemporaryFilePromptErrorTypeId;
-
-    override get message(): string
-    {
-        return this.path === undefined
-            ? `Temporary file prompt failed while ${this.operation}.`
-            : `Temporary file prompt failed while ${this.operation}: ${this.path}.`;
-    }
-}
-
-export type TemporaryFilePromptError =
-    | NoTemporaryFileProgramAvailable
-    | TemporaryFileProgramAvailabilityFailed
-    | TemporaryFileProgramFailed
-    | TemporaryFileProgramExitedWithInvalidCode
-    | TemporaryFileSaveDetectionFailed
-    | TemporaryFileWasRemoved
-    | TemporaryFilePromptCancelled
-    | TemporaryFilePromptFailed;
-
-export const isTemporaryFilePromptError = (
-    Value: unknown
-): Value is TemporaryFilePromptError =>
-    Predicate.hasProperty(Value, TemporaryFilePromptErrorTypeId);
-
-const isTemporaryFilePromptCancelled = (
-    Value: unknown
-): Value is TemporaryFilePromptCancelled =>
-    isTemporaryFilePromptError(Value) &&
-    (Value as { readonly _tag?: string })._tag === "TemporaryFilePromptCancelled";
-
-export interface MapTemporaryFilePromptErrorsOptions
-{
-    readonly operation: string
-    readonly path?: string | undefined
-}
-
-export const mapTemporaryFilePromptErrors =
-    (Options: MapTemporaryFilePromptErrorsOptions) =>
-        <Success, Error, Services>(
-            Self: Effect.Effect<Success, Error, Services>
-        ): Effect.Effect<
-            Success,
-            TemporaryFilePromptError | Terminal.QuitError,
-            Services
-        > =>
-            Self.pipe(
-                Effect.mapError((ErrorValue) =>
-                {
-                    if (isTemporaryFilePromptError(ErrorValue))
-                    {
-                        return ErrorValue;
-                    }
-
-                    if (Terminal.isQuitError(ErrorValue))
-                    {
-                        return ErrorValue;
-                    }
-
-                    return new TemporaryFilePromptFailed({
-                        cause: ErrorValue,
-                        operation: Options.operation,
-                        path: Options.path
-                    });
-                })
-            );
-
-const sortTemporaryFileProgramsByPriority = (
-    Programs: ReadonlyArray<TemporaryFileProgram>
-): ReadonlyArray<TemporaryFileProgram> =>
-    [ ...Programs ].sort((LeftProgram, RightProgram) =>
-        (LeftProgram.priority ?? 0) - (RightProgram.priority ?? 0)
-    );
-
-export const availableTemporaryFilePrograms = (
-    Programs: ReadonlyArray<TemporaryFileProgram>
-): Effect.Effect<
-    ReadonlyArray<TemporaryFileProgram>,
-    TemporaryFilePromptError,
-    TemporaryFileProgramAvailabilityEnvironment
-> =>
-    Effect.gen(function*()
-    {
-        const AvailablePrograms: Array<TemporaryFileProgram> = [];
-
-        for (const CurrentProgram of Programs)
-        {
-            const IsAvailable = CurrentProgram.isAvailable === undefined
-                ? true
-                : yield* CurrentProgram.isAvailable.pipe(
-                    Effect.mapError((Cause) =>
-                        new TemporaryFileProgramAvailabilityFailed({
-                            cause: Cause,
-                            programName: CurrentProgram.name
-                        })
-                    )
-                );
-
-            if (IsAvailable)
-            {
-                AvailablePrograms.push(CurrentProgram);
-            }
-        }
-
-        return sortTemporaryFileProgramsByPriority(AvailablePrograms);
-    });
-
-export const chooseFirstAvailableTemporaryFileProgram = (
-    Programs: ReadonlyArray<TemporaryFileProgram>
-): Effect.Effect<
-    TemporaryFileProgram,
-    TemporaryFilePromptError,
-    TemporaryFileProgramAvailabilityEnvironment
-> =>
-    Effect.gen(function*()
-    {
-        const AvailablePrograms = yield* availableTemporaryFilePrograms(Programs);
-        const FirstProgram = AvailablePrograms[0];
-
-        if (FirstProgram === undefined)
-        {
-            return yield* Effect.fail(
-                new NoTemporaryFileProgramAvailable({
-                    programNames: Programs.map((CurrentProgram) => CurrentProgram.name)
-                })
-            );
-        }
-
-        return FirstProgram;
-    });
-
-export interface ChooseTemporaryFileProgramOptions
-{
-    readonly programs: ReadonlyArray<TemporaryFileProgram>
-    readonly selection?: TemporaryFileProgramSelection | undefined
-    readonly message?: string | undefined
-    readonly maxPerPage?: number | undefined
-}
-
-export const chooseTemporaryFileProgram = (
-    Options: ChooseTemporaryFileProgramOptions
-): Prompt<
-    TemporaryFileProgram,
-    TemporaryFilePromptError,
-    TemporaryFileProgramAvailabilityEnvironment
-> =>
-{
-    switch (Options.selection ?? "first-available")
-    {
-        case "first-available":
-        {
-            return program(chooseFirstAvailableTemporaryFileProgram(Options.programs));
-        }
-
-        case "prompt":
-        {
-            return program(availableTemporaryFilePrograms(Options.programs)).pipe(
-                flatMap((AvailablePrograms: ReadonlyArray<TemporaryFileProgram>) =>
-                {
-                    if (AvailablePrograms.length === 0)
-                    {
-                        return program(
-                            Effect.fail(
-                                new NoTemporaryFileProgramAvailable({
-                                    programNames: Options.programs.map(
-                                        (CurrentProgram: TemporaryFileProgram) => CurrentProgram.name
-                                    )
-                                })
-                            )
-                        );
-                    }
-
-                    if (AvailablePrograms.length === 1)
-                    {
-                        return succeed(AvailablePrograms[0]);
-                    }
-
-                    const MaybeMaxPerPage = Options.maxPerPage !== undefined
-                        ? { maxPerPage: Options.maxPerPage }
-                        : { };
-
-                    return select({
-                        ...MaybeMaxPerPage,
-                        choices: AvailablePrograms.map((CurrentProgram) =>
-                        {
-                            if (CurrentProgram.description !== undefined)
-                            {
-                                return {
-                                    description: CurrentProgram.description,
-                                    title: CurrentProgram.name,
-                                    value: CurrentProgram
-                                };
-                            }
-                            else
-                            {
-                                return {
-                                    title: CurrentProgram.name,
-                                    value: CurrentProgram
-                                };
-                            }
-                        }),
-                        message: Options.message ?? "Choose a program to open the temporary file"
-                    });
-                })
-            );
-        }
-    }
-};
-
-export interface WaitForExitOptions
-{
-    readonly handle: ChildProcessSpawner.ChildProcessHandle
-    readonly acceptExitCode?: ((exitCode: ChildProcessSpawner.ExitCode) => boolean) | undefined
-}
-
-export const waitForExitCompletion = (
-    Options: WaitForExitOptions
-): Effect.Effect<
-    TemporaryFileCompletion,
-    | TemporaryFilePromptError
-    | TemporaryFileProgramExitedWithInvalidCode
-    | PlatformError
-> =>
-    Effect.gen(function*()
-    {
-        const ExitCode = yield* Options.handle.exitCode;
-
-        const IsAccepted = Options.acceptExitCode === undefined
-            ? Number(ExitCode) === 0
-            : Options.acceptExitCode(ExitCode);
-
-        if (!IsAccepted)
-        {
-            return yield* Effect.fail(
-                new TemporaryFileProgramExitedWithInvalidCode({
-                    exitCode: ExitCode
-                })
-            );
-        }
-
-        return {
-            _tag: "Exit" as const,
-            exitCode: ExitCode
-        };
-    });
-
-export const waitForExit = (
-    Options: WaitForExitOptions
-): Effect.Effect<void, TemporaryFilePromptError | PlatformError> =>
-    waitForExitCompletion(Options).pipe(Effect.map(() => undefined));
-
-export interface WaitForSaveOptions
-{
-    readonly temporaryFilePath: string
-    readonly debounce?: Duration.Input | undefined
-}
-
-export const waitForSaveCompletion = (
-    Options: WaitForSaveOptions
-): Effect.Effect<
-    TemporaryFileCompletion,
-    TemporaryFilePromptError,
-    FileSystem.FileSystem | Path.Path
-> =>
-    Effect.gen(function*()
-    {
-        const FileSystemService = yield* FileSystem.FileSystem;
-        const PathService = yield* Path.Path;
-
-        const DirectoryPath = PathService.dirname(Options.temporaryFilePath);
-        const FileName = PathService.basename(Options.temporaryFilePath);
-
-        yield* pipe(
-            FileSystemService.watch(DirectoryPath),
-            Stream.filter((WatchEvent) =>
-                WatchEvent._tag !== "Remove" &&
-                PathService.basename(WatchEvent.path) === FileName
-            ),
-            Stream.take(1),
-            Stream.runDrain,
-            Effect.mapError((Cause) =>
-                new TemporaryFileSaveDetectionFailed({
-                    cause: Cause,
-                    path: Options.temporaryFilePath,
-                    phase: "watching-for-save",
-                    watchedPath: DirectoryPath
-                })
-            )
-        );
-
-        if (Options.debounce !== undefined)
-        {
-            yield* Effect.sleep(Options.debounce);
-        }
-
-        const FileStillExists = yield* FileSystemService.exists(Options.temporaryFilePath).pipe(
-            Effect.mapError((Cause) =>
-                new TemporaryFileSaveDetectionFailed({
-                    cause: Cause,
-                    path: Options.temporaryFilePath,
-                    phase: "verifying-file-after-save",
-                    watchedPath: DirectoryPath
-                })
-            )
-        );
-
-        if (!FileStillExists)
-        {
-            return yield* Effect.fail(
-                new TemporaryFileWasRemoved({
-                    path: Options.temporaryFilePath
-                })
-            );
-        }
-
-        return {
-            _tag: "Save" as const
-        };
-    });
-
-export const waitForSave = (
-    Options: WaitForSaveOptions
-): Effect.Effect<void, TemporaryFilePromptError, FileSystem.FileSystem | Path.Path> =>
-    waitForSaveCompletion(Options).pipe(Effect.map(() => undefined));
-
-export interface WaitForExitOrSaveOptions extends WaitForSaveOptions, WaitForExitOptions { }
-
-export const waitForExitOrSave = (
-    Options: WaitForExitOrSaveOptions
-): Effect.Effect<
-    TemporaryFileCompletion,
-    | TemporaryFilePromptError
-    | PlatformError,
-    FileSystem.FileSystem | Path.Path
-> =>
-{
-    const ExitEffect = waitForExitCompletion({
-        acceptExitCode: Options.acceptExitCode,
-        handle: Options.handle
-    });
-
-    const SaveEffect = waitForSaveCompletion({
-        debounce: Options.debounce,
-        temporaryFilePath: Options.temporaryFilePath
-    });
-
-    return Effect.raceFirst(ExitEffect, SaveEffect);
-};
-
-export interface WaitForManualConfirmationOptions
-{
-    readonly message?: string | undefined
-}
-
-export const waitForManualConfirmation = (
-    Options: WaitForManualConfirmationOptions = { }
-): Effect.Effect<TemporaryFileCompletion, Terminal.QuitError, Terminal.Terminal | Scope.Scope> =>
-    Effect.gen(function*()
-    {
-        const TerminalService = yield* Terminal.Terminal;
-        const Input = yield* TerminalService.readInput;
-        const Message = Options.message ?? "Press Enter after saving the temporary file.";
-
-        yield* Effect.orDie(TerminalService.display(`${Message}\n`));
-
-        while (true)
-        {
-            const Event = yield* Queue.take(Input).pipe(
-                Effect.mapError(() => new Terminal.QuitError({}))
-            );
-
-            if (Event.key.name === "enter" || Event.key.name === "return")
-            {
-                return {
-                    _tag: "Manual" as const
-                };
-            }
-
-            yield* Effect.orDie(TerminalService.display(Ansi.beep));
-        }
-    });
-
-const waitForTemporaryFileCompletion = (
-    TemporaryFilePath: string,
-    Session: TemporaryFileSession
-): Effect.Effect<
-    void,
-    | TemporaryFilePromptError
-    | Terminal.QuitError
-    | PlatformError,
-    | Environment
-    | Scope.Scope
-> =>
-{
-    switch (Session._tag)
-    {
-        case "WaitForExit":
-        {
-            return waitForExit({
-                acceptExitCode: Session.acceptExitCode,
-                handle: Session.handle
-            });
-        }
-
-        case "WaitForSave":
-        {
-            return waitForSave({
-                debounce: Session.debounce,
-                temporaryFilePath: TemporaryFilePath
-            });
-        }
-
-        case "WaitForExitOrSave":
-        {
-            return waitForExitOrSave({
-                acceptExitCode: Session.acceptExitCode,
-                debounce: Session.debounce,
-                handle: Session.handle,
-                temporaryFilePath: TemporaryFilePath
-            }).pipe(Effect.map(() => undefined));
-        }
-
-        case "Manual":
-        {
-            return waitForManualConfirmation({
-                message: Session.message
-            }).pipe(Effect.map(() => { }));
-        }
-    }
-};
-
-const shouldCleanupTemporaryFile = (
-    Policy: TemporaryFileCleanupPolicy,
-    ErrorValue: TemporaryFilePromptError | Terminal.QuitError
-): boolean =>
-{
-    switch (Policy)
-    {
-        case "never":
-        {
-            return false;
-        }
-
-        case "on-failure":
-        {
-            return true;
-        }
-
-        case "on-cancel":
-        {
-            return Terminal.isQuitError(ErrorValue) || isTemporaryFilePromptCancelled(ErrorValue);
-        }
-    }
-};
-
-const cleanupTemporaryFile = (
-    TemporaryFilePath: string | undefined,
-    Policy: TemporaryFileCleanupPolicy,
-    ErrorValue: TemporaryFilePromptError | Terminal.QuitError
-): Effect.Effect<void, never, FileSystem.FileSystem> =>
-    Effect.gen(function*()
-    {
-        if (TemporaryFilePath === undefined || !shouldCleanupTemporaryFile(Policy, ErrorValue))
-        {
-            return undefined;
-        }
-
-        const FileSystemService = yield* FileSystem.FileSystem;
-
-        yield* Effect.orDie(
-            FileSystemService.remove(TemporaryFilePath, {
-                force: true
-            })
-        );
-    });
-
-const openTemporaryFileWithProgram = (
-    Options: TemporaryFileOptions,
-    Program: TemporaryFileProgram
-): Effect.Effect<
-    string,
-    TemporaryFilePromptError | Terminal.QuitError,
-    TemporaryFileProgramEnvironment
-> =>
-{
-    const CleanupPolicy = Options.cleanup ?? "on-cancel";
-    let TemporaryFilePath: string | undefined;
-
-    const OpenEffect = Effect.gen(function*()
-    {
-        const FileSystemService = yield* FileSystem.FileSystem;
-        const TerminalService = yield* Terminal.Terminal;
-
-        yield* Effect.orDie(
-            TerminalService.display(Options.message ?? "Opening temporary file...\n")
-        );
-
-        TemporaryFilePath = yield* FileSystemService.makeTempFile({
-            directory: Options.directory,
-            prefix: Options.prefix,
-            suffix: Options.suffix
-        }).pipe(
-            mapTemporaryFilePromptErrors({
-                operation: "creating a temporary file"
-            })
-        );
-
-        if (Options.initialContent !== undefined)
-        {
-            yield* FileSystemService.writeFileString(
-                TemporaryFilePath,
-                Options.initialContent
-            ).pipe(
-                mapTemporaryFilePromptErrors({
-                    operation: "writing initial temporary file content",
-                    path: TemporaryFilePath
-                })
-            );
-        }
-
-        const Session = yield* Program.open(TemporaryFilePath).pipe(
-            Effect.mapError((Cause) =>
-            {
-                if (isTemporaryFilePromptError(Cause) || Terminal.isQuitError(Cause))
-                {
-                    return Cause;
-                }
-
-                return new TemporaryFileProgramFailed({
-                    cause: Cause,
-                    programName: Program.name
-                });
-            })
-        );
-
-        yield* waitForTemporaryFileCompletion(TemporaryFilePath, Session).pipe(
-            mapTemporaryFilePromptErrors({
-                operation: "waiting for the temporary file program",
-                path: TemporaryFilePath
-            })
-        );
-
-        return TemporaryFilePath;
-    });
-
-    return pipe(
-        OpenEffect,
-        Effect.matchEffect({
-            onFailure: (ErrorValue: TemporaryFilePromptError | Terminal.QuitError) =>
-                pipe(
-                    cleanupTemporaryFile(TemporaryFilePath, CleanupPolicy, ErrorValue),
-                    Effect.flatMap(() => Effect.fail(ErrorValue))
-                ),
-            onSuccess: Effect.succeed
-        })
-    );
-};
-
-export const temporaryFile = (
-    Options: TemporaryFileOptions
-): Prompt<
-    string,
-    TemporaryFilePromptError,
-    TemporaryFileProgramEnvironment
-> =>
-    chooseTemporaryFileProgram({
-        maxPerPage: Options.maxProgramsPerPage,
-        message: Options.programMessage,
-        programs: Options.programs,
-        selection: Options.selectProgram
-    }).pipe(
-        flatMap((ChosenProgram) => program(openTemporaryFileWithProgram(Options, ChosenProgram)))
-    );
 
 /**
  * Composes prompts by using the output of this prompt to create the next prompt.
@@ -1778,26 +906,23 @@ export const temporaryFile = (
  * @since 4.0.0
  */
 export const flatMap: {
-    <Output, Output2, Error2 = never, ExtraEnvironment2 = never>(
-        f: (output: Output) => Prompt<Output2, Error2, ExtraEnvironment2>
-    ): <Error = never, ExtraEnvironment = never>(
-        self: Prompt<Output, Error, ExtraEnvironment>
-    ) => Prompt<Output2, Error | Error2, ExtraEnvironment | ExtraEnvironment2>
-    <Output, Error, ExtraEnvironment, Output2, Error2, ExtraEnvironment2>(
-        self: Prompt<Output, Error, ExtraEnvironment>,
-        f: (output: Output) => Prompt<Output2, Error2, ExtraEnvironment2>
-    ): Prompt<Output2, Error | Error2, ExtraEnvironment | ExtraEnvironment2>
-} = dual(2, <Output, Error, ExtraEnvironment, Output2, Error2, ExtraEnvironment2>(
-    self: Prompt<Output, Error, ExtraEnvironment>,
-    f: (output: Output) => Prompt<Output2, Error2, ExtraEnvironment2>
-) =>
-{
-    const op = Object.create(proto);
-    op._tag = "OnSuccess";
-    op.prompt = self;
-    op.onSuccess = f;
-    return op;
-});
+  <Output, Output2>(
+    f: (output: Output) => Prompt<Output2>
+  ): (self: Prompt<Output>) => Prompt<Output2>
+  <Output, Output2>(
+    self: Prompt<Output>,
+    f: (output: Output) => Prompt<Output2>
+  ): Prompt<Output2>
+} = dual(2, <Output, Output2>(
+  self: Prompt<Output>,
+  f: (output: Output) => Prompt<Output2>
+) => {
+  const op = Object.create(proto)
+  op._tag = "OnSuccess"
+  op.prompt = self
+  op.onSuccess = f
+  return op
+})
 
 /**
  * Creates a floating-point number prompt.
@@ -1810,48 +935,37 @@ export const flatMap: {
  * @category constructors
  * @since 4.0.0
  */
-export const float = (options: FloatOptions): Prompt<number> =>
-{
-    const opts: FloatOptionsReq = {
-        default: 0,
-
-        decrementBy: 1,
-        incrementBy: 1,
-
-        max: Number.POSITIVE_INFINITY,
-        min: Number.NEGATIVE_INFINITY,
-
-        precision: 2,
-        validate: (n) =>
-        {
-            if (n < opts.min)
-            {
-                return Effect.fail(`${n} must be greater than or equal to ${opts.min}`);
-            }
-            if (n > opts.max)
-            {
-                return Effect.fail(`${n} must be less than or equal to ${opts.max}`);
-            }
-            return Effect.succeed(n);
-        },
-        ...options
-    };
-    const initialValue = options.default === undefined ? "" : `${opts.default}`;
-    const initialState: NumberState = {
-        cursor: initialValue.length,
-        error: Option.none(),
-        value: initialValue
-    };
-    return custom(
-        initialState,
-        {
-            clear: handleNumberClear(opts),
-            process: handleProcessFloat(opts),
-            render: handleRenderFloat(opts)
-        }
-    );
-};
-
+export const float = (options: FloatOptions): Prompt<number> => {
+  const opts: FloatOptionsReq = {
+    default: 0,
+    min: Number.NEGATIVE_INFINITY,
+    max: Number.POSITIVE_INFINITY,
+    incrementBy: 1,
+    decrementBy: 1,
+    precision: 2,
+    validate: (n) => {
+      if (n < opts.min) {
+        return Effect.fail(`${n} must be greater than or equal to ${opts.min}`)
+      }
+      if (n > opts.max) {
+        return Effect.fail(`${n} must be less than or equal to ${opts.max}`)
+      }
+      return Effect.succeed(n)
+    },
+    ...options
+  }
+  const initialValue = options.default === undefined ? "" : `${opts.default}`
+  const initialState: NumberState = {
+    cursor: initialValue.length,
+    value: initialValue,
+    error: Option.none()
+  }
+  return custom(initialState, {
+    render: handleRenderFloat(opts),
+    process: handleProcessFloat(opts),
+    clear: handleNumberClear(opts)
+  })
+}
 /**
  * Creates a text prompt that does not echo typed input and returns the
  * submitted value wrapped in `Redacted`.
@@ -1860,11 +974,8 @@ export const float = (options: FloatOptions): Prompt<number> =>
  * @since 4.0.0
  */
 export const hidden = (
-    options: TextOptions
-): Prompt<Redacted.Redacted> => pipe(
-    basePrompt(options, "hidden"),
-    map(Redacted.make)
-);
+  options: TextOptions
+): Prompt<Redacted.Redacted> => basePrompt(options, "hidden").pipe(map(Redacted.make))
 
 /**
  * Creates an integer prompt.
@@ -1877,46 +988,36 @@ export const hidden = (
  * @category constructors
  * @since 4.0.0
  */
-export const integer = (options: IntegerOptions): Prompt<number> =>
-{
-    const opts: IntegerOptionsReq = {
-        default: 0,
-
-        decrementBy: 1,
-        incrementBy: 1,
-
-        max: Number.POSITIVE_INFINITY,
-        min: Number.NEGATIVE_INFINITY,
-
-        validate: (n) =>
-        {
-            if (n < opts.min)
-            {
-                return Effect.fail(`${n} must be greater than or equal to ${opts.min}`);
-            }
-            if (n > opts.max)
-            {
-                return Effect.fail(`${n} must be less than or equal to ${opts.max}`);
-            }
-            return Effect.succeed(n);
-        },
-        ...options
-    };
-    const initialValue = options.default === undefined ? "" : `${opts.default}`;
-    const initialState: NumberState = {
-        cursor: initialValue.length,
-        error: Option.none(),
-        value: initialValue
-    };
-    return custom(
-        initialState,
-        {
-            clear: handleNumberClear(opts),
-            process: handleProcessInteger(opts),
-            render: handleRenderInteger(opts)
-        }
-    );
-};
+export const integer = (options: IntegerOptions): Prompt<number> => {
+  const opts: IntegerOptionsReq = {
+    default: 0,
+    min: Number.NEGATIVE_INFINITY,
+    max: Number.POSITIVE_INFINITY,
+    incrementBy: 1,
+    decrementBy: 1,
+    validate: (n) => {
+      if (n < opts.min) {
+        return Effect.fail(`${n} must be greater than or equal to ${opts.min}`)
+      }
+      if (n > opts.max) {
+        return Effect.fail(`${n} must be less than or equal to ${opts.max}`)
+      }
+      return Effect.succeed(n)
+    },
+    ...options
+  }
+  const initialValue = options.default === undefined ? "" : `${opts.default}`
+  const initialState: NumberState = {
+    cursor: initialValue.length,
+    value: initialValue,
+    error: Option.none()
+  }
+  return custom(initialState, {
+    render: handleRenderInteger(opts),
+    process: handleProcessInteger(opts),
+    clear: handleNumberClear(opts)
+  })
+}
 
 /**
  * Creates a text prompt that returns an array of strings by splitting the
@@ -1926,10 +1027,9 @@ export const integer = (options: IntegerOptions): Prompt<number> =>
  * @since 4.0.0
  */
 export const list = (options: ListOptions): Prompt<Array<string>> =>
-    pipe(
-        text(options),
-        map((output) => output.split(options.delimiter || ","))
-    );
+  text(options).pipe(
+    map((output) => output.split(options.delimiter || ","))
+  )
 
 /**
  * Transforms the output value produced by a prompt.
@@ -1938,19 +1038,17 @@ export const list = (options: ListOptions): Prompt<Array<string>> =>
  * @since 4.0.0
  */
 export const map: {
-    <Output, Output2>(
-        f: (output: Output) => Output2
-    ): <Error = never, ExtraEnvironment = never>(
-        self: Prompt<Output, Error, ExtraEnvironment>
-    ) => Prompt<Output2, Error, ExtraEnvironment>
-    <Output, Error, ExtraEnvironment, Output2>(
-        self: Prompt<Output, Error, ExtraEnvironment>,
-        f: (output: Output) => Output2
-    ): Prompt<Output2, Error, ExtraEnvironment>
-} = dual(2, <Output, Error, ExtraEnvironment, Output2>(
-    self: Prompt<Output, Error, ExtraEnvironment>,
+  <Output, Output2>(
     f: (output: Output) => Output2
-) => flatMap(self, (a) => succeed(f(a))));
+  ): (self: Prompt<Output>) => Prompt<Output2>
+  <Output, Output2>(
+    self: Prompt<Output>,
+    f: (output: Output) => Output2
+  ): Prompt<Output2>
+} = dual(2, <Output, Output2>(
+  self: Prompt<Output>,
+  f: (output: Output) => Output2
+) => flatMap(self, (a) => succeed(f(a))))
 
 /**
  * Creates a password prompt that masks typed input and returns the submitted
@@ -1960,8 +1058,8 @@ export const map: {
  * @since 4.0.0
  */
 export const password = (
-    options: TextOptions
-): Prompt<Redacted.Redacted> => basePrompt(options, "password").pipe(map(Redacted.make));
+  options: TextOptions
+): Prompt<Redacted.Redacted> => basePrompt(options, "password").pipe(map(Redacted.make))
 
 /**
  * Runs a prompt by reading terminal input and rendering prompt frames until the
@@ -1975,48 +1073,39 @@ export const password = (
  * @category execution
  * @since 4.0.0
  */
-export const run: <Output, Error = never, ExtraEnvironment = never>(
-    self: Prompt<Output, Error, ExtraEnvironment>
+export const run: <Output>(
+  self: Prompt<Output>
 ) => Effect.Effect<
-    Output,
-    Terminal.QuitError | Error,
-    Environment | ExtraEnvironment
+  Output,
+  Terminal.QuitError,
+  Environment
 > = Effect.fnUntraced(
-    function*<Output, Error = never, ExtraEnvironment = never>(self: Prompt<Output, Error, ExtraEnvironment>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const input = yield* terminal.readInput;
-        return yield* runWithInput(self, terminal, input);
-    },
-    Effect.scoped
-);
+  function*<Output>(self: Prompt<Output>) {
+    const terminal = yield* Terminal.Terminal
+    const input = yield* terminal.readInput
+    return yield* runWithInput(self, terminal, input)
+  },
+  Effect.mapError(() => new Terminal.QuitError({})),
+  Effect.scoped
+)
 
-const getSelectInitialIndex = <A>(choices: ReadonlyArray<SelectChoice<A>>): number =>
-{
-    let initialIndex = 0;
-    let seenSelected = -1;
-    for (let Index: number = 0; Index < choices.length; Index++)
-    {
-        const choice = choices[Index] as SelectChoice<A>;
-        if (choice.selected === true)
-        {
-            if (seenSelected !== -1)
-            {
-                throw new Error(
-                    "InvalidArgumentException: only a single choice can be selected by " +
-                    "default for Prompt.select."
-                );
-            }
-
-            seenSelected = Index;
-        }
+const getSelectInitialIndex = <A>(choices: ReadonlyArray<SelectChoice<A>>): number => {
+  let initialIndex = 0
+  let seenSelected = -1
+  for (let i = 0; i < choices.length; i++) {
+    const choice = choices[i] as SelectChoice<A>
+    if (choice.selected === true) {
+      if (seenSelected !== -1) {
+        throw new Error("InvalidArgumentException: only a single choice can be selected by default for Prompt.select")
+      }
+      seenSelected = i
     }
-    if (seenSelected !== -1)
-    {
-        initialIndex = seenSelected;
-    }
-    return initialIndex;
-};
+  }
+  if (seenSelected !== -1) {
+    initialIndex = seenSelected
+  }
+  return initialIndex
+}
 
 /**
  * Creates a prompt that lets the user select a single value from a list of
@@ -2029,22 +1118,18 @@ const getSelectInitialIndex = <A>(choices: ReadonlyArray<SelectChoice<A>>): numb
  * @category constructors
  * @since 4.0.0
  */
-export const select = <const A>(options: SelectOptions<A>): Prompt<A> =>
-{
-    const opts: SelectOptionsReq<A> = {
-        maxPerPage: 10,
-        ...options
-    };
-    const initialIndex = getSelectInitialIndex(opts.choices);
-    return custom(
-        initialIndex,
-        {
-            clear: handleSelectClear(opts),
-            process: handleSelectProcess(opts),
-            render: handleSelectRender(opts)
-        }
-    );
-};
+export const select = <const A>(options: SelectOptions<A>): Prompt<A> => {
+  const opts: SelectOptionsReq<A> = {
+    maxPerPage: 10,
+    ...options
+  }
+  const initialIndex = getSelectInitialIndex(opts.choices)
+  return custom(initialIndex, {
+    render: handleSelectRender(opts),
+    process: handleSelectProcess(opts),
+    clear: handleSelectClear(opts)
+  })
+}
 
 /**
  * Creates a prompt that lets users filter select choices by typing.
@@ -2052,7 +1137,7 @@ export const select = <const A>(options: SelectOptions<A>): Prompt<A> =>
  * **Example** (Filtering choices with autocomplete)
  *
  * ```ts
- * import { Prompt } from "@sorrell/effect/unstable/cli"
+ * import { Prompt } from "effect/unstable/cli"
  *
  * const language = Prompt.autoComplete({
  *   message: "Choose a language",
@@ -2067,33 +1152,32 @@ export const select = <const A>(options: SelectOptions<A>): Prompt<A> =>
  * @category constructors
  * @since 4.0.0
  */
-export const autoComplete = <const A>(options: AutoCompleteOptions<A>): Prompt<A> =>
-{
-    const opts: AutoCompleteOptionsReq<A> = {
-        emptyMessage: "No matches",
-        filterLabel: "filter",
-        filterPlaceholder: "type to filter",
-        maxPerPage: 10,
-        ...options
-    };
-    const initialIndex = getSelectInitialIndex(opts.choices);
-    const filtered = filterAutoCompleteChoices(opts.choices, "");
-    const index = filtered.length === 0
-        ? 0
-        : filtered.includes(initialIndex)
-            ? initialIndex
-            : filtered[0];
-    const initialState: AutoCompleteState = {
-        filtered,
-        index,
-        query: ""
-    };
-    return custom(initialState, {
-        clear: handleAutoCompleteClear(opts),
-        process: handleAutoCompleteProcess(opts),
-        render: handleAutoCompleteRender(opts)
-    });
-};
+export const autoComplete = <const A>(options: AutoCompleteOptions<A>): Prompt<A> => {
+  const opts: AutoCompleteOptionsReq<A> = {
+    maxPerPage: 10,
+    filterLabel: "filter",
+    filterPlaceholder: "type to filter",
+    emptyMessage: "No matches",
+    ...options
+  }
+  const initialIndex = getSelectInitialIndex(opts.choices)
+  const filtered = filterAutoCompleteChoices(opts.choices, "")
+  const index = filtered.length === 0
+    ? 0
+    : filtered.includes(initialIndex)
+    ? initialIndex
+    : filtered[0]
+  const initialState: AutoCompleteState = {
+    query: "",
+    index,
+    filtered
+  }
+  return custom(initialState, {
+    render: handleAutoCompleteRender(opts),
+    process: handleAutoCompleteProcess(opts),
+    clear: handleAutoCompleteClear(opts)
+  })
+}
 
 /**
  * Creates a prompt that lets the user select multiple choices and returns their
@@ -2108,39 +1192,27 @@ export const autoComplete = <const A>(options: AutoCompleteOptions<A>): Prompt<A
  * @since 4.0.0
  */
 export const multiSelect = <const A>(
-    options: SelectOptions<A> & MultiSelectOptions
-): Prompt<Array<A>> =>
-{
-    const opts: SelectOptionsReq<A> & MultiSelectOptionsReq = {
-        maxPerPage: 10,
-        ...options
-    };
-    // Seed initial selection from choices marked as selected: true
-    const initialSelected = new Set<number>();
-    for (let i = 0; i < opts.choices.length; i++)
-    {
-        const choice = opts.choices[i] as SelectChoice<A>;
-        if (choice.selected === true)
-        {
-            initialSelected.add(i);
-        }
+  options: SelectOptions<A> & MultiSelectOptions
+): Prompt<Array<A>> => {
+  const opts: SelectOptionsReq<A> & MultiSelectOptionsReq = {
+    maxPerPage: 10,
+    ...options
+  }
+  // Seed initial selection from choices marked as selected: true
+  const initialSelected = new Set<number>()
+  for (let i = 0; i < opts.choices.length; i++) {
+    const choice = opts.choices[i] as SelectChoice<A>
+    if (choice.selected === true) {
+      initialSelected.add(i)
     }
-    const initialState: MultiSelectState =
-        {
-            error: Option.none(),
-            index: 0,
-            selectedIndices: initialSelected
-        };
-
-    return custom(
-        initialState,
-        {
-            clear: handleMultiSelectClear(opts),
-            process: handleMultiSelectProcess(opts),
-            render: handleMultiSelectRender(opts)
-        }
-    );
-};
+  }
+  const initialState: MultiSelectState = { index: 0, selectedIndices: initialSelected, error: Option.none() }
+  return custom(initialState, {
+    render: handleMultiSelectRender(opts),
+    process: handleMultiSelectProcess(opts),
+    clear: handleMultiSelectClear(opts)
+  })
+}
 
 /**
  * Creates a `Prompt` which immediately succeeds with the specified value.
@@ -2153,13 +1225,12 @@ export const multiSelect = <const A>(
  * @category constructors
  * @since 4.0.0
  */
-export const succeed = <A>(value: A): Prompt<A> =>
-{
-    const op = Object.create(proto);
-    op._tag = "Succeed";
-    op.value = value;
-    return op;
-};
+export const succeed = <A>(value: A): Prompt<A> => {
+  const op = Object.create(proto)
+  op._tag = "Succeed"
+  op.value = value
+  return op
+}
 
 /**
  * Creates a text-entry prompt that echoes input and returns the submitted
@@ -2169,8 +1240,8 @@ export const succeed = <A>(value: A): Prompt<A> =>
  * @since 4.0.0
  */
 export const text = (
-    options: TextOptions
-): Prompt<string> => basePrompt(options, "text");
+  options: TextOptions
+): Prompt<string> => basePrompt(options, "text")
 
 /**
  * Creates a toggle prompt that lets the user switch between active and inactive
@@ -2179,3129 +1250,2603 @@ export const text = (
  * @category constructors
  * @since 4.0.0
  */
-export const toggle = (options: ToggleOptions): Prompt<boolean> =>
-{
-    const opts: ToggleOptionsReq =
-        {
-            active: "on",
-            inactive: "off",
-            initial: false,
-            ...options
-        };
-
-    return custom(
-        opts.initial,
-        {
-            clear: () => handleToggleClear(opts),
-            process: handleToggleProcess,
-            render: handleToggleRender(opts)
-        }
-    );
-};
+export const toggle = (options: ToggleOptions): Prompt<boolean> => {
+  const opts: ToggleOptionsReq = {
+    initial: false,
+    active: "on",
+    inactive: "off",
+    ...options
+  }
+  return custom(opts.initial, {
+    render: handleToggleRender(opts),
+    process: handleToggleProcess,
+    clear: () => handleToggleClear(opts)
+  })
+}
 
 const proto = {
-    ...Effectable.Prototype<Prompt<any>>({
-        evaluate()
-        {
-            return run(this);
-        },
-        label: "Prompt"
-    }),
-    [ TypeId ]:
-    {
-        _Error: (_: never) => _,
-        _ExtraEnvironment: (_: never) => _,
-        _Output: (_: never) => _
+  ...Effectable.Prototype<Prompt<any>>({
+    label: "Prompt",
+    evaluate() {
+      return run(this)
     }
-};
+  }),
+  [TypeId]: {
+    _Output: (_: never) => _
+  }
+}
 
 type Op<Tag extends string, Body = {}> = Prompt<never> & Body & {
-    readonly _tag: Tag
-};
+  readonly _tag: Tag
+}
 
-interface ProgramEffect extends Op<"Program", {
-    readonly effect: Effect.Effect<unknown, unknown, unknown>
-}>
-{ }
-
-type PromptPrimitive = Loop | OnSuccess | Succeed | ProgramEffect;
+type PromptPrimitive = Loop | OnSuccess | Succeed
 
 interface Loop extends
-    Op<"Loop", {
-        readonly initialState: unknown | Effect.Effect<unknown, never, Environment>
-        readonly render: Handlers<unknown, unknown>["render"]
-        readonly process: Handlers<unknown, unknown>["process"]
-        readonly clear: Handlers<unknown, unknown>["clear"]
-    }>
+  Op<"Loop", {
+    readonly initialState: unknown | Effect.Effect<unknown, never, Environment>
+    readonly render: Handlers<unknown, unknown>["render"]
+    readonly process: (
+      input: unknown,
+      state: unknown
+    ) => Effect.Effect<Action<unknown, unknown>, never, Environment>
+    readonly clear: Handlers<unknown, unknown>["clear"]
+    readonly events: Queue.Dequeue<unknown, never> | undefined
+  }>
 {}
 
 /** @internal */
 export interface OnSuccess extends
-    Op<"OnSuccess", {
-        readonly prompt: PromptPrimitive
-        readonly onSuccess: (value: unknown) => Prompt<unknown, unknown, unknown>
-    }>
+  Op<"OnSuccess", {
+    readonly prompt: PromptPrimitive
+    readonly onSuccess: (value: unknown) => Prompt<unknown>
+  }>
 {}
 
 interface Succeed extends
-    Op<"Succeed", {
-        readonly value: unknown
-    }>
+  Op<"Succeed", {
+    readonly value: unknown
+  }>
 {}
 
 const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<
-    {
-        [K in keyof T]: [T[K]] extends [Prompt<infer A>] ? A : never
-    }
-> =>
-{
-    if (arg.length === 0)
-    {
-        return succeed([]) as any;
-    }
-    if (arg.length === 1)
-    {
-        return map(arg[0], (x) => [ x ]) as any;
-    }
-    let result = map(arg[0], (x) => [ x ]);
-    for (let i = 1; i < arg.length; i++)
-    {
-        const curr = arg[i];
-        result = flatMap(result, (tuple) => map(curr, (a) => [ ...tuple, a ]));
-    }
-    return result as any;
-};
+  {
+    [K in keyof T]: [T[K]] extends [Prompt<infer A>] ? A : never
+  }
+> => {
+  if (arg.length === 0) {
+    return succeed([]) as any
+  }
+  if (arg.length === 1) {
+    return map(arg[0], (x) => [x]) as any
+  }
+  let result = map(arg[0], (x) => [x])
+  for (let i = 1; i < arg.length; i++) {
+    const curr = arg[i]
+    result = flatMap(result, (tuple) => map(curr, (a) => [...tuple, a]))
+  }
+  return result as any
+}
 
-const runWithInput = <Output, Error = never, ExtraEnvironment = never>(
-    prompt: Prompt<Output, Error, ExtraEnvironment>,
-    terminal: Terminal.Terminal,
-    input: Queue.Dequeue<Terminal.UserInput, Cause.Done>
-): Effect.Effect<Output, Terminal.QuitError | Error, Environment | ExtraEnvironment> =>
-    Effect.suspend(() =>
-    {
-        const op = prompt as PromptPrimitive;
-        switch (op._tag)
-        {
-            case "Loop": {
-                return runLoop(op, terminal, input) as any;
-            }
-            case "OnSuccess": {
-                return Effect.flatMap(
-                    runWithInput(op.prompt, terminal, input),
-                    (a) => runWithInput(op.onSuccess(a), terminal, input)
-                ) as any;
-            }
-            case "Succeed": {
-                return Effect.succeed(op.value) as any;
-            }
-            case "Program":  {
-                return op.effect as any;
-            }
-        }
-    });
+const runWithInput = <Output>(
+  prompt: Prompt<Output>,
+  terminal: Terminal.Terminal,
+  input: Queue.Dequeue<Terminal.UserInput, Cause.Done>
+): Effect.Effect<Output, NoSuchElementError, Environment> =>
+  Effect.suspend(() => {
+    const op = prompt as PromptPrimitive
+    switch (op._tag) {
+      case "Loop": {
+        return runLoop(op, terminal, input)
+      }
+      case "OnSuccess": {
+        return Effect.flatMap(
+          runWithInput(op.prompt, terminal, input),
+          (a) => runWithInput(op.onSuccess(a), terminal, input)
+        ) as any
+      }
+      case "Succeed": {
+        return Effect.succeed(op.value)
+      }
+    }
+  })
 
 const runLoop = Effect.fnUntraced(
-    function*(
-        loop: Loop,
-        terminal: Terminal.Terminal,
-        input: Queue.Dequeue<Terminal.UserInput, Cause.Done>
-    )
-    {
-        let state = Effect.isEffect(loop.initialState) ? yield* loop.initialState : loop.initialState;
-        let action: Action<unknown, unknown> = Action.NextFrame({ state });
-        while (true)
-        {
-            const msg = yield* loop.render(state, action);
-            yield* Effect.orDie(terminal.display(msg));
-            const event = yield* Queue.take(input).pipe(
-                Effect.mapError(() => new Terminal.QuitError({}))
-            );
-            action = yield* loop.process(event, state);
-            switch (action._tag)
-            {
-                case "Beep":
-                    continue;
-                case "NextFrame": {
-                    yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
-                    state = action.state;
-                    continue;
-                }
-                case "Submit": {
-                    yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
-                    const msg = yield* loop.render(state, action);
-                    yield* Effect.orDie(terminal.display(msg));
-                    return action.value;
-                }
-            }
+  function*(
+    loop: Loop,
+    terminal: Terminal.Terminal,
+    input: Queue.Dequeue<Terminal.UserInput, Cause.Done>
+  ) {
+    let state = Effect.isEffect(loop.initialState) ? yield* loop.initialState : loop.initialState
+    let action: Action<unknown, unknown> = Action.NextFrame({ state })
+    while (true) {
+      const msg = yield* loop.render(state, action)
+      yield* Effect.orDie(terminal.display(msg))
+      if (loop.events) {
+        const takeInput = Queue.take(input).pipe(
+          Effect.map((input) => ({ _tag: "Input" as const, input }))
+        )
+        const result = yield* Effect.raceFirst(
+          takeInput,
+          Queue.take(loop.events).pipe(Effect.map((value) => ({ _tag: "Event" as const, value })))
+        )
+        action = yield* loop.process(result, state)
+      } else {
+        const result = yield* Queue.take(input)
+        action = yield* loop.process(result, state)
+      }
+      switch (action._tag) {
+        case "Beep":
+          continue
+        case "NextFrame": {
+          yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)))
+          state = action.state
+          continue
         }
-    },
-    (effect, _, terminal) => Effect.ensuring(effect, Effect.orDie(terminal.display(Ansi.cursorShow)))
-);
+        case "Submit": {
+          yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)))
+          const msg = yield* loop.render(state, action)
+          yield* Effect.orDie(terminal.display(msg))
+          return action.value
+        }
+      }
+    }
+  },
+  (effect, _, terminal) => Effect.ensuring(effect, Effect.orDie(terminal.display(Ansi.cursorShow)))
+)
 
-const Action = Data.taggedEnum<ActionDefinition>();
+const Action = Data.taggedEnum<ActionDefinition>()
 
 /**
  * Clears all lines taken up by the specified `text`.
  */
-const eraseText = (text: string, columns: number): string =>
-{
-    if (columns === 0)
-    {
-        return Ansi.eraseLine + Ansi.cursorTo(0);
-    }
-    let rows = 0;
-    const lines = text.split(NEWLINE_REGEXP);
-    for (const line of lines)
-    {
-        rows += 1 + Math.floor(Math.max(line.length - 1, 0) / columns);
-    }
-    return Ansi.eraseLines(rows);
-};
+const eraseText = (text: string, columns: number): string => {
+  if (columns === 0) {
+    return Ansi.eraseLine + Ansi.cursorTo(0)
+  }
+  let rows = 0
+  const lines = text.split(NEWLINE_REGEXP)
+  for (const line of lines) {
+    rows += 1 + Math.floor(Math.max(line.length - 1, 0) / columns)
+  }
+  return Ansi.eraseLines(rows)
+}
 
-const lines = (prompt: string, columns: number): number =>
-{
-    const lines = prompt.split(NEWLINE_REGEXP);
-    return columns === 0
-        ? lines.length
-        : pipe(
-            Arr.map(lines, (line) => Math.ceil(line.length / columns)),
-            Arr.reduce(0, (left, right) => left + right)
-        );
-};
+const lines = (prompt: string, columns: number): number => {
+  const lines = prompt.split(NEWLINE_REGEXP)
+  return columns === 0
+    ? lines.length
+    : pipe(
+      Arr.map(lines, (line) => Math.ceil(line.length / columns)),
+      Arr.reduce(0, (left, right) => left + right)
+    )
+}
 
-const clearOutputWithError = (outputText: string, columns: number, errorText?: string): string =>
-{
-    if (errorText !== undefined && errorText.length > 0)
-    {
-        return Ansi.cursorDown(lines(errorText, columns))
+const clearOutputWithError = (outputText: string, columns: number, errorText?: string): string => {
+  if (errorText !== undefined && errorText.length > 0) {
+    return Ansi.cursorDown(lines(errorText, columns))
       + eraseText(`\n${errorText}`, columns)
-      + eraseText(outputText, columns);
-    }
-    return eraseText(outputText, columns);
-};
+      + eraseText(outputText, columns)
+  }
+  return eraseText(outputText, columns)
+}
 
 interface ConfirmOptionsReq extends Required<ConfirmOptions> {}
 
 interface ConfirmState {
-    readonly value: boolean
+  readonly value: boolean
 }
 
-const renderBeep = Ansi.beep;
+const renderBeep = Ansi.beep
 
-const NEWLINE_REGEXP = /\r?\n/;
+const NEWLINE_REGEXP = /\r?\n/
 
-const handleConfirmClear = (options: ConfirmOptionsReq) =>
-{
-    return Effect.fnUntraced(function*(state: ConfirmState, _: Action<ConfirmState, boolean>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const figures = yield* platformFigures;
-        const confirmMessage = state.value
-            ? options.placeholder.defaultConfirm!
-            : options.placeholder.defaultDeny!;
-        const promptText = renderConfirmOutput(
-            confirmMessage,
-            "?",
-            figures.pointerSmall,
-            options,
-            { plain: true }
-        );
-        const clearOutput = eraseText(promptText, columns);
-        const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft;
-        return clearOutput + resetCurrentLine;
-    });
-};
+const handleConfirmClear = (options: ConfirmOptionsReq) => {
+  return Effect.fnUntraced(function*(state: ConfirmState, _: Action<ConfirmState, boolean>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const figures = yield* platformFigures
+    const confirmMessage = state.value
+      ? options.placeholder.defaultConfirm!
+      : options.placeholder.defaultDeny!
+    const promptText = renderConfirmOutput(
+      confirmMessage,
+      "?",
+      figures.pointerSmall,
+      options,
+      { plain: true }
+    )
+    const clearOutput = eraseText(promptText, columns)
+    const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft
+    return clearOutput + resetCurrentLine
+  })
+}
 
 const renderConfirmOutput = (
-    confirm: string,
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options: ConfirmOptionsReq,
-    renderOptions?: RenderOptions | undefined
-) => renderPrompt(confirm, options.message, leadingSymbol, trailingSymbol, renderOptions);
+  confirm: string,
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options: ConfirmOptionsReq,
+  renderOptions?: RenderOptions | undefined
+) => renderPrompt(confirm, options.message, leadingSymbol, trailingSymbol, renderOptions)
 
-const renderConfirmNextFrame = Effect.fnUntraced(function*(state: ConfirmState, options: ConfirmOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    // Marking these explicitly as present with `!` because they always will be
-    // and there is really no value in adding a `DeepRequired` type helper just
-    // for these internal cases
-    const confirmMessage = state.value
-        ? options.placeholder.defaultConfirm!
-        : options.placeholder.defaultDeny!;
-    const confirm = Ansi.annotate(confirmMessage, Ansi.blackBright);
-    const promptMsg = renderConfirmOutput(confirm, leadingSymbol, trailingSymbol, options);
-    return Ansi.cursorHide + promptMsg;
-});
+const renderConfirmNextFrame = Effect.fnUntraced(function*(state: ConfirmState, options: ConfirmOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  // Marking these explicitly as present with `!` because they always will be
+  // and there is really no value in adding a `DeepRequired` type helper just
+  // for these internal cases
+  const confirmMessage = state.value
+    ? options.placeholder.defaultConfirm!
+    : options.placeholder.defaultDeny!
+  const confirm = Ansi.annotate(confirmMessage, Ansi.blackBright)
+  const promptMsg = renderConfirmOutput(confirm, leadingSymbol, trailingSymbol, options)
+  return Ansi.cursorHide + promptMsg
+})
 
-const renderConfirmSubmission = Effect.fnUntraced(function*(value: boolean, options: ConfirmOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const confirmMessage = value ? options.label.confirm : options.label.deny;
-    const promptMsg = renderConfirmOutput(confirmMessage, leadingSymbol, trailingSymbol, options);
-    return promptMsg + "\n";
-});
+const renderConfirmSubmission = Effect.fnUntraced(function*(value: boolean, options: ConfirmOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const confirmMessage = value ? options.label.confirm : options.label.deny
+  const promptMsg = renderConfirmOutput(confirmMessage, leadingSymbol, trailingSymbol, options)
+  return promptMsg + "\n"
+})
 
-const handleConfirmRender = (options: ConfirmOptionsReq) =>
-{
-    return (_: ConfirmState, action: Action<ConfirmState, boolean>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderConfirmNextFrame(state, options),
-            Submit: ({ value }) => renderConfirmSubmission(value, options)
-        });
-    };
-};
+const handleConfirmRender = (options: ConfirmOptionsReq) => {
+  return (_: ConfirmState, action: Action<ConfirmState, boolean>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderConfirmNextFrame(state, options),
+      Submit: ({ value }) => renderConfirmSubmission(value, options)
+    })
+  }
+}
 
-const TRUE_VALUE_REGEXP = /^y|t$/;
-const FALSE_VALUE_REGEXP = /^n|f$/;
+const TRUE_VALUE_REGEXP = /^y|t$/
+const FALSE_VALUE_REGEXP = /^n|f$/
 
-const handleConfirmProcess = (input: Terminal.UserInput, defaultValue: boolean) =>
-{
-    const value = Option.getOrElse(input.input, () => "");
-    if (input.key.name === "enter" || input.key.name === "return")
-    {
-        return Effect.succeed(Action.Submit({ value: defaultValue }));
-    }
-    if (TRUE_VALUE_REGEXP.test(value.toLowerCase()))
-    {
-        return Effect.succeed(Action.Submit({ value: true }));
-    }
-    if (FALSE_VALUE_REGEXP.test(value.toLowerCase()))
-    {
-        return Effect.succeed(Action.Submit({ value: false }));
-    }
-    return Effect.succeed(Action.Beep());
-};
+const handleConfirmProcess = (input: Terminal.UserInput, defaultValue: boolean) => {
+  const value = Option.getOrElse(input.input, () => "")
+  if (input.key.name === "enter" || input.key.name === "return") {
+    return Effect.succeed(Action.Submit({ value: defaultValue }))
+  }
+  if (TRUE_VALUE_REGEXP.test(value.toLowerCase())) {
+    return Effect.succeed(Action.Submit({ value: true }))
+  }
+  if (FALSE_VALUE_REGEXP.test(value.toLowerCase())) {
+    return Effect.succeed(Action.Submit({ value: false }))
+  }
+  return Effect.succeed(Action.Beep())
+}
 
 interface DateOptionsReq extends Required<DateOptions> {}
 
 interface DateState {
-    readonly typed: string
-    readonly cursor: number
-    readonly value: globalThis.Date
-    readonly dateParts: ReadonlyArray<DatePart>
-    readonly error: Option.Option<string>
+  readonly typed: string
+  readonly cursor: number
+  readonly value: globalThis.Date
+  readonly dateParts: ReadonlyArray<DatePart>
+  readonly error: Option.Option<string>
 }
 
-const handleDateClear = (options: DateOptionsReq) =>
-{
-    return Effect.fnUntraced(function*(state: DateState, _: Action<DateState, globalThis.Date>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const figures = yield* platformFigures;
-        const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft;
-        const parts = Arr.reduce(state.dateParts, "", (doc, part) => doc + part.toString());
-        const promptText = renderDateOutput("?", figures.pointerSmall, parts, options, { plain: true });
-        const errorText = Option.isSome(state.error)
-            ? Arr.match(state.error.value.split(NEWLINE_REGEXP), {
-                onEmpty: () => "",
-                onNonEmpty: (errorLines) => `${figures.pointerSmall} ${errorLines.join("\n")}`
-            })
-            : "";
-        const clearOutput = clearOutputWithError(promptText, columns, errorText);
-        return clearOutput + resetCurrentLine;
-    });
-};
+const handleDateClear = (options: DateOptionsReq) => {
+  return Effect.fnUntraced(function*(state: DateState, _: Action<DateState, globalThis.Date>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const figures = yield* platformFigures
+    const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft
+    const parts = Arr.reduce(state.dateParts, "", (doc, part) => doc + part.toString())
+    const promptText = renderDateOutput("?", figures.pointerSmall, parts, options, { plain: true })
+    const errorText = Option.isSome(state.error)
+      ? Arr.match(state.error.value.split(NEWLINE_REGEXP), {
+        onEmpty: () => "",
+        onNonEmpty: (errorLines) => `${figures.pointerSmall} ${errorLines.join("\n")}`
+      })
+      : ""
+    const clearOutput = clearOutputWithError(promptText, columns, errorText)
+    return clearOutput + resetCurrentLine
+  })
+}
 
-const renderDateError = (state: DateState, pointer: string): string =>
-{
-    if (Option.isSome(state.error))
-    {
-        const errorLines = state.error.value.split(NEWLINE_REGEXP);
-        if (Arr.isReadonlyArrayNonEmpty(errorLines))
-        {
-            const prefix = Ansi.annotate(pointer, Ansi.red) + " ";
-            const lines = Arr.map(errorLines, (str) => annotateErrorLine(str));
-            return Ansi.cursorSavePosition + "\n" + prefix + lines.join("\n") + Ansi.cursorRestorePosition;
-        }
+const renderDateError = (state: DateState, pointer: string): string => {
+  if (Option.isSome(state.error)) {
+    const errorLines = state.error.value.split(NEWLINE_REGEXP)
+    if (Arr.isReadonlyArrayNonEmpty(errorLines)) {
+      const prefix = Ansi.annotate(pointer, Ansi.red) + " "
+      const lines = Arr.map(errorLines, (str) => annotateErrorLine(str))
+      return Ansi.cursorSavePosition + "\n" + prefix + lines.join("\n") + Ansi.cursorRestorePosition
     }
-    return "";
-};
+  }
+  return ""
+}
 
-const renderParts = (state: DateState, submitted: boolean = false) =>
-{
-    return Arr.reduce(
-        state.dateParts,
-        "",
-        (doc, part, currentIndex) =>
-        {
-            const partDoc = part.toString();
-            if (currentIndex === state.cursor && !submitted)
-            {
-                const annotation = Ansi.combine(Ansi.underlined, Ansi.cyanBright);
-                return doc + Ansi.annotate(partDoc, annotation);
-            }
-            return doc + partDoc;
-        }
-    );
-};
+const renderParts = (state: DateState, submitted: boolean = false) => {
+  return Arr.reduce(
+    state.dateParts,
+    "",
+    (doc, part, currentIndex) => {
+      const partDoc = part.toString()
+      if (currentIndex === state.cursor && !submitted) {
+        const annotation = Ansi.combine(Ansi.underlined, Ansi.cyanBright)
+        return doc + Ansi.annotate(partDoc, annotation)
+      }
+      return doc + partDoc
+    }
+  )
+}
 
 const renderDateOutput = (
-    leadingSymbol: string,
-    trailingSymbol: string,
-    parts: string,
-    options: DateOptionsReq,
-    renderOptions?: RenderOptions | undefined
-) => renderPrompt(parts, options.message, leadingSymbol, trailingSymbol, renderOptions);
+  leadingSymbol: string,
+  trailingSymbol: string,
+  parts: string,
+  options: DateOptionsReq,
+  renderOptions?: RenderOptions | undefined
+) => renderPrompt(parts, options.message, leadingSymbol, trailingSymbol, renderOptions)
 
-const renderDateNextFrame = Effect.fnUntraced(function*(state: DateState, options: DateOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    const parts = renderParts(state);
-    const promptMsg = renderDateOutput(leadingSymbol, trailingSymbol, parts, options);
-    const errorMsg = renderDateError(state, figures.pointerSmall);
-    return Ansi.cursorHide + promptMsg + errorMsg;
-});
+const renderDateNextFrame = Effect.fnUntraced(function*(state: DateState, options: DateOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  const parts = renderParts(state)
+  const promptMsg = renderDateOutput(leadingSymbol, trailingSymbol, parts, options)
+  const errorMsg = renderDateError(state, figures.pointerSmall)
+  return Ansi.cursorHide + promptMsg + errorMsg
+})
 
-const renderDateSubmission = Effect.fnUntraced(function*(state: DateState, options: DateOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const parts = renderParts(state, true);
-    const promptMsg = renderDateOutput(leadingSymbol, trailingSymbol, parts, options);
-    return promptMsg + "\n";
-});
+const renderDateSubmission = Effect.fnUntraced(function*(state: DateState, options: DateOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const parts = renderParts(state, true)
+  const promptMsg = renderDateOutput(leadingSymbol, trailingSymbol, parts, options)
+  return promptMsg + "\n"
+})
 
-const processUp = (state: DateState) =>
-{
-    state.dateParts[state.cursor].increment();
+const processUp = (state: DateState) => {
+  state.dateParts[state.cursor].increment()
+  return Action.NextFrame({
+    state: { ...state, typed: "" }
+  })
+}
+
+const processDown = (state: DateState) => {
+  state.dateParts[state.cursor].decrement()
+  return Action.NextFrame({
+    state: { ...state, typed: "" }
+  })
+}
+
+const processDateCursorLeft = (state: DateState) => {
+  const previous = state.dateParts[state.cursor].previousPart()
+  if (Option.isSome(previous)) {
     return Action.NextFrame({
-        state: { ...state, typed: "" }
-    });
-};
+      state: {
+        ...state,
+        typed: "",
+        cursor: state.dateParts.indexOf(previous.value)
+      }
+    })
+  }
+  return Action.Beep()
+}
 
-const processDown = (state: DateState) =>
-{
-    state.dateParts[state.cursor].decrement();
+const processDateCursorRight = (state: DateState) => {
+  const next = state.dateParts[state.cursor].nextPart()
+  if (Option.isSome(next)) {
     return Action.NextFrame({
-        state: { ...state, typed: "" }
-    });
-};
+      state: {
+        ...state,
+        typed: "",
+        cursor: state.dateParts.indexOf(next.value)
+      }
+    })
+  }
+  return Action.Beep()
+}
 
-const processDateCursorLeft = (state: DateState) =>
-{
-    const previous = state.dateParts[state.cursor].previousPart();
-    if (Option.isSome(previous))
-    {
-        return Action.NextFrame({
-            state: {
-                ...state,
-                cursor: state.dateParts.indexOf(previous.value),
-                typed: ""
-            }
-        });
-    }
-    return Action.Beep();
-};
+const processDateNext = (state: DateState) => {
+  const next = state.dateParts[state.cursor].nextPart()
+  const cursor = Option.match(next, {
+    onNone: () => state.dateParts.findIndex((part) => !part.isToken()),
+    onSome: (next) => state.dateParts.indexOf(next)
+  })
+  return Action.NextFrame({
+    state: { ...state, cursor }
+  })
+}
 
-const processDateCursorRight = (state: DateState) =>
-{
-    const next = state.dateParts[state.cursor].nextPart();
-    if (Option.isSome(next))
-    {
-        return Action.NextFrame({
-            state: {
-                ...state,
-                cursor: state.dateParts.indexOf(next.value),
-                typed: ""
-            }
-        });
-    }
-    return Action.Beep();
-};
-
-const processDateNext = (state: DateState) =>
-{
-    const next = state.dateParts[state.cursor].nextPart();
-    const cursor = Option.match(next, {
-        onNone: () => state.dateParts.findIndex((part) => !part.isToken()),
-        onSome: (next) => state.dateParts.indexOf(next)
-    });
+const defaultDateProcessor = (value: string, state: DateState) => {
+  if (/\d/.test(value)) {
+    const typed = state.typed + value
+    state.dateParts[state.cursor].setValue(typed)
     return Action.NextFrame({
-        state: { ...state, cursor }
-    });
-};
-
-const defaultDateProcessor = (value: string, state: DateState) =>
-{
-    if (/\d/.test(value))
-    {
-        const typed = state.typed + value;
-        state.dateParts[state.cursor].setValue(typed);
-        return Action.NextFrame({
-            state: { ...state, typed }
-        });
-    }
-    return Action.Beep();
-};
+      state: { ...state, typed }
+    })
+  }
+  return Action.Beep()
+}
 
 const defaultLocales: DateOptionsReq["locales"] = {
-    months: [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-    ],
-    monthsShort: [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ],
-    weekdays: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ],
-    weekdaysShort: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ]
-};
+  months: [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ],
+  monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  weekdaysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+}
 
-const handleDateRender = (options: DateOptionsReq) =>
-{
-    return (state: DateState, action: Action<DateState, globalThis.Date>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderDateNextFrame(state, options),
-            Submit: () => renderDateSubmission(state, options)
-        });
-    };
-};
+const handleDateRender = (options: DateOptionsReq) => {
+  return (state: DateState, action: Action<DateState, globalThis.Date>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderDateNextFrame(state, options),
+      Submit: () => renderDateSubmission(state, options)
+    })
+  }
+}
 
-const handleDateProcess = (options: DateOptionsReq) =>
-{
-    return (input: Terminal.UserInput, state: DateState) =>
-    {
-        switch (input.key.name)
-        {
-            case "left": {
-                return Effect.succeed(processDateCursorLeft(state));
-            }
-            case "right": {
-                return Effect.succeed(processDateCursorRight(state));
-            }
-            case "k":
-            case "up": {
-                return Effect.succeed(processUp(state));
-            }
-            case "j":
-            case "down": {
-                return Effect.succeed(processDown(state));
-            }
-            case "tab": {
-                return Effect.succeed(processDateNext(state));
-            }
-            case "enter":
-            case "return": {
-                return Effect.match(options.validate(state.value), {
-                    onFailure: (error) =>
-                        Action.NextFrame({
-                            state: {
-                                ...state,
-                                error: Option.some(error)
-                            }
-                        }),
-                    onSuccess: (value) => Action.Submit({ value })
-                });
-            }
-            default: {
-                return Effect.succeed(defaultDateProcessor(Option.getOrElse(input.input, () => ""), state));
-            }
-        }
-    };
-};
+const handleDateProcess = (options: DateOptionsReq) => {
+  return (input: Terminal.UserInput, state: DateState) => {
+    switch (input.key.name) {
+      case "left": {
+        return Effect.succeed(processDateCursorLeft(state))
+      }
+      case "right": {
+        return Effect.succeed(processDateCursorRight(state))
+      }
+      case "k":
+      case "up": {
+        return Effect.succeed(processUp(state))
+      }
+      case "j":
+      case "down": {
+        return Effect.succeed(processDown(state))
+      }
+      case "tab": {
+        return Effect.succeed(processDateNext(state))
+      }
+      case "enter":
+      case "return": {
+        return Effect.match(options.validate(state.value), {
+          onFailure: (error) =>
+            Action.NextFrame({
+              state: {
+                ...state,
+                error: Option.some(error)
+              }
+            }),
+          onSuccess: (value) => Action.Submit({ value })
+        })
+      }
+      default: {
+        return Effect.succeed(defaultDateProcessor(Option.getOrElse(input.input, () => ""), state))
+      }
+    }
+  }
+}
 
 const DATE_PART_REGEXP =
-    /* eslint-disable-next-line @stylistic/max-len */
-    /\\(.)|"((?:\\["\\]|[^"])+)"|(D[Do]?|d{3,4}|d)|(M{1,4})|(YY(?:YY)?)|([aA])|([Hh]{1,2})|(m{1,2})|(s{1,2})|(S{1,4})|./g;
+  /\\(.)|"((?:\\["\\]|[^"])+)"|(D[Do]?|d{3,4}|d)|(M{1,4})|(YY(?:YY)?)|([aA])|([Hh]{1,2})|(m{1,2})|(s{1,2})|(S{1,4})|./g
 
-const regExpGroups: Record<number, (params: DatePartParams) => DatePart> =
-    {
-        1: ({ token, ...opts }) => new Token({ token: token.replace(/\\(.)/g, "$1"), ...opts }),
-        2: (opts) => new Day(opts),
-        3: (opts) => new Month(opts),
-        4: (opts) => new Year(opts),
-        5: (opts) => new Meridiem(opts),
-        6: (opts) => new Hours(opts),
-        7: (opts) => new Minutes(opts),
-        8: (opts) => new Seconds(opts),
-        9: (opts) => new Milliseconds(opts)
-    };
+const regExpGroups: Record<number, (params: DatePartParams) => DatePart> = {
+  1: ({ token, ...opts }) => new Token({ token: token.replace(/\\(.)/g, "$1"), ...opts }),
+  2: (opts) => new Day(opts),
+  3: (opts) => new Month(opts),
+  4: (opts) => new Year(opts),
+  5: (opts) => new Meridiem(opts),
+  6: (opts) => new Hours(opts),
+  7: (opts) => new Minutes(opts),
+  8: (opts) => new Seconds(opts),
+  9: (opts) => new Milliseconds(opts)
+}
 
 const makeDateParts = (
-    dateMask: string,
-    date: globalThis.Date,
-    locales: DateOptions["locales"]
-) =>
-{
-    const parts: Array<DatePart> = [];
-    let result: RegExpExecArray | null = null;
-    /* eslint-disable-next-line no-cond-assign */
-    while (result = DATE_PART_REGEXP.exec(dateMask))
-    {
-        const match = result.shift();
-        const index = result.findIndex((group) => group !== undefined);
-        if (index in regExpGroups)
-        {
-            const token = (result[index] || match)!;
-            parts.push(regExpGroups[index]({ date, locales, parts, token }));
-        }
-        else
-        {
-            parts.push(new Token({
-                date,
-                locales,
-                parts,
-                token: (result[index] || match)!
-            }));
-        }
+  dateMask: string,
+  date: globalThis.Date,
+  locales: DateOptions["locales"]
+) => {
+  const parts: Array<DatePart> = []
+  let result: RegExpExecArray | null = null
+  // oxlint-disable-next-line no-cond-assign
+  while (result = DATE_PART_REGEXP.exec(dateMask)) {
+    const match = result.shift()
+    const index = result.findIndex((group) => group !== undefined)
+    if (index in regExpGroups) {
+      const token = (result[index] || match)!
+      parts.push(regExpGroups[index]({ token, date, parts, locales }))
+    } else {
+      parts.push(new Token({ token: (result[index] || match)!, date, parts, locales }))
     }
-    const orderedParts = parts.reduce((array, element) =>
-    {
-        const lastElement = array[array.length - 1];
-        if (element.isToken() && lastElement !== undefined && lastElement.isToken())
-        {
-            lastElement.setValue(element.token);
-        }
-        else
-        {
-            array.push(element);
-        }
-        return array;
-    }, Arr.empty<DatePart>());
-    parts.splice(0, parts.length, ...orderedParts);
-    return parts;
-};
+  }
+  const orderedParts = parts.reduce((array, element) => {
+    const lastElement = array[array.length - 1]
+    if (element.isToken() && lastElement !== undefined && lastElement.isToken()) {
+      lastElement.setValue(element.token)
+    } else {
+      array.push(element)
+    }
+    return array
+  }, Arr.empty<DatePart>())
+  parts.splice(0, parts.length, ...orderedParts)
+  return parts
+}
 
 interface DatePartParams {
-    readonly token: string
-    readonly locales: DateOptions["locales"]
-    readonly date?: globalThis.Date
-    readonly parts?: ReadonlyArray<DatePart>
+  readonly token: string
+  readonly locales: DateOptions["locales"]
+  readonly date?: globalThis.Date
+  readonly parts?: ReadonlyArray<DatePart>
 }
 
-abstract class DatePart
-{
-    token: string;
-    readonly date: globalThis.Date;
-    readonly parts: ReadonlyArray<DatePart>;
-    readonly locales: DateOptions["locales"];
+abstract class DatePart {
+  token: string
+  readonly date: globalThis.Date
+  readonly parts: ReadonlyArray<DatePart>
+  readonly locales: DateOptions["locales"]
 
-    constructor(params: DatePartParams)
-    {
-        this.token = params.token;
-        this.locales = params.locales;
-        this.date = params.date || new Date();
-        this.parts = params.parts || [ this ];
+  constructor(params: DatePartParams) {
+    this.token = params.token
+    this.locales = params.locales
+    this.date = params.date || new Date()
+    this.parts = params.parts || [this]
+  }
+
+  /**
+   * Increments this date part.
+   */
+  abstract increment(): void
+
+  /**
+   * Decrements this date part.
+   */
+  abstract decrement(): void
+
+  /**
+   * Sets the current value of this date part to the provided value.
+   */
+  abstract setValue(value: string): void
+
+  /**
+   * Returns `true` if this `DatePart` is a `Token`, `false` otherwise.
+   */
+  isToken(): this is Token {
+    return false
+  }
+
+  /**
+   * Retrieves the next date part in the list of parts.
+   */
+  nextPart(): Option.Option<DatePart> {
+    const currentPartIndex = Option.getOrElse(Arr.findFirstIndex(this.parts, (part) => part === this), () => 0)
+    return Arr.findFirst(this.parts.slice(currentPartIndex + 1), (part) => !part.isToken())
+  }
+
+  /**
+   * Retrieves the previous date part in the list of parts.
+   */
+  previousPart(): Option.Option<DatePart> {
+    const currentPartIndex = Arr.findFirstIndex(this.parts, (part) => part === this)
+    if (Option.isSome(currentPartIndex)) {
+      return Arr.findLast(this.parts.slice(0, currentPartIndex.value), (part) => !part.isToken())
     }
+    return Option.none()
+  }
 
-    /**
-     * Increments this date part.
-     */
-    abstract increment(): void;
-
-    /**
-     * Decrements this date part.
-     */
-    abstract decrement(): void;
-
-    /**
-     * Sets the current value of this date part to the provided value.
-     */
-    abstract setValue(value: string): void;
-
-    /**
-     * Returns `true` if this `DatePart` is a `Token`, `false` otherwise.
-     */
-    isToken(): this is Token
-    {
-        return false;
-    }
-
-    /**
-     * Retrieves the next date part in the list of parts.
-     */
-    nextPart(): Option.Option<DatePart>
-    {
-        const currentPartIndex = Option.getOrElse(
-            Arr.findFirstIndex(this.parts, (part) => part === this),
-            () => 0
-        );
-
-        return Arr.findFirst(this.parts.slice(currentPartIndex + 1), (part) => !part.isToken());
-    }
-
-    /**
-     * Retrieves the previous date part in the list of parts.
-     */
-    previousPart(): Option.Option<DatePart>
-    {
-        const currentPartIndex = Arr.findFirstIndex(this.parts, (part) => part === this);
-        if (Option.isSome(currentPartIndex))
-        {
-            return Arr.findLast(this.parts.slice(0, currentPartIndex.value), (part) => !part.isToken());
-        }
-        return Option.none();
-    }
-
-    toString()
-    {
-        return String(this.date);
-    }
+  toString() {
+    return String(this.date)
+  }
 }
 
-class Token extends DatePart
-{
-    increment(): void {}
+class Token extends DatePart {
+  increment(): void {}
 
-    decrement(): void {}
+  decrement(): void {}
 
-    setValue(value: string): void
-    {
-        this.token = this.token + value;
-    }
+  setValue(value: string): void {
+    this.token = this.token + value
+  }
 
-    override isToken(): this is Token
-    {
-        return true;
-    }
+  override isToken(): this is Token {
+    return true
+  }
 
-    override toString()
-    {
-        return this.token;
-    }
+  override toString() {
+    return this.token
+  }
 }
 
-class Milliseconds extends DatePart
-{
-    increment(): void
-    {
-        this.date.setMilliseconds(this.date.getMilliseconds() + 1);
-    }
+class Milliseconds extends DatePart {
+  increment(): void {
+    this.date.setMilliseconds(this.date.getMilliseconds() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setMilliseconds(this.date.getMilliseconds() - 1);
-    }
+  decrement(): void {
+    this.date.setMilliseconds(this.date.getMilliseconds() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        this.date.setMilliseconds(Number.parseInt(value.slice(-this.token.length)));
-    }
+  setValue(value: string): void {
+    this.date.setMilliseconds(Number.parseInt(value.slice(-this.token.length)))
+  }
 
-    override toString()
-    {
-        const millis = `${this.date.getMilliseconds()}`;
-        return millis.padStart(4, "0").substring(0, this.token.length);
-    }
+  override toString() {
+    const millis = `${this.date.getMilliseconds()}`
+    return millis.padStart(4, "0").substring(0, this.token.length)
+  }
 }
 
-class Seconds extends DatePart
-{
-    increment(): void
-    {
-        this.date.setSeconds(this.date.getSeconds() + 1);
-    }
+class Seconds extends DatePart {
+  increment(): void {
+    this.date.setSeconds(this.date.getSeconds() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setSeconds(this.date.getSeconds() - 1);
-    }
+  decrement(): void {
+    this.date.setSeconds(this.date.getSeconds() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        this.date.setSeconds(Number.parseInt(value.slice(-2)));
-    }
+  setValue(value: string): void {
+    this.date.setSeconds(Number.parseInt(value.slice(-2)))
+  }
 
-    override toString()
-    {
-        const seconds = `${this.date.getSeconds()}`;
-        return this.token.length > 1
-            ? seconds.padStart(2, "0")
-            : seconds;
-    }
+  override toString() {
+    const seconds = `${this.date.getSeconds()}`
+    return this.token.length > 1
+      ? seconds.padStart(2, "0")
+      : seconds
+  }
 }
 
-class Minutes extends DatePart
-{
-    increment(): void
-    {
-        this.date.setMinutes(this.date.getMinutes() + 1);
-    }
+class Minutes extends DatePart {
+  increment(): void {
+    this.date.setMinutes(this.date.getMinutes() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setMinutes(this.date.getMinutes() - 1);
-    }
+  decrement(): void {
+    this.date.setMinutes(this.date.getMinutes() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        this.date.setMinutes(Number.parseInt(value.slice(-2)));
-    }
+  setValue(value: string): void {
+    this.date.setMinutes(Number.parseInt(value.slice(-2)))
+  }
 
-    override toString()
-    {
-        const minutes = `${this.date.getMinutes()}`;
-        return this.token.length > 1
-            ? minutes.padStart(2, "0") :
-            minutes;
-    }
+  override toString() {
+    const minutes = `${this.date.getMinutes()}`
+    return this.token.length > 1
+      ? minutes.padStart(2, "0") :
+      minutes
+  }
 }
 
-class Hours extends DatePart
-{
-    increment(): void
-    {
-        this.date.setHours(this.date.getHours() + 1);
-    }
+class Hours extends DatePart {
+  increment(): void {
+    this.date.setHours(this.date.getHours() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setHours(this.date.getHours() - 1);
-    }
+  decrement(): void {
+    this.date.setHours(this.date.getHours() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        this.date.setHours(Number.parseInt(value.slice(-2)));
-    }
+  setValue(value: string): void {
+    this.date.setHours(Number.parseInt(value.slice(-2)))
+  }
 
-    override toString()
-    {
-        const hours = /h/.test(this.token)
-            ? this.date.getHours() % 12 || 12
-            : this.date.getHours();
-        return this.token.length > 1
-            ? `${hours}`.padStart(2, "0")
-            : `${hours}`;
-    }
+  override toString() {
+    const hours = /h/.test(this.token)
+      ? this.date.getHours() % 12 || 12
+      : this.date.getHours()
+    return this.token.length > 1
+      ? `${hours}`.padStart(2, "0")
+      : `${hours}`
+  }
 }
 
-class Day extends DatePart
-{
-    increment(): void
-    {
-        this.date.setDate(this.date.getDate() + 1);
-    }
+class Day extends DatePart {
+  increment(): void {
+    this.date.setDate(this.date.getDate() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setDate(this.date.getDate() - 1);
-    }
+  decrement(): void {
+    this.date.setDate(this.date.getDate() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        this.date.setDate(Number.parseInt(value.slice(-2)));
-    }
+  setValue(value: string): void {
+    this.date.setDate(Number.parseInt(value.slice(-2)))
+  }
 
-    override toString()
-    {
-        const date = this.date.getDate();
-        const day = this.date.getDay();
-        switch (this.token)
-        {
-            case "DD":
-                return `${date}`.padStart(2, "0");
-            case "Do":
-                return `${date}${this.ordinalIndicator(date)}`;
-            case "d":
-                return `${day + 1}`;
-            case "ddd":
-                return this.locales!.weekdaysShort[day]!;
-            case "dddd":
-                return this.locales!.weekdays[day]!;
-            default:
-                return `${date}`;
-        }
+  override toString() {
+    const date = this.date.getDate()
+    const day = this.date.getDay()
+    switch (this.token) {
+      case "DD":
+        return `${date}`.padStart(2, "0")
+      case "Do":
+        return `${date}${this.ordinalIndicator(date)}`
+      case "d":
+        return `${day + 1}`
+      case "ddd":
+        return this.locales!.weekdaysShort[day]!
+      case "dddd":
+        return this.locales!.weekdays[day]!
+      default:
+        return `${date}`
     }
+  }
 
-    private ordinalIndicator(day: number): string
-    {
-        switch (day % 10)
-        {
-            case 1:
-                return "st";
-            case 2:
-                return "nd";
-            case 3:
-                return "rd";
-            default:
-                return "th";
-        }
+  private ordinalIndicator(day: number): string {
+    switch (day % 10) {
+      case 1:
+        return "st"
+      case 2:
+        return "nd"
+      case 3:
+        return "rd"
+      default:
+        return "th"
     }
+  }
 }
 
-class Month extends DatePart
-{
-    increment(): void
-    {
-        this.date.setMonth(this.date.getMonth() + 1);
-    }
+class Month extends DatePart {
+  increment(): void {
+    this.date.setMonth(this.date.getMonth() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setMonth(this.date.getMonth() - 1);
-    }
+  decrement(): void {
+    this.date.setMonth(this.date.getMonth() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        const month = Number.parseInt(value.slice(-2)) - 1;
-        this.date.setMonth(month < 0 ? 0 : month);
-    }
+  setValue(value: string): void {
+    const month = Number.parseInt(value.slice(-2)) - 1
+    this.date.setMonth(month < 0 ? 0 : month)
+  }
 
-    override toString()
-    {
-        const month = this.date.getMonth();
-        switch (this.token.length)
-        {
-            case 2:
-                return `${month + 1}`.padStart(2, "0");
-            case 3:
-                return this.locales!.monthsShort[month]!;
-            case 4:
-                return this.locales!.months[month]!;
-            default:
-                return `${month + 1}`;
-        }
+  override toString() {
+    const month = this.date.getMonth()
+    switch (this.token.length) {
+      case 2:
+        return `${month + 1}`.padStart(2, "0")
+      case 3:
+        return this.locales!.monthsShort[month]!
+      case 4:
+        return this.locales!.months[month]!
+      default:
+        return `${month + 1}`
     }
+  }
 }
 
-class Year extends DatePart
-{
-    increment(): void
-    {
-        this.date.setFullYear(this.date.getFullYear() + 1);
-    }
+class Year extends DatePart {
+  increment(): void {
+    this.date.setFullYear(this.date.getFullYear() + 1)
+  }
 
-    decrement(): void
-    {
-        this.date.setFullYear(this.date.getFullYear() - 1);
-    }
+  decrement(): void {
+    this.date.setFullYear(this.date.getFullYear() - 1)
+  }
 
-    setValue(value: string): void
-    {
-        this.date.setFullYear(Number.parseInt(value.slice(-4)));
-    }
+  setValue(value: string): void {
+    this.date.setFullYear(Number.parseInt(value.slice(-4)))
+  }
 
-    override toString()
-    {
-        const year = `${this.date.getFullYear()}`.padStart(4, "0");
-        return this.token.length === 2
-            ? year.substring(-2)
-            : year;
-    }
+  override toString() {
+    const year = `${this.date.getFullYear()}`.padStart(4, "0")
+    return this.token.length === 2
+      ? year.substring(-2)
+      : year
+  }
 }
 
-class Meridiem extends DatePart
-{
-    increment(): void
-    {
-        this.date.setHours((this.date.getHours() + 12) % 24);
-    }
+class Meridiem extends DatePart {
+  increment(): void {
+    this.date.setHours((this.date.getHours() + 12) % 24)
+  }
 
-    decrement(): void
-    {
-        this.increment();
-    }
+  decrement(): void {
+    this.increment()
+  }
 
-    setValue(_value: string): void {}
+  setValue(_value: string): void {}
 
-    override toString()
-    {
-        const meridiem = this.date.getHours() > 12 ? "pm" : "am";
-        return /A/.test(this.token)
-            ? meridiem.toUpperCase()
-            : meridiem;
-    }
+  override toString() {
+    const meridiem = this.date.getHours() > 12 ? "pm" : "am"
+    return /A/.test(this.token)
+      ? meridiem.toUpperCase()
+      : meridiem
+  }
 }
 
 interface FileOptionsReq extends Required<Omit<FileOptions, "startingPath" | "default">> {
-    readonly startingPath: Option.Option<string>
-    readonly default: Option.Option<string>
+  readonly startingPath: Option.Option<string>
+  readonly default: Option.Option<string>
 }
 
 interface FileState {
-    readonly cursor: number
-    readonly files: ReadonlyArray<string>
-    readonly allFiles: ReadonlyArray<string>
-    readonly query: string
-    readonly path: Option.Option<string>
-    readonly confirm: Confirm
+  readonly cursor: number
+  readonly files: ReadonlyArray<string>
+  readonly allFiles: ReadonlyArray<string>
+  readonly query: string
+  readonly path: Option.Option<string>
+  readonly confirm: Confirm
 }
 
-const CONFIRM_MESSAGE =
-    "The selected directory contains files. Would you like to traverse the selected directory?";
-const FILE_FILTER_LABEL = "filter";
-const FILE_FILTER_PLACEHOLDER = "type to filter";
-const FILE_EMPTY_MESSAGE = "No matches";
+const CONFIRM_MESSAGE = "The selected directory contains files. Would you like to traverse the selected directory?"
+const FILE_FILTER_LABEL = "filter"
+const FILE_FILTER_PLACEHOLDER = "type to filter"
+const FILE_EMPTY_MESSAGE = "No matches"
 type Confirm = Data.TaggedEnum<{
-    /* eslint-disable @typescript-eslint/no-empty-object-type */
-    readonly Show: { }
-    readonly Hide: { }
-    /* eslint-enable @typescript-eslint/no-empty-object-type */
-}>;
-const Confirm = Data.taggedEnum<Confirm>();
+  readonly Show: {}
+  readonly Hide: {}
+}>
+const Confirm = Data.taggedEnum<Confirm>()
 
-const showConfirmation = Confirm.$is("Show");
+const showConfirmation = Confirm.$is("Show")
 
 const resolveCurrentPath = (
-    path: Option.Option<string>,
-    options: FileOptionsReq
-): Effect.Effect<string, never, FileSystem.FileSystem> =>
-{
-    if (Option.isSome(path))
-    {
-        return Effect.succeed(path.value);
-    }
-    if (Option.isSome(options.startingPath))
-    {
-        const startingPath = options.startingPath.value;
-        return Effect.flatMap(FileSystem.FileSystem, (fs) =>
-        // Ensure the user provided starting path exists
-            Effect.orDie(fs.exists(startingPath)).pipe(
-                Effect.flatMap((exists) =>
-                    exists ? Effect.void : Effect.die(
-                        `The provided starting path '${startingPath}' does not exist`
-                    )
-                ),
-                Effect.as(startingPath)
-            ));
-    }
-    return Effect.sync(() => process.cwd());
-};
-
-const getFileList = Effect.fnUntraced(function*(directory: string, options: FileOptionsReq)
-{
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const files = yield* Effect.orDie(fs.readDirectory(directory)).pipe(
-    // Always prepend the `".."` option to the file list but allow it
-    // to be filtered out if the user so desires
-        Effect.map((files) => [ "..", ...files ])
-    );
-    return yield* Effect.filter(files, (file) =>
-    {
-        const result = options.filter(file);
-        const userDefinedFilter = Effect.isEffect(result)
-            ? result
-            : Effect.succeed(result);
-        const directoryFilter = options.type === "directory"
-            ? Effect.map(
-                Effect.orDie(fs.stat(path.join(directory, file))),
-                (info) => info.type === "Directory"
-            )
-            : Effect.succeed(true);
-        return Effect.zipWith(userDefinedFilter, directoryFilter, (a, b) => a && b);
-    }, { concurrency: files.length });
-});
-
-const filterFiles = (files: ReadonlyArray<string>, query: string) =>
-{
-    if (query.length === 0)
-    {
-        return files;
-    }
-    const normalizedQuery = query.toLowerCase();
-    const filtered: Array<string> = [];
-    for (let index = 0; index < files.length; index++)
-    {
-        if (files[index].toLowerCase().includes(normalizedQuery))
-        {
-            filtered.push(files[index]);
-        }
-    }
-    return filtered;
-};
-
-const updateFileState = (
-    state: FileState,
-    query: string,
-    allFiles: ReadonlyArray<string> = state.allFiles
-): FileState =>
-{
-    const files = filterFiles(allFiles, query);
-    if (files.length === 0)
-    {
-        return { ...state, allFiles, cursor: 0, files, query };
-    }
-    const selected = state.files[state.cursor];
-    const cursor = selected === undefined ? 0 : files.indexOf(selected);
-    return {
-        ...state,
-        allFiles,
-        cursor: cursor === -1 ? 0 : cursor,
-        files,
-        query
-    };
-};
-
-const handleFileClear = (options: FileOptionsReq) =>
-{
-    return Effect.fnUntraced(function*(state: FileState, _: Action<FileState, string>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const path = yield* Path.Path;
-        const figures = yield* platformFigures;
-        const currentPath = yield* resolveCurrentPath(state.path, options);
-        const selectedPath = state.files[state.cursor];
-        const resolvedPath = selectedPath === undefined
-            ? currentPath
-            : path.resolve(currentPath, selectedPath);
-        const resolvedPathText = `${figures.pointerSmall} ${resolvedPath}`;
-        const isConfirming = showConfirmation(state.confirm);
-        const promptText = isConfirming
-            ? renderPrompt("(Y/n)", CONFIRM_MESSAGE, "?", figures.pointerSmall, { plain: true })
-            : renderPrompt(
-                renderFileFilter(
-                    state,
-                    { plain: true }
-                ),
-                options.message,
-                figures.tick,
-                figures.ellipsis,
-                { plain: true }
-            );
-
-        const filesText = isConfirming
-            ? ""
-            : renderFiles(state, state.files, figures, options, { plain: true });
-
-        const outputText = isConfirming
-            ? `${promptText}\n${resolvedPathText}`
-            : `${promptText}\n${resolvedPathText}\n${filesText}`;
-
-        const clearOutput = eraseText(outputText, columns);
-        const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft;
-
-        return clearOutput + resetCurrentLine;
-    });
-};
-
-type RenderOptions =
-    {
-        readonly plain?: boolean
-    };
-
-const renderPrompt = (
-    confirm: string,
-    message: string,
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options?: RenderOptions | undefined
-) =>
-{
-    const prefix = leadingSymbol + " ";
-    const annotate = options?.plain === true
-        ? (line: string) => line
-        : annotateLine;
-    return Arr.match(message.split(NEWLINE_REGEXP), {
-        onEmpty: () => prefix + " " + trailingSymbol + " " + confirm,
-        onNonEmpty: (promptLines) =>
-        {
-            const lines = Arr.map(promptLines, (line) => annotate(line));
-            return prefix + lines.join("\n") + " " + trailingSymbol + " " + confirm;
-        }
-    });
-};
-
-const renderPrefix = (
-    state: FileState,
-    toDisplay: { readonly startIndex: number; readonly endIndex: number },
-    currentIndex: number,
-    length: number,
-    figures: Effect.Success<typeof platformFigures>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    let prefix = " ";
-    if (currentIndex === toDisplay.startIndex && toDisplay.startIndex > 0)
-    {
-        prefix = figures.arrowUp;
-    }
-    else if (currentIndex === toDisplay.endIndex - 1 && toDisplay.endIndex < length)
-    {
-        prefix = figures.arrowDown;
-    }
-    if (state.cursor === currentIndex)
-    {
-        return renderOptions?.plain === true
-            ? figures.pointer + prefix
-            : Ansi.annotate(figures.pointer, Ansi.cyanBright) + prefix;
-    }
-    return prefix + " ";
-};
-
-const renderFileName = (file: string, isSelected: boolean, renderOptions?: RenderOptions | undefined) =>
-{
-    if (renderOptions?.plain === true)
-    {
-        return file;
-    }
-    return isSelected
-        ? Ansi.annotate(file, Ansi.combine(Ansi.underlined, Ansi.cyanBright))
-        : file;
-};
-
-const renderFileFilter = (state: FileState, renderOptions?: RenderOptions | undefined) =>
-{
-    const filterValue = state.query.length === 0
-        ? renderOptions?.plain === true
-            ? FILE_FILTER_PLACEHOLDER
-            : Ansi.annotate(FILE_FILTER_PLACEHOLDER, Ansi.blackBright)
-        : renderOptions?.plain === true
-            ? state.query
-            : Ansi.annotate(state.query, Ansi.combine(Ansi.underlined, Ansi.cyanBright));
-    return `[${FILE_FILTER_LABEL}: ${filterValue}]`;
-};
-
-const renderFiles = (
-    state: FileState,
-    files: ReadonlyArray<string>,
-    figures: Effect.Success<typeof platformFigures>,
-    options: FileOptionsReq,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    const length = files.length;
-    if (length === 0)
-    {
-        return renderOptions?.plain === true
-            ? FILE_EMPTY_MESSAGE
-            : Ansi.annotate(FILE_EMPTY_MESSAGE, Ansi.blackBright);
-    }
-    const toDisplay = entriesToDisplay(state.cursor, length, options.maxPerPage);
-    const documents: Array<string> = [];
-    for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++)
-    {
-        const isSelected = state.cursor === index;
-        const prefix = renderPrefix(state, toDisplay, index, length, figures, renderOptions);
-        const fileName = renderFileName(files[index], isSelected, renderOptions);
-        documents.push(prefix + fileName);
-    }
-    return documents.join("\n");
-};
-
-const renderFileNextFrame = Effect.fnUntraced(function*(state: FileState, options: FileOptionsReq)
-{
-    const path = yield* Path.Path;
-    const figures = yield* platformFigures;
-    const currentPath = yield* resolveCurrentPath(state.path, options);
-    const selectedPath = state.files[state.cursor];
-    const resolvedPath = selectedPath === undefined ? currentPath : path.resolve(currentPath, selectedPath);
-    const resolvedPathMsg = Ansi.annotate(figures.pointerSmall + " " + resolvedPath, Ansi.blackBright);
-
-    if (showConfirmation(state.confirm))
-    {
-        const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-        const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-        const confirm = Ansi.annotate("(Y/n)", Ansi.blackBright);
-        const promptMsg = renderPrompt(confirm, CONFIRM_MESSAGE, leadingSymbol, trailingSymbol);
-        return Ansi.cursorHide + promptMsg + "\n" + resolvedPathMsg;
-    }
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const promptMsg = renderPrompt(renderFileFilter(state), options.message, leadingSymbol, trailingSymbol);
-    const files = renderFiles(state, state.files, figures, options);
-    return Ansi.cursorHide + promptMsg + "\n" + resolvedPathMsg + "\n" + files;
-});
-
-const renderFileSubmission = Effect.fnUntraced(function*(
-    state: FileState,
-    value: string,
-    options: FileOptionsReq
-)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const promptMsg = renderPrompt(renderFileFilter(state), options.message, leadingSymbol, trailingSymbol);
-    return promptMsg + " " + Ansi.annotate(value, Ansi.white) + "\n";
-});
-
-const handleFileRender = (options: FileOptionsReq) =>
-{
-    return (
-        state: FileState,
-        action: Action<FileState, string>
-    ): Effect.Effect<string, never, Path.Path | FileSystem.FileSystem> =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderFileNextFrame(state, options),
-            Submit: ({ value }) => renderFileSubmission(state, value, options)
-        });
-    };
-};
-
-const processFileCursorUp = (state: FileState) =>
-{
-    if (state.files.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const cursor = state.cursor - 1;
-    return Effect.succeed(Action.NextFrame({
-        state: { ...state, cursor: cursor < 0 ? state.files.length - 1 : cursor }
-    }));
-};
-
-const processFileCursorDown = (state: FileState) =>
-{
-    if (state.files.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    return Effect.succeed(Action.NextFrame({
-        state: { ...state, cursor: (state.cursor + 1) % state.files.length }
-    }));
-};
-
-const processFileBackspace = (state: FileState) =>
-{
-    if (state.query.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const query = state.query.slice(0, state.query.length - 1);
-    return Effect.succeed(Action.NextFrame({ state: updateFileState(state, query) }));
-};
-
-const processFileClear = (state: FileState) => Effect.succeed(
-    Action.NextFrame({ state: updateFileState(state, "") })
-);
-
-const processFileInput = (input: string, state: FileState) =>
-{
-    if (input.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const query = state.query + input;
-    return Effect.succeed(Action.NextFrame({ state: updateFileState(state, query) }));
-};
-
-const processSelection = Effect.fnUntraced(function*(state: FileState, options: FileOptionsReq)
-{
-    if (state.files.length === 0)
-    {
-        return Action.Beep();
-    }
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const currentPath = yield* resolveCurrentPath(state.path, options);
-    const selectedPath = state.files[state.cursor];
-    const resolvedPath = path.resolve(currentPath, selectedPath);
-    const info = yield* Effect.orDie(fs.stat(resolvedPath));
-    if (info.type === "Directory")
-    {
-        const files = yield* getFileList(resolvedPath, options);
-        const filesWithoutParent = files.filter((file) => file !== "..");
-        // If the user selected a directory AND the prompt type can result with
-        // a directory, we must confirm:
-        //  - If the selected directory has any files
-        //  - Confirm whether or not the user wants to traverse those files
-        if (options.type === "directory" || options.type === "either")
-        {
-            return filesWithoutParent.length === 0
-            // Directory is empty so it's safe to select it
-                ? Action.Submit({ value: resolvedPath })
-            // Directory has contents - show confirmation to user
-                : Action.NextFrame({
-                    state: { ...state, confirm: Confirm.Show() }
-                });
-        }
-        return Action.NextFrame({
-            state: {
-                allFiles: files,
-                confirm: Confirm.Hide(),
-                cursor: 0,
-                files,
-                path: Option.some(resolvedPath),
-                query: ""
-            }
-        });
-    }
-    return Action.Submit({ value: resolvedPath });
-});
-
-const handleFileProcess = (options: FileOptionsReq) =>
-{
-    return Effect.fnUntraced(function*(input: Terminal.UserInput, state: FileState)
-    {
-        if (input.key.ctrl)
-        {
-            if (input.key.name === "u")
-            {
-                if (showConfirmation(state.confirm))
-                {
-                    return Action.Beep();
-                }
-                return yield* processFileClear(state);
-            }
-            return Action.Beep();
-        }
-        switch (input.key.name)
-        {
-            case "k":
-            case "up": {
-                return yield* processFileCursorUp(state);
-            }
-            case "j":
-            case "down":
-            case "tab": {
-                return yield* processFileCursorDown(state);
-            }
-            case "backspace": {
-                if (showConfirmation(state.confirm))
-                {
-                    return Action.Beep();
-                }
-                return yield* processFileBackspace(state);
-            }
-            case "enter":
-            case "return": {
-                return yield* processSelection(state, options);
-            }
-            case "y":
-            case "t": {
-                if (showConfirmation(state.confirm))
-                {
-                    const path = yield* Path.Path;
-                    const currentPath = yield* resolveCurrentPath(state.path, options);
-                    const selectedPath = state.files[state.cursor];
-                    const resolvedPath = path.resolve(currentPath, selectedPath);
-                    const files = yield* getFileList(resolvedPath, options);
-                    return Action.NextFrame({
-                        state: {
-                            allFiles: files,
-                            confirm: Confirm.Hide(),
-                            cursor: 0,
-                            files,
-                            path: Option.some(resolvedPath),
-                            query: ""
-                        }
-                    });
-                }
-                return yield* processFileInput(Option.getOrElse(input.input, () => ""), state);
-            }
-            case "n":
-            case "f": {
-                if (showConfirmation(state.confirm))
-                {
-                    const path = yield* Path.Path;
-                    const currentPath = yield* resolveCurrentPath(state.path, options);
-                    const selectedPath = state.files[state.cursor];
-                    const resolvedPath = path.resolve(currentPath, selectedPath);
-                    return Action.Submit({ value: resolvedPath });
-                }
-                return yield* processFileInput(Option.getOrElse(input.input, () => ""), state);
-            }
-            default: {
-                if (showConfirmation(state.confirm))
-                {
-                    return Action.Beep();
-                }
-                return yield* processFileInput(Option.getOrElse(input.input, () => ""), state);
-            }
-        }
-    });
-};
-
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-interface SelectOptionsReq<A> extends Required<SelectOptions<A>> {}
-interface MultiSelectOptionsReq extends MultiSelectOptions {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
-
-type MultiSelectState =
-    {
-        index: number
-        selectedIndices: Set<number>
-        error: Option.Option<string>
-    };
-
-const renderMultiSelectError = (
-    state: MultiSelectState,
-    pointer: string,
-    renderOptions?: RenderOptions | undefined
-): string =>
-{
-    if (Option.isSome(state.error))
-    {
-        return Arr.match(state.error.value.split(NEWLINE_REGEXP), {
-            onEmpty: () => "",
-            onNonEmpty: (errorLines) =>
-            {
-                if (renderOptions?.plain === true)
-                {
-                    return `${pointer} ${errorLines.join("\n")}`;
-                }
-                const prefix = Ansi.annotate(pointer, Ansi.red) + " ";
-                const lines = Arr.map(errorLines, (str) => annotateErrorLine(str));
-                return (
-                    Ansi.cursorSavePosition +
-                    "\n" +
-                    prefix +
-                    lines.join("\n") +
-                    Ansi.cursorRestorePosition
-                );
-            }
-        });
-    }
-    return "";
-};
-
-const renderChoiceDescription = <A>(
-    choice: SelectChoice<A>,
-    isActive: boolean,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    if (!choice.disabled && choice.description && isActive)
-    {
-        return renderOptions?.plain === true
-            ? "- " + choice.description
-            : Ansi.annotate("- " + choice.description, Ansi.blackBright);
-    }
-    return "";
-};
-
-const metaOptionsCount = 2;
-
-const renderMultiSelectTitle = (
-    title: string,
-    isHighlighted: boolean,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    if (renderOptions?.plain === true || !isHighlighted)
-    {
-        return title;
-    }
-    return Ansi.annotate(title, Ansi.combine(Ansi.underlined, Ansi.cyanBright));
-};
-
-const renderMultiSelectChoices = <A>(
-    state: MultiSelectState,
-    options: SelectOptionsReq<A> & MultiSelectOptionsReq,
-    figures: Effect.Success<typeof platformFigures>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    const choices = options.choices;
-    const totalChoices = choices.length;
-    const selectedCount = state.selectedIndices.size;
-    const allSelected = selectedCount === totalChoices;
-
-    const selectAllText = allSelected
-        ? options?.selectNone ?? "Select None"
-        : options?.selectAll ?? "Select All";
-
-    const inverseSelectionText = options?.inverseSelection ?? "Inverse Selection";
-
-    const metaOptions = [
-        { title: selectAllText },
-        { title: inverseSelectionText }
-    ];
-    const allChoices = [ ...metaOptions, ...choices ];
-    const toDisplay = entriesToDisplay(state.index, allChoices.length, options.maxPerPage);
-    const documents: Array<string> = [];
-    for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++)
-    {
-        const choice = allChoices[index];
-        const isHighlighted = state.index === index;
-        let prefix = " ";
-        if (index === toDisplay.startIndex && toDisplay.startIndex > 0)
-        {
-            prefix = figures.arrowUp;
-        }
-        else if (index === toDisplay.endIndex - 1 && toDisplay.endIndex < allChoices.length)
-        {
-            prefix = figures.arrowDown;
-        }
-        if (index < metaOptions.length)
-        {
-            // Meta options
-            const title = renderMultiSelectTitle(choice.title, isHighlighted, renderOptions);
-            documents.push(prefix + " " + title);
-        }
-        else
-        {
-            // Regular choices
-            const choiceIndex = index - metaOptions.length;
-            const isSelected = state.selectedIndices.has(choiceIndex);
-            const checkbox = isSelected ? figures.checkboxOn : figures.checkboxOff;
-            const annotatedCheckbox = isHighlighted && renderOptions?.plain !== true
-                ? Ansi.annotate(checkbox, Ansi.cyanBright)
-                : checkbox;
-            const title = renderMultiSelectTitle(choice.title, isHighlighted, renderOptions);
-            const description = renderChoiceDescription(
-                choice as SelectChoice<A>,
-                isHighlighted,
-                renderOptions
-            );
-            documents.push(prefix + " " + annotatedCheckbox + " " + title + " " + description);
-        }
-    }
-    return documents.join("\n");
-};
-
-const renderMultiSelectNextFrame = Effect.fnUntraced(
-    function*<A>(state: MultiSelectState, options: SelectOptionsReq<A>)
-    {
-        const figures = yield* platformFigures;
-        const choices = renderMultiSelectChoices(state, options, figures);
-        const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-        const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-        const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options);
-        const error = renderMultiSelectError(state, figures.pointer);
-        return Ansi.cursorHide + promptMsg + "\n" + choices + error;
-    }
-);
-
-const renderMultiSelectSubmission = Effect.fnUntraced(
-    function*<A>(state: MultiSelectState, options: SelectOptionsReq<A>)
-    {
-        const figures = yield* platformFigures;
-        const selectedChoices = Array.from(state.selectedIndices).sort(EffectNumber.Order).map((index) =>
-            options.choices[index].title
-        );
-        const selectedText = selectedChoices.join(", ");
-        const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-        const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-        const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options);
-        return promptMsg + " " + Ansi.annotate(selectedText, Ansi.white) + "\n";
-    }
-);
-
-const processMultiSelectCursorUp = (state: MultiSelectState, totalChoices: number) =>
-{
-    const newIndex = state.index === 0 ? totalChoices - 1 : state.index - 1;
-    return Effect.succeed(Action.NextFrame({ state: { ...state, index: newIndex } }));
-};
-
-const processMultiSelectCursorDown = (state: MultiSelectState, totalChoices: number) =>
-{
-    const newIndex = (state.index + 1) % totalChoices;
-    return Effect.succeed(Action.NextFrame({ state: { ...state, index: newIndex } }));
-};
-
-const processSpace = <A>(
-    state: MultiSelectState,
-    options: SelectOptionsReq<A>
-) =>
-{
-    const selectedIndices = new Set(state.selectedIndices);
-    if (state.index === 0)
-    {
-        if (state.selectedIndices.size === options.choices.length)
-        {
-            selectedIndices.clear();
-        }
-        else
-        {
-            for (let i = 0; i < options.choices.length; i++)
-            {
-                selectedIndices.add(i);
-            }
-        }
-    }
-    else if (state.index === 1)
-    {
-        for (let i = 0; i < options.choices.length; i++)
-        {
-            if (state.selectedIndices.has(i))
-            {
-                selectedIndices.delete(i);
-            }
-            else
-            {
-                selectedIndices.add(i);
-            }
-        }
-    }
-    else
-    {
-        const choiceIndex = state.index - metaOptionsCount;
-        if (selectedIndices.has(choiceIndex))
-        {
-            selectedIndices.delete(choiceIndex);
-        }
-        else
-        {
-            selectedIndices.add(choiceIndex);
-        }
-    }
-    return Effect.succeed(Action.NextFrame({ state: { ...state, selectedIndices } }));
-};
-
-const handleMultiSelectClear = <A>(options: SelectOptionsReq<A>) =>
-    Effect.fnUntraced(function*(state: MultiSelectState, _: Action<MultiSelectState, Array<A>>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const figures = yield* platformFigures;
-        const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft;
-        const promptText = renderSelectOutput("?", figures.pointerSmall, options, { plain: true });
-        const choicesText = renderMultiSelectChoices(state, options, figures, { plain: true });
-        const errorText = renderMultiSelectError(state, figures.pointer, { plain: true });
-        const clearOutput = clearOutputWithError(`${promptText}\n${choicesText}`, columns, errorText);
-        return clearOutput + clearPrompt;
-    });
-
-const handleMultiSelectProcess = <A>(options: SelectOptionsReq<A> & MultiSelectOptionsReq) =>
-{
-    return (input: Terminal.UserInput, state: MultiSelectState) =>
-    {
-        const totalChoices = options.choices.length + metaOptionsCount;
-        switch (input.key.name)
-        {
-            case "k":
-            case "up": {
-                return processMultiSelectCursorUp({ ...state, error: Option.none() }, totalChoices);
-            }
-            case "j":
-            case "down":
-            case "tab": {
-                return processMultiSelectCursorDown({ ...state, error: Option.none() }, totalChoices);
-            }
-            case "space": {
-                return processSpace(state, options);
-            }
-            case "enter":
-            case "return": {
-                const selectedCount = state.selectedIndices.size;
-                if (options.min !== undefined && selectedCount < options.min)
-                {
-                    return Effect.succeed(
-                        Action.NextFrame({ state: {
-                            ...state,
-                            error: Option.some(`At least ${options.min} are required`)
-                        } })
-                    );
-                }
-                if (options.max !== undefined && selectedCount > options.max)
-                {
-                    return Effect.succeed(
-                        Action.NextFrame({ state: {
-                            ...state, error: Option.some(`At most ${options.max} choices are allowed`)
-                        } })
-                    );
-                }
-                const selectedValues =
-                    Array.from(state.selectedIndices)
-                        .sort(EffectNumber.Order)
-                        .map((index) => options.choices[index].value);
-
-                return Effect.succeed(Action.Submit({ value: selectedValues }));
-            }
-            default: {
-                return Effect.succeed(Action.Beep());
-            }
-        }
-    };
-};
-
-const handleMultiSelectRender = <A>(options: SelectOptionsReq<A>) =>
-{
-    return (state: MultiSelectState, action: Action<MultiSelectState, Array<A>>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderMultiSelectNextFrame(state, options),
-            Submit: () => renderMultiSelectSubmission(state, options)
-        });
-    };
-};
-
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-interface IntegerOptionsReq extends Required<IntegerOptions> {}
-interface FloatOptionsReq extends Required<FloatOptions> {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
-
-interface NumberState {
-    readonly cursor: number
-    readonly value: string
-    readonly error: Option.Option<string>
+  path: Option.Option<string>,
+  options: FileOptionsReq
+): Effect.Effect<string, never, FileSystem.FileSystem> => {
+  if (Option.isSome(path)) {
+    return Effect.succeed(path.value)
+  }
+  if (Option.isSome(options.startingPath)) {
+    const startingPath = options.startingPath.value
+    return Effect.flatMap(FileSystem.FileSystem, (fs) =>
+      // Ensure the user provided starting path exists
+      Effect.orDie(fs.exists(startingPath)).pipe(
+        Effect.flatMap((exists) =>
+          exists ? Effect.void : Effect.die(
+            `The provided starting path '${startingPath}' does not exist`
+          )
+        ),
+        Effect.as(startingPath)
+      ))
+  }
+  return Effect.sync(() => process.cwd())
 }
 
-const handleNumberClear = (options: IntegerOptionsReq) =>
-{
-    return Effect.fnUntraced(function*(state: NumberState, _: Action<NumberState, number>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const figures = yield* platformFigures;
-        const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft;
-        const errorText = renderNumberError(state, figures.pointerSmall, { plain: true });
-        const promptText = renderNumberOutput(state, "?", figures.pointerSmall, options, { plain: true });
-        const clearOutput = clearOutputWithError(promptText, columns, errorText);
-        return clearOutput + resetCurrentLine;
-    });
-};
+const getFileList = Effect.fnUntraced(function*(directory: string, options: FileOptionsReq) {
+  const fs = yield* FileSystem.FileSystem
+  const path = yield* Path.Path
+  const files = yield* Effect.orDie(fs.readDirectory(directory)).pipe(
+    // Always prepend the `".."` option to the file list but allow it
+    // to be filtered out if the user so desires
+    Effect.map((files) => ["..", ...files])
+  )
+  return yield* Effect.filter(files, (file) => {
+    const result = options.filter(file)
+    const userDefinedFilter = Effect.isEffect(result)
+      ? result
+      : Effect.succeed(result)
+    const directoryFilter = options.type === "directory"
+      ? Effect.map(
+        Effect.orDie(fs.stat(path.join(directory, file))),
+        (info) => info.type === "Directory"
+      )
+      : Effect.succeed(true)
+    return Effect.zipWith(userDefinedFilter, directoryFilter, (a, b) => a && b)
+  }, { concurrency: files.length })
+})
+
+const filterFiles = (files: ReadonlyArray<string>, query: string) => {
+  if (query.length === 0) {
+    return files
+  }
+  const normalizedQuery = query.toLowerCase()
+  const filtered: Array<string> = []
+  for (let index = 0; index < files.length; index++) {
+    if (files[index].toLowerCase().includes(normalizedQuery)) {
+      filtered.push(files[index])
+    }
+  }
+  return filtered
+}
+
+const updateFileState = (
+  state: FileState,
+  query: string,
+  allFiles: ReadonlyArray<string> = state.allFiles
+): FileState => {
+  const files = filterFiles(allFiles, query)
+  if (files.length === 0) {
+    return { ...state, query, allFiles, files, cursor: 0 }
+  }
+  const selected = state.files[state.cursor]
+  const cursor = selected === undefined ? 0 : files.indexOf(selected)
+  return {
+    ...state,
+    query,
+    allFiles,
+    files,
+    cursor: cursor === -1 ? 0 : cursor
+  }
+}
+
+const handleFileClear = (options: FileOptionsReq) => {
+  return Effect.fnUntraced(function*(state: FileState, _: Action<FileState, string>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const path = yield* Path.Path
+    const figures = yield* platformFigures
+    const currentPath = yield* resolveCurrentPath(state.path, options)
+    const selectedPath = state.files[state.cursor]
+    const resolvedPath = selectedPath === undefined ? currentPath : path.resolve(currentPath, selectedPath)
+    const resolvedPathText = `${figures.pointerSmall} ${resolvedPath}`
+    const isConfirming = showConfirmation(state.confirm)
+    const promptText = isConfirming
+      ? renderPrompt("(Y/n)", CONFIRM_MESSAGE, "?", figures.pointerSmall, { plain: true })
+      : renderPrompt(renderFileFilter(state, { plain: true }), options.message, figures.tick, figures.ellipsis, {
+        plain: true
+      })
+    const filesText = isConfirming
+      ? ""
+      : renderFiles(state, state.files, figures, options, { plain: true })
+    const outputText = isConfirming
+      ? `${promptText}\n${resolvedPathText}`
+      : `${promptText}\n${resolvedPathText}\n${filesText}`
+    const clearOutput = eraseText(outputText, columns)
+    const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft
+    return clearOutput + resetCurrentLine
+  })
+}
+
+type RenderOptions = {
+  readonly plain?: boolean
+}
+
+const renderPrompt = (
+  confirm: string,
+  message: string,
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options?: RenderOptions | undefined
+) => {
+  const prefix = leadingSymbol + " "
+  const annotate = options?.plain === true
+    ? (line: string) => line
+    : annotateLine
+  return Arr.match(message.split(NEWLINE_REGEXP), {
+    onEmpty: () => prefix + " " + trailingSymbol + " " + confirm,
+    onNonEmpty: (promptLines) => {
+      const lines = Arr.map(promptLines, (line) => annotate(line))
+      return prefix + lines.join("\n") + " " + trailingSymbol + " " + confirm
+    }
+  })
+}
+
+const renderPrefix = (
+  state: FileState,
+  toDisplay: { readonly startIndex: number; readonly endIndex: number },
+  currentIndex: number,
+  length: number,
+  figures: Effect.Success<typeof platformFigures>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  let prefix = " "
+  if (currentIndex === toDisplay.startIndex && toDisplay.startIndex > 0) {
+    prefix = figures.arrowUp
+  } else if (currentIndex === toDisplay.endIndex - 1 && toDisplay.endIndex < length) {
+    prefix = figures.arrowDown
+  }
+  if (state.cursor === currentIndex) {
+    return renderOptions?.plain === true
+      ? figures.pointer + prefix
+      : Ansi.annotate(figures.pointer, Ansi.cyanBright) + prefix
+  }
+  return prefix + " "
+}
+
+const renderFileName = (file: string, isSelected: boolean, renderOptions?: RenderOptions | undefined) => {
+  if (renderOptions?.plain === true) {
+    return file
+  }
+  return isSelected
+    ? Ansi.annotate(file, Ansi.combine(Ansi.underlined, Ansi.cyanBright))
+    : file
+}
+
+const renderFileFilter = (state: FileState, renderOptions?: RenderOptions | undefined) => {
+  const filterValue = state.query.length === 0
+    ? renderOptions?.plain === true
+      ? FILE_FILTER_PLACEHOLDER
+      : Ansi.annotate(FILE_FILTER_PLACEHOLDER, Ansi.blackBright)
+    : renderOptions?.plain === true
+    ? state.query
+    : Ansi.annotate(state.query, Ansi.combine(Ansi.underlined, Ansi.cyanBright))
+  return `[${FILE_FILTER_LABEL}: ${filterValue}]`
+}
+
+const renderFiles = (
+  state: FileState,
+  files: ReadonlyArray<string>,
+  figures: Effect.Success<typeof platformFigures>,
+  options: FileOptionsReq,
+  renderOptions?: RenderOptions | undefined
+) => {
+  const length = files.length
+  if (length === 0) {
+    return renderOptions?.plain === true
+      ? FILE_EMPTY_MESSAGE
+      : Ansi.annotate(FILE_EMPTY_MESSAGE, Ansi.blackBright)
+  }
+  const toDisplay = entriesToDisplay(state.cursor, length, options.maxPerPage)
+  const documents: Array<string> = []
+  for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++) {
+    const isSelected = state.cursor === index
+    const prefix = renderPrefix(state, toDisplay, index, length, figures, renderOptions)
+    const fileName = renderFileName(files[index], isSelected, renderOptions)
+    documents.push(prefix + fileName)
+  }
+  return documents.join("\n")
+}
+
+const renderFileNextFrame = Effect.fnUntraced(function*(state: FileState, options: FileOptionsReq) {
+  const path = yield* Path.Path
+  const figures = yield* platformFigures
+  const currentPath = yield* resolveCurrentPath(state.path, options)
+  const selectedPath = state.files[state.cursor]
+  const resolvedPath = selectedPath === undefined ? currentPath : path.resolve(currentPath, selectedPath)
+  const resolvedPathMsg = Ansi.annotate(figures.pointerSmall + " " + resolvedPath, Ansi.blackBright)
+
+  if (showConfirmation(state.confirm)) {
+    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+    const confirm = Ansi.annotate("(Y/n)", Ansi.blackBright)
+    const promptMsg = renderPrompt(confirm, CONFIRM_MESSAGE, leadingSymbol, trailingSymbol)
+    return Ansi.cursorHide + promptMsg + "\n" + resolvedPathMsg
+  }
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const promptMsg = renderPrompt(renderFileFilter(state), options.message, leadingSymbol, trailingSymbol)
+  const files = renderFiles(state, state.files, figures, options)
+  return Ansi.cursorHide + promptMsg + "\n" + resolvedPathMsg + "\n" + files
+})
+
+const renderFileSubmission = Effect.fnUntraced(function*(state: FileState, value: string, options: FileOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const promptMsg = renderPrompt(renderFileFilter(state), options.message, leadingSymbol, trailingSymbol)
+  return promptMsg + " " + Ansi.annotate(value, Ansi.white) + "\n"
+})
+
+const handleFileRender = (options: FileOptionsReq) => {
+  return (
+    state: FileState,
+    action: Action<FileState, string>
+  ): Effect.Effect<string, never, Path.Path | FileSystem.FileSystem> => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderFileNextFrame(state, options),
+      Submit: ({ value }) => renderFileSubmission(state, value, options)
+    })
+  }
+}
+
+const processFileCursorUp = (state: FileState) => {
+  if (state.files.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const cursor = state.cursor - 1
+  return Effect.succeed(Action.NextFrame({
+    state: { ...state, cursor: cursor < 0 ? state.files.length - 1 : cursor }
+  }))
+}
+
+const processFileCursorDown = (state: FileState) => {
+  if (state.files.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  return Effect.succeed(Action.NextFrame({
+    state: { ...state, cursor: (state.cursor + 1) % state.files.length }
+  }))
+}
+
+const processFileBackspace = (state: FileState) => {
+  if (state.query.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const query = state.query.slice(0, state.query.length - 1)
+  return Effect.succeed(Action.NextFrame({ state: updateFileState(state, query) }))
+}
+
+const processFileClear = (state: FileState) => Effect.succeed(Action.NextFrame({ state: updateFileState(state, "") }))
+
+const processFileInput = (input: string, state: FileState) => {
+  if (input.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const query = state.query + input
+  return Effect.succeed(Action.NextFrame({ state: updateFileState(state, query) }))
+}
+
+const processSelection = Effect.fnUntraced(function*(state: FileState, options: FileOptionsReq) {
+  if (state.files.length === 0) {
+    return Action.Beep()
+  }
+  const fs = yield* FileSystem.FileSystem
+  const path = yield* Path.Path
+  const currentPath = yield* resolveCurrentPath(state.path, options)
+  const selectedPath = state.files[state.cursor]
+  const resolvedPath = path.resolve(currentPath, selectedPath)
+  const info = yield* Effect.orDie(fs.stat(resolvedPath))
+  if (info.type === "Directory") {
+    const files = yield* getFileList(resolvedPath, options)
+    const filesWithoutParent = files.filter((file) => file !== "..")
+    // If the user selected a directory AND the prompt type can result with
+    // a directory, we must confirm:
+    //  - If the selected directory has any files
+    //  - Confirm whether or not the user wants to traverse those files
+    if (options.type === "directory" || options.type === "either") {
+      return filesWithoutParent.length === 0
+        // Directory is empty so it's safe to select it
+        ? Action.Submit({ value: resolvedPath })
+        // Directory has contents - show confirmation to user
+        : Action.NextFrame({
+          state: { ...state, confirm: Confirm.Show() }
+        })
+    }
+    return Action.NextFrame({
+      state: {
+        cursor: 0,
+        files,
+        allFiles: files,
+        query: "",
+        path: Option.some(resolvedPath),
+        confirm: Confirm.Hide()
+      }
+    })
+  }
+  return Action.Submit({ value: resolvedPath })
+})
+
+const handleFileProcess = (options: FileOptionsReq) => {
+  return Effect.fnUntraced(function*(input: Terminal.UserInput, state: FileState) {
+    if (input.key.ctrl) {
+      if (input.key.name === "u") {
+        if (showConfirmation(state.confirm)) {
+          return Action.Beep()
+        }
+        return yield* processFileClear(state)
+      }
+      return Action.Beep()
+    }
+    switch (input.key.name) {
+      case "k":
+      case "up": {
+        return yield* processFileCursorUp(state)
+      }
+      case "j":
+      case "down":
+      case "tab": {
+        return yield* processFileCursorDown(state)
+      }
+      case "backspace": {
+        if (showConfirmation(state.confirm)) {
+          return Action.Beep()
+        }
+        return yield* processFileBackspace(state)
+      }
+      case "enter":
+      case "return": {
+        return yield* processSelection(state, options)
+      }
+      case "y":
+      case "t": {
+        if (showConfirmation(state.confirm)) {
+          const path = yield* Path.Path
+          const currentPath = yield* resolveCurrentPath(state.path, options)
+          const selectedPath = state.files[state.cursor]
+          const resolvedPath = path.resolve(currentPath, selectedPath)
+          const files = yield* getFileList(resolvedPath, options)
+          return Action.NextFrame({
+            state: {
+              cursor: 0,
+              files,
+              allFiles: files,
+              query: "",
+              path: Option.some(resolvedPath),
+              confirm: Confirm.Hide()
+            }
+          })
+        }
+        return yield* processFileInput(Option.getOrElse(input.input, () => ""), state)
+      }
+      case "n":
+      case "f": {
+        if (showConfirmation(state.confirm)) {
+          const path = yield* Path.Path
+          const currentPath = yield* resolveCurrentPath(state.path, options)
+          const selectedPath = state.files[state.cursor]
+          const resolvedPath = path.resolve(currentPath, selectedPath)
+          return Action.Submit({ value: resolvedPath })
+        }
+        return yield* processFileInput(Option.getOrElse(input.input, () => ""), state)
+      }
+      default: {
+        if (showConfirmation(state.confirm)) {
+          return Action.Beep()
+        }
+        return yield* processFileInput(Option.getOrElse(input.input, () => ""), state)
+      }
+    }
+  })
+}
+
+interface SelectOptionsReq<A> extends Required<SelectOptions<A>> {}
+interface MultiSelectOptionsReq extends MultiSelectOptions {}
+
+type MultiSelectState = {
+  index: number
+  selectedIndices: Set<number>
+  error: Option.Option<string>
+}
+
+const renderMultiSelectError = (
+  state: MultiSelectState,
+  pointer: string,
+  renderOptions?: RenderOptions | undefined
+): string => {
+  if (Option.isSome(state.error)) {
+    return Arr.match(state.error.value.split(NEWLINE_REGEXP), {
+      onEmpty: () => "",
+      onNonEmpty: (errorLines) => {
+        if (renderOptions?.plain === true) {
+          return `${pointer} ${errorLines.join("\n")}`
+        }
+        const prefix = Ansi.annotate(pointer, Ansi.red) + " "
+        const lines = Arr.map(errorLines, (str) => annotateErrorLine(str))
+        return Ansi.cursorSavePosition + "\n" + prefix + lines.join("\n") + Ansi.cursorRestorePosition
+      }
+    })
+  }
+  return ""
+}
+
+const renderChoiceDescription = <A>(
+  choice: SelectChoice<A>,
+  isActive: boolean,
+  renderOptions?: RenderOptions | undefined
+) => {
+  if (!choice.disabled && choice.description && isActive) {
+    return renderOptions?.plain === true
+      ? "- " + choice.description
+      : Ansi.annotate("- " + choice.description, Ansi.blackBright)
+  }
+  return ""
+}
+
+const metaOptionsCount = 2
+
+const renderMultiSelectTitle = (
+  title: string,
+  isHighlighted: boolean,
+  renderOptions?: RenderOptions | undefined
+) => {
+  if (renderOptions?.plain === true || !isHighlighted) {
+    return title
+  }
+  return Ansi.annotate(title, Ansi.combine(Ansi.underlined, Ansi.cyanBright))
+}
+
+const renderMultiSelectChoices = <A>(
+  state: MultiSelectState,
+  options: SelectOptionsReq<A> & MultiSelectOptionsReq,
+  figures: Effect.Success<typeof platformFigures>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  const choices = options.choices
+  const totalChoices = choices.length
+  const selectedCount = state.selectedIndices.size
+  const allSelected = selectedCount === totalChoices
+
+  const selectAllText = allSelected
+    ? options?.selectNone ?? "Select None"
+    : options?.selectAll ?? "Select All"
+
+  const inverseSelectionText = options?.inverseSelection ?? "Inverse Selection"
+
+  const metaOptions = [
+    { title: selectAllText },
+    { title: inverseSelectionText }
+  ]
+  const allChoices = [...metaOptions, ...choices]
+  const toDisplay = entriesToDisplay(state.index, allChoices.length, options.maxPerPage)
+  const documents: Array<string> = []
+  for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++) {
+    const choice = allChoices[index]
+    const isHighlighted = state.index === index
+    let prefix = " "
+    if (index === toDisplay.startIndex && toDisplay.startIndex > 0) {
+      prefix = figures.arrowUp
+    } else if (index === toDisplay.endIndex - 1 && toDisplay.endIndex < allChoices.length) {
+      prefix = figures.arrowDown
+    }
+    if (index < metaOptions.length) {
+      // Meta options
+      const title = renderMultiSelectTitle(choice.title, isHighlighted, renderOptions)
+      documents.push(prefix + " " + title)
+    } else {
+      // Regular choices
+      const choiceIndex = index - metaOptions.length
+      const isSelected = state.selectedIndices.has(choiceIndex)
+      const checkbox = isSelected ? figures.checkboxOn : figures.checkboxOff
+      const annotatedCheckbox = isHighlighted && renderOptions?.plain !== true
+        ? Ansi.annotate(checkbox, Ansi.cyanBright)
+        : checkbox
+      const title = renderMultiSelectTitle(choice.title, isHighlighted, renderOptions)
+      const description = renderChoiceDescription(choice as SelectChoice<A>, isHighlighted, renderOptions)
+      documents.push(prefix + " " + annotatedCheckbox + " " + title + " " + description)
+    }
+  }
+  return documents.join("\n")
+}
+
+const renderMultiSelectNextFrame = Effect.fnUntraced(
+  function*<A>(state: MultiSelectState, options: SelectOptionsReq<A>) {
+    const figures = yield* platformFigures
+    const choices = renderMultiSelectChoices(state, options, figures)
+    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+    const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options)
+    const error = renderMultiSelectError(state, figures.pointer)
+    return Ansi.cursorHide + promptMsg + "\n" + choices + error
+  }
+)
+
+const renderMultiSelectSubmission = Effect.fnUntraced(
+  function*<A>(state: MultiSelectState, options: SelectOptionsReq<A>) {
+    const figures = yield* platformFigures
+    const selectedChoices = Array.from(state.selectedIndices).sort(EffectNumber.Order).map((index) =>
+      options.choices[index].title
+    )
+    const selectedText = selectedChoices.join(", ")
+    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+    const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options)
+    return promptMsg + " " + Ansi.annotate(selectedText, Ansi.white) + "\n"
+  }
+)
+
+const processMultiSelectCursorUp = (state: MultiSelectState, totalChoices: number) => {
+  const newIndex = state.index === 0 ? totalChoices - 1 : state.index - 1
+  return Effect.succeed(Action.NextFrame({ state: { ...state, index: newIndex } }))
+}
+
+const processMultiSelectCursorDown = (state: MultiSelectState, totalChoices: number) => {
+  const newIndex = (state.index + 1) % totalChoices
+  return Effect.succeed(Action.NextFrame({ state: { ...state, index: newIndex } }))
+}
+
+const processSpace = <A>(
+  state: MultiSelectState,
+  options: SelectOptionsReq<A>
+) => {
+  const selectedIndices = new Set(state.selectedIndices)
+  if (state.index === 0) {
+    if (state.selectedIndices.size === options.choices.length) {
+      selectedIndices.clear()
+    } else {
+      for (let i = 0; i < options.choices.length; i++) {
+        selectedIndices.add(i)
+      }
+    }
+  } else if (state.index === 1) {
+    for (let i = 0; i < options.choices.length; i++) {
+      if (state.selectedIndices.has(i)) {
+        selectedIndices.delete(i)
+      } else {
+        selectedIndices.add(i)
+      }
+    }
+  } else {
+    const choiceIndex = state.index - metaOptionsCount
+    if (selectedIndices.has(choiceIndex)) {
+      selectedIndices.delete(choiceIndex)
+    } else {
+      selectedIndices.add(choiceIndex)
+    }
+  }
+  return Effect.succeed(Action.NextFrame({ state: { ...state, selectedIndices } }))
+}
+
+const handleMultiSelectClear = <A>(options: SelectOptionsReq<A>) =>
+  Effect.fnUntraced(function*(state: MultiSelectState, _: Action<MultiSelectState, Array<A>>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const figures = yield* platformFigures
+    const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft
+    const promptText = renderSelectOutput("?", figures.pointerSmall, options, { plain: true })
+    const choicesText = renderMultiSelectChoices(state, options, figures, { plain: true })
+    const errorText = renderMultiSelectError(state, figures.pointer, { plain: true })
+    const clearOutput = clearOutputWithError(`${promptText}\n${choicesText}`, columns, errorText)
+    return clearOutput + clearPrompt
+  })
+
+const handleMultiSelectProcess = <A>(options: SelectOptionsReq<A> & MultiSelectOptionsReq) => {
+  return (input: Terminal.UserInput, state: MultiSelectState) => {
+    const totalChoices = options.choices.length + metaOptionsCount
+    switch (input.key.name) {
+      case "k":
+      case "up": {
+        return processMultiSelectCursorUp({ ...state, error: Option.none() }, totalChoices)
+      }
+      case "j":
+      case "down":
+      case "tab": {
+        return processMultiSelectCursorDown({ ...state, error: Option.none() }, totalChoices)
+      }
+      case "space": {
+        return processSpace(state, options)
+      }
+      case "enter":
+      case "return": {
+        const selectedCount = state.selectedIndices.size
+        if (options.min !== undefined && selectedCount < options.min) {
+          return Effect.succeed(
+            Action.NextFrame({ state: { ...state, error: Option.some(`At least ${options.min} are required`) } })
+          )
+        }
+        if (options.max !== undefined && selectedCount > options.max) {
+          return Effect.succeed(
+            Action.NextFrame({ state: { ...state, error: Option.some(`At most ${options.max} choices are allowed`) } })
+          )
+        }
+        const selectedValues = Array.from(state.selectedIndices).sort(EffectNumber.Order).map((index) =>
+          options.choices[index].value
+        )
+        return Effect.succeed(Action.Submit({ value: selectedValues }))
+      }
+      default: {
+        return Effect.succeed(Action.Beep())
+      }
+    }
+  }
+}
+
+const handleMultiSelectRender = <A>(options: SelectOptionsReq<A>) => {
+  return (state: MultiSelectState, action: Action<MultiSelectState, Array<A>>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderMultiSelectNextFrame(state, options),
+      Submit: () => renderMultiSelectSubmission(state, options)
+    })
+  }
+}
+
+interface IntegerOptionsReq extends Required<IntegerOptions> {}
+interface FloatOptionsReq extends Required<FloatOptions> {}
+
+interface NumberState {
+  readonly cursor: number
+  readonly value: string
+  readonly error: Option.Option<string>
+}
+
+const handleNumberClear = (options: IntegerOptionsReq) => {
+  return Effect.fnUntraced(function*(state: NumberState, _: Action<NumberState, number>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const figures = yield* platformFigures
+    const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft
+    const errorText = renderNumberError(state, figures.pointerSmall, { plain: true })
+    const promptText = renderNumberOutput(state, "?", figures.pointerSmall, options, { plain: true })
+    const clearOutput = clearOutputWithError(promptText, columns, errorText)
+    return clearOutput + resetCurrentLine
+  })
+}
 
 const renderNumberInput = (
-    state: NumberState,
-    submitted: boolean,
-    renderOptions?: RenderOptions | undefined
-): string =>
-{
-    const value = state.value === "" ? "" : `${state.value}`;
-    if (submitted || renderOptions?.plain === true)
-    {
-        return value;
-    }
-    const annotation = Option.isSome(state.error) ?
-        Ansi.red :
-        Ansi.combine(Ansi.underlined, Ansi.cyanBright);
-    return Ansi.annotate(value, annotation);
-};
+  state: NumberState,
+  submitted: boolean,
+  renderOptions?: RenderOptions | undefined
+): string => {
+  const value = state.value === "" ? "" : `${state.value}`
+  if (submitted || renderOptions?.plain === true) {
+    return value
+  }
+  const annotation = Option.isSome(state.error) ?
+    Ansi.red :
+    Ansi.combine(Ansi.underlined, Ansi.cyanBright)
+  return Ansi.annotate(value, annotation)
+}
 
 const renderNumberError = (
-    state: NumberState,
-    pointer: string,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    if (Option.isSome(state.error))
-    {
-        return Arr.match(state.error.value.split(NEWLINE_REGEXP), {
-            onEmpty: () => "",
-            onNonEmpty: (errorLines) =>
-            {
-                if (renderOptions?.plain === true)
-                {
-                    return `${pointer} ${errorLines.join("\n")}`;
-                }
-                const prefix = Ansi.annotate(pointer, Ansi.red) + " ";
-                const lines = Arr.map(errorLines, (str) => annotateErrorLine(str));
-                return (
-                    Ansi.cursorSavePosition +
-                    "\n" +
-                    prefix +
-                    lines.join("\n") +
-                    Ansi.cursorRestorePosition
-                );
-            }
-        });
-    }
-    return "";
-};
+  state: NumberState,
+  pointer: string,
+  renderOptions?: RenderOptions | undefined
+) => {
+  if (Option.isSome(state.error)) {
+    return Arr.match(state.error.value.split(NEWLINE_REGEXP), {
+      onEmpty: () => "",
+      onNonEmpty: (errorLines) => {
+        if (renderOptions?.plain === true) {
+          return `${pointer} ${errorLines.join("\n")}`
+        }
+        const prefix = Ansi.annotate(pointer, Ansi.red) + " "
+        const lines = Arr.map(errorLines, (str) => annotateErrorLine(str))
+        return Ansi.cursorSavePosition + "\n" + prefix + lines.join("\n") + Ansi.cursorRestorePosition
+      }
+    })
+  }
+  return ""
+}
 
 const renderNumberOutput = (
-    state: NumberState,
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options: IntegerOptionsReq,
-    renderOptions?: RenderOptions | undefined,
-    submitted: boolean = false
-) =>
-{
-    const value = renderNumberInput(state, submitted, renderOptions);
-    return renderPrompt(value, options.message, leadingSymbol, trailingSymbol, renderOptions);
-};
+  state: NumberState,
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options: IntegerOptionsReq,
+  renderOptions?: RenderOptions | undefined,
+  submitted: boolean = false
+) => {
+  const value = renderNumberInput(state, submitted, renderOptions)
+  return renderPrompt(value, options.message, leadingSymbol, trailingSymbol, renderOptions)
+}
 
-const renderNumberNextFrame = Effect.fnUntraced(function*(state: NumberState, options: IntegerOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    const errorMsg = renderNumberError(state, figures.pointerSmall);
-    const promptMsg = renderNumberOutput(state, leadingSymbol, trailingSymbol, options);
-    return promptMsg + errorMsg;
-});
+const renderNumberNextFrame = Effect.fnUntraced(function*(state: NumberState, options: IntegerOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  const errorMsg = renderNumberError(state, figures.pointerSmall)
+  const promptMsg = renderNumberOutput(state, leadingSymbol, trailingSymbol, options)
+  return promptMsg + errorMsg
+})
 
-const renderNumberSubmission = Effect.fnUntraced(function*(nextState: NumberState, options: IntegerOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const promptMsg = renderNumberOutput(nextState, leadingSymbol, trailingSymbol, options, undefined, true);
-    return promptMsg + "\n";
-});
+const renderNumberSubmission = Effect.fnUntraced(function*(nextState: NumberState, options: IntegerOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const promptMsg = renderNumberOutput(nextState, leadingSymbol, trailingSymbol, options, undefined, true)
+  return promptMsg + "\n"
+})
 
-const processNumberBackspace = (state: NumberState) =>
-{
-    if (state.value.length <= 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const value = state.value.slice(0, state.value.length - 1);
-    return Effect.succeed(Action.NextFrame({
-        state: {
-            ...state,
-            error: Option.none(),
-            value
-        }
-    }));
-};
+const processNumberBackspace = (state: NumberState) => {
+  if (state.value.length <= 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const value = state.value.slice(0, state.value.length - 1)
+  return Effect.succeed(Action.NextFrame({
+    state: { ...state, value, error: Option.none() }
+  }))
+}
 
 const processNumberClear = (state: NumberState) =>
-    Effect.succeed(Action.NextFrame({
-        state: {
+  Effect.succeed(Action.NextFrame({
+    state: { ...state, cursor: 0, value: "", error: Option.none() }
+  }))
+
+const defaultIntProcessor = (input: string, state: NumberState) => {
+  if (state.value.length === 0 && input === "-") {
+    return Effect.succeed(Action.NextFrame({
+      state: { ...state, value: "-", error: Option.none() }
+    }))
+  }
+
+  const parsed = Number.parseInt(state.value + input)
+  if (Number.isNaN(parsed)) {
+    return Effect.succeed(Action.Beep())
+  } else {
+    return Effect.succeed(Action.NextFrame({
+      state: { ...state, value: `${parsed}`, error: Option.none() }
+    }))
+  }
+}
+
+const defaultFloatProcessor = (input: string, state: NumberState) => {
+  if (input === "." && state.value.includes(".")) {
+    return Effect.succeed(Action.Beep())
+  }
+  if (state.value.length === 0 && input === "-") {
+    return Effect.succeed(Action.NextFrame({
+      state: { ...state, value: "-", error: Option.none() }
+    }))
+  }
+
+  const parsed = Number.parseFloat(state.value + input)
+  if (Number.isNaN(parsed)) {
+    return Effect.succeed(Action.Beep())
+  } else {
+    return Effect.succeed(Action.NextFrame({
+      state: {
+        ...state,
+        value: input === "." ? `${parsed}.` : `${parsed}`,
+        error: Option.none()
+      }
+    }))
+  }
+}
+
+const handleRenderInteger = (options: IntegerOptionsReq) => {
+  return (state: NumberState, action: Action<NumberState, number>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderNumberNextFrame(state, options),
+      Submit: () => renderNumberSubmission(state, options)
+    })
+  }
+}
+
+const handleProcessInteger = (options: IntegerOptionsReq) => {
+  return (input: Terminal.UserInput, state: NumberState) => {
+    if (input.key.ctrl && input.key.name === "u") {
+      return processNumberClear(state)
+    }
+    switch (input.key.name) {
+      case "backspace": {
+        return processNumberBackspace(state)
+      }
+      case "k":
+      case "up": {
+        return Effect.succeed(Action.NextFrame({
+          state: {
             ...state,
-            cursor: 0,
-            error: Option.none(),
-            value: ""
-        }
-    }));
-
-const defaultIntProcessor = (input: string, state: NumberState) =>
-{
-    if (state.value.length === 0 && input === "-")
-    {
+            value: state.value === "" || state.value === "-"
+              ? `${options.incrementBy}`
+              : `${Number.parseInt(state.value) + options.incrementBy}`,
+            error: Option.none()
+          }
+        }))
+      }
+      case "j":
+      case "down": {
         return Effect.succeed(Action.NextFrame({
+          state: {
+            ...state,
+            value: state.value === "" || state.value === "-"
+              ? `-${options.decrementBy}`
+              : `${Number.parseInt(state.value) - options.decrementBy}`,
+            error: Option.none()
+          }
+        }))
+      }
+      case "enter":
+      case "return": {
+        const parsed = Number.parseInt(state.value)
+        if (Number.isNaN(parsed)) {
+          return Effect.succeed(Action.NextFrame({
             state: {
-                ...state,
-                error: Option.none(),
-                value: "-"
+              ...state,
+              error: Option.some("Must provide an integer value")
             }
-        }));
+          }))
+        } else {
+          return Effect.match(options.validate(parsed), {
+            onFailure: (error) =>
+              Action.NextFrame({
+                state: {
+                  ...state,
+                  error: Option.some(error)
+                }
+              }),
+            onSuccess: (value) => Action.Submit({ value })
+          })
+        }
+      }
+      default: {
+        return defaultIntProcessor(Option.getOrElse(input.input, () => ""), state)
+      }
     }
+  }
+}
 
-    const parsed = Number.parseInt(state.value + input);
-    if (Number.isNaN(parsed))
-    {
-        return Effect.succeed(Action.Beep());
+const handleRenderFloat = (options: FloatOptionsReq) => {
+  return (state: NumberState, action: Action<NumberState, number>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderNumberNextFrame(state, options),
+      Submit: () => renderNumberSubmission(state, options)
+    })
+  }
+}
+
+const handleProcessFloat = (options: FloatOptionsReq) => {
+  return (input: Terminal.UserInput, state: NumberState) => {
+    if (input.key.ctrl && input.key.name === "u") {
+      return processNumberClear(state)
     }
-    else
-    {
+    switch (input.key.name) {
+      case "backspace": {
+        return processNumberBackspace(state)
+      }
+      case "k":
+      case "up": {
         return Effect.succeed(Action.NextFrame({
-            state: {
-                ...state,
-                error: Option.none(),
-                value: `${ parsed }`
-            }
-        }));
-    }
-};
-
-const defaultFloatProcessor = (input: string, state: NumberState) =>
-{
-    if (input === "." && state.value.includes("."))
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    if (state.value.length === 0 && input === "-")
-    {
+          state: {
+            ...state,
+            value: state.value === "" || state.value === "-"
+              ? `${options.incrementBy}`
+              : `${Number.parseFloat(state.value) + options.incrementBy}`,
+            error: Option.none()
+          }
+        }))
+      }
+      case "j":
+      case "down": {
         return Effect.succeed(Action.NextFrame({
+          state: {
+            ...state,
+            value: state.value === "" || state.value === "-"
+              ? `-${options.decrementBy}`
+              : `${Number.parseFloat(state.value) - options.decrementBy}`,
+            error: Option.none()
+          }
+        }))
+      }
+      case "enter":
+      case "return": {
+        const parsed = Number.parseFloat(state.value)
+        if (Number.isNaN(parsed)) {
+          return Effect.succeed(Action.NextFrame({
             state: {
-                ...state,
-                error: Option.none(),
-                value: "-"
+              ...state,
+              error: Option.some("Must provide a floating point value")
             }
-        }));
+          }))
+        } else {
+          return Effect.flatMap(
+            Effect.sync(() => EffectNumber.round(parsed, options.precision)),
+            (rounded) =>
+              Effect.match(options.validate(rounded), {
+                onFailure: (error) =>
+                  Action.NextFrame({
+                    state: {
+                      ...state,
+                      error: Option.some(error)
+                    }
+                  }),
+                onSuccess: (value) => Action.Submit({ value })
+              })
+          )
+        }
+      }
+      default: {
+        return defaultFloatProcessor(Option.getOrElse(input.input, () => ""), state)
+      }
     }
+  }
+}
 
-    const parsed = Number.parseFloat(state.value + input);
-    if (Number.isNaN(parsed))
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    else
-    {
-        return Effect.succeed(Action.NextFrame({
-            state: {
-                ...state,
-                error: Option.none(),
-                value: input === "." ? `${ parsed }.` : `${ parsed }`
-            }
-        }));
-    }
-};
-
-const handleRenderInteger = (options: IntegerOptionsReq) =>
-{
-    return (state: NumberState, action: Action<NumberState, number>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderNumberNextFrame(state, options),
-            Submit: () => renderNumberSubmission(state, options)
-        });
-    };
-};
-
-const handleProcessInteger = (options: IntegerOptionsReq) =>
-{
-    return (input: Terminal.UserInput, state: NumberState) =>
-    {
-        if (input.key.ctrl && input.key.name === "u")
-        {
-            return processNumberClear(state);
-        }
-        switch (input.key.name)
-        {
-            case "backspace": {
-                return processNumberBackspace(state);
-            }
-            case "k":
-            case "up": {
-                return Effect.succeed(Action.NextFrame({
-                    state: {
-                        ...state,
-                        error: Option.none(),
-                        value: state.value === "" || state.value === "-"
-                            ? `${options.incrementBy}`
-                            : `${Number.parseInt(state.value) + options.incrementBy}`
-                    }
-                }));
-            }
-            case "j":
-            case "down": {
-                return Effect.succeed(Action.NextFrame({
-                    state: {
-                        ...state,
-                        error: Option.none(),
-                        value: state.value === "" || state.value === "-"
-                            ? `-${ options.decrementBy }`
-                            : `${ Number.parseInt(state.value) - options.decrementBy }`
-                    }
-                }));
-            }
-            case "enter":
-            case "return": {
-                const parsed = Number.parseInt(state.value);
-                if (Number.isNaN(parsed))
-                {
-                    return Effect.succeed(Action.NextFrame({
-                        state: {
-                            ...state,
-                            error: Option.some("Must provide an integer value")
-                        }
-                    }));
-                }
-                else
-                {
-                    return Effect.match(
-                        options.validate(parsed),
-                        {
-                            onFailure: (error) =>
-                                Action.NextFrame({
-                                    state: {
-                                        ...state,
-                                        error: Option.some(error)
-                                    }
-                                }),
-                            onSuccess: (value) => Action.Submit({ value })
-                        }
-                    );
-                }
-            }
-            default: {
-                return defaultIntProcessor(Option.getOrElse(input.input, () => ""), state);
-            }
-        }
-    };
-};
-
-const handleRenderFloat = (options: FloatOptionsReq) =>
-{
-    return (state: NumberState, action: Action<NumberState, number>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderNumberNextFrame(state, options),
-            Submit: () => renderNumberSubmission(state, options)
-        });
-    };
-};
-
-const handleProcessFloat = (options: FloatOptionsReq) =>
-{
-    return (input: Terminal.UserInput, state: NumberState) =>
-    {
-        if (input.key.ctrl && input.key.name === "u")
-        {
-            return processNumberClear(state);
-        }
-        switch (input.key.name)
-        {
-            case "backspace": {
-                return processNumberBackspace(state);
-            }
-            case "k":
-            case "up": {
-                return Effect.succeed(Action.NextFrame({
-                    state: {
-                        ...state,
-                        error: Option.none(),
-                        value: state.value === "" || state.value === "-"
-                            ? `${options.incrementBy}`
-                            : `${Number.parseFloat(state.value) + options.incrementBy}`
-                    }
-                }));
-            }
-            case "j":
-            case "down": {
-                return Effect.succeed(Action.NextFrame({
-                    state: {
-                        ...state,
-                        error: Option.none(),
-                        value: state.value === "" || state.value === "-"
-                            ? `-${options.decrementBy}`
-                            : `${Number.parseFloat(state.value) - options.decrementBy}`
-                    }
-                }));
-            }
-            case "enter":
-            case "return": {
-                const parsed = Number.parseFloat(state.value);
-                if (Number.isNaN(parsed))
-                {
-                    return Effect.succeed(Action.NextFrame({
-                        state: {
-                            ...state,
-                            error: Option.some("Must provide a floating point value")
-                        }
-                    }));
-                }
-                else
-                {
-                    return Effect.flatMap(
-                        Effect.sync(() => EffectNumber.round(parsed, options.precision)),
-                        (rounded) =>
-                            Effect.match(options.validate(rounded), {
-                                onFailure: (error) =>
-                                    Action.NextFrame({
-                                        state: {
-                                            ...state,
-                                            error: Option.some(error)
-                                        }
-                                    }),
-                                onSuccess: (value) => Action.Submit({ value })
-                            })
-                    );
-                }
-            }
-            default: {
-                return defaultFloatProcessor(Option.getOrElse(input.input, () => ""), state);
-            }
-        }
-    };
-};
-
-type SelectState = number;
+type SelectState = number
 
 type AutoCompleteState = {
-    readonly query: string
-    readonly index: number
-    readonly filtered: ReadonlyArray<number>
-};
+  readonly query: string
+  readonly index: number
+  readonly filtered: ReadonlyArray<number>
+}
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 interface SelectOptionsReq<A> extends Required<SelectOptions<A>> {}
 interface AutoCompleteOptionsReq<A> extends Required<AutoCompleteOptions<A>> {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
-const filterAutoCompleteChoices = <A>(choices: ReadonlyArray<SelectChoice<A>>, query: string) =>
-{
-    const normalizedQuery = query.toLowerCase();
-    const indices: Array<number> = [];
-    for (let i = 0; i < choices.length; i++)
-    {
-        if (choices[i].title.toLowerCase().includes(normalizedQuery))
-        {
-            indices.push(i);
-        }
+const filterAutoCompleteChoices = <A>(choices: ReadonlyArray<SelectChoice<A>>, query: string) => {
+  const normalizedQuery = query.toLowerCase()
+  const indices: Array<number> = []
+  for (let i = 0; i < choices.length; i++) {
+    if (choices[i].title.toLowerCase().includes(normalizedQuery)) {
+      indices.push(i)
     }
-    return indices;
-};
+  }
+  return indices
+}
 
 const updateAutoCompleteState = <A>(
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>,
-    query: string
-): AutoCompleteState =>
-{
-    const filtered = filterAutoCompleteChoices(options.choices, query);
-    if (filtered.length === 0)
-    {
-        return {
-            ...state,
-            filtered,
-            index: 0,
-            query
-        };
-    }
-    if (filtered.includes(state.index))
-    {
-        return {
-            ...state,
-            filtered,
-            query
-        };
-    }
-    return {
-        ...state,
-        filtered,
-        index: filtered[0],
-        query
-    };
-};
+  state: AutoCompleteState,
+  options: AutoCompleteOptionsReq<A>,
+  query: string
+): AutoCompleteState => {
+  const filtered = filterAutoCompleteChoices(options.choices, query)
+  if (filtered.length === 0) {
+    return { ...state, query, filtered, index: 0 }
+  }
+  if (filtered.includes(state.index)) {
+    return { ...state, query, filtered }
+  }
+  return { ...state, query, filtered, index: filtered[0] }
+}
 
 const autoCompleteCursor = (state: AutoCompleteState) =>
-    Option.getOrElse(Arr.findFirstIndex(state.filtered, (index) => index === state.index), () => 0);
+  Option.getOrElse(Arr.findFirstIndex(state.filtered, (index) => index === state.index), () => 0)
 
 const renderSelectOutput = <A>(
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options: SelectOptionsReq<A>,
-    renderOptions?: RenderOptions | undefined
-) => renderPrompt("", options.message, leadingSymbol, trailingSymbol, renderOptions);
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options: SelectOptionsReq<A>,
+  renderOptions?: RenderOptions | undefined
+) => renderPrompt("", options.message, leadingSymbol, trailingSymbol, renderOptions)
 
 const renderAutoCompleteFilter = <A>(
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    const filterValue = state.query.length === 0
-        ? renderOptions?.plain === true
-            ? options.filterPlaceholder
-            : Ansi.annotate(options.filterPlaceholder, Ansi.blackBright)
-        : renderOptions?.plain === true
-            ? state.query
-            : Ansi.annotate(state.query, Ansi.combine(Ansi.underlined, Ansi.cyanBright));
-    return `[${ options.filterLabel }: ${ filterValue }]`;
-};
+  state: AutoCompleteState,
+  options: AutoCompleteOptionsReq<A>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  const filterValue = state.query.length === 0
+    ? renderOptions?.plain === true
+      ? options.filterPlaceholder
+      : Ansi.annotate(options.filterPlaceholder, Ansi.blackBright)
+    : renderOptions?.plain === true
+    ? state.query
+    : Ansi.annotate(state.query, Ansi.combine(Ansi.underlined, Ansi.cyanBright))
+  return `[${options.filterLabel}: ${filterValue}]`
+}
 
 const renderAutoCompleteOutput = <A>(
-    state: AutoCompleteState,
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options: AutoCompleteOptionsReq<A>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    const filter = renderAutoCompleteFilter(state, options, renderOptions);
-
-    return renderPrompt(
-        filter,
-        options.message,
-        leadingSymbol,
-        trailingSymbol,
-        renderOptions
-    );
-};
+  state: AutoCompleteState,
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options: AutoCompleteOptionsReq<A>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  const filter = renderAutoCompleteFilter(state, options, renderOptions)
+  return renderPrompt(filter, options.message, leadingSymbol, trailingSymbol, renderOptions)
+}
 
 const renderChoicePrefix = <A>(
-    state: SelectState,
-    choices: SelectOptionsReq<A>["choices"],
-    toDisplay: { readonly startIndex: number; readonly endIndex: number },
-    currentIndex: number,
-    figures: Effect.Success<typeof platformFigures>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    let prefix = " ";
-    if (currentIndex === toDisplay.startIndex && toDisplay.startIndex > 0)
-    {
-        prefix = figures.arrowUp;
-    }
-    else if (currentIndex === toDisplay.endIndex - 1 && toDisplay.endIndex < choices.length)
-    {
-        prefix = figures.arrowDown;
-    }
-    if (renderOptions?.plain === true)
-    {
-        return state === currentIndex
-            ? figures.pointer + prefix
-            : prefix + " ";
-    }
-    if (choices[currentIndex].disabled)
-    {
-        const annotation = Ansi.combine(Ansi.bold, Ansi.blackBright);
-        return state === currentIndex
-            ? Ansi.annotate(figures.pointer, annotation) + prefix
-            : prefix + " ";
-    }
+  state: SelectState,
+  choices: SelectOptionsReq<A>["choices"],
+  toDisplay: { readonly startIndex: number; readonly endIndex: number },
+  currentIndex: number,
+  figures: Effect.Success<typeof platformFigures>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  let prefix = " "
+  if (currentIndex === toDisplay.startIndex && toDisplay.startIndex > 0) {
+    prefix = figures.arrowUp
+  } else if (currentIndex === toDisplay.endIndex - 1 && toDisplay.endIndex < choices.length) {
+    prefix = figures.arrowDown
+  }
+  if (renderOptions?.plain === true) {
     return state === currentIndex
-        ? Ansi.annotate(figures.pointer, Ansi.cyanBright) + prefix
-        : prefix + " ";
-};
+      ? figures.pointer + prefix
+      : prefix + " "
+  }
+  if (choices[currentIndex].disabled) {
+    const annotation = Ansi.combine(Ansi.bold, Ansi.blackBright)
+    return state === currentIndex
+      ? Ansi.annotate(figures.pointer, annotation) + prefix
+      : prefix + " "
+  }
+  return state === currentIndex
+    ? Ansi.annotate(figures.pointer, Ansi.cyanBright) + prefix
+    : prefix + " "
+}
 
 const renderAutoCompleteChoicePrefix = <A>(
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>,
-    toDisplay: { readonly startIndex: number; readonly endIndex: number },
-    currentIndex: number,
-    figures: Effect.Success<typeof platformFigures>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    let prefix = " ";
-    if (currentIndex === toDisplay.startIndex && toDisplay.startIndex > 0)
-    {
-        prefix = figures.arrowUp;
-    }
-    else if (currentIndex === toDisplay.endIndex - 1 && toDisplay.endIndex < state.filtered.length)
-    {
-        prefix = figures.arrowDown;
-    }
-    const choiceIndex = state.filtered[currentIndex];
-    if (renderOptions?.plain === true)
-    {
-        return state.index === choiceIndex
-            ? figures.pointer + prefix
-            : prefix + " ";
-    }
-    const choice = options.choices[choiceIndex];
-    if (choice.disabled)
-    {
-        const annotation = Ansi.combine(Ansi.bold, Ansi.blackBright);
-        return state.index === choiceIndex
-            ? Ansi.annotate(figures.pointer, annotation) + prefix
-            : prefix + " ";
-    }
+  state: AutoCompleteState,
+  options: AutoCompleteOptionsReq<A>,
+  toDisplay: { readonly startIndex: number; readonly endIndex: number },
+  currentIndex: number,
+  figures: Effect.Success<typeof platformFigures>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  let prefix = " "
+  if (currentIndex === toDisplay.startIndex && toDisplay.startIndex > 0) {
+    prefix = figures.arrowUp
+  } else if (currentIndex === toDisplay.endIndex - 1 && toDisplay.endIndex < state.filtered.length) {
+    prefix = figures.arrowDown
+  }
+  const choiceIndex = state.filtered[currentIndex]
+  if (renderOptions?.plain === true) {
     return state.index === choiceIndex
-        ? Ansi.annotate(figures.pointer, Ansi.cyanBright) + prefix
-        : prefix + " ";
-};
+      ? figures.pointer + prefix
+      : prefix + " "
+  }
+  const choice = options.choices[choiceIndex]
+  if (choice.disabled) {
+    const annotation = Ansi.combine(Ansi.bold, Ansi.blackBright)
+    return state.index === choiceIndex
+      ? Ansi.annotate(figures.pointer, annotation) + prefix
+      : prefix + " "
+  }
+  return state.index === choiceIndex
+    ? Ansi.annotate(figures.pointer, Ansi.cyanBright) + prefix
+    : prefix + " "
+}
 
 const renderChoiceTitle = <A>(
-    choice: SelectChoice<A>,
-    isSelected: boolean,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    if (renderOptions?.plain === true)
-    {
-        return choice.title;
-    }
-    const title = choice.title;
-    if (isSelected)
-    {
-        return choice.disabled
-            ? Ansi.annotate(title, Ansi.combine(Ansi.underlined, Ansi.blackBright))
-            : Ansi.annotate(title, Ansi.combine(Ansi.underlined, Ansi.cyanBright));
-    }
+  choice: SelectChoice<A>,
+  isSelected: boolean,
+  renderOptions?: RenderOptions | undefined
+) => {
+  if (renderOptions?.plain === true) {
+    return choice.title
+  }
+  const title = choice.title
+  if (isSelected) {
     return choice.disabled
-        ? Ansi.annotate(title, Ansi.combine(Ansi.strikethrough, Ansi.blackBright))
-        : title;
-};
+      ? Ansi.annotate(title, Ansi.combine(Ansi.underlined, Ansi.blackBright))
+      : Ansi.annotate(title, Ansi.combine(Ansi.underlined, Ansi.cyanBright))
+  }
+  return choice.disabled
+    ? Ansi.annotate(title, Ansi.combine(Ansi.strikethrough, Ansi.blackBright))
+    : title
+}
 
 const renderSelectChoices = <A>(
-    state: SelectState,
-    options: SelectOptionsReq<A>,
-    figures: Effect.Success<typeof platformFigures>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    const choices = options.choices;
-    const toDisplay = entriesToDisplay(state, choices.length, options.maxPerPage);
-    const documents: Array<string> = [];
-    for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++)
-    {
-        const choice = choices[index];
-        const isSelected = state === index;
-        const prefix = renderChoicePrefix(state, choices, toDisplay, index, figures, renderOptions);
-        const title = renderChoiceTitle(choice, isSelected, renderOptions);
-        const description = renderChoiceDescription(choice, isSelected, renderOptions);
-        documents.push(prefix + title + " " + description);
-    }
-    return documents.join("\n");
-};
+  state: SelectState,
+  options: SelectOptionsReq<A>,
+  figures: Effect.Success<typeof platformFigures>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  const choices = options.choices
+  const toDisplay = entriesToDisplay(state, choices.length, options.maxPerPage)
+  const documents: Array<string> = []
+  for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++) {
+    const choice = choices[index]
+    const isSelected = state === index
+    const prefix = renderChoicePrefix(state, choices, toDisplay, index, figures, renderOptions)
+    const title = renderChoiceTitle(choice, isSelected, renderOptions)
+    const description = renderChoiceDescription(choice, isSelected, renderOptions)
+    documents.push(prefix + title + " " + description)
+  }
+  return documents.join("\n")
+}
 
 const renderAutoCompleteChoices = <A>(
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>,
-    figures: Effect.Success<typeof platformFigures>,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    if (state.filtered.length === 0)
-    {
-        return renderOptions?.plain === true
-            ? options.emptyMessage
-            : Ansi.annotate(options.emptyMessage, Ansi.blackBright);
-    }
-    const cursor = autoCompleteCursor(state);
-    const toDisplay = entriesToDisplay(cursor, state.filtered.length, options.maxPerPage);
-    const documents: Array<string> = [];
-    for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++)
-    {
-        const choiceIndex = state.filtered[index];
-        const choice = options.choices[choiceIndex];
-        const isSelected = state.index === choiceIndex;
-        const prefix = renderAutoCompleteChoicePrefix(
-            state,
-            options,
-            toDisplay,
-            index,
-            figures,
-            renderOptions
-        );
-        const title = renderChoiceTitle(choice, isSelected, renderOptions);
-        const description = renderChoiceDescription(choice, isSelected, renderOptions);
-        documents.push(prefix + title + " " + description);
-    }
-    return documents.join("\n");
-};
+  state: AutoCompleteState,
+  options: AutoCompleteOptionsReq<A>,
+  figures: Effect.Success<typeof platformFigures>,
+  renderOptions?: RenderOptions | undefined
+) => {
+  if (state.filtered.length === 0) {
+    return renderOptions?.plain === true
+      ? options.emptyMessage
+      : Ansi.annotate(options.emptyMessage, Ansi.blackBright)
+  }
+  const cursor = autoCompleteCursor(state)
+  const toDisplay = entriesToDisplay(cursor, state.filtered.length, options.maxPerPage)
+  const documents: Array<string> = []
+  for (let index = toDisplay.startIndex; index < toDisplay.endIndex; index++) {
+    const choiceIndex = state.filtered[index]
+    const choice = options.choices[choiceIndex]
+    const isSelected = state.index === choiceIndex
+    const prefix = renderAutoCompleteChoicePrefix(state, options, toDisplay, index, figures, renderOptions)
+    const title = renderChoiceTitle(choice, isSelected, renderOptions)
+    const description = renderChoiceDescription(choice, isSelected, renderOptions)
+    documents.push(prefix + title + " " + description)
+  }
+  return documents.join("\n")
+}
 
-const renderSelectNextFrame = Effect.fnUntraced(function*<A>(state: SelectState, options: SelectOptionsReq<A>)
-{
-    const figures = yield* platformFigures;
-    const choices = renderSelectChoices(state, options, figures);
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options);
-    return Ansi.cursorHide + promptMsg + "\n" + choices;
-});
+const renderSelectNextFrame = Effect.fnUntraced(function*<A>(state: SelectState, options: SelectOptionsReq<A>) {
+  const figures = yield* platformFigures
+  const choices = renderSelectChoices(state, options, figures)
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options)
+  return Ansi.cursorHide + promptMsg + "\n" + choices
+})
 
 const renderAutoCompleteNextFrame = Effect.fnUntraced(function*<A>(
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>
-)
-{
-    const figures = yield* platformFigures;
-    const choices = renderAutoCompleteChoices(state, options, figures);
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    const promptMsg = renderAutoCompleteOutput(state, leadingSymbol, trailingSymbol, options);
-    return Ansi.cursorHide + promptMsg + "\n" + choices;
-});
+  state: AutoCompleteState,
+  options: AutoCompleteOptionsReq<A>
+) {
+  const figures = yield* platformFigures
+  const choices = renderAutoCompleteChoices(state, options, figures)
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  const promptMsg = renderAutoCompleteOutput(state, leadingSymbol, trailingSymbol, options)
+  return Ansi.cursorHide + promptMsg + "\n" + choices
+})
 
-const renderSelectSubmission = Effect.fnUntraced(function*<A>(
-    state: SelectState,
-    options: SelectOptionsReq<A>
-)
-{
-    const figures = yield* platformFigures;
-    const selected = options.choices[state].title;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options);
-    return promptMsg + " " + Ansi.annotate(selected, Ansi.white) + "\n";
-});
+const renderSelectSubmission = Effect.fnUntraced(function*<A>(state: SelectState, options: SelectOptionsReq<A>) {
+  const figures = yield* platformFigures
+  const selected = options.choices[state].title
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const promptMsg = renderSelectOutput(leadingSymbol, trailingSymbol, options)
+  return promptMsg + " " + Ansi.annotate(selected, Ansi.white) + "\n"
+})
 
 const renderAutoCompleteSubmission = Effect.fnUntraced(function*<A>(
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>
-)
-{
-    const figures = yield* platformFigures;
-    const selected = options.choices[state.index].title;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const promptMsg = renderAutoCompleteOutput(state, leadingSymbol, trailingSymbol, options);
-    return promptMsg + " " + Ansi.annotate(selected, Ansi.white) + "\n";
-});
+  state: AutoCompleteState,
+  options: AutoCompleteOptionsReq<A>
+) {
+  const figures = yield* platformFigures
+  const selected = options.choices[state.index].title
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const promptMsg = renderAutoCompleteOutput(state, leadingSymbol, trailingSymbol, options)
+  return promptMsg + " " + Ansi.annotate(selected, Ansi.white) + "\n"
+})
 
-const processSelectCursorUp = <A>(state: SelectState, choices: SelectOptionsReq<A>["choices"]) =>
-{
-    if (state === 0)
-    {
-        return Effect.succeed(Action.NextFrame({ state: choices.length - 1 }));
-    }
-    return Effect.succeed(Action.NextFrame({ state: state - 1 }));
-};
+const processSelectCursorUp = <A>(state: SelectState, choices: SelectOptionsReq<A>["choices"]) => {
+  if (state === 0) {
+    return Effect.succeed(Action.NextFrame({ state: choices.length - 1 }))
+  }
+  return Effect.succeed(Action.NextFrame({ state: state - 1 }))
+}
 
-const processSelectCursorDown = <A>(state: SelectState, choices: SelectOptionsReq<A>["choices"]) =>
-{
-    if (state === choices.length - 1)
-    {
-        return Effect.succeed(Action.NextFrame({ state: 0 }));
-    }
-    return Effect.succeed(Action.NextFrame({ state: state + 1 }));
-};
+const processSelectCursorDown = <A>(state: SelectState, choices: SelectOptionsReq<A>["choices"]) => {
+  if (state === choices.length - 1) {
+    return Effect.succeed(Action.NextFrame({ state: 0 }))
+  }
+  return Effect.succeed(Action.NextFrame({ state: state + 1 }))
+}
 
-const processSelectNext = <A>(state: SelectState, choices: SelectOptionsReq<A>["choices"]) =>
-{
-    return Effect.succeed(Action.NextFrame({ state: (state + 1) % choices.length }));
-};
+const processSelectNext = <A>(state: SelectState, choices: SelectOptionsReq<A>["choices"]) => {
+  return Effect.succeed(Action.NextFrame({ state: (state + 1) % choices.length }))
+}
 
-const processAutoCompleteCursorUp = (state: AutoCompleteState) =>
-{
-    if (state.filtered.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const cursor = autoCompleteCursor(state);
-    const nextCursor = cursor === 0 ? state.filtered.length - 1 : cursor - 1;
-    return Effect.succeed(Action.NextFrame({ state: { ...state, index: state.filtered[nextCursor] } }));
-};
+const processAutoCompleteCursorUp = (state: AutoCompleteState) => {
+  if (state.filtered.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const cursor = autoCompleteCursor(state)
+  const nextCursor = cursor === 0 ? state.filtered.length - 1 : cursor - 1
+  return Effect.succeed(Action.NextFrame({ state: { ...state, index: state.filtered[nextCursor] } }))
+}
 
-const processAutoCompleteCursorDown = (state: AutoCompleteState) =>
-{
-    if (state.filtered.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const cursor = autoCompleteCursor(state);
-    const nextCursor = (cursor + 1) % state.filtered.length;
-    return Effect.succeed(Action.NextFrame({ state: { ...state, index: state.filtered[nextCursor] } }));
-};
+const processAutoCompleteCursorDown = (state: AutoCompleteState) => {
+  if (state.filtered.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const cursor = autoCompleteCursor(state)
+  const nextCursor = (cursor + 1) % state.filtered.length
+  return Effect.succeed(Action.NextFrame({ state: { ...state, index: state.filtered[nextCursor] } }))
+}
 
-const processAutoCompleteNext = (state: AutoCompleteState) => processAutoCompleteCursorDown(state);
+const processAutoCompleteNext = (state: AutoCompleteState) => processAutoCompleteCursorDown(state)
 
-const processAutoCompleteBackspace = <A>(state: AutoCompleteState, options: AutoCompleteOptionsReq<A>) =>
-{
-    if (state.query.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const query = state.query.slice(0, state.query.length - 1);
-    return Effect.succeed(Action.NextFrame({ state: updateAutoCompleteState(state, options, query) }));
-};
+const processAutoCompleteBackspace = <A>(state: AutoCompleteState, options: AutoCompleteOptionsReq<A>) => {
+  if (state.query.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const query = state.query.slice(0, state.query.length - 1)
+  return Effect.succeed(Action.NextFrame({ state: updateAutoCompleteState(state, options, query) }))
+}
 
 const processAutoCompleteClear = <A>(state: AutoCompleteState, options: AutoCompleteOptionsReq<A>) =>
-    Effect.succeed(Action.NextFrame({ state: updateAutoCompleteState(state, options, "") }));
+  Effect.succeed(Action.NextFrame({ state: updateAutoCompleteState(state, options, "") }))
 
-const processAutoCompleteInput = <A>(
-    input: string,
-    state: AutoCompleteState,
-    options: AutoCompleteOptionsReq<A>
-) =>
-{
-    if (input.length === 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const query = state.query + input;
-    return Effect.succeed(Action.NextFrame({ state: updateAutoCompleteState(state, options, query) }));
-};
+const processAutoCompleteInput = <A>(input: string, state: AutoCompleteState, options: AutoCompleteOptionsReq<A>) => {
+  if (input.length === 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const query = state.query + input
+  return Effect.succeed(Action.NextFrame({ state: updateAutoCompleteState(state, options, query) }))
+}
 
-const handleSelectRender = <A>(options: SelectOptionsReq<A>) =>
-{
-    return (state: SelectState, action: Action<SelectState, A>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderSelectNextFrame(state, options),
-            Submit: () => renderSelectSubmission(state, options)
-        });
-    };
-};
+const handleSelectRender = <A>(options: SelectOptionsReq<A>) => {
+  return (state: SelectState, action: Action<SelectState, A>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderSelectNextFrame(state, options),
+      Submit: () => renderSelectSubmission(state, options)
+    })
+  }
+}
 
-const handleAutoCompleteRender = <A>(options: AutoCompleteOptionsReq<A>) =>
-{
-    return (state: AutoCompleteState, action: Action<AutoCompleteState, A>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderAutoCompleteNextFrame(state, options),
-            Submit: () => renderAutoCompleteSubmission(state, options)
-        });
-    };
-};
+const handleAutoCompleteRender = <A>(options: AutoCompleteOptionsReq<A>) => {
+  return (state: AutoCompleteState, action: Action<AutoCompleteState, A>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderAutoCompleteNextFrame(state, options),
+      Submit: () => renderAutoCompleteSubmission(state, options)
+    })
+  }
+}
 
 const handleSelectClear = <A>(options: SelectOptionsReq<A>) =>
-    Effect.fnUntraced(function*(state: SelectState, _: Action<SelectState, A>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const figures = yield* platformFigures;
-        const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft;
-        const promptText = renderSelectOutput("?", figures.pointerSmall, options, { plain: true });
-        const choicesText = renderSelectChoices(state, options, figures, { plain: true });
-        const clearOutput = eraseText(`${promptText}\n${choicesText}`, columns);
-        return clearOutput + clearPrompt;
-    });
+  Effect.fnUntraced(function*(state: SelectState, _: Action<SelectState, A>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const figures = yield* platformFigures
+    const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft
+    const promptText = renderSelectOutput("?", figures.pointerSmall, options, { plain: true })
+    const choicesText = renderSelectChoices(state, options, figures, { plain: true })
+    const clearOutput = eraseText(`${promptText}\n${choicesText}`, columns)
+    return clearOutput + clearPrompt
+  })
 
 const handleAutoCompleteClear = <A>(options: AutoCompleteOptionsReq<A>) =>
-    Effect.fnUntraced(function*(state: AutoCompleteState, _: Action<AutoCompleteState, A>)
-    {
-        const terminal = yield* Terminal.Terminal;
-        const columns = yield* terminal.columns;
-        const figures = yield* platformFigures;
-        const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft;
-        const promptText = renderAutoCompleteOutput(
-            state,
-            "?",
-            figures.pointerSmall,
-            options,
-            { plain: true }
-        );
-        const choicesText = renderAutoCompleteChoices(state, options, figures, { plain: true });
-        const clearOutput = eraseText(`${promptText}\n${choicesText}`, columns);
-        return clearOutput + clearPrompt;
-    });
+  Effect.fnUntraced(function*(state: AutoCompleteState, _: Action<AutoCompleteState, A>) {
+    const terminal = yield* Terminal.Terminal
+    const columns = yield* terminal.columns
+    const figures = yield* platformFigures
+    const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft
+    const promptText = renderAutoCompleteOutput(state, "?", figures.pointerSmall, options, { plain: true })
+    const choicesText = renderAutoCompleteChoices(state, options, figures, { plain: true })
+    const clearOutput = eraseText(`${promptText}\n${choicesText}`, columns)
+    return clearOutput + clearPrompt
+  })
 
-const handleSelectProcess = <A>(options: SelectOptionsReq<A>) =>
-{
-    return (input: Terminal.UserInput, state: SelectState) =>
-    {
-        switch (input.key.name)
-        {
-            case "k":
-            case "up": {
-                return processSelectCursorUp(state, options.choices);
-            }
-            case "j":
-            case "down": {
-                return processSelectCursorDown(state, options.choices);
-            }
-            case "tab": {
-                return processSelectNext(state, options.choices);
-            }
-            case "enter":
-            case "return": {
-                const selected = options.choices[state];
-                if (selected.disabled)
-                {
-                    return Effect.succeed(Action.Beep());
-                }
-                return Effect.succeed(Action.Submit({ value: selected.value }));
-            }
-            default: {
-                return Effect.succeed(Action.Beep());
-            }
+const handleSelectProcess = <A>(options: SelectOptionsReq<A>) => {
+  return (input: Terminal.UserInput, state: SelectState) => {
+    switch (input.key.name) {
+      case "k":
+      case "up": {
+        return processSelectCursorUp(state, options.choices)
+      }
+      case "j":
+      case "down": {
+        return processSelectCursorDown(state, options.choices)
+      }
+      case "tab": {
+        return processSelectNext(state, options.choices)
+      }
+      case "enter":
+      case "return": {
+        const selected = options.choices[state]
+        if (selected.disabled) {
+          return Effect.succeed(Action.Beep())
         }
-    };
-};
+        return Effect.succeed(Action.Submit({ value: selected.value }))
+      }
+      default: {
+        return Effect.succeed(Action.Beep())
+      }
+    }
+  }
+}
 
-const handleAutoCompleteProcess = <A>(options: AutoCompleteOptionsReq<A>) =>
-{
-    return (input: Terminal.UserInput, state: AutoCompleteState) =>
-    {
-        if (input.key.ctrl)
-        {
-            if (input.key.name === "u")
-            {
-                return processAutoCompleteClear(state, options);
-            }
-            return Effect.succeed(Action.Beep());
+const handleAutoCompleteProcess = <A>(options: AutoCompleteOptionsReq<A>) => {
+  return (input: Terminal.UserInput, state: AutoCompleteState) => {
+    if (input.key.ctrl) {
+      if (input.key.name === "u") {
+        return processAutoCompleteClear(state, options)
+      }
+      return Effect.succeed(Action.Beep())
+    }
+    switch (input.key.name) {
+      case "k":
+      case "up": {
+        return processAutoCompleteCursorUp(state)
+      }
+      case "j":
+      case "down": {
+        return processAutoCompleteCursorDown(state)
+      }
+      case "tab": {
+        return processAutoCompleteNext(state)
+      }
+      case "backspace": {
+        return processAutoCompleteBackspace(state, options)
+      }
+      case "enter":
+      case "return": {
+        if (state.filtered.length === 0) {
+          return Effect.succeed(Action.Beep())
         }
-        switch (input.key.name)
-        {
-            case "k":
-            case "up": {
-                return processAutoCompleteCursorUp(state);
-            }
-            case "j":
-            case "down": {
-                return processAutoCompleteCursorDown(state);
-            }
-            case "tab": {
-                return processAutoCompleteNext(state);
-            }
-            case "backspace": {
-                return processAutoCompleteBackspace(state, options);
-            }
-            case "enter":
-            case "return": {
-                if (state.filtered.length === 0)
-                {
-                    return Effect.succeed(Action.Beep());
-                }
-                const selected = options.choices[state.index];
-                if (selected.disabled)
-                {
-                    return Effect.succeed(Action.Beep());
-                }
-                return Effect.succeed(Action.Submit({ value: selected.value }));
-            }
-            default: {
-                return processAutoCompleteInput(Option.getOrElse(input.input, () => ""), state, options);
-            }
+        const selected = options.choices[state.index]
+        if (selected.disabled) {
+          return Effect.succeed(Action.Beep())
         }
-    };
-};
+        return Effect.succeed(Action.Submit({ value: selected.value }))
+      }
+      default: {
+        return processAutoCompleteInput(Option.getOrElse(input.input, () => ""), state, options)
+      }
+    }
+  }
+}
 
 interface TextOptionsReq extends Required<TextOptions> {
-    /**
-     * The type of the text option.
-     */
-    readonly type: "hidden" | "password" | "text"
+  /**
+   * The type of the text option.
+   */
+  readonly type: "hidden" | "password" | "text"
 }
 
 interface TextState {
-    readonly cursor: number
-    readonly value: string
-    readonly error: Option.Option<string>
+  readonly cursor: number
+  readonly value: string
+  readonly error: Option.Option<string>
 }
 
-const renderClearScreen = Effect.fnUntraced(function*(state: TextState, options: TextOptionsReq)
-{
-    const terminal = yield* Terminal.Terminal;
-    const columns = yield* terminal.columns;
-    const figures = yield* platformFigures;
-    const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft;
-    const errorText = renderTextError(state, figures.pointerSmall, { plain: true });
-    const clearOutput = clearOutputWithError(
-        renderTextOutput(state, "?", figures.pointerSmall, options, { plain: true }),
-        columns,
-        errorText
-    );
-    return clearOutput + resetCurrentLine;
-});
+const renderClearScreen = Effect.fnUntraced(function*(state: TextState, options: TextOptionsReq) {
+  const terminal = yield* Terminal.Terminal
+  const columns = yield* terminal.columns
+  const figures = yield* platformFigures
+  const resetCurrentLine = Ansi.eraseLine + Ansi.cursorLeft
+  const errorText = renderTextError(state, figures.pointerSmall, { plain: true })
+  const clearOutput = clearOutputWithError(
+    renderTextOutput(state, "?", figures.pointerSmall, options, { plain: true }),
+    columns,
+    errorText
+  )
+  return clearOutput + resetCurrentLine
+})
 
 const renderTextInput = (
-    nextState: TextState,
-    options: TextOptionsReq,
-    submitted: boolean,
-    renderOptions?: RenderOptions | undefined
-) =>
-{
-    const text = nextState.value;
-    if (renderOptions?.plain === true)
-    {
-        switch (options.type)
-        {
-            case "hidden": {
-                return "";
-            }
-            case "password": {
-                return "*".repeat(text.length);
-            }
-            case "text": {
-                return text;
-            }
-        }
+  nextState: TextState,
+  options: TextOptionsReq,
+  submitted: boolean,
+  renderOptions?: RenderOptions | undefined
+) => {
+  const text = nextState.value
+  if (renderOptions?.plain === true) {
+    switch (options.type) {
+      case "hidden": {
+        return ""
+      }
+      case "password": {
+        return "*".repeat(text.length)
+      }
+      case "text": {
+        return text
+      }
     }
+  }
 
-    const annotation = Option.isSome(nextState.error) ?
-        Ansi.red
-        : submitted ?
-            Ansi.white
-            : nextState.value.length === 0 ?
-                Ansi.blackBright
-                : Ansi.combine(Ansi.underlined, Ansi.cyanBright);
+  const annotation = Option.isSome(nextState.error) ?
+    Ansi.red
+    : submitted ?
+    Ansi.white
+    : nextState.value.length === 0 ?
+    Ansi.blackBright
+    : Ansi.combine(Ansi.underlined, Ansi.cyanBright)
 
-    switch (options.type)
-    {
-        case "hidden": {
-            return "";
-        }
-        case "password": {
-            return Ansi.annotate("*".repeat(text.length), annotation);
-        }
-        case "text": {
-            return Ansi.annotate(text, annotation);
-        }
+  switch (options.type) {
+    case "hidden": {
+      return ""
     }
-};
+    case "password": {
+      return Ansi.annotate("*".repeat(text.length), annotation)
+    }
+    case "text": {
+      return Ansi.annotate(text, annotation)
+    }
+  }
+}
 
 const renderTextError = (
-    nextState: TextState,
-    pointer: string,
-    renderOptions?: RenderOptions | undefined
-): string =>
-{
-    if (Option.isSome(nextState.error))
-    {
-        return Arr.match(nextState.error.value.split(NEWLINE_REGEXP), {
-            onEmpty: () => "",
-            onNonEmpty: (errorLines) =>
-            {
-                if (renderOptions?.plain === true)
-                {
-                    return `${pointer} ${errorLines.join("\n")}`;
-                }
-                const prefix = Ansi.annotate(pointer, Ansi.red) + " ";
-                const lines = Arr.map(errorLines, (str) => annotateErrorLine(str));
-                return (
-                    Ansi.cursorSavePosition +
-                    "\n" +
-                    prefix +
-                    lines.join("\n") +
-                    Ansi.cursorRestorePosition
-                );
-            }
-        });
-    }
-    return "";
-};
+  nextState: TextState,
+  pointer: string,
+  renderOptions?: RenderOptions | undefined
+): string => {
+  if (Option.isSome(nextState.error)) {
+    return Arr.match(nextState.error.value.split(NEWLINE_REGEXP), {
+      onEmpty: () => "",
+      onNonEmpty: (errorLines) => {
+        if (renderOptions?.plain === true) {
+          return `${pointer} ${errorLines.join("\n")}`
+        }
+        const prefix = Ansi.annotate(pointer, Ansi.red) + " "
+        const lines = Arr.map(errorLines, (str) => annotateErrorLine(str))
+        return Ansi.cursorSavePosition + "\n" + prefix + lines.join("\n") + Ansi.cursorRestorePosition
+      }
+    })
+  }
+  return ""
+}
 
 const renderTextOutput = (
-    nextState: TextState,
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options: TextOptionsReq,
-    renderOptions?: RenderOptions | undefined,
-    submitted: boolean = false
-) =>
-{
-    const value = renderTextInput(nextState, options, submitted, renderOptions);
-    return renderPrompt(value, options.message, leadingSymbol, trailingSymbol, renderOptions);
-};
+  nextState: TextState,
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options: TextOptionsReq,
+  renderOptions?: RenderOptions | undefined,
+  submitted: boolean = false
+) => {
+  const value = renderTextInput(nextState, options, submitted, renderOptions)
+  return renderPrompt(value, options.message, leadingSymbol, trailingSymbol, renderOptions)
+}
 
-const renderTextNextFrame = Effect.fnUntraced(function*(state: TextState, options: TextOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    const promptMsg = renderTextOutput(state, leadingSymbol, trailingSymbol, options);
-    const errorMsg = renderTextError(state, figures.pointerSmall);
-    const offset = state.cursor - state.value.length;
-    return promptMsg + errorMsg + Ansi.cursorMove(offset);
-});
+const renderTextNextFrame = Effect.fnUntraced(function*(state: TextState, options: TextOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  const promptMsg = renderTextOutput(state, leadingSymbol, trailingSymbol, options)
+  const errorMsg = renderTextError(state, figures.pointerSmall)
+  const offset = state.cursor - state.value.length
+  return promptMsg + errorMsg + Ansi.cursorMove(offset)
+})
 
-const renderTextSubmission = Effect.fnUntraced(function*(state: TextState, options: TextOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const promptMsg = renderTextOutput(state, leadingSymbol, trailingSymbol, options, undefined, true);
-    return promptMsg + "\n";
-});
+const renderTextSubmission = Effect.fnUntraced(function*(state: TextState, options: TextOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const promptMsg = renderTextOutput(state, leadingSymbol, trailingSymbol, options, undefined, true)
+  return promptMsg + "\n"
+})
 
-const processTextBackspace = (state: TextState) =>
-{
-    if (state.cursor <= 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const beforeCursor = state.value.slice(0, state.cursor - 1);
-    const afterCursor = state.value.slice(state.cursor);
-    const cursor = state.cursor - 1;
-    const value = `${beforeCursor}${afterCursor}`;
-    return Effect.succeed(
-        Action.NextFrame({
-            state: {
-                ...state,
-                cursor,
-                error: Option.none(),
-                value
-            }
-        })
-    );
-};
+const processTextBackspace = (state: TextState) => {
+  if (state.cursor <= 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const beforeCursor = state.value.slice(0, state.cursor - 1)
+  const afterCursor = state.value.slice(state.cursor)
+  const cursor = state.cursor - 1
+  const value = `${beforeCursor}${afterCursor}`
+  return Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor, value, error: Option.none() }
+    })
+  )
+}
 
 const processTextClear = (state: TextState) =>
-    Effect.succeed(
-        Action.NextFrame({
-            state: {
-                ...state,
-                cursor: 0,
-                error: Option.none(),
-                value: ""
-            }
-        })
-    );
+  Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor: 0, value: "", error: Option.none() }
+    })
+  )
 
-const processTextCursorLeft = (state: TextState) =>
-{
-    if (state.cursor <= 0)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const cursor = state.cursor - 1;
-    return Effect.succeed(
-        Action.NextFrame({
-            state: { ...state, cursor, error: Option.none() }
-        })
-    );
-};
+const processTextCursorLeft = (state: TextState) => {
+  if (state.cursor <= 0) {
+    return Effect.succeed(Action.Beep())
+  }
+  const cursor = state.cursor - 1
+  return Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor, error: Option.none() }
+    })
+  )
+}
 
-const processTextCursorRight = (state: TextState) =>
-{
-    if (state.cursor >= state.value.length)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const cursor = Math.min(state.cursor + 1, state.value.length);
-    return Effect.succeed(
-        Action.NextFrame({
-            state: { ...state, cursor, error: Option.none() }
-        })
-    );
-};
+const processTextCursorRight = (state: TextState) => {
+  if (state.cursor >= state.value.length) {
+    return Effect.succeed(Action.Beep())
+  }
+  const cursor = Math.min(state.cursor + 1, state.value.length)
+  return Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor, error: Option.none() }
+    })
+  )
+}
 
 const processTextCursorStart = (state: TextState) =>
-    Effect.succeed(
-        Action.NextFrame({
-            state: { ...state, cursor: 0, error: Option.none() }
-        })
-    );
+  Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor: 0, error: Option.none() }
+    })
+  )
 
 const processTextCursorEnd = (state: TextState) =>
-    Effect.succeed(
-        Action.NextFrame({
-            state: { ...state, cursor: state.value.length, error: Option.none() }
-        })
-    );
+  Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor: state.value.length, error: Option.none() }
+    })
+  )
 
-const processTab = (state: TextState, options: TextOptionsReq) =>
-{
-    if (state.value === options.default)
-    {
-        return Effect.succeed(Action.Beep());
-    }
-    const value = state.value.length === 0 ? options.default : state.value;
-    return Effect.succeed(
-        Action.NextFrame({
-            state: {
-                ...state,
-                cursor: value.length,
-                error: Option.none(),
-                value
-            }
-        })
-    );
-};
+const processTab = (state: TextState, options: TextOptionsReq) => {
+  if (state.value === options.default) {
+    return Effect.succeed(Action.Beep())
+  }
+  const value = state.value.length === 0 ? options.default : state.value
+  return Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, value, cursor: value.length, error: Option.none() }
+    })
+  )
+}
 
-const defaultTextProcessor = (input: string, state: TextState) =>
-{
-    const beforeCursor = state.value.slice(0, state.cursor);
-    const afterCursor = state.value.slice(state.cursor);
-    const value = `${beforeCursor}${input}${afterCursor}`;
-    const cursor = state.cursor + input.length;
-    return Effect.succeed(
-        Action.NextFrame({
-            state: {
-                ...state,
-                cursor,
-                error: Option.none(),
-                value
-            }
-        })
-    );
-};
+const defaultTextProcessor = (input: string, state: TextState) => {
+  const beforeCursor = state.value.slice(0, state.cursor)
+  const afterCursor = state.value.slice(state.cursor)
+  const value = `${beforeCursor}${input}${afterCursor}`
+  const cursor = state.cursor + input.length
+  return Effect.succeed(
+    Action.NextFrame({
+      state: { ...state, cursor, value, error: Option.none() }
+    })
+  )
+}
 
-const handleTextRender = (options: TextOptionsReq) =>
-{
-    return (state: TextState, action: Action<TextState, string>) =>
-    {
-        return Action.$match(action, {
-            Beep: () => Effect.succeed(renderBeep),
-            NextFrame: ({ state }) => renderTextNextFrame(state, options),
-            Submit: () => renderTextSubmission(state, options)
-        });
-    };
-};
+const handleTextRender = (options: TextOptionsReq) => {
+  return (state: TextState, action: Action<TextState, string>) => {
+    return Action.$match(action, {
+      Beep: () => Effect.succeed(renderBeep),
+      NextFrame: ({ state }) => renderTextNextFrame(state, options),
+      Submit: () => renderTextSubmission(state, options)
+    })
+  }
+}
 
-const handleTextProcess = (options: TextOptionsReq) =>
-{
-    return (input: Terminal.UserInput, state: TextState) =>
-    {
-        if (input.key.ctrl)
-        {
-            switch (input.key.name)
-            {
-                case "u": {
-                    return processTextClear(state);
-                }
-                case "a": {
-                    return processTextCursorStart(state);
-                }
-                case "e": {
-                    return processTextCursorEnd(state);
-                }
-                default: {
-                    return Effect.succeed(Action.Beep());
-                }
-            }
+const handleTextProcess = (options: TextOptionsReq) => {
+  return (input: Terminal.UserInput, state: TextState) => {
+    if (input.key.ctrl) {
+      switch (input.key.name) {
+        case "u": {
+          return processTextClear(state)
         }
-        switch (input.key.name)
-        {
-            case "backspace": {
-                return processTextBackspace(state);
-            }
-            case "left": {
-                return processTextCursorLeft(state);
-            }
-            case "right": {
-                return processTextCursorRight(state);
-            }
-            case "home": {
-                return processTextCursorStart(state);
-            }
-            case "end": {
-                return processTextCursorEnd(state);
-            }
-            case "enter":
-            case "return": {
-                const value = state.value;
-                return Effect.match(options.validate(value), {
-                    onFailure: (error) =>
-                        Action.NextFrame({
-                            state: {
-                                ...state,
-                                error: Option.some(error),
-                                value
-                            }
-                        }),
-                    onSuccess: (value) => Action.Submit({ value })
-                });
-            }
-            case "tab": {
-                return processTab(state, options);
-            }
-            default: {
-                return defaultTextProcessor(Option.getOrElse(input.input, () => ""), state);
-            }
+        case "a": {
+          return processTextCursorStart(state)
         }
-    };
-};
-
-const handleTextClear = (options: TextOptionsReq) =>
-{
-    return (state: TextState, _: Action<TextState, string>) =>
-    {
-        return renderClearScreen(state, options);
-    };
-};
-
-const basePrompt = (
-    options: TextOptions,
-    type: TextOptionsReq["type"]
-): Prompt<string> =>
-{
-    const opts: TextOptionsReq = {
-        default: "",
-        type,
-        validate: Effect.succeed,
-        ...options
-    };
-
-    const initialState: TextState = {
-        cursor: opts.default.length,
-        error: Option.none(),
-        value: opts.default
-    };
-    return custom(initialState, {
-        clear: handleTextClear(opts),
-        process: handleTextProcess(opts),
-        render: handleTextRender(opts)
-    });
-};
-
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-interface ToggleOptionsReq extends Required<ToggleOptions> { }
-
-type ToggleState = boolean;
-
-const handleToggleClear = Effect.fnUntraced(function*(options: ToggleOptionsReq)
-{
-    const terminal = yield* Terminal.Terminal;
-    const columns = yield* terminal.columns;
-    const figures = yield* platformFigures;
-    const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft;
-    const toggleText = `${options.active} / ${options.inactive}`;
-    const promptText = renderPrompt(toggleText, options.message, "?", figures.pointerSmall, { plain: true });
-    const clearOutput = eraseText(promptText, columns);
-    return clearOutput + clearPrompt;
-});
-
-const renderToggle = (
-    value: boolean,
-    options: ToggleOptionsReq,
-    submitted: boolean = false
-) =>
-{
-    const separator = Ansi.annotate("/", Ansi.blackBright);
-    const selectedAnnotation = Ansi.combine(Ansi.underlined, submitted ? Ansi.white : Ansi.cyanBright);
-    const inactive = value
-        ? options.inactive
-        : Ansi.annotate(options.inactive, selectedAnnotation);
-    const active = value
-        ? Ansi.annotate(options.active, selectedAnnotation)
-        : options.active;
-    return active + " " + separator + " " + inactive;
-};
-
-const renderToggleOutput = (
-    toggle: string,
-    leadingSymbol: string,
-    trailingSymbol: string,
-    options: ToggleOptionsReq
-) =>
-{
-    const promptLines = options.message.split(NEWLINE_REGEXP);
-    const prefix = leadingSymbol + " ";
-    if (Arr.isReadonlyArrayNonEmpty(promptLines))
-    {
-        const lines = Arr.map(promptLines, (line) => annotateLine(line));
-        return prefix + lines.join("\n") + " " + trailingSymbol + " " + toggle;
-    }
-    return prefix + " " + trailingSymbol + " " + toggle;
-};
-
-const renderToggleNextFrame = Effect.fnUntraced(function*(state: ToggleState, options: ToggleOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright);
-    const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright);
-    const toggle = renderToggle(state, options);
-    const promptMsg = renderToggleOutput(toggle, leadingSymbol, trailingSymbol, options);
-    return Ansi.cursorHide + promptMsg;
-});
-
-const renderToggleSubmission = Effect.fnUntraced(function*(value: boolean, options: ToggleOptionsReq)
-{
-    const figures = yield* platformFigures;
-    const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green);
-    const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright);
-    const toggle = renderToggle(value, options, true);
-    const promptMsg = renderToggleOutput(toggle, leadingSymbol, trailingSymbol, options);
-    return promptMsg + "\n";
-});
-
-const activate = Effect.succeed(Action.NextFrame({ state: true }));
-const deactivate = Effect.succeed(Action.NextFrame({ state: false }));
-
-const handleToggleRender = (options: ToggleOptionsReq) =>
-{
-    return (state: ToggleState, action: Action<ToggleState, boolean>) =>
-    {
-        switch (action._tag)
-        {
-            case "Beep": {
-                return Effect.succeed(renderBeep);
-            }
-            case "NextFrame": {
-                return renderToggleNextFrame(state, options);
-            }
-            case "Submit": {
-                return renderToggleSubmission(state, options);
-            }
-        }
-    };
-};
-
-const handleToggleProcess = (input: Terminal.UserInput, state: ToggleState) =>
-{
-    switch (input.key.name)
-    {
-        case "0":
-        case "j":
-        case "delete":
-        case "right":
-        case "down": {
-            return deactivate;
-        }
-        case "1":
-        case "k":
-        case "left":
-        case "up": {
-            return activate;
-        }
-        case " ":
-        case "tab": {
-            return state ? deactivate : activate;
-        }
-        case "enter":
-        case "return": {
-            return Effect.succeed(Action.Submit({ value: state }));
+        case "e": {
+          return processTextCursorEnd(state)
         }
         default: {
-            return Effect.succeed(Action.Beep());
+          return Effect.succeed(Action.Beep())
         }
+      }
     }
-};
-
-const entriesToDisplay = (cursor: number, total: number, maxVisible?: number) =>
-{
-    const max: number = maxVisible === undefined
-        ? total
-        : maxVisible;
-
-    let startIndex = Math.min(total - max, cursor - Math.floor(max / 2));
-    if (startIndex < 0)
-    {
-        startIndex = 0;
+    switch (input.key.name) {
+      case "backspace": {
+        return processTextBackspace(state)
+      }
+      case "left": {
+        return processTextCursorLeft(state)
+      }
+      case "right": {
+        return processTextCursorRight(state)
+      }
+      case "home": {
+        return processTextCursorStart(state)
+      }
+      case "end": {
+        return processTextCursorEnd(state)
+      }
+      case "enter":
+      case "return": {
+        const value = state.value
+        return Effect.match(options.validate(value), {
+          onFailure: (error) =>
+            Action.NextFrame({
+              state: { ...state, value, error: Option.some(error) }
+            }),
+          onSuccess: (value) => Action.Submit({ value })
+        })
+      }
+      case "tab": {
+        return processTab(state, options)
+      }
+      default: {
+        return defaultTextProcessor(Option.getOrElse(input.input, () => ""), state)
+      }
     }
-    const endIndex: number = Math.min(startIndex + max, total);
-    return { endIndex, startIndex };
-};
+  }
+}
+
+const handleTextClear = (options: TextOptionsReq) => {
+  return (state: TextState, _: Action<TextState, string>) => {
+    return renderClearScreen(state, options)
+  }
+}
+
+const basePrompt = (
+  options: TextOptions,
+  type: TextOptionsReq["type"]
+): Prompt<string> => {
+  const opts: TextOptionsReq = {
+    default: "",
+    type,
+    validate: Effect.succeed,
+    ...options
+  }
+
+  const initialState: TextState = {
+    cursor: opts.default.length,
+    value: opts.default,
+    error: Option.none()
+  }
+  return custom(initialState, {
+    render: handleTextRender(opts),
+    process: handleTextProcess(opts),
+    clear: handleTextClear(opts)
+  })
+}
+
+interface ToggleOptionsReq extends Required<ToggleOptions> {}
+
+type ToggleState = boolean
+
+const handleToggleClear = Effect.fnUntraced(function*(options: ToggleOptionsReq) {
+  const terminal = yield* Terminal.Terminal
+  const columns = yield* terminal.columns
+  const figures = yield* platformFigures
+  const clearPrompt = Ansi.eraseLine + Ansi.cursorLeft
+  const toggleText = `${options.active} / ${options.inactive}`
+  const promptText = renderPrompt(toggleText, options.message, "?", figures.pointerSmall, { plain: true })
+  const clearOutput = eraseText(promptText, columns)
+  return clearOutput + clearPrompt
+})
+
+const renderToggle = (
+  value: boolean,
+  options: ToggleOptionsReq,
+  submitted: boolean = false
+) => {
+  const separator = Ansi.annotate("/", Ansi.blackBright)
+  const selectedAnnotation = Ansi.combine(Ansi.underlined, submitted ? Ansi.white : Ansi.cyanBright)
+  const inactive = value
+    ? options.inactive
+    : Ansi.annotate(options.inactive, selectedAnnotation)
+  const active = value
+    ? Ansi.annotate(options.active, selectedAnnotation)
+    : options.active
+  return active + " " + separator + " " + inactive
+}
+
+const renderToggleOutput = (
+  toggle: string,
+  leadingSymbol: string,
+  trailingSymbol: string,
+  options: ToggleOptionsReq
+) => {
+  const promptLines = options.message.split(NEWLINE_REGEXP)
+  const prefix = leadingSymbol + " "
+  if (Arr.isReadonlyArrayNonEmpty(promptLines)) {
+    const lines = Arr.map(promptLines, (line) => annotateLine(line))
+    return prefix + lines.join("\n") + " " + trailingSymbol + " " + toggle
+  }
+  return prefix + " " + trailingSymbol + " " + toggle
+}
+
+const renderToggleNextFrame = Effect.fnUntraced(function*(state: ToggleState, options: ToggleOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate("?", Ansi.cyanBright)
+  const trailingSymbol = Ansi.annotate(figures.pointerSmall, Ansi.blackBright)
+  const toggle = renderToggle(state, options)
+  const promptMsg = renderToggleOutput(toggle, leadingSymbol, trailingSymbol, options)
+  return Ansi.cursorHide + promptMsg
+})
+
+const renderToggleSubmission = Effect.fnUntraced(function*(value: boolean, options: ToggleOptionsReq) {
+  const figures = yield* platformFigures
+  const leadingSymbol = Ansi.annotate(figures.tick, Ansi.green)
+  const trailingSymbol = Ansi.annotate(figures.ellipsis, Ansi.blackBright)
+  const toggle = renderToggle(value, options, true)
+  const promptMsg = renderToggleOutput(toggle, leadingSymbol, trailingSymbol, options)
+  return promptMsg + "\n"
+})
+
+const activate = Effect.succeed(Action.NextFrame({ state: true }))
+const deactivate = Effect.succeed(Action.NextFrame({ state: false }))
+
+const handleToggleRender = (options: ToggleOptionsReq) => {
+  return (state: ToggleState, action: Action<ToggleState, boolean>) => {
+    switch (action._tag) {
+      case "Beep": {
+        return Effect.succeed(renderBeep)
+      }
+      case "NextFrame": {
+        return renderToggleNextFrame(state, options)
+      }
+      case "Submit": {
+        return renderToggleSubmission(state, options)
+      }
+    }
+  }
+}
+
+const handleToggleProcess = (input: Terminal.UserInput, state: ToggleState) => {
+  switch (input.key.name) {
+    case "0":
+    case "j":
+    case "delete":
+    case "right":
+    case "down": {
+      return deactivate
+    }
+    case "1":
+    case "k":
+    case "left":
+    case "up": {
+      return activate
+    }
+    case " ":
+    case "tab": {
+      return state ? deactivate : activate
+    }
+    case "enter":
+    case "return": {
+      return Effect.succeed(Action.Submit({ value: state }))
+    }
+    default: {
+      return Effect.succeed(Action.Beep())
+    }
+  }
+}
+
+const entriesToDisplay = (cursor: number, total: number, maxVisible?: number) => {
+  const max = maxVisible === undefined ? total : maxVisible
+  let startIndex = Math.min(total - max, cursor - Math.floor(max / 2))
+  if (startIndex < 0) {
+    startIndex = 0
+  }
+  const endIndex = Math.min(startIndex + max, total)
+  return { startIndex, endIndex }
+}
