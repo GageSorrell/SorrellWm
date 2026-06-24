@@ -10,7 +10,7 @@
     "check": "tsc -b tsconfig.json",
     "test": "vitest --sequence.concurrent=false",
     "prestart": "npm run build",
-    "start": "node ./Distribution/Playground.js",
+    "start": "node ./Distribution/Internal/Playground.js",
     "coverage": "vitest --run --coverage --sequence.concurrent=false"
   },
   "devDependencies": {
