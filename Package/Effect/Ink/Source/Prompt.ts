@@ -26,10 +26,13 @@ import * as Predicate from "effect/Predicate";
 import type * as Primitive from "effect/unstable/cli/Primitive";
 import * as Queue from "effect/Queue";
 import * as Redacted from "effect/Redacted";
+import * as Runtime from "./Runtime.tsx";
 import * as Terminal from "effect/Terminal";
 import { dual, pipe } from "effect/Function";
+import { Component } from "./index.js";
 import type { Covariant } from "effect/Types";
 import type { NoSuchElementError } from "effect/Cause";
+import type { Scope } from "effect";
 
 const TypeId: string = "~sorrell/effect-ink/Prompt";
 
@@ -107,8 +110,8 @@ export interface ActionDefinition extends Data.TaggedEnum.WithGenerics<2>
  * @since 1.0.0
  */
 export type ProcessInput<A> = Data.TaggedEnum<{
-    readonly Input: { readonly input: Terminal.UserInput }
-    readonly Event: { readonly value: A }
+    readonly Input: { readonly input: Terminal.UserInput; };
+    readonly Event: { readonly value: A; };
 }>;
 
 /**
@@ -1198,6 +1201,8 @@ export const run: <Output>(
 > = Effect.fnUntraced(
     function*<Output>(self: Prompt<Output>)
     {
+        yield* EnsureInk;
+
         const terminal: Terminal.Terminal = yield* Terminal.Terminal;
         const input: Queue.Dequeue<Terminal.UserInput, Cause.Done<void>> = yield* terminal.readInput;
         return yield* runWithInput(self, terminal, input);
@@ -1464,15 +1469,13 @@ interface Succeed extends
 /* eslint-enable @typescript-eslint/no-empty-object-type */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<
-    {
-        [K in keyof T]: [T[K]] extends [Prompt<infer A>] ? A : never
-    }
-> =>
+const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<{
+    [ K in keyof T ]: [ T[K] ] extends [  Prompt<infer A> ] ? A : never;
+}> =>
 {
     if (arg.length === 0)
     {
-        return succeed([]) as any;
+        return succeed([ ]) as any;
     }
     if (arg.length === 1)
     {
@@ -1489,27 +1492,35 @@ const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+const EnsureInk: Effect.Effect<void, Runtime.InkRuntimeError, Scope.Scope> = Effect.gen(function*()
+{
+    yield* Runtime.Runtime.defaultValue().Run(Component.RootComponent);
+});
+
 const runWithInput = <Output>(
     prompt: Prompt<Output>,
     terminal: Terminal.Terminal,
     input: Queue.Dequeue<Terminal.UserInput, Cause.Done>
-): Effect.Effect<Output, NoSuchElementError, Environment> =>
+): Effect.Effect<Output, NoSuchElementError | Runtime.InkRuntimeError, Environment | Scope.Scope> =>
     Effect.suspend(() =>
     {
         const op: PromptPrimitive = prompt as PromptPrimitive;
         switch (op._tag)
         {
-            case "Loop": {
+            case "Loop":
+            {
                 return runLoop(op, terminal, input);
             }
-            case "OnSuccess": {
+            case "OnSuccess":
+            {
                 return Effect.flatMap(
                     runWithInput(op.prompt, terminal, input),
                     (a: never) => runWithInput(op.onSuccess(a), terminal, input)
                 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
                 ) as any;
             }
-            case "Succeed": {
+            case "Succeed":
+            {
                 return Effect.succeed(op.value);
             }
         }

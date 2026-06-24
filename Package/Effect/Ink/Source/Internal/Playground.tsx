@@ -40,6 +40,7 @@ const All: Prompt.Prompt<{
 const command =
     Cli.Command.make("hello-world", { }, () => Effect.gen(function* ()
     {
+        // yield* Runtime.defaultValue().Run(Component.);
         yield* Console.log(yield* All);
     }));
 
@@ -59,6 +60,7 @@ const command =
 const Program = Cli.Command.run(command, {
     version: "1.0.0"
 }).pipe(
+    Effect.scoped,
     Effect.provide(NodeServices.layer)
 );
 

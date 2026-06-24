@@ -16,4 +16,5 @@
  * @license   MIT
  */
 
+export * as Component from "./Component.tsx";
 export * from "./Prompt.ts";
