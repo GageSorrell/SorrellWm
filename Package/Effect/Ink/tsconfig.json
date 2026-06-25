@@ -6,6 +6,6 @@
     "compilerOptions":
     {
         "erasableSyntaxOnly": false,
-        "types": [ "node" ]
+        "types": [ "node", "react" ]
     }
 }

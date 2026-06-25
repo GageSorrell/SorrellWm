@@ -49,11 +49,7 @@
         "tar": "^7.5.13",
         "uuid": "^14.0.0",
         "vite": "^8.0.10",
-        "zod": "4.3.6",
-        "@types/react": "19.2.14",
-        "@types/react-dom": "19.2.3",
-        "react": "19.2.3",
-        "react-dom": "19.2.3"
+        "zod": "4.3.6"
     },
     "workspaces": [
         "!Package/Create/CodeAuger",

@@ -14,18 +14,19 @@
 
 import * as Cli from "effect/unstable/cli";
 import * as Prompt from "../Prompt.ts";
-import { Console, Effect } from "effect";
+import { Console, Effect, pipe } from "effect";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 // import { Prompt } from "effect/unstable/cli";
+import { Event } from "./index.ts";
 import type { Redacted } from "effect";
 
 const username: Prompt.Prompt<string> = Prompt.text({
-    message: "Enter your username: "
+    Message: "Enter your username: "
 });
 
 const password: Prompt.Prompt<Redacted.Redacted<string>> = Prompt.password({
-    message: "Enter your password: ",
-    validate: (value: string) =>
+    Message: "Enter your password: ",
+    Validate: (value: string) =>
         value.length === 0
             ? Effect.fail("Password cannot be empty")
             : Effect.succeed(value)
@@ -57,11 +58,10 @@ const command =
 
 // NodeRuntime.runMain(Cli.Command.run({ version }));
 /* eslint-disable-next-line @typescript-eslint/typedef */
-const Program = Cli.Command.run(command, {
-    version: "1.0.0"
-}).pipe(
-    Effect.scoped,
+const Program = pipe(
+    Cli.Command.run(command, { version: "1.0.0" }),
+    Effect.provide(Event.EventBridgePubSub.layer),
     Effect.provide(NodeServices.layer)
 );
 
-NodeRuntime.runMain(Program);
+NodeRuntime.runMain(pipe(Effect.gen(function* () { return yield* Program; }), Effect.scoped));

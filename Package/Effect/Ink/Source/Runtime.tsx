@@ -12,9 +12,10 @@
  * @license   MIT
  */
 
+import * as Event from  "./Internal/Event.tsx";
 import { Context, Data, Effect, type Scope, pipe } from "effect";
+import type { FC, PropsWithChildren, ReactNode } from "react";
 import { type Instance, render } from "ink";
-import type { FC } from "react";
 
 export const TypeIdKey: "~sorrell/effect-ink/Runtime" = "~sorrell/effect-ink/Runtime" as const;
 
@@ -27,11 +28,26 @@ export interface Runtime
 {
     readonly Instance: Instance | undefined;
     readonly Kill: () => Effect.Effect<void, InkRuntimeError>;
-    readonly Run: (RootComponent: FC) => Effect.Effect<void, InkRuntimeError, Scope.Scope>;
+    readonly Run: (RootComponent: FC) =>
+    Effect.Effect<void, InkRuntimeError, Event.EventBridgePubSub | Scope.Scope>;
 }
 
+interface RootProps extends PropsWithChildren
+{
+    readonly Bridge: Event.InkEventBridge;
+}
+
+const RootComponent = ({ Bridge, children }: RootProps): ReactNode =>
+{
+    return (
+        <Event.Provider { ...{ Bridge } }>
+            { children }
+        </Event.Provider>
+    );
+};
+
 export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
-    "~sorrell/effect-ink/Runtime",
+    TypeIdKey,
     {
         defaultValue: () =>
         {
@@ -45,7 +61,8 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                 }
             });
 
-            const Run = (RootComponent: FC): Effect.Effect<void, InkRuntimeError, Scope.Scope> =>
+            // const Run = (ConsumerRootComponent: FC): Effect.Effect<void, InkRuntimeError, Scope.Scope> =>
+            const Run = (ConsumerRootComponent: FC) =>
                 Effect.gen(function* ()
                 {
                     if (Instance !== undefined)
@@ -53,7 +70,16 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                         return;
                     }
 
-                    Instance = yield* Effect.sync(() => render(<RootComponent />));
+                    const UiEventService: Event.EventBridgePubSubImpl = yield* Event.EventBridgePubSub;
+                    const Bridge: Event.InkEventBridge = yield* Event.Make(UiEventService);
+                    // const Bridge: Event.InkEventBridge = yield* Event.Make(Event.EventBridgePubSub );
+
+                    Instance = yield* Effect.sync(() => render(
+                        <RootComponent { ...{ Bridge } }>
+                            <ConsumerRootComponent />
+                        </RootComponent> )
+                    );
+
                     yield* Effect.addFinalizer(() => Effect.sync(() => Instance?.unmount()));
 
                     yield* pipe(
@@ -64,8 +90,7 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                                     : new InkRuntimeError({ message: String(Cause) }),
                             try: Instance?.waitUntilExit
                         }),
-                        Effect.asVoid,
-                        Effect.forkScoped
+                        Effect.forkScoped({ startImmediately: true })
                     );
                 });
 
