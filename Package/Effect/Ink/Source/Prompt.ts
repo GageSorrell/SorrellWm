@@ -38,6 +38,7 @@ import { Component } from "./index.js";
 import type { Covariant } from "effect/Types";
 import type { Key } from "ink";
 import type { NoSuchElementError } from "effect/Cause";
+import type { ReactNode } from "react";
 
 const TypeId: string = "~sorrell/effect-ink/Prompt";
 
@@ -94,6 +95,11 @@ export type Action<StateType, A> = Data.TaggedEnum<{
     readonly NoOp: { };
     readonly NextFrame: { readonly State: StateType; };
     readonly Submit: { readonly value: A; };
+    /* eslint-disable @typescript-eslint/no-empty-object-type */
+    readonly StartValidation: { };
+    readonly ClearError: { };
+    /* eslint-enable @typescript-eslint/no-empty-object-type */
+    readonly Fail: { readonly Message: ReactNode; };
 }>;
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -128,6 +134,7 @@ export type ProcessInput<A> = Data.TaggedEnum<{
 }>;
 
 export interface HandlerArgument<StateType>
+    extends Pick<Event.EventBridgePubSubImpl["ActionOptions"], "Publish">
 {
     readonly Input: Option.Option<string>;
     readonly Key: Key;
@@ -1746,7 +1753,11 @@ const runLoop: {
 
             yield* pubSub.ActionOptions.Publish(action);
             const { _tag, ...Tail }: Event.InputEvent = yield* Queue.take(input);
-            action = yield* loop.Process({ ...Tail, State: state });
+            action = yield* loop.Process({
+                ...Tail,
+                Publish: pubSub.ActionOptions.Publish,
+                State: state
+            });
             // // const msg: string = yield* loop.render(state, action);
             // /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
             // // yield* Effect.orDie(terminal.display(msg));
@@ -1794,7 +1805,7 @@ const runLoop: {
                 {
                     // yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
                     state = action.State;
-                    yield* pubSub.ActionOptions.Publish(state);
+                    yield* pubSub.ActionOptions.Publish(action);
                     continue;
                 }
                 case "Submit":
@@ -1809,7 +1820,7 @@ const runLoop: {
     });
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
-const Action = Data.taggedEnum<ActionDefinition>();
+export const Action = Data.taggedEnum<ActionDefinition>();
 
 /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 export interface ConfirmOptionsReq extends Required<ConfirmOptions> { }
@@ -2872,7 +2883,7 @@ const defaultTextProcessor = (input: Option.Option<string>, _key: Key, state: In
 
 const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
 {
-    return ({ Input: input, Key: key, State: state }: HandlerArgument<Internal.TextState>) =>
+    return ({ Input: input, Key: key, Publish, State: state }: HandlerArgument<Internal.TextState>) =>
     {
         if (key.ctrl && Option.isSome(input))
         {
@@ -2920,17 +2931,24 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
         else if (key.return)
         {
             const value: string = state.value;
-            return Effect.match(options.Validate(value), {
-                onFailure: (error: string) =>
-                    Action.NextFrame({
-                        State:
-                        {
-                            ...state,
-                            error: Option.some(error),
-                            value
-                        }
-                    }),
-                onSuccess: (value: string) => Action.Submit({ value: value })
+            return Effect.gen(function* ()
+            {
+                yield* Publish(Action.StartValidation());
+
+                yield* Effect.delay("2 seconds")(Publish(Action.Fail({ Message: "Foo" })));
+
+                return yield* Effect.delay("2 seconds")(Effect.match(options.Validate(value), {
+                    onFailure: (error: string) =>
+                        Action.NextFrame({
+                            State:
+                            {
+                                ...state,
+                                error: Option.some(error),
+                                value
+                            }
+                        }),
+                    onSuccess: (value: string) => Action.Submit({ value: value })
+                }));
             });
         }
         else if (key.tab)

@@ -41,7 +41,7 @@ export const TypeId: string = "~sorrell/effect-ink/Internal/Event";
 // }>;
 
 /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-export interface InputEvent extends Omit<Prompt.HandlerArgument<never>, "State">
+export interface InputEvent extends Omit<Prompt.HandlerArgument<never>, "Publish" | "State">
 {
     readonly _tag: "InputEvent";
 }

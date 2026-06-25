@@ -96,7 +96,8 @@
   "dependencies": {
     "@sorrell/effect-rational": "1.0.1",
     "@sorrell/multimap": "1.0.9",
-    "ink": "7.1.0"
+    "ink": "7.1.0",
+    "ink-spinner": "5.0.0"
   },
   "peerDependenciesMeta": {
     "effect": {
