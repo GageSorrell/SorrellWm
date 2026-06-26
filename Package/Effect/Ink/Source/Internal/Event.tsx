@@ -73,14 +73,20 @@ export interface BeginPromptEvent
     readonly Options: unknown;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     readonly Component: Component.Component<any, any>;
+    readonly Keybinds: Prompt.Keybinds | undefined;
 }
 
-export const BeginPromptEvent = ({ Options, Component }: Omit<BeginPromptEvent, "_tag">): BeginPromptEvent =>
+export const BeginPromptEvent = ({
+    Keybinds,
+    Options,
+    Component
+}: Omit<BeginPromptEvent, "_tag">): BeginPromptEvent =>
 {
     return {
         _tag: "BeginPromptEvent",
 
         Component,
+        Keybinds,
         Options
     };
 };

@@ -1,11 +1,11 @@
 /**
  * Components for the built-in prompts offered by this package.
  *
- * @module @sorrell/effect-ink/Component
+ * @module @sorrell/effect-ink/Component/Prompt
  */
 
 /**
- * @file      Component.tsx
+ * @file      Prompt.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -13,16 +13,19 @@
 
 import * as Arr from "effect/Array";
 // import * as Effect from "effect/effect";
-import * as Event from "./Internal/Event.tsx";
+import * as Event from "../Internal/Event.tsx";
 import * as Function from "effect/Function";
 // import * as Function from "effect/Function";
 import * as Ink from "ink";
-import type * as Internal from "./Internal/Prompt.ts";
+import * as Input from "../Input.js";
+import type * as Internal from "../Internal/Prompt.ts";
 import * as Option from "effect/Option";
-import * as Prompt from "./Prompt.js";
+import * as Prompt from "../Prompt.ts";
+import * as Record from "effect/Record";
 import { type FC, type ReactNode, type RefObject, useRef, useState } from "react";
 import Chalk from "chalk";
-import Spinner from "ink-spinner";
+import CliBoxes from "cli-boxes";
+import InkSpinner from "ink-spinner";
 import { pipe } from "effect/Function";
 
 // @TODO TEMPORARY
@@ -51,11 +54,66 @@ interface Field
 {
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     readonly Component: FC<any>;
+    readonly Keybinds: Prompt.Keybinds | undefined;
     readonly Options: unknown;
     readonly State: Option.Option<unknown>;
     readonly ErrorMessage: Option.Option<ReactNode>;
+    readonly IsSubmitted: boolean;
     readonly IsValidating: boolean;
 }
+
+interface KeybindsProps
+{
+    readonly Keybinds: Prompt.Keybinds | undefined;
+}
+
+interface KeybindProps
+{
+    readonly Name: string;
+    readonly Key: Input.Key;
+}
+
+const Keybind = ({ Key, Name }: KeybindProps): ReactNode =>
+{
+    return (
+        <Ink.Box
+            flexDirection="row"
+            gap={ 1 }>
+            <Ink.Text inverse>{ Input.ToString(Key) }</Ink.Text>
+            <Ink.Text>{ Name }</Ink.Text>
+        </Ink.Box>
+    );
+};
+
+const KeybindsFooter = ({ Keybinds }: KeybindsProps): ReactNode =>
+{
+    const ToKeybind = (Key: Input.Key, Name: string) =>
+        <Keybind
+            { ...{ Key, Name } }
+            key={ Key + Name }
+        />;
+
+    if (Keybinds === undefined || Record.size(Keybinds) === 0)
+    {
+        return undefined;
+    }
+
+    return (
+        <Ink.Box
+            borderBottom={ false }
+            borderDimColor
+            borderLeft={ false }
+            borderRight={ false }
+            borderStyle="single"
+            borderTop
+            flexDirection="row"
+            flexWrap="wrap"
+            justifyContent="space-around"
+            minHeight={ 1 }>
+            { Record.values(Record.map(Keybinds, ToKeybind)) }
+        </Ink.Box>
+    );
+};
 
 /** @internal */
 export const RootComponent = (): ReactNode =>
@@ -64,12 +122,16 @@ export const RootComponent = (): ReactNode =>
         useState<ReadonlyArray<Field>>([ {
             Component: (_Props: unknown) => undefined,
             ErrorMessage: Option.none(),
+            IsSubmitted: false,
             IsValidating: false,
+            Keybinds: { },
             Options: { },
             State: Option.none()
         } ]);
 
     const [ Bridge ] = Event.UseEvents();
+
+    const [ KeybindsOverride, SetKeybindsOverride ] = useState<Prompt.Keybinds | undefined>(undefined);
 
     Ink.useInput((Input: string, Key: Ink.Key) =>
     {
@@ -102,7 +164,9 @@ export const RootComponent = (): ReactNode =>
                 {
                     Component: InEvent.Component,
                     ErrorMessage: Option.none(),
+                    IsSubmitted: false,
                     IsValidating: false,
+                    Keybinds: InEvent.Keybinds,
                     Options: InEvent.Options,
                     State: Option.none()
                 }
@@ -148,6 +212,10 @@ export const RootComponent = (): ReactNode =>
                         });
                     },
                     NoOp: Function.identity,
+                    SetKeybinds: ({ Keybinds: Out }: { readonly Keybinds: Prompt.Keybinds; }) =>
+                    {
+                        SetKeybindsOverride((_Old: Prompt.Keybinds | undefined) => Out);
+                    },
                     StartValidation: (_Value: unknown) =>
                     {
                         UpdateTail((OldTail: Field) =>
@@ -160,30 +228,37 @@ export const RootComponent = (): ReactNode =>
                             };
                         });
                     },
-                    Submit: Function.identity
-                    // Submit: ({ value }: { readonly value: unknown; }) =>
-                    // {
-                    //     UpdateTail((OldTail: Field) =>
-                    //     {
-                    //         return {
-                    //             ...OldTail,
-                    //             State: Option.some()
-                    //         };
-                    //     });
-                    // }
+                    Submit: ({ value }: { readonly value: unknown; }) =>
+                    {
+                        UpdateTail((OldTail: Field) =>
+                        {
+                            return {
+                                ...OldTail,
+                                IsSubmitted: true,
+                                State: Option.some(value)
+                            };
+                        });
+                    }
                 })
             );
         }
     });
 
-    return Fields.map(({ Component, ErrorMessage, IsValidating, Options, State }: Field, Index: number) =>
+    const RenderedFields: ReactNode = Fields.map(({
+        Component,
+        ErrorMessage,
+        IsSubmitted,
+        IsValidating,
+        Options,
+        State
+    }: Field, Index: number) =>
     {
         return Option.isSome(State)
             ? <Field
                 Component={ Component }
                 Props={ {
                     ErrorMessage,
-                    IsSubmitted: Index < Fields.length - 1,
+                    IsSubmitted: IsSubmitted || Index < Fields.length - 1,
                     IsValidating,
                     Options,
                     State: State.value
@@ -193,6 +268,16 @@ export const RootComponent = (): ReactNode =>
             : <Ink.Text key={ JSON.stringify(State) + Index.toString() }></Ink.Text>;
     });
 
+    return (
+        <Ink.Box flexDirection="column">
+            <Ink.Box
+                flexDirection="column"
+                flexGrow={ 1 }>
+                { RenderedFields }
+            </Ink.Box>
+            <KeybindsFooter Keybinds={ KeybindsOverride ?? Fields[Fields.length - 1].Keybinds } />
+        </Ink.Box>
+    );
 };
 
 export const Confirm = ({
@@ -339,9 +424,14 @@ export const Toggle = ({
     );
 };
 
-const ApplyCursor = (InLine: string, CursorIndex: number, IsSubmitted: boolean): string =>
+const ApplyCursor = (
+    InLine: string,
+    CursorIndex: number,
+    IsSubmitted: boolean,
+    IsValidating: boolean
+): string =>
 {
-    if (IsSubmitted)
+    if (IsSubmitted || IsValidating)
     {
         return InLine;
     }
@@ -361,7 +451,14 @@ export const Text = (Props: Props<Internal.TextState, Internal.TextOptionsIntern
 {
     if (Props.Options.type === "Text")
     {
-        return <Ink.Text>{ ApplyCursor(Props.State.value, Props.State.cursor, Props.IsSubmitted) }</Ink.Text>;
+        const WithCursor: string = ApplyCursor(
+            Props.State.value,
+            Props.State.cursor,
+            Props.IsSubmitted,
+            Props.IsValidating
+        );
+
+        return <Ink.Text>{ WithCursor }</Ink.Text>;
     }
     else if (Props.Options.type === "Hidden")
     {
@@ -369,9 +466,14 @@ export const Text = (Props: Props<Internal.TextState, Internal.TextOptionsIntern
     }
     else
     {
-        return <Ink.Text>{
-            ApplyCursor("*".repeat(Props.State.value.length), Props.State.cursor, Props.IsSubmitted)
-        }</Ink.Text>;
+        const WithCursor: string = ApplyCursor(
+            "*".repeat(Props.State.value.length),
+            Props.State.cursor,
+            Props.IsSubmitted,
+            Props.IsValidating
+        );
+
+        return <Ink.Text>{ WithCursor }</Ink.Text>;
     }
 };
 
@@ -393,13 +495,76 @@ const Message = ({ IsSubmitted, Message }: MessageProps): ReactNode =>
     return <Ink.Text dimColor={ IsSubmitted }>{ Message }</Ink.Text>;
 };
 
+// @TODO Replace with proper `ink` theming.
 const PrimaryColor: string = "cyan";
+
+/* eslint-disable-next-line @typescript-eslint/typedef */
+export const Shape =
+    {
+        Diamond:
+        {
+            Medium:
+            {
+                Black: "⬥",
+                White: "⬦"
+            }
+        }
+    } as const;
+
+interface ClackRowProps
+{
+    readonly IsSubmitted: boolean;
+    readonly IsValidating: boolean;
+    readonly Value: number;
+    readonly Height: number;
+}
+
+const Spinner = () => <Ink.Transform
+    transform={ (
+        children: string,
+        _index: number
+    ): string => Chalk.magenta(children) }>
+    <InkSpinner type="circleHalves" />
+</Ink.Transform>;
+
+const ClackRow = ({ Height, IsSubmitted, IsValidating, Value }: ClackRowProps): ReactNode =>
+{
+    const Character: ReactNode = Value === 0
+        ? IsValidating
+            ? <Ink.Transform
+                transform={ (
+                    children: string,
+                    _index: number
+                ): string => Chalk.magenta(children) }>
+                <Spinner />
+            </Ink.Transform>
+            : IsSubmitted
+                ? Shape.Diamond.Medium.White
+                : Shape.Diamond.Medium.Black
+        : Value !== Height - 1 || IsSubmitted
+            ? CliBoxes.single.left
+            : CliBoxes.single.bottomLeft;
+
+    const color: string = Value === 0 || !IsSubmitted
+        ? PrimaryColor
+        : "";
+
+    const dimColor: boolean = Value > 0 && IsSubmitted;
+
+    return <Ink.Text
+        { ...{ color, dimColor } }
+        key={ Value.toString() + Character }>
+        { Character }
+    </Ink.Text>;
+};
 
 const Field = ({ Component, Props }: FieldProps): ReactNode =>
 {
     const BarBoxRef: RefObject<Ink.DOMElement | null> = useRef<Ink.DOMElement>(null);
 
-    const { height } = Ink.useBoxMetrics(BarBoxRef);
+    const { IsSubmitted, IsValidating } = Props;
+
+    const { height: Height } = Ink.useBoxMetrics(BarBoxRef);
 
     return (
         <Ink.Box
@@ -411,24 +576,13 @@ const Field = ({ Component, Props }: FieldProps): ReactNode =>
                 marginRight={ 1 }
                 width={ 1 }>
                 {
-                    Arr.range(0, height - 1).map((Value: number) =>
-                    {
-                        const Character: ReactNode = Value === 0
-                            ? Props.IsValidating
-                                ? <Spinner type="circle"/>
-                                : Props.IsSubmitted
-                                    ? "◇"
-                                    : "◆"
-                            : Value !== height - 1
-                                ? "│"
-                                : Props.IsSubmitted ? "│" : "└";
-
-                        return <Ink.Text
-                            { ...(!Props.IsSubmitted ? { color: PrimaryColor } : { }) }
-                            key={ Value.toString() + Character }>
-                            { Character }
-                        </Ink.Text>;
-                    })
+                    Arr.range(0, Height - 1)
+                        .map((Value: number) => ({ Height, IsSubmitted, IsValidating, Value }))
+                        .map((Props: ClackRowProps) =>
+                            <ClackRow
+                                key={ Props.Value }
+                                { ...Props }
+                            />)
                 }
             </Ink.Box>
             <Ink.Box

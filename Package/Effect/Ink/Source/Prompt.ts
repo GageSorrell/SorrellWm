@@ -15,19 +15,21 @@
 
 import * as Arr from "effect/Array";
 import type * as Cause from "effect/Cause";
-// import * as Console from "effect/Console";
+import * as Console from "effect/Console";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 // import * as EffectNumber from "effect/Number";
 import * as Effectable from "effect/Effectable";
 import * as Event from "./Internal/Event.js";
 import * as FileSystem from "effect/FileSystem";
+import * as Input from "./Input.js";
 import * as Internal from "./Internal/Prompt.ts";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Predicate from "effect/Predicate";
 import type * as Primitive from "effect/unstable/cli/Primitive";
 import * as Queue from "effect/Queue";
+import type * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Runtime from "./Runtime.tsx";
 import type * as Scope from "effect/Scope";
@@ -83,6 +85,8 @@ export type Environment =
     | Scope.Scope
     | Terminal.Terminal;
 
+export type Keybinds = Record.ReadonlyRecord<string, Input.Key>;
+
 /**
  * Represents the action that should be taken by a `Prompt` based upon user
  * input or an external event received during the current frame.
@@ -91,15 +95,16 @@ export type Environment =
  * @since 1.0.0
  */
 export type Action<StateType, A> = Data.TaggedEnum<{
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
+    /* eslint-disable @typescript-eslint/no-empty-object-type */
     readonly NoOp: { };
     readonly NextFrame: { readonly State: StateType; };
     readonly Submit: { readonly value: A; };
-    /* eslint-disable @typescript-eslint/no-empty-object-type */
+
     readonly StartValidation: { };
     readonly ClearError: { };
-    /* eslint-enable @typescript-eslint/no-empty-object-type */
     readonly Fail: { readonly Message: ReactNode; };
+    readonly SetKeybinds: { readonly Keybinds: Keybinds; };
+    /* eslint-enable @typescript-eslint/no-empty-object-type */
 }>;
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -184,6 +189,9 @@ export interface Handlers<StateType, OptionsType, A>
      */
     readonly Process: (Options: Required<OptionsType>) =>
     (Input: HandlerArgument<StateType>) => Effect.Effect<Action<StateType, A>, never, Environment>;
+
+    // @TODO Make Required
+    readonly GetInitialKeybinds?: (Options: Required<OptionsType>) => Keybinds;
 
     // /**
     //  * A function that is called to clear the terminal screen before rendering
@@ -886,6 +894,10 @@ export const custom = <State, OptionsType, Output>(
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const op: any = Object.create(proto);
     op._tag = "Loop";
+    if ("GetInitialKeybinds" in handlers && handlers.GetInitialKeybinds !== undefined)
+    {
+        op.GetInitialKeybinds = handlers.GetInitialKeybinds;
+    }
     op.InitialState = initialState;
     op.Process = handlers.Process(Options);
     op.Options = Options;
@@ -1739,6 +1751,7 @@ const runLoop: {
 
         yield* pubSub.ActionOptions.Publish(Event.BeginPromptEvent({
             Component: loop.Component,
+            Keybinds: loop?.GetInitialKeybinds(loop.Options),
             Options: loop.Options
         }));
 
@@ -1805,7 +1818,7 @@ const runLoop: {
                 {
                     // yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
                     state = action.State;
-                    yield* pubSub.ActionOptions.Publish(action);
+                    // yield* pubSub.ActionOptions.Publish(action);
                     continue;
                 }
                 case "Submit":
@@ -2887,8 +2900,12 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
     {
         if (key.ctrl && Option.isSome(input))
         {
+            Effect.runSync(Console.dir(key));
+            Effect.runSync(Console.log(new Date().getTime().toString() + " " + input.value));
             switch (input.value)
             {
+                /* Pressing `backspace` and `ctrl` registers as `key.ctrl && input.value === "w"`. */
+                case "w":
                 case "u":
                 {
                     return processTextClear(state);
@@ -2939,15 +2956,22 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
 
                 return yield* Effect.delay("2 seconds")(Effect.match(options.Validate(value), {
                     onFailure: (error: string) =>
-                        Action.NextFrame({
+                    {
+                        return Action.NextFrame({
                             State:
-                            {
-                                ...state,
-                                error: Option.some(error),
-                                value
-                            }
-                        }),
-                    onSuccess: (value: string) => Action.Submit({ value: value })
+                                {
+                                    ...state,
+                                    error: Option.some(error),
+                                    value
+                                }
+                        });
+                    },
+                    onSuccess: (value: string) =>
+                    {
+                        /* eslint-disable-next-line @typescript-eslint/typedef */
+                        const Submit = Action.Submit({ value });
+                        return Submit;
+                    }
                 }));
             });
         }
@@ -2998,9 +3022,17 @@ const basePrompt = (
             // _tag: type,
 
             Component: Component.Text,
+            GetInitialKeybinds: GetInitialTextKeybinds,
             Process: handleTextProcess
         }
     );
+};
+
+const GetInitialTextKeybinds = (_Options: Required<Internal.TextOptionsInternal>) =>
+{
+    return {
+        Foo: Input.Key({ Input: Option.some("N"), Modifiers: { ctrl: true } })
+    } as const;
 };
 
 /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */

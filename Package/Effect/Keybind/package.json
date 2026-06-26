@@ -1,7 +1,7 @@
 {
-  "name": "@sorrell/effect-ink",
+  "name": "@sorrell/effect-keybind",
   "version": "4.0.0-beta.78",
-  "description": "Use Ink with Effect, including with the effect/cli/Prompt module.",
+  "description": "A small package for working with keybinds (keyboard \"shortcuts\") in effect.",
   "scripts": {
     "codegen": "effect-utils codegen",
     "build": "tsc -b tsconfig.json && npm run babel",
