@@ -19,7 +19,7 @@
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/typedef, jsdoc/require-jsdoc, jsdoc/require-param */
 /* eslint-disable jsdoc/require-returns, prefer-rest-params */
@@ -3144,11 +3144,9 @@ const FILE_FILTER_LABEL = "filter";
 const FILE_FILTER_PLACEHOLDER = "type to filter";
 const FILE_EMPTY_MESSAGE = "No matches";
 type Confirm = Data.TaggedEnum<{
-    /* eslint-disable @typescript-eslint/no-empty-object-type */
-    readonly Show: { }
+        readonly Show: { }
     readonly Hide: { }
-    /* eslint-enable @typescript-eslint/no-empty-object-type */
-}>;
+    }>;
 const Confirm = Data.taggedEnum<Confirm>();
 
 const showConfirmation = Confirm.$is("Show");
@@ -3617,10 +3615,8 @@ const handleFileProcess = (options: FileOptionsReq) =>
     });
 };
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 interface SelectOptionsReq<A> extends Required<SelectOptions<A>> {}
 interface MultiSelectOptionsReq extends MultiSelectOptions {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 type MultiSelectState =
     {
@@ -3923,10 +3919,8 @@ const handleMultiSelectRender = <A>(options: SelectOptionsReq<A>) =>
     };
 };
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 interface IntegerOptionsReq extends Required<IntegerOptions> {}
 interface FloatOptionsReq extends Required<FloatOptions> {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 interface NumberState {
     readonly cursor: number
@@ -4298,10 +4292,8 @@ type AutoCompleteState = {
     readonly filtered: ReadonlyArray<number>
 };
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 interface SelectOptionsReq<A> extends Required<SelectOptions<A>> {}
 interface AutoCompleteOptionsReq<A> extends Required<AutoCompleteOptions<A>> {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 const filterAutoCompleteChoices = <A>(choices: ReadonlyArray<SelectChoice<A>>, query: string) =>
 {
@@ -5167,7 +5159,6 @@ const basePrompt = (
     });
 };
 
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 interface ToggleOptionsReq extends Required<ToggleOptions> { }
 
 type ToggleState = boolean;

@@ -68,11 +68,9 @@ export const withCancel = (
             )
         );
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 export class ClackCancelledError extends Data.TaggedError("ClackCancelledError")<{ }> { }
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export const fromClack = <Type>(
     getValue: () => Promise<Type | symbol>,

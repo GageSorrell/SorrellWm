@@ -13,8 +13,18 @@
  */
 
 import * as Arr from "effect/Array";
-import { Data, Option } from "effect";
-import type { DateOptions, FileOptions, MultiSelectOptions, SelectOptions, TextOptions } from "../Prompt.ts";
+import { Data, Effectable, Option } from "effect";
+import {
+    type DateOptions,
+    type FileOptions,
+    type MultiSelectOptions,
+    type Prompt,
+    type SelectOptions,
+    type TextOptions,
+    run
+} from "../Prompt.ts";
+
+const TypeId: string = "~sorrell/effect-ink/Prompt";
 
 export interface TextOptionsInternal extends Required<TextOptions>
 {
@@ -151,11 +161,9 @@ export interface DateState
 }
 
 export type Confirm = Data.TaggedEnum<{
-    /* eslint-disable @typescript-eslint/no-empty-object-type */
-    readonly Show: { };
+        readonly Show: { };
     readonly Hide: { };
-    /* eslint-enable @typescript-eslint/no-empty-object-type */
-}>;
+    }>;
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
 export const Confirm = Data.taggedEnum<Confirm>();
@@ -168,6 +176,12 @@ export interface FileState
     readonly query: string;
     readonly path: Option.Option<string>;
     readonly confirm: Confirm;
+}
+
+export interface TempFileState
+{
+    readonly FilePath: string;
+    readonly HasManuallyConfirmedComplete: Option.Option<boolean>;
 }
 
 export interface NumberState
@@ -205,3 +219,28 @@ export type MultiSelectOptionsInternal<A> =
     MultiSelectOptions;
 
 export type ToggleState = boolean;
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+const Prototype: any =
+    {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        ...Effectable.Prototype<Prompt<any>>({
+            evaluate()
+            {
+                return run(this);
+            },
+            label: "InkPrompt"
+        }),
+        [ TypeId ]:
+        {
+            _Output: (_: never) => _
+        }
+    };
+
+export const MakePrototype = (Tag: string): object =>
+{
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const Out: any = Object.create(Prototype);
+    Out._tag = Tag;
+    return Out;
+};

@@ -5,7 +5,7 @@
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/naming-convention */
 
 /**
  * This interface holds the strings that define your package's tags.

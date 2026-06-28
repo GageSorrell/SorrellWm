@@ -286,8 +286,7 @@ function RunPromptAsPromise<A>(
 
         const Cancel = (Message?: string) =>
         {
-            /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-            const ErrorArgument: { Message: string; } | { } = Message !== undefined
+                        const ErrorArgument: { Message: string; } | { } = Message !== undefined
                 ? { Message }
                 : { };
 

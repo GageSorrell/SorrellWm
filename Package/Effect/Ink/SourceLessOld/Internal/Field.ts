@@ -19,7 +19,6 @@ import { Data, type Effect, type Terminal } from "effect";
 import type { FC, ReactNode } from "react";
 import type { Prompt } from "../index.ts";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 export type Operand<Tag extends string, Body = { }> =
     Prompt.Prompt<never> &
@@ -34,7 +33,6 @@ export type Action<A, StateType> = Data.TaggedEnum<{
     readonly Submit: { readonly Value: A; };
 }>;
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export interface ActionDefinition extends Data.TaggedEnum.WithGenerics<2>
 {
@@ -62,7 +60,6 @@ export type Primitive =
     | Succeed
     | Loop;
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 export interface OnSuccess extends Operand<"OnSuccess", {
     readonly Prompt: Primitive;
@@ -79,7 +76,6 @@ export interface Loop extends Operand<"Succeed", {
     readonly Process: Process<unknown, unknown>;
 }> { }
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 // /**
 //  * The state of a {@link Field}.

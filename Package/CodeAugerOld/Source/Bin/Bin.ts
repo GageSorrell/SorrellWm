@@ -14,8 +14,7 @@ import { Effect } from "effect";
 /** The entry-point for commands provided by this package. */
 async function Main(): Promise<void>
 {
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    const MainCommand: Command.Command<"code-auger", never, never, { }> =
+        const MainCommand: Command.Command<"code-auger", never, never, { }> =
         Command.make("code-auger", { }, (_: object): Effect.Effect<void, never, never> =>
         {
             return Effect.succeed(undefined);

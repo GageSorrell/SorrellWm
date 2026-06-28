@@ -25,7 +25,6 @@ export const TypeId: unique symbol = Symbol.for(TypeIdKey);
 
 export type TypeId = typeof TypeId;
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 export type TaskProgress = Data.TaggedEnum<{
     /** The quantity of work that the task performs is not set (or is unknown). */
@@ -122,7 +121,6 @@ type TaskStatusPrimitives = Data.TaggedEnum<{
     };
 }>;
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 /* eslint-disable @typescript-eslint/typedef */
 

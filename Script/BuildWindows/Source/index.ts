@@ -17,8 +17,7 @@ import { InitCommand } from "../Init/Init.js";
 /** The entry-point for commands provided by this package. */
 async function Main(): Promise<void>
 {
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    const MainCommand: Command.Command<"@sorrell/cli", never, never, { }> =
+        const MainCommand: Command.Command<"@sorrell/cli", never, never, { }> =
         Command.make("@sorrell/build-windows", { }, (_: object): Effect.Effect<void, never, never> =>
         {
             return Effect.succeed(undefined);

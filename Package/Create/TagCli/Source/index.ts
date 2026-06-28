@@ -14,8 +14,7 @@ import { Effect } from "effect";
 /** The entry-point for this package's (only) command. */
 async function Main(): Promise<void>
 {
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    const MainCommand: Command.Command<"@sorrell/cli", never, never, { }> =
+        const MainCommand: Command.Command<"@sorrell/cli", never, never, { }> =
         Command.make("@sorrell/cli", { }, (_: object): Effect.Effect<void, never, never> =>
         {
             return Effect.succeed(undefined);

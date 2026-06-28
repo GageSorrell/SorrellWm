@@ -15,7 +15,7 @@ import type { Ratio } from "./Ratio.ts";
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * @remarks
@@ -33,4 +33,4 @@ export type OfFractions<CommutativeRingType extends CommutativeRing<any, any>> =
         ? Field<CommutativeRing<Ratio<ElementType>, Group<Ratio<NonzeroElementType>>>>
         : never;
 
-/* eslint-enable @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any */
+/* eslint-enable @typescript-eslint/no-explicit-any */

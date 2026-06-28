@@ -12,7 +12,9 @@
  * @license   MIT
  */
 
+import * as Component from "./Component/index.js";
 import * as Event from  "./Internal/Event.tsx";
+import * as Theme from "./Theme.ts";
 import { Context, Data, Effect, type Scope, pipe } from "effect";
 import type { FC, PropsWithChildren, ReactNode } from "react";
 import { type Instance, render } from "ink";
@@ -24,24 +26,34 @@ export type TypeId = typeof TypeId;
 
 export class InkRuntimeError extends Data.TaggedError("InkRuntimeError")<{ readonly message: string; }> { }
 
+
+export interface Options extends Component.Theme.ThemeContext { }
+
+
 export interface Runtime
 {
     readonly Instance: Instance | undefined;
     readonly Kill: () => Effect.Effect<void, InkRuntimeError>;
-    readonly Run: (RootComponent: FC) =>
+    readonly Run: (RootComponent: FC, Options?: Options) =>
     Effect.Effect<void, InkRuntimeError, Event.EventBridgePubSub | Scope.Scope>;
 }
 
-interface RootProps extends PropsWithChildren
+interface RootProps extends PropsWithChildren, Partial<Component.Theme.ThemeProviderProps>
 {
     readonly Bridge: Event.InkEventBridge;
 }
 
-const RootComponent = ({ Bridge, children }: RootProps): ReactNode =>
+const RootComponent = ({
+    Bridge,
+    Theme: InTheme = Theme.DefaultTheme,
+    children
+}: RootProps): ReactNode =>
 {
     return (
         <Event.Provider { ...{ Bridge } }>
-            { children }
+            <Component.Theme.ThemeProvider Theme={ InTheme }>
+                { children }
+            </Component.Theme.ThemeProvider>
         </Event.Provider>
     );
 };
@@ -62,7 +74,7 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
             });
 
             // const Run = (ConsumerRootComponent: FC): Effect.Effect<void, InkRuntimeError, Scope.Scope> =>
-            const Run = (ConsumerRootComponent: FC) =>
+            const Run = (ConsumerRootComponent: FC, Options?: Options) =>
                 Effect.gen(function* ()
                 {
                     if (Instance !== undefined)
@@ -75,7 +87,9 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                     // const Bridge: Event.InkEventBridge = yield* Event.Make(Event.EventBridgePubSub );
 
                     Instance = yield* Effect.sync(() => render(
-                        <RootComponent { ...{ Bridge } }>
+                        <RootComponent
+                            Theme={ Options?.Theme ?? Theme.DefaultTheme }
+                            { ...{ Bridge } }>
                             <ConsumerRootComponent />
                         </RootComponent> )
                     );

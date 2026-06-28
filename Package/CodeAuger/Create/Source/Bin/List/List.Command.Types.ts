@@ -30,6 +30,5 @@ export type CommandList =
         | PackageJsonParseError
         | RootDirectoryNotFoundError
         | PlatformError,
-        /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-        { }
+                { }
     >;

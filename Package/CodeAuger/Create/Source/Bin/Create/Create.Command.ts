@@ -647,5 +647,5 @@ const CreateHandler = Effect.gen(function*()
     outro("🥳 Enjoy!");
 });
 
-/* eslint-disable-next-line @typescript-eslint/typedef, @typescript-eslint/no-empty-object-type */
+/* eslint-disable-next-line @typescript-eslint/typedef */
 export const CreateCommand = Command.make("create-code-auger", { }, (_: { }) => CreateHandler);

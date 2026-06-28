@@ -63,7 +63,6 @@ const GetProviders = Effect.gen(function* ()
     return;
 });
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 export/**
        * List provider packages that are currently installed in the package
@@ -77,4 +76,3 @@ const ListCommand: CommandList =
         (_: { }) => GetProviders
     );
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */

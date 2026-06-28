@@ -19,7 +19,7 @@
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/typedef, jsdoc/require-jsdoc, jsdoc/require-param */
 /* eslint-disable jsdoc/require-returns, prefer-rest-params */

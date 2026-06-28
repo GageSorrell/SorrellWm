@@ -541,7 +541,6 @@ module.exports = {
         "jsdoc/tag-lines": "off",
         "jsdoc/text-escaping": "off",
         "jsdoc/ts-method-signature-style": "error",
-        "jsdoc/ts-no-empty-object-type": "error",
         "jsdoc/ts-no-unnecessary-template-expression": "error",
         "jsdoc/ts-prefer-function-type": "error",
         "jsdoc/type-formatting": "off",
@@ -604,20 +603,13 @@ module.exports = {
                 selector: "variableLike"
             }
         ],
-        "@typescript-eslint/no-unused-vars":
-        [
-            "error",
-            {
-                argsIgnorePattern: "^_",
-                varsIgnorePattern: "^_"
-            }
-        ],
+        "@typescript-eslint/no-empty-object-type": "off",
         "@typescript-eslint/typedef":
         [
             "error",
             {
                 arrayDestructuring: false,
-                arrowParameter: true,
+                arrowParameter: false,
                 memberVariableDeclaration: true,
                 objectDestructuring: false,
                 parameter: true,

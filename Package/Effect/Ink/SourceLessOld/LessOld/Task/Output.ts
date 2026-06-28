@@ -55,8 +55,7 @@ export const Output = (Content: ReactNode, TimestampOverride?: DateTime.DateTime
 };
 
 export type Display = Data.TaggedEnum<{
-    /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-    Hidden: { };
+        Hidden: { };
 
     Visible:
     {

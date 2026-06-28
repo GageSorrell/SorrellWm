@@ -86,7 +86,6 @@ export type TUseDomRectReturnValue<Type extends HTMLElement> =
         Ref: RefObject<Type | null>
     ];
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 /** The initial argument passed to {@link UseIndexedValue}. */
 export type TUseIndexedArgument<ElementType> =
@@ -123,7 +122,6 @@ export type TUseIndexedArgument<ElementType> =
         Value: ElementType;
     };
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 /**
  * The indexed `Value`, index, and setters.

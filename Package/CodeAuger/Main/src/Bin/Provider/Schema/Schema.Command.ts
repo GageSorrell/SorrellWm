@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 import * as Provider from "../../../Provider/Config/Config.js";
 import { Effect, JsonSchema, Schema, pipe } from "effect";

@@ -19,6 +19,7 @@
     "@babel/plugin-transform-export-namespace-from": "^7.27.1",
     "@babel/plugin-transform-modules-commonjs": "^7.28.6",
     "@effect/platform-node": "^4.0.0-beta.78",
+    "@types/culori": "4.0.1",
     "@types/ini": "^4.1.1",
     "@types/node": "^25.7.0",
     "ajv": "^8.20.0",
@@ -27,6 +28,7 @@
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "effect": "^4.0.0-beta.78",
     "immer": "^11.1.8",
+    "ink-picture": "2.0.0",
     "react-devtools": "^7.0.1",
     "react-devtools-core": "^7.0.1",
     "react-router": "^7.14.0",
@@ -86,18 +88,20 @@
     "effect@^4.0.0-beta.78": "@sorrell/effect"
   },
   "peerDependencies": {
+    "@inkkit/ink-markdown": "1.0.0",
     "@types/react": ">=19.2.0",
     "effect": "^4.0.0-beta.78",
-    "ink-markdown": "^1.0.4",
     "ink-picture": "^2.0.0",
     "react": ">=19.2.0",
-    "react-devtools-core": ">=6.1.2"
+    "react-devtools-core": ">=6.1.2",
+    "threejs-term": "3.0.0"
   },
   "dependencies": {
     "@sorrell/effect-rational": "1.0.1",
     "@sorrell/multimap": "1.0.9",
     "cli-boxes": "4.0.1",
     "ink": "7.1.0",
+    "ink-big-text": "2.0.0",
     "ink-spinner": "5.0.0"
   },
   "peerDependenciesMeta": {

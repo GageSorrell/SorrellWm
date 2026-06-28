@@ -8,7 +8,6 @@
 /** A {@link Record} whose keys are `string`s, and properties are `unknown`. */
 export type RecordUnknown = Record<string, unknown>;
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 /**
  * Equip a {@link BaseOptionsType} with {@link CustomOptionsType | custom options} via
@@ -33,4 +32,3 @@ export type WithCustomOptions<
             }
         >;
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */

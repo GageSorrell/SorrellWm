@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 import { Effect, JsonSchema, Schema, pipe } from "effect";
 import { Command } from "effect/unstable/cli";

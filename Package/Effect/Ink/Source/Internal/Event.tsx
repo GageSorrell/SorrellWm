@@ -24,7 +24,7 @@ import {
     useEffect,
     useRef
 } from "react";
-import type { Component } from "../index.ts";
+import type { Field } from "../Component/index.ts";
 
 export const TypeId: string = "~sorrell/effect-ink/Internal/Event";
 
@@ -34,13 +34,11 @@ export const TypeId: string = "~sorrell/effect-ink/Internal/Event";
 // }
 
 // export type InkEvent<StateType, A> = Data.TaggedEnum<{
-//     /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-//     readonly NoOp: { };
+//     //     readonly NoOp: { };
 //     readonly NextFrame: { readonly State: StateType; };
 //     readonly Submit: { readonly value: A; };
 // }>;
 
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 export interface InputEvent extends Omit<Prompt.HandlerArgument<never>, "Publish" | "State">
 {
     readonly _tag: "InputEvent";
@@ -48,16 +46,23 @@ export interface InputEvent extends Omit<Prompt.HandlerArgument<never>, "Publish
 
 export type InkEvent =
     | BeginPromptEvent
+    | BeginProseEvent
     | Prompt.AnyAction
     | InputEvent;
 
+export type BackendEvent =
+    | BeginPromptEvent
+    | BeginProseEvent
+    | Prompt.AnyAction;
+
+export type FrontendEvent = InputEvent;
 /* eslint-disable-next-line @typescript-eslint/typedef */
 // export const InkEvent = Data.taggedEnum<Prompt.Action<>>();
 
 export interface InkEventBridge
 {
-    readonly Publish: (Event: InputEvent) => void;
-    readonly Subscribe: (Listener: (Event: Prompt.AnyAction | BeginPromptEvent) => void) => () => void;
+    readonly Publish: (Event: FrontendEvent) => void;
+    readonly Subscribe: (Listener: (Event: BackendEvent) => void) => () => void;
 }
 
 interface Part<EventType>
@@ -72,8 +77,13 @@ export interface BeginPromptEvent
     readonly _tag: "BeginPromptEvent";
     readonly Options: unknown;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    readonly Component: Component.Component<any, any>;
+    readonly Component: Field.Component<any, any>;
     readonly Keybinds: Prompt.Keybinds | undefined;
+}
+
+export interface BeginProseEvent extends Pick<Prompt.Operand.Prose, "Content" | "Component">
+{
+    readonly _tag: "BeginProseEvent";
 }
 
 export const BeginPromptEvent = ({
@@ -91,16 +101,26 @@ export const BeginPromptEvent = ({
     };
 };
 
+export const BeginProseEvent = ({ Component, Content }: Omit<BeginProseEvent, "_tag">): BeginProseEvent =>
+{
+    return {
+        _tag: "BeginProseEvent",
+
+        Component,
+        Content
+    };
+};
+
 export interface EventBridgePubSubImpl
 {
-    readonly Input: Part<InputEvent>;
-    readonly ActionOptions: Part<Prompt.AnyAction | BeginPromptEvent>;
+    readonly Input: Part<FrontendEvent>;
+    readonly ActionOptions: Part<BackendEvent>;
 }
 
 const EmptyContext: InkEventBridge =
     {
-        Publish: (_Event: InputEvent) => { },
-        Subscribe: (_Listener: (_Event: Prompt.AnyAction) => void) => () => { }
+        Publish: (_Event: FrontendEvent) => { },
+        Subscribe: (_Listener: (_Event: BackendEvent) => void) => () => { }
     } as const;
 
 const InkEventContext: ReactContext<InkEventBridge> = createContext<InkEventBridge>(EmptyContext);
@@ -135,7 +155,7 @@ export const UseEvents = (): readonly [ InkEventBridge ] =>
     return [ Bridge ] as const;
 };
 
-export const UseEvent = (Handler: (Event: Prompt.AnyAction | BeginPromptEvent) => void): void =>
+export const UseEvent = (Handler: (Event: BackendEvent) => void): void =>
 {
     const [ Bridge ] = UseEvents();
     const HandlerReference: RefObject<typeof Handler> = useRef(Handler);
@@ -147,7 +167,7 @@ export const UseEvent = (Handler: (Event: Prompt.AnyAction | BeginPromptEvent) =
 
     useEffect(() =>
     {
-        return Bridge.Subscribe((Event: Prompt.AnyAction | BeginPromptEvent) =>
+        return Bridge.Subscribe((Event: BackendEvent) =>
         {
             // Effect.runSync(Console.log("FooFooHandler"));
             // Effect.runSync(Console.log("FooFoo"));
@@ -163,11 +183,11 @@ export class EventBridgePubSub extends Context.Service<EventBridgePubSub, EventB
         Effect.gen(function* ()
         {
             const capacity: 512 = 512 as const;
-            const ActionOptionsEvents: PubSub.PubSub<Prompt.AnyAction | BeginPromptEvent> =
-                yield* PubSub.bounded<Prompt.AnyAction | BeginPromptEvent>({ capacity });
+            const ActionOptionsEvents: PubSub.PubSub<BackendEvent> =
+                yield* PubSub.bounded<BackendEvent>({ capacity });
 
-            const InputEvents: PubSub.PubSub<InputEvent> =
-                yield* PubSub.bounded<InputEvent>({ capacity });
+            const InputEvents: PubSub.PubSub<FrontendEvent> =
+                yield* PubSub.bounded<FrontendEvent>({ capacity });
 
             yield* Effect.addFinalizer(() =>
             {
@@ -177,26 +197,19 @@ export class EventBridgePubSub extends Context.Service<EventBridgePubSub, EventB
                 ]);
             });
 
-            const ActionOptions: Part<Prompt.AnyAction | BeginPromptEvent> =
+            const ActionOptions: Part<BackendEvent> =
                 {
-                    Publish: (Event: Prompt.AnyAction | BeginPromptEvent) => Effect.gen(function* ()
+                    Publish: (Event: BackendEvent) => Effect.gen(function* ()
                     {
-                        // yield* Console.log("Publishing Event");
-                        // yield* Console.dir(Event);
-
                         yield* PubSub.publish(ActionOptionsEvents, Event);
                     }),
-                    // Publish: (Event: Prompt.AnyAction | BeginPromptEvent) => pipe(
-                    //     PubSub.publish(ActionOptionsEvents, Event),
-                    //     Effect.asVoid
-                    // ),
                     Stream: Stream.fromPubSub(ActionOptionsEvents),
                     Subscribe: yield* PubSub.subscribe(ActionOptionsEvents)
                 } as const;
 
-            const Input: Part<InputEvent> =
+            const Input: Part<FrontendEvent> =
                 {
-                    Publish: (Event: InputEvent) => pipe(
+                    Publish: (Event: FrontendEvent) => pipe(
                         PubSub.publish(InputEvents, Event),
                         Effect.asVoid
                     ),
@@ -258,12 +271,12 @@ export class EventBridgePubSub extends Context.Service<EventBridgePubSub, EventB
 export const Make = (Events: EventBridgePubSubImpl): Effect.Effect<InkEventBridge, never, Scope.Scope> =>
     Effect.gen(function* ()
     {
-        const Listeners: Set<(Event: Prompt.AnyAction | BeginPromptEvent) => void> =
-            new Set<(Event: Prompt.AnyAction | BeginPromptEvent) => void>();
+        const Listeners: Set<(Event: BackendEvent) => void> =
+            new Set<(Event: BackendEvent) => void>();
 
         yield* pipe(
             Events.ActionOptions.Stream,
-            Stream.runForEach((Event: Prompt.AnyAction | BeginPromptEvent) =>
+            Stream.runForEach((Event: BackendEvent) =>
                 Effect.sync(() =>
                 {
                     for (const Listener of Listeners)
@@ -276,12 +289,12 @@ export const Make = (Events: EventBridgePubSubImpl): Effect.Effect<InkEventBridg
         );
 
         return {
-            Publish: (Event: InputEvent) =>
+            Publish: (Event: FrontendEvent) =>
             {
                 Effect.runFork(Events.Input.Publish(Event));
             },
 
-            Subscribe: (Listener: (Value: Prompt.AnyAction | BeginPromptEvent) => void) =>
+            Subscribe: (Listener: (Value: BackendEvent) => void) =>
             {
                 Listeners.add(Listener);
 

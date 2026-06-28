@@ -33,11 +33,9 @@ const ConfigCommandConfig: FConfigCommandConfig =
         )
     };
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 // const ConfigCommand: Command.Command<"init-config", FConfigCommandConfig, never, FConfigCommandConfig> =
 
 export/** Write a default config file to the root of the package. */
 const ConfigCommand: FConfigCommand =
     Command.make("init-config", ConfigCommandConfig, HandleConfigCommand);
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */

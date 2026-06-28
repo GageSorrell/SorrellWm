@@ -21,7 +21,6 @@ export type CodeAugerPackageConfig =
         config: string;
     }>;
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 /**
  * The type of `package.json`, with an additional *optional* field
@@ -29,6 +28,5 @@ export type CodeAugerPackageConfig =
  */
 export interface IPackageJson extends IPackageJsonBase<CodeAugerPackageConfig> { }
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export default IPackageJson;

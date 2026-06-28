@@ -13,5 +13,5 @@
  */
 
 export * as Event from "./Event.ts";
-export * as InkContext from "./InkContext.ts";
 export * as Prompt from "./Prompt.ts";
+export * as Prose from "./Prose.ts";

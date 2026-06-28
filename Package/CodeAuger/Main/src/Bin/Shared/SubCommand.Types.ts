@@ -16,8 +16,7 @@ export type Subcommand<
     Command.Command<
         NameType,
         Command.Command.Config.Infer<ConfigType>,
-        /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
-        { },
+                { },
         PlatformError,
         | Environment
         | Command.CommandContext<"code-auger">

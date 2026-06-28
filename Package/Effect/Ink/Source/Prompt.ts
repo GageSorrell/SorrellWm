@@ -2,32 +2,28 @@
  * The primary module of {@link \@sorrell/effect-ink}.
  *
  * @module @sorrell/effect-ink/Prompt
- */
-
-/**
+ *
  * @file      Prompt.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-/* eslint-disable prefer-rest-params */
-
 import * as Arr from "effect/Array";
 import type * as Cause from "effect/Cause";
+import type * as Cli from "effect/unstable/cli";
 import * as Console from "effect/Console";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 // import * as EffectNumber from "effect/Number";
-import * as Effectable from "effect/Effectable";
-import * as Event from "./Internal/Event.js";
+import * as Field from "./Component/Field/index.ts";
 import * as FileSystem from "effect/FileSystem";
 import * as Input from "./Input.js";
-import * as Internal from "./Internal/Prompt.ts";
+import * as Internal from "./Internal/index.ts";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Predicate from "effect/Predicate";
-import type * as Primitive from "effect/unstable/cli/Primitive";
+// import type * as Prose from "./Prose.ts";
 import * as Queue from "effect/Queue";
 import type * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -35,14 +31,15 @@ import * as Runtime from "./Runtime.tsx";
 import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Terminal from "effect/Terminal";
+import type { Covariant, Mutable } from "effect/Types";
 import { dual, pipe } from "effect/Function";
 import { Component } from "./index.js";
-import type { Covariant } from "effect/Types";
+import { Confirm } from "./Component/Field/Confirm/index.ts";
 import type { Key } from "ink";
 import type { NoSuchElementError } from "effect/Cause";
 import type { ReactNode } from "react";
 
-const TypeId: string = "~sorrell/effect-ink/Prompt";
+export const TypeId: string = "~sorrell/effect-ink/Prompt";
 
 /**
  * Represents an interactive terminal prompt that produces an `Output` value.
@@ -81,7 +78,7 @@ export const isPrompt = (u: unknown): u is Prompt<unknown> => Predicate.hasPrope
 export type Environment =
     | FileSystem.FileSystem
     | Path.Path
-    | Event.EventBridgePubSub
+    | Internal.Event.EventBridgePubSub
     | Scope.Scope
     | Terminal.Terminal;
 
@@ -95,8 +92,7 @@ export type Keybinds = Record.ReadonlyRecord<string, Input.Key>;
  * @since 1.0.0
  */
 export type Action<StateType, A> = Data.TaggedEnum<{
-    /* eslint-disable @typescript-eslint/no-empty-object-type */
-    readonly NoOp: { };
+        readonly NoOp: { };
     readonly NextFrame: { readonly State: StateType; };
     readonly Submit: { readonly value: A; };
 
@@ -104,8 +100,7 @@ export type Action<StateType, A> = Data.TaggedEnum<{
     readonly ClearError: { };
     readonly Fail: { readonly Message: ReactNode; };
     readonly SetKeybinds: { readonly Keybinds: Keybinds; };
-    /* eslint-enable @typescript-eslint/no-empty-object-type */
-}>;
+    }>;
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type AnyAction = Action<any, any>;
@@ -139,7 +134,7 @@ export type ProcessInput<A> = Data.TaggedEnum<{
 }>;
 
 export interface HandlerArgument<StateType>
-    extends Pick<Event.EventBridgePubSubImpl["ActionOptions"], "Publish">
+    extends Pick<Internal.Event.EventBridgePubSubImpl["ActionOptions"], "Publish">
 {
     readonly Input: Option.Option<string>;
     readonly Key: Key;
@@ -150,6 +145,8 @@ export interface Handler<StateType, A>
 {
     (Input: HandlerArgument<StateType>): Effect.Effect<Action<StateType, A>, never, Environment>;
 }
+
+interface HandlersUnknown extends Handlers<unknown, unknown, unknown> { }
 
 /**
  * Represents the set of handlers used by a `Prompt`.
@@ -173,7 +170,7 @@ export interface Handlers<StateType, OptionsType, A>
 
     // readonly _tag: string;
 
-    readonly Component: Component.Component<StateType, OptionsType>;
+    readonly Component: Field.Field.Component<StateType, OptionsType>;
 
     // /**
     //  * A function that is called to render the current frame of the `Prompt`.
@@ -323,6 +320,28 @@ export interface DateOptions
     }
 }
 
+export interface Program
+{
+    readonly Name: string;
+    readonly Description?: string;
+
+    readonly Command: string;
+    readonly GetArgumentVector: (TempFilePath: string) => ReadonlyArray<string>;
+    readonly ConfirmComplete: boolean;
+}
+
+export interface TempFileOptions extends Options<string>
+{
+    readonly Programs: ReadonlyArray<Program>;
+    readonly GetTempFilePath?: Effect.Effect<string, never, Environment>;
+    readonly WriteTempFile?: (TempFilePath: string) => Effect.Effect<void, never, Environment>;
+    readonly OnPreOpen?: (TempFilePath: string) => Effect.Effect<void, never, Environment>;
+    readonly OnPostOpen?: (TempFilePath: string) => Effect.Effect<void, never, Environment>;
+    readonly OnClose?:
+        | ((TempFilePath: string) => Effect.Effect<void, never, Environment>)
+        | ((TempFilePath: string, ManuallyCompleted: boolean) => Effect.Effect<void, never, Environment>);
+}
+
 /**
  * Options for an integer prompt, including bounds, keyboard step sizes, and
  * additional validation.
@@ -414,7 +433,7 @@ export interface FileOptions extends Options<string>
     /**
      * The path type that will be selected, defaulting to `"file"`.
      */
-    readonly type?: Primitive.PathType;
+    readonly type?: Cli.Primitive.PathType;
 
     /**
      * Where the user will initially be prompted to select files from, defaulting
@@ -543,7 +562,6 @@ export interface SelectChoice<A>
     readonly selected?: boolean
 }
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 /**
  * Options for text-entry prompts, including the displayed message, default
@@ -556,7 +574,6 @@ export interface TextOptions extends Options<string>
 {
 }
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 /**
  * Options for a toggle prompt that lets the user switch between active and
@@ -579,68 +596,6 @@ export interface ToggleOptions extends Options<boolean>
      */
     readonly Inactive?: string;
 }
-
-type Figures = Readonly<{
-    arrowDown: string;
-    arrowLeft: string;
-    arrowRight: string;
-    arrowUp: string;
-    checkboxOff: string;
-    checkboxOn: string;
-    cross: string;
-    ellipsis: string;
-    line: string;
-    pointer: string;
-    pointerSmall: string;
-    radioOff: string;
-    radioOn: string;
-    tick: string;
-}>;
-
-const DefaultFigures: Figures =
-    {
-        arrowDown: "↓",
-        arrowLeft: "←",
-        arrowRight: "→",
-        arrowUp: "↑",
-        checkboxOff: "☐",
-        checkboxOn: "☒",
-        cross: "✖",
-        ellipsis: "…",
-        line: "─",
-        pointer: "❯",
-        pointerSmall: "›",
-        radioOff: "◯",
-        radioOn: "◉",
-        tick: "✔"
-    };
-
-const WindowsFigures: Figures =
-    {
-        arrowDown: DefaultFigures.arrowDown,
-        arrowLeft: DefaultFigures.arrowLeft,
-        arrowRight: DefaultFigures.arrowRight,
-        arrowUp: DefaultFigures.arrowUp,
-        checkboxOff: "[ ]",
-        checkboxOn: "[*]",
-        cross: "×",
-        ellipsis: "...",
-        line: "─",
-        pointer: ">",
-        pointerSmall: "»",
-        radioOff: "( )",
-        radioOn: "(*)",
-        tick: "√"
-    };
-
-/** @internal */
-export const PlatformFigures: Effect.Effect<Figures> =
-    Effect.map(
-        Effect.sync(() => process.platform === "win32"),
-        (IsWindows: boolean) => IsWindows
-            ? WindowsFigures
-            : DefaultFigures
-    );
 
 /**
  * Type alias for any `Prompt`, regardless of its output type.
@@ -721,6 +676,8 @@ export declare namespace All
                     ? ReturnObject<Arg>
                     : never;
 }
+
+/* eslint-disable prefer-rest-params */
 
 /**
  * Runs all the provided prompts in sequence respecting the structure provided
@@ -806,6 +763,8 @@ export const all: <
     /* eslint-enable @typescript-eslint/no-explicit-any */
 };
 
+/* eslint-enable prefer-rest-params */
+
 /**
  * Creates a confirmation prompt that asks the user to choose a boolean yes/no
  * value.
@@ -832,7 +791,8 @@ export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
             Plain: false,
             Validate: Effect.succeed,
             ...options,
-            Label: {
+            Label:
+            {
                 Confirm: "yes",
                 Deny: "no",
                 ...options.Label
@@ -845,7 +805,7 @@ export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
             }
         };
 
-    const initialState: Internal.ConfirmState =
+    const initialState: Internal.Prompt.ConfirmState =
         {
             internalRepresentation: opts.Default ? "Y" : "N",
             value: opts.Default
@@ -857,7 +817,7 @@ export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
         {
             // _tag: "Confirm",
 
-            Component: Component.Confirm,
+            Component: Confirm,
             Process: handleConfirmProcess
         }
     );
@@ -876,12 +836,6 @@ export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
  * next prompt action, and `clear` returns ANSI output used to clear the previous
  * frame.
  *
- * Optionally, an external `events` dequeue can be provided as the third
- * argument. When present, the render loop will race user input against events
- * from the dequeue, allowing background events to trigger re-renders without
- * waiting for a keypress. When an event is received from the dequeue, the
- * `receive` handler is called instead of `process`.
- *
  * @category constructors
  * @since 1.0.0
  */
@@ -891,19 +845,22 @@ export const custom = <State, OptionsType, Output>(
     handlers: Handlers<State, OptionsType, Output>
 ): Prompt<Output> =>
 {
+    const HandlersCast: HandlersUnknown = handlers as HandlersUnknown;
+
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    const op: any = Object.create(proto);
-    op._tag = "Loop";
+    const Operand: Mutable<Partial<Operand.Loop>> = Internal.Prompt.MakePrototype("Loop");
+
     if ("GetInitialKeybinds" in handlers && handlers.GetInitialKeybinds !== undefined)
     {
-        op.GetInitialKeybinds = handlers.GetInitialKeybinds;
+        Operand.GetInitialKeybinds = handlers.GetInitialKeybinds;
     }
-    op.InitialState = initialState;
-    op.Process = handlers.Process(Options);
-    op.Options = Options;
-    // op.events = events;
-    op.Component = handlers.Component;
-    return op;
+
+    Operand.InitialState = initialState;
+    Operand.Process = HandlersCast.Process(Options);
+    Operand.Options = Options;
+    Operand.Component = HandlersCast.Component;
+
+    return Operand as Prompt<Output>;
 };
 
 /**
@@ -941,9 +898,11 @@ export const date = (options: DateOptions): Prompt<Date> =>
                 ...options.locales
             }
         };
-    const dateParts: Array<Internal.DatePart> = makeDateParts(opts.dateMask, opts.initial, opts.locales);
-    const initialCursorPosition: number = dateParts.findIndex((part: Internal.DatePart) => !part.isToken());
-    const initialState: Internal.DateState =
+    const dateParts: Array<Internal.Prompt.DatePart> =
+        makeDateParts(opts.dateMask, opts.initial, opts.locales);
+    const initialCursorPosition: number =
+        dateParts.findIndex((part: Internal.Prompt.DatePart) => !part.isToken());
+    const initialState: Internal.Prompt.DateState =
         {
             cursor: initialCursorPosition,
             dateParts,
@@ -958,7 +917,7 @@ export const date = (options: DateOptions): Prompt<Date> =>
         {
             // _tag: "Date",
 
-            Component: Component.Date,
+            Component: Field.Date,
             Process: handleDateProcess
         }
     );
@@ -977,7 +936,7 @@ export const date = (options: DateOptions): Prompt<Date> =>
  */
 export const file = (options: FileOptions): Prompt<string> =>
 {
-    const opts: Required<Internal.FileOptionsInternal> =
+    const opts: Required<Internal.Prompt.FileOptionsInternal> =
         {
             Default: Option.fromUndefinedOr(options.Default),
             Message: options.Message ?? "Choose a file",
@@ -990,7 +949,7 @@ export const file = (options: FileOptions): Prompt<string> =>
         };
 
     const initialState: Effect.Effect<
-        Internal.FileState,
+        Internal.Prompt.FileState,
         never,
         Environment
     > = Effect.gen(function*()
@@ -1012,7 +971,7 @@ export const file = (options: FileOptions): Prompt<string> =>
                 return index === -1 ? 0 : index;
             }
         });
-        const confirm: Internal.Confirm = Internal.Confirm.Hide();
+        const confirm: Internal.Prompt.Confirm = Internal.Prompt.Confirm.Hide();
         return {
             allFiles: files,
             confirm,
@@ -1029,7 +988,7 @@ export const file = (options: FileOptions): Prompt<string> =>
         {
             // _tag: "File",
 
-            Component: Component.File,
+            Component: Field.File,
             Process: handleFileProcess
         }
     );
@@ -1054,9 +1013,8 @@ export const flatMap: {
     f: (output: Output) => Prompt<Output2>
 ) =>
 {
+    const op: Partial<Mutable<Operand.OnSuccess>> = Internal.Prompt.MakePrototype("OnSuccess");
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    const op: any = Object.create(proto);
-    op._tag = "OnSuccess";
     op.Prompt = self;
     op.OnSuccess = f;
     return op;
@@ -1099,7 +1057,7 @@ export const float = (options: FloatOptions): Prompt<number> =>
             ...options
         };
     const initialValue: string = options.Default === undefined ? "" : `${ opts.Default }`;
-    const initialState: Internal.NumberState =
+    const initialState: Internal.Prompt.NumberState =
         {
             cursor: initialValue.length,
             error: Option.none(),
@@ -1111,7 +1069,7 @@ export const float = (options: FloatOptions): Prompt<number> =>
         {
             // _tag: "Float",
 
-            Component: Component.Float,
+            Component: Field.Float,
             Process: handleProcessFloat
         }
     );
@@ -1166,7 +1124,7 @@ export const integer = (options: IntegerOptions): Prompt<number> =>
         };
 
     const initialValue: string = options.Default === undefined ? "" : `${ opts.Default }`;
-    const initialState: Internal.NumberState =
+    const initialState: Internal.Prompt.NumberState =
         {
             cursor: initialValue.length,
             error: Option.none(),
@@ -1179,7 +1137,7 @@ export const integer = (options: IntegerOptions): Prompt<number> =>
         {
             // _tag: "Integer",
 
-            Component: Component.Integer,
+            Component: Field.Integer,
             Process: handleProcessInteger
         }
     );
@@ -1224,52 +1182,11 @@ export const map: {
  * @category constructors
  * @since 1.0.0
  */
-export const password = (options: TextOptions): Prompt<Redacted.Redacted> =>
+export const Password = (options: TextOptions): Prompt<Redacted.Redacted> =>
     pipe(
         basePrompt(options, "Password"),
         map(Redacted.make)
     );
-
-// const IsInkInputEvent = (Value: unknown): Value is Event.InputEvent =>
-// {
-//     return (
-//         typeof Value === "object" &&
-//         Value !== null &&
-//         "_tag" in Value &&
-//         Value._tag === "InputEvent"
-//     );
-// };
-
-// const SubscribeToInputEvents = (
-//     EventPubSub: PubSub.PubSub<Event.InkEvent>
-// ): Effect.Effect<Queue.Dequeue<Event.InputEvent>, never, Scope.Scope> =>
-//     Effect.gen(function* ()
-//     {
-//         const Subscription: PubSub.Subscription<Event.InkEvent> = yield* PubSub.subscribe(EventPubSub);
-//         const FilteredQueue: Queue.Queue<Event.InputEvent> = yield* Queue.unbounded<Event.InputEvent>();
-
-//         const input: Queue.Dequeue<Event.InkEvent, Cause.Done<void>> =
-//             // SubscribeToInputEvents(Event.EventBridgePubSub.Service.Subscribe);
-//             yield* Stream.toQueue(
-//                 Event.EventBridgePubSub.Service.Subscribe,
-//                 { capacity: "unbounded" }
-//             );
-
-//         yield* Effect.addFinalizer(() => Queue.shutdown(FilteredQueue));
-
-//         yield* pipe(
-//             PubSub.take(Subscription),
-//             Effect.flatMap((EventValue: Event.InkEvent) =>
-//                 IsInkInputEvent(EventValue)
-//                     ? Queue.offer(FilteredQueue, EventValue).pipe(Effect.asVoid)
-//                     : Effect.void
-//             ),
-//             Effect.forever,
-//             Effect.forkScoped
-//         );
-
-//         return FilteredQueue;
-//     });
 
 /**
  * Runs a prompt by reading terminal input and rendering prompt frames until the
@@ -1305,28 +1222,32 @@ export const run: <Output>(
 
                 // const terminal: Terminal.Terminal = yield* Terminal.Terminal;
                 // const input: Queue.Dequeue<Terminal.UserInput, Cause.Done<void>> =
-                //     Event.EventBridgePubSub.Service.Publish();
+                //     Internal.Event.EventBridgePubSub.Service.Publish();
 
-                // const input: Queue.Dequeue<Event.InkEvent, Cause.Done<void>> =
+                // const input: Queue.Dequeue<Internal.Event.InkEvent, Cause.Done<void>> =
                 //     // SubscribeToInputEvents(Event.EventBridgePubSub.Service.Subscribe);
                 //     yield* Stream.toQueue(
-                //         Event.EventBridgePubSub.Service.Subscribe,
+                //         Internal.Event.EventBridgePubSub.Service.Subscribe,
                 //         { capacity: "unbounded" }
                 //     );
 
-                const pubSub: Event.EventBridgePubSubImpl = yield* Event.EventBridgePubSub;
+                const pubSub: Internal.Event.EventBridgePubSubImpl = yield* Internal.Event.EventBridgePubSub;
 
-                const input: Queue.Dequeue<Event.InputEvent, Cause.Done<void>> =
+                const input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>> =
                     yield* Stream.toQueue(
                         pubSub.Input.Stream,
                         { capacity: "unbounded" }
                     );
 
-                return yield* pipe(
+                const Out: Output = yield* pipe(
                     runWithInput(self, input),
                     // runWithInput(self, input),
                     Effect.scoped
                 );
+
+                return (Out === Operand.NoOp)
+                    ? (yield* Effect.void) as Output
+                    : Out;
             }),
             Effect.scoped
         );
@@ -1385,7 +1306,7 @@ export const select = <const A>(options: SelectOptions<A>): Prompt<A> =>
         {
             // _tag: "Select",
 
-            Component: Component.Select,
+            Component: Field.Select,
             Process: handleSelectProcess
         }
     );
@@ -1431,7 +1352,7 @@ export const autoComplete = <const A>(options: AutoCompleteOptions<A>): Prompt<A
             ? initialIndex
             : filtered[0];
 
-    const initialState: Internal.AutoCompleteState =
+    const initialState: Internal.Prompt.AutoCompleteState =
         {
             filtered,
             index,
@@ -1444,7 +1365,7 @@ export const autoComplete = <const A>(options: AutoCompleteOptions<A>): Prompt<A
         {
             // _tag: "AutoComplete",
 
-            Component: Component.AutoComplete,
+            Component: Field.AutoComplete,
             Process: handleAutoCompleteProcess
         }
     );
@@ -1466,7 +1387,7 @@ export const multiSelect = <const A>(
     options: SelectOptions<A> & MultiSelectOptions
 ): Prompt<Array<A>> =>
 {
-    const opts: Required<Internal.MultiSelectOptionsInternal<A>> =
+    const opts: Required<Internal.Prompt.MultiSelectOptionsInternal<A>> =
         {
             inverseSelection: "Invert Selection",
             max: Infinity,
@@ -1487,7 +1408,7 @@ export const multiSelect = <const A>(
             initialSelected.add(i);
         }
     }
-    const initialState: Internal.MultiSelectState =
+    const initialState: Internal.Prompt.MultiSelectState =
         {
             error: Option.none(),
             index: 0,
@@ -1500,7 +1421,7 @@ export const multiSelect = <const A>(
         {
             // _tag: "MultiSelect",
 
-            Component: Component.MultiSelect,
+            Component: Field.MultiSelect,
             Process: handleMultiSelectProcess
         }
     );
@@ -1519,11 +1440,9 @@ export const multiSelect = <const A>(
  */
 export const succeed = <A>(value: A): Prompt<A> =>
 {
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    const op: any = Object.create(proto);
-    op._tag = "Succeed";
+    const op: Mutable<Partial<Operand.Succeed>> = Internal.Prompt.MakePrototype("Succeed");
     op.value = value;
-    return op;
+    return op as Prompt<A>;
 };
 
 /**
@@ -1561,7 +1480,7 @@ export const toggle = (options: ToggleOptions): Prompt<boolean> =>
         {
             // _tag: "Toggle",
 
-            Component: Component.Toggle,
+            Component: Field.Toggle,
             Process: handleToggleProcess
         }
     );
@@ -1587,65 +1506,59 @@ export interface Options<in out A>
     readonly Validate?: (Value: A) => Effect.Effect<A, string>;
 }
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-const proto: any =
-    {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        ...Effectable.Prototype<Prompt<any>>({
-            evaluate()
-            {
-                return run(this);
-            },
-            label: "InkPrompt"
-        }),
-        [ TypeId ]:
-        {
-            _Output: (_: never) => _
-        }
-    };
-
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-
-type Op<Tag extends string, Body = { }> =
-    Prompt<never> &
-    Body &
-    {
-        readonly _tag: Tag;
-    };
-
-type PromptPrimitive = Loop | OnSuccess | Succeed;
-
-interface Loop extends
-    Op<"Loop", {
-        readonly InitialState: unknown | Effect.Effect<unknown, never, Environment>;
-        // readonly render: Handlers<unknown, unknown>["render"];
-        // readonly Process: (
-        //     Input: unknown,
-        //     State: unknown
-        // ) => Effect.Effect<Action<unknown, unknown>, never, Environment>;
-        // readonly clear: Handlers<unknown, unknown>["clear"];
-        readonly Component: Component.Component<unknown, unknown>;
-        readonly Options: unknown;
-        readonly events: Queue.Dequeue<unknown, never> | undefined;
-        readonly Process: ReturnType<Handlers<unknown, unknown, unknown>["Process"]>;
-    }>
-{ }
 
 /** @internal */
-export interface OnSuccess extends
-    Op<"OnSuccess", {
-        readonly Prompt: PromptPrimitive;
-        readonly OnSuccess: (value: unknown) => Prompt<unknown>;
-    }>
-{ }
+export namespace Operand
+{
+    export const NoOp: unique symbol = Symbol.for(`${ TypeId }!Operand!ReturnValue`);
 
-interface Succeed extends
-    Op<"Succeed", {
-        readonly value: unknown
-    }>
-{ }
+    type Op<Tag extends string, Body = { }> =
+        Prompt<never> &
+        Body &
+        {
+            readonly _tag: Tag;
+        };
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
+    export interface Loop extends
+        Op<"Loop", {
+            readonly InitialState: unknown | Effect.Effect<unknown, never, Environment>;
+            readonly Component: Field.Field.Component<unknown, unknown>;
+            readonly Options: unknown;
+            readonly Process: ReturnType<Handlers<unknown, unknown, unknown>["Process"]>;
+        }>
+    { }
+
+    export interface Prose extends
+        Op<"Prose", {
+            readonly Content: Internal.Prose.Prose;
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            readonly Component: React.FC<any>;
+        }>
+    { }
+
+    /** @internal */
+    export interface OnSuccess extends
+        Op<"OnSuccess", {
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            readonly Prompt: Operand | Prompt<any>;
+            readonly OnSuccess: (value: any) => Prompt<any>;
+            /* eslint-enable @typescript-eslint/no-explicit-any */
+        }>
+    { }
+
+    export interface Succeed extends
+        Op<"Succeed", {
+            readonly value: unknown
+        }>
+    { }
+
+    export type Operand =
+        | Prose
+        | Loop
+        | OnSuccess
+        | Succeed;
+}
+
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<{
@@ -1674,36 +1587,54 @@ const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<{
 const EnsureInk: Effect.Effect<
     void,
     Runtime.InkRuntimeError,
-    | Event.EventBridgePubSub
+    | Internal.Event.EventBridgePubSub
     | Scope.Scope
-> = Runtime.Runtime.defaultValue().Run(Component.RootComponent);
+> = Runtime.Runtime.defaultValue().Run(Component.Prompt.RootComponent);
 
 const runWithInput = <A>(
     prompt: Prompt<A>,
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     // pubSub: PubSub.PubSub<AnyAction>,
     // terminal: Terminal.Terminal,
-    input: Queue.Dequeue<Event.InputEvent, Cause.Done<void>>
+    input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>>
 ): Effect.Effect<A, NoSuchElementError | Runtime.InkRuntimeError, Environment | Scope.Scope> =>
     Effect.suspend(() =>
     {
-        const op: PromptPrimitive = prompt as PromptPrimitive;
+        const op: Operand.Operand = prompt as Operand.Operand;
 
         // Effect.runSync(Console.dir(prompt));
 
         switch (op._tag)
         {
+            case "Prose":
+            {
+                return Effect.fnUntraced(function* ()
+                {
+                    const pubSub: Internal.Event.EventBridgePubSubImpl =
+                        yield* Internal.Event.EventBridgePubSub;
+
+                    // yield* Console.dir(loop.Component);
+
+                    yield* pubSub.ActionOptions.Publish(Internal.Event.BeginProseEvent({
+                        Component: op.Component,
+                        Content: op.Content
+                    }));
+
+                    return yield* Effect.void;
+                })();
+            }
             case "Loop":
             {
                 return runLoop(op, input);
             }
             case "OnSuccess":
             {
+                /* eslint-disable @typescript-eslint/no-explicit-any */
                 return Effect.flatMap(
                     runWithInput(op.Prompt, input),
-                    (a: never) => runWithInput(op.OnSuccess(a), input)
-                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                    (a: any) => runWithInput(op.OnSuccess(a), input)
                 ) as any;
+                /* eslint-enable @typescript-eslint/no-explicit-any */
             }
             case "Succeed":
             {
@@ -1713,46 +1644,31 @@ const runWithInput = <A>(
     });
 
 const runLoop: {
-    (loop: Loop,
-    //     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    //     pubSub: PubSub.PubSub<AnyAction>,
-        input: Queue.Dequeue<Event.InputEvent, Cause.Done<void>>
+    (Loop: Operand.Loop,
+        Input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>>
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     ): Effect.Effect<unknown, any, any>;
 } = Effect.fnUntraced(
     function*(
-        loop: Loop,
-        input: Queue.Dequeue<Event.InputEvent, Cause.Done<void>>
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        // pubSub: PubSub.PubSub<AnyAction>,
-        // input: Queue.Dequeue<Terminal.UserInput, Cause.Done>
+        Loop: Operand.Loop,
+        Input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>>
     )
     {
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        // pubSub.pubsub.publish(undefined as any);
-        // pubSub.pubsub.publish({
-        //     _tag: "BeginRunLoop",
-        //     Payload:
-        //     {
+        let State: any = Effect.isEffect(Loop.InitialState)
+            ? yield* Loop.InitialState
+            : Loop.InitialState;
 
-        //     }
-        // });
+        let ThisAction: Action<unknown, unknown> = Action.NextFrame({ State: State });
 
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        let state: any = Effect.isEffect(loop.InitialState)
-            ? yield* loop.InitialState
-            : loop.InitialState;
-
-        let action: Action<unknown, unknown> = Action.NextFrame({ State: state });
-
-        const pubSub: Event.EventBridgePubSubImpl = yield* Event.EventBridgePubSub;
+        const pubSub: Internal.Event.EventBridgePubSubImpl = yield* Internal.Event.EventBridgePubSub;
 
         // yield* Console.dir(loop.Component);
 
-        yield* pubSub.ActionOptions.Publish(Event.BeginPromptEvent({
-            Component: loop.Component,
-            Keybinds: loop?.GetInitialKeybinds(loop.Options),
-            Options: loop.Options
+        yield* pubSub.ActionOptions.Publish(Internal.Event.BeginPromptEvent({
+            Component: Loop.Component,
+            Keybinds: Loop?.GetInitialKeybinds(Loop.Options),
+            Options: Loop.Options
         }));
 
         while (true)
@@ -1764,12 +1680,12 @@ const runLoop: {
             // a new instance of that component, and updating its state on subsequent publishes
             // of a new event type that belongs to the `Action` `Part`.
 
-            yield* pubSub.ActionOptions.Publish(action);
-            const { _tag, ...Tail }: Event.InputEvent = yield* Queue.take(input);
-            action = yield* loop.Process({
+            yield* pubSub.ActionOptions.Publish(ThisAction);
+            const { _tag, ...Tail }: Internal.Event.InputEvent = yield* Queue.take(Input);
+            ThisAction = yield* Loop.Process({
                 ...Tail,
                 Publish: pubSub.ActionOptions.Publish,
-                State: state
+                State: State
             });
             // // const msg: string = yield* loop.render(state, action);
             // /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -1810,14 +1726,14 @@ const runLoop: {
             //     action = yield* loop.Process(input, state);
             // }
             // yield* Console.log("Foo");
-            switch (action._tag)
+            switch (ThisAction._tag)
             {
                 case "NoOp":
                     continue;
                 case "NextFrame":
                 {
                     // yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
-                    state = action.State;
+                    State = ThisAction.State;
                     // yield* pubSub.ActionOptions.Publish(action);
                     continue;
                 }
@@ -1826,7 +1742,7 @@ const runLoop: {
                     // yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
                     // const msg: string = yield* loop.render(state, action);
                     // yield* Effect.orDie(terminal.display(msg));
-                    return action.value;
+                    return ThisAction.value;
                 }
             }
         }
@@ -1835,7 +1751,6 @@ const runLoop: {
 /* eslint-disable-next-line @typescript-eslint/typedef */
 export const Action = Data.taggedEnum<ActionDefinition>();
 
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 export interface ConfirmOptionsReq extends Required<ConfirmOptions> { }
 
 const TRUE_VALUE_REGEXP: RegExp = /^y|t$/;
@@ -1843,9 +1758,8 @@ const FALSE_VALUE_REGEXP: RegExp = /^n|f$/;
 
 const handleConfirmProcess = (_Options: Required<ConfirmOptions>) =>
 {
-    return ({
-        Key
-    }: HandlerArgument<Internal.ConfirmState>): Effect.Effect<Action<Internal.ConfirmState, boolean>> =>
+    return ({ Key }: HandlerArgument<Internal.Prompt.ConfirmState>
+    ): Effect.Effect<Action<Internal.Prompt.ConfirmState, boolean>> =>
     {
         // const value: string = Option.getOrElse(input.input, () => "");
         const value: string = "";
@@ -1865,7 +1779,6 @@ const handleConfirmProcess = (_Options: Required<ConfirmOptions>) =>
     };
 };
 
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 interface DateOptionsReq extends Required<DateOptions> { }
 
 const defaultLocales: DateOptionsReq["locales"] =
@@ -1892,7 +1805,8 @@ const defaultLocales: DateOptionsReq["locales"] =
 
 const handleDateProcess = (_options: Required<DateOptions>) =>
 {
-    return (_Input: HandlerArgument<Internal.DateState>): Effect.Effect<Action<Internal.DateState, Date>> =>
+    return (_Input: HandlerArgument<Internal.Prompt.DateState>
+    ): Effect.Effect<Action<Internal.Prompt.DateState, Date>> =>
     {
         return Effect.succeed(Action.Submit({ value: new Date() }));
         // switch (input.key.name)
@@ -1947,18 +1861,18 @@ const DATE_PART_REGEXP: RegExp =
     /* eslint-disable-next-line @stylistic/max-len */
     /\\(.)|"((?:\\["\\]|[^"])+)"|(D[Do]?|d{3,4}|d)|(M{1,4})|(YY(?:YY)?)|([aA])|([Hh]{1,2})|(m{1,2})|(s{1,2})|(S{1,4})|./g;
 
-const regExpGroups: Record<number, (params: Internal.DatePartParams) => Internal.DatePart> =
+const regExpGroups: Record<number, (params: Internal.Prompt.DatePartParams) => Internal.Prompt.DatePart> =
     {
-        1: ({ token, ...opts }: Internal.DatePartParams) =>
-            new Internal.Token({ token: token.replace(/\\(.)/g, "$1"), ...opts }),
-        2: (opts: Internal.DatePartParams) => new Day(opts),
-        3: (opts: Internal.DatePartParams) => new Month(opts),
-        4: (opts: Internal.DatePartParams) => new Year(opts),
-        5: (opts: Internal.DatePartParams) => new Meridiem(opts),
-        6: (opts: Internal.DatePartParams) => new Hours(opts),
-        7: (opts: Internal.DatePartParams) => new Minutes(opts),
-        8: (opts: Internal.DatePartParams) => new Seconds(opts),
-        9: (opts: Internal.DatePartParams) => new Milliseconds(opts)
+        1: ({ token, ...opts }: Internal.Prompt.DatePartParams) =>
+            new Internal.Prompt.Token({ token: token.replace(/\\(.)/g, "$1"), ...opts }),
+        2: (opts: Internal.Prompt.DatePartParams) => new Day(opts),
+        3: (opts: Internal.Prompt.DatePartParams) => new Month(opts),
+        4: (opts: Internal.Prompt.DatePartParams) => new Year(opts),
+        5: (opts: Internal.Prompt.DatePartParams) => new Meridiem(opts),
+        6: (opts: Internal.Prompt.DatePartParams) => new Hours(opts),
+        7: (opts: Internal.Prompt.DatePartParams) => new Minutes(opts),
+        8: (opts: Internal.Prompt.DatePartParams) => new Seconds(opts),
+        9: (opts: Internal.Prompt.DatePartParams) => new Milliseconds(opts)
     };
 
 const makeDateParts = (
@@ -1967,7 +1881,7 @@ const makeDateParts = (
     locales: DateOptions["locales"]
 ) =>
 {
-    const parts: Array<Internal.DatePart> = [ ];
+    const parts: Array<Internal.Prompt.DatePart> = [ ];
     let result: RegExpExecArray | null = null;
     /* eslint-disable-next-line no-cond-assign */
     while (result = DATE_PART_REGEXP.exec(dateMask))
@@ -1981,15 +1895,15 @@ const makeDateParts = (
         }
         else
         {
-            parts.push(new Internal.Token({ date, locales, parts, token: (result[index] || match)! }));
+            parts.push(new Internal.Prompt.Token({ date, locales, parts, token: (result[index] || match)! }));
         }
     }
-    const orderedParts: Array<Internal.DatePart> = parts.reduce((
-        array: Array<Internal.DatePart>,
-        element: Internal.DatePart
+    const orderedParts: Array<Internal.Prompt.DatePart> = parts.reduce((
+        array: Array<Internal.Prompt.DatePart>,
+        element: Internal.Prompt.DatePart
     ) =>
     {
-        const lastElement: Internal.DatePart = array[array.length - 1];
+        const lastElement: Internal.Prompt.DatePart = array[array.length - 1];
         if (element.isToken() && lastElement !== undefined && lastElement.isToken())
         {
             lastElement.setValue(element.token);
@@ -1999,14 +1913,14 @@ const makeDateParts = (
             array.push(element);
         }
         return array;
-    }, Arr.empty<Internal.DatePart>());
+    }, Arr.empty<Internal.Prompt.DatePart>());
 
     parts.splice(0, parts.length, ...orderedParts);
 
     return parts;
 };
 
-class Milliseconds extends Internal.DatePart
+class Milliseconds extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2030,7 +1944,7 @@ class Milliseconds extends Internal.DatePart
     }
 }
 
-class Seconds extends Internal.DatePart
+class Seconds extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2056,7 +1970,7 @@ class Seconds extends Internal.DatePart
     }
 }
 
-class Minutes extends Internal.DatePart
+class Minutes extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2082,7 +1996,7 @@ class Minutes extends Internal.DatePart
     }
 }
 
-class Hours extends Internal.DatePart
+class Hours extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2111,7 +2025,7 @@ class Hours extends Internal.DatePart
     }
 }
 
-class Day extends Internal.DatePart
+class Day extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2165,7 +2079,7 @@ class Day extends Internal.DatePart
     }
 }
 
-class Month extends Internal.DatePart
+class Month extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2200,7 +2114,7 @@ class Month extends Internal.DatePart
     }
 }
 
-class Year extends Internal.DatePart
+class Year extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2226,7 +2140,7 @@ class Year extends Internal.DatePart
     }
 }
 
-class Meridiem extends Internal.DatePart
+class Meridiem extends Internal.Prompt.DatePart
 {
     increment(): void
     {
@@ -2255,11 +2169,12 @@ class Meridiem extends Internal.DatePart
 // const FILE_FILTER_PLACEHOLDER: string = "type to filter";
 // const FILE_EMPTY_MESSAGE: string = "No matches";
 
-// const showConfirmation: (u: unknown) => u is { readonly _tag: "Show"; } = Internal.Confirm.$is("Show");
+// const showConfirmation: (u: unknown) => u is { readonly _tag: "Show"; } =
+//     Internal.Prompt.Confirm.$is("Show");
 
 const resolveCurrentPath = (
     path: Option.Option<string>,
-    options: Internal.FileOptionsInternal
+    options: Internal.Prompt.FileOptionsInternal
 ): Effect.Effect<string, never, FileSystem.FileSystem> =>
 {
     if (Option.isSome(path))
@@ -2286,8 +2201,8 @@ const resolveCurrentPath = (
 
 const getFileList: {
     (directory: string,
-        options: Internal.FileOptionsInternal): Effect.Effect<Array<string>, never, Environment>;
-} = Effect.fnUntraced(function*(directory: string, options: Internal.FileOptionsInternal)
+        options: Internal.Prompt.FileOptionsInternal): Effect.Effect<Array<string>, never, Environment>;
+} = Effect.fnUntraced(function*(directory: string, options: Internal.Prompt.FileOptionsInternal)
 {
     const fs: FileSystem.FileSystem = yield* FileSystem.FileSystem;
     const path: Path.Path = yield* Path.Path;
@@ -2313,10 +2228,10 @@ const getFileList: {
     }, { concurrency: files.length });
 });
 
-const handleFileProcess = (_Options: Required<Internal.FileOptionsInternal>) =>
+const handleFileProcess = (_Options: Required<Internal.Prompt.FileOptionsInternal>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return Effect.fnUntraced(function*({ }: HandlerArgument<Internal.FileState>)
+    return Effect.fnUntraced(function*({ }: HandlerArgument<Internal.Prompt.FileState>)
     {
         return Action.NoOp();
         // if (input.key.ctrl)
@@ -2371,7 +2286,7 @@ const handleFileProcess = (_Options: Required<Internal.FileOptionsInternal>) =>
         //                 State:
         //                 {
         //                     allFiles: files,
-        //                     confirm: Internal.Confirm.Hide(),
+        //                     confirm: Internal.Prompt.Confirm.Hide(),
         //                     cursor: 0,
         //                     files,
         //                     path: Option.some(resolvedPath),
@@ -2406,10 +2321,10 @@ const handleFileProcess = (_Options: Required<Internal.FileOptionsInternal>) =>
     });
 };
 
-const handleMultiSelectProcess = <A>(_Options: Required<Internal.MultiSelectOptionsInternal<A>>) =>
+const handleMultiSelectProcess = <A>(_Options: Required<Internal.Prompt.MultiSelectOptionsInternal<A>>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return ({ }: HandlerArgument<Internal.MultiSelectState>) =>
+    return ({ }: HandlerArgument<Internal.Prompt.MultiSelectState>) =>
     {
         return Effect.succeed(Action.NoOp());
         // const totalChoices: number = options.choices.length + metaOptionsCount;
@@ -2476,7 +2391,7 @@ const handleMultiSelectProcess = <A>(_Options: Required<Internal.MultiSelectOpti
 const handleProcessInteger = (_Options: Required<IntegerOptions>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return ({ }: HandlerArgument<Internal.NumberState>) =>
+    return ({ }: HandlerArgument<Internal.Prompt.NumberState>) =>
     {
         return Effect.succeed(Action.NoOp());
         // if (input.key.ctrl && input.key.name === "u")
@@ -2557,7 +2472,7 @@ const handleProcessInteger = (_Options: Required<IntegerOptions>) =>
 const handleProcessFloat = (_Options: Required<FloatOptions>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return ({ }: HandlerArgument<Internal.NumberState>) =>
+    return ({ }: HandlerArgument<Internal.Prompt.NumberState>) =>
     {
         return Effect.succeed(Action.NoOp());
         // if (input.key.ctrl && input.key.name === "u")
@@ -2639,12 +2554,10 @@ const handleProcessFloat = (_Options: Required<FloatOptions>) =>
     };
 };
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 interface SelectOptionsReq<A> extends Required<SelectOptions<A>> { }
 interface AutoCompleteOptionsReq<A> extends Required<AutoCompleteOptions<A>> { }
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 const filterAutoCompleteChoices = <A>(choices: ReadonlyArray<SelectChoice<A>>, query: string) =>
 {
@@ -2664,7 +2577,7 @@ const filterAutoCompleteChoices = <A>(choices: ReadonlyArray<SelectChoice<A>>, q
 const handleSelectProcess = <A>(_Options: Required<SelectOptions<A>>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return ({ }: HandlerArgument<Internal.SelectState>) =>
+    return ({ }: HandlerArgument<Internal.Prompt.SelectState>) =>
     {
         return Effect.succeed(Action.NoOp());
         // switch (input.key.name)
@@ -2704,7 +2617,7 @@ const handleSelectProcess = <A>(_Options: Required<SelectOptions<A>>) =>
 const handleAutoCompleteProcess = <A>(_Options: Required<AutoCompleteOptionsReq<A>>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return ({ }: HandlerArgument<Internal.AutoCompleteState>) =>
+    return ({ }: HandlerArgument<Internal.Prompt.AutoCompleteState>) =>
     {
         return Effect.succeed(Action.NoOp());
         // if (input.key.ctrl)
@@ -2757,7 +2670,7 @@ const handleAutoCompleteProcess = <A>(_Options: Required<AutoCompleteOptionsReq<
     };
 };
 
-const processTextBackspace = (state: Internal.TextState) =>
+const processTextBackspace = (state: Internal.Prompt.TextState) =>
 {
     if (state.cursor <= 0)
     {
@@ -2780,7 +2693,7 @@ const processTextBackspace = (state: Internal.TextState) =>
     );
 };
 
-const processTextClear = (state: Internal.TextState) =>
+const processTextClear = (state: Internal.Prompt.TextState) =>
     Effect.succeed(
         Action.NextFrame({
             State:
@@ -2793,7 +2706,7 @@ const processTextClear = (state: Internal.TextState) =>
         })
     );
 
-const processTextCursorLeft = (state: Internal.TextState) =>
+const processTextCursorLeft = (state: Internal.Prompt.TextState) =>
 {
     if (state.cursor <= 0)
     {
@@ -2812,7 +2725,7 @@ const processTextCursorLeft = (state: Internal.TextState) =>
     );
 };
 
-const processTextCursorRight = (state: Internal.TextState) =>
+const processTextCursorRight = (state: Internal.Prompt.TextState) =>
 {
     if (state.cursor >= state.value.length)
     {
@@ -2831,7 +2744,7 @@ const processTextCursorRight = (state: Internal.TextState) =>
     );
 };
 
-const processTextCursorStart = (state: Internal.TextState) =>
+const processTextCursorStart = (state: Internal.Prompt.TextState) =>
     Effect.succeed(
         Action.NextFrame({
             State:
@@ -2843,7 +2756,7 @@ const processTextCursorStart = (state: Internal.TextState) =>
         })
     );
 
-const processTextCursorEnd = (state: Internal.TextState) =>
+const processTextCursorEnd = (state: Internal.Prompt.TextState) =>
     Effect.succeed(
         Action.NextFrame({
             State:
@@ -2855,7 +2768,10 @@ const processTextCursorEnd = (state: Internal.TextState) =>
         })
     );
 
-const processTab = (state: Internal.TextState, options: Required<Internal.TextOptionsInternal>) =>
+const processTab = (
+    state: Internal.Prompt.TextState,
+    options: Required<Internal.Prompt.TextOptionsInternal>
+) =>
 {
     if (state.value === options.Default)
     {
@@ -2875,28 +2791,49 @@ const processTab = (state: Internal.TextState, options: Required<Internal.TextOp
     );
 };
 
-const defaultTextProcessor = (input: Option.Option<string>, _key: Key, state: Internal.TextState) =>
+// const HasControlCharacters = (Value: string): boolean =>
+// {
+//     /* eslint-disable-next-line no-control-regex */
+//     return /[\u0000-\u001F\u007F]/.test(Value);
+// };
+
+const defaultTextProcessor = (input: Option.Option<string>, _key: Key, state: Internal.Prompt.TextState) =>
 {
-    const beforeCursor: string = state.value.slice(0, state.cursor);
-    const afterCursor: string = state.value.slice(state.cursor);
-    const value: string = `${ beforeCursor }${ input.valueOrUndefined }${ afterCursor }`;
-    const cursor: number = state.cursor + (Option.isSome(input) ? input.value.length : 0);
-    return Effect.succeed(
-        Action.NextFrame({
-            State:
-            {
-                ...state,
-                cursor,
-                error: Option.none(),
-                value
-            }
-        })
-    );
+    if (Option.isSome(input))
+    {
+        const beforeCursor: string = state.value.slice(0, state.cursor);
+        const afterCursor: string = state.value.slice(state.cursor);
+        const value: string = `${ beforeCursor }${ input.value }${ afterCursor }`;
+        const cursor: number = state.cursor + (Option.isSome(input) ? input.value.length : 0);
+        return Effect.succeed(
+            Action.NextFrame({
+                State:
+                {
+                    ...state,
+                    cursor,
+                    error: Option.none(),
+                    value
+                }
+            })
+        );
+    }
+    else
+    {
+        return Effect.succeed(
+            Action.NextFrame({
+                State:
+                {
+                    ...state,
+                    error: Option.none()
+                }
+            })
+        );
+    }
 };
 
-const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
+const handleTextProcess = (options: Required<Internal.Prompt.TextOptionsInternal>) =>
 {
-    return ({ Input: input, Key: key, Publish, State: state }: HandlerArgument<Internal.TextState>) =>
+    return ({ Input: input, Key: key, Publish, State: state }: HandlerArgument<Internal.Prompt.TextState>) =>
     {
         if (key.ctrl && Option.isSome(input))
         {
@@ -2952,9 +2889,9 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
             {
                 yield* Publish(Action.StartValidation());
 
-                yield* Effect.delay("2 seconds")(Publish(Action.Fail({ Message: "Foo" })));
+                yield* Effect.delay("250 milli")(Publish(Action.Fail({ Message: "Foo" })));
 
-                return yield* Effect.delay("2 seconds")(Effect.match(options.Validate(value), {
+                return yield* Effect.match(options.Validate(value), {
                     onFailure: (error: string) =>
                     {
                         return Action.NextFrame({
@@ -2972,7 +2909,7 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
                         const Submit = Action.Submit({ value });
                         return Submit;
                     }
-                }));
+                });
             });
         }
         else if (key.tab)
@@ -2988,7 +2925,7 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
 
 // const handleTextClear = (options: TextOptionsReq) =>
 // {
-//     return (state: Internal.TextState, _: Action<Internal.TextState, string>) =>
+//     return (state: Internal.Prompt.TextState, _: Action<Internal.TextState, string>) =>
 //     {
 //         return renderClearScreen(state, options);
 //     };
@@ -2996,10 +2933,10 @@ const handleTextProcess = (options: Required<Internal.TextOptionsInternal>) =>
 
 const basePrompt = (
     options: TextOptions,
-    type: Internal.TextOptionsInternal["type"]
+    type: Internal.Prompt.TextOptionsInternal["type"]
 ): Prompt<string> =>
 {
-    const opts: Required<Internal.TextOptionsInternal> =
+    const opts: Required<Internal.Prompt.TextOptionsInternal> =
         {
             Default: "",
             Plain: false,
@@ -3008,7 +2945,7 @@ const basePrompt = (
             ...options
         };
 
-    const initialState: Internal.TextState =
+    const initialState: Internal.Prompt.TextState =
         {
             cursor: opts.Default.length,
             error: Option.none(),
@@ -3021,27 +2958,26 @@ const basePrompt = (
         {
             // _tag: type,
 
-            Component: Component.Text,
+            Component: Field.Text,
             GetInitialKeybinds: GetInitialTextKeybinds,
             Process: handleTextProcess
         }
     );
 };
 
-const GetInitialTextKeybinds = (_Options: Required<Internal.TextOptionsInternal>) =>
+const GetInitialTextKeybinds = (_Options: Required<Internal.Prompt.TextOptionsInternal>) =>
 {
     return {
         Foo: Input.Key({ Input: Option.some("N"), Modifiers: { ctrl: true } })
     } as const;
 };
 
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 interface ToggleOptionsReq extends Required<ToggleOptions> { }
 
 const handleToggleProcess = (_Options: Required<ToggleOptions>) =>
 {
     /* eslint-disable-next-line no-empty-pattern */
-    return ({ }: HandlerArgument<Internal.ToggleState>) =>
+    return ({ }: HandlerArgument<Internal.Prompt.ToggleState>) =>
     {
         return Effect.succeed(Action.NoOp());
         // switch (input.key.name)

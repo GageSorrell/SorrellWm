@@ -5,7 +5,6 @@
  * @license   MIT
  */
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 import type { OwnerKey } from "../Internal/Decl.Types";
 

@@ -13,9 +13,8 @@
 
 import * as Arr from "effect/Array";
 import type * as Ink from "ink";
-import { Option, Record, pipe } from "effect";
+import { Option, pipe } from "effect";
 
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 export interface Modifiers extends Omit<Ink.Key, "eventType"> { }
 
 export interface Key
@@ -65,178 +64,472 @@ export const Key = ({ Input = Option.none(), Modifiers = EmptyModifiers }: KeyAr
     return { Input, Modifiers: { ...EmptyModifiers, ...Modifiers } } as const;
 };
 
-export interface ModifierLabel
+export interface ModifierLabelPart
 {
     readonly Long: string;
     readonly Short: string;
     readonly Symbol: string;
 }
 
-export const ModifierLabels: Record.ReadonlyRecord<keyof Modifiers, ModifierLabel> =
+export type Platform = Extract<NodeJS.Platform, "win32" | "linux" | "darwin">;
+
+export type ModifierLabel = Record<Platform, ModifierLabelPart>;
+
+/* eslint-disable @typescript-eslint/typedef */
+
+export const ModifierLabels =
     {
         backspace:
         {
-            Long: "Backspace",
-            Short: "Bksp",
-            Symbol: "⌫"
+            darwin:
+            {
+                Long: "Delete",
+                Short: "Del",
+                Symbol: "⌫"
+            },
+            linux:
+            {
+                Long: "Backspace",
+                Short: "Bksp",
+                Symbol: "⌫"
+            },
+            win32:
+            {
+                Long: "Backspace",
+                Short: "Bksp",
+                Symbol: "⌫"
+            }
         },
+
         capsLock:
         {
-            Long: "Caps Lock",
-            Short: "CapsLock",
-            Symbol: "⇪"
+            darwin:
+            {
+                Long: "Caps Lock",
+                Short: "Caps",
+                Symbol: "⇪"
+            },
+            linux:
+            {
+                Long: "Caps Lock",
+                Short: "Caps",
+                Symbol: "⇪"
+            },
+            win32:
+            {
+                Long: "Caps Lock",
+                Short: "Caps",
+                Symbol: "⇪"
+            }
         },
+
         ctrl:
         {
-            Long: "Ctrl",
-            Short: "^",
-            Symbol: "⎈"
+            darwin:
+            {
+                Long: "Control",
+                Short: "Ctrl",
+                Symbol: "⌃"
+            },
+            linux:
+            {
+                Long: "Control",
+                Short: "Ctrl",
+                Symbol: "Ctrl"
+            },
+            win32:
+            {
+                Long: "Control",
+                Short: "Ctrl",
+                Symbol: "Ctrl"
+            }
         },
+
         delete:
         {
-            Long: "Delete",
-            Short: "Del",
-            Symbol: "⌦"
+            darwin:
+            {
+                Long: "Forward Delete",
+                Short: "Fwd Del",
+                Symbol: "⌦"
+            },
+            linux:
+            {
+                Long: "Delete",
+                Short: "Del",
+                Symbol: "⌦"
+            },
+            win32:
+            {
+                Long: "Delete",
+                Short: "Del",
+                Symbol: "⌦"
+            }
         },
+
         downArrow:
         {
-            Long: "Down Arrow",
-            Short: "Down",
-            Symbol: "↓"
+            darwin:
+            {
+                Long: "Down Arrow",
+                Short: "Down",
+                Symbol: "↓"
+            },
+            linux:
+            {
+                Long: "Down Arrow",
+                Short: "Down",
+                Symbol: "↓"
+            },
+            win32:
+            {
+                Long: "Down Arrow",
+                Short: "Down",
+                Symbol: "↓"
+            }
         },
+
         end:
         {
-            Long: "End",
-            Short: "End",
-            Symbol: "⇲"
+            darwin:
+            {
+                Long: "End",
+                Short: "End",
+                Symbol: "↘"
+            },
+            linux:
+            {
+                Long: "End",
+                Short: "End",
+                Symbol: "↘"
+            },
+            win32:
+            {
+                Long: "End",
+                Short: "End",
+                Symbol: "↘"
+            }
         },
+
         escape:
         {
-            Long: "Escape",
-            Short: "Esc",
-            Symbol: "⎋"
+            darwin:
+            {
+                Long: "Escape",
+                Short: "Esc",
+                Symbol: "⎋"
+            },
+            linux:
+            {
+                Long: "Escape",
+                Short: "Esc",
+                Symbol: "Esc"
+            },
+            win32:
+            {
+                Long: "Escape",
+                Short: "Esc",
+                Symbol: "Esc"
+            }
         },
+
         home:
         {
-            Long: "Home",
-            Short: "Home",
-            Symbol: "⇱"
+            darwin:
+            {
+                Long: "Home",
+                Short: "Home",
+                Symbol: "↖"
+            },
+            linux:
+            {
+                Long: "Home",
+                Short: "Home",
+                Symbol: "↖"
+            },
+            win32:
+            {
+                Long: "Home",
+                Short: "Home",
+                Symbol: "↖"
+            }
         },
+
         hyper:
         {
-            Long: "Hyper",
-            Short: "Hyper",
-            Symbol: "✦"
+            darwin:
+            {
+                Long: "Hyper",
+                Short: "Hyper",
+                Symbol: "Hyper"
+            },
+            linux:
+            {
+                Long: "Hyper",
+                Short: "Hyper",
+                Symbol: "Hyper"
+            },
+            win32:
+            {
+                Long: "Hyper",
+                Short: "Hyper",
+                Symbol: "Hyper"
+            }
         },
+
         leftArrow:
         {
-            Long: "Left Arrow",
-            Short: "Left",
-            Symbol: "→"
+            darwin:
+            {
+                Long: "Left Arrow",
+                Short: "Left",
+                Symbol: "←"
+            },
+            linux:
+            {
+                Long: "Left Arrow",
+                Short: "Left",
+                Symbol: "←"
+            },
+            win32:
+            {
+                Long: "Left Arrow",
+                Short: "Left",
+                Symbol: "←"
+            }
         },
+
         meta:
         {
-            Long: "Meta",
-            Short: "Meta",
-            Symbol: "◆"
+            darwin:
+            {
+                Long: "Option",
+                Short: "Opt",
+                Symbol: "⌥"
+            },
+            linux:
+            {
+                Long: "Alt",
+                Short: "Alt",
+                Symbol: "Alt"
+            },
+            win32:
+            {
+                Long: "Alt",
+                Short: "Alt",
+                Symbol: "Alt"
+            }
         },
+
         numLock:
         {
-            Long: "Num Lock",
-            Short: "NumLock",
-            Symbol: "⇭"
+            darwin:
+            {
+                Long: "Clear",
+                Short: "Clr",
+                Symbol: "⌧"
+            },
+            linux:
+            {
+                Long: "Num Lock",
+                Short: "Num",
+                Symbol: "Num"
+            },
+            win32:
+            {
+                Long: "Num Lock",
+                Short: "Num",
+                Symbol: "Num"
+            }
         },
+
         pageDown:
         {
-            Long: "Page Down",
-            Short: "PgDn",
-            Symbol: "⇟"
+            darwin:
+            {
+                Long: "Page Down",
+                Short: "PgDn",
+                Symbol: "⇟"
+            },
+            linux:
+            {
+                Long: "Page Down",
+                Short: "PgDn",
+                Symbol: "⇟"
+            },
+            win32:
+            {
+                Long: "Page Down",
+                Short: "PgDn",
+                Symbol: "⇟"
+            }
         },
+
         pageUp:
         {
-            Long: "Page Up",
-            Short: "PgUp",
-            Symbol: "⇞"
+            darwin:
+            {
+                Long: "Page Up",
+                Short: "PgUp",
+                Symbol: "⇞"
+            },
+            linux:
+            {
+                Long: "Page Up",
+                Short: "PgUp",
+                Symbol: "⇞"
+            },
+            win32:
+            {
+                Long: "Page Up",
+                Short: "PgUp",
+                Symbol: "⇞"
+            }
         },
+
         return:
         {
-            Long: "Return",
-            Short: "Enter",
-            Symbol: "⏎"
+            darwin:
+            {
+                Long: "Return",
+                Short: "Ret",
+                Symbol: "⏎"
+            },
+            linux:
+            {
+                Long: "Enter",
+                Short: "Enter",
+                Symbol: "↵"
+            },
+            win32:
+            {
+                Long: "Enter",
+                Short: "Enter",
+                Symbol: "↵"
+            }
         },
+
         rightArrow:
         {
-            Long: "Right Arrow",
-            Short: "Right",
-            Symbol: "→"
+            darwin:
+            {
+                Long: "Right Arrow",
+                Short: "Right",
+                Symbol: "→"
+            },
+            linux:
+            {
+                Long: "Right Arrow",
+                Short: "Right",
+                Symbol: "→"
+            },
+            win32:
+            {
+                Long: "Right Arrow",
+                Short: "Right",
+                Symbol: "→"
+            }
         },
+
         shift:
         {
-            Long: "Shift",
-            Short: "Shift",
-            Symbol: "⇧"
+            darwin:
+            {
+                Long: "Shift",
+                Short: "Shift",
+                Symbol: "⇧"
+            },
+            linux:
+            {
+                Long: "Shift",
+                Short: "Shift",
+                Symbol: "Shift"
+            },
+            win32:
+            {
+                Long: "Shift",
+                Short: "Shift",
+                Symbol: "Shift"
+            }
         },
+
         super:
         {
-            Long: "Super",
-            Short: "Super",
-            Symbol: "❖"
+            darwin:
+            {
+                Long: "Command",
+                Short: "Cmd",
+                Symbol: "⌘"
+            },
+            linux:
+            {
+                Long: "Super",
+                Short: "Super",
+                Symbol: "Super"
+            },
+            win32:
+            {
+                Long: "Windows",
+                Short: "Win",
+                Symbol: "⊞"
+            }
         },
+
         tab:
         {
-            Long: "Tab",
-            Short: "Tab",
-            Symbol: "↹"
+            darwin:
+            {
+                Long: "Tab",
+                Short: "Tab",
+                Symbol: "⇥"
+            },
+            linux:
+            {
+                Long: "Tab",
+                Short: "Tab",
+                Symbol: "Tab"
+            },
+            win32:
+            {
+                Long: "Tab",
+                Short: "Tab",
+                Symbol: "Tab"
+            }
         },
+
         upArrow:
         {
-            Long: "Up Arrow",
-            Short: "Up",
-            Symbol: "↑"
+            darwin:
+            {
+                Long: "Up Arrow",
+                Short: "Up",
+                Symbol: "↑"
+            },
+            linux:
+            {
+                Long: "Up Arrow",
+                Short: "Up",
+                Symbol: "↑"
+            },
+            win32:
+            {
+                Long: "Up Arrow",
+                Short: "Up",
+                Symbol: "↑"
+            }
         }
     } as const;
 
-export const DefaultLabelsStrategy: Required<CustomLabelsStrategy> =
+export const LabelStrategy =
     {
-        backspace: "Symbol",
-        capsLock: "Symbol",
-        ctrl: "Short",
-        delete: "Short",
-        downArrow: "Symbol",
-        end: "Short",
-        escape: "Short",
-        home: "Short",
-        hyper: "Short",
-        leftArrow: "Symbol",
-        meta: "Short",
-        numLock: "Short",
-        pageDown: "Short",
-        pageUp: "Short",
-        return: "Symbol",
-        rightArrow: "Symbol",
-        shift: "Short",
-        super: "Short",
-        tab: "Short",
-        upArrow: "Symbol"
-    } as const;
+        Long: { _tag: "Long" as const } as const,
+        Short: { _tag: "Short" as const } as const,
+        Symbol: { _tag: "Symbol" as const } as const
+    };
 
-export type CustomLabelsStrategy = Partial<Record.ReadonlyRecord<keyof Modifiers, keyof ModifierLabel>>;
+export type LabelStrategy = typeof LabelStrategy[keyof typeof LabelStrategy];
 
-/* eslint-disable-next-line @typescript-eslint/typedef */
-export const ModifierLabelsStrategy =
-    {
-        All: (Strategy: keyof ModifierLabel): Required<CustomLabelsStrategy> =>
-        {
-            const GetLabelByStrategy = (
-                _Value: keyof ModifierLabel,
-                Key: keyof Modifiers
-            ) => ModifierLabels[Key][Strategy];
-
-            return Record.map(DefaultLabelsStrategy, GetLabelByStrategy) as Required<CustomLabelsStrategy>;
-        },
-        Custom: (Strategy: CustomLabelsStrategy): Required<CustomLabelsStrategy> =>
-            ({ ...DefaultLabelsStrategy, ...Strategy })
-    } as const;
+/* eslint-enable @typescript-eslint/typedef */
 
 export const ModifierLabelPriorities: Arr.NonEmptyReadonlyArray<keyof Modifiers> =
     [
@@ -264,13 +557,33 @@ export const ModifierLabelPriorities: Arr.NonEmptyReadonlyArray<keyof Modifiers>
 
 export const Separator: "+" = "+" as const;
 
+export const Platforms: ReadonlyArray<Platform> = [ "darwin", "linux", "win32" ] as const;
+
+export const IsPlatform = (Value: unknown): Value is Platform =>
+{
+    return (Platforms as ReadonlyArray<unknown>).includes(Value);
+};
+
+export const GetInputPlatform = (Fallback: Platform = "linux"): Platform =>
+{
+    return IsPlatform(process.platform)
+        ? process.platform
+        : Fallback;
+};
+
 export const ToString = (
     Key: Key,
-    LabelsStrategy: Required<CustomLabelsStrategy> = DefaultLabelsStrategy
+    LabelStrategyOverride: LabelStrategy = LabelStrategy.Short,
+    PlatformFallback: Platform = "linux"
 ): string =>
 {
+    const Platform: Platform = GetInputPlatform(PlatformFallback);
+
     const IsModifierUsed = (Value: keyof Modifiers, _Index: number) => Key.Modifiers[Value];
-    const GetLabel = (Value: keyof Modifiers, _Index: number) => ModifierLabels[Value][LabelsStrategy[Value]];
+    const GetLabel = (
+        Value: keyof Modifiers,
+        _Index: number
+    ): string => ModifierLabels[Value][Platform][LabelStrategyOverride["_tag"]];
 
     const ModifiersPart: ReadonlyArray<string> =
         pipe(
@@ -279,9 +592,13 @@ export const ToString = (
             Arr.map(GetLabel)
         );
 
+    const Separator: string = LabelStrategyOverride === LabelStrategy.Symbol
+        ? " "
+        : "+";
+
     const OutArray: ReadonlyArray<string> = Option.isSome(Key.Input)
         ? [ ...ModifiersPart, Key.Input.value ]
         : ModifiersPart;
 
-    return Arr.join(OutArray, Separator).replace("^+", "^");
+    return Arr.join(OutArray, Separator);
 };

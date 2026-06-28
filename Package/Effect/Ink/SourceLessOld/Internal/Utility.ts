@@ -18,7 +18,6 @@ export const ApplyOptional = <SourceType extends object>(
     OutName: string,
     Source: SourceType,
     PropertyName: keyof SourceType
-/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
 ): { [ Key in typeof OutName ]: typeof Source[typeof PropertyName]; } | { } =>
 {
     return PropertyName in Source

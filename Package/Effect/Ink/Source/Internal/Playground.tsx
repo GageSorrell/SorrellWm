@@ -18,13 +18,14 @@ import { Console, Effect, pipe } from "effect";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 // import { Prompt } from "effect/unstable/cli";
 import { Event } from "./index.ts";
+import { Prose } from "../index.ts";
 import type { Redacted } from "effect";
 
 const username: Prompt.Prompt<string> = Prompt.text({
     Message: "Enter your username: "
 });
 
-const password: Prompt.Prompt<Redacted.Redacted<string>> = Prompt.password({
+const password: Prompt.Prompt<Redacted.Redacted<string>> = Prompt.Password({
     Message: "Enter your password: ",
     Validate: (value: string) =>
         value.length === 0
@@ -35,7 +36,7 @@ const password: Prompt.Prompt<Redacted.Redacted<string>> = Prompt.password({
 const All: Prompt.Prompt<{
     username: string;
     password: Redacted.Redacted<string>;
-}> = Prompt.all({ password, username });
+}> = Prose.WithHeader(Prose.Text.Plain("Foo"), Prompt.all({ password, username }));
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
 const command =

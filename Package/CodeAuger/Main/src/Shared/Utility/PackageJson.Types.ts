@@ -7,7 +7,6 @@
 
 import type { IPackageJson } from "package-json-type";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 /**
  * The base type for the `package.json` types that `code-auger` provides.
@@ -25,4 +24,3 @@ export interface IPackageJsonBase<ConfigType extends Record<string, unknown>> ex
         };
 }
 
-/* eslint-enable @typescript-eslint/no-empty-object-type */
