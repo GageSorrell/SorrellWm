@@ -10,6 +10,6 @@
  * @license   MIT
  */
 
-import * as Effectable from "effect/Effectable";
-import * as Program from "../Program.ts";
-import * as Prompt from "../Prompt.ts";
+// import * as Effectable from "effect/Effectable";
+// import * as Program from "../Program.ts";
+// import * as Prompt from "../Prompt.ts";

@@ -14,16 +14,17 @@ import * as Internal from "./index.ts";
 import type * as Prompt from "../Prompt.ts";
 import type * as Prose from "../Prose.ts";
 import type * as React from "react";
+import type * as Text from "../Text.ts";
 import { Data, flow } from "effect";
 import type { Mutable } from "effect/Types";
 
 type _Prose = Data.TaggedEnum<{
-    readonly Header: { readonly Text: Prose.Text.Text; };
+    readonly Header: { readonly Text: Text.Text; };
     readonly Alert: { readonly Alert: Prose.Alert; };
     readonly Element: { readonly Element: React.ReactNode; };
-    readonly Exposition: { readonly Text: Prose.Text.Text; };
-    readonly Banner: { readonly Text: Prose.Text.Plain; };
-    readonly Outro: { readonly Title: Prose.Text.Text; readonly Body?: Prose.Text.Text; };
+    readonly Exposition: { readonly Text: Text.Text; };
+    readonly Banner: { readonly Text: Text.Plain; };
+    readonly Outro: { readonly Title: Text.Text; readonly Body?: Text.Text; };
 }>;
 
 /* eslint-disable @typescript-eslint/typedef */

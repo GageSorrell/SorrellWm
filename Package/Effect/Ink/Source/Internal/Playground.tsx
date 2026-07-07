@@ -3,9 +3,7 @@
  *
  * @module @sorrell/effect-ink/Playground
  * @internal
- */
-
-/**
+ *
  * @file      Playground.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
@@ -14,6 +12,7 @@
 
 import * as Cli from "effect/unstable/cli";
 import * as Prompt from "../Prompt.ts";
+import * as Text from "../Text.ts";
 import { Console, Effect, pipe } from "effect";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 // import { Prompt } from "effect/unstable/cli";
@@ -36,7 +35,7 @@ const password: Prompt.Prompt<Redacted.Redacted<string>> = Prompt.Password({
 const All: Prompt.Prompt<{
     username: string;
     password: Redacted.Redacted<string>;
-}> = Prose.WithHeader(Prose.Text.Plain("Foo"), Prompt.all({ password, username }));
+}> = Prose.WithHeader(Text.Plain("Foo"), Prompt.all({ password, username }));
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
 const command =

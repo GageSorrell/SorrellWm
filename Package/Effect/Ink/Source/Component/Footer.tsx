@@ -14,6 +14,7 @@ import * as Input from "../Input.js";
 import type * as Prompt from "../Prompt.ts";
 import * as React from "react";
 import * as Record from "effect/Record";
+import { Hash } from "effect";
 
 interface KeybindsProps
 {
@@ -43,7 +44,7 @@ export const KeybindsFooter = ({ Keybinds }: KeybindsProps): React.ReactNode =>
     const ToKeybind = (Key: Input.Key, Name: string) =>
         <Keybind
             { ...{ Key, Name } }
-            key={ Key + Name }
+            key={ Hash.array([ Key, Name ]).toString() }
         />;
 
     if (Keybinds === undefined || Record.size(Keybinds) === 0)

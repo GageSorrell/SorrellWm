@@ -12,28 +12,12 @@
 import type * as Color from "./Color.ts";
 import * as Internal from "./Internal/index.ts";
 import * as Prompt from "./Prompt.js";
-import type * as React from "react";
 import type * as Symbol from "./Component/Symbol.tsx";
-import { Brand, type Data, type Option } from "effect";
+import type * as Text from "./Text.ts";
+import type { Data, Option } from "effect";
 import { Component } from "./index.ts";
 import type { Mutable } from "effect/Types";
 import { dual } from "effect/Function";
-
-export namespace Text
-{
-    export type Plain = Brand.Branded<string, "PlainText">;
-    export type Rich = Brand.Branded<React.ReactNode, "RichText">;
-    export type Markdown = Brand.Branded<string, "Markdown">;
-
-    export const Plain: Brand.Constructor<Plain> = Brand.nominal<Plain>();
-    export const Rich: Brand.Constructor<Rich> = Brand.nominal<Rich>();
-    export const Markdown: Brand.Constructor<Markdown> = Brand.nominal<Markdown>();
-
-    export type Text =
-        | Plain
-        | Rich
-        | Markdown;
-}
 
 interface ProseBase
 {

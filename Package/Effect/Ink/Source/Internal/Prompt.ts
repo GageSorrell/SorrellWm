@@ -3,9 +3,7 @@
  *
  * @module @sorrell/effect-ink/Internal/Prompt
  * @internal
- */
-
-/**
+ *
  * @file      Prompt.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
@@ -161,9 +159,9 @@ export interface DateState
 }
 
 export type Confirm = Data.TaggedEnum<{
-        readonly Show: { };
+    readonly Show: { };
     readonly Hide: { };
-    }>;
+}>;
 
 /* eslint-disable-next-line @typescript-eslint/typedef */
 export const Confirm = Data.taggedEnum<Confirm>();

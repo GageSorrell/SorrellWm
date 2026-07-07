@@ -2,9 +2,7 @@
  * Types and functions for handling keyboard input.
  *
  * @module @sorrell/effect-ink/Input
- */
-
-/**
+ *
  * @file      Input.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell

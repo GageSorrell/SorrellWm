@@ -12,12 +12,13 @@
 import * as Arr from "effect/Array";
 import type * as Cause from "effect/Cause";
 import type * as Cli from "effect/unstable/cli";
-import * as Console from "effect/Console";
+// import * as Console from "effect/Console";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 // import * as EffectNumber from "effect/Number";
 import * as Field from "./Component/Field/index.ts";
 import * as FileSystem from "effect/FileSystem";
+import * as Function from "effect/Function";
 import * as Input from "./Input.js";
 import * as Internal from "./Internal/index.ts";
 import * as Option from "effect/Option";
@@ -92,7 +93,7 @@ export type Keybinds = Record.ReadonlyRecord<string, Input.Key>;
  * @since 1.0.0
  */
 export type Action<StateType, A> = Data.TaggedEnum<{
-        readonly NoOp: { };
+    readonly NoOp: { };
     readonly NextFrame: { readonly State: StateType; };
     readonly Submit: { readonly value: A; };
 
@@ -100,7 +101,7 @@ export type Action<StateType, A> = Data.TaggedEnum<{
     readonly ClearError: { };
     readonly Fail: { readonly Message: ReactNode; };
     readonly SetKeybinds: { readonly Keybinds: Keybinds; };
-    }>;
+}>;
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type AnyAction = Action<any, any>;
@@ -120,18 +121,6 @@ export interface ActionDefinition extends Data.TaggedEnum.WithGenerics<2>
 {
     readonly taggedEnum: Action<this["A"], this["B"]>
 }
-
-/**
- * Represents the input that should be processed by a `Prompt` based upon user
- * input or an external event received during the current frame.
- *
- * @category models
- * @since 1.0.0
- */
-export type ProcessInput<A> = Data.TaggedEnum<{
-    readonly Input: { readonly input: Terminal.UserInput; };
-    readonly Event: { readonly value: A; };
-}>;
 
 export interface HandlerArgument<StateType>
     extends Pick<Internal.Event.EventBridgePubSubImpl["ActionOptions"], "Publish">
@@ -378,11 +367,11 @@ export interface IntegerOptions extends Options<number>
      */
     readonly DecrementBy?: number;
 
-    /**
-     * An effectful function that can be used to validate the value entered into
-     * the prompt before final submission.
-     */
-    readonly Validate?: (value: number) => Effect.Effect<number, string>;
+    // /**
+    //  * An effectful function that can be used to validate the value entered into
+    //  * the prompt before final submission.
+    //  */
+    // readonly Validate?: (value: number) => Effect.Effect<number, string>;
 }
 
 /**
@@ -542,26 +531,29 @@ export interface SelectChoice<A>
     /**
      * The name of the select option that is displayed to the user.
      */
-    readonly title: string
+    readonly title: string;
+
     /**
      * The underlying value of the select option.
      */
-    readonly value: A
+    readonly value: A;
+
     /**
      * An optional description for the select option which will be displayed
      * to the user.
      */
-    readonly description?: string
+    readonly description?: string;
+
     /**
      * Whether or not this select option is disabled.
      */
-    readonly disabled?: boolean
+    readonly disabled?: boolean;
+
     /**
      * Whether this option should be selected by default (only used by MultiSelect).
      */
     readonly selected?: boolean
 }
-
 
 /**
  * Options for text-entry prompts, including the displayed message, default
@@ -573,7 +565,6 @@ export interface SelectChoice<A>
 export interface TextOptions extends Options<string>
 {
 }
-
 
 /**
  * Options for a toggle prompt that lets the user switch between active and
@@ -1188,6 +1179,10 @@ export const Password = (options: TextOptions): Prompt<Redacted.Redacted> =>
         map(Redacted.make)
     );
 
+// type PromptDequeue<A> = Queue.Dequeue<A, Cause.Done<void>>;
+
+// type InputQueue = PromptDequeue<Internal.Event.Frontend.Input>;
+
 /**
  * Runs a prompt by reading terminal input and rendering prompt frames until the
  * prompt submits a value.
@@ -1232,16 +1227,26 @@ export const run: <Output>(
                 //     );
 
                 const pubSub: Internal.Event.EventBridgePubSubImpl = yield* Internal.Event.EventBridgePubSub;
+                // type InputEvent = Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">;
 
-                const input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>> =
-                    yield* Stream.toQueue(
+                const input: Queue.Dequeue<
+                    // Input: Queue.Dequeue<Internal.Event.Frontend.Input, Cause.Done<void>>
+                    Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">,
+                    Cause.Done<void>
+                > =
+                    yield* pipe(
                         pubSub.Input.Stream,
-                        { capacity: "unbounded" }
+                        // Stream.filter(
+                        //     (Value): Value is InputEvent =>
+                        //     {
+                        //         return true;
+                        //     }),
+                        Stream.filter(Internal.Event.Frontend.$is("Input")),
+                        Stream.toQueue({ capacity: "unbounded" })
                     );
 
                 const Out: Output = yield* pipe(
                     runWithInput(self, input),
-                    // runWithInput(self, input),
                     Effect.scoped
                 );
 
@@ -1506,7 +1511,6 @@ export interface Options<in out A>
     readonly Validate?: (Value: A) => Effect.Effect<A, string>;
 }
 
-
 /** @internal */
 export namespace Operand
 {
@@ -1559,7 +1563,6 @@ export namespace Operand
         | Succeed;
 }
 
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<{
     [ K in keyof T ]: [ T[K] ] extends [  Prompt<infer A> ] ? A : never;
@@ -1596,7 +1599,8 @@ const runWithInput = <A>(
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     // pubSub: PubSub.PubSub<AnyAction>,
     // terminal: Terminal.Terminal,
-    input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>>
+    input: Queue.Dequeue<Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">, Cause.Done<void>>
+    // Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">,
 ): Effect.Effect<A, NoSuchElementError | Runtime.InkRuntimeError, Environment | Scope.Scope> =>
     Effect.suspend(() =>
     {
@@ -1615,10 +1619,12 @@ const runWithInput = <A>(
 
                     // yield* Console.dir(loop.Component);
 
-                    yield* pubSub.ActionOptions.Publish(Internal.Event.BeginProseEvent({
-                        Component: op.Component,
-                        Content: op.Content
-                    }));
+                    yield* pubSub.ActionOptions.Publish(
+                        Internal.Event.Backend.Begin["Begin.Prose"]({
+                            Component: op.Component,
+                            Content: op.Content
+                        })
+                    );
 
                     return yield* Effect.void;
                 })();
@@ -1645,13 +1651,14 @@ const runWithInput = <A>(
 
 const runLoop: {
     (Loop: Operand.Loop,
-        Input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>>
+        // Input: Queue.Dequeue<Internal.Event.Frontend.Input, Cause.Done<void>>
+        Input: Queue.Dequeue<Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">, Cause.Done<void>>
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     ): Effect.Effect<unknown, any, any>;
 } = Effect.fnUntraced(
     function*(
         Loop: Operand.Loop,
-        Input: Queue.Dequeue<Internal.Event.InputEvent, Cause.Done<void>>
+        Input: Queue.Dequeue<Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">, Cause.Done<void>>
     )
     {
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -1665,7 +1672,7 @@ const runLoop: {
 
         // yield* Console.dir(loop.Component);
 
-        yield* pubSub.ActionOptions.Publish(Internal.Event.BeginPromptEvent({
+        yield* pubSub.ActionOptions.Publish(Internal.Event.Backend.Begin["Begin.Field"]({
             Component: Loop.Component,
             Keybinds: Loop?.GetInitialKeybinds(Loop.Options),
             Options: Loop.Options
@@ -1681,11 +1688,13 @@ const runLoop: {
             // of a new event type that belongs to the `Action` `Part`.
 
             yield* pubSub.ActionOptions.Publish(ThisAction);
-            const { _tag, ...Tail }: Internal.Event.InputEvent = yield* Queue.take(Input);
+
+            const { _tag: _, ...Tail } = yield* Queue.take(Input);
+
             ThisAction = yield* Loop.Process({
                 ...Tail,
                 Publish: pubSub.ActionOptions.Publish,
-                State: State
+                State
             });
             // // const msg: string = yield* loop.render(state, action);
             // /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -2554,10 +2563,8 @@ const handleProcessFloat = (_Options: Required<FloatOptions>) =>
     };
 };
 
-
 interface SelectOptionsReq<A> extends Required<SelectOptions<A>> { }
 interface AutoCompleteOptionsReq<A> extends Required<AutoCompleteOptions<A>> { }
-
 
 const filterAutoCompleteChoices = <A>(choices: ReadonlyArray<SelectChoice<A>>, query: string) =>
 {
@@ -2833,12 +2840,12 @@ const defaultTextProcessor = (input: Option.Option<string>, _key: Key, state: In
 
 const handleTextProcess = (options: Required<Internal.Prompt.TextOptionsInternal>) =>
 {
-    return ({ Input: input, Key: key, Publish, State: state }: HandlerArgument<Internal.Prompt.TextState>) =>
+    return ({ Input: input, Key: key, State: state }: HandlerArgument<Internal.Prompt.TextState>) =>
     {
         if (key.ctrl && Option.isSome(input))
         {
-            Effect.runSync(Console.dir(key));
-            Effect.runSync(Console.log(new Date().getTime().toString() + " " + input.value));
+            // Effect.runSync(Console.dir(key));
+            // Effect.runSync(Console.log(new Date().getTime().toString() + " " + input.value));
             switch (input.value)
             {
                 /* Pressing `backspace` and `ctrl` registers as `key.ctrl && input.value === "w"`. */
@@ -2885,31 +2892,27 @@ const handleTextProcess = (options: Required<Internal.Prompt.TextOptionsInternal
         else if (key.return)
         {
             const value: string = state.value;
-            return Effect.gen(function* ()
-            {
-                yield* Publish(Action.StartValidation());
-
-                yield* Effect.delay("250 milli")(Publish(Action.Fail({ Message: "Foo" })));
-
-                return yield* Effect.match(options.Validate(value), {
-                    onFailure: (error: string) =>
-                    {
-                        return Action.NextFrame({
-                            State:
-                                {
-                                    ...state,
-                                    error: Option.some(error),
-                                    value
-                                }
-                        });
-                    },
-                    onSuccess: (value: string) =>
-                    {
-                        /* eslint-disable-next-line @typescript-eslint/typedef */
-                        const Submit = Action.Submit({ value });
-                        return Submit;
-                    }
-                });
+            return Effect.matchEffect(options.Validate(value), {
+                onFailure: (Message: string) => Effect.gen(function* ()
+                {
+                    yield* Effect.delay("250 milli")(Effect.gen(function* () { }));
+                    return Action.Fail({ Message });
+                    // return Action.NextFrame({
+                    //     State:
+                    //         {
+                    //             ...state,
+                    //             error: Option.some(error),
+                    //             value
+                    //         }
+                    // });
+                }),
+                onSuccess: (value: string) =>
+                {
+                    // return Effect.succeed(Action.StartValidation());
+                    /* eslint-disable-next-line @typescript-eslint/typedef */
+                    const Submit = Action.Submit({ value });
+                    return Effect.succeed(Submit);
+                }
             });
         }
         else if (key.tab)
@@ -2940,7 +2943,7 @@ const basePrompt = (
         {
             Default: "",
             Plain: false,
-            Validate: Effect.succeed,
+            Validate: Function.flow(Effect.succeed),
             type,
             ...options
         };

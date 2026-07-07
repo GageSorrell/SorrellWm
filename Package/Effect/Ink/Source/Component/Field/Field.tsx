@@ -111,7 +111,9 @@ export const Field = ({ Component, Props }: FieldProps): ReactNode =>
     return (
         <Atom.Atom { ...{ GetCharacter, GetColor, GetDimColor } }>
             <Grid.Row marginBottom={ 1 }>
-                <Message { ...{ IsSubmitted } }>{ Props.Options.Message }</Message>
+                <Message { ...{ IsSubmitted } }>
+                    { Props.Options.Message }
+                </Message>
             </Grid.Row>
             <Component { ...Props } />
             { ErrorMessage }

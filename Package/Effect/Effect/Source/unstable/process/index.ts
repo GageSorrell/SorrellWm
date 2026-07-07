@@ -7,7 +7,7 @@
 /**
  * @since 4.0.0
  */
-export * as ChildProcess from "./ChildProcess.ts"
+export * as Proc from "./ChildProcess.ts"
 
 /**
  * @since 4.0.0

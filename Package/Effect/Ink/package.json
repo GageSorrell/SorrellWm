@@ -9,7 +9,6 @@
     "babel": "babel Distribution --plugins annotate-pure-calls --out-dir Distribution --source-maps",
     "check": "tsc -b tsconfig.json",
     "test": "vitest --sequence.concurrent=false",
-    "prestart": "npm run build",
     "start": "node ./Distribution/Internal/Playground.js",
     "coverage": "vitest --run --coverage --sequence.concurrent=false"
   },
@@ -21,6 +20,7 @@
     "@effect/platform-node": "^4.0.0-beta.78",
     "@types/culori": "4.0.1",
     "@types/ini": "^4.1.1",
+    "@types/marked-terminal": "6.1.1",
     "@types/node": "^25.7.0",
     "ajv": "^8.20.0",
     "arktype": "^2.2.0",
@@ -85,7 +85,8 @@
     "Distribution/**/*.d.ts.map"
   ],
   "overrides": {
-    "effect@^4.0.0-beta.78": "@sorrell/effect"
+    "effect@^4.0.0-beta.78": "@sorrell/effect",
+    "chalk": "npm:chalk@5.6.2"
   },
   "peerDependencies": {
     "@inkkit/ink-markdown": "1.0.0",
@@ -93,8 +94,7 @@
     "effect": "^4.0.0-beta.78",
     "ink-picture": "^2.0.0",
     "react": ">=19.2.0",
-    "react-devtools-core": ">=6.1.2",
-    "threejs-term": "3.0.0"
+    "react-devtools-core": ">=6.1.2"
   },
   "dependencies": {
     "@sorrell/effect-rational": "1.0.1",

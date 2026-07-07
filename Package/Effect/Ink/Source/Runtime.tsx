@@ -3,9 +3,7 @@
  * the lifetime of the {@link https://www.npmjs.com/package/ink | ink} session.
  *
  * @module @sorrell/effect-ink/Runtime
- */
-
-/**
+ *
  * @file      Runtime.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
@@ -14,10 +12,10 @@
 
 import * as Component from "./Component/index.js";
 import * as Event from  "./Internal/Event.tsx";
+import * as Ink from "ink";
 import * as Theme from "./Theme.ts";
 import { Context, Data, Effect, type Scope, pipe } from "effect";
 import type { FC, PropsWithChildren, ReactNode } from "react";
-import { type Instance, render } from "ink";
 
 export const TypeIdKey: "~sorrell/effect-ink/Runtime" = "~sorrell/effect-ink/Runtime" as const;
 
@@ -26,13 +24,17 @@ export type TypeId = typeof TypeId;
 
 export class InkRuntimeError extends Data.TaggedError("InkRuntimeError")<{ readonly message: string; }> { }
 
-
 export interface Options extends Component.Theme.ThemeContext { }
-
 
 export interface Runtime
 {
-    readonly Instance: Instance | undefined;
+    // readonly [ Internal.Private ]:
+    // {
+    //     readonly Flush: Effect.Effect<void>;
+
+    //     readonly Suspend: <A, E, R>(Arg: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+    // };
+    readonly Instance: Ink.Instance | undefined;
     readonly Kill: () => Effect.Effect<void, InkRuntimeError>;
     readonly Run: (RootComponent: FC, Options?: Options) =>
     Effect.Effect<void, InkRuntimeError, Event.EventBridgePubSub | Scope.Scope>;
@@ -63,7 +65,7 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
     {
         defaultValue: () =>
         {
-            let Instance: Instance | undefined = undefined;
+            let Instance: Ink.Instance | undefined = undefined;
 
             const Kill = (): Effect.Effect<void, InkRuntimeError> => Effect.gen(function* ()
             {
@@ -86,7 +88,7 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                     const Bridge: Event.InkEventBridge = yield* Event.Make(UiEventService);
                     // const Bridge: Event.InkEventBridge = yield* Event.Make(Event.EventBridgePubSub );
 
-                    Instance = yield* Effect.sync(() => render(
+                    Instance = yield* Effect.sync(() => Ink.render(
                         <RootComponent
                             Theme={ Options?.Theme ?? Theme.DefaultTheme }
                             { ...{ Bridge } }>
@@ -107,6 +109,31 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                         Effect.forkScoped({ startImmediately: true })
                     );
                 });
+
+            // const Flush: Effect.Effect<void> = Effect.gen(function* ()
+            // {
+            //     const EventBridge: Event.EventBridgePubSubImpl = yield* Event.EventBridgePubSub;
+            //     EventBridge.
+            // });
+            // // Effect.promise(() => App.waitUntilRenderFlush);
+
+            // const Suspend = <A, E, R>(Arg: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+            // {
+            //     return Effect.acquireUseRelease(
+            //         Effect.promise(() => Instance?.suspendTerminal),
+            //         () =>
+            //         {
+            //             return Arg;
+            //         },
+            //         (Suspension) =>
+            //         {
+            //             return Effect.promise(() =>
+            //             {
+            //                 return Suspension.resume();
+            //             });
+            //         }
+            //     );
+            // }
 
             return {
                 Instance,

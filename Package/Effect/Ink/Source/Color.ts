@@ -523,7 +523,7 @@ export const Apply: {
     (Arg: Color, Self: string): string;
 
     (Arg: Color): ChalkPkg.ChalkFunction;
-} = Function.dual(2, (Self: string, Arg: Color): string =>
+} = Function.dual(2, (Arg: Color, Self: string): string =>
 {
     const ChalkFunction: ChalkPkg.ChalkFunction = ((): ChalkPkg.ChalkFunction =>
     {

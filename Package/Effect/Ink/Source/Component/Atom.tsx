@@ -25,12 +25,13 @@ export const Atom = ({ children, ...ClackArmProps  }: AtomProps): React.ReactNod
     return (
         <Grid.Row gap={ 1 }>
             <Grid.Column
-                height="100%"
                 marginRight={ 1 }
                 width={ 1 }>
                 <Clack.ClackArm { ...{ ...ClackArmProps, Height } } />
             </Grid.Column>
-            <Grid.Column ref={ BarBoxRef }>
+            <Grid.Column
+                flexGrow={ 1 }
+                ref={ BarBoxRef }>
                 { children }
             </Grid.Column>
         </Grid.Row>

@@ -96,7 +96,7 @@ const ClackRow = ({ GetCharacter, GetColor, GetDimColor, Height, Index }: ClackR
 
     return <Text
         { ...{ color, dimColor } }
-        key={ Hash.hash([ Character, Index, Height, RowKind, color, dimColor ]) }>
+        key={ Hash.array([ Character, Index, Height, RowKind, color, dimColor ]) }>
         { Character }
     </Text>;
 };
@@ -107,7 +107,7 @@ export const ClackArm = (Props: ClackArmProps): React.ReactNode =>
         .range(0, Props.Height - 1)
         .map((Index: number) =>
             <ClackRow
-                key={ Hash.array([ Props.Height, Index ]) }
+                key={ Hash.array([ Props.Height, Index ]).toString() }
                 { ...{ ...Props, Index } }
             />);
 };

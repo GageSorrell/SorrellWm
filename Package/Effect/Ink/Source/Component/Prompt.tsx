@@ -18,6 +18,7 @@ import * as Option from "effect/Option";
 import * as Prompt from "../Prompt.ts";
 import * as Prose from "./Prose/Prose.js";
 import * as React from "react";
+import { Hash } from "effect";
 import { KeybindsFooter } from "./Footer.tsx";
 import { pipe } from "effect/Function";
 
@@ -45,7 +46,7 @@ export const RootComponent = (): React.ReactNode =>
     Ink.useInput((Input: string, Key: Ink.Key) =>
     {
         Bridge.Publish({
-            _tag: "InputEvent",
+            _tag: "Input",
 
             Input: Input !== "" ? Option.some(Input) : Option.none(),
             Key
@@ -61,9 +62,14 @@ export const RootComponent = (): React.ReactNode =>
         });
     };
 
-    Event.UseEvent((InEvent: Event.BackendEvent): void =>
+    const App: Ink.AppProps = Ink.useApp();
+
+    const SuspensionHandle: React.RefObject<Ink.TerminalSuspension | undefined> =
+        React.useRef<Ink.TerminalSuspension | undefined>(undefined);
+
+    Event.UseEvent((InEvent: Event.Backend.Event): void =>
     {
-        if (InEvent._tag === "BeginPromptEvent")
+        if (InEvent._tag === "Begin.Field")
         {
             SetAtoms((Old: ReadonlyArray<Field.Field | AnyProse>) => [
                 ...Old,
@@ -78,7 +84,7 @@ export const RootComponent = (): React.ReactNode =>
                 }
             ]);
         }
-        else if (InEvent._tag === "BeginProseEvent")
+        else if (InEvent._tag === "Begin.Prose")
         {
             SetAtoms((Old: ReadonlyArray<Field.Field | AnyProse>) => [
                 ...Old,
@@ -87,6 +93,21 @@ export const RootComponent = (): React.ReactNode =>
                     Content: InEvent.Content
                 }
             ]);
+        }
+        else if (InEvent._tag === "Suspend.Start")
+        {
+            App.suspendTerminal().then((Value: Ink.TerminalSuspension) =>
+            {
+                SuspensionHandle.current = Value;
+                Bridge.Publish({ _tag: "OnSuspended" });
+                // @TODO Implement in `Prompt` module, in `runLoop`, `TempFile` ctor the
+                // ability to fire the SuspendEvent, and receive/handle `SuspensionFinishedEvent`.
+                // Also add a `ResumeEvent` to fire from the `Prompt` module.
+            });
+        }
+        else if (InEvent._tag === "Suspend.End")
+        {
+            // @TODO Resume the `ink` rendering
         }
         else
         {
@@ -150,7 +171,9 @@ export const RootComponent = (): React.ReactNode =>
                         {
                             return {
                                 ...OldTail,
+                                ErrorMessage: Option.none(),
                                 IsSubmitted: true,
+                                IsValidating: false,
                                 State: Option.some(value)
                             };
                         });
@@ -176,6 +199,8 @@ export const RootComponent = (): React.ReactNode =>
                 State
             } = Atom;
 
+            const key: React.Key = Hash.array([ State, Index ]).toString();
+
             return Option.isSome(State)
                 ? <Field.Field
                     Component={ Component }
@@ -186,14 +211,18 @@ export const RootComponent = (): React.ReactNode =>
                         Options,
                         State: State.value
                     } }
-                    key={ JSON.stringify(State) + Index.toString() }
+                    key={ key }
                 />
-                : <Ink.Text key={ JSON.stringify(State) + Index.toString() }></Ink.Text>;
+                : undefined;
+            //     : <Ink.Text key={ key }></Ink.Text>;
         }
         else
         {
             const { Component, Content } = Atom;
-            return <Prose.Prose { ...{ Component, Content } } />;
+            return <Prose.Prose
+                key={ Index }
+                { ...{ Component, Content } }
+            />;
         }
     });
 
@@ -207,7 +236,9 @@ export const RootComponent = (): React.ReactNode =>
                 : { };
 
     return (
-        <Ink.Box flexDirection="column">
+        <Ink.Box
+            flexDirection="column"
+            maxHeight="100%">
             <Ink.Box
                 flexDirection="column"
                 flexGrow={ 1 }>

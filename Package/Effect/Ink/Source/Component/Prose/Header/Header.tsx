@@ -24,7 +24,6 @@ import { Theme } from "../../index.js";
 export const Header: React.FC<HeaderProps> = ({ Content }: HeaderProps): React.ReactNode =>
 {
     const UserTheme: Theme.Theme = Theme.UseTheme();
-
     // const MarkedUp: React.FC = React.useMemo((): React.FC =>
     // {
     //     const TransformMarkdownColor = (children: string, _index: number) =>
@@ -44,6 +43,8 @@ export const Header: React.FC<HeaderProps> = ({ Content }: HeaderProps): React.R
 
     return (
         <Grid.Row
+            // backgroundColor={ UserTheme.ColorPalette.Primary }
+            alignSelf="flex-start"
             backgroundColor={ UserTheme.ColorPalette.Primary }
             marginBottom={ 1 }
             marginLeft={ -1 }
@@ -52,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ Content }: HeaderProps): React.R
             <Ink.Text
                 bold
                 color="#FFFFFF">
-                { Content.Text }
+                { Content.Text.Value }
             </Ink.Text>
             {/* <MarkedUp /> */}
         </Grid.Row>

@@ -9,53 +9,15 @@
  * @license   MIT
  */
 
-import type * as Data from "effect/Data";
-import * as Internal from "./Internal/Program.ts";
-import * as Prompt from "./Prompt.ts";
-i
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Function from "effect/Function";
+import * as Proc from "effect/unstable/process";
+import type * as Prompt from "./Prompt.ts";
 
 export const TypeIdKey: string = "~sorrell/effect-ink/Prompt";
 export const TypeId: unique symbol = Symbol.for(TypeIdKey);
 export type TypeId = typeof TypeId;
-
-export interface Options
-{
-    readonly
-}
-
-export interface CommandOptions
-{
-    readonly Foo: string;
-}
-
-export interface ExecutableOptions
-{
-    readonly Bar: string;
-}
-
-// export interface Command
-// {
-
-// }
-
-export interface Executable
-{
-
-}
-
-const CommandConstructor = (Options: CommandOptions): Program =>
-{
-
-};
-
-export type ProgramDefinitions = Data.TaggedEnum<{
-    readonly Command: CommandOptions;
-    readonly Executable: ExecutableOptions;
-}>;
-
-import { Effect, FileSystem } from "effect";
-import type * as PlatformError from "effect/PlatformError";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 /**
  * A small abstraction over Ink's terminal suspension behavior.
@@ -70,89 +32,66 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
  */
 export interface Terminal
 {
-    readonly Flush: Effect.Effect<void>;
-
-    readonly Suspend: <Value, Error, Requirements>(
-        Use: Effect.Effect<Value, Error, Requirements>
-    ) => Effect.Effect<Value, Error, Requirements>;
 }
 
 export namespace Terminal
 {
-    export const None: Terminal = {
-        Flush: Effect.void,
-        Suspend: (Use) => Use
-    };
+    export const None: Terminal =
+        {
+            Flush: Effect.void,
+            Suspend: (Use: unknown) => Use
+        };
 }
 
-export class UserCompletionRequiredError extends Error
+export class UserCompletionRequiredError extends Data.TaggedError("UserCompletionRequiredError")<{
+    readonly ProgramName: string;
+    readonly FilePath: string;
+}> { }
+
+export class ProgramExitCodeError extends Data.TaggedError("ProgramExitCodeError")<{
+    readonly ProgramName: string;
+    readonly ExitCode: Proc.ChildProcessSpawner.ExitCode;
+}> { }
+
+export interface Program
 {
-    public readonly _tag = "UserCompletionRequiredError" as const;
-    public readonly ProgramName: string;
-    public readonly FilePath: string;
+    readonly [ TypeId ]: TypeId;
 
-    public constructor(Options: {
-        readonly ProgramName: string;
-        readonly FilePath: string;
-    })
-    {
-        super(`${Options.ProgramName} requires user confirmation before reading the temp file.`);
-
-        this.ProgramName = Options.ProgramName;
-        this.FilePath = Options.FilePath;
-    }
-}
-
-export class ProgramExitCodeError extends Error
-{
-    public readonly _tag = "ProgramExitCodeError" as const;
-    public readonly ProgramName: string;
-    public readonly ExitCode: ChildProcessSpawner.ExitCode;
-
-    public constructor(Options: {
-        readonly ProgramName: string;
-        readonly ExitCode: ChildProcessSpawner.ExitCode;
-    })
-    {
-        super(`${Options.ProgramName} exited with code ${Options.ExitCode}.`);
-
-        this.ProgramName = Options.ProgramName;
-        this.ExitCode = Options.ExitCode;
-    }
-}
-
-export interface Program<E = never>
-{
-    readonly _tag: "Program";
     readonly Name: string;
-    readonly Presentation: Program.Presentation;
-    readonly Done: Program.Done<E, Prompt.Environment>;
+    readonly Presentation: Presentation;
+    readonly Done: Done;
 
     /** Defaults to accepting only exit code 0. */
-    readonly IsSuccessfulExitCode: (ExitCode: ChildProcessSpawner.ExitCode) => boolean;
+    readonly IsSuccessfulExitCode: (ExitCode: Proc.ChildProcessSpawner.ExitCode) => boolean;
 
-    readonly MakeCommand: (FilePath: string) => Effect.Effect<ChildProcess.Command, E, Prompt.Environment>;
+    readonly GetCommand: (FilePath: string) => ProgramEffect<Proc.ChildProcess.Command>;
 }
 
-export const Presentation: Readonly<{ External: string; Terminal: string; }> =
+const ExternalPresentation: unique symbol = Symbol.for(`${ TypeIdKey }!Presentation!External`);
+const TerminalPresentation: unique symbol = Symbol.for(`${ TypeIdKey }!Presentation!Terminal`);
+
+export const Presentation: Readonly<{
+    External: typeof ExternalPresentation;
+    Terminal: typeof TerminalPresentation;
+}> =
     {
-        External: `${ TypeIdKey }!Presentation!External`,
-        Terminal: `${ TypeIdKey }!Presentation!Terminal`,
+        External: ExternalPresentation,
+        Terminal: TerminalPresentation
     } as const;
 
 export type Presentation = typeof Presentation[keyof typeof Presentation];
 
-export type ProgramEffect<A = void, E = never> = Effect.Effect<A, E, Prompt.Environment>;
+export type ProgramEffect<A = void> = Effect.Effect<A, never, Prompt.Environment>;
 
-export type AwaitDoneCallback = <E = never>(
-    Context: AwaitDoneContext
-) => ProgramEffect<void, E>;
+export type AwaitDoneCallback = (Context: AwaitDoneContext) => ProgramEffect<void>;
 
 export type Done = Data.TaggedEnum<{
     readonly ProcessExit: { };
     readonly UserConfirmation: { };
-    readonly AwaitDone: { readonly Callback: AwaitDoneCallback };
+    readonly AwaitDone: { readonly Callback: AwaitDoneCallback; };
 }>;
+
+export const Done: Data.TaggedEnum.Constructor<Done> = Data.taggedEnum<Done>();
 
 export interface AwaitDoneContext
 {
@@ -160,77 +99,57 @@ export interface AwaitDoneContext
     readonly ProgramName: string;
 }
 
-export interface Options<Error, Requirements>
+export interface Options
+    extends Omit<Program, TypeId | "Presentation" | "Done" | "IsSuccessfulExitCode">,
+    Partial<Pick<Program, "Presentation" | "Done" | "IsSuccessfulExitCode">> { };
+
+export interface CommandOptions extends Options
 {
-    readonly Name: string;
-    readonly Presentation?: Presentation;
-    readonly Done?: Done<Error, Requirements>;
-
-    readonly IsSuccessfulExitCode?: (
-        ExitCode: ChildProcessSpawner.ExitCode
-    ) => boolean;
-
-    readonly MakeCommand: (
-        FilePath: string
-    ) => Effect.Effect<ChildProcess.Command, Error, Requirements>;
-}
-
-export interface CommandOptions<Error = never, Requirements = never>
-{
-    readonly Name: string;
     readonly ProgramCommand: string;
-    readonly MakeArguments: (FilePath: string) => ReadonlyArray<string>;
+    readonly GetArguments: (FilePath: string) => ReadonlyArray<string>;
 
-    readonly Presentation?: Presentation;
-    readonly Done?: Done<Error, Requirements>;
-
-    readonly ChildProcessOptions?: ChildProcess.CommandOptions;
-
-    readonly IsSuccessfulExitCode?: (
-        ExitCode: ChildProcessSpawner.ExitCode
-    ) => boolean;
+    readonly ChildProcessOptions?: Proc.ChildProcess.CommandOptions;
 
     readonly Configure?: (
-        CommandValue: ChildProcess.Command
-    ) => ChildProcess.Command;
+        CommandValue: Proc.ChildProcess.Command
+    ) => Proc.ChildProcess.Command;
 }
 
-export const MakeProgram = <Error = never, Requirements = never>(
-    Options: Program.Options<Error, Requirements>
-): Program<Error, Requirements> =>
+export const Program = (Options: Options): Program =>
 {
     return {
-        _tag: "Program",
-        Name: Options.Name,
-        Presentation: Options.Presentation ?? "External",
+        [ TypeId ]: TypeId,
+
         Done: Options.Done ?? { _tag: "ProcessExit" },
+        GetCommand: Options.GetCommand,
         IsSuccessfulExitCode: Options.IsSuccessfulExitCode ?? ((ExitCode) =>
         {
-            return ExitCode === ChildProcessSpawner.ExitCode(0);
+            return ExitCode === Proc.ChildProcessSpawner.ExitCode(0);
         }),
-        MakeCommand: Options.MakeCommand
+        Name: Options.Name,
+        Presentation: Options.Presentation ?? Presentation.External
     };
 };
 
 /**
- * For terminal-taking commands, v4 `ChildProcess` does not use the old
+ * For terminal-taking commands, v4 `Process.ChildProcess` does not use the old
  * `Command.stdin("inherit")` style. Instead, stdio is supplied through the
  * command options object.
  */
 export const WithInheritedTerminal = (
-    CommandValue: ChildProcess.Command
-): ChildProcess.Command =>
+    InCommand: Proc.ChildProcess.Command
+): Proc.ChildProcess.Command =>
 {
-    if (CommandValue._tag === "StandardCommand")
+    if (InCommand._tag === "StandardCommand")
     {
-        return ChildProcess.make(
-            CommandValue.command,
-            CommandValue.args,
+        return Proc.ChildProcess.make(
+            InCommand.command,
+            InCommand.args,
             {
-                ...CommandValue.options,
+                ...InCommand.options,
+                stderr: "inherit",
                 stdin: "inherit",
-                stdout: "inherit",
-                stderr: "inherit"
+                stdout: "inherit"
             }
         );
     }
@@ -239,37 +158,32 @@ export const WithInheritedTerminal = (
      * Pipelines are usually not what you want for an interactive terminal
      * program. Leave them alone rather than corrupting the pipe topology.
      */
-    return CommandValue;
+    return InCommand;
 };
 
-export const MakeCommandProgram = <E = never>(
-    Options: Program.CommandOptions<E, Prompt.Environment>
-): Program<E> =>
+export const CommandProgram = (Options: CommandOptions): Program =>
 {
-    return MakeProgram({
-        Name: Options.Name,
-        Presentation: Options.Presentation,
-        Done: Options.Done,
-        IsSuccessfulExitCode: Options.IsSuccessfulExitCode,
-        MakeCommand: (FilePath) =>
+    return Program({
+        Done: Options.Done ?? Done.ProcessExit(),
+        GetCommand: (FilePath: string) => Effect.gen(function* ()
         {
-            return Effect.sync(() =>
-            {
-                const BaseCommand = ChildProcess.make(
-                    Options.ProgramCommand,
-                    Options.MakeArguments(FilePath),
-                    Options.ChildProcessOptions
-                );
+            const BaseCommand: Proc.ChildProcess.StandardCommand = Proc.ChildProcess.make(
+                Options.ProgramCommand,
+                Options.GetArguments(FilePath),
+                Options.ChildProcessOptions
+            );
 
-                const PresentedCommand =
-                    Options.Presentation === "Terminal"
-                        ? WithInheritedTerminal(BaseCommand)
-                        : BaseCommand;
+            const PresentedCommand: Proc.ChildProcess.Command =
+                Options.Presentation === Presentation.Terminal
+                    ? WithInheritedTerminal(BaseCommand)
+                    : BaseCommand;
 
-                return Options.Configure === undefined
-                    ? PresentedCommand
-                    : Options.Configure(PresentedCommand);
-            });
-        }
+            return Options.Configure === undefined
+                ? PresentedCommand
+                : Options.Configure(PresentedCommand);
+        }),
+        IsSuccessfulExitCode: Options.IsSuccessfulExitCode ?? Function.constTrue,
+        Name: Options.Name,
+        Presentation: Options.Presentation ?? Presentation.External
     });
 };

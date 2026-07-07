@@ -604,6 +604,19 @@ module.exports = {
             }
         ],
         "@typescript-eslint/no-empty-object-type": "off",
+        "@typescript-eslint/no-unused-vars":
+        [
+            "error",
+            {
+                args: "all",
+                argsIgnorePattern: "^_",
+                caughtErrors: "all",
+                caughtErrorsIgnorePattern: "^_",
+                destructuredArrayIgnorePattern: "^_",
+                ignoreRestSiblings: true,
+                varsIgnorePattern: "^_"
+            }
+        ],
         "@typescript-eslint/typedef":
         [
             "error",

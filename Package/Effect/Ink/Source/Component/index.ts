@@ -2,9 +2,7 @@
  * `react` components for the prompts provided by this package.
  *
  * @module @sorrell/effect-ink/Component
- */
-
-/**
+ *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
