@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/effect-ink/Component/Prose/Header
+ * @module @sorrell/effect-ink/Component/Doc/Header
  * @internal
  *
  * @file      Header.tsx
@@ -18,7 +18,7 @@ import * as React from "react";
 import { Grid } from "../../Primitive/index.ts";
 import type { HeaderProps } from "./Header.Types.ts";
 // import Markdown from "@inkkit/ink-markdown";
-import { Theme } from "../../index.js";
+import { Theme } from "../../index.ts";
 // import { pipe } from "effect";
 
 export const Header: React.FC<HeaderProps> = ({ Content }: HeaderProps): React.ReactNode =>

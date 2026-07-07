@@ -16,4 +16,4 @@
 
 export * as Component from "./Component/index.ts";
 export * from "./Prompt.ts";
-export * as Prose from "./Prose.ts";
+export * as Doc from "./Doc.ts";

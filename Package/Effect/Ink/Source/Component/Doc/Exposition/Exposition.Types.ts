@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/effect-ink/Component/Prose/Exposition/Types
+ * @module @sorrell/effect-ink/Component/Doc/Exposition/Types
  * @internal
  *
  * @file      Exposition.Types.ts
@@ -10,6 +10,6 @@
  * @license   MIT
  */
 
-import type { Props } from "../Prose.tsx";
+import type { Props } from "../Doc.tsx";
 
 export type ExpositionProps = Props<"Exposition">;

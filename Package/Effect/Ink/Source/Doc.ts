@@ -1,9 +1,9 @@
 /**
  * Annotate prompts with headers and bodies of text.
  *
- * @module @sorrell/effect-ink/Prose
+ * @module @sorrell/effect-ink/Doc
  *
- * @file      Prose.ts
+ * @file      Doc.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -11,7 +11,7 @@
 
 import type * as Color from "./Color.ts";
 import * as Internal from "./Internal/index.ts";
-import * as Prompt from "./Prompt.js";
+import * as Prompt from "./Prompt.ts";
 import type * as Symbol from "./Component/Symbol.tsx";
 import type * as Text from "./Text.ts";
 import type { Data, Option } from "effect";
@@ -19,52 +19,52 @@ import { Component } from "./index.ts";
 import type { Mutable } from "effect/Types";
 import { dual } from "effect/Function";
 
-interface ProseBase
+interface DocBase
 {
     readonly Text: Text.Text;
 }
 
 export type Alert = Data.TaggedEnum<{
     readonly Custom:
-        ProseBase &
+        DocBase &
         {
             readonly Title: Text.Text;
             readonly Symbol: Option.Option<Symbol.Symbol>;
             readonly Body: Text.Text;
             readonly Color?: Color.Color;
         };
-    readonly Note: ProseBase;
-    readonly Tip: ProseBase;
-    readonly Important: ProseBase;
-    readonly Warning: ProseBase;
-    readonly Caution: ProseBase;
+    readonly Note: DocBase;
+    readonly Tip: DocBase;
+    readonly Important: DocBase;
+    readonly Warning: DocBase;
+    readonly Caution: DocBase;
 }>;
 
 /* eslint-disable @typescript-eslint/typedef */
 
 export const Alert =
     {
-        Caution: Internal.Prose.WithMakeAlert(Internal.Prose.Alert.Caution),
-        Custom: Internal.Prose.WithMakeAlert(Internal.Prose.Alert.Custom),
-        Important: Internal.Prose.WithMakeAlert(Internal.Prose.Alert.Important),
-        Note: Internal.Prose.WithMakeAlert(Internal.Prose.Alert.Note),
-        Tip: Internal.Prose.WithMakeAlert(Internal.Prose.Alert.Tip),
-        Warning: Internal.Prose.WithMakeAlert(Internal.Prose.Alert.Warning)
+        Caution: Internal.Doc.WithMakeAlert(Internal.Doc.Alert.Caution),
+        Custom: Internal.Doc.WithMakeAlert(Internal.Doc.Alert.Custom),
+        Important: Internal.Doc.WithMakeAlert(Internal.Doc.Alert.Important),
+        Note: Internal.Doc.WithMakeAlert(Internal.Doc.Alert.Note),
+        Tip: Internal.Doc.WithMakeAlert(Internal.Doc.Alert.Tip),
+        Warning: Internal.Doc.WithMakeAlert(Internal.Doc.Alert.Warning)
     };
 
 /* eslint-enable @typescript-eslint/typedef */
 
 export const Header = (Text: Text.Text): Prompt.Prompt<void> =>
 {
-    const Out: Mutable<Prompt.Operand.Prose> =
-        Internal.Prose.Operand(Internal.Prose.Prose.Header({ Text }), Component.Prose.Header);
+    const Out: Mutable<Prompt.Operand.Doc> =
+        Internal.Doc.Operand(Internal.Doc.Doc.Header({ Text }), Component.Doc.Header);
 
     return Out;
 };
 
 export const Outro = (Title: Text.Text, Body?: Text.Text): Prompt.Prompt<void> =>
 {
-    return Internal.Prose.Operand(Internal.Prose.Prose.Outro({
+    return Internal.Doc.Operand(Internal.Doc.Doc.Outro({
         Title,
         ...(Body !== undefined ? { Body } : { })
     }), (_: unknown) => undefined);
@@ -72,16 +72,16 @@ export const Outro = (Title: Text.Text, Body?: Text.Text): Prompt.Prompt<void> =
 
 export const Banner = (Text: Text.Plain): Prompt.Prompt<void> =>
 {
-    return Internal.Prose.Operand(
-        Internal.Prose.Prose.Header({ Text }),
+    return Internal.Doc.Operand(
+        Internal.Doc.Doc.Header({ Text }),
         (_: unknown) => undefined
     );
 };
 
 export const Exposition = (Text: Text.Text): Prompt.Prompt<void> =>
 {
-    return Internal.Prose.Operand(
-        Internal.Prose.Prose.Exposition({ Text }),
+    return Internal.Doc.Operand(
+        Internal.Doc.Doc.Exposition({ Text }),
         (_: unknown) => undefined
     );
 };

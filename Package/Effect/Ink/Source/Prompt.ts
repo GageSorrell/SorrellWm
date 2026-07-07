@@ -24,7 +24,7 @@ import * as Internal from "./Internal/index.ts";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Predicate from "effect/Predicate";
-// import type * as Prose from "./Prose.ts";
+// import type * as Doc from "./Doc.ts";
 import * as Queue from "effect/Queue";
 import type * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -54,11 +54,11 @@ export const TypeId: string = "~sorrell/effect-ink/Prompt";
  * @category models
  * @since 1.0.0
  */
-export interface Prompt<Output> extends Effect.Effect<Output, Terminal.QuitError, Environment>
+export interface Prompt<A> extends Effect.Effect<A, Terminal.QuitError, Environment>
 {
     readonly [ TypeId ]:
     {
-        readonly _Output: Covariant<Output>;
+        readonly _A: Covariant<A>;
     };
 }
 
@@ -588,13 +588,17 @@ export interface ToggleOptions extends Options<boolean>
     readonly Inactive?: string;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Type alias for any `Prompt`, regardless of its output type.
  *
  * @category utility types
  * @since 1.0.0
  */
-export type Any = Prompt<unknown>;
+export type Any = Prompt<any>;
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Namespace containing return-type helpers for `Prompt.all`.
@@ -707,7 +711,7 @@ export declare namespace All
  */
 export const all: <
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    const Arg extends Iterable<Prompt<any>> | Record<string, Prompt<any>>
+    const Arg extends Iterable<Any> | Record<string, Any>
 >(arg: Arg) => All.Return<Arg> = function()
 {
     if (arguments.length === 1)
@@ -723,15 +727,15 @@ export const all: <
         }
         else
         {
-            const entries: Array<[ string, Prompt<any> ]> =
-                Object.entries(arguments[0] as Readonly<{ [ K: string ]: Prompt<any> }>);
+            const entries: Array<[ string, Any ]> =
+                Object.entries(arguments[0] as Readonly<{ [ K: string ]: Any }>);
             let result: Prompt<{ [ K: string ]: any; }> =
                 map(entries[0][1], (value: any) => ({ [entries[0][0]]: value }));
             if (entries.length === 1)
             {
                 return result as any;
             }
-            const rest: Array<[ string, Prompt<any> ]> = entries.slice(1);
+            const rest: Array<[ string, Any ]> = entries.slice(1);
             for (const [ key, prompt ] of rest)
             {
                 result = pipe(
@@ -1179,9 +1183,7 @@ export const Password = (options: TextOptions): Prompt<Redacted.Redacted> =>
         map(Redacted.make)
     );
 
-// type PromptDequeue<A> = Queue.Dequeue<A, Cause.Done<void>>;
-
-// type InputQueue = PromptDequeue<Internal.Event.Frontend.Input>;
+export type PromptEffect<A> = Effect.Effect<A, Terminal.QuitError, Environment>;
 
 /**
  * Runs a prompt by reading terminal input and rendering prompt frames until the
@@ -1195,14 +1197,10 @@ export const Password = (options: TextOptions): Prompt<Redacted.Redacted> =>
  * @category execution
  * @since 1.0.0
  */
-export const run: <Output>(
-    self: Prompt<Output>
-) => Effect.Effect<
-    Output,
-    Terminal.QuitError,
-    Environment
-> = Effect.fnUntraced(
-    function*<Output>(self: Prompt<Output>)
+export const run: {
+    <A>(Self: Prompt<A>): PromptEffect<A>;
+} = Effect.fnUntraced(
+    function*<A>(Self: Prompt<A>)
     {
         return yield* pipe(
             Effect.gen(function* ()
@@ -1245,13 +1243,13 @@ export const run: <Output>(
                         Stream.toQueue({ capacity: "unbounded" })
                     );
 
-                const Out: Output = yield* pipe(
-                    runWithInput(self, input),
+                const Out: A = yield* pipe(
+                    runWithInput(Self, input),
                     Effect.scoped
                 );
 
                 return (Out === Operand.NoOp)
-                    ? (yield* Effect.void) as Output
+                    ? (yield* Effect.void) as A
                     : Out;
             }),
             Effect.scoped
@@ -1514,13 +1512,14 @@ export interface Options<in out A>
 /** @internal */
 export namespace Operand
 {
-    export const NoOp: unique symbol = Symbol.for(`${ TypeId }!Operand!ReturnValue`);
+    const NoOpKey: string = `${ TypeId }!Operand!ReturnValue`;
+    export const NoOp: unique symbol = Symbol.for(NoOpKey);
 
-    type Op<Tag extends string, Body = { }> =
+    type Op<TagType extends string, BodyType = { }> =
         Prompt<never> &
-        Body &
+        BodyType &
         {
-            readonly _tag: Tag;
+            readonly _tag: TagType;
         };
 
     export interface Loop extends
@@ -1529,42 +1528,43 @@ export namespace Operand
             readonly Component: Field.Field.Component<unknown, unknown>;
             readonly Options: unknown;
             readonly Process: ReturnType<Handlers<unknown, unknown, unknown>["Process"]>;
-        }>
-    { }
+        }> { }
 
-    export interface Prose extends
-        Op<"Prose", {
-            readonly Content: Internal.Prose.Prose;
+    export interface Doc extends
+        Op<"Doc", {
+            readonly Content: Internal.Doc.Doc;
             /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
             readonly Component: React.FC<any>;
-        }>
-    { }
+        }> { }
 
     /** @internal */
     export interface OnSuccess extends
         Op<"OnSuccess", {
             /* eslint-disable @typescript-eslint/no-explicit-any */
-            readonly Prompt: Operand | Prompt<any>;
-            readonly OnSuccess: (value: any) => Prompt<any>;
+            readonly Prompt: Operand | Any;
+            readonly OnSuccess: (value: any) => Any;
             /* eslint-enable @typescript-eslint/no-explicit-any */
-        }>
-    { }
+        }> { }
 
     export interface Succeed extends
         Op<"Succeed", {
-            readonly value: unknown
-        }>
-    { }
+            readonly value: unknown;
+        }> { }
+
+    export interface Form extends Op<"Form", {
+        readonly Foo: string;
+    }> { }
 
     export type Operand =
-        | Prose
+        | Form
+        | Doc
         | Loop
         | OnSuccess
         | Succeed;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<{
+const allTupled = <const T extends ArrayLike<Any>>(arg: T): Prompt<{
     [ K in keyof T ]: [ T[K] ] extends [  Prompt<infer A> ] ? A : never;
 }> =>
 {
@@ -1579,7 +1579,7 @@ const allTupled = <const T extends ArrayLike<Prompt<any>>>(arg: T): Prompt<{
     let result: Prompt<Array<any>> = map(arg[0], (x: any) => [ x ]);
     for (let i: number = 1; i < arg.length; i++)
     {
-        const curr: Prompt<any> = arg[i];
+        const curr: Any = arg[i];
         result = flatMap(result, (tuple: Array<any>) => map(curr, (a: any) => [ ...tuple, a ]));
     }
     return result as any;
@@ -1610,7 +1610,7 @@ const runWithInput = <A>(
 
         switch (op._tag)
         {
-            case "Prose":
+            case "Doc":
             {
                 return Effect.fnUntraced(function* ()
                 {
@@ -1620,7 +1620,7 @@ const runWithInput = <A>(
                     // yield* Console.dir(loop.Component);
 
                     yield* pubSub.ActionOptions.Publish(
-                        Internal.Event.Backend.Begin["Begin.Prose"]({
+                        Internal.Event.Backend.Begin["Begin.Doc"]({
                             Component: op.Component,
                             Content: op.Content
                         })
@@ -3017,3 +3017,91 @@ const handleToggleProcess = (_Options: Required<ToggleOptions>) =>
         // }
     };
 };
+
+/* eslint-disable prefer-rest-params */
+
+/**
+ * Runs all the provided prompts in sequence respecting the structure provided
+ * in input.
+ *
+ * **Details**
+ *
+ * Supports either a tuple / iterable of prompts or a record / struct of prompts
+ * as an argument.
+ *
+ * **Example** (Collecting prompt results)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Prompt } from "effect/unstable/cli"
+ *
+ * const username = Prompt.text({
+ *   message: "Enter your username: "
+ * })
+ *
+ * const password = Prompt.password({
+ *   message: "Enter your password: ",
+ *   validate: (value) =>
+ *     value.length === 0
+ *       ? Effect.fail("Password cannot be empty")
+ *       : Effect.succeed(value)
+ * })
+ *
+ * const allWithTuple = Prompt.all([username, password])
+ *
+ * const allWithRecord = Prompt.all({ username, password })
+ * ```
+ *
+ * @category collecting & elements
+ * @since 1.0.0
+ */
+export const Form: <
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const Arg extends Iterable<Any> | Record<string, Any>
+>(arg: Arg) => All.Return<Arg> = function()
+{
+    if (arguments.length === 1)
+    {
+        if (isPrompt(arguments[0]))
+        {
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            return map(arguments[0], (x: unknown) => [ x ]) as any;
+        }
+        else if (Array.isArray(arguments[0]))
+        {
+            return allTupled(arguments[0]) as any;
+        }
+        else
+        {
+            const entries: Array<[ string, Any ]> =
+                Object.entries(arguments[0] as Readonly<{ [ K: string ]: Any }>);
+            let result: Prompt<{ [ K: string ]: any; }> =
+                map(entries[0][1], (value: any) => ({ [entries[0][0]]: value }));
+            if (entries.length === 1)
+            {
+                return result as any;
+            }
+            const rest: Array<[ string, Any ]> = entries.slice(1);
+            for (const [ key, prompt ] of rest)
+            {
+                result = pipe(
+                    result,
+                    flatMap((record: Record<string, any>) =>
+                        pipe(
+                            prompt,
+                            map((Value: any) => ({
+                                ...record,
+                                [ key ]: Value
+                            }))
+                        )
+                    )
+                );
+            }
+            return result as any;
+        }
+    }
+    return allTupled(arguments[0]) as any;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+};
+
+/* eslint-enable prefer-rest-params */

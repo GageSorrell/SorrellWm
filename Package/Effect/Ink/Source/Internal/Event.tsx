@@ -10,7 +10,7 @@
  * @license   MIT
  */
 
-import * as Prompt from "../Prompt.js";
+import type * as Prompt from "../Prompt.js";
 import { Context, Data, Effect, Layer, PubSub, type Scope, Stream, pipe } from "effect";
 import {
     type PropsWithChildren,
@@ -22,6 +22,7 @@ import {
     useEffect,
     useRef
 } from "react";
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import type { Field } from "../Component/index.ts";
 import type { Mutable } from "effect/Types";
 
@@ -40,7 +41,7 @@ export const TypeId: string = "~sorrell/effect-ink/Internal/Event";
 
 // export type InkEvent =
 //     | BeginPromptEvent
-//     | BeginProseEvent
+//     | BeginDocEvent
 //     | Prompt.AnyAction
 //     | InputEvent;
 
@@ -57,7 +58,7 @@ export interface SuspensionFinishedEvent
 // export type BackendEvent =
 //     | SuspendEvent
 //     | BeginPromptEvent
-//     | BeginProseEvent
+//     | BeginDocEvent
 //     | Prompt.AnyAction;
 
 // export type FrontendEvent =
@@ -82,16 +83,16 @@ export namespace Backend
                 readonly Keybinds: Prompt.Keybinds | undefined;
             };
 
-        export type Prose =
+        export type Doc =
             {
-                readonly Content: Prompt.Operand.Prose["Content"];
-                readonly Component: Prompt.Operand.Prose["Component"];
+                readonly Content: Prompt.Operand.Doc["Content"];
+                readonly Component: Prompt.Operand.Doc["Component"];
             };
     }
 
     export type Begin = Data.TaggedEnum<{
         readonly "Begin.Field": Begin.Field;
-        readonly "Begin.Prose": Begin.Prose;
+        readonly "Begin.Doc": Begin.Doc;
     }>;
 
     export type Suspend = Data.TaggedEnum<{
@@ -152,9 +153,9 @@ interface Part<EventType>
 //     readonly Keybinds: Prompt.Keybinds | undefined;
 // }
 
-// export interface BeginProseEvent extends Pick<Prompt.Operand.Prose, "Content" | "Component">
+// export interface BeginDocEvent extends Pick<Prompt.Operand.Doc, "Content" | "Component">
 // {
-//     readonly _tag: "BeginProseEvent";
+//     readonly _tag: "BeginDocEvent";
 // }
 
 // export const BeginPromptEvent = ({
@@ -172,10 +173,10 @@ interface Part<EventType>
 //     };
 // };
 
-// export const BeginProseEvent = ({ Component, Content }: Omit<BeginProseEvent, "_tag">): BeginProseEvent =>
+// export const BeginDocEvent = ({ Component, Content }: Omit<BeginDocEvent, "_tag">): BeginDocEvent =>
 // {
 //     return {
-//         _tag: "BeginProseEvent",
+//         _tag: "BeginDocEvent",
 
 //         Component,
 //         Content

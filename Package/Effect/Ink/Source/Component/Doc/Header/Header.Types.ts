@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/effect-ink/Component/Prose/Header/Types
+ * @module @sorrell/effect-ink/Component/Doc/Header/Types
  * @internal
  *
  * @file      Header.Types.ts
@@ -10,6 +10,6 @@
  * @license   MIT
  */
 
-import type { Props } from "../Prose.tsx";
+import type { Props } from "../Doc.tsx";
 
 export type HeaderProps = Props<"Header">;

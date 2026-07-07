@@ -1,9 +1,9 @@
 /**
  *
  *
- * @module @sorrell/effect-ink/Component/Prose
+ * @module @sorrell/effect-ink/Component/Doc
  *
- * @file      Prose.tsx
+ * @file      Doc.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -17,21 +17,21 @@ import type { Clack } from "../index.ts";
 import CliBoxes from "cli-boxes";
 import type { Data } from "effect";
 
-export interface Props<in out TagType extends Internal.Prose.Prose["_tag"]>
+export interface Props<in out TagType extends Internal.Doc.Doc["_tag"]>
 {
-    readonly Content: Data.TaggedEnum.Value<Internal.Prose.Prose, TagType>;
+    readonly Content: Data.TaggedEnum.Value<Internal.Doc.Doc, TagType>;
 }
 
-export interface Component<in out TagType extends Internal.Prose.Prose["_tag"]>
+export interface Component<in out TagType extends Internal.Doc.Doc["_tag"]>
     extends React.FC<Props<TagType>> { }
 
-export interface Prose<TagType extends Internal.Prose.Prose["_tag"]> extends Props<TagType>
+export interface Doc<TagType extends Internal.Doc.Doc["_tag"]> extends Props<TagType>
 {
     readonly Component: Component<TagType>;
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export const Prose = ({ Component, Content }: Prose<any>): React.ReactNode =>
+export const Doc = ({ Component, Content }: Doc<any>): React.ReactNode =>
 {
     const GetCharacter = (_RowKind: Clack.RowKind): React.ReactNode =>
         _RowKind === "Top"

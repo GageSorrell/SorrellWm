@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/effect-ink/Component/Prose/Exposition
+ * @module @sorrell/effect-ink/Component/Doc/Exposition
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

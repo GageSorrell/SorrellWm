@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/effect-ink/Component/Prose/Header
+ * @module @sorrell/effect-ink/Component/Doc
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -9,5 +9,5 @@
  * @license   MIT
  */
 
-export * from "./Header.tsx";
-export type * from "./Header.Types.ts";
+export * from "./Doc.tsx";
+export * from "./Header/index.ts";

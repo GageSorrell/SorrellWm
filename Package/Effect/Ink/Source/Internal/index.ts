@@ -12,4 +12,4 @@
 
 export * as Event from "./Event.ts";
 export * as Prompt from "./Prompt.ts";
-export * as Prose from "./Prose.ts";
+export * as Doc from "./Doc.ts";

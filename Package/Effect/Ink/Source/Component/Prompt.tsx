@@ -10,26 +10,26 @@
  * @license   MIT
  */
 
+import * as Doc from "./Doc/Doc.js";
 import * as Event from "../Internal/Event.tsx";
 import * as Field from "./Field/Field.tsx";
 import * as Function from "effect/Function";
 import * as Ink from "ink";
 import * as Option from "effect/Option";
 import * as Prompt from "../Prompt.ts";
-import * as Prose from "./Prose/Prose.js";
 import * as React from "react";
 import { Hash } from "effect";
 import { KeybindsFooter } from "./Footer.tsx";
 import { pipe } from "effect/Function";
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-type AnyProse = Prose.Prose<any>;
+type AnyDoc = Doc.Doc<any>;
 
 /** @internal */
 export const RootComponent = (): React.ReactNode =>
 {
     const [ Atoms, SetAtoms ] =
-        React.useState<ReadonlyArray<Field.Field | AnyProse>>([ {
+        React.useState<ReadonlyArray<Field.Field | AnyDoc>>([ {
             Component: (_Props: unknown) => undefined,
             ErrorMessage: Option.none(),
             IsSubmitted: false,
@@ -53,11 +53,11 @@ export const RootComponent = (): React.ReactNode =>
         });
     });
 
-    const UpdateTail = (Callback: (OldTail: Field.Field | AnyProse) => Field.Field | AnyProse) =>
+    const UpdateTail = (Callback: (OldTail: Field.Field | AnyDoc) => Field.Field | AnyDoc) =>
     {
-        SetAtoms((Old: ReadonlyArray<Field.Field | AnyProse>) =>
+        SetAtoms((Old: ReadonlyArray<Field.Field | AnyDoc>) =>
         {
-            const Tail: Field.Field | AnyProse = Old[Old.length - 1];
+            const Tail: Field.Field | AnyDoc = Old[Old.length - 1];
             return [ ...(Old.slice(0, Old.length - 1)), Callback({ ...Tail }) ];
         });
     };
@@ -71,7 +71,7 @@ export const RootComponent = (): React.ReactNode =>
     {
         if (InEvent._tag === "Begin.Field")
         {
-            SetAtoms((Old: ReadonlyArray<Field.Field | AnyProse>) => [
+            SetAtoms((Old: ReadonlyArray<Field.Field | AnyDoc>) => [
                 ...Old,
                 {
                     Component: InEvent.Component,
@@ -84,9 +84,9 @@ export const RootComponent = (): React.ReactNode =>
                 }
             ]);
         }
-        else if (InEvent._tag === "Begin.Prose")
+        else if (InEvent._tag === "Begin.Doc")
         {
-            SetAtoms((Old: ReadonlyArray<Field.Field | AnyProse>) => [
+            SetAtoms((Old: ReadonlyArray<Field.Field | AnyDoc>) => [
                 ...Old,
                 {
                     Component: InEvent.Component,
@@ -116,7 +116,7 @@ export const RootComponent = (): React.ReactNode =>
                 Prompt.Action.$match({
                     ClearError: (_Value: unknown) =>
                     {
-                        UpdateTail((Old: Field.Field | AnyProse) =>
+                        UpdateTail((Old: Field.Field | AnyDoc) =>
                         {
                             // Effect.runSync(Console.log("ClearError"));
                             return {
@@ -127,7 +127,7 @@ export const RootComponent = (): React.ReactNode =>
                     },
                     Fail: ({ Message }: { readonly Message: React.ReactNode; }) =>
                     {
-                        UpdateTail((Old: Field.Field | AnyProse) =>
+                        UpdateTail((Old: Field.Field | AnyDoc) =>
                         {
                             // Effect.runSync(Console.log("Fail"));
                             return {
@@ -140,7 +140,7 @@ export const RootComponent = (): React.ReactNode =>
                     NextFrame: ({ State }: { readonly State: unknown; }) =>
                     {
                         // Effect.runSync(Console.log("NextFrame Callback"));
-                        UpdateTail((OldTail: Field.Field | AnyProse) =>
+                        UpdateTail((OldTail: Field.Field | AnyDoc) =>
                         {
                             return {
                                 ...OldTail,
@@ -155,7 +155,7 @@ export const RootComponent = (): React.ReactNode =>
                     },
                     StartValidation: (_Value: unknown) =>
                     {
-                        UpdateTail((OldTail: Field.Field | AnyProse) =>
+                        UpdateTail((OldTail: Field.Field | AnyDoc) =>
                         {
                             // Effect.runSync(Console.log("StartValidation"));
                             return {
@@ -167,7 +167,7 @@ export const RootComponent = (): React.ReactNode =>
                     },
                     Submit: ({ value }: { readonly value: unknown; }) =>
                     {
-                        UpdateTail((OldTail: Field.Field | AnyProse) =>
+                        UpdateTail((OldTail: Field.Field | AnyDoc) =>
                         {
                             return {
                                 ...OldTail,
@@ -184,7 +184,7 @@ export const RootComponent = (): React.ReactNode =>
     });
 
     const RenderedAtoms: React.ReactNode = Atoms.map((
-        Atom: Field.Field | AnyProse,
+        Atom: Field.Field | AnyDoc,
         Index: number
     ) =>
     {
@@ -219,14 +219,14 @@ export const RootComponent = (): React.ReactNode =>
         else
         {
             const { Component, Content } = Atom;
-            return <Prose.Prose
+            return <Doc.Doc
                 key={ Index }
                 { ...{ Component, Content } }
             />;
         }
     });
 
-    const LastAtom: Field.Field | AnyProse | undefined = Atoms[Atoms.length - 1];
+    const LastAtom: Field.Field | AnyDoc | undefined = Atoms[Atoms.length - 1];
 
     const Keybinds: Prompt.Keybinds | undefined =
         KeybindsOverride !== undefined
