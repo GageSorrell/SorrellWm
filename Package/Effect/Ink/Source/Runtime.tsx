@@ -37,7 +37,7 @@ export interface Runtime
     readonly Instance: Ink.Instance | undefined;
     readonly Kill: () => Effect.Effect<void, InkRuntimeError>;
     readonly Run: (RootComponent: FC, Options?: Options) =>
-    Effect.Effect<void, InkRuntimeError, Event.EventBridgePubSub | Scope.Scope>;
+    Effect.Effect<void, InkRuntimeError, Event.Bridge | Scope.Scope>;
 }
 
 interface RootProps extends PropsWithChildren, Partial<Component.Theme.ThemeProviderProps>
@@ -84,7 +84,7 @@ export const Runtime: Context.Reference<Runtime> = Context.Reference<Runtime>(
                         return;
                     }
 
-                    const UiEventService: Event.EventBridgePubSubImpl = yield* Event.EventBridgePubSub;
+                    const UiEventService: Event.BridgeImpl = yield* Event.Bridge;
                     const Bridge: Event.InkEventBridge = yield* Event.Make(UiEventService);
                     // const Bridge: Event.InkEventBridge = yield* Event.Make(Event.EventBridgePubSub );
 

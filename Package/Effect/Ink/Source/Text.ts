@@ -9,66 +9,36 @@
  * @license   MIT
  */
 
+import * as Data from "effect/Data";
+import * as Predicate from "effect/Predicate";
 import type * as React from "react";
-import type { TerminalRendererOptions } from "marked-terminal";
 
 export const TypeIdKey: string = "~sorrell/effect-ink/Prompt";
 export const TypeId: unique symbol = Symbol.for(TypeIdKey);
 export type TypeId = typeof TypeId;
 
-export interface Base<in out TagType extends string, in out ValueType>
+export interface Base<ValueType>
 {
     readonly [ TypeId ]: TypeId;
-
-    readonly _tag: TagType;
 
     readonly Value: ValueType;
 }
 
-export interface Plain extends Base<"Plain", string> { }
+export type Text = Data.TaggedEnum<{
+    readonly Plain: Base<string>;
+    readonly Rich: Base<React.ReactNode>;
+    readonly Markdown: Base<string>;
+}>;
 
-export interface Rich extends Base<"Rich", React.ReactNode> { }
+export type Markdown = Data.TaggedEnum.Value<Text, "Markdown">;
+export type Rich = Data.TaggedEnum.Value<Text, "Rich">;
+export type Plain = Data.TaggedEnum.Value<Text, "Plain">;
 
-export type RenderOptions = TerminalRendererOptions;
+const { $is, $match, ...TextConstructors }: Data.TaggedEnum.Constructor<Text> = Data.taggedEnum<Text>();
 
-export interface Markdown extends Base<"Markdown", string>
-{
-    readonly RenderOptions: RenderOptions;
-}
+export { $is, $match };
+export const Rich: Data.TaggedEnum.Constructor<Text>["Rich"] = TextConstructors.Rich;
+export const Plain: Data.TaggedEnum.Constructor<Text>["Plain"] = TextConstructors.Plain;
+export const Markdown: Data.TaggedEnum.Constructor<Text>["Markdown"] = TextConstructors.Markdown;
 
-export const Plain = (Value: string): Plain =>
-{
-    return {
-        [ TypeId ]: TypeId,
-        _tag: "Plain",
-
-        Value
-    } as const;
-};
-
-export const Rich = (Value: React.ReactNode): Rich =>
-{
-    return {
-        [ TypeId ]: TypeId,
-        _tag: "Rich",
-
-        Value
-    } as const;
-};
-
-export const Markdown = (Value: string, Options?: RenderOptions): Plain =>
-{
-    return {
-        [ TypeId ]: TypeId,
-        _tag: "Plain",
-
-        ...(Options !== undefined ? { Options } : { }),
-
-        Value
-    } as const;
-};
-
-export type Text =
-    | Plain
-    | Rich
-    | Markdown;
+export const IsText = (Value: unknown): Value is Text => Predicate.hasProperty(Value, TypeId);

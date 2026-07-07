@@ -24,7 +24,6 @@ import * as Internal from "./Internal/index.ts";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Predicate from "effect/Predicate";
-// import type * as Doc from "./Doc.ts";
 import * as Queue from "effect/Queue";
 import type * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -42,6 +41,8 @@ import type { ReactNode } from "react";
 
 export const TypeId: string = "~sorrell/effect-ink/Prompt";
 
+export type PromptError = Terminal.QuitError;
+
 /**
  * Represents an interactive terminal prompt that produces an `Output` value.
  *
@@ -54,7 +55,7 @@ export const TypeId: string = "~sorrell/effect-ink/Prompt";
  * @category models
  * @since 1.0.0
  */
-export interface Prompt<A> extends Effect.Effect<A, Terminal.QuitError, Environment>
+export interface Prompt<A> extends Effect.Effect<A, PromptError, Environment>
 {
     readonly [ TypeId ]:
     {
@@ -79,7 +80,7 @@ export const isPrompt = (u: unknown): u is Prompt<unknown> => Predicate.hasPrope
 export type Environment =
     | FileSystem.FileSystem
     | Path.Path
-    | Internal.Event.EventBridgePubSub
+    | Internal.Event.Bridge
     | Scope.Scope
     | Terminal.Terminal;
 
@@ -119,11 +120,11 @@ export type AnyAction = Action<any, any>;
  */
 export interface ActionDefinition extends Data.TaggedEnum.WithGenerics<2>
 {
-    readonly taggedEnum: Action<this["A"], this["B"]>
+    readonly taggedEnum: Action<this["A"], this["B"]>;
 }
 
 export interface HandlerArgument<StateType>
-    extends Pick<Internal.Event.EventBridgePubSubImpl["ActionOptions"], "Publish">
+    extends Pick<Internal.Event.BridgeImpl["Backend"], "Publish">
 {
     readonly Input: Option.Option<string>;
     readonly Key: Key;
@@ -157,36 +158,17 @@ export interface Handlers<StateType, OptionsType, A>
     // mutate any state.
     //
 
-    // readonly _tag: string;
-
     readonly Component: Field.Field.Component<StateType, OptionsType>;
-
-    // /**
-    //  * A function that is called to render the current frame of the `Prompt`.
-    //  */
-    // readonly render: (
-    //     state: StateType,
-    //     action: Action<StateType, A>
-    // ) => Effect.Effect<string, never, Environment>;
 
     /**
      * A function that is called to process user input and determine the next
-     * `Prompt.Action` that should be taken.
+     * {@link Action} that should be taken.
      */
     readonly Process: (Options: Required<OptionsType>) =>
     (Input: HandlerArgument<StateType>) => Effect.Effect<Action<StateType, A>, never, Environment>;
 
     // @TODO Make Required
     readonly GetInitialKeybinds?: (Options: Required<OptionsType>) => Keybinds;
-
-    // /**
-    //  * A function that is called to clear the terminal screen before rendering
-    //  * the next frame of the `Prompt`.
-    //  */
-    // readonly clear: (
-    //     state: StateType,
-    //     action: Action<StateType, A>
-    // ) => Effect.Effect<string, never, Environment>;
 }
 
 /**
@@ -834,11 +816,11 @@ export const confirm = (options: ConfirmOptions): Prompt<boolean> =>
  * @category constructors
  * @since 1.0.0
  */
-export const custom = <State, OptionsType, Output>(
-    initialState: State | Effect.Effect<State, never, Environment>,
+export const custom = <StateType, OptionsType, A>(
+    initialState: StateType | Effect.Effect<StateType, never, Environment>,
     Options: Required<OptionsType>,
-    handlers: Handlers<State, OptionsType, Output>
-): Prompt<Output> =>
+    handlers: Handlers<StateType, OptionsType, A>
+): Prompt<A> =>
 {
     const HandlersCast: HandlersUnknown = handlers as HandlersUnknown;
 
@@ -855,7 +837,7 @@ export const custom = <State, OptionsType, Output>(
     Operand.Options = Options;
     Operand.Component = HandlersCast.Component;
 
-    return Operand as Prompt<Output>;
+    return Operand as Prompt<A>;
 };
 
 /**
@@ -1183,7 +1165,7 @@ export const Password = (options: TextOptions): Prompt<Redacted.Redacted> =>
         map(Redacted.make)
     );
 
-export type PromptEffect<A> = Effect.Effect<A, Terminal.QuitError, Environment>;
+export type PromptEffect<A> = Effect.Effect<A, PromptError, Environment>;
 
 /**
  * Runs a prompt by reading terminal input and rendering prompt frames until the
@@ -1224,27 +1206,19 @@ export const run: {
                 //         { capacity: "unbounded" }
                 //     );
 
-                const pubSub: Internal.Event.EventBridgePubSubImpl = yield* Internal.Event.EventBridgePubSub;
+                const EventBridgeService: Internal.Event.BridgeImpl =
+                    yield* Internal.Event.Bridge;
                 // type InputEvent = Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">;
 
-                const input: Queue.Dequeue<
-                    // Input: Queue.Dequeue<Internal.Event.Frontend.Input, Cause.Done<void>>
-                    Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">,
-                    Cause.Done<void>
-                > =
+                const Input: InputDequeue =
                     yield* pipe(
-                        pubSub.Input.Stream,
-                        // Stream.filter(
-                        //     (Value): Value is InputEvent =>
-                        //     {
-                        //         return true;
-                        //     }),
+                        EventBridgeService.Frontend.Stream,
                         Stream.filter(Internal.Event.Frontend.$is("Input")),
                         Stream.toQueue({ capacity: "unbounded" })
                     );
 
                 const Out: A = yield* pipe(
-                    runWithInput(Self, input),
+                    runWithInput(Self, Input),
                     Effect.scoped
                 );
 
@@ -1455,9 +1429,7 @@ export const succeed = <A>(value: A): Prompt<A> =>
  * @category constructors
  * @since 1.0.0
  */
-export const text = (
-    options: TextOptions
-): Prompt<string> => basePrompt(options, "Text");
+export const text = (options: TextOptions): Prompt<string> => basePrompt(options, "Text");
 
 /**
  * Creates a toggle prompt that lets the user switch between active and inactive
@@ -1524,10 +1496,10 @@ export namespace Operand
 
     export interface Loop extends
         Op<"Loop", {
-            readonly InitialState: unknown | Effect.Effect<unknown, never, Environment>;
-            readonly Component: Field.Field.Component<unknown, unknown>;
+            readonly Component: Field.Field.Component.Any;
+            readonly InitialState: Internal.Types.OrEffect<unknown, never, Environment>;
             readonly Options: unknown;
-            readonly Process: ReturnType<Handlers<unknown, unknown, unknown>["Process"]>;
+            readonly Process: ReturnType<HandlersUnknown["Process"]>;
         }> { }
 
     export interface Doc extends
@@ -1551,8 +1523,12 @@ export namespace Operand
             readonly value: unknown;
         }> { }
 
+    /**
+     * @todo Do not use or modify `runLoop` *et al.*, instead create other functions
+     * with similar functionality.
+     */
     export interface Form extends Op<"Form", {
-        readonly Foo: string;
+        readonly _Form: "_Form";
     }> { }
 
     export type Operand =
@@ -1563,25 +1539,32 @@ export namespace Operand
         | Succeed;
 }
 
+type AllTupled<ArrayType extends ArrayLike<Any>> = Prompt<{
+    [ K in keyof ArrayType ]: [ ArrayType[K] ] extends [ Prompt<infer A> ]
+        ? A
+        : never;
+}>;
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const allTupled = <const T extends ArrayLike<Any>>(arg: T): Prompt<{
-    [ K in keyof T ]: [ T[K] ] extends [  Prompt<infer A> ] ? A : never;
-}> =>
+const allTupled = <const ArrayType extends ArrayLike<Any>>(Argument: ArrayType): AllTupled<ArrayType> =>
 {
-    if (arg.length === 0)
+    if (Argument.length === 0)
     {
         return succeed([ ]) as any;
     }
-    if (arg.length === 1)
+    if (Argument.length === 1)
     {
-        return map(arg[0], (x: any) => [ x ]) as any;
+        return map(Argument[0], (x: any) => [ x ]) as any;
     }
-    let result: Prompt<Array<any>> = map(arg[0], (x: any) => [ x ]);
-    for (let i: number = 1; i < arg.length; i++)
+
+    let result: Prompt<Array<any>> = map(Argument[0], (x: any) => [ x ]);
+
+    for (let i: number = 1; i < Argument.length; i++)
     {
-        const curr: Any = arg[i];
+        const curr: Any = Argument[i];
         result = flatMap(result, (tuple: Array<any>) => map(curr, (a: any) => [ ...tuple, a ]));
     }
+
     return result as any;
 };
 
@@ -1590,16 +1573,21 @@ const allTupled = <const T extends ArrayLike<Any>>(arg: T): Prompt<{
 const EnsureInk: Effect.Effect<
     void,
     Runtime.InkRuntimeError,
-    | Internal.Event.EventBridgePubSub
+    | Internal.Event.Bridge
     | Scope.Scope
 > = Runtime.Runtime.defaultValue().Run(Component.Prompt.RootComponent);
+
+type InputDequeue = Queue.Dequeue<
+    Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">,
+    Cause.Done<void>
+>;
 
 const runWithInput = <A>(
     prompt: Prompt<A>,
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     // pubSub: PubSub.PubSub<AnyAction>,
     // terminal: Terminal.Terminal,
-    input: Queue.Dequeue<Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">, Cause.Done<void>>
+    input: InputDequeue
     // Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">,
 ): Effect.Effect<A, NoSuchElementError | Runtime.InkRuntimeError, Environment | Scope.Scope> =>
     Effect.suspend(() =>
@@ -1610,16 +1598,31 @@ const runWithInput = <A>(
 
         switch (op._tag)
         {
+            case "Form":
+            {
+                return Effect.fnUntraced(function* ()
+                {
+                    const pubSub: Internal.Event.BridgeImpl =
+                        yield* Internal.Event.Bridge;
+
+                    yield* pubSub.Backend.Publish(
+                        Internal.Event.Backend.Begin["Begin.Doc"]({
+                            Component: op.Component,
+                            Content: op.Content
+                        })
+                    );
+
+                    return yield* Effect.void;
+                });
+            }
             case "Doc":
             {
                 return Effect.fnUntraced(function* ()
                 {
-                    const pubSub: Internal.Event.EventBridgePubSubImpl =
-                        yield* Internal.Event.EventBridgePubSub;
+                    const pubSub: Internal.Event.BridgeImpl =
+                        yield* Internal.Event.Bridge;
 
-                    // yield* Console.dir(loop.Component);
-
-                    yield* pubSub.ActionOptions.Publish(
+                    yield* pubSub.Backend.Publish(
                         Internal.Event.Backend.Begin["Begin.Doc"]({
                             Component: op.Component,
                             Content: op.Content
@@ -1650,29 +1653,21 @@ const runWithInput = <A>(
     });
 
 const runLoop: {
-    (Loop: Operand.Loop,
-        // Input: Queue.Dequeue<Internal.Event.Frontend.Input, Cause.Done<void>>
-        Input: Queue.Dequeue<Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">, Cause.Done<void>>
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    ): Effect.Effect<unknown, any, any>;
+    (Loop: Operand.Loop, Input: InputDequeue): Effect.Effect<unknown, any, any>;
 } = Effect.fnUntraced(
-    function*(
-        Loop: Operand.Loop,
-        Input: Queue.Dequeue<Data.TaggedEnum.Value<Internal.Event.Frontend.Event, "Input">, Cause.Done<void>>
-    )
+    function* (Loop: Operand.Loop, Input: InputDequeue)
     {
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         let State: any = Effect.isEffect(Loop.InitialState)
             ? yield* Loop.InitialState
             : Loop.InitialState;
 
-        let ThisAction: Action<unknown, unknown> = Action.NextFrame({ State: State });
+        let ThisAction: AnyAction = Action.NextFrame({ State });
 
-        const pubSub: Internal.Event.EventBridgePubSubImpl = yield* Internal.Event.EventBridgePubSub;
+        const pubSub: Internal.Event.BridgeImpl = yield* Internal.Event.Bridge;
 
-        // yield* Console.dir(loop.Component);
-
-        yield* pubSub.ActionOptions.Publish(Internal.Event.Backend.Begin["Begin.Field"]({
+        yield* pubSub.Backend.Publish(Internal.Event.Backend.Begin["Begin.Field"]({
             Component: Loop.Component,
             Keybinds: Loop?.GetInitialKeybinds(Loop.Options),
             Options: Loop.Options
@@ -1680,77 +1675,27 @@ const runLoop: {
 
         while (true)
         {
-            // @TODO Where to pick back up:
-            //
-            // The `Action` `Part` should be extended to also allow for submitting options
-            // and the Component, which should correspond to the root component creating
-            // a new instance of that component, and updating its state on subsequent publishes
-            // of a new event type that belongs to the `Action` `Part`.
-
-            yield* pubSub.ActionOptions.Publish(ThisAction);
+            yield* pubSub.Backend.Publish(ThisAction);
 
             const { _tag: _, ...Tail } = yield* Queue.take(Input);
 
             ThisAction = yield* Loop.Process({
                 ...Tail,
-                Publish: pubSub.ActionOptions.Publish,
+                Publish: pubSub.Backend.Publish,
                 State
             });
-            // // const msg: string = yield* loop.render(state, action);
-            // /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-            // // yield* Effect.orDie(terminal.display(msg));
-            // if (loop.events)
-            // {
-            //     // type InputEffect = Effect.Effect<{
-            //     //     _tag: "Input";
-            //     //     input: Terminal.UserInput;
-            //     // }, Cause.Done<void>, never>;
 
-            //     // const takeInput: InputEffect = pipe(
-            //     //     Queue.take(input),
-            //     //     Effect.map((input: Terminal.UserInput) => ({ _tag: "Input" as const, input }))
-            //     // );
-            //     // const result: (
-            //     //     | {
-            //     //         _tag: "Input";
-            //     //         input: Terminal.UserInput;
-            //     //     }
-            //     //     | {
-            //     //         _tag: "Event";
-            //     //         value: unknown;
-            //     //     }
-            //     // ) = yield* Effect.raceFirst(
-            //     //     takeInput,
-            //     //     pipe(
-            //     //         Queue.take(loop.events),
-            //     //         Effect.map((value: unknown) => ({ _tag: "Event" as const, value }))
-            //     //     )
-            //     // );
-
-            //     // action = yield* loop.Process(value, state);
-            // }
-            // else
-            // {
-            //     // const result: Terminal.UserInput = yield* Queue.take(input);
-            //     action = yield* loop.Process(input, state);
-            // }
-            // yield* Console.log("Foo");
             switch (ThisAction._tag)
             {
                 case "NoOp":
                     continue;
                 case "NextFrame":
                 {
-                    // yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
                     State = ThisAction.State;
-                    // yield* pubSub.ActionOptions.Publish(action);
                     continue;
                 }
                 case "Submit":
                 {
-                    // yield* Effect.orDie(terminal.display(yield* loop.clear(state, action)));
-                    // const msg: string = yield* loop.render(state, action);
-                    // yield* Effect.orDie(terminal.display(msg));
                     return ThisAction.value;
                 }
             }
@@ -3060,48 +3005,50 @@ export const Form: <
     const Arg extends Iterable<Any> | Record<string, Any>
 >(arg: Arg) => All.Return<Arg> = function()
 {
-    if (arguments.length === 1)
-    {
-        if (isPrompt(arguments[0]))
-        {
-            /* eslint-disable @typescript-eslint/no-explicit-any */
-            return map(arguments[0], (x: unknown) => [ x ]) as any;
-        }
-        else if (Array.isArray(arguments[0]))
-        {
-            return allTupled(arguments[0]) as any;
-        }
-        else
-        {
-            const entries: Array<[ string, Any ]> =
-                Object.entries(arguments[0] as Readonly<{ [ K: string ]: Any }>);
-            let result: Prompt<{ [ K: string ]: any; }> =
-                map(entries[0][1], (value: any) => ({ [entries[0][0]]: value }));
-            if (entries.length === 1)
-            {
-                return result as any;
-            }
-            const rest: Array<[ string, Any ]> = entries.slice(1);
-            for (const [ key, prompt ] of rest)
-            {
-                result = pipe(
-                    result,
-                    flatMap((record: Record<string, any>) =>
-                        pipe(
-                            prompt,
-                            map((Value: any) => ({
-                                ...record,
-                                [ key ]: Value
-                            }))
-                        )
-                    )
-                );
-            }
-            return result as any;
-        }
-    }
-    return allTupled(arguments[0]) as any;
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    // if (arguments.length === 1)
+    // {
+    //     if (isPrompt(arguments[0]))
+    //     {
+    //         /* eslint-disable @typescript-eslint/no-explicit-any */
+    //         return map(arguments[0], (x: unknown) => [ x ]) as any;
+    //     }
+    //     else if (Array.isArray(arguments[0]))
+    //     {
+    //         return allTupled(arguments[0]) as any;
+    //     }
+    //     else
+    //     {
+    //         const entries: Array<[ string, Any ]> =
+    //             Object.entries(arguments[0] as Readonly<{ [ K: string ]: Any }>);
+    //         let result: Prompt<{ [ K: string ]: any; }> =
+    //             map(entries[0][1], (value: any) => ({ [entries[0][0]]: value }));
+    //         if (entries.length === 1)
+    //         {
+    //             return result as any;
+    //         }
+    //         const rest: Array<[ string, Any ]> = entries.slice(1);
+    //         for (const [ key, prompt ] of rest)
+    //         {
+    //             result = pipe(
+    //                 result,
+    //                 flatMap((record: Record<string, any>) =>
+    //                     pipe(
+    //                         prompt,
+    //                         map((Value: any) => ({
+    //                             ...record,
+    //                             [ key ]: Value
+    //                         }))
+    //                     )
+    //                 )
+    //             );
+    //         }
+    //         return result as any;
+    //     }
+    // }
+    // return allTupled(arguments[0]) as any;
+    // /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    return undefined as any;
 };
 
 /* eslint-enable prefer-rest-params */

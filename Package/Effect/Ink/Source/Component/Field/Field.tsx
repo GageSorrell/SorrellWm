@@ -56,6 +56,11 @@ const Message = ({ IsSubmitted, children }: MessageProps): React.ReactNode =>
 
 export type Component<StateType, OptionsType> = FC<Props<StateType, OptionsType>>;
 
+export namespace Component
+{
+    export type Any = Component<unknown, unknown>;
+}
+
 /**
  * The base type for props given to the components `export`ed by this module.
  *

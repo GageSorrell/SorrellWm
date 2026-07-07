@@ -1,7 +1,7 @@
 /**
  * Testing module.
  *
- * @module @sorrell/effect-ink/Playground
+ * @module @sorrell/effect-ink/Internal/Playground
  * @internal
  *
  * @file      Playground.tsx
@@ -59,7 +59,7 @@ const command =
 /* eslint-disable-next-line @typescript-eslint/typedef */
 const Program = pipe(
     Cli.Command.run(command, { version: "1.0.0" }),
-    Effect.provide(Event.EventBridgePubSub.layer),
+    Effect.provide(Event.Bridge.layer),
     Effect.provide(NodeServices.layer)
 );
 

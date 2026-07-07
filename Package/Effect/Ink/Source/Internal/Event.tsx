@@ -10,6 +10,7 @@
  * @license   MIT
  */
 
+import type * as Function from "effect/Function";
 import type * as Prompt from "../Prompt.js";
 import { Context, Data, Effect, Layer, PubSub, type Scope, Stream, pipe } from "effect";
 import {
@@ -183,10 +184,10 @@ interface Part<EventType>
 //     };
 // };
 
-export interface EventBridgePubSubImpl
+export interface BridgeImpl
 {
-    readonly Input: Part<Frontend.Event>;
-    readonly ActionOptions: Part<Backend.Event>;
+    readonly Frontend: Part<Frontend.Event>;
+    readonly Backend: Part<Backend.Event>;
 }
 
 const EmptyContext: InkEventBridge =
@@ -248,106 +249,60 @@ export const UseEvent = (Handler: (Event: Backend.Event) => void): void =>
     }, [ Bridge ]);
 };
 
-export class EventBridgePubSub extends Context.Service<EventBridgePubSub, EventBridgePubSubImpl>()(TypeId)
+export class Bridge extends Context.Service<Bridge, BridgeImpl>()(TypeId)
 {
-    static readonly layer: Layer.Layer<EventBridgePubSub> = Layer.effect(
-        EventBridgePubSub,
+    static readonly layer: Layer.Layer<Bridge> = Layer.effect(
+        Bridge,
         Effect.gen(function* ()
         {
             const capacity: 512 = 512 as const;
-            const ActionOptionsEvents: PubSub.PubSub<Backend.Event> =
+            const BackendEvents: PubSub.PubSub<Backend.Event> =
                 yield* PubSub.bounded<Backend.Event>({ capacity });
 
-            const InputEvents: PubSub.PubSub<Frontend.Event> =
+            const FrontendEvents: PubSub.PubSub<Frontend.Event> =
                 yield* PubSub.bounded<Frontend.Event>({ capacity });
 
-            yield* Effect.addFinalizer(() =>
-            {
-                return Effect.all([
-                    PubSub.shutdown(ActionOptionsEvents),
-                    PubSub.shutdown(InputEvents)
+            const ShutdownBridge: Function.LazyArg<Effect.Effect<[ void, void ]>> =
+                () => Effect.all([
+                    PubSub.shutdown(BackendEvents),
+                    PubSub.shutdown(FrontendEvents)
                 ]);
-            });
 
-            const ActionOptions: Part<Backend.Event> =
+            yield* Effect.addFinalizer(ShutdownBridge);
+
+            const Backend: Part<Backend.Event> =
                 {
                     Publish: (Event: Backend.Event) => Effect.gen(function* ()
                     {
-                        yield* PubSub.publish(ActionOptionsEvents, Event);
+                        yield* PubSub.publish(BackendEvents, Event);
                     }),
-                    Stream: Stream.fromPubSub(ActionOptionsEvents),
-                    Subscribe: yield* PubSub.subscribe(ActionOptionsEvents)
+                    Stream: Stream.fromPubSub(BackendEvents),
+                    Subscribe: yield* PubSub.subscribe(BackendEvents)
                 } as const;
 
-            const Input: Part<Frontend.Event> =
+            const Frontend: Part<Frontend.Event> =
                 {
                     Publish: (Event: Frontend.Event) => pipe(
-                        PubSub.publish(InputEvents, Event),
+                        PubSub.publish(FrontendEvents, Event),
                         Effect.asVoid
                     ),
-                    Stream: Stream.fromPubSub(InputEvents),
-                    Subscribe: yield* PubSub.subscribe(InputEvents)
+                    Stream: Stream.fromPubSub(FrontendEvents),
+                    Subscribe: yield* PubSub.subscribe(FrontendEvents)
                 } as const;
 
-            return EventBridgePubSub.of({
-                ActionOptions,
-                Input
-            });
+            return Bridge.of({ Backend, Frontend });
         })
     );
 }
 
-// @TODO
-// Pick back up by making the service that ChatGPT recommends (rather than)
-// just implementing a singleton object with no service.  Then, make the Runtime
-// use this service.
-
-// export const Make = () => Effect.gen(function* ()
-//     Events: InkEvents
-// ): Effect.Effect<InkEventBridge, never, Scope.Scope> =>
-//     Effect.gen(function* ()
-//     {
-//         const Listeners = new Set<(Event: UiEvent) => void>();
-
-//         yield* Events.Subscribe.pipe(
-//             Stream.runForEach((Event) =>
-//                 Effect.sync(() =>
-//                 {
-//                     for (const Listener of Listeners)
-//                     {
-//                         Listener(Event);
-//                     }
-//                 })
-//             ),
-//             Effect.forkScoped
-//         );
-
-//         return {
-//             Publish: (Event) =>
-//             {
-//                 Effect.runFork(Events.Publish(Event));
-//             },
-
-//             Subscribe: (Listener) =>
-//             {
-//                 Listeners.add(Listener);
-
-//                 return () =>
-//                 {
-//                     Listeners.delete(Listener);
-//                 };
-//             }
-//         };
-//     });
-
-export const Make = (Events: EventBridgePubSubImpl): Effect.Effect<InkEventBridge, never, Scope.Scope> =>
+export const Make = (Events: BridgeImpl): Effect.Effect<InkEventBridge, never, Scope.Scope> =>
     Effect.gen(function* ()
     {
         const Listeners: Set<(Event: Backend.Event) => void> =
             new Set<(Event: Backend.Event) => void>();
 
         yield* pipe(
-            Events.ActionOptions.Stream,
+            Events.Backend.Stream,
             Stream.runForEach((Event: Backend.Event) =>
                 Effect.sync(() =>
                 {
@@ -363,17 +318,14 @@ export const Make = (Events: EventBridgePubSubImpl): Effect.Effect<InkEventBridg
         return {
             Publish: (Event: Frontend.Event) =>
             {
-                Effect.runFork(Events.Input.Publish(Event));
+                Effect.runFork(Events.Frontend.Publish(Event));
             },
 
             Subscribe: (Listener: (Value: Backend.Event) => void) =>
             {
                 Listeners.add(Listener);
 
-                return () =>
-                {
-                    Listeners.delete(Listener);
-                };
+                return () => void Listeners.delete(Listener);
             }
         };
     });

@@ -10,6 +10,9 @@
  * @license   MIT
  */
 
-export * as Event from "./Event.ts";
-export * as Prompt from "./Prompt.ts";
 export * as Doc from "./Doc.ts";
+export * as Event from "./Event.ts";
+export * as Handle from "./Handle.ts";
+export * as Prompt from "./Prompt.ts";
+export * as Text from "./Text.ts";
+export * as Types from "./Types.ts";

@@ -10,6 +10,8 @@
  * @license   MIT
  */
 
+import type * as Effect from "effect/Effect";
+
 type UnionToIntersection<Union> =
     (
         Union extends unknown
@@ -32,11 +34,11 @@ type UnionToTuple<
     Union,
     Result extends ReadonlyArray<unknown> = [ ]
 > =
-    [Union] extends [never]
+    [ Union ] extends [ never ]
         ? Result
         : UnionToTuple<
             Exclude<Union, LastOfUnion<Union>>,
-            [LastOfUnion<Union>, ...Result]
+            [ LastOfUnion<Union>, ...Result ]
         >;
 
 /**
@@ -44,3 +46,11 @@ type UnionToTuple<
  */
 // @ts-expect-error "Excessive stack depth" error appears here, but not in the types defined with this type.
 export type PropertyCount<Value extends object> = UnionToTuple<keyof Value>["length"];
+
+export type OrEffect<A, E = never, R = never> =
+    | A
+    | Effect.Effect<A, E, R>;
+
+export type CallbackArgument<ArgumentType extends object, ReturnType> =
+    | (() => ReturnType)
+    | ((Argument: Partial<ArgumentType>) => ReturnType);
