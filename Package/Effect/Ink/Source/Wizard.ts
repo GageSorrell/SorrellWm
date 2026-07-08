@@ -11,11 +11,16 @@
  * @license   MIT
  */
 
-import * as Internal from "./Internal/index.js";
+import type * as Internal from "./Internal/index.js";
 import type * as React from "react";
-import * as Prompt from "./Prompt.ts";
-import { Data, Effect, Effectable, type Record, type Terminal, type Types } from "effect";
-import type * as Text from "./Text.ts";
+import {
+    Data,
+    Effect,
+    type Record,
+    type Types
+} from "effect";
+import type { Prompt, Text } from "./index.ts";
+import type { Effect as _Effect } from "effect";
 
 export const TypeIdKey: "~sorrell/effect-ink/Wizard" = "~sorrell/effect-ink/Wizard" as const;
 export const TypeId: unique symbol = Symbol.for(TypeIdKey);
@@ -26,7 +31,7 @@ export type Environment = Prompt.Environment;
 export class TaskPageCanceled extends Data.TaggedClass("TaskPageCanceled")<{ readonly Foo: string; }> { }
 
 export type WizardError =
-    | Terminal.QuitError
+    | Prompt.PromptError
     | TaskPageCanceled;
 
 export type Result = Record.ReadonlyRecord<string, unknown>;
@@ -41,23 +46,31 @@ export interface Wizard<A extends Result, E extends WizardError = never>
     };
 }
 
-export const Run: {
-    <A extends Record.ReadonlyRecord<string, unknown>,
-        E extends WizardError = never>(
-        Self: Wizard<A, E>
-    ): Effect.Effect<A, E, Environment>;
-} = Effect.fnUntraced(function* <
-    A extends Record.ReadonlyRecord<string, unknown>,
-    E extends WizardError = never
->(_Self: Wizard<A, E>)
+export namespace Wizard
 {
+    export type Effect<
+        A extends Record.ReadonlyRecord<string, unknown>,
+        E extends WizardError = never
+    > = _Effect.Effect<A, E, Environment>;
 
-});
+    export type Any = Wizard<Result, WizardError>;
 
-// type PromptsFromResult<A extends Result> =
-//     {
-//         [ Key in keyof A ]: Prompt.Prompt<A>;
-//     };
+    export namespace Effect
+    {
+        export type Of<WizardType extends Any> = WizardType extends Wizard<infer A, infer E>
+            ? Effect<A, E>
+            : never;
+    }
+}
+
+export const Run: {
+    <WizardType extends Wizard.Any>(Self: WizardType): Wizard.Effect.Of<typeof Self>;
+} = Effect.fnUntraced(function* <WizardType extends Wizard.Any>(_Self: WizardType)
+{
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    return undefined as unknown as any;
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+}) as any;
 
 type PromptRecord = Record.ReadonlyRecord<string, Prompt.Any>;
 
@@ -138,6 +151,6 @@ export namespace Page
     {
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         return undefined as any;
-    });
+    }) as unknown as (<RecordType extends PromptRecord>(Prompts: RecordType) => Page<typeof Prompts>);
 }
 

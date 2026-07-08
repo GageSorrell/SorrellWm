@@ -231,7 +231,7 @@ const Prototype: any =
         }),
         [ TypeId ]:
         {
-            _Output: (_: never) => _
+            _A: (_: never) => _
         }
     };
 

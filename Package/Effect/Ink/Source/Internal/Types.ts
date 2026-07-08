@@ -12,10 +12,10 @@
 
 import type * as Effect from "effect/Effect";
 
-type UnionToIntersection<Union> =
+type UnionToIntersection<UnionType> =
     (
-        Union extends unknown
-            ? (Value: Union) => void
+        UnionType extends unknown
+            ? (Value: UnionType) => void
             : never
     ) extends (Value: infer Intersection) => void
         ? Intersection

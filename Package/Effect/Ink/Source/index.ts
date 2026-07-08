@@ -15,5 +15,7 @@
  */
 
 export * as Component from "./Component/index.ts";
-export * from "./Prompt.ts";
+export * as Prompt from "./Prompt.ts";
 export * as Doc from "./Doc.ts";
+export * as Page from "./Page.ts";
+export * as Text from "./Text.ts";

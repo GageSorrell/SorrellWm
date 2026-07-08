@@ -20,12 +20,10 @@ export interface DisplayTextProps
     readonly Text: Text.Text;
 }
 
-const Simple: (self: Text.Base<React.ReactNode>) => React.ReactNode =
-    Struct.get<Text.Base<React.ReactNode>, "Value">("Value");
-
 export const DisplayText = ({ Text: InText }: DisplayTextProps): React.ReactNode =>
-    Text.$match(InText, {
-        Markdown: (In: Text.Markdown): React.ReactNode => <Markdown>{ Simple(In) as string }</Markdown>,
+    Text.$Match(InText, {
+        Markdown: (In: Text.Markdown): React.ReactNode =>
+            <Markdown>{ Struct.get(In, "Value") as string }</Markdown>,
         Plain: Struct.get("Value"),
         Rich: Struct.get("Value")
     });
