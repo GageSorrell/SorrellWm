@@ -54,3 +54,9 @@ export type OrEffect<A, E = never, R = never> =
 export type CallbackArgument<ArgumentType extends object, ReturnType> =
     | (() => ReturnType)
     | ((Argument: Partial<ArgumentType>) => ReturnType);
+
+export type Thunk<ArgumentType = never> = [ ArgumentType ] extends [ never ]
+    ? () => void
+    : (Argument: ArgumentType) => void;
+
+export type Transform<A> = (Argument: A) => typeof Argument;

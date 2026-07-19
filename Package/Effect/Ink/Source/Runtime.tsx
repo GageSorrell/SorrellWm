@@ -24,7 +24,10 @@ export type TypeId = typeof TypeId;
 
 export class InkRuntimeError extends Data.TaggedError("InkRuntimeError")<{ readonly message: string; }> { }
 
-export interface Options extends Component.Theme.ThemeContext { }
+export interface Options extends Component.Theme.ThemeContext
+{
+    readonly EnableMouseInteraction?: boolean;
+}
 
 export interface Runtime
 {
@@ -40,22 +43,31 @@ export interface Runtime
     Effect.Effect<void, InkRuntimeError, Event.Bridge | Scope.Scope>;
 }
 
-interface RootProps extends PropsWithChildren, Partial<Component.Theme.ThemeProviderProps>
+interface RootProps
+    extends PropsWithChildren,
+    Partial<Component.Theme.ThemeProviderProps>,
+    Omit<Options, keyof Component.Theme.ThemeContext>
 {
     readonly Bridge: Event.InkEventBridge;
 }
 
-const RootComponent = ({
-    Bridge,
-    Theme: InTheme = Theme.DefaultTheme,
-    children
-}: RootProps): ReactNode =>
+const RootComponent = (Props: RootProps): React.ReactNode =>
 {
+    const Defaults: Required<Pick<RootProps, "EnableMouseInteraction" | "Theme">> =
+        {
+            EnableMouseInteraction: true,
+            Theme: Component.Theme.DefaultTheme
+        };
+
+    const { Bridge, EnableMouseInteraction, Theme, children } = { ...Defaults, ...Props };
+
     return (
         <Event.Provider { ...{ Bridge } }>
-            <Component.Theme.ThemeProvider Theme={ InTheme }>
-                { children }
-            </Component.Theme.ThemeProvider>
+            <Mouse.Provider>
+                <Component.Theme.ThemeProvider { ...{ Theme } }>
+                    { children }
+                </Component.Theme.ThemeProvider>
+            </Mouse.Provider>
         </Event.Provider>
     );
 };

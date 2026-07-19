@@ -20,11 +20,14 @@
 
 import type * as Prompt from "./Prompt.ts";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import type { Effect } from "effect";
+import type { Effect, Record } from "effect";
 
-export type Environment = Prompt.Environment;
+export type Environment =
+    // @TODO
+    | never
+    | Prompt.Environment;
 
-export type Results<KeyType extends string, ValueType> = Record<KeyType, ValueType>;
+export type Results<KeyType extends string, ValueType> = Record.ReadonlyRecord<KeyType, ValueType>;
 
 export namespace Results
 {

@@ -1,0 +1,25 @@
+{
+    "compilerOptions":
+    {
+        "incremental": true,
+        "composite": true,
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleDetection": "force",
+        "verbatimModuleSyntax": true,
+        "rewriteRelativeImportExtensions": true,
+        "strict": true,
+        "exactOptionalPropertyTypes": true,
+        "noUnusedLocals": true,
+        "noImplicitOverride": true,
+        "declaration": true,
+        "declarationMap": true,
+        "rootDir": "./Source",
+        "sourceMap": true,
+        "types": [ "@types/node" ],
+        "jsx": "react-jsx",
+        "skipLibCheck": true
+    },
+    "include": [ "Source" ],
+    "exclude": [ "Distribution", "Intermediate" ]
+}

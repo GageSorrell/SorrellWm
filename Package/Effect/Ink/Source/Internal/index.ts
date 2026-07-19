@@ -15,6 +15,7 @@ export * as FixedTaggedEnum from "./FixedTaggedEnum.ts";
 export * as Doc from "./Doc.ts";
 export * as Event from "./Event.ts";
 export * as Handle from "./Handle.ts";
+export * as Mouse from "./Mouse.tsx";
 export * as Program from "./Program.ts";
 export * as Prompt from "./Prompt.ts";
 export * as Text from "./Text.ts";

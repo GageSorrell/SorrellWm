@@ -55,6 +55,7 @@
         "!Package/Create/CodeAuger",
         "Package/Effect/Effect",
         "Package/Effect/Ink",
+        "Package/Ink/Mouse",
         "!Package/EffectOld",
         "Package/CodeAuger/Main",
         "!Package/CodeAuger/Create",

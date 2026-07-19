@@ -1,0 +1,64 @@
+{
+  "name": "@sorrell/ink-mouse",
+  "private": false,
+  "version": "1.0.1",
+  "description": "Use modern mouse features in the terminal with ink.",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "./package.json",
+    "./License.md",
+    "./ReadMe.md",
+    "./Distribution/**/*"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "build:test": "tsc -p ./tsconfig.test.json",
+    "test": "node ./Intermediate/Test/index.js"
+  },
+  "keywords": [
+    "ink",
+    "mouse",
+    "hook",
+    "SGR"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Ink/Mouse",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "homepage": "https://ink-mouse.sorrell.sh",
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "@types/react": ">=19.2.0",
+    "react": ">=19.2.0",
+    "react-devtools-core": ">=6.1.2",
+    "ink": "7.1.0"
+  },
+  "peerDependencies": {
+    "ink": "7.1.0"
+  },
+  "peerDependenciesMeta": {
+    "ink": {
+      "optional": false
+    }
+  },
+  "dependencies": {
+    "effect": "^4.0.0-beta"
+  }
+}

@@ -485,10 +485,10 @@ module.exports = {
                 {
                     contexts:
                     [
-                        "ExportNamedDeclaration > TSTypeAliasDeclaration",
+                        "ExportNamedDeclaration > TSTypeAliasDeclaration:not([id.name='TypeId'])",
+                        "ExportNamedDeclaration > VariableDeclaration:not([declarations.0.id.name='TypeId'])",
                         "ExportNamedDeclaration > TSInterfaceDeclaration",
                         "ExportNamedDeclaration > TSEnumDeclaration",
-                        "ExportNamedDeclaration > VariableDeclaration",
                         "ExportNamedDeclaration > FunctionDeclaration",
                         "ExportNamedDeclaration > ClassDeclaration"
                     ]

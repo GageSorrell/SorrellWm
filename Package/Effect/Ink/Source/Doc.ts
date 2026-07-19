@@ -1,5 +1,5 @@
 /**
- * Annotate prompts with headers and bodies of text.
+ * Annotate prompts with display-only UI elements.
  *
  * @module @sorrell/effect-ink/Doc
  *
