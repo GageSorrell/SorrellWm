@@ -1,0 +1,12 @@
+{
+  "name": "@sorrell/esbuild-config",
+  "description": "The ESBuild configuration used in the SorrellWm monorepo.",
+  "version": "1.0.0",
+  "private": "false",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [ ],
+  "type": "commonjs"
+}

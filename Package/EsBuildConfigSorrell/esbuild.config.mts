@@ -1,15 +1,15 @@
 /**
+ * This module provides full configuration for {@link https://www.npmjs.com/package/esbuild | ESBuild},
+ * for the packages in this monorepo that provide exports for `CommonJS` *and* `ESM` packages, *and*
+ * types, which are provided in *both* `*.d.cts` and `*.d.mts` form.
+ *
+ *
+ * @module @sorrell/esbuild-config
+ *
  * @file      esbuild.config.mjs
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
- */
-
-/**
- * @module
- * This module provides full configuration for {@link https://www.npmjs.com/package/esbuild | ESBuild},
- * for the packages in this monorepo that provide exports for `CommonJS` *and* `ESM` packages, *and*
- * types, which are provided in *both* `*.d.cts` and `*.d.mts` form.
  */
 
 /* eslint-disable jsdoc/require-jsdoc */
