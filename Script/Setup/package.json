@@ -1,0 +1,40 @@
+{
+    "name": "@sorrell/wm-monorepo-setup",
+    "version": "0.1.0",
+    "description": "Local setup automation for the SorrellWm monorepo.",
+    "private": true,
+    "type": "module",
+    "author": {
+        "name": "Gage Sorrell",
+        "email": "gage@sorrell.sh",
+        "url": "https://sorrell.sh"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git",
+        "directory": "Script/Setup"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    },
+    "scripts": {
+        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../../Package/EsLintConfigSorrell --ext .ts Source",
+        "start": "tsx Source/Index.ts",
+        "typecheck": "tsc --noEmit -p tsconfig.json"
+    },
+    "dependencies": {
+        "@effect/platform-node": "4.0.0-beta.99",
+        "effect": "4.0.0-beta.99",
+        "ora": "9.4.1"
+    },
+    "devDependencies": {
+        "@sorrell/eslint-config": "file:../../Package/EsLintConfigSorrell",
+        "@types/node": "26.1.1",
+        "cross-env": "10.1.0",
+        "eslint": "9.39.5",
+        "tsx": "4.23.1",
+        "typescript": "6.0.2"
+    }
+}

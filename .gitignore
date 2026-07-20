@@ -31,3 +31,6 @@ Application/Intermediate
 .env*
 *.tsbuildinfo
 .turbo
+
+# Local monorepo setup state
+/Configuration/Local.json

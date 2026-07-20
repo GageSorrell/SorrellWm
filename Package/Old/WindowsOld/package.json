@@ -1,0 +1,53 @@
+{
+  "name": "@sorrell/windows",
+  "private": false,
+  "version": "1.0.0",
+  "description": "Utilities for accessing the Windows API in NodeJS.",
+  "main": "./Distribution/index.js",
+  "scripts": {
+    "build": "cd ../../Script/Build && npm run start",
+    "cmake-step": "cmake-js compile --out ../Build",
+    "start": "npm run build"
+  },
+  "keywords": [
+    "windows",
+    "win32",
+    "api",
+    "cpp",
+    "c++",
+    "cmake",
+    "native",
+    "typescript",
+    "ts",
+    "native-module",
+    "utilities",
+    "utils"
+  ],
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Windows#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Windows",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+        "@types/node": "24.13.0",
+    "cmake-js": "^8.0.0",
+    "node-api-headers": "^1.8.0",
+    "typescript": "npm:tsover@^6.0.0"
+  },
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^8.7.0",
+    "node-gyp": "^12.3.0"
+  }
+}

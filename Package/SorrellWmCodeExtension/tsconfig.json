@@ -1,0 +1,20 @@
+{
+    "extends": "../../Configuration/tsconfig.base.json",
+    "compilerOptions": {
+        "lib": [
+            "ES2024"
+        ],
+        "module": "Preserve",
+        "moduleResolution": "Bundler",
+        "noEmit": true,
+        "rootDir": ".",
+        "types": [
+            "node",
+            "vscode"
+        ]
+    },
+    "include": [
+        "Source/**/*.ts",
+        "Test/**/*.ts"
+    ]
+}

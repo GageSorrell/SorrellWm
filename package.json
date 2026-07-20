@@ -34,17 +34,34 @@
         "npm": ">=12.0.1"
     },
     "type": "module",
+    "scripts": {
+        "postinstall": "tsx ./Script/Setup/Source/index.ts --postinstall"
+    },
     "workspaces": [
         "Application",
         "Package/EsBuildConfigSorrell",
-        "Package/EsLintConfigSorrell"
+        "Package/EsLintConfigSorrell",
+        "Package/Math",
+        "Script/Setup",
+        "Package/SorrellWmCodeExtension",
+        "Package/Windows"
     ],
+    "allowScripts": {
+        "@vscode/vsce-sign@2.0.9": true,
+        "electron-winstaller@5.4.0": true,
+        "esbuild@0.25.12": true,
+        "esbuild@0.28.1": true,
+        "keytar@7.9.0": true,
+        "msgpackr-extract@3.0.4": true,
+        "@sorrell/windows@1.0.0": true
+    },
     "devDependencies": {
         "@effect/language-service": "0.87.0",
         "@sorrell/eslint-config": "file:./Package/EsLintConfigSorrell",
         "@types/node": "26.1.1",
         "eslint": "^9.39.4",
         "ts-node": "^10.9.2",
-        "typescript": "7.0.2"
+        "tsx": "4.23.1",
+        "typescript": "6.0.2"
     }
 }

@@ -1,0 +1,72 @@
+{
+    "name": "sorrell-wm-code-extension",
+    "displayName": "SorrellWm Code Extension",
+    "version": "0.1.0",
+    "description": "Workspace automation for the SorrellWm TypeScript and C++ source conventions.",
+    "publisher": "GageSorrell",
+    "license": "MIT",
+    "author": {
+        "name": "Gage Sorrell",
+        "email": "gage@sorrell.sh"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/main/Package/SorrellWmCodeExtension",
+    "type": "module",
+    "engines": {
+        "vscode": "^1.125.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "sorrellwm",
+        "typescript",
+        "cpp",
+        "jsdoc"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "extensionKind": [
+        "workspace"
+    ],
+    "main": "./Distribution/extension.cjs",
+    "files": [
+        "Distribution/extension.cjs",
+        "Distribution/extension.cjs.map",
+        "License.md",
+        "ReadMe.md",
+        "package.json"
+    ],
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": false,
+            "description": "The extension edits newly created TypeScript and C++ files."
+        }
+    },
+    "scripts": {
+        "build": "npm run typecheck && esbuild Source/Extension.ts --bundle --external:vscode --format=cjs --platform=node --target=node20 --outfile=Distribution/extension.cjs --sourcemap",
+        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts Source Test",
+        "package:vsix": "vsce package --allow-star-activation --no-dependencies --out ./SorrellWmCodeExtension.vsix",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p tsconfig.json",
+        "vscode:prepublish": "npm run build"
+    },
+    "devDependencies": {
+        "@sorrell/eslint-config": "file:../EsLintConfigSorrell",
+        "@types/node": "24.13.3",
+        "@types/vscode": "1.125.0",
+        "@vscode/vsce": "3.9.2",
+        "cross-env": "10.1.0",
+        "esbuild": "0.28.1",
+        "eslint": "9.39.5",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    }
+}

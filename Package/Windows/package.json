@@ -3,12 +3,6 @@
   "private": false,
   "version": "1.0.0",
   "description": "Utilities for accessing the Windows API in NodeJS.",
-  "main": "./Distribution/index.js",
-  "scripts": {
-    "build": "cd ../../Script/Build && npm run start",
-    "cmake-step": "cmake-js compile --out ../Build",
-    "start": "npm run build"
-  },
   "keywords": [
     "windows",
     "win32",
@@ -28,7 +22,7 @@
     "name": "Gage Sorrell",
     "url": "https://sorrell.sh"
   },
-  "homepage": "https://github.com/GageSorrell/Windows#ReadMe",
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Windows#ReadMe",
   "bugs": {
     "url": "https://github.com/GageSorrell/SorrellWm/issues"
   },
@@ -39,15 +33,46 @@
   },
   "license": "MIT",
   "type": "module",
-  "devDependencies": {
-        "@types/node": "24.13.0",
-    "cmake-js": "^8.0.0",
-    "node-api-headers": "^1.8.0",
-    "typescript": "npm:tsover@^6.0.0"
+  "main": "./Distribution/index.js",
+  "types": "./Distribution/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./package.json": "./package.json"
   },
+  "files": [
+    "build/Release/SorrellWindows.node",
+    "Distribution",
+    "License.md",
+    "ReadMe.md",
+    "binding.gyp"
+  ],
+  "scripts": {
+    "build": "npm run build:js && npm run build:native",
+    "build:native": "node-gyp rebuild --enable-thin-lto=false --enable-lto=false --lto-jobs=",
+    "build:js": "tsc -p ./tsconfig.json",
+    "install": "npm run build:native",
+    "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../../Package/EsLintConfigSorrell --ext .ts Source",
+    "prepare": "npm run build:js",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "cross-env": "10.1.0",
+    "typescript": "6.0.2"
+  },
+  "engines": {
+    "node": ">=26.5.0",
+    "npm": ">=12.0.1"
+  },
+  "gypfile": true,
+  "os": [
+    "win32"
+  ],
   "dependencies": {
-    "bindings": "^1.5.0",
-    "node-addon-api": "^8.7.0",
-    "node-gyp": "^12.3.0"
+    "@sorrell/math": "1.0.0",
+    "effect": "^4.0.0-beta"
   }
 }

@@ -7,7 +7,29 @@
 
 module.exports = {
     root: true,
-    extends: [ "@sorrell/eslint-config" ]
+    extends: [ "@sorrell/eslint-config" ],
+    rules: {
+        "jsdoc/no-blank-block-descriptions": "off",
+        "jsdoc/sort-tags": [
+            "error",
+            {
+                reportIntraTagGroupSpacing: false,
+                reportTagGroupSpacing: false,
+                tagSequence: [
+                    {
+                        tags: [
+                            "module",
+                            "internal",
+                            "file",
+                            "author",
+                            "copyright",
+                            "license"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
 };
 
 // /**

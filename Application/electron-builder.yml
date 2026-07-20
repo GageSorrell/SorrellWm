@@ -1,0 +1,52 @@
+appId: org.sorrell.wm
+productName: SorrellWm
+copyright: Copyright (c) 2024–2026 Gage Sorrell
+
+directories:
+  buildResources: Resource
+  output: Distribution
+
+files:
+  - Build/**
+  - package.json
+  - "!Build/**/*.map"
+
+extraResources:
+  - from: Resource
+    to: Resource
+    filter:
+      - "**/*"
+
+asar: true
+asarUnpack:
+  - "**/*.node"
+  - "**/*.dll"
+
+npmRebuild: true
+nativeRebuilder: parallel
+
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  loadBrowserProcessSpecificV8Snapshot: false
+  grantFileProtocolExtraPrivileges: false
+
+win:
+  requestedExecutionLevel: asInvoker
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
+
+nsis:
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  oneClick: false
+
+artifactName: "${productName}-${version}-${os}-${arch}.${ext}"

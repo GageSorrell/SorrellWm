@@ -1,0 +1,55 @@
+{
+  "name": "@sorrell/math",
+  "private": false,
+  "version": "1.0.0",
+  "description": "Math-related utilities for effect.",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./Int": {
+      "import": "./Distribution/Int.js",
+      "types": "./Distribution/Int.d.ts"
+    },
+    "./IntPoint": {
+      "import": "./Distribution/IntPoint.js",
+      "types": "./Distribution/IntPoint.d.ts"
+    },
+    "./RealPlane": {
+      "import": "./Distribution/RealPlane.js",
+      "types": "./Distribution/RealPlane.d.ts"
+    },
+    "./UInt": {
+      "import": "./Distribution/UInt.js",
+      "types": "./Distribution/UInt.d.ts"
+    },
+    "./Vector2D": {
+      "import": "./Distribution/Vector2D.js",
+      "types": "./Distribution/Vector2D.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Math#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Math",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "effect": "^4.0.0-beta"
+  }
+}

@@ -1,0 +1,61 @@
+{
+    "name": "@sorrell/wm",
+    "version": "0.1.0",
+    "description": "The tiling window manager for everyone.",
+    "private": true,
+    "type": "module",
+    "main": "./Build/Main/Index.js",
+    "author": {
+        "name": "Gage Sorrell",
+        "email": "gage@sorrell.sh",
+        "url": "https://sorrell.sh"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git",
+        "directory": "Application"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    },
+    "scripts": {
+        "build": "npm run typecheck && electron-vite build",
+        "dev": "electron-vite dev --watch",
+        "dev:inspect": "electron-vite dev --watch --inspect=5858",
+        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../Package/EsLintConfigSorrell --ext .cjs,.js,.jsx,.mjs,.mts,.ts,.tsx Source electron.vite.config.ts vitest.config.ts",
+        "make": "npm run build && electron-builder",
+        "package": "npm run build && electron-builder --dir",
+        "postinstall": "npm run rebuild:native",
+        "preview": "electron-vite preview",
+        "rebuild:native": "electron-builder install-app-deps",
+        "smoke:packaged": "powershell -NoProfile -ExecutionPolicy Bypass -File ./Script/SmokePackaged.ps1",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+    },
+    "dependencies": {
+        "@sorrell/windows": "1.0.0"
+    },
+    "devDependencies": {
+        "@testing-library/dom": "10.4.1",
+        "@testing-library/jest-dom": "6.9.1",
+        "@testing-library/react": "16.3.2",
+        "@types/node": "24.13.3",
+        "@types/react": "19.2.17",
+        "@types/react-dom": "19.2.3",
+        "@vitejs/plugin-react": "5.2.0",
+        "cross-env": "10.1.0",
+        "effect": "4.0.0-beta.99",
+        "electron": "43.1.1",
+        "electron-builder": "26.15.3",
+        "electron-vite": "5.0.0",
+        "jsdom": "29.1.1",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
+        "typescript": "6.0.2",
+        "vite": "7.3.6",
+        "vitest": "4.1.10"
+    }
+}

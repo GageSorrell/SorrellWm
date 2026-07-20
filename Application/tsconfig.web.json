@@ -1,0 +1,22 @@
+{
+    "extends": "../Configuration/tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ES2024"
+        ],
+        "module": "Preserve",
+        "moduleResolution": "Bundler",
+        "types": [
+            "@testing-library/jest-dom",
+            "vite/client"
+        ]
+    },
+    "include": [
+        "Source/Renderer/**/*.ts",
+        "Source/Renderer/**/*.tsx",
+        "Source/Shared/**/*.ts"
+    ]
+}

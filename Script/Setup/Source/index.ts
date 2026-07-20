@@ -1,0 +1,261 @@
+/**
+ *
+ *
+ * @module @sorrell/wm-monorepo-setup/Index
+ *
+ * @file      Index.ts
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import {
+    ClearLocalConfiguration,
+    EnsureLocalConfiguration,
+    type ILocalConfiguration,
+    WriteLocalConfiguration
+} from "./Configuration.js";
+import { Command, Flag, Param, Prompt } from "effect/unstable/cli";
+import { Console, Context, Effect } from "effect";
+import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { join, resolve } from "node:path";
+import type { ChildProcessSpawner } from "effect/unstable/process";
+import { ConfigureExtension } from "./Extension.js";
+import type { FileSystem } from "effect";
+
+interface ISetupOptions
+{
+    readonly Force: boolean;
+    readonly PostInstall: boolean;
+    readonly Verbose: boolean;
+}
+
+interface IRootCommandInput
+{
+    readonly force: boolean;
+    readonly postinstall: boolean;
+}
+
+interface IExtensionCommandInput
+{
+    readonly enabled: boolean;
+}
+
+class SSetupOptions extends Context.Service<SSetupOptions, ISetupOptions>()(
+    "@sorrell/wm-monorepo-setup/SetupOptions"
+) { }
+
+const RepositoryRoot: string = resolve(import.meta.dirname, "../../..");
+const LocalConfigurationPath: string = join(RepositoryRoot, "Configuration", "Local.json");
+const VisualStudioCodePackage: string = join(
+    RepositoryRoot,
+    "Package",
+    "SorrellWmCodeExtension",
+    "SorrellWmCodeExtension.vsix"
+);
+
+const RootCommandBase: Command.Command<
+    "wm-monorepo-setup",
+    Record<never, never>,
+    Record<never, never>,
+    Error,
+    Command.Environment | SSetupOptions
+> = Command.make(
+    "wm-monorepo-setup",
+    { },
+    (): Effect.Effect<
+        void,
+        Error,
+        Command.Environment | SSetupOptions
+    > => RunAllFeatures()
+).pipe(Command.withDescription(
+    "Configure optional local features for the SorrellWm monorepo."
+));
+
+const ExtensionCommand: Command.Command<
+    "extension",
+    IExtensionCommandInput,
+    Record<never, never>,
+    Error,
+    ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | SSetupOptions
+> = Command.make(
+    "extension",
+    {
+        enabled: Param.boolean(Param.argumentKind, "enabled").pipe(
+            Param.withDefault(true),
+            Param.withDescription("Whether the VS Code extension should be enabled.")
+        )
+    },
+    ({ enabled }: IExtensionCommandInput): Effect.Effect<
+        void,
+        Error,
+        ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | SSetupOptions
+    > =>
+        RunSetupFeatures((Options: ISetupOptions): Effect.Effect<
+            boolean,
+            Error,
+            ChildProcessSpawner.ChildProcessSpawner
+        > =>
+            ConfigureExtension(enabled, Options.Verbose, {
+                RepositoryRoot,
+                VisualStudioCodePackage
+            }).pipe(Effect.as(true))
+        )
+).pipe(Command.withDescription(
+    "Build and install, or uninstall, the SorrellWm VS Code extension."
+));
+
+const ClearCommand: Command.Command<
+    "clear",
+    Record<never, never>,
+    Record<never, never>,
+    Error,
+    FileSystem.FileSystem | SSetupOptions
+> = Command.make(
+    "clear",
+    { },
+    (): Effect.Effect<void, Error, FileSystem.FileSystem | SSetupOptions> => ClearSetupState()
+).pipe(Command.withDescription(
+    "Delete Configuration/Local.json and reset local setup state."
+));
+
+const RootCommand: Command.Command<
+    "wm-monorepo-setup",
+    IRootCommandInput,
+    IRootCommandInput,
+    Error,
+    Command.Environment
+> = RootCommandBase.pipe(
+    Command.withSharedFlags({
+        force: Flag.boolean("force").pipe(
+            Flag.withDescription("Run setup even when it has already completed.")
+        ),
+        postinstall: Flag.boolean("postinstall").pipe(
+            Flag.withDescription("Run in quiet npm postinstall mode.")
+        )
+    }),
+    Command.withSubcommands([ ExtensionCommand, ClearCommand ]),
+    Command.provideEffect(
+        SSetupOptions,
+        (Input: IRootCommandInput): Effect.Effect<ISetupOptions> => Effect.succeed({
+            Force: Input.force,
+            PostInstall: Input.postinstall,
+            Verbose: !Input.postinstall
+        })
+    )
+);
+
+const Program: Effect.Effect<void, Error> = Effect.gen(
+    function*()
+    {
+        yield* EnsureLocalConfiguration(LocalConfigurationPath);
+        yield* Command.run(RootCommand, { version: "0.1.0" });
+    }
+).pipe(Effect.provide(NodeServices.layer));
+
+NodeRuntime.runMain(Program);
+
+/**
+ * Run every registered setup feature in declaration order.
+ *
+ * @returns {Effect.Effect<void>} An effect that completes after all features.
+ */
+function RunAllFeatures(): Effect.Effect<
+    void,
+    Error,
+    Command.Environment | SSetupOptions
+>
+{
+    return RunSetupFeatures((Options: ISetupOptions) =>
+        Effect.gen(function*()
+        {
+            if (Options.PostInstall)
+            {
+                if (process.stdin.isTTY !== true || process.stdout.isTTY !== true)
+                {
+                    return false;
+                }
+
+                const ShouldRun: boolean = yield* Prompt.run(Prompt.confirm({
+                    initial: true,
+                    message: "Run local SorrellWm monorepo setup now?"
+                }));
+
+                if (!ShouldRun)
+                {
+                    return false;
+                }
+            }
+
+            yield* ConfigureExtension(true, Options.Verbose, {
+                RepositoryRoot,
+                VisualStudioCodePackage
+            });
+
+            return true;
+        })
+    );
+}
+
+/**
+ * Apply the completed-run guard, execute features, and persist success.
+ *
+ * @param Features - The ordered feature operation to execute.
+ * @returns {Effect.Effect<void>} An effect that completes after state is saved.
+ */
+function RunSetupFeatures<Requirements>(
+    Features: (Options: ISetupOptions) => Effect.Effect<boolean, Error, Requirements>
+): Effect.Effect<void, Error, FileSystem.FileSystem | Requirements | SSetupOptions>
+{
+    return Effect.gen(function*()
+    {
+        const Options: ISetupOptions = yield* SSetupOptions;
+        const Configuration: ILocalConfiguration =
+            yield* EnsureLocalConfiguration(LocalConfigurationPath);
+
+        if (Configuration.HasRun && !Options.Force)
+        {
+            if (Options.Verbose)
+            {
+                yield* Console.log(
+                    "Local setup has already completed. Use --force to run it again."
+                );
+            }
+
+            return;
+        }
+
+        const DidComplete: boolean = yield* Features(Options);
+
+        if (!DidComplete)
+        {
+            return;
+        }
+
+        yield* WriteLocalConfiguration(LocalConfigurationPath, { HasRun: true });
+    });
+}
+
+/**
+ * Delete local setup state regardless of the completed-run guard.
+ *
+ * @returns {Effect.Effect<void>} An effect that completes after state removal.
+ */
+function ClearSetupState(): Effect.Effect<
+    void,
+    Error,
+    FileSystem.FileSystem | SSetupOptions
+>
+{
+    return Effect.gen(function*()
+    {
+        const Options: ISetupOptions = yield* SSetupOptions;
+
+        yield* ClearLocalConfiguration(LocalConfigurationPath);
+
+        if (Options.Verbose)
+        {
+            yield* Console.log("Cleared Configuration/Local.json.");
+        }
+    });
+}

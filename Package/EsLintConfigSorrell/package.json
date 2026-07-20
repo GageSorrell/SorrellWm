@@ -2,7 +2,7 @@
     "name": "@sorrell/eslint-config",
     "version": "1.0.0",
     "description": "The ESLint config used by SorrellWm *et al.*",
-    "main": "./Distribution/index.js",
+    "main": "./index.cjs",
     "keywords":
     [
         "ESLint",
@@ -40,6 +40,7 @@
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.0.1",
         "eslint-plugin-tsdoc": "^0.5.2",
-        "typescript-eslint": "^8.57.2"
+        "typescript-eslint": "^8.57.2",
+        "@typescript-eslint/eslint-plugin": "^8.57.1"
     }
 }

@@ -1,33 +1,11 @@
 {
-    "compilerOptions":
-    {
-        "target": "ESNext",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "lib": [ "ES2023" ],
-        "types": [ "node" ],
-
-        "strict": true,
-        "noUncheckedIndexedAccess": true,
-        "exactOptionalPropertyTypes": true,
-
-        "verbatimModuleSyntax": true,
-        "isolatedModules": true,
-
-        "sourceMap": true,
-        "noEmitOnError": true,
-        "skipLibCheck": true,
-
-        "rootDir": "./Script",
-        "outDir": "./Intermediate",
-
-        "jsx": "react-jsx",
-
-        "declaration": true,
-        "declarationMap": true,
-
-        "useUnknownInCatchVariables": true
+    "extends": "../../Configuration/tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": false,
+        "outDir": "Distribution",
+        "rootDir": "Source",
+        "tsBuildInfoFile": "Intermediate/TypeScript/tsconfig.tsbuildinfo",
+        "types": [ "node" ]
     },
-    "include": [ "Source/**/*" ],
-    "exclude": [ "node_modules", "Distribution", "Intermediate" ]
+    "include": [ "Source" ]
 }

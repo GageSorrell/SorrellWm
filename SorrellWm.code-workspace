@@ -190,6 +190,7 @@
             "RENDERFULLCONTENT",
             "Responseful",
             "RETVAL",
+            "Sandboxed",
             "scmp",
             "Segoe",
             "Shiftand",
@@ -233,10 +234,11 @@
 	"extensions": {
 		"recommendations": [
 			"ms-vscode.cpptools",
-            "josetr.cmake-language-support-vscode",
-            "streetsidesoftware.code-spell-checker",
+			"josetr.cmake-language-support-vscode",
+			"streetsidesoftware.code-spell-checker",
 			"ms-vscode.powershell",
-			"effectful-tech.effect-vscode"
+			"effectful-tech.effect-vscode",
+			"GageSorrell.sorrell-wm-code-extension"
 		]
 	}
 }
