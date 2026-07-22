@@ -8,7 +8,7 @@
 #pragma once
 
 #include <napi.h>
-#include <functional>
+#include <string>
 
 /**
  * An error-as-value approach to C++ exported functions failing.
@@ -19,33 +19,35 @@
 class Result
 {
 public:
-    std::function<Napi::Object(Napi::Value)> Succeed;
-    std::function<Napi::Object(Napi::Value)> Fail;
+    explicit Result(const Napi::Env& InEnvironment) : Environment(InEnvironment) { }
 
-    Result(const Napi::Env Environment)
+    Napi::Object Succeed(const Napi::Value& Value) const
     {
-        return Result{
-            .Succeed =
-                [Environment](const Napi::Value Value) -> Napi::Object
-                {
-                    return Make(Environment, "Success", Value);
-                },
-
-            .Fail =
-                [Environment](std::string Value) -> Napi::Object
-                {
-                    return Make(Environment, "Failure", Napi::String::New(Environment, Value));
-                }
-        };
+        return Make(Environment, "Success", Value);
     }
-private:
-    static Napi::Object Make(const Napi::Env& Environment, std::string Tag, Napi::Value Value)
+
+    Napi::Object Fail(const std::string& Value) const
     {
-        Napi::Symbol TypeId = Napi::Symbol::For(Environment, "~sorrell/windows/Internal/Result");
+        return Make(Environment, "Failure", Napi::String::New(Environment, Value));
+    }
+
+private:
+    Napi::Env Environment;
+
+    static Napi::Object Make(
+        const Napi::Env& Environment,
+        const std::string& Tag,
+        const Napi::Value& Value
+    )
+    {
+        Napi::Symbol TypeId = Napi::Symbol::For(
+            Environment,
+            "~sorrell/windows/Internal/Attempt"
+        );
         Napi::Object Out = Napi::Object::New(Environment);
         Out.Set(TypeId, TypeId);
         Out.Set("_tag", Tag);
         Out.Set("Value", Value);
         return Out;
     }
-}
+};

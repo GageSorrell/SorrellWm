@@ -131,6 +131,58 @@ Effect is intended to model fallible and asynchronous application logic, depende
 
 Keep Effect descriptions separate from execution where practical. Build reusable values first, provide their requirements at an application boundary, and run them from an Electron lifecycle or IPC handler. React components should generally receive plain values or call a small adapter rather than becoming responsible for long-lived Effect runtimes.
 
+The main process applies that lifecycle rule to native input services:
+
+- [`WindowsMessageLoop.ts`](../../Application/Source/Main/WindowsMessageLoop.ts) is a scoped layer. Acquiring it starts the dedicated Win32 message loop and exposes its thread identifier; releasing it stops and joins the loop.
+- [`Keyboard.ts`](../../Application/Source/Main/Keyboard.ts) depends on that layer and exposes `Events()`. Each call creates a scoped Effect containing a `Stream` of every keyboard event. Closing the scope unsubscribes the native callback and shuts down its queue.
+- [`Hotkey.ts`](../../Application/Source/Main/Hotkey.ts) consumes that complete event stream, tracks held keys, and compares each key-down with its configured keybinds. A keybind contains one trigger key and exact `Control`, `Alt`, `Shift`, and `Super` requirements. Matches are broadcast through the service's `Matches` stream for a `HotkeyMatcher` layer to consume.
+- [`Index.ts`](../../Application/Source/Main/Index.ts) owns one `ManagedRuntime`. It first evaluates the runtime after `app.whenReady()` and disposes it during `before-quit`, before allowing Electron to finish quitting.
+
+Native callbacks only enqueue event values. Application behavior consumes the resulting stream in an Effect fiber, so failures, interruption, and listener lifetimes stay explicit. A feature can subscribe as follows:
+
+```ts
+import { Keyboard as NativeKeyboard, VK } from "@sorrell/windows";
+import { Effect, Stream } from "effect";
+import { Keyboard } from "./Keyboard.js";
+
+const WatchF24 = Effect.gen(function*()
+{
+    const Service = yield* Keyboard;
+    const Events = yield* Service.Events();
+
+    yield* Events.pipe(
+        Stream.filter((Event) =>
+            Event.Key === VK.F24
+                && NativeKeyboard.State.$is("Down")(Event.State)
+        ),
+        Stream.runForEach((Event) =>
+            Effect.log(`F24 scan code: ${ Event.ScanCode }`)
+        )
+    );
+}).pipe(Effect.scoped);
+```
+
+Hotkey actions remain separate from detection. A future matcher can consume the
+already-matched application actions without maintaining keyboard state itself:
+
+```ts
+import { Effect, Stream } from "effect";
+import { Hotkey } from "./Hotkey.js";
+
+const RunHotkeyMatcher = Effect.gen(function*()
+{
+    const Service = yield* Hotkey;
+
+    yield* Service.Matches.pipe(
+        Stream.runForEach((Match) =>
+            Effect.log(`Matched hotkey action: ${ Match.Keybind.Id }`)
+        )
+    );
+});
+```
+
+Run a long-lived consumer with `Effect.forkScoped` from another application layer, or run it through the managed runtime when the feature should have an explicitly shorter lifetime. Do not call `MessageLoop.Start`, `MessageLoop.Stop`, `Keyboard.Subscribe`, or `Keyboard.Unsubscribe` directly from application features; those are implementation details of the Effect layers.
+
 Effect v4 is beta software and may contain breaking API changes between releases. Treat upgrades as migrations: pin an exact version, consult the v4 migration material, run every validation command, and review the packaged application before changing the lockfile.
 
 ## TypeScript Configuration

@@ -9,13 +9,37 @@
  * @license   MIT
  */
 
-import { createRequire } from "node:module";
-import type { Handle } from "./index.ts";
-import type { IntPoint } from "@sorrell/math";
+import type { Handle, Subscription, Thread } from "./index.ts";
 import type { Attempt } from "./Internal/index.ts";
+import type { IntPoint } from "@sorrell/math";
+import { createRequire } from "node:module";
 
+/**
+ * The API surface of the native module.
+ * @internal
+ */
 export interface NativeBinding
 {
+    readonly Keyboard:
+    {
+        readonly Subscribe: (
+            Callback: Subscription.NativeCallback
+        ) => Attempt.Attempt<Subscription.Id>;
+
+        readonly Unsubscribe: (SubscriptionId: Subscription.Id) => Attempt.Attempt<void>;
+    };
+    readonly MessageLoop:
+    {
+        readonly Start: () => Attempt.Attempt<Thread.ThreadId>;
+        readonly Stop: () => Attempt.Attempt<void>;
+        readonly Subscribe: (
+            Message: number,
+            Callback: Subscription.NativeCallback
+        ) => Attempt.Attempt<Subscription.Id>;
+        readonly Unsubscribe: (
+            SubscriptionId: Subscription.Id
+        ) => Attempt.Attempt<void>;
+    };
     readonly Window:
     {
         readonly GetForegroundWindow: () => Attempt.Attempt<Handle.HWND>;
@@ -24,5 +48,10 @@ export interface NativeBinding
 }
 
 const Require: NodeJS.Require = createRequire(import.meta.url);
-export const Binding: NativeBinding =
+
+export/**
+       * The exports of the native module.
+       * @internal
+       */
+const Binding: NativeBinding =
     Require("../build/Release/SorrellWindows.node") as NativeBinding;

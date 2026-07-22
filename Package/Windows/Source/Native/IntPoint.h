@@ -8,7 +8,7 @@ class IntPoint
 public:
     IntPoint(int InX, int InY) : X(InX), Y(InY) { }
 
-    Napi::Object ToNapi(const Napi::Env& InEnvironment)
+    Napi::Object ToNapi(const Napi::Env& Environment) const
     {
         Napi::Object Out = Napi::Object::New(Environment);
         Napi::Symbol TypeId = Napi::Symbol::For(Environment, TypeIdKey);
@@ -23,5 +23,5 @@ public:
     int X;
     int Y;
 private:
-    std::string TypeIdKey;// = "~sorrell/math/Point/IntPoint";
+    static constexpr const char* TypeIdKey = "~sorrell/math/Point/IntPoint";
 };

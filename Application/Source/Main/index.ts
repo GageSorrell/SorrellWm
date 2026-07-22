@@ -9,25 +9,45 @@
  * @license   MIT
  */
 
+export * as Accelerator from "./Accelerator.ts";
+export * as Command from "./Command.ts";
+export * as Hotkey from "./Hotkey.ts";
+export * as Keyboard from "./Keyboard.ts";
+export * as WindowsMessageLoop from "./WindowsMessageLoop.ts";
+export * as Theme from "./Theme.ts";
+export * as AppSettings from "./AppSettings.ts";
+
 import * as FileSystem from "node:fs";
+import * as HotkeyService from "./Hotkey.ts";
+import * as KeyboardService from "./Keyboard.ts";
+import * as WindowsMessageLoopService from "./WindowsMessageLoop.ts";
 import type {
     BrowserWindow as BrowserWindowType,
     Event,
     HandlerDetails,
     RenderProcessGoneDetails
 } from "electron";
-import { Window, type Handle } from "@sorrell/windows";
+import { Effect, Layer, ManagedRuntime, type Option } from "effect";
+import { type Handle, Window } from "@sorrell/windows";
 import { isAbsolute, join, relative } from "node:path";
 
 import { ApplicationIpcChannel } from "../Shared/Api.ts";
 import electron from "electron";
 import { pathToFileURL } from "node:url";
-import type { Option } from "effect";
 
 const { app, BrowserWindow, ipcMain, net, protocol, shell } = electron;
 const isSmokeTest: boolean = process.argv.includes("--smoke-test");
 const RendererProtocolScheme: string = "sorrell";
 const smokeLogPath: string | undefined = process.env.SORRELL_SMOKE_LOG;
+const KeyboardLive = KeyboardService.Live.pipe(
+    Layer.provideMerge(WindowsMessageLoopService.Live)
+);
+const NativeServicesLive = HotkeyService.Live(HotkeyService.DefaultKeybinds).pipe(
+    Layer.provideMerge(KeyboardLive)
+);
+const ApplicationRuntime = ManagedRuntime.make(NativeServicesLive);
+let IsApplicationRuntimeStarted: boolean = false;
+let IsApplicationRuntimeDisposing: boolean = false;
 
 protocol.registerSchemesAsPrivileged([
     {
@@ -51,49 +71,49 @@ const logSmokeStep = (message: string): void =>
 
 logSmokeStep("main module loaded");
 
-const smokeTimeout: NodeJS.Timeout | undefined = isSmokeTest
-    ? setTimeout(() =>
-    {
-        logSmokeStep("smoke timeout reached");
-        app.exit(1);
-    }, 15_000)
-    : undefined;
+// const smokeTimeout: NodeJS.Timeout | undefined = isSmokeTest
+//     ? setTimeout(() =>
+//     {
+//         logSmokeStep("smoke timeout reached");
+//         app.exit(1);
+//     }, 15_000)
+//     : undefined;
 
-const finishSmokeTest = async (mainWindow: BrowserWindowType): Promise<void> =>
-{
-    let exitCode: number = 1;
+// const finishSmokeTest = async (mainWindow: BrowserWindowType): Promise<void> =>
+// {
+//     let exitCode: number = 1;
 
-    try
-    {
-        logSmokeStep("checking the renderer bridge");
-        const response: unknown = await mainWindow.webContents.executeJavaScript(
-            "window.sorrell.ping()",
-            true
-        );
+//     try
+//     {
+//         logSmokeStep("checking the renderer bridge");
+//         const response: unknown = await mainWindow.webContents.executeJavaScript(
+//             "window.sorrell.ping()",
+//             true
+//         );
 
-        exitCode = response === "pong" ? 0 : 1;
-        logSmokeStep(`renderer bridge returned ${ String(response) }`);
-    }
-    catch (error: unknown)
-    {
-        logSmokeStep(`renderer bridge failed: ${ String(error) }`);
-        exitCode = 1;
-    }
-    finally
-    {
-        if (smokeTimeout !== undefined)
-        {
-            clearTimeout(smokeTimeout);
-        }
+//         exitCode = response === "pong" ? 0 : 1;
+//         logSmokeStep(`renderer bridge returned ${ String(response) }`);
+//     }
+//     catch (error: unknown)
+//     {
+//         logSmokeStep(`renderer bridge failed: ${ String(error) }`);
+//         exitCode = 1;
+//     }
+//     finally
+//     {
+//         if (smokeTimeout !== undefined)
+//         {
+//             clearTimeout(smokeTimeout);
+//         }
 
-        if (exitCode === 0)
-        {
-            logSmokeStep("smoke test passed");
-        }
+//         if (exitCode === 0)
+//         {
+//             logSmokeStep("smoke test passed");
+//         }
 
-        app.exit(exitCode);
-    }
-};
+//         app.exit(exitCode);
+//     }
+// };
 
 const registerRendererProtocol = (): void =>
 {
@@ -134,7 +154,8 @@ const createMainWindow = (): BrowserWindowType =>
         },
         width: 1200
     });
-    let rendererLoadError: string | undefined;
+
+    // let rendererLoadError: string | undefined;
 
     logSmokeStep("main window created");
 
@@ -144,7 +165,7 @@ const createMainWindow = (): BrowserWindowType =>
         errorDescription: string
     ) =>
     {
-        rendererLoadError = `${ errorCode }: ${ errorDescription }`;
+        // rendererLoadError = `${ errorCode }: ${ errorDescription }`;
         logSmokeStep(`renderer load failed (${ errorCode }): ${ errorDescription }`);
     });
 
@@ -173,23 +194,23 @@ const createMainWindow = (): BrowserWindowType =>
         }
     });
 
-    if (isSmokeTest)
-    {
-        mainWindow.webContents.once("did-finish-load", () =>
-        {
-            logSmokeStep("renderer finished loading");
+    // if (isSmokeTest)
+    // {
+    //     mainWindow.webContents.once("did-finish-load", () =>
+    //     {
+    //         logSmokeStep("renderer finished loading");
 
-            if (rendererLoadError !== undefined)
-            {
-                logSmokeStep(`renderer smoke check failed: ${ rendererLoadError }`);
-                app.exit(1);
+    //         if (rendererLoadError !== undefined)
+    //         {
+    //             logSmokeStep(`renderer smoke check failed: ${ rendererLoadError }`);
+    //             app.exit(1);
 
-                return;
-            }
+    //             return;
+    //         }
 
-            void finishSmokeTest(mainWindow);
-        });
-    }
+    //         void finishSmokeTest(mainWindow);
+    //     });
+    // }
 
     mainWindow.webContents.setWindowOpenHandler(({ url }: HandlerDetails) =>
     {
@@ -220,18 +241,63 @@ const createMainWindow = (): BrowserWindowType =>
 
 ipcMain.handle(ApplicationIpcChannel.Ping, () => "pong");
 
-logSmokeStep("waiting for Electron ready");
-void app.whenReady().then((): void =>
+const StartApplication = Effect.gen(function*()
 {
-    logSmokeStep("Electron ready");
-    const foregroundWindow: Option.Option<Handle.HWND> = Window.GetForegroundWindow();
+    yield* HotkeyService.Hotkey;
+    yield* KeyboardService.Keyboard;
+    yield* WindowsMessageLoopService.WindowsMessageLoop;
 
-    logSmokeStep(foregroundWindow === null
-        ? "native Win32 foreground window is unavailable"
-        : `native Win32 foreground window is ${ foregroundWindow.toString() }`
-    );
-    registerRendererProtocol();
-    createMainWindow();
+    yield* Effect.sync(() =>
+    {
+        logSmokeStep("Electron ready");
+        const foregroundWindow: Option.Option<Handle.HWND> = Window.GetForegroundWindow();
+
+        logSmokeStep(foregroundWindow === null
+            ? "native Win32 foreground window is unavailable"
+            : `native Win32 foreground window is ${ foregroundWindow.toString() }`
+        );
+        registerRendererProtocol();
+        createMainWindow();
+    });
+});
+
+logSmokeStep("waiting for Electron ready");
+void app.whenReady().then(async (): Promise<void> =>
+{
+    IsApplicationRuntimeStarted = true;
+
+    try
+    {
+        await ApplicationRuntime.runPromise(StartApplication);
+    }
+    catch (error: unknown)
+    {
+        logSmokeStep(`application startup failed: ${ String(error) }`);
+        IsApplicationRuntimeDisposing = true;
+        await ApplicationRuntime.dispose();
+        app.exit(1);
+    }
+});
+
+app.on("before-quit", (event: Event): void =>
+{
+    if (!IsApplicationRuntimeStarted || IsApplicationRuntimeDisposing)
+    {
+        return;
+    }
+
+    event.preventDefault();
+    IsApplicationRuntimeDisposing = true;
+
+    void ApplicationRuntime.dispose()
+        .catch((error: unknown): void =>
+        {
+            logSmokeStep(`application shutdown failed: ${ String(error) }`);
+        })
+        .finally((): void =>
+        {
+            app.quit();
+        });
 });
 
 app.on("activate", () =>

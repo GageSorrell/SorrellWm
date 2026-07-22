@@ -124,7 +124,8 @@ export const Multiply: {
     return Self * That as Int;
 });
 
-export const MultiplyAll: { (Summand: Iterable<Int>): Int; } = Iterable.reduce(Zero, Multiply);
+export const MultiplyAll: { (Summand: Iterable<Int>): Int; } =
+    Iterable.reduce(Zero, Multiply);
 
 export const Pow: {
     (Exponent: number): (Self: Int) => EffectOption.Option<number>;

@@ -21,6 +21,24 @@ Package/Windows/Source/Native/Windows.cc
 
 If any path component contains the case-sensitive word `Internal`, the header also receives `@internal` immediately after `@module`.
 
+## JSDoc comments
+
+Typing a standalone JSDoc opening in a JavaScript, TypeScript, or supported C++
+source file expands the editor's automatically closed one-line block into four
+lines:
+
+```ts
+/**
+ *
+ * @since 1.0.0
+ */
+```
+
+The extension reads the version from the nearest owning `package.json`,
+preserves the line's indentation and the document's newline style, and leaves
+the caret on the blank description line. It does not expand inline comments or
+ordinary `/**/` block comments.
+
 ## Development
 
 From the repository root:

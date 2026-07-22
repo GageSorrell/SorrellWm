@@ -114,16 +114,16 @@ module.exports = {
             ],
         "jsdoc/require-next-description": "error",
         "jsdoc/require-next-type": "error",
-        "jsdoc/require-param": "error",
+        "jsdoc/require-param": "off",
         "jsdoc/require-param-description": "error",
-        "jsdoc/require-param-name": "error",
+        "jsdoc/require-param-name": "off",
         "jsdoc/require-param-type": "off",
         "jsdoc/require-property": "error",
         "jsdoc/require-property-description": "error",
         "jsdoc/require-property-name": "error",
         "jsdoc/require-property-type": "error",
         "jsdoc/require-rejects": "off",
-        "jsdoc/require-returns": "error",
+        "jsdoc/require-returns": "off",
         "jsdoc/require-returns-check": "error",
         "jsdoc/require-returns-description": "error",
         "jsdoc/require-returns-type": "error",
@@ -194,10 +194,29 @@ module.exports = {
         [
             "error",
             {
+                filter:
+                {
+                    match: true,
+                    regex: "^_"
+                },
+                format: [ "PascalCase", "UPPER_CASE" ],
+                leadingUnderscore: "require",
+                selector: "typeAlias"
+            },
+            {
                 custom:
                 {
                     match: true,
-                    regex: "^[A-Z][a-z].+"
+                    regex: "^(?:[A-Z][a-z].*|[A-Z][A-Z0-9_]*)$"
+                },
+                format: [ "PascalCase", "UPPER_CASE" ],
+                selector: "typeAlias"
+            },
+            {
+                custom:
+                {
+                    match: true,
+                    regex: "^(?:[AER]|[A-Z][a-z].+)$"
                 },
                 format: [ "PascalCase" ],
                 selector: "typeParameter"
@@ -206,9 +225,10 @@ module.exports = {
                 custom:
                 {
                     match: true,
-                    regex: "^(H|F|I|P|T|S|A|Y|C|K|N|G)[A-Z][a-zA-Z0-9]+$|^T|^U|^K|^Y|^A|^H|^G$"
+                    regex: "^[A-Z][a-z].+"
                 },
                 format: [ "PascalCase" ],
+                leadingUnderscore: "allow",
                 selector: "typeLike"
             },
             {
@@ -222,6 +242,9 @@ module.exports = {
                 selector: "variableLike"
             }
         ],
+        "@typescript-eslint/no-empty-object-type": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-namespace": "off",
         "@typescript-eslint/no-unused-vars":
         [
             "error",
@@ -240,7 +263,7 @@ module.exports = {
                 objectDestructuring: false,
                 parameter: true,
                 propertyDeclaration: true,
-                variableDeclaration: true,
+                variableDeclaration: false,
                 variableDeclarationIgnoreFunction: true
             }
         ],

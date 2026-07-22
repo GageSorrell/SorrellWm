@@ -9,11 +9,16 @@
  * @license   MIT
  */
 
+import { Attempt } from "./Internal/index.js";
+import { Binding } from "./Binding.ts";
+import type { Handle } from "./index.ts";
 import type { IntPoint } from "@sorrell/math";
 import type { Option } from "effect";
-import { Binding } from "./Binding.ts";
-import { Attempt } from "./Internal/index.js";
-import type { Handle } from "./index.ts";
 
-export const GetCursorPosition: { (): Option.Option<IntPoint.IntPoint>; } = Attempt.ToOption(Binding.Window.GetCursorPosition);
-export const GetForegroundWindow: { (): Option.Option<Handle.HWND>; } = Attempt.ToOption(Binding.Window.GetForegroundWindow);
+export/** Get the current position of the cursor. */
+const GetCursorPosition: { (): Option.Option<IntPoint.IntPoint>; } =
+    Attempt.ToOption(Binding.Window.GetCursorPosition);
+
+export/** Get the current foreground window, if a window is focused. */
+const GetForegroundWindow: { (): Option.Option<Handle.HWND>; } =
+    Attempt.ToOption(Binding.Window.GetForegroundWindow);

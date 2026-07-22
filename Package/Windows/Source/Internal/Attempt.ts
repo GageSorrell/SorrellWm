@@ -45,7 +45,9 @@ export const AsOption = <A>(Self: Attempt<A>): Option.Option<A> =>
         : Option.none();
 };
 
-export const ToOption = <ArgsType extends ReadonlyArray<unknown>, A>(In: Function.FunctionN<ArgsType, Attempt<A>>) => Function.flow(In, AsOption);
+export const ToOption = <ArgsType extends ReadonlyArray<unknown>, A>(
+    In: Function.FunctionN<ArgsType, Attempt<A>>
+) => Function.flow(In, AsOption);
 
 export class NativeError extends Data.TaggedClass("NativeError")<{
     readonly Message: string;

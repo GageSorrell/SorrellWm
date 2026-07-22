@@ -1,11 +1,12 @@
 /**
  *
  *
- * @module @sorrell/windows/Native
+ * @module @sorrell/app-settings
  *
- * @file      Native.ts
+ * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
+export * as AppSettings from "./AppSettings.js";

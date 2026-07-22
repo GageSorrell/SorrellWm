@@ -16,8 +16,14 @@ import {
     IsSupportedSourcePath
 } from "./Header.js";
 import {
+    CreateJsDocExpansion,
+    IsJsDocSourcePath,
+    type JsDocExpansion
+} from "./JsDoc.js";
+import {
     EndOfLine,
     Position,
+    Selection,
     WorkspaceEdit,
     window,
     workspace
@@ -27,20 +33,29 @@ import type {
     FileSystemWatcher,
     OutputChannel,
     TextDocument,
+    TextDocumentChangeEvent,
     Uri,
     WorkspaceFolder
 } from "vscode";
 import { posix } from "node:path";
 
-interface IPackageContext
+interface PackageContext
 {
     readonly Name: string;
     readonly RootPath: string;
+    readonly Version: string | undefined;
 }
 
-interface IPackageManifest
+interface PackageManifest
 {
     readonly name?: unknown;
+    readonly version?: unknown;
+}
+
+interface PackageManifestMetadata
+{
+    readonly Name: string | undefined;
+    readonly Version: string | undefined;
 }
 
 const PendingFiles: Map<string, Promise<void>> = new Map();
@@ -66,8 +81,115 @@ export function activate(Context: ExtensionContext): void
     Context.subscriptions.push(
         Output,
         Watcher,
+        workspace.onDidChangeTextDocument(QueueJsDocExpansion),
         Watcher.onDidCreate(QueueHeaderInsertion)
     );
+}
+
+/**
+ * Expand a newly auto-closed JSDoc block when its source file has an owning package.
+ *
+ * @param Event - The VS Code document change that may have created the block.
+ * @returns {void}
+ */
+function QueueJsDocExpansion(Event: TextDocumentChangeEvent): void
+{
+    const Document: TextDocument = Event.document;
+    const Change = Event.contentChanges.at(-1);
+
+    if (
+        Change === undefined
+        || !IsJsDocSourcePath(Document.uri.path)
+        || Change.range.start.line >= Document.lineCount
+    )
+    {
+        return;
+    }
+
+    const Line: number = Change.range.start.line;
+    const LineText: string = Document.lineAt(Line).text;
+
+    if (CreateJsDocExpansion(LineText, "Pending") === undefined)
+    {
+        return;
+    }
+
+    const DocumentVersion: number = Document.version;
+
+    void ExpandJsDocComment(Document, DocumentVersion, Line).catch((Error: unknown): void =>
+    {
+        Output?.appendLine(
+            `Could not expand a JSDoc comment in ${Document.uri.fsPath}: ${FormatError(Error)}`
+        );
+    });
+}
+
+/**
+ * Replace one auto-closed JSDoc line and position the caret for its description.
+ *
+ * @param Document - The document containing the candidate comment.
+ * @param DocumentVersion - The version observed when the comment was created.
+ * @param Line - The zero-based line containing the comment.
+ * @returns {Promise<void>} A promise that settles after the edit is attempted.
+ */
+async function ExpandJsDocComment(
+    Document: TextDocument,
+    DocumentVersion: number,
+    Line: number
+): Promise<void>
+{
+    const Folder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Document.uri);
+
+    if (Folder === undefined)
+    {
+        return;
+    }
+
+    const Package: PackageContext = await FindPackageContext(Document.uri, Folder);
+
+    if (
+        Package.Version === undefined
+        || Document.version !== DocumentVersion
+        || Line >= Document.lineCount
+    )
+    {
+        return;
+    }
+
+    const NewLine: string = Document.eol === EndOfLine.CRLF ? "\r\n" : "\n";
+    const Expansion: JsDocExpansion | undefined = CreateJsDocExpansion(
+        Document.lineAt(Line).text,
+        Package.Version,
+        NewLine
+    );
+
+    if (Expansion === undefined)
+    {
+        return;
+    }
+
+    const Edit = new WorkspaceEdit();
+
+    Edit.replace(Document.uri, Document.lineAt(Line).range, Expansion.Text);
+
+    const WasApplied: boolean = await workspace.applyEdit(Edit);
+
+    if (!WasApplied)
+    {
+        throw new Error("VS Code rejected the JSDoc workspace edit.");
+    }
+
+    const Editor = window.activeTextEditor;
+
+    if (Editor?.document === Document)
+    {
+        const Cursor = new Position(
+            Line + Expansion.CursorLineOffset,
+            Expansion.CursorCharacter
+        );
+
+        Editor.selection = new Selection(Cursor, Cursor);
+    }
 }
 
 /**
@@ -139,7 +261,7 @@ async function AddHeader(FileUri: Uri): Promise<void>
         return;
     }
 
-    const Package: IPackageContext = await FindPackageContext(FileUri, Folder);
+    const Package: PackageContext = await FindPackageContext(FileUri, Folder);
     const ModuleName: string = DeriveModuleName(
         FileUri.fsPath,
         Package.RootPath,
@@ -178,12 +300,12 @@ async function AddHeader(FileUri: Uri): Promise<void>
  *
  * @param FileUri - The source file whose owning package is required.
  * @param Folder - The VS Code workspace folder containing the file.
- * @returns {Promise<IPackageContext>} The package name and file-system root.
+ * @returns {Promise<PackageContext>} The package name, version, and file-system root.
  */
 async function FindPackageContext(
     FileUri: Uri,
     Folder: WorkspaceFolder
-): Promise<IPackageContext>
+): Promise<PackageContext>
 {
     const WorkspaceRootPath: string = Folder.uri.path;
     let CurrentPath: string = posix.dirname(FileUri.path);
@@ -193,13 +315,15 @@ async function FindPackageContext(
         const ManifestUri: Uri = FileUri.with({
             path: posix.join(CurrentPath, "package.json")
         });
-        const PackageName: string | undefined = await ReadPackageName(ManifestUri);
+        const Manifest: PackageManifestMetadata | undefined =
+            await ReadPackageManifest(ManifestUri);
 
-        if (PackageName !== undefined)
+        if (Manifest?.Name !== undefined)
         {
             return {
-                Name: PackageName,
-                RootPath: FileUri.with({ path: CurrentPath }).fsPath
+                Name: Manifest.Name,
+                RootPath: FileUri.with({ path: CurrentPath }).fsPath,
+                Version: Manifest.Version
             };
         }
 
@@ -220,17 +344,20 @@ async function FindPackageContext(
 
     return {
         Name: Folder.name,
-        RootPath: Folder.uri.fsPath
+        RootPath: Folder.uri.fsPath,
+        Version: undefined
     };
 }
 
 /**
- * Read a package name without failing when a candidate manifest is absent.
+ * Read package metadata without failing when a candidate manifest is absent.
  *
  * @param ManifestUri - The package.json URI to read.
- * @returns {Promise<string | undefined>} The package name when one is present.
+ * @returns {Promise<PackageManifestMetadata | undefined>} The parsed package metadata.
  */
-async function ReadPackageName(ManifestUri: Uri): Promise<string | undefined>
+async function ReadPackageManifest(
+    ManifestUri: Uri
+): Promise<PackageManifestMetadata | undefined>
 {
     try
     {
@@ -244,10 +371,16 @@ async function ReadPackageName(ManifestUri: Uri): Promise<string | undefined>
             return undefined;
         }
 
-        return typeof ParsedManifest.name === "string"
-            && ParsedManifest.name.length > 0
-            ? ParsedManifest.name
-            : undefined;
+        return {
+            Name: typeof ParsedManifest.name === "string"
+                && ParsedManifest.name.length > 0
+                ? ParsedManifest.name
+                : undefined,
+            Version: typeof ParsedManifest.version === "string"
+                && ParsedManifest.version.length > 0
+                ? ParsedManifest.version
+                : undefined
+        };
     }
     catch
     {
@@ -261,7 +394,7 @@ async function ReadPackageName(ManifestUri: Uri): Promise<string | undefined>
  * @param Value - The parsed JSON value.
  * @returns {boolean} Whether the value can contain a package name.
  */
-function IsPackageManifest(Value: unknown): Value is IPackageManifest
+function IsPackageManifest(Value: unknown): Value is PackageManifest
 {
     return typeof Value === "object" && Value !== null;
 }

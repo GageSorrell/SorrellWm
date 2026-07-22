@@ -3,8 +3,11 @@
         {
             "target_name": "SorrellWindows",
             "sources": [
-                "Source/Native/*",
-                "Source/Native/**/*"
+                "Source/Native/Initialization.cpp",
+                "Source/Native/Keyboard.cpp",
+                "Source/Native/MessageLoop.cpp",
+                "Source/Native/Utility.cpp",
+                "Source/Native/Window.cpp"
             ],
             "defines": [
                 "NAPI_VERSION=10",
@@ -22,6 +25,7 @@
             "msvs_settings": {
                 "VCCLCompilerTool": {
                     "AdditionalOptions": [
+                        "/EHsc",
                         "/std:c++20"
                     ],
                     "WarningLevel": 4
