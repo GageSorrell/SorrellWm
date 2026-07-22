@@ -10,6 +10,7 @@
  */
 
 import { type Data, Function, Predicate, type Record, Struct, type Types } from "effect";
+import type { Unify } from "effect/Unify";
 
 const TypeIdKey = "~sorrell/wm/Main/Command/Command" as const;
 
@@ -38,34 +39,67 @@ const Proto =
 
 export namespace Command
 {
+    export type Constructor<A extends Any> = Types.Simplify<
+    {
+        readonly [ Tag in A["_tag"] ]: Data.TaggedEnum.ConstructorFrom<
+            Extract<A, { readonly _tag: Tag }>,
+            "_tag" | "Category" | TypeId
+        >
+    } & {
+        readonly $is: <Tag extends A["_tag"]>(
+            tag: Tag
+        ) => (u: unknown) => u is Extract<A, { readonly _tag: Tag }>
+        readonly $match: {
+            <
+                Cases extends {
+                    readonly [Tag in A["_tag"]]: (
+                        args: Extract<A, { readonly _tag: Tag }>
+                    ) => any
+                }
+            >(
+                cases: Cases
+            ): (value: A) => Unify<ReturnType<Cases[A["_tag"]]>>
+            <
+                Cases extends {
+                    readonly [Tag in A["_tag"]]: (
+                        args: Extract<A, { readonly _tag: Tag }>
+                    ) => any
+                }
+            >(
+                value: A,
+                cases: Cases
+            ): Unify<ReturnType<Cases[A["_tag"]]>>
+        }
+    }>;
+
     export const Constructor = <EnumType extends Enum<any, any>>(
         Category: EnumType["Category"]
-    ): () => Data.TaggedEnum.Constructor<EnumType> =>
-        () =>
-            new Proxy(
-                {},
+    ): () => Constructor<EnumType> =>
+        () => new Proxy(
+            { },
+            {
+                /* eslint-disable-next-line @typescript-eslint/typedef */
+                get(_target, tag, _receiver)
                 {
-                    /* eslint-disable-next-line @typescript-eslint/typedef */
-                    get(_target, tag, _receiver)
+                    if (tag === "$is")
                     {
-                        if (tag === "$is")
-                        {
-                            return Predicate.isTagged;
-                        }
-                        else if (tag === "$match")
-                        {
-                            return taggedMatch;
-                        }
-
-                        return (props: any) =>
-                        {
-                            const Out = Object.create(Proto);
-                            Out.Category = Category;
-                            return Object.freeze(Struct.assign(Out, props));
-                        };
+                        return Predicate.isTagged;
                     }
+                    else if (tag === "$match")
+                    {
+                        return taggedMatch;
+                    }
+
+                    return (props: any) =>
+                    {
+                        const Out = Object.create(Proto);
+                        Out.Category = Category;
+                        Out._tag = tag;
+                        return Object.freeze(Struct.assign(Out, props));
+                    };
                 }
-            ) as any;
+            }
+        ) as any;
 
     type TaggedCases<A extends { readonly _tag: string; }> =
         {
@@ -137,18 +171,29 @@ export const $is: {
     return Self.Category === Category;
 });
 
+/**
+ * Match a command's category.
+ *
+ * @since 0.1.0
+ */
 export const $match: {
-    <A, const Category extends string>(
-        Cases: Record.ReadonlyRecord<Category, Function.LazyArg<A>>
-    ): (Self: Command<Category>) => A;
+    <A, const Categories extends string>(
+        Cases: {
+            readonly [ Key in Categories ]: (Self: Command<Key>) => A;
+        }
+    ): (Self: Command<keyof typeof Cases>) => A;
 
-    <A, const Category extends string>(
-        Self: Command<Category>,
-        Cases: Record.ReadonlyRecord<Category, Function.LazyArg<A>>
+    <A, const Categories extends string>(
+        Self: Command<keyof typeof Cases>,
+        Cases: {
+            readonly [ Key in Categories ]: (Self: Command<Key>) => A;
+        }
     ): A;
-} = Function.dual(2, <A, const Category extends string>(
-    Self: Command<Category>,
-    Cases: Record.ReadonlyRecord<Category, Function.LazyArg<A>>): A =>
+} = Function.dual(2, <A, const Categories extends string>(
+    Self: Command<keyof typeof Cases>,
+    Cases: {
+        readonly [ Key in Categories ]: (Self: Command<Key>) => A;
+    }): A =>
 {
-    return Cases[Self.Category]();
+    return Cases[Self.Category](Self);
 });

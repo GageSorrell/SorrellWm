@@ -12,7 +12,10 @@
 
 import type { Array } from "effect";
 
-export const SubTypeIdFactory = (...TypeIds: Array.NonEmptyReadonlyArray<string>): (Label: string) => string =>
+export/** Create a factory that appends labels to a nonempty type-identifier path. */
+const SubTypeIdFactory = (
+    ...TypeIds: Array.NonEmptyReadonlyArray<string>
+): (Label: string) => string =>
 {
     return (...Labels: ReadonlyArray<string>) => [ ...TypeIds, ...Labels ].join("!");
 };

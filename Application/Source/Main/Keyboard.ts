@@ -62,7 +62,8 @@ const Events = (): Effect.Effect<
         ),
         (Id: Subscription.Id) => Effect.gen(function*()
         {
-            yield* Effect.sync(() => NativeKeyboard.Unsubscribe(Id)).pipe(
+            yield* pipe(
+                Effect.sync(() => NativeKeyboard.Unsubscribe(Id)),
                 Effect.flatMap(Effect.fromResult),
                 Effect.ignore({
                     log: "Error",

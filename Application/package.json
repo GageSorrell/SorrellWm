@@ -4,7 +4,7 @@
     "description": "The tiling window manager for everyone.",
     "private": true,
     "type": "module",
-    "main": "./Build/Main/Index.js",
+    "main": "./Build/Main/index.js",
     "author": {
         "name": "Gage Sorrell",
         "email": "gage@sorrell.sh",
@@ -39,6 +39,8 @@
         "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
     },
     "dependencies": {
+        "@effect/platform-node": "4.0.0-beta.99",
+        "@fluentui/react-components": "9.74.4",
         "@sorrell/app-settings": "1.0.0",
         "@sorrell/math": "1.0.0",
         "@sorrell/windows": "1.0.0"

@@ -54,7 +54,7 @@ export type SubscribableMessage = keyof MessageArgument;
  * Subscribe a listener to `WM_MOVE` messages.
  *
  * The packed coordinates in the native message's `lParam` are decoded into an
- * {@link IntPoint.IntPoint}, including sign extension for negative positions.
+ * {@link IntPoint.A}, including sign extension for negative positions.
  *
  * @param Message - The `WM_MOVE` message identifier.
  * @param Callback - The listener to invoke with the window's new position.

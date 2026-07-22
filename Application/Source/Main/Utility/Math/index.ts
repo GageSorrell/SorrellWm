@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/app-settings
+ * @module @sorrell/wm/Main/Utility/Math/index
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -9,5 +9,4 @@
  * @license   MIT
  */
 
-export * as AppSettings from "./AppSettings.js";
-export * from "./AppSettings.js";
+export * as Box from "./Box.ts";

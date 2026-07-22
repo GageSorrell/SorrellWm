@@ -43,8 +43,7 @@ export function Application(): React.JSX.Element
 
             <section
                 aria-label="Runtime status"
-                className="status-grid"
-            >
+                className="status-grid">
                 <article className="status-card">
                     <span>Renderer</span>
                     <strong>React ready</strong>
@@ -66,8 +65,7 @@ export function Application(): React.JSX.Element
             <button
                 className="bridge-check"
                 onClick={ checkBridge }
-                type="button"
-            >
+                type="button">
                 Check preload bridge: { bridgeStatus }
             </button>
         </main>

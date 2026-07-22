@@ -1,9 +1,9 @@
 /**
  *
  *
- * @module @sorrell/wm/Preload/Index
+ * @module @sorrell/wm/Preload
  *
- * @file      Index.ts
+ * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT

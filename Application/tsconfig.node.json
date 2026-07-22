@@ -15,6 +15,7 @@
         "Source/Main/**/*.ts",
         "Source/Preload/**/*.ts",
         "Source/Shared/**/*.ts",
+        "Test/**/*.ts",
         "vitest.config.ts"
     ]
 }

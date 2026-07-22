@@ -9,53 +9,54 @@
  * @license   MIT
  */
 
-import { Effect, Schema } from "effect";
-import { AppSettings } from "@sorrell/app-settings";
-import { Theme } from "./index.ts";
+import * as Hotkey from "./Hotkey.js";
+import * as _AppSettings from "@sorrell/app-settings";
+import { Effect, Schema, pipe } from "effect";
+
+export/** The application-settings module identifier used for tracing. */
+const TypeId = "~sorrell/wm/Main/AppSettings" as const;
+/** The type of the application-settings module identifier. */
+export type TypeId = typeof TypeId;
 
 const SettingsSchema = Schema.Struct({
-    RunAtStartup: Schema.Boolean,
-    Theme: Schema.Literals([ Theme.Encoded.Dark, Theme.Encoded.Light, Theme.Encoded.System ])
+    Keybinds: pipe(
+        Schema.Array(Hotkey.KeybindSettingSchema),
+        Schema.withDecodingDefaultKey(Effect.succeed(Hotkey.DefaultKeybindSettings))
+    ),
+    OverlayRoundedCorners: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(true))
+    ),
+    RunAtStartup: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(true))
+    ),
+    Theme: pipe(
+        Schema.Literals([ "Dark", "Light", "System" ]),
+        Schema.withDecodingDefaultKey(Effect.succeed("System" as const))
+    )
 });
 
-type _AppSettings = typeof SettingsSchema.Type;
+/** The complete validated application settings value. */
+export type AppSettings = typeof SettingsSchema.Type;
 
-const _AppSettings = AppSettings.make(
+/** The operations exposed by the application settings service. */
+export type Service = _AppSettings.Service<AppSettings>;
+
+export/**
+       * The service that yields the application's settings and related tools.
+       *
+       * @since 0.1.0
+       */
+const AppSettings = _AppSettings.make(
     SettingsSchema,
     {
         initial:
         {
+            Keybinds: Array.from(Hotkey.DefaultKeybinds, Hotkey.ToSetting),
+            OverlayRoundedCorners: true,
             RunAtStartup: true,
-            Theme: Theme.Encoded.System
-        },
-        synchronize: (ProposedSettings: typeof SettingsSchema.Type) => Effect.gen(function* ()
-        {
-            yield* Effect.all([
-                Theme.Synchronize(ProposedSettings)
-            ]);
-        })
+            Theme: "System"
+        }
     }
 );
-
-export { _AppSettings as AppSettings };
-
-// const Live = Settings.layer.pipe(Layer.provide(NodeServices.layer));
-
-// const Program = Effect.gen(function*()
-// {
-//     const Service = yield* Settings;
-
-//     const Theme = yield* Service.getSetting("Theme");
-//     yield* Effect.log(`Current theme: ${ Theme }`);
-
-//     yield* Service.setSetting("Theme", "Dark");
-
-//     // `changes` immediately emits the current value, then every update made
-//     // through the service or loaded from an external file edit.
-//     yield* Service.changes.pipe(
-//         Stream.runForEach((Value) => Effect.log("Settings changed", Value)),
-//         Effect.forkScoped
-//     );
-// });
-
-// Effect.runPromise(Effect.scoped(Program).pipe(Effect.provide(Live)));

@@ -13,7 +13,7 @@ export default defineConfig({
     test:
     {
         environment: "jsdom",
-        include: [ "Source/**/*Test.{ts,tsx}" ],
+        include: [ "Source/**/*Test.{ts,tsx}", "Test/**/*.Test.{ts,tsx}" ],
         setupFiles: [ "./Source/Renderer/Source/Test/Setup.ts" ]
     }
 });

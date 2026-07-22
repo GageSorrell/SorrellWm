@@ -9,8 +9,7 @@
  * @license   MIT
  */
 
-import { Command } from "./index.ts";
-import { TypeId } from "./Command.ts";
+import * as Command from "./Command.js";
 
 export type WmCommand = Command.Command.Enum<"Wm", {
     /**
@@ -28,4 +27,5 @@ export type WmCommand = Command.Command.Enum<"Wm", {
     readonly SetFocus: { };
 }>;
 
-export const WmCommand = Command.Command.Constructor("Wm");
+export const WmCommand: () => Command.Command.Constructor<WmCommand> =
+    Command.Command.Constructor<WmCommand>("Wm");

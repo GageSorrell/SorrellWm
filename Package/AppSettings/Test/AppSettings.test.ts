@@ -10,6 +10,8 @@
  */
 
 import {
+    Context,
+    Deferred,
     Effect,
     Fiber,
     Layer,
@@ -165,53 +167,70 @@ describe("AppSettings", () =>
         });
     });
 
-    it("does not write or publish settings when external synchronization fails", async() =>
+    it("keeps committed settings when downstream synchronization fails", async() =>
     {
         const Directory = await MakeTemporaryDirectory();
         const FilePath = join(Directory, "settings.json");
         const Attempts = new Array<string>();
         const ExternalThemes = new Array<string>();
+        const DarkApplied = Effect.runSync(Deferred.make<void>());
         const Settings = AppSettings.make(SettingsSchema, {
             filePath: FilePath,
             initial: {
                 launchAtStartup: false,
                 theme: "light"
-            },
-            synchronize: (Value: Settings) => Effect.sync(() =>
-            {
-                Attempts.push(Value.theme);
-            }).pipe(
-                Effect.andThen(Value.theme === "blocked"
-                    ? Effect.fail(new Error("External mutation failed."))
-                    : Effect.sync(() =>
-                    {
-                        ExternalThemes.push(Value.theme);
-                    }))
-            )
+            }
         });
+        interface ExternalState
+        {
+            readonly Themes: Array<string>;
+        }
+        const ExternalState = Context.Service<ExternalState>(
+            "@sorrell/app-settings/Test/ExternalState"
+        );
+        const ExternalStateLive = Layer.succeed(ExternalState, { Themes: ExternalThemes });
+        const SynchronizationLive = AppSettings.synchronizeSetting(
+            Settings,
+            "theme",
+            (Theme: string) => Effect.gen(function*()
+            {
+                const External = yield* ExternalState;
+                Attempts.push(Theme);
+
+                if (Theme === "blocked")
+                {
+                    return yield* Effect.fail(new Error("External mutation failed."));
+                }
+
+                External.Themes.push(Theme);
+
+                if (Theme === "dark")
+                {
+                    yield* Deferred.succeed(DarkApplied, undefined);
+                }
+            })
+        );
+        const Live = SynchronizationLive.pipe(
+            Layer.provideMerge(Settings.layer),
+            Layer.provide(PlatformLayer),
+            Layer.provide(ExternalStateLive)
+        );
 
         const Outcome = await Effect.runPromise(Effect.gen(function*()
         {
             const Service = yield* Settings;
-            yield* Service.setSetting("theme", "dark");
 
-            const SetResult = yield* Service.setSetting("theme", "blocked").pipe(Effect.result);
+            yield* Service.setSetting("launchAtStartup", true);
+            yield* Service.setSetting("theme", "blocked");
+            yield* Service.setSetting("theme", "dark");
+            yield* Deferred.await(DarkApplied).pipe(Effect.timeout("5 seconds"));
             const Current = yield* Service.get;
 
-            return { Current, SetResult };
-        }).pipe(
-            Effect.provide(Settings.layer),
-            Effect.provide(PlatformLayer)
-        ));
+            return { Current };
+        }).pipe(Effect.provide(Live)));
 
-        expect(Attempts).toEqual([ "light", "dark", "blocked" ]);
+        expect(Attempts).toEqual([ "light", "blocked", "dark" ]);
         expect(ExternalThemes).toEqual([ "light", "dark" ]);
-        expect(Result.isFailure(Outcome.SetResult)).toBe(true);
-        if (Result.isFailure(Outcome.SetResult))
-        {
-            expect(Outcome.SetResult.failure).toBeInstanceOf(AppSettings.SynchronizationError);
-            expect(Outcome.SetResult.failure.operation).toBe("LocalUpdate");
-        }
         expect(Outcome.Current.theme).toBe("dark");
         await expect(readFile(FilePath, "utf8")).resolves.toContain("\"theme\": \"dark\"");
     });

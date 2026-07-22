@@ -10,5 +10,7 @@
  * @license   MIT
  */
 
-export * as Direction from "./Direction.js";
+export * as Cardinal from "./Cardinal.ts";
+export * as Function from "./Function.ts";
+export * as Math from "./Math/index.ts";
 

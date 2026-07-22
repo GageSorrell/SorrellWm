@@ -9,9 +9,9 @@
  * @license   MIT
  */
 
-import { Command } from "./index.ts";
-import { TypeId } from "./Command.ts";
+import * as Command from "./Command.js";
 
+/** Commands that control the application's user interface. */
 export type UiCommand = Command.Command.Enum<"Ui", {
     /**
      * Show the command UI.
@@ -20,10 +20,12 @@ export type UiCommand = Command.Command.Enum<"Ui", {
     readonly Activate: { };
 
     /**
-     * Hide the command UI.
+     * Hide the command UI when the activation key is released.
      * @since 0.1.0
      */
-    readonly Blur: { };
+    readonly Deactivate: { };
 }>;
 
-export const UiCommand = Command.Command.Constructor("Ui");
+export/** Construct immutable user-interface commands. */
+const UiCommand: () => Command.Command.Constructor<UiCommand> =
+    Command.Command.Constructor<UiCommand>("Ui");

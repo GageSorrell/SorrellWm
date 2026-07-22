@@ -38,6 +38,46 @@
       "import": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
     },
+    "./Subscription": {
+      "import": "./Distribution/Subscription.js",
+      "types": "./Distribution/Subscription.d.ts"
+    },
+    "./Handle": {
+      "import": "./Distribution/Handle.js",
+      "types": "./Distribution/Handle.d.ts"
+    },
+    "./Key": {
+      "import": "./Distribution/Key.js",
+      "types": "./Distribution/Key.d.ts"
+    },
+    "./Keyboard": {
+      "import": "./Distribution/Keyboard.js",
+      "types": "./Distribution/Keyboard.d.ts"
+    },
+    "./MessageLoop": {
+      "import": "./Distribution/MessageLoop.js",
+      "types": "./Distribution/MessageLoop.d.ts"
+    },
+    "./Thread": {
+      "import": "./Distribution/Thread.js",
+      "types": "./Distribution/Thread.d.ts"
+    },
+    "./Time": {
+      "import": "./Distribution/Time.js",
+      "types": "./Distribution/Time.d.ts"
+    },
+    "./Window": {
+      "import": "./Distribution/Window.js",
+      "types": "./Distribution/Window.d.ts"
+    },
+    "./VK": {
+      "import": "./Distribution/VK.js",
+      "types": "./Distribution/VK.d.ts"
+    },
+    "./WM": {
+      "import": "./Distribution/WM.js",
+      "types": "./Distribution/WM.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "files": [

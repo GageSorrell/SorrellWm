@@ -11,6 +11,7 @@
 
 import { Data } from "effect";
 
+/** One Cartesian coordinate dimension. */
 export type Dimension = Data.TaggedEnum<{
     readonly X: { };
     readonly Y: { };
@@ -18,14 +19,16 @@ export type Dimension = Data.TaggedEnum<{
 
 const { $is: IsDimension, $match: MatchDimension } = Data.taggedEnum<Dimension>();
 
-export const Dimension =
+export/** Constructors, guards, and matching utilities for coordinate dimensions. */
+const Dimension =
     {
-        X: { _tag: "X" as const },
-        Y: { _tag: "Y" as const },
         $is: IsDimension,
-        $match: MatchDimension
+        $match: MatchDimension,
+        X: { _tag: "X" as const },
+        Y: { _tag: "Y" as const }
     } as const;
 
+/** One of the four Cartesian quadrants. */
 export type Quadrant = Data.TaggedEnum<{
     readonly I: { };
     readonly II: { };
@@ -35,16 +38,18 @@ export type Quadrant = Data.TaggedEnum<{
 
 const { $is: IsQuadrant, $match: MatchQuadrant } = Data.taggedEnum<Quadrant>();
 
-export const Quadrant =
+export/** Constructors, guards, and matching utilities for Cartesian quadrants. */
+const Quadrant =
     {
+        $is: IsQuadrant,
+        $match: MatchQuadrant,
         I: { _tag: "I" as const },
         II: { _tag: "II" as const },
         III: { _tag: "III" as const },
-        IV: { _tag: "IV" as const },
-        $is: IsQuadrant,
-        $match: MatchQuadrant
+        IV: { _tag: "IV" as const }
     } as const;
 
+/** A signed half of the Cartesian plane along either axis. */
 export type HalfPlane = Data.TaggedEnum<{
     readonly XPos: { };
     readonly XNeg: { };
@@ -54,14 +59,10 @@ export type HalfPlane = Data.TaggedEnum<{
 
 const { $is: IsHalfPlane, $match: MatchHalfPlane } = Data.taggedEnum<HalfPlane>();
 
-export const HalfPlane =
+export/** Constructors, guards, matching, and classification utilities for half-planes. */
+const HalfPlane =
     {
-        XPos: { _tag: "XPos" as const },
-        XNeg: { _tag: "XNeg" as const },
-        YPos: { _tag: "YPos" as const },
-        YNeg: { _tag: "YNeg" as const },
         $is: IsHalfPlane,
-        $match: MatchHalfPlane,
         $isAxis: (Axis: Dimension): (Self: HalfPlane) => boolean =>
             Dimension.$match(Axis, {
                 X: () => (Self: HalfPlane): boolean => [ "XPos", "XNeg" ].includes(Self._tag),
@@ -69,7 +70,12 @@ export const HalfPlane =
             }),
         $isSign: (Sign: "Pos" | "Neg"): (Self: HalfPlane) => boolean =>
             ({
-                Pos: (Self: HalfPlane): boolean => [ "XPos", "YPos" ].includes(Self._tag),
-                Neg: (Self: HalfPlane): boolean => [ "XNeg", "YNeg" ].includes(Self._tag)
-            }[Sign])
+                Neg: (Self: HalfPlane): boolean => [ "XNeg", "YNeg" ].includes(Self._tag),
+                Pos: (Self: HalfPlane): boolean => [ "XPos", "YPos" ].includes(Self._tag)
+            }[Sign]),
+        $match: MatchHalfPlane,
+        XNeg: { _tag: "XNeg" as const },
+        XPos: { _tag: "XPos" as const },
+        YNeg: { _tag: "YNeg" as const },
+        YPos: { _tag: "YPos" as const }
     } as const;

@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import { Context, Data, Effect, Layer } from "effect";
+import { Context, Data, Effect, Layer, pipe } from "effect";
 import { MessageLoop, type Thread } from "@sorrell/windows";
 
 interface NativeFailure
@@ -33,7 +33,8 @@ export class WindowsMessageLoop extends Context.Service<WindowsMessageLoop, {
     readonly ThreadId: Thread.ThreadId;
 }>()("@sorrell/wm/Main/WindowsMessageLoop") { }
 
-const Start = Effect.sync(MessageLoop.Start).pipe(
+const Start = pipe(
+    Effect.sync(MessageLoop.Start),
     Effect.flatMap(Effect.fromResult),
     Effect.mapError((NativeError: NativeFailure) => new WindowsMessageLoopError({
         Message: NativeError.Message,
@@ -41,7 +42,8 @@ const Start = Effect.sync(MessageLoop.Start).pipe(
     }))
 );
 
-const Stop = Effect.sync(MessageLoop.Stop).pipe(
+const Stop = pipe(
+    Effect.sync(MessageLoop.Stop),
     Effect.flatMap(Effect.fromResult),
     Effect.mapError((NativeError: NativeFailure) => new WindowsMessageLoopError({
         Message: NativeError.Message,
@@ -56,7 +58,8 @@ const Stop = Effect.sync(MessageLoop.Stop).pipe(
 export/** A scoped layer that starts the native loop and stops it during finalization. */
 const Live = Layer.effect(
     WindowsMessageLoop,
-    Effect.acquireRelease(Start, () => Stop).pipe(
+    pipe(
+        Effect.acquireRelease(Start, () => Stop),
         Effect.map((ThreadId: Thread.ThreadId) => ({ ThreadId }))
     )
 );

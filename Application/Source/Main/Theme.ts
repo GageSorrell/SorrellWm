@@ -13,7 +13,11 @@ import { AppSettings } from "./index.ts";
 import { Effect } from "effect";
 import { nativeTheme } from "electron";
 
-export const TypeId = "~sorrell/wm/Main/Theme" as const;
+export/** The type ID for this module. */
+const TypeId = "~sorrell/wm/Main/Theme" as const;
+
+/** {@inheritDoc TypeId:var} */
+export type TypeId = typeof TypeId;
 
 export/** The token that represents the "light" mode. */
 const Light: unique symbol = Symbol.for(`${ TypeId }!Light`);
@@ -57,12 +61,22 @@ export namespace Encoded
     export/** The token that represents the system's current mode. */
     const System = "System" as const;
 
+    /**
+     * A string corresponding to a theme mode, for serializing in/from settings.
+     *
+     * @since 0.1.0
+     */
     export type Encoded =
         | typeof Light
         | typeof Dark
         | typeof System;
 
-    export const Encoded = (Value: Theme): Encoded =>
+    export/**
+           * Get the encoded form of a theme mode.
+           *
+           * @since 0.1.0
+           */
+    const Encoded = (Value: Theme): Encoded =>
     {
         switch (Value)
         {
@@ -73,9 +87,16 @@ export namespace Encoded
             case _System:
                 return System;
         }
+
+        throw new TypeError("The theme value is not supported.");
     };
 
-    export const Decoded = (Value: Encoded): Theme =>
+    export/**
+           * Get a theme mode from its encoded value.
+           *
+           * @since 0.1.0
+           */
+    const Decoded = (Value: Encoded): Theme =>
     {
         switch (Value)
         {
@@ -109,21 +130,27 @@ const GetResolved = (): Resolved =>
     }
 };
 
-export const Synchronize = (ProposedSettings: AppSettings.AppSettings) => Effect.gen(function* ()
-{
-    const NewTheme = ProposedSettings.Theme.toLowerCase() as "dark" | "light" | "system";
-    nativeTheme.themeSource = NewTheme;
-});
-
-export const GetTheme = Effect.fn("GetTheme", function* ()
+export/**
+       * Get the current theme mode.
+       *
+       * @since 0.1.0
+       */
+const GetTheme = Effect.fn("GetTheme")(function* ()
 {
     const Settings = yield* AppSettings.AppSettings;
     const EncodedTheme: Encoded.Encoded = yield* Settings.getSetting("Theme");
     return Encoded.Decoded(EncodedTheme);
 });
 
-export const SetTheme = Effect.fn("SetTheme", function* (NewTheme: Theme)
-{
-    const Settings = yield* AppSettings.AppSettings;
-    return yield* Settings.setSetting("Theme", Encoded.Encoded(NewTheme));
-});
+export/**
+       * Set the current theme mode.  This is immediately reflected in the AppSettings.
+       *
+       * @since 0.1.0
+       */
+const SetTheme = Effect.fn("SetTheme")(
+    function* (NewTheme: Theme)
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        return yield* Settings.setSetting("Theme", Encoded.Encoded(NewTheme));
+    }
+);

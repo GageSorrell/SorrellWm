@@ -85,38 +85,44 @@ The previous positional form, `AppSettings.make(schema, filePath, options)`, rem
 
 ## External state synchronization
 
-Use `synchronize` when one or more settings also control state outside the JSON file, such as
-registering the application to run when the user signs in:
+Settings are the durable description of desired state. Use a downstream synchronization layer
+when settings also control state outside the JSON file, such as registering the application to
+run when the user signs in:
 
 ```ts
-declare const SynchronizeExternalState: (
-    Settings: Schema.Schema.Type<typeof SettingsSchema>
-) => Effect.Effect<void, Error>;
-
 const Settings = AppSettings.make(SettingsSchema, {
     initial: {
         launchAtStartup: false,
         theme: "system"
-    },
-    synchronize: SynchronizeExternalState
+    }
 });
+
+declare const SynchronizeLaunchAtStartup: (
+    Enabled: boolean
+) => Effect.Effect<void, Error, StartupRegistration>;
+
+const SynchronizationLive = AppSettings.synchronizeSetting(
+    Settings,
+    "launchAtStartup",
+    SynchronizeLaunchAtStartup
+);
+
+const Live = SynchronizationLive.pipe(
+    Layer.provideMerge(Settings.layer),
+    Layer.provide(NodeServices.layer),
+    Layer.provide(StartupRegistrationLive)
+);
 ```
 
-Candidate settings are schema-validated and serialized before `synchronize` runs. For updates
-made through `set`, `setSetting`, or `update`, the commit order is:
+`synchronizeSetting` immediately applies the current committed value, then applies later changes
+to that setting. Changes to unrelated settings are ignored using `Object.is` equality. The
+synchronizer's Effect requirements are retained by the returned layer, so it may depend on
+services that themselves use `Settings` without creating a construction cycle.
 
-1. Run `synchronize` with the complete candidate settings value.
-2. Atomically replace the JSON file.
-3. Publish the new in-memory value through `get` and `changes`.
-
-If synchronization fails, the operation fails with `AppSettings.SynchronizationError`; the JSON
-file and in-memory settings remain unchanged. The original failure is available as the error's
-`cause`.
-
-The hook also runs when the layer initializes, allowing saved settings to be reconciled with
-external state before the service becomes available. Valid external file edits run through the
-hook before entering memory. Because such an edit was made outside this package, a failed hook
-cannot undo the external file write; it keeps the previous in-memory settings instead.
+`synchronize(Settings, Reconcile)` provides the same behavior for the complete settings value.
+Failures are logged and do not terminate monitoring; the committed settings remain the desired
+state and later changes are still processed. A reconciler can apply its own retry policy with
+`Effect.retry` when external failures are transient.
 
 ## Service API
 
@@ -135,8 +141,6 @@ cannot undo the external file write; it keeps the previous in-memory settings in
 - If the file does not exist, `initial` is persisted. When `initial` is omitted, an empty object
   is decoded so defaults defined by the schema can provide the initial settings.
 - Missing parent directories are created recursively before the file is loaded or written.
-- When `synchronize` is provided, its successful completion is required before a file is created
-  or replaced and before a value is published in memory.
 - Writes use a temporary file in the same directory followed by an atomic replacement. The
   service's in-memory value and `changes` stream are updated only after that replacement succeeds.
 - A failed write returns `AppSettings.WriteError` and leaves the last committed in-memory value
@@ -146,5 +150,5 @@ cannot undo the external file write; it keeps the previous in-memory settings in
 - A failed watcher is logged and restarted after `watchRetryDelay` (one second by default).
 
 `AppSettings.make` also accepts `applicationName`, `fileName`, `filePath`, `jsonSpace`,
-`synchronize`, `watchDebounce`, and `watchRetryDelay` options. The returned tag retains the
-inferred settings type, its `.schema`, its resolved `.filePath`, and its scoped `.layer`.
+`watchDebounce`, and `watchRetryDelay` options. The returned tag retains the inferred settings
+type, its `.schema`, its resolved `.filePath`, and its scoped `.layer`.

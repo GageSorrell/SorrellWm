@@ -7,7 +7,8 @@
                 "Source/Native/Keyboard.cpp",
                 "Source/Native/MessageLoop.cpp",
                 "Source/Native/Utility.cpp",
-                "Source/Native/Window.cpp"
+                "Source/Native/Window.cpp",
+                "Source/Native/WindowDimming.cpp"
             ],
             "defines": [
                 "NAPI_VERSION=10",

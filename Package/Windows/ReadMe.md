@@ -30,6 +30,18 @@ if (KeyboardSubscription._tag === "Success")
 MessageLoop.Stop();
 ```
 
+`Window.DimWindowsExcept(ExcludedWindows)` places a 50%-opaque,
+click-through black overlay immediately above every visible, non-minimized
+top-level window not contained in `ExcludedWindows`. It returns an Effect
+`Result`; call `Window.ClearWindowDimming()` to remove all active overlays.
+Repeated calls replace the existing overlay set, and addon cleanup also
+removes any remaining overlays.
+
+`Window.HasRoundedCorners(WindowHandle)` returns `Some(true)` for explicit
+`ROUND` and `ROUNDSMALL` DWM preferences, `Some(false)` for an explicit
+`DONOTROUND` preference, and `None` when the preference is default, unsupported,
+invalid, or otherwise indeterminate.
+
 `MessageLoop.Start` creates a Win32 message queue and runs `GetMessageW` on a
 dedicated native thread, separate from Electron's UI thread. Only one native
 loop can run per process. `MessageLoop.Stop` posts `WM_QUIT` and joins the

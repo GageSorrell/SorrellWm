@@ -14,10 +14,13 @@ import { Equal, Hash, Inspectable, Pipeable } from "effect";
 import type { Vector2D } from "../Vector2D.ts";
 
 const TypeIdKey = "~sorrell/math/Vector2D" as const;
-export const TypeId: unique symbol = Symbol.for(TypeIdKey);
+export/** The symbol installed on every vector value. */
+const TypeId: unique symbol = Symbol.for(TypeIdKey);
+/** The type of the internal vector symbol. */
 export type TypeId = typeof TypeId;
 
-export const Proto =
+export/** Shared equality, hashing, inspection, iteration, and piping behavior. */
+const Proto =
     {
         [ TypeId ]: TypeId,
 
@@ -48,15 +51,16 @@ export const Proto =
 
         pipe()
         {
+            /* eslint-disable-next-line prefer-rest-params */
             return Pipeable.pipeArguments(this, arguments);
         },
 
         toJSON()
         {
             return {
-                _tag: "Vector2D",
                 X: this.X,
-                Y: this.Y
+                Y: this.Y,
+                _tag: "Vector2D"
             } as const;
         },
         toString()

@@ -24,7 +24,8 @@ import {
     type SchemaError,
     type Scope,
     Stream,
-    SubscriptionRef
+    SubscriptionRef,
+    pipe
 } from "effect";
 import { homedir } from "node:os";
 
@@ -66,9 +67,6 @@ export type JsonOperation = "Parse" | "Stringify";
 /** Identifies the schema operation that failed. */
 export type ValidationOperation = "Decode" | "Encode";
 
-/** Identifies the update source being synchronized with external state. */
-export type SynchronizationOperation = "ExternalUpdate" | "Initialize" | "LocalUpdate";
-
 /** A failure raised while accessing the settings file. */
 export class FileError extends Data.TaggedError("AppSettingsFileError")<{
     readonly cause: PlatformError.PlatformError;
@@ -90,18 +88,11 @@ export class ValidationError extends Data.TaggedError("AppSettingsValidationErro
     readonly operation: ValidationOperation;
 }> { }
 
-/** A failure raised while synchronizing settings with external state. */
-export class SynchronizationError extends Data.TaggedError("AppSettingsSynchronizationError")<{
-    readonly cause: unknown;
-    readonly filePath: string;
-    readonly operation: SynchronizationOperation;
-}> { }
-
 /** Errors that can occur while loading settings from disk. */
-export type LoadError = FileError | JsonError | SynchronizationError | ValidationError;
+export type LoadError = FileError | JsonError | ValidationError;
 
 /** Errors that can occur while persisting settings to disk. */
-export type WriteError = FileError | JsonError | SynchronizationError | ValidationError;
+export type WriteError = FileError | JsonError | ValidationError;
 
 /** Errors that can prevent the settings layer from being constructed. */
 export type InitializationError = LoadError | WriteError;
@@ -142,12 +133,6 @@ export interface MakeOptions<Settings extends object>
 
     /** JSON indentation. Defaults to four spaces. */
     readonly jsonSpace?: number | string;
-
-    /**
-     * Applies candidate settings to external state before they are committed.
-     * A failure prevents both the JSON write and the in-memory update.
-     */
-    readonly synchronize?: (Settings: Settings) => Effect.Effect<void, unknown>;
 
     /** Time used to coalesce bursts of file-system events. Defaults to 50 ms. */
     readonly watchDebounce?: Duration.Input;
@@ -215,6 +200,91 @@ export interface Tag<
     readonly schema: Schema.Codec<Settings, Encoded, DecodingServices, EncodingServices>;
 }
 
+/** An effectful function that reconciles committed settings with external state. */
+export type Synchronizer<Settings extends object, E = never, R = never> =
+    (NewSettings: Settings) => Effect.Effect<void, E, R>;
+
+export/**
+       * Construct a scoped layer that reconciles every committed settings value.
+       *
+       * The current value is applied when the layer starts. Synchronizer failures are
+       * logged without terminating the stream, and requirements are preserved in the
+       * returned layer so application services can be provided downstream of settings.
+       */
+const synchronize = <Settings extends object, Identifier, Error, Requirements>(
+    SettingsTag: Context.Key<Identifier, Service<Settings>>,
+    Synchronize: Synchronizer<Settings, Error, Requirements>
+): Layer.Layer<never, never, Identifier | Requirements> => Layer.effectDiscard(
+    Effect.gen(function*()
+    {
+        const SettingsService = yield* SettingsTag;
+
+        yield* SettingsService.changes.pipe(
+            Stream.runForEach((Current: Settings) => Effect.suspend(() => Synchronize(Current)).pipe(
+                Effect.catch((ErrorValue: Error) => Effect.logWarning(
+                    `Settings synchronization failed for ${ SettingsTag.key }; `
+                    + "the committed value remains active.",
+                    ErrorValue
+                ))
+            )),
+            Effect.forkScoped({ startImmediately: true })
+        );
+    })
+);
+
+interface SelectedSetting<Settings extends object, Key extends keyof Settings>
+{
+    readonly Current: Settings;
+    readonly Value: Settings[Key];
+}
+
+export/**
+       * Construct a scoped layer that reconciles one setting whenever its value changes.
+       *
+       * Changes to unrelated settings are ignored using `Object.is` equality. The
+       * synchronizer receives both the selected value and the complete committed value.
+       */
+const synchronizeSetting = <
+    Settings extends object,
+    Identifier,
+    Key extends keyof Settings,
+    Error,
+    Requirements
+>(
+    SettingsTag: Context.Key<Identifier, Service<Settings>>,
+    KeyValue: Key,
+    Synchronize: (
+        Value: Settings[Key],
+        Settings: Settings
+    ) => Effect.Effect<void, Error, Requirements>
+): Layer.Layer<never, never, Identifier | Requirements> => Layer.effectDiscard(
+    Effect.gen(function*()
+    {
+        const SettingsService = yield* SettingsTag;
+
+        yield* SettingsService.changes.pipe(
+            Stream.map((Current: Settings): SelectedSetting<Settings, Key> => ({
+                Current,
+                Value: Current[KeyValue]
+            })),
+            Stream.changesWith((
+                Previous: SelectedSetting<Settings, Key>,
+                Current: SelectedSetting<Settings, Key>
+            ): boolean => Object.is(Previous.Value, Current.Value)),
+            Stream.runForEach(({ Current, Value }: SelectedSetting<Settings, Key>) => Effect.suspend(
+                () => Synchronize(Value, Current)
+            ).pipe(
+                Effect.catch((ErrorValue: Error) => Effect.logWarning(
+                    `Settings synchronization failed for ${ SettingsTag.key }[${ String(KeyValue) }]; `
+                    + "the committed value remains active.",
+                    ErrorValue
+                ))
+            )),
+            Effect.forkScoped({ startImmediately: true })
+        );
+    })
+);
+
 interface State<Settings extends object>
 {
     readonly json: string;
@@ -225,7 +295,6 @@ interface ResolvedOptions<Settings extends object>
 {
     readonly initial: Option.Option<Settings>;
     readonly jsonSpace: number | string;
-    readonly synchronize: Option.Option<(Settings: Settings) => Effect.Effect<void, unknown>>;
     readonly watchDebounce: Duration.Input;
     readonly watchRetryDelay: Duration.Input;
 }
@@ -322,9 +391,6 @@ export function make<
     const Resolved: ResolvedOptions<Settings> = {
         initial: Options?.initial === undefined ? Option.none() : Option.some(Options.initial),
         jsonSpace: Options?.jsonSpace ?? 4,
-        synchronize: Options?.synchronize === undefined
-            ? Option.none()
-            : Option.some(Options.synchronize),
         watchDebounce: Options?.watchDebounce ?? "50 millis",
         watchRetryDelay: Options?.watchRetryDelay ?? "1 second"
     };
@@ -367,7 +433,8 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
     const AbsoluteFilePath = PathService.resolve(SettingsFilePath);
     const DirectoryPath = PathService.dirname(AbsoluteFilePath);
 
-    yield* Fs.makeDirectory(DirectoryPath, { recursive: true }).pipe(
+    yield* pipe(
+        Fs.makeDirectory(DirectoryPath, { recursive: true }),
         Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
             cause: Cause,
             filePath: AbsoluteFilePath,
@@ -375,23 +442,9 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         }))
     );
 
-    const Synchronize = (
-        Value: Settings,
-        Operation: SynchronizationOperation
-    ): Effect.Effect<void, SynchronizationError> => Option.match(Options.synchronize, {
-        onNone: () => Effect.void,
-        onSome: (Apply: (Settings: Settings) => Effect.Effect<void, unknown>) =>
-            Effect.suspend(() => Apply(Value)).pipe(
-                Effect.mapError((Cause: unknown) => new SynchronizationError({
-                    cause: Cause,
-                    filePath: AbsoluteFilePath,
-                    operation: Operation
-                }))
-            )
-    });
-
     const Decode = (Input: unknown): Effect.Effect<Settings, ValidationError> =>
-        Schema.decodeUnknownEffect(SettingsSchema)(Input).pipe(
+        pipe(
+            Schema.decodeUnknownEffect(SettingsSchema)(Input),
             Effect.provide(SchemaServices),
             Effect.mapError((Cause: SchemaError.SchemaError) => new ValidationError({
                 cause: Cause,
@@ -401,7 +454,8 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         );
 
     const Encode = (Value: Settings): Effect.Effect<Encoded, ValidationError> =>
-        Schema.encodeEffect(SettingsSchema)(Value).pipe(
+        pipe(
+            Schema.encodeEffect(SettingsSchema)(Value),
             Effect.provide(SchemaServices),
             Effect.mapError((Cause: SchemaError.SchemaError) => new ValidationError({
                 cause: Cause,
@@ -430,7 +484,8 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
     });
 
     const EncodeState = (Value: Settings): Effect.Effect<State<Settings>, JsonError | ValidationError> =>
-        Encode(Value).pipe(
+        pipe(
+            Encode(Value),
             Effect.flatMap(Stringify),
             Effect.map((Json: string) => ({ json: Json, settings: Value }))
         );
@@ -444,9 +499,8 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         try: () => JSON.parse(Json) as unknown
     });
 
-    const ReadState: Effect.Effect<State<Settings>, LoadError> = Fs.readFileString(
-        AbsoluteFilePath
-    ).pipe(
+    const ReadState: Effect.Effect<State<Settings>, LoadError> = pipe(
+        Fs.readFileString(AbsoluteFilePath),
         Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
             cause: Cause,
             filePath: AbsoluteFilePath,
@@ -459,22 +513,24 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
 
     const WriteJson = (Json: string): Effect.Effect<void, FileError> =>
         Effect.acquireUseRelease(
-            Fs.makeTempFile({
-                directory: DirectoryPath,
-                prefix: `.${ PathService.basename(AbsoluteFilePath) }-`,
-                suffix: ".tmp"
-            }).pipe(Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-                cause: Cause,
-                filePath: AbsoluteFilePath,
-                operation: "CreateTemporary"
-            }))),
-            (TemporaryPath: string) => Fs.writeFileString(TemporaryPath, Json).pipe(
+            pipe(
+                Fs.makeTempFile({
+                    directory: DirectoryPath,
+                    prefix: `.${ PathService.basename(AbsoluteFilePath) }-`,
+                    suffix: ".tmp"
+                }),
+                Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
+                    cause: Cause,
+                    filePath: AbsoluteFilePath,
+                    operation: "CreateTemporary"
+                }))),
+            (TemporaryPath: string) => pipe(Fs.writeFileString(TemporaryPath, Json),
                 Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
                     cause: Cause,
                     filePath: AbsoluteFilePath,
                     operation: "Write"
                 })),
-                Effect.flatMap(() => Fs.rename(TemporaryPath, AbsoluteFilePath).pipe(
+                Effect.flatMap(() => pipe(Fs.rename(TemporaryPath, AbsoluteFilePath),
                     Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
                         cause: Cause,
                         filePath: AbsoluteFilePath,
@@ -482,19 +538,16 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
                     }))
                 ))
             ),
-            (TemporaryPath: string) => Fs.remove(TemporaryPath, { force: true }).pipe(Effect.ignore)
+            (TemporaryPath: string) => pipe(Fs.remove(TemporaryPath, { force: true }), Effect.ignore)
         );
 
     const Persist = (Value: Settings): Effect.Effect<State<Settings>, WriteError> =>
         EncodeState(Value).pipe(
-            Effect.tap((StateValue: State<Settings>) => Synchronize(
-                StateValue.settings,
-                "Initialize"
-            )),
             Effect.tap((StateValue: State<Settings>) => WriteJson(StateValue.json))
         );
 
-    const Exists: boolean = yield* Fs.exists(AbsoluteFilePath).pipe(
+    const Exists: boolean = yield* pipe(
+        Fs.exists(AbsoluteFilePath),
         Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
             cause: Cause,
             filePath: AbsoluteFilePath,
@@ -503,12 +556,9 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
     );
 
     const InitialState: State<Settings> = yield* Exists
-        ? ReadState.pipe(Effect.tap((StateValue: State<Settings>) => Synchronize(
-            StateValue.settings,
-            "Initialize"
-        )))
+        ? ReadState
         : Option.match(Options.initial, {
-            onNone: () => Decode({ }).pipe(Effect.flatMap(Persist)),
+            onNone: () => pipe(Decode({ }), Effect.flatMap(Persist)),
             onSome: Persist
         });
 
@@ -516,11 +566,11 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
 
     const Set = (Value: Settings): Effect.Effect<void, WriteError> =>
         SubscriptionRef.updateSomeEffect(StateRef, (Current: State<Settings>) =>
-            EncodeState(Value).pipe(
+            pipe(
+                EncodeState(Value),
                 Effect.flatMap((Next: State<Settings>) => Next.json === Current.json
                     ? Effect.succeed(Option.none())
-                    : Synchronize(Next.settings, "LocalUpdate").pipe(
-                        Effect.andThen(WriteJson(Next.json)),
+                    : WriteJson(Next.json).pipe(
                         Effect.as(Option.some(Next))
                     ))
             )
@@ -534,8 +584,7 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
             Effect.flatMap(EncodeState),
             Effect.flatMap((Next: State<Settings>) => Next.json === Current.json
                 ? Effect.succeed(Option.none())
-                : Synchronize(Next.settings, "LocalUpdate").pipe(
-                    Effect.andThen(WriteJson(Next.json)),
+                : WriteJson(Next.json).pipe(
                     Effect.as(Option.some(Next))
                 ))
         )
@@ -546,9 +595,7 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         (Current: State<Settings>) => ReadState.pipe(
             Effect.flatMap((Next: State<Settings>) => Next.json === Current.json
                 ? Effect.succeed(Option.none())
-                : Synchronize(Next.settings, "ExternalUpdate").pipe(
-                    Effect.as(Option.some(Next))
-                ))
+                : Effect.succeed(Option.some(Next)))
         )
     ).pipe(
         Effect.catch((ErrorValue: LoadError) => Effect.logWarning(

@@ -9,9 +9,9 @@
  * @license   MIT
  */
 
+import type { Box, IntPoint } from "@sorrell/math";
 import type { Handle, Subscription, Thread } from "./index.ts";
 import type { Attempt } from "./Internal/index.ts";
-import type { IntPoint } from "@sorrell/math";
 import { createRequire } from "node:module";
 
 /**
@@ -42,8 +42,17 @@ export interface NativeBinding
     };
     readonly Window:
     {
-        readonly GetForegroundWindow: () => Attempt.Attempt<Handle.HWND>;
+        readonly ClearWindowDimming: () => Attempt.Attempt<void>;
+        readonly DimWindowsExcept: (
+            ExcludedWindows: ReadonlyArray<Handle.HWND>
+        ) => Attempt.Attempt<void>;
         readonly GetCursorPosition: () => Attempt.Attempt<IntPoint.IntPoint>;
+        readonly GetForegroundWindow: () => Attempt.Attempt<Handle.HWND>;
+        readonly GetWindowRect: (
+            Window: Handle.HWND
+        ) => Attempt.Attempt<Box.BoxArg<number>>;
+        readonly GetWindowText: (Window: Handle.HWND) => Attempt.Attempt<string>;
+        readonly HasRoundedCorners: (Window: Handle.HWND) => Attempt.Attempt<boolean>;
     };
 }
 

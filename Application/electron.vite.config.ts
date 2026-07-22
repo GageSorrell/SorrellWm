@@ -19,7 +19,7 @@ export default defineConfig({
         {
             lib:
             {
-                entry: join(ApplicationDirectory, "Source/Main/Index.ts")
+                entry: join(ApplicationDirectory, "Source/Main/index.ts")
             },
             outDir: join(BuildDirectory, "Main"),
             rollupOptions:
@@ -37,7 +37,7 @@ export default defineConfig({
             externalizeDeps: false,
             lib:
             {
-                entry: join(ApplicationDirectory, "Source/Preload/Index.ts")
+                entry: join(ApplicationDirectory, "Source/Preload/index.ts")
             },
             outDir: join(BuildDirectory, "Preload"),
             rollupOptions:
@@ -58,7 +58,7 @@ export default defineConfig({
             outDir: join(BuildDirectory, "Renderer"),
             rollupOptions:
             {
-                input: join(ApplicationDirectory, "Source/Renderer/Index.html")
+                input: join(ApplicationDirectory, "Source/Renderer/index.html")
             },
             sourcemap: true
         },
