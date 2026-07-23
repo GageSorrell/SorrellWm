@@ -58,6 +58,10 @@
       "import": "./Distribution/MessageLoop.js",
       "types": "./Distribution/MessageLoop.d.ts"
     },
+    "./Theme": {
+      "import": "./Distribution/Theme.js",
+      "types": "./Distribution/Theme.d.ts"
+    },
     "./Thread": {
       "import": "./Distribution/Thread.js",
       "types": "./Distribution/Thread.d.ts"

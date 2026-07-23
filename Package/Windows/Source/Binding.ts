@@ -40,19 +40,38 @@ export interface NativeBinding
             SubscriptionId: Subscription.Id
         ) => Attempt.Attempt<void>;
     };
+    readonly Theme:
+    {
+        readonly GetAccentColor: () => Attempt.Attempt<string>;
+    };
     readonly Window:
     {
         readonly ClearWindowDimming: () => Attempt.Attempt<void>;
         readonly DimWindowsExcept: (
             ExcludedWindows: ReadonlyArray<Handle.HWND>
         ) => Attempt.Attempt<void>;
+        readonly ShowBackdrop: (
+            Window: Handle.HWND,
+            Intensity: number,
+            FadeDurationMilliseconds: number
+        ) => Attempt.Attempt<void>;
         readonly GetCursorPosition: () => Attempt.Attempt<IntPoint.IntPoint>;
         readonly GetForegroundWindow: () => Attempt.Attempt<Handle.HWND>;
+        readonly GetManageableTopLevelWindows: () =>
+        Attempt.Attempt<ReadonlyArray<Handle.HWND>>;
         readonly GetWindowRect: (
             Window: Handle.HWND
         ) => Attempt.Attempt<Box.BoxArg<number>>;
         readonly GetWindowText: (Window: Handle.HWND) => Attempt.Attempt<string>;
+        readonly GetWindowWorkArea: (
+            Window: Handle.HWND
+        ) => Attempt.Attempt<Box.BoxArg<number>>;
         readonly HasRoundedCorners: (Window: Handle.HWND) => Attempt.Attempt<boolean>;
+        readonly SetForegroundWindow: (Window: Handle.HWND) => Attempt.Attempt<void>;
+        readonly SetWindowRect: (
+            Window: Handle.HWND,
+            Bounds: Box.BoxArg<number>
+        ) => Attempt.Attempt<void>;
     };
 }
 

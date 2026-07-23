@@ -23,6 +23,7 @@
     "scripts": {
         "build": "npm run typecheck && electron-vite build",
         "dev": "node ./Script/RunElectronVite.mjs dev --watch",
+        "dev:overlay": "node ./Script/RunElectronVite.mjs dev --watch",
         "dev:inspect": "node ./Script/RunElectronVite.mjs dev --watch --inspect=5858",
         "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../Package/EsLintConfigSorrell --ext .cjs,.js,.jsx,.mjs,.mts,.ts,.tsx Source electron.vite.config.ts vitest.config.ts",
         "make": "npm run build && electron-builder",
@@ -41,6 +42,7 @@
     "dependencies": {
         "@effect/platform-node": "4.0.0-beta.99",
         "@fluentui/react-components": "9.74.4",
+        "@fluentui/react-icons": "2.0.333",
         "@sorrell/app-settings": "1.0.0",
         "@sorrell/math": "1.0.0",
         "@sorrell/windows": "1.0.0"

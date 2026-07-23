@@ -10,7 +10,7 @@
  */
 
 import * as BoxUtility from "../Source/Main/Utility/Math/Box.js";
-import { Box, Int, IntInterval } from "@sorrell/math";
+import { Box, Int, IntInterval, IntPoint } from "@sorrell/math";
 import { describe, expect, it } from "vitest";
 
 describe("Math.Box.Center", () =>
@@ -18,7 +18,7 @@ describe("Math.Box.Center", () =>
     it("preserves the requested size and centers it over the target", () =>
     {
         const That = Box.Box(Int.Int(10), Int.Int(30), Int.Int(30), Int.Int(10));
-        const Size = IntInterval.IntInterval(8, 6);
+        const Size = IntPoint.IntPoint(8, 6);
         const Centered = BoxUtility.Center(Size, That);
 
         expect(Box.Tupled(Centered)).toEqual([ 17, 24, 23, 16 ]);

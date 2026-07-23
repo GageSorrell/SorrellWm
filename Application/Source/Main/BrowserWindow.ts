@@ -31,11 +31,13 @@ import electron, { app } from "electron";
 import type { Box } from "@sorrell/math";
 import { ToRectangle as BoxToRectangle } from "./Utility/Math/Box.ts";
 import { join } from "path";
+import { DevFeatures } from "./DevFeatures.ts";
 
 const TypeId = "~sorrell/wm/Main/BrowserWindow" as const;
 
 export/** The logical identities understood by the BrowserWindow service. */
 const Key = Object.freeze({
+    Backdrop: "Backdrop",
     Inspector: "Inspector",
     Main: "Main",
     Overlay: "Overlay",
@@ -55,6 +57,8 @@ export interface Handle
 /** Everything required to construct and load one application browser window. */
 export interface Spec
 {
+    /** Make pointer input pass through the native window after construction. */
+    readonly IgnoreMouseEvents?: boolean;
     readonly Key: Key;
     readonly Options: BrowserWindowConstructorOptions;
     readonly ShowWhenReady?: boolean;
@@ -68,8 +72,10 @@ export type Operation =
     | "Focus"
     | "Hide"
     | "Send"
+    | "SetIgnoreMouseEvents"
     | "SetBounds"
-    | "Show";
+    | "Show"
+    | "ShowInactive";
 
 /** BrowserWindow construction failed before an Electron window was registered. */
 export class BrowserWindowConstructionError extends
@@ -145,6 +151,9 @@ export interface BrowserWindowImpl
 
     /** Show an open window. */
     readonly Show: (Key: Key) => Effect.Effect<void, Error>;
+
+    /** Show an open window without activating it. */
+    readonly ShowInactive: (Key: Key) => Effect.Effect<void, Error>;
 
     /** Hide an open window. */
     readonly Hide: (Key: Key) => Effect.Effect<void, Error>;
@@ -316,6 +325,15 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
             );
             const Closed = yield* Deferred.make<void>();
             const ReadyToShow = yield* Deferred.make<void>();
+
+            if (SpecificationValue.IgnoreMouseEvents === true)
+            {
+                yield* TryOperation(
+                    SpecificationValue.Key,
+                    "SetIgnoreMouseEvents",
+                    () => Window.setIgnoreMouseEvents(true)
+                );
+            }
 
             yield* Effect.acquireRelease(
                 Effect.sync((): WindowListeners =>
@@ -624,6 +642,11 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
                 KeyValue,
                 "Show",
                 (Window: ElectronBrowserWindow) => Window.show()
+            ),
+            ShowInactive: (KeyValue: Key) => Operate(
+                KeyValue,
+                "ShowInactive",
+                (Window: ElectronBrowserWindow) => Window.showInactive()
             )
         } as const;
     })
@@ -641,7 +664,7 @@ const Live = MakeLive({
 const GetSpecBase = (): Pick<Spec, "Options" | "Url"> =>
 {
     const DevelopmentRendererUrl: string | undefined = process.env.ELECTRON_RENDERER_URL;
-    const Url: string = !app.isPackaged && DevelopmentRendererUrl !== undefined
+    const Url: string = app?.isPackaged === false && DevelopmentRendererUrl !== undefined
         ? DevelopmentRendererUrl
         : "sorrell://app/index.html";
 
@@ -663,31 +686,76 @@ const GetSpecBase = (): Pick<Spec, "Options" | "Url"> =>
     } as const;
 };
 
-export/** Construct the overlay specification for the selected corner style. */
-const GetOverlayWindowSpec = (RoundedCorners: boolean = true): Spec =>
+const WithWindowKey = (Url: string, WindowKey: Key): string =>
+{
+    const WindowUrl = new URL(Url);
+    WindowUrl.searchParams.set("window", WindowKey);
+    return WindowUrl.toString();
+};
+
+export/** Construct the transparent, input-transparent transient backdrop specification. */
+const GetBackdropWindowSpec = (): Spec =>
 {
     const { Options: BaseOptions, Url } = GetSpecBase();
+    const BackdropOptions: BrowserWindowConstructorOptions =
+        {
+            alwaysOnTop: true,
+            backgroundColor: "#00000000",
+            backgroundMaterial: "none",
+            focusable: false,
+            frame: false,
+            hasShadow: false,
+            height: 1,
+            maximizable: false,
+            minimizable: false,
+            resizable: false,
+            roundedCorners: false,
+            skipTaskbar: true,
+            transparent: true,
+            webPreferences:
+            {
+                ...BaseOptions.webPreferences,
+                backgroundThrottling: false
+            },
+            width: 1
+        } as const;
+
+    return {
+        IgnoreMouseEvents: true,
+        Key: Key.Backdrop,
+        Options: Struct.assign(BaseOptions, BackdropOptions),
+        ShowWhenReady: false,
+        Url: WithWindowKey(Url, Key.Backdrop)
+    } as const;
+};
+
+export/** Construct the overlay specification for the selected corner style. */
+const OverlayWindowSpec = Effect.gen(function* ()
+{
+    const { Options: BaseOptions, Url } = GetSpecBase();
+    const { StaticOverlay } = yield* DevFeatures;
+
     const OverlayOptions: BrowserWindowConstructorOptions =
         {
             alwaysOnTop: true,
             frame: false,
             height: 800,
             maximizable: false,
-            minHeight: 480,
-            minWidth: 640,
             resizable: false,
-            roundedCorners: RoundedCorners,
-            skipTaskbar: true,
-            title: "SorrellWm Overlay"
+            roundedCorners: false,
+            // roundedCorners: RoundedCorners,
+            skipTaskbar: !StaticOverlay,
+            title: "SorrellWm Overlay",
+            width: 480
         } as const;
 
     return {
         Key: Key.Overlay,
         Options: Struct.assign(BaseOptions, OverlayOptions),
         ShowWhenReady: false,
-        Url
+        Url: WithWindowKey(Url, Key.Overlay)
     } as const;
-};
+});
 
 export/** Construct the main application-window specification. */
 const GetMainWindowSpec = (): Spec =>
@@ -709,6 +777,6 @@ const GetMainWindowSpec = (): Spec =>
         Key: Key.Main,
         Options: Struct.assign(BaseOptions, OverlayOptions),
         ShowWhenReady,
-        Url
+        Url: WithWindowKey(Url, Key.Main)
     } as const;
 };

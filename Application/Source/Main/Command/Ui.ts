@@ -10,6 +10,7 @@
  */
 
 import * as Command from "./Command.js";
+import type { OverlayCommandId, OverlayScreenId } from "../../Shared/OverlayCommand.js";
 
 /** Commands that control the application's user interface. */
 export type UiCommand = Command.Command.Enum<"Ui", {
@@ -24,6 +25,28 @@ export type UiCommand = Command.Command.Enum<"Ui", {
      * @since 0.1.0
      */
     readonly Deactivate: { };
+
+    /**
+     * Return to the preceding overlay screen.
+     * @since 0.1.0
+     */
+    readonly BackOverlayScreen: { };
+
+    /**
+     * Navigate to another overlay screen.
+     * @since 0.1.0
+     */
+    readonly NavigateOverlayScreen: {
+        readonly ScreenId: OverlayScreenId;
+    };
+
+    /**
+     * Represent an overlay command whose behavior has not been implemented yet.
+     * @since 0.1.0
+     */
+    readonly NoOpOverlayCommand: {
+        readonly Id: OverlayCommandId;
+    };
 }>;
 
 export/** Construct immutable user-interface commands. */

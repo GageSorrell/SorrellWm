@@ -6,6 +6,7 @@
                 "Source/Native/Initialization.cpp",
                 "Source/Native/Keyboard.cpp",
                 "Source/Native/MessageLoop.cpp",
+                "Source/Native/Theme.cpp",
                 "Source/Native/Utility.cpp",
                 "Source/Native/Window.cpp",
                 "Source/Native/WindowDimming.cpp"

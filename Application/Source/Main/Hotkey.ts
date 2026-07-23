@@ -11,6 +11,7 @@
 
 import { Context, Effect, HashSet, Layer, PubSub, Schema, Stream, pipe } from "effect";
 import { type Keyboard as NativeKeyboard, VK } from "@sorrell/windows";
+import { HotkeyId } from "../Shared/Hotkey.js";
 import { Keyboard } from "./Keyboard.js";
 
 const TypeIdKey = "~sorrell/wm/Main/Hotkey" as const;
@@ -22,21 +23,10 @@ const TypeId: unique symbol = Symbol.for(TypeIdKey);
 export type TypeId = typeof TypeId;
 
 export/** Identifiers understood by the hotkey-action matcher. */
-const Id = Object.freeze({
-    Activate: "Activate" as const,
-    Cancel: "Cancel" as const,
-    Commit: "Commit" as const,
-    CycleNext: "CycleNext" as const,
-    CyclePrevious: "CyclePrevious" as const,
-    SelectDown: "SelectDown" as const,
-    SelectLeft: "SelectLeft" as const,
-    SelectRight: "SelectRight" as const,
-    SelectUp: "SelectUp" as const,
-    Toggle: "Toggle" as const
-} as const);
+const Id = HotkeyId;
 
 /** One of the application actions that can be associated with a keybind. */
-export type Id = typeof Id[keyof typeof Id];
+export type Id = HotkeyId;
 
 /** The modifier state required by a keybind. */
 export interface Modifiers
@@ -122,13 +112,35 @@ export/** Construct a KeybindSet from application-settings values. */
 const KeybindSetFromSettings = (Values: ReadonlyArray<KeybindSetting>): KeybindSet =>
     KeybindSet(...Values.map(FromSetting));
 
+const DefaultKeybindValues: ReadonlyArray<Keybind> = Object.freeze([
+    Make(Id.Activate, VK.F20),
+    Make(Id.Back, VK.BROWSER_BACK),
+    Make(Id.SelectLeft, VK.D),
+    Make(Id.SelectUp, VK.H),
+    Make(Id.SelectDown, VK.T),
+    Make(Id.SelectRight, VK.N),
+    Make(Id.Toggle, VK.TAB)
+]);
+
 export/** The initial keybinds used by the application. */
-const DefaultKeybinds: KeybindSet = KeybindSet(
-    Make(Id.Activate, VK.F20)
-);
+const DefaultKeybinds: KeybindSet = KeybindSet(...DefaultKeybindValues);
 
 export/** {@inheritDoc DefaultKeybinds} */
-const DefaultKeybindSettings = Array.from(DefaultKeybinds, ToSetting);
+const DefaultKeybindSettings = Object.freeze(DefaultKeybindValues.map(ToSetting));
+
+export/** Add newly introduced default actions without replacing customized keybinds. */
+const WithDefaultKeybindSettings = (
+    Values: ReadonlyArray<KeybindSetting>
+): ReadonlyArray<KeybindSetting> =>
+{
+    const ConfiguredIds = new Set(Values.map((Value: KeybindSetting) => Value.Id));
+    const MissingDefaults = DefaultKeybindSettings.filter((Value: KeybindSetting) =>
+        !ConfiguredIds.has(Value.Id));
+
+    return MissingDefaults.length === 0
+        ? Values
+        : Object.freeze([ ...Values, ...MissingDefaults ]);
+};
 
 export/** The phase of a matched hotkey's physical key lifecycle. */
 const Phase = Object.freeze({

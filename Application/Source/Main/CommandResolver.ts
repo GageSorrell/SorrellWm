@@ -10,9 +10,17 @@
  */
 
 import * as Hotkey from "./Hotkey.js";
+import * as OverlaySession from "./OverlaySession.js";
 import * as Ui from "./Command/Ui.js";
 import type * as Wm from "./Command/Wm.js";
 import { Context, Effect, Layer, Option, Result, Stream, pipe } from "effect";
+import {
+    GetOverlayCommandDefinitions,
+    type OverlayCommandDefinition,
+    type OverlayCommandId,
+    type OverlayScreenId,
+    OverlayScreenId as ScreenId
+} from "../Shared/OverlayCommand.js";
 
 export/** The service identifier for command resolution. */
 const TypeId = "~sorrell/wm/Main/CommandResolver" as const;
@@ -24,8 +32,32 @@ export type Resolved =
 
 const UiCommands = Ui.UiCommand();
 
-export/** Resolve one hotkey activation without retaining input-device details. */
-const Resolve = (Activation: Hotkey.Match): Option.Option<Resolved> =>
+export/** Resolve an available screen command without retaining renderer details. */
+const ResolveOverlayCommand = (
+    Screen: OverlayScreenId,
+    Id: OverlayCommandId
+): Option.Option<Resolved> =>
+{
+    const IsAvailable = GetOverlayCommandDefinitions(Screen).some((
+        Definition: OverlayCommandDefinition
+    ) =>
+        Definition.Id === Id);
+
+    if (!IsAvailable)
+    {
+        return Option.none();
+    }
+
+    return Screen === ScreenId.Home && Id === "Focus"
+        ? Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Focus }))
+        : Option.some(UiCommands.NoOpOverlayCommand({ Id }));
+};
+
+export/** Resolve one hotkey activation for an overlay screen. */
+const Resolve = (
+    Activation: Hotkey.Match,
+    Screen: OverlayScreenId = ScreenId.Home
+): Option.Option<Resolved> =>
 {
     switch (Activation.Keybind.Id)
     {
@@ -43,12 +75,37 @@ const Resolve = (Activation: Hotkey.Match): Option.Option<Resolved> =>
             return Option.none();
 
         case Hotkey.Id.Cancel:
-            return Activation.Phase === Hotkey.Phase.Pressed
+            if (Activation.Phase !== Hotkey.Phase.Pressed)
+            {
+                return Option.none();
+            }
+
+            return Screen === ScreenId.Home
                 ? Option.some(UiCommands.Deactivate())
+                : Option.some(UiCommands.BackOverlayScreen());
+
+        case Hotkey.Id.Back:
+            return Activation.Phase === Hotkey.Phase.Pressed
+                && Screen !== ScreenId.Home
+                ? Option.some(UiCommands.BackOverlayScreen())
                 : Option.none();
 
         default:
-            return Option.none();
+        {
+            if (Activation.Phase !== Hotkey.Phase.Pressed)
+            {
+                return Option.none();
+            }
+
+            const Definition = GetOverlayCommandDefinitions(Screen).find((
+                Candidate: OverlayCommandDefinition
+            ) =>
+                Candidate.HotkeyId === Activation.Keybind.Id);
+
+            return Definition === undefined
+                ? Option.none()
+                : ResolveOverlayCommand(Screen, Definition.Id);
+        }
     }
 };
 
@@ -59,7 +116,14 @@ export interface CommandResolverImpl
     readonly Commands: Stream.Stream<Resolved>;
 
     /** Resolve an activation directly, primarily for non-stream consumers and tests. */
-    readonly Resolve: (Activation: Hotkey.Match) => Option.Option<Resolved>;
+    readonly Resolve: (
+        Activation: Hotkey.Match
+    ) => Effect.Effect<Option.Option<Resolved>>;
+
+    /** Resolve a renderer invocation against the current screen. */
+    readonly ResolveOverlayCommand: (
+        Id: OverlayCommandId
+    ) => Effect.Effect<Option.Option<Resolved>>;
 }
 
 /** Resolve configured hotkey activations into immutable application commands. */
@@ -72,19 +136,28 @@ const Live = Layer.effect(
     Effect.gen(function*()
     {
         const Hotkeys = yield* Hotkey.Hotkey;
+        const Session = yield* OverlaySession.OverlaySession;
+        const ResolveCurrent = (Activation: Hotkey.Match) => Session.Current.pipe(
+            Effect.map((Screen: OverlayScreenId) => Resolve(Activation, Screen))
+        );
+        const ResolveCurrentOverlayCommand = (Id: OverlayCommandId) => Session.Current.pipe(
+            Effect.map((Screen: OverlayScreenId) => ResolveOverlayCommand(Screen, Id))
+        );
 
         return {
             Commands: pipe(
                 Hotkeys.Matches,
-                Stream.filterMap((Activation: Hotkey.Match) => pipe(
-                    Resolve(Activation),
+                Stream.mapEffect(ResolveCurrent),
+                Stream.filterMap((Command: Option.Option<Resolved>) => pipe(
+                    Command,
                     Option.match({
                         onNone: () => Result.failVoid,
                         onSome: Result.succeed
                     })
                 ))
             ),
-            Resolve
+            Resolve: ResolveCurrent,
+            ResolveOverlayCommand: ResolveCurrentOverlayCommand
         } as const;
     })
 );

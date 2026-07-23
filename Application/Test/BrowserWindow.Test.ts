@@ -12,6 +12,7 @@
 import {
     BrowserWindow,
     type Dependencies,
+    GetBackdropWindowSpec,
     Key,
     MakeLive,
     type Spec
@@ -48,6 +49,10 @@ class FakeWindow extends EventEmitter
     HideCount: number = 0;
 
     ShowCount: number = 0;
+
+    ShowInactiveCount: number = 0;
+
+    IgnoreMouseEvents: boolean = false;
 
     readonly id: number = FakeWindow.NextId++;
 
@@ -119,6 +124,17 @@ class FakeWindow extends EventEmitter
         this.ShowCount += 1;
         this.emit("show");
     }
+
+    showInactive(): void
+    {
+        this.ShowInactiveCount += 1;
+        this.emit("show");
+    }
+
+    setIgnoreMouseEvents(Ignore: boolean): void
+    {
+        this.IgnoreMouseEvents = Ignore;
+    }
 }
 
 const MainSpecification = (): Spec => ({
@@ -160,6 +176,34 @@ const FakeDependencies = (
 
 describe("BrowserWindow", () =>
 {
+    it("constructs a transparent, input-transparent transient backdrop", async() =>
+    {
+        const Windows = new Array<FakeWindow>();
+        const ConstructorOptions = new Array<BrowserWindowConstructorOptions>();
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Service = yield* BrowserWindow;
+
+                yield* Service.Open(GetBackdropWindowSpec());
+                yield* Service.ShowInactive(Key.Backdrop);
+            }),
+            Effect.provide(MakeLive(FakeDependencies(Windows, ConstructorOptions)))
+        ));
+
+        expect(ConstructorOptions[0]).toMatchObject({
+            alwaysOnTop: true,
+            backgroundColor: "#00000000",
+            backgroundMaterial: "none",
+            focusable: false,
+            frame: false,
+            transparent: true
+        });
+        expect(Windows[0]?.IgnoreMouseEvents).toBe(true);
+        expect(Windows[0]?.ShowInactiveCount).toBe(1);
+    });
+
     it("opens a concurrent singleton once and destroys it with the service scope", async() =>
     {
         const Windows = new Array<FakeWindow>();

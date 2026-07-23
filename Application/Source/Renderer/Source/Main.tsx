@@ -9,8 +9,7 @@
  * @license   MIT
  */
 
-import "./Styles.css";
-import { Application } from "./Application.js";
+import { Root } from "./Root.js";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -23,6 +22,6 @@ if (rootElement === null)
 
 createRoot(rootElement).render(
     <StrictMode>
-        <Application />
+        <Root />
     </StrictMode>
 );

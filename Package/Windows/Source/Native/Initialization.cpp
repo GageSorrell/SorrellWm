@@ -13,6 +13,7 @@
 #include "./Core.h"
 #include "./Keyboard.h"
 #include "./MessageLoop.h"
+#include "./Theme.h"
 #include "./Window.h"
 #include "./WindowDimming.h"
 
@@ -46,6 +47,12 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, UnsubscribeFromMessageLoop)
     );
 
+    Napi::Object Theme = Napi::Object::New(Environment);
+    Theme.Set(
+        "GetAccentColor",
+        Napi::Function::New(Environment, GetAccentColor)
+    );
+
     Napi::Object Window = Napi::Object::New(Environment);
     Window.Set(
         "ClearWindowDimming",
@@ -56,12 +63,20 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, DimWindowsExcept)
     );
     Window.Set(
+        "ShowBackdrop",
+        Napi::Function::New(Environment, ShowBackdrop)
+    );
+    Window.Set(
         "GetCursorPosition",
         Napi::Function::New(Environment, GetCursorPosition)
     );
     Window.Set(
         "GetForegroundWindow",
         Napi::Function::New(Environment, GetForegroundWindow_Node)
+    );
+    Window.Set(
+        "GetManageableTopLevelWindows",
+        Napi::Function::New(Environment, GetManageableTopLevelWindows)
     );
     Window.Set(
         "GetWindowRect",
@@ -72,12 +87,25 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetWindowText_Node)
     );
     Window.Set(
+        "GetWindowWorkArea",
+        Napi::Function::New(Environment, GetWindowWorkArea)
+    );
+    Window.Set(
         "HasRoundedCorners",
         Napi::Function::New(Environment, HasRoundedCorners)
+    );
+    Window.Set(
+        "SetForegroundWindow",
+        Napi::Function::New(Environment, SetForegroundWindow_Node)
+    );
+    Window.Set(
+        "SetWindowRect",
+        Napi::Function::New(Environment, SetWindowRect)
     );
 
     Exports.Set("Keyboard", Keyboard);
     Exports.Set("MessageLoop", MessageLoop);
+    Exports.Set("Theme", Theme);
     Exports.Set("Window", Window);
 
     napi_add_env_cleanup_hook(Environment, CleanupMessageLoop, nullptr);

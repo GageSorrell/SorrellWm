@@ -23,6 +23,14 @@ const SettingsSchema = Schema.Struct({
         Schema.Array(Hotkey.KeybindSettingSchema),
         Schema.withDecodingDefaultKey(Effect.succeed(Hotkey.DefaultKeybindSettings))
     ),
+    OverlayBackdropIntensity: pipe(
+        Schema.Int,
+        Schema.check(
+            Schema.isGreaterThanOrEqualTo(0),
+            Schema.isLessThanOrEqualTo(100)
+        ),
+        Schema.withDecodingDefaultKey(Effect.succeed(50))
+    ),
     OverlayRoundedCorners: pipe(
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(true))
@@ -53,7 +61,8 @@ const AppSettings = _AppSettings.make(
     {
         initial:
         {
-            Keybinds: Array.from(Hotkey.DefaultKeybinds, Hotkey.ToSetting),
+            Keybinds: Array.from(Hotkey.DefaultKeybindSettings),
+            OverlayBackdropIntensity: 2,
             OverlayRoundedCorners: true,
             RunAtStartup: true,
             Theme: "System"

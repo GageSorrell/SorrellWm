@@ -11,18 +11,31 @@
 
 #include "./WindowDimming.h"
 
+#include <cmath>
 #include <dwmapi.h>
 #include <exception>
+#include <limits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace
 {
-    constexpr BYTE DimmingAlpha = 128;
+    constexpr BYTE DefaultDimmingAlpha = 128;
+    constexpr UINT FadeTimerIntervalMilliseconds = 16;
+    constexpr UINT_PTR FadeTimerId = 1;
     constexpr const wchar_t* DimmingWindowClassName =
         L"SorrellWm.WindowDimmingOverlay";
 
+    struct FadeAnimation
+    {
+        DWORD DurationMilliseconds;
+        ULONGLONG StartedAt;
+        BYTE TargetAlpha;
+    };
+
     std::vector<HWND> DimmingWindows;
+    std::unordered_map<HWND, FadeAnimation> FadeAnimations;
     HINSTANCE DimmingInstance = nullptr;
     bool OwnsDimmingWindowClass = false;
 
@@ -42,6 +55,11 @@ namespace
     {
         switch (Message)
         {
+            case WM_DESTROY:
+                KillTimer(Window, FadeTimerId);
+                FadeAnimations.erase(Window);
+                return 0;
+
             case WM_MOUSEACTIVATE:
                 return MA_NOACTIVATE;
 
@@ -58,6 +76,47 @@ namespace
                     static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH))
                 );
                 EndPaint(Window, &Paint);
+                return 0;
+            }
+
+            case WM_TIMER:
+            {
+                if (WParameter != FadeTimerId)
+                {
+                    return DefWindowProcW(Window, Message, WParameter, LParameter);
+                }
+
+                const auto Animation = FadeAnimations.find(Window);
+
+                if (Animation == FadeAnimations.end())
+                {
+                    KillTimer(Window, FadeTimerId);
+                    return 0;
+                }
+
+                const ULONGLONG Elapsed = GetTickCount64() - Animation->second.StartedAt;
+                const bool IsComplete = Elapsed >= Animation->second.DurationMilliseconds;
+                const BYTE Alpha = IsComplete
+                    ? Animation->second.TargetAlpha
+                    : static_cast<BYTE>(
+                        static_cast<ULONGLONG>(Animation->second.TargetAlpha)
+                        * Elapsed
+                        / Animation->second.DurationMilliseconds
+                    );
+
+                if (SetLayeredWindowAttributes(Window, 0, Alpha, LWA_ALPHA) == FALSE)
+                {
+                    KillTimer(Window, FadeTimerId);
+                    FadeAnimations.erase(Animation);
+                    return 0;
+                }
+
+                if (IsComplete)
+                {
+                    KillTimer(Window, FadeTimerId);
+                    FadeAnimations.erase(Animation);
+                }
+
                 return 0;
             }
 
@@ -79,6 +138,7 @@ namespace
         }
 
         DimmingWindows.clear();
+        FadeAnimations.clear();
         return Succeeded;
     }
 
@@ -215,7 +275,11 @@ namespace
         return true;
     }
 
-    bool CreateDimmingWindow(HWND TargetWindow)
+    bool CreateDimmingWindow(
+        HWND TargetWindow,
+        BYTE Alpha,
+        DWORD FadeDurationMilliseconds
+    )
     {
         RECT Bounds { };
 
@@ -263,7 +327,7 @@ namespace
         if (SetLayeredWindowAttributes(
             DimmingWindow,
             0,
-            DimmingAlpha,
+            FadeDurationMilliseconds == 0 ? Alpha : 0,
             LWA_ALPHA
         ) == FALSE)
         {
@@ -279,7 +343,7 @@ namespace
                 : HWND_TOP;
         }
 
-        return SetWindowPos(
+        if (SetWindowPos(
             DimmingWindow,
             InsertAfter,
             Bounds.left,
@@ -287,7 +351,93 @@ namespace
             Bounds.right - Bounds.left,
             Bounds.bottom - Bounds.top,
             SWP_NOACTIVATE | SWP_SHOWWINDOW
-        ) != FALSE;
+        ) == FALSE)
+        {
+            return false;
+        }
+
+        if (FadeDurationMilliseconds == 0)
+        {
+            return true;
+        }
+
+        try
+        {
+            FadeAnimations.emplace(DimmingWindow, FadeAnimation {
+                FadeDurationMilliseconds,
+                GetTickCount64(),
+                Alpha
+            });
+        }
+        catch (const std::exception&)
+        {
+            return false;
+        }
+
+        if (SetTimer(
+            DimmingWindow,
+            FadeTimerId,
+            FadeTimerIntervalMilliseconds,
+            nullptr
+        ) == 0)
+        {
+            FadeAnimations.erase(DimmingWindow);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool DecodeWindowHandle(const Napi::Value& Value, HWND& Out)
+    {
+        if (!Value.IsBigInt())
+        {
+            return false;
+        }
+
+        bool IsLossless = false;
+        const std::uint64_t NumericHandle = Value
+            .As<Napi::BigInt>()
+            .Uint64Value(&IsLossless);
+        const HWND Window = reinterpret_cast<HWND>(
+            static_cast<std::uintptr_t>(NumericHandle)
+        );
+
+        if (!IsLossless || Window == nullptr || IsWindow(Window) == FALSE)
+        {
+            return false;
+        }
+
+        Out = Window;
+        return true;
+    }
+
+    bool DecodeUnsignedInteger(const Napi::Value& Value, DWORD& Out)
+    {
+        if (!Value.IsNumber())
+        {
+            return false;
+        }
+
+        const double Number = Value.As<Napi::Number>().DoubleValue();
+
+        if (
+            !std::isfinite(Number)
+            || std::floor(Number) != Number
+            || Number < 0
+            || Number > std::numeric_limits<DWORD>::max()
+        )
+        {
+            return false;
+        }
+
+        Out = static_cast<DWORD>(Number);
+        return true;
+    }
+
+    BYTE IntensityToAlpha(DWORD Intensity)
+    {
+        return static_cast<BYTE>((Intensity * 255 + 50) / 100);
     }
 }
 
@@ -361,11 +511,77 @@ Napi::Value DimWindowsExcept(const Napi::CallbackInfo& CallbackInfo)
 
     for (const HWND Window : Context.Windows)
     {
-        if (!CreateDimmingWindow(Window))
+        if (!CreateDimmingWindow(Window, DefaultDimmingAlpha, 0))
         {
             DestroyDimmingWindows();
             return Out.Fail("Could not create every dimming window.");
         }
+    }
+
+    return Out.Succeed(Environment.Undefined());
+}
+
+Napi::Value ShowBackdrop(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+
+    if (CallbackInfo.Length() != 3)
+    {
+        return Out.Fail(
+            "ShowBackdrop requires a window handle, intensity, and fade duration."
+        );
+    }
+
+    HWND TargetWindow = nullptr;
+    DWORD Intensity = 0;
+    DWORD FadeDurationMilliseconds = 0;
+
+    if (!DecodeWindowHandle(CallbackInfo[0], TargetWindow))
+    {
+        return Out.Fail("ShowBackdrop requires a valid top-level window handle.");
+    }
+
+    if ((GetWindowLongPtrW(TargetWindow, GWL_STYLE) & WS_CHILD) != 0)
+    {
+        return Out.Fail("ShowBackdrop requires a top-level window handle.");
+    }
+
+    if (!DecodeUnsignedInteger(CallbackInfo[1], Intensity) || Intensity > 100)
+    {
+        return Out.Fail("ShowBackdrop intensity must be an integer from 0 to 100.");
+    }
+
+    if (!DecodeUnsignedInteger(CallbackInfo[2], FadeDurationMilliseconds))
+    {
+        return Out.Fail("ShowBackdrop fade duration must be a nonnegative integer.");
+    }
+
+    std::string ErrorMessage;
+
+    if (!EnsureDimmingWindowClass(ErrorMessage))
+    {
+        return Out.Fail(ErrorMessage);
+    }
+
+    if (!DestroyDimmingWindows())
+    {
+        return Out.Fail("Could not replace the existing backdrop.");
+    }
+
+    if (Intensity == 0)
+    {
+        return Out.Succeed(Environment.Undefined());
+    }
+
+    if (!CreateDimmingWindow(
+        TargetWindow,
+        IntensityToAlpha(Intensity),
+        FadeDurationMilliseconds
+    ))
+    {
+        DestroyDimmingWindows();
+        return Out.Fail("Could not create the window backdrop.");
     }
 
     return Out.Succeed(Environment.Undefined());

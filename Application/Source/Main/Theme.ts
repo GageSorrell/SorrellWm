@@ -9,8 +9,11 @@
  * @license   MIT
  */
 
-import { AppSettings } from "./index.ts";
-import { Effect } from "effect";
+import * as AppSettings from "./AppSettings.ts";
+import { Effect, Option } from "effect";
+import { ColorScheme } from "../Shared/Theme.ts";
+import type { RendererTheme } from "../Shared/Theme.ts";
+import { Theme as WindowsTheme } from "@sorrell/windows";
 import { nativeTheme } from "electron";
 
 export/** The type ID for this module. */
@@ -129,6 +132,17 @@ const GetResolved = (): Resolved =>
             : Light;
     }
 };
+
+export/** Get the renderer-safe theme currently resolved by Electron and Windows. */
+const GetRendererTheme = (): RendererTheme => ({
+    AccentColor: Option.match(WindowsTheme.GetAccentColor(), {
+        onNone: (): null => null,
+        onSome: (Value: WindowsTheme.AccentColor) => Value
+    }),
+    ColorScheme: nativeTheme.shouldUseDarkColors
+        ? ColorScheme.Dark
+        : ColorScheme.Light
+});
 
 export/**
        * Get the current theme mode.

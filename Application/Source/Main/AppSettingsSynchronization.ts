@@ -11,8 +11,11 @@
 
 import * as AppSettings from "./AppSettings.js";
 import * as BrowserWindow from "./BrowserWindow.js";
+import * as OverlayCommandCatalog from "./OverlayCommandCatalog.js";
+import * as OverlaySession from "./OverlaySession.js";
 import * as _AppSettings from "@sorrell/app-settings";
 import { Effect, Layer } from "effect";
+import { AppApiChannel } from "../Shared/Api.js";
 import { MakeFnTracer } from "./Utility/Function.ts";
 import { nativeTheme } from "electron";
 
@@ -33,11 +36,28 @@ const SynchronizeOverlayRoundedCorners = Fn("SynchronizeOverlayRoundedCorners")(
         yield* BrowserWindows.ForceClose(BrowserWindow.Key.Overlay).pipe(
             Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
         );
-        yield* BrowserWindows.Ensure(BrowserWindow.GetOverlayWindowSpec(RoundedCorners));
+        yield* BrowserWindows.Ensure(BrowserWindow.OverlayWindowSpec(RoundedCorners));
+    });
+
+const SynchronizeKeybinds = Fn("SynchronizeKeybinds")(
+    function* (Keybinds: AppSettings.AppSettings["Keybinds"])
+    {
+        const BrowserWindows = yield* BrowserWindow.BrowserWindow;
+        const Session = yield* OverlaySession.OverlaySession;
+        const Screen = yield* Session.Current;
+
+        yield* BrowserWindows.Send(
+            BrowserWindow.Key.Overlay,
+            AppApiChannel.OverlayScreenChanged,
+            OverlayCommandCatalog.FromKeybindSettings(Screen, Keybinds)
+        ).pipe(
+            Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
+        );
     });
 
 export/** Long-lived reconciliation of committed settings with Electron state. */
 const Live = Layer.mergeAll(
+    _AppSettings.synchronizeSetting(AppSettings.AppSettings, "Keybinds", SynchronizeKeybinds),
     _AppSettings.synchronizeSetting(AppSettings.AppSettings, "Theme", SynchronizeTheme),
     _AppSettings.synchronizeSetting(
         AppSettings.AppSettings,

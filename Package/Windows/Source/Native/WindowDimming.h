@@ -15,4 +15,5 @@
 
 Napi::Value ClearWindowDimming(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value DimWindowsExcept(const Napi::CallbackInfo& CallbackInfo);
+Napi::Value ShowBackdrop(const Napi::CallbackInfo& CallbackInfo);
 void CleanupWindowDimming(void* Data);

@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import type { IApplicationApi } from "../../Shared/Api.js";
+import type { AppApi } from "../../Shared/Api.js";
 
 declare global
 {
@@ -17,6 +17,6 @@ declare global
     // eslint-disable-next-line @typescript-eslint/naming-convention
     interface Window
     {
-        readonly sorrell: IApplicationApi;
+        readonly sorrell: AppApi;
     }
 }

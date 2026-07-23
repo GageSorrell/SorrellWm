@@ -11,14 +11,42 @@
 
 import "@testing-library/jest-dom/vitest";
 
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+
+afterEach(cleanup);
+
+Object.defineProperty(globalThis, "NodeFilter", {
+    configurable: true,
+    value: window.NodeFilter
+});
 
 Object.defineProperty(window, "sorrell", {
     configurable: true,
     value:
     {
+        backdrop:
+        {
+            onShow: vi.fn(() => (): void => undefined)
+        },
+        overlay:
+        {
+            back: vi.fn(() => Promise.resolve()),
+            get: vi.fn(() => Promise.resolve({
+                CanGoBack: false,
+                Commands: [ ],
+                Id: "Home"
+            })),
+            invoke: vi.fn(() => Promise.resolve()),
+            onChanged: vi.fn(() => (): void => undefined)
+        },
         ping: vi.fn<() => Promise<string>>(() => Promise.resolve("pong")),
         platform: "win32",
+        theme:
+        {
+            get: vi.fn(() => Promise.resolve({ AccentColor: null, ColorScheme: "Dark" })),
+            onChanged: vi.fn(() => (): void => undefined)
+        },
         versions:
         {
             chrome: "test",

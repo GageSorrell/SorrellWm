@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as OverlaySession from "../Source/Main/OverlaySession.js";
 import * as Windows from "@sorrell/windows";
 import {
     CommandResolver,
@@ -26,6 +27,7 @@ import {
     type Phase as PhaseType
 } from "../Source/Main/Hotkey.js";
 import { describe, expect, it, vi } from "vitest";
+import { OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
@@ -41,19 +43,27 @@ vi.mock("@sorrell/windows", () => ({
     VK:
     {
         A: 0x41,
+        BROWSER_BACK: 0xA6,
         CONTROL: 0x11,
+        D: 0x44,
         F20: 0x83,
+        H: 0x48,
+        J: 0x4A,
+        K: 0x4B,
+        L: 0x4C,
         LCONTROL: 0xA2,
         LMENU: 0xA4,
         LSHIFT: 0xA0,
         LWIN: 0x5B,
         MENU: 0x12,
+        N: 0x4E,
         RCONTROL: 0xA3,
         RMENU: 0xA5,
         RSHIFT: 0xA1,
         RWIN: 0x5C,
         SHIFT: 0x10,
-        VK: [ 0x41, 0x83 ]
+        T: 0x54,
+        VK: [ 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x4E, 0x54, 0x83, 0xA6 ]
     }
 }));
 
@@ -79,11 +89,74 @@ describe("CommandResolver.Resolve", () =>
         expect("KeyboardEvent" in Activate).toBe(false);
     });
 
+    it("maps the vim-direction action keys to the ordered primary commands", () =>
+    {
+        const Mappings = [
+            [ Id.SelectLeft, Windows.VK.D, "Focus" ],
+            [ Id.SelectUp, Windows.VK.H, "Insert" ],
+            [ Id.SelectDown, Windows.VK.T, "Move" ],
+            [ Id.SelectRight, Windows.VK.N, "Resize" ]
+        ] as const;
+
+        const Commands = Mappings.map(([ HotkeyId, Key ]: typeof Mappings[number]) =>
+            Option.getOrThrow(Resolve(Activation(
+                HotkeyId,
+                Key,
+                Phase.Pressed
+            ))));
+
+        expect(Commands[0]).toMatchObject({
+            Category: "Ui",
+            ScreenId: "Focus",
+            _tag: "NavigateOverlayScreen"
+        });
+        expect(Commands.slice(1)).toMatchObject(Mappings.slice(1).map((
+            [ , , Id ]: typeof Mappings[number]
+        ) => ({
+            Category: "Ui",
+            Id,
+            _tag: "NoOpOverlayCommand"
+        })));
+    });
+
+    it("maps the same action keys to the Focus screen's direction commands", () =>
+    {
+        const Mappings = [
+            [ Id.SelectLeft, Windows.VK.D, "FocusMoveLeft" ],
+            [ Id.SelectUp, Windows.VK.H, "FocusMoveUp" ],
+            [ Id.SelectDown, Windows.VK.T, "FocusMoveDown" ],
+            [ Id.SelectRight, Windows.VK.N, "FocusMoveRight" ]
+        ] as const;
+
+        expect(Mappings.map((
+            [ HotkeyId, Key ]: typeof Mappings[number]
+        ) => Option.getOrThrow(Resolve(
+            Activation(HotkeyId, Key, Phase.Pressed),
+            OverlayScreenId.Focus
+        )))).toMatchObject(Mappings.map((
+            [ , , CommandId ]: typeof Mappings[number]
+        ) => ({
+            Category: "Ui",
+            Id: CommandId,
+            _tag: "NoOpOverlayCommand"
+        })));
+
+        expect(Option.getOrThrow(Resolve(
+            Activation(Id.Back, Windows.VK.BROWSER_BACK, Phase.Pressed),
+            OverlayScreenId.Focus
+        ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
+    });
+
     it("does not invent commands for actions without command semantics", () =>
     {
         expect(Option.isNone(Resolve(Activation(
             Id.Commit,
             Windows.VK.A,
+            Phase.Pressed
+        )))).toBe(true);
+        expect(Option.isNone(Resolve(Activation(
+            Id.Back,
+            Windows.VK.BROWSER_BACK,
             Phase.Pressed
         )))).toBe(true);
         expect(Option.isNone(Resolve(Activation(
@@ -104,6 +177,7 @@ describe("CommandResolver.Live", () =>
                 Activation(Id.Activate, Windows.VK.F20, Phase.Repeated),
                 Activation(Id.Activate, Windows.VK.F20, Phase.Released),
                 Activation(Id.Commit, Windows.VK.A, Phase.Pressed),
+                Activation(Id.SelectLeft, Windows.VK.D, Phase.Pressed),
                 Activation(Id.Cancel, Windows.VK.A, Phase.Pressed)
             ])
         });
@@ -114,12 +188,22 @@ describe("CommandResolver.Live", () =>
                 return Array.from(yield* Stream.runCollect(Resolver.Commands));
             }),
             Effect.provide(Live),
+            Effect.provide(HomeSession),
             Effect.provide(HotkeyLive)
         ));
 
         expect(Commands.map((Command: Resolved) => Command._tag))
-            .toEqual([ "Activate", "Deactivate" ]);
+            .toEqual([ "Activate", "Deactivate", "NavigateOverlayScreen", "Deactivate" ]);
     });
+});
+
+const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
+    Back: Effect.void,
+    Changes: Stream.succeed(OverlayScreenId.Home),
+    Current: Effect.succeed(OverlayScreenId.Home),
+    Navigate: () => Effect.void,
+    Reset: Effect.void,
+    Snapshot: Effect.succeed({ CanGoBack: false, Commands: [ ], Id: OverlayScreenId.Home })
 });
 
 const Activation = (InId: Id, Key: Windows.VK.VK, InPhase: PhaseType): Match => ({

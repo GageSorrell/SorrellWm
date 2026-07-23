@@ -11,17 +11,7 @@
 
 import * as Windows from "@sorrell/windows";
 import {
-    Deferred,
-    Effect,
-    Fiber,
-    Layer,
-    Option,
-    Queue,
-    Stream,
-    SubscriptionRef,
-    pipe
-} from "effect";
-import {
+    DefaultKeybindSettings,
     Hotkey,
     type Match as HotkeyMatch,
     Id,
@@ -34,6 +24,17 @@ import {
     Phase,
     ToSetting
 } from "../Source/Main/Hotkey.js";
+import {
+    Deferred,
+    Effect,
+    Fiber,
+    Layer,
+    Option,
+    Queue,
+    Stream,
+    SubscriptionRef,
+    pipe
+} from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { Keyboard } from "../Source/Main/Keyboard.js";
 
@@ -51,8 +52,13 @@ vi.mock("@sorrell/windows", () => ({
     VK:
     {
         A: 0x41,
+        BROWSER_BACK: 0xA6,
         CONTROL: 0x11,
         F20: 0x83,
+        H: 0x48,
+        J: 0x4A,
+        K: 0x4B,
+        L: 0x4C,
         LCONTROL: 0xA2,
         LMENU: 0xA4,
         LSHIFT: 0xA0,
@@ -63,12 +69,27 @@ vi.mock("@sorrell/windows", () => ({
         RSHIFT: 0xA1,
         RWIN: 0x5C,
         SHIFT: 0x10,
-        VK: [ 0x41, 0x83 ]
+        VK: [ 0x41, 0x48, 0x4A, 0x4B, 0x4C, 0x83, 0xA6 ]
     }
 }));
 
 describe("Hotkey.IsMatch", () =>
 {
+    it("binds the Back action to the browser previous key by default", () =>
+    {
+        expect(DefaultKeybindSettings).toContainEqual({
+            Id: Id.Back,
+            Key: Windows.VK.BROWSER_BACK,
+            Modifiers:
+            {
+                Alt: false,
+                Control: false,
+                Shift: false,
+                Super: false
+            }
+        });
+    });
+
     it("matches either side of each requested modifier", () =>
     {
         const Keybind = Make(Id.Toggle, Windows.VK.A, {

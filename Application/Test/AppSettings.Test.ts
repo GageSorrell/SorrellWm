@@ -30,8 +30,17 @@ vi.mock("@sorrell/windows", () => ({
     },
     VK:
     {
+        BROWSER_BACK: 0xA6,
+        D: 0x44,
         F20: 0x83,
-        VK: [ 0x83 ]
+        H: 0x48,
+        J: 0x4A,
+        K: 0x4B,
+        L: 0x4C,
+        N: 0x4E,
+        T: 0x54,
+        TAB: 0x09,
+        VK: [ 0x09, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x4E, 0x54, 0x83, 0xA6 ]
     }
 }));
 
@@ -63,11 +72,64 @@ describe("AppSettings schema", () =>
                         Shift: false,
                         Super: false
                     }
+                },
+                {
+                    Id: "Back",
+                    Key: 0xA6,
+                    Modifiers:
+                    {
+                        Alt: false,
+                        Control: false,
+                        Shift: false,
+                        Super: false
+                    }
+                },
+                {
+                    Id: "SelectLeft",
+                    Key: 0x44,
+                    Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
+                },
+                {
+                    Id: "SelectUp",
+                    Key: 0x48,
+                    Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
+                },
+                {
+                    Id: "SelectDown",
+                    Key: 0x54,
+                    Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
+                },
+                {
+                    Id: "SelectRight",
+                    Key: 0x4E,
+                    Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
+                },
+                {
+                    Id: "Toggle",
+                    Key: 0x09,
+                    Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
                 }
             ],
+            OverlayBackdropIntensity: 50,
             OverlayRoundedCorners: true,
             RunAtStartup: true,
             Theme: "System"
         });
     });
+
+    it.each([ 0, 100 ])("accepts a backdrop intensity of %i", async(Intensity: number) =>
+    {
+        const Decoded = await DecodeSettings({ OverlayBackdropIntensity: Intensity });
+
+        expect(Decoded.OverlayBackdropIntensity).toBe(Intensity);
+    });
+
+    it.each([ -1, 50.5, 101 ])("rejects a backdrop intensity of %s", async(Intensity: number) =>
+    {
+        await expect(DecodeSettings({ OverlayBackdropIntensity: Intensity })).rejects.toBeDefined();
+    });
 });
+
+/** Decode one partial persisted settings value through the application codec. */
+const DecodeSettings = (Settings: Record<string, unknown>): Promise<AppSettings.AppSettings> =>
+    Effect.runPromise(Schema.decodeUnknownEffect(AppSettings.AppSettings.schema)(Settings));
