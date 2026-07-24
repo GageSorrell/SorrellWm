@@ -43,12 +43,14 @@ import {
     TimelineTab,
     Tips,
     Toast,
+    UseInteraction,
     ValidationNotice,
     VarInput,
     VarText,
     View,
     ViewPane,
     YamlEditorOverlay,
+    useCommand,
     useMouseEvent
 } from "../Source/index.js";
 import { Box, type Key, Text, render, useApp, useInput, useWindowSize } from "ink";
@@ -154,8 +156,8 @@ const ScrollAreaExample = (): React.JSX.Element =>
                     { IsSelected ? "› " : "  " }{ Item }
                 </Text>
             ) }
-            SelectedIndex={ Selected }
-            SetSelectedIndex={ SetSelected } />
+            Index={ Selected }
+            OnChangeIndex={ SetSelected } />
     );
 };
 
@@ -392,37 +394,37 @@ const Showcase = (): React.JSX.Element =>
     }
 
     return (
-        <InteractionProvider>
-            <Box flexDirection="column">
-                <GradientBadge Text="@sorrell/ink-ui showcase" />
-                <Text color={ DefaultTheme.TextMuted }>
-                    Use ↑/↓ and Enter. Press q or Escape to exit.
-                </Text>
-                <ScrollArea
-                    Height={ Math.max(4, rows - 4) }
-                    Items={ Items }
-                    OnSelect={ SetPage }
-                    RenderItem={ (
-                        Item: ShowcaseItem,
-                        _Index: number,
-                        IsSelected: boolean
-                    ) => (
-                        <Text color={ IsSelected
-                            ? DefaultTheme.Primary
-                            : DefaultTheme.Text }>
-                            { IsSelected ? "› " : "  " }{ Item.Name }
-                        </Text>
-                    ) }
-                    SelectedIndex={ Selected }
-                    SetSelectedIndex={ SetSelected } />
-            </Box>
-        </InteractionProvider>
+        <Box flexDirection="column">
+            <GradientBadge Text="@sorrell/ink-ui showcase" />
+            <Text color={ DefaultTheme.TextMuted }>
+                Use ↑/↓ and Enter. Press q or Escape to exit.
+            </Text>
+            <ScrollArea
+                Height={ Math.max(4, rows - 4) }
+                Items={ Items }
+                OnSelect={ SetPage }
+                RenderItem={ (
+                    Item: ShowcaseItem,
+                    _Index: number,
+                    IsSelected: boolean
+                ) => (
+                    <Text color={ IsSelected
+                        ? DefaultTheme.Primary
+                        : DefaultTheme.Text }>
+                        { IsSelected ? "› " : "  " }{ Item.Name }
+                    </Text>
+                ) }
+                Index={ Selected }
+                OnChangeIndex={ SetSelected } />
+        </Box>
     );
 };
 
 render(
     <ThemeProvider>
-        <Showcase />
+        <InteractionProvider>
+            <Showcase />
+        </InteractionProvider>
     </ThemeProvider>,
     {
         // alternateScreen: true,

@@ -11,7 +11,14 @@
 
 import * as React from "react";
 import { CommandScopeContext, FocusScopeContext, TypeId, UseInteraction } from "./Context.tsx";
+import { Array, Function, MutableHashMap, MutableHashSet, Number, Option, pipe, Struct, UndefinedOr } from "effect";
 
+/**
+ * The argument used to define a focusable region of the application.
+ *
+ * @category Interaction
+ * @since 1.0.0
+ */
 export interface FocusRegistration
 {
     readonly AutoFocus?: boolean;
@@ -24,6 +31,13 @@ export interface FocusRegistration
     readonly ScopeId: string;
 }
 
+/**
+ * The argument used to define a scope which allows the FocusManager
+ * to decide which `FocusRegistration`s to consider when routing input.
+ *
+ * @category Interaction
+ * @since 1.0.0
+ */
 export interface FocusScopeRegistration
 {
     readonly Active?: boolean;
@@ -51,19 +65,25 @@ interface RegisteredFocusScope extends FocusScopeRegistration
  */
 export class FocusRegistry
 {
-    private readonly Entries = new Map<string, RegisteredFocus>();
-    private readonly Listeners = new Set<() => void>();
+    private readonly Entries: MutableHashMap.MutableHashMap<string, RegisteredFocus> =
+        MutableHashMap.empty<string, RegisteredFocus>();
+
+    private readonly Listeners: MutableHashSet.MutableHashSet<() => void> =
+        MutableHashSet.empty<() => void>();
+
+    private readonly Scopes: MutableHashMap.MutableHashMap<string, RegisteredFocusScope> =
+        MutableHashMap.empty<string, RegisteredFocusScope>();
+
     private readonly RootScope: RegisteredFocusScope;
-    private readonly Scopes = new Map<string, RegisteredFocusScope>();
-    private CurrentId: string | undefined;
-    private InitialFocus: string | undefined;
+    private CurrentId: Option.Option<string> = Option.none();
+    private InitialFocus: Option.Option<string>;
     private InitialFocusApplied: boolean = false;
     private Sequence: number = 0;
     private Version: number = 0;
 
-    public constructor(InitialFocus?: string, Wrap = true)
+    public constructor(InitialFocus?: string, Wrap: boolean = true)
     {
-        this.InitialFocus = InitialFocus;
+        this.InitialFocus = Option.fromUndefinedOr(InitialFocus);
         this.RootScope =
             {
                 Active: true,
@@ -73,68 +93,86 @@ export class FocusRegistry
                 Trap: false,
                 Wrap
             };
-        this.Scopes.set(TypeId, this.RootScope);
+
+        MutableHashMap.set(this.Scopes, TypeId, this.RootScope);
     }
 
     public readonly GetSnapshot = (): number => this.Version;
 
     public readonly Subscribe = (Listener: () => void): (() => void) =>
     {
-        this.Listeners.add(Listener);
-        return () => this.Listeners.delete(Listener);
+        MutableHashSet.add(this.Listeners, Listener);
+        return () => MutableHashSet.remove(this.Listeners, Listener);
     };
 
-    public GetFocusedId(): string | undefined
+    public GetFocusedId(): Option.Option<string>
     {
         return this.CurrentId;
     }
 
     public GetFocusedCommandScopeId(): string
     {
-        const Current = this.CurrentId === undefined
-            ? undefined
-            : this.Entries.get(this.CurrentId);
-        return Current?.CommandScopeId ?? TypeId;
+        return pipe(
+            Option.flatMap(
+                this.CurrentId,
+                (CurrentId: string) => MutableHashMap.get(this.Entries, CurrentId)
+            ),
+            Option.map(Struct.get("CommandScopeId")),
+            Option.getOrUndefined,
+            (Value: string | undefined) => Value ?? TypeId
+        );
+        // if (Option.isSome(this.CurrentId))
+        // {
+        //     return Option.getOrUndefined(
+        //     ) ?? TypeId;
+        // }
+
+        // return TypeId;
     }
 
     public SetInitialFocus(Id: string | undefined): void
     {
-        if (Id !== this.InitialFocus)
+        if (Id !== this.InitialFocus.valueOrUndefined)
         {
             this.InitialFocusApplied = false;
         }
-        this.InitialFocus = Id;
+        this.InitialFocus = Option.fromUndefinedOr(Id);
         this.TryInitialFocus();
     }
 
     public SetWrap(Wrap: boolean): void
     {
-        this.Scopes.set(TypeId, {
+        MutableHashMap.set(this.Scopes, TypeId, {
             ...this.RootScope,
             Wrap
         });
+
         this.Notify();
     }
 
     public RegisterScope(Scope: FocusScopeRegistration): () => void
     {
-        if (this.Scopes.has(Scope.Id))
+        if (MutableHashMap.has(this.Scopes, Scope.Id))
         {
             throw new Error(`A focus scope with the id "${ Scope.Id }" is already registered.`);
         }
 
-        this.Scopes.set(Scope.Id, {
-            ...Scope,
-            Active: Scope.Active ?? true,
-            Sequence: this.Sequence++,
-            Trap: Scope.Trap ?? false
-        });
+        MutableHashMap.set(
+            this.Scopes,
+            Scope.Id,
+            {
+                ...Scope,
+                Active: Scope.Active ?? true,
+                Sequence: this.Sequence++,
+                Trap: Scope.Trap ?? false
+            });
+
         this.EnsureValidFocus();
         this.Notify();
 
         return () =>
         {
-            this.Scopes.delete(Scope.Id);
+            MutableHashMap.remove(this.Scopes, Scope.Id);
             this.EnsureValidFocus();
             this.Notify();
         };
@@ -145,38 +183,44 @@ export class FocusRegistry
         Update: Pick<FocusScopeRegistration, "Active" | "Trap" | "Wrap">
     ): void
     {
-        const Scope = this.Scopes.get(Id);
-        if (Scope === undefined)
+        const Scope = MutableHashMap.get(this.Scopes, Id);
+        if (Option.isNone(Scope))
         {
             return;
         }
 
-        this.Scopes.set(Id, {
-            ...Scope,
-            Active: Update.Active ?? true,
-            Trap: Update.Trap ?? false,
-            Wrap: Update.Wrap
-        });
+        MutableHashMap.set(
+            this.Scopes,
+            Id,
+            {
+                ...Scope.value,
+                Active: Update.Active ?? true,
+                Trap: Update.Trap ?? false,
+                Wrap: Update.Wrap
+            });
         this.EnsureValidFocus();
         this.Notify();
     }
 
     public Register(Focus: FocusRegistration): () => void
     {
-        if (this.Entries.has(Focus.Id))
+        if (MutableHashMap.has(this.Entries, Focus.Id))
         {
             throw new Error(`A focusable with the id "${ Focus.Id }" is already registered.`);
         }
 
-        this.Entries.set(Focus.Id, {
-            ...Focus,
-            AutoFocus: Focus.AutoFocus ?? false,
-            Disabled: Focus.Disabled ?? false,
-            Order: Focus.Order ?? 0,
-            Sequence: this.Sequence++
-        });
+        MutableHashMap.set(
+            this.Entries,
+            Focus.Id,
+            {
+                ...Focus,
+                AutoFocus: Focus.AutoFocus ?? false,
+                Disabled: Focus.Disabled ?? false,
+                Order: Focus.Order ?? 0,
+                Sequence: this.Sequence++
+            });
 
-        if (Focus.Id === this.InitialFocus && !this.InitialFocusApplied)
+        if (Focus.Id === this.InitialFocus.valueOrUndefined && !this.InitialFocusApplied)
         {
             this.TryInitialFocus();
         }
@@ -191,13 +235,19 @@ export class FocusRegistry
 
         return () =>
         {
-            const WasFocused = this.CurrentId === Focus.Id;
+            const WasFocused = this.CurrentId.valueOrUndefined === Focus.Id;
             if (WasFocused)
             {
-                this.Entries.get(Focus.Id)?.OnBlur?.();
-                this.CurrentId = undefined;
+                const LastFocusedElement = MutableHashMap.get(this.Entries, Focus.Id);
+                if (Option.isSome(LastFocusedElement))
+                {
+                    LastFocusedElement.value.OnBlur?.();
+                }
+
+                this.CurrentId = Option.none();
             }
-            this.Entries.delete(Focus.Id);
+
+            MutableHashMap.remove(this.Entries, Focus.Id);
             this.EnsureValidFocus();
             this.Notify();
         };
@@ -208,29 +258,31 @@ export class FocusRegistry
         Update: Pick<FocusRegistration, "Disabled" | "OnBlur" | "OnFocus" | "Order">
     ): void
     {
-        const Focus = this.Entries.get(Id);
-        if (Focus === undefined)
+        const Focus = MutableHashMap.get(this.Entries, Id);
+        Option.map(Focus, (TheFocus: RegisteredFocus) =>
         {
-            return;
-        }
+            MutableHashMap.set(
+                this.Entries,
+                Id,
+                {
+                    ...TheFocus,
+                    Disabled: Update.Disabled ?? false,
+                    OnBlur: Update.OnBlur,
+                    OnFocus: Update.OnFocus,
+                    Order: Update.Order ?? 0
+                });
 
-        this.Entries.set(Id, {
-            ...Focus,
-            Disabled: Update.Disabled ?? false,
-            OnBlur: Update.OnBlur,
-            OnFocus: Update.OnFocus,
-            Order: Update.Order ?? 0
+            this.EnsureValidFocus();
+            this.Notify();
         });
-        this.EnsureValidFocus();
-        this.Notify();
     }
 
     public CanFocus(Id: string): boolean
     {
-        const Focus = this.Entries.get(Id);
-        return Focus !== undefined
-            && Focus.Disabled !== true
-            && this.IsScopeActive(Focus.ScopeId);
+        const Focus = MutableHashMap.get(this.Entries, Id);
+        return Focus.valueOrUndefined !== undefined
+            && Focus.value.Disabled !== true
+            && this.IsScopeActive(Focus.value.ScopeId);
     }
 
     public Focus(Id: string): boolean
@@ -239,36 +291,46 @@ export class FocusRegistry
         {
             return false;
         }
-        if (this.CurrentId === Id)
+        if (this.CurrentId.valueOrUndefined === Id)
         {
             return true;
         }
 
-        const Previous = this.CurrentId === undefined
-            ? undefined
-            : this.Entries.get(this.CurrentId);
-        const Next = this.Entries.get(Id);
-        Previous?.OnBlur?.();
-        this.CurrentId = Id;
-        if (Id === this.InitialFocus)
+        // const Previous = this.CurrentId === undefined
+        //     ? undefined
+        //     : MutableHashMap.get(this.Entries, this.CurrentId.valueOrUndefined).valueOrUndefined;
+
+        const Previous = Option.flatMap(
+            this.CurrentId,
+            (CurrentId: string) => MutableHashMap.get(this.Entries, CurrentId)
+        );
+
+        const Next = MutableHashMap.get(this.Entries, Id);
+
+        Previous.valueOrUndefined?.OnBlur?.();
+        this.CurrentId = Option.some(Id);
+
+        if (Id === this.InitialFocus.valueOrUndefined)
         {
             this.InitialFocusApplied = true;
         }
-        Next?.OnFocus?.();
+
+        Next.valueOrUndefined?.OnFocus?.();
         this.Notify();
         return true;
     }
 
     public Blur(): void
     {
-        if (this.CurrentId === undefined)
+        Option.map(this.CurrentId, (CurrentId: string) =>
         {
-            return;
-        }
-
-        this.Entries.get(this.CurrentId)?.OnBlur?.();
-        this.CurrentId = undefined;
-        this.Notify();
+            MutableHashMap.get(
+                this.Entries,
+                CurrentId
+            ).valueOrUndefined?.OnBlur?.();
+            this.CurrentId = Option.none();
+            this.Notify();
+        });
     }
 
     public FocusFirst(ScopeId?: string): boolean
@@ -296,147 +358,187 @@ export class FocusRegistry
 
     private Move(Direction: 1 | -1): boolean
     {
-        const Current = this.CurrentId === undefined
-            ? undefined
-            : this.Entries.get(this.CurrentId);
-        const Trap = Current === undefined
-            ? undefined
-            : this.FindNearestTrap(Current.ScopeId);
-        const Candidates = this.GetCandidates(Trap?.Id);
-        if (Candidates.length === 0)
+        const Current = Option.flatMap(
+            this.CurrentId,
+            (CurrentId: string) => MutableHashMap.get(this.Entries, CurrentId)
+        );
+
+        const Trap = Option.flatMap(Current, Function.flow(Struct.get("ScopeId"), this.FindNearestTrap));
+
+        const Candidates = Option.map(
+            Trap,
+            Function.flow(
+                UndefinedOr.map(Struct.get("Id")),
+                this.GetCandidates
+            )
+        );
+
+        if ((Candidates.valueOrUndefined?.length ?? 0) === 0)
         {
             return false;
         }
 
-        if (Current === undefined)
+        if (Option.isNone(Current) && Option.isSome(Candidates))
         {
             const Initial = Direction === 1
-                ? Candidates[0]
-                : Candidates[Candidates.length - 1];
+                ? Candidates.value[0]
+                : Candidates.value[Candidates.value.length - 1];
+
             return Initial === undefined ? false : this.Focus(Initial.Id);
         }
 
-        const CurrentIndex = Candidates.findIndex(
-            (Candidate: RegisteredFocus) => Candidate.Id === Current.Id
+        const CurrentIndex = Option.flatMap(
+            Current,
+            (TheCurrent: RegisteredFocus) => Option.flatMap(
+                Candidates,
+                Array.findFirstIndex(
+                    (Element: RegisteredFocus, _: number) => Element.Id === TheCurrent.Id
+                )
+            )
         );
-        if (CurrentIndex === -1)
+
+        if (Option.isNone(CurrentIndex) || CurrentIndex.value === -1)
         {
-            const Initial = Direction === 1
-                ? Candidates[0]
-                : Candidates[Candidates.length - 1];
-            return Initial === undefined ? false : this.Focus(Initial.Id);
+            return Option.getOrElse(Option.map(Candidates, (TheCandidates: ReadonlyArray<RegisteredFocus>) =>
+            {
+                const Initial = Direction === 1
+                    ? TheCandidates[0]
+                    : TheCandidates[TheCandidates.length - 1];
+                return Initial === undefined ? false : this.Focus(Initial.Id);
+            }), () => false);
         }
 
-        const NextIndex = CurrentIndex + Direction;
-        if (NextIndex >= 0 && NextIndex < Candidates.length)
+        const NextIndex = CurrentIndex.value + Direction;
+        if (Option.isSome(Candidates) && NextIndex >= 0 && NextIndex < Candidates.value.length)
         {
-            return this.Focus(Candidates[NextIndex]!.Id);
+            return this.Focus(Candidates.value[NextIndex]!.Id);
         }
 
-        const Wrap = this.GetWrap(Current.ScopeId);
+        const Wrap = pipe(
+            Option.map(
+                Current,
+                Function.flow(
+                    Struct.get("ScopeId"),
+                    this.GetWrap
+                )
+            ),
+            Option.getOrElse(() => false)
+        );
+
         if (!Wrap)
         {
             return false;
         }
         return this.Focus(Direction === 1
-            ? Candidates[0]!.Id
-            : Candidates[Candidates.length - 1]!.Id);
+            ? Candidates.valueOrUndefined![0]!.Id
+            : Candidates.valueOrUndefined![Candidates.valueOrUndefined!.length - 1]!.Id);
     }
 
     private GetCandidates(ScopeId?: string): Array<RegisteredFocus>
     {
-        return [ ...this.Entries.values() ]
-            .filter((Focus: RegisteredFocus) =>
-                this.CanFocus(Focus.Id)
-                && (
-                    ScopeId === undefined
-                    || this.IsScopeDescendant(Focus.ScopeId, ScopeId)
-                ))
-            .sort((Left: RegisteredFocus, Right: RegisteredFocus) =>
-                (Left.Order ?? 0) - (Right.Order ?? 0)
-                || Left.Sequence - Right.Sequence
-            );
+        return pipe(
+            [ ...MutableHashMap.values(this.Entries) ],
+            Array.filter((Focus: RegisteredFocus) =>
+                this.CanFocus(Focus.Id) &&
+                (
+                    ScopeId === undefined ||
+                    this.IsScopeDescendant(Focus.ScopeId, ScopeId)
+                )),
+            Array.sort((Left: RegisteredFocus, Right: RegisteredFocus) =>
+                Number.sign((Left.Order ?? 0) - (Right.Order ?? 0)
+                || Left.Sequence - Right.Sequence)
+            )
+        );
     }
 
     private IsScopeActive(ScopeId: string): boolean
     {
-        let Current: string | undefined = ScopeId;
-        const Visited = new Set<string>();
-        while (Current !== undefined && !Visited.has(Current))
+        let Current: Option.Option<string> = Option.some(ScopeId);
+        const Visited = MutableHashSet.empty<string>();
+        while (Option.isSome(Current) && !MutableHashSet.has(Visited, Current.valueOrUndefined))
         {
-            Visited.add(Current);
-            const Scope = this.Scopes.get(Current);
-            if (Scope === undefined || Scope.Active === false)
+            MutableHashSet.add(Visited, Current.value);
+            const Scope = MutableHashMap.get(this.Scopes, Current.value);
+            if (Option.isNone(Scope) || Scope.value.Active === false)
             {
                 return false;
             }
-            if (Scope.Id === TypeId)
+            if (Scope.value.Id === TypeId)
             {
                 return true;
             }
-            Current = Scope.ParentId;
+            Current = Option.some(Scope.value.ParentId);
         }
         return false;
     }
 
     private IsScopeDescendant(ScopeId: string, AncestorId: string): boolean
     {
-        let Current: string | undefined = ScopeId;
-        const Visited = new Set<string>();
-        while (Current !== undefined && !Visited.has(Current))
+        let Current: Option.Option<string> = Option.some(ScopeId);
+        const Visited = MutableHashSet.empty<string>();
+        while (Option.isSome(Current) && !MutableHashSet.has(Visited, Current.valueOrUndefined))
         {
-            if (Current === AncestorId)
+            if (Current.value === AncestorId)
             {
                 return true;
             }
-            Visited.add(Current);
-            Current = this.Scopes.get(Current)?.ParentId;
+            MutableHashSet.add(Visited, Current.value);
+            Current = pipe(
+                Option.flatMap(
+                    Current,
+                    (CurrentVal) => MutableHashMap.get(this.Scopes, CurrentVal)
+                ),
+                Option.map(Struct.get("ParentId"))
+            );
         }
         return false;
     }
 
-    private FindNearestTrap(ScopeId: string): RegisteredFocusScope | undefined
+    private FindNearestTrap(ScopeId: string): Option.Option<RegisteredFocusScope>
     {
-        let Current: string | undefined = ScopeId;
-        const Visited = new Set<string>();
-        while (Current !== undefined && !Visited.has(Current))
+        let Current: Option.Option<string> = Option.some(ScopeId);
+        const Visited = MutableHashSet.empty<string>();
+        while (Option.isSome(Current) && !MutableHashSet.has(Visited, Current.valueOrUndefined))
         {
-            Visited.add(Current);
-            const Scope = this.Scopes.get(Current);
-            if (Scope === undefined)
+            MutableHashSet.add(Visited, Current.value);
+            const Scope = MutableHashMap.get(this.Scopes, Current.value);
+
+            if (Option.isNone(Scope))
             {
-                return undefined;
+                return Option.none();
             }
-            if (Scope.Trap === true)
+            if (Scope.value.Trap === true)
             {
                 return Scope;
             }
-            if (Scope.Id === TypeId)
+            if (Scope.value.Id === TypeId)
             {
-                return undefined;
+                return Option.none();
             }
-            Current = Scope.ParentId;
+
+            Current = Option.some(Scope.value.ParentId);
         }
-        return undefined;
+
+        return Option.none();
     }
 
     private GetWrap(ScopeId: string): boolean
     {
-        let Current: string | undefined = ScopeId;
-        const Visited = new Set<string>();
-        while (Current !== undefined && !Visited.has(Current))
+        let Current: Option.Option<string> = Option.some(ScopeId);
+        const Visited = MutableHashSet.empty<string>();
+        while (Option.isSome(Current) && !MutableHashSet.has(Visited, Current.valueOrUndefined))
         {
-            Visited.add(Current);
-            const Scope = this.Scopes.get(Current);
-            if (Scope === undefined)
+            MutableHashSet.add(Visited, Current.value);
+            const Scope = MutableHashMap.get(this.Scopes, Current.value);
+            if (Option.isNone(Scope))
             {
                 return true;
             }
-            if (Scope.Wrap !== undefined)
+            if (Scope.value.Wrap !== undefined)
             {
-                return Scope.Wrap;
+                return Scope.value.Wrap;
             }
-            Current = Scope.ParentId;
+            Current = Option.some(Scope.value.ParentId);
         }
         return true;
     }
@@ -447,18 +549,15 @@ export class FocusRegistry
         {
             return;
         }
-        if (
-            this.CurrentId !== undefined
-            && this.CanFocus(this.CurrentId)
-        )
+        if (Option.isSome(this.CurrentId) && this.CanFocus(this.CurrentId.value))
         {
             return;
         }
 
-        if (this.CurrentId !== undefined)
+        if (Option.isSome(this.CurrentId))
         {
-            this.Entries.get(this.CurrentId)?.OnBlur?.();
-            this.CurrentId = undefined;
+            MutableHashMap.get(this.Entries, this.CurrentId.value).valueOrUndefined?.OnBlur?.();
+            this.CurrentId = Option.none();
         }
 
         this.FocusFirst();
@@ -469,12 +568,14 @@ export class FocusRegistry
         if (
             this.InitialFocusApplied
             || this.InitialFocus === undefined
-            || !this.CanFocus(this.InitialFocus)
+            || Option.isNone(this.InitialFocus)
+            || !this.CanFocus(this.InitialFocus.value)
         )
         {
             return false;
         }
-        return this.Focus(this.InitialFocus);
+
+        return this.Focus(this.InitialFocus.value);
     }
 
     private Notify(): void
@@ -551,9 +652,9 @@ const FocusScope = ({
         {
             DisposeFocusScope();
             DisposeCommandScope();
-            if (MountOptions.RestoreFocus && PreviousFocus !== undefined)
+            if (MountOptions.RestoreFocus && Option.isSome(PreviousFocus))
             {
-                Focus.Focus(PreviousFocus);
+                Focus.Focus(PreviousFocus.value);
             }
         };
     }, [
@@ -667,7 +768,7 @@ const UseFocusableRegistration = ({
     return {
         Blur: () => Focus.Blur(),
         Focus: () => Focus.Focus(FocusId),
-        Focused: Focus.GetFocusedId() === FocusId,
+        Focused: Focus.GetFocusedId().valueOrUndefined === FocusId,
         Id: FocusId
     };
 };
@@ -738,7 +839,7 @@ export interface FocusManager
     readonly FocusLast: (ScopeId?: string) => boolean;
     readonly FocusNext: () => boolean;
     readonly FocusPrevious: () => boolean;
-    readonly FocusedId: string | undefined;
+    readonly FocusedId: Option.Option<string>;
 }
 
 export/**
@@ -755,13 +856,8 @@ const useFocusManager = (): FocusManager =>
         Focus.GetSnapshot,
         Focus.GetSnapshot
     );
-    return {
-        Blur: () => Focus.Blur(),
-        Focus: (Id: string) => Focus.Focus(Id),
-        FocusFirst: (ScopeId?: string) => Focus.FocusFirst(ScopeId),
-        FocusLast: (ScopeId?: string) => Focus.FocusLast(ScopeId),
-        FocusNext: () => Focus.FocusNext(),
-        FocusPrevious: () => Focus.FocusPrevious(),
-        FocusedId: Focus.GetFocusedId()
-    };
+    return Struct.assign(
+        Struct.pick(Focus, [ "Blur", "Focus", "FocusFirst", "FocusLast", "FocusNext", "FocusPrevious" ]),
+        { FocusedId: Focus.GetFocusedId() }
+    );
 };

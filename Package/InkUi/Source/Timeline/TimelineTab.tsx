@@ -61,7 +61,7 @@ const TimelineTab = ({
                     Event={ Event }
                     Selected={ IsSelected } />
             ) }
-            SelectedIndex={ Selected }
-            SetSelectedIndex={ SetSelected } />
+            Index={ Selected }
+            OnChangeIndex={ SetSelected } />
     );
 };

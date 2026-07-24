@@ -11,8 +11,10 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { useRoutedInput } from "./Interaction/Shortcut.ts";
+import { GetKeyChord, useShortcut, useShortcutGroup } from "./Interaction/Shortcut.ts";
 import { useCommand } from "./Interaction/Command.tsx";
+import { Key } from "./Interaction/Key.ts";
+// import { useCommand } from "./Interaction/Command.tsx";
 
 /** {@inheritDoc ScrollArea} */
 export interface ScrollAreaProps<A>
@@ -22,8 +24,8 @@ export interface ScrollAreaProps<A>
     readonly Items: ReadonlyArray<A>;
     readonly OnSelect?: ((Item: A, Index: number) => void) | undefined;
     readonly RenderItem: (Item: A, Index: number, Selected: boolean) => React.ReactNode;
-    readonly SelectedIndex?: number;
-    readonly SetSelectedIndex?: ((Index: number) => void) | undefined;
+    readonly Index?: number;
+    readonly OnChangeIndex?: ((Index: number) => void) | undefined;
 }
 
 export/**
@@ -35,16 +37,16 @@ export/**
 const ScrollArea = <A,>({
     Active = true,
     Height,
+    Index = 0,
     Items,
+    OnChangeIndex,
     OnSelect,
-    RenderItem,
-    SelectedIndex = 0,
-    SetSelectedIndex
+    RenderItem
 }: ScrollAreaProps<A>): React.ReactNode =>
 {
     const SafeHeight = Math.max(1, Height);
     const LastIndex = Math.max(0, Items.length - 1);
-    const SafeSelected = Math.min(Math.max(0, SelectedIndex), LastIndex);
+    const SafeSelected = Math.min(Math.max(0, Index), LastIndex);
     const MaximumOffset = Math.max(0, Items.length - SafeHeight);
     const Offset = Math.min(
         MaximumOffset,
@@ -53,53 +55,104 @@ const ScrollArea = <A,>({
 
     React.useEffect(() =>
     {
-        if (SelectedIndex !== SafeSelected)
+        if (Index !== SafeSelected)
         {
-            SetSelectedIndex?.(SafeSelected);
+            OnChangeIndex?.(SafeSelected);
         }
-    }, [ SafeSelected, SelectedIndex, SetSelectedIndex ]);
+    }, [ SafeSelected, Index, OnChangeIndex ]);
 
     // @TODO Make this use commands instead, and allow commands
     // with keybinds to be assigned footer items arbitrarily with icons.
 
-    useRoutedInput((_Input: string, Key: Ink.Key) =>
+    useCommand("Move.Up", () =>
     {
-        if (Items.length === 0)
-        {
-            return false;
-        }
+        OnChangeIndex?.(Math.max(0, SafeSelected - 1));
+    });
 
-        if (Key.upArrow)
+    useCommand("Move.PageUp", () =>
+    {
+        OnChangeIndex?.(Math.max(0, SafeSelected - SafeHeight));
+    });
+
+    useCommand("Move.Down", () =>
+    {
+        OnChangeIndex?.(Math.min(LastIndex, SafeSelected + 1));
+    });
+
+    useCommand("Move.PageDown", () =>
+    {
+        OnChangeIndex?.(Math.min(LastIndex, SafeSelected + SafeHeight));
+    });
+
+    useCommand("Move.Home", () =>
+    {
+        OnChangeIndex?.(0);
+    });
+
+    useCommand("Move.Home", () =>
+    {
+        OnChangeIndex?.(LastIndex);
+    });
+
+    useCommand("Commit", () =>
+    {
+        const Item = Items[SafeSelected];
+        if (Item !== undefined)
         {
-            SetSelectedIndex?.(Math.max(0, SafeSelected - 1));
-            return true;
+            OnSelect?.(Item, SafeSelected);
         }
-        else if (Key.downArrow)
-        {
-            SetSelectedIndex?.(Math.min(LastIndex, SafeSelected + 1));
-            return true;
-        }
-        else if (Key.pageUp)
-        {
-            SetSelectedIndex?.(Math.max(0, SafeSelected - SafeHeight));
-            return true;
-        }
-        else if (Key.pageDown)
-        {
-            SetSelectedIndex?.(Math.min(LastIndex, SafeSelected + SafeHeight));
-            return true;
-        }
-        else if (Key.return)
-        {
-            const Item = Items[SafeSelected];
-            if (Item !== undefined)
-            {
-                OnSelect?.(Item, SafeSelected);
-            }
-            return true;
-        }
-        return false;
-    }, { Active });
+    });
+
+    useShortcut(GetKeyChord("", Key({ upArrow: true }))!, "Move.Up");
+    useShortcut(GetKeyChord("", Key({ downArrow: true }))!, "Move.Down");
+    useShortcut(GetKeyChord("", Key({ pageUp: true }))!, "Move.PageUp");
+    useShortcut(GetKeyChord("", Key({ pageDown: true }))!, "Move.PageDown");
+    useShortcut(GetKeyChord("", Key({ home: true }))!, "Move.Home");
+    useShortcut(GetKeyChord("", Key({ return: true }))!, "Commit");
+
+    useShortcutGroup({
+        Commands: [ "Move.Up", "Move.Down" ],
+        Glyph: "⇅",
+        Label: "Move Up/Down"
+    });
+
+    // useRoutedInput((_Input: string, Key: Ink.Key) =>
+    // {
+    //     if (Items.length === 0)
+    //     {
+    //         return false;
+    //     }
+
+    //     if (Key.upArrow)
+    //     {
+    //         return true;
+    //     }
+    //     else if (Key.downArrow)
+    //     {
+    //         OnChangeIndex?.(Math.min(LastIndex, SafeSelected + 1));
+    //         return true;
+    //     }
+    //     else if (Key.pageUp)
+    //     {
+    //         OnChangeIndex?.(Math.max(0, SafeSelected - SafeHeight));
+    //         return true;
+    //     }
+    //     else if (Key.pageDown)
+    //     {
+    //         OnChangeIndex?.(Math.min(LastIndex, SafeSelected + SafeHeight));
+    //         return true;
+    //     }
+    //     else if (Key.return)
+    //     {
+    //         const Item = Items[SafeSelected];
+    //         if (Item !== undefined)
+    //         {
+    //             OnSelect?.(Item, SafeSelected);
+    //         }
+    //         return true;
+    //     }
+    //     return false;
+    // }, { Active });
 
     return (
         <Ink.Box

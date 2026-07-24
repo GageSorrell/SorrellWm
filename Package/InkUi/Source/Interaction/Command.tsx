@@ -14,6 +14,7 @@ import * as React from "react";
 import { CommandScopeContext, TypeId, UseInteraction } from "./Context.tsx";
 import {
     GetKeyChord,
+    type GroupShortcut,
     type InternalShortcut,
     NormalizeKeyChord,
     type RegisteredInputHandler,
@@ -21,6 +22,7 @@ import {
     type RoutedInputHandler,
     type ShortcutRegistration
 } from "./Shortcut.ts";
+import { Array, Function, MutableHashMap, MutableHashSet, Number, Option } from "effect";
 
 export/**
        * The identifiers of the focus commands supplied by `InteractionProvider`.
@@ -131,42 +133,56 @@ export interface ExecuteCommandOptions<Data = unknown>
  */
 export class CommandRegistry
 {
-    private readonly Commands: Map<string, Array<RegisteredCommand>> =
-        new Map<string, Array<RegisteredCommand>>();
+    private readonly Commands: MutableHashMap.MutableHashMap<string, Array<RegisteredCommand>> =
+        MutableHashMap.empty<string, Array<RegisteredCommand>>();
+
     private readonly InputHandlers: Array<RegisteredInputHandler> = [ ];
-    private readonly Listeners: Set<() => void> = new Set<() => void>();
-    private readonly Scopes: Map<string, RegisteredCommandScope> = new Map<string, RegisteredCommandScope>();
+
+    private readonly Listeners: MutableHashSet.MutableHashSet<() => void> =
+        MutableHashSet.empty<() => void>();
+
+    private readonly Scopes: MutableHashMap.MutableHashMap<string, RegisteredCommandScope> =
+        MutableHashMap.empty<string, RegisteredCommandScope>();
+
     private readonly Shortcuts: Array<InternalShortcut> = [ ];
     private Sequence: number = 0;
     private Version: number = 0;
 
+    private readonly ShortcutGroups: MutableHashSet.MutableHashSet<GroupShortcut> =
+        MutableHashSet.empty<GroupShortcut>();
+
     public constructor()
     {
-        this.Scopes.set(TypeId, {
-            Id: TypeId,
-            ParentId: TypeId
-        });
+        MutableHashMap.set(
+            this.Scopes,
+            TypeId,
+            {
+                Id: TypeId,
+                ParentId: TypeId
+            });
     }
 
     public readonly GetSnapshot = (): number => this.Version;
 
     public readonly Subscribe = (Listener: () => void): (() => void) =>
     {
-        this.Listeners.add(Listener);
-        return () => this.Listeners.delete(Listener);
+        MutableHashSet.add(this.Listeners, Listener);
+        return () => MutableHashSet.remove(this.Listeners, Listener);
     };
 
     public RegisterScope(Id: string, ParentId: string = TypeId): () => void
     {
-        if (this.Scopes.has(Id))
+        if (MutableHashMap.has(this.Scopes, Id))
         {
             throw new Error(`A command scope with the id "${ Id }" is already registered.`);
         }
-        this.Scopes.set(Id, { Id, ParentId });
+
+        MutableHashMap.set(this.Scopes, Id, { Id, ParentId });
+
         this.Notify();
         return () =>
         {
-            this.Scopes.delete(Id);
+            MutableHashMap.remove(this.Scopes, Id);
             this.Notify();
         };
     }
@@ -184,28 +200,30 @@ export class CommandRegistry
             ScopeId: Registration.ScopeId,
             Sequence: this.Sequence++
         };
-        const Existing = this.Commands.get(Registration.Command) ?? [];
+        const Existing = MutableHashMap.get(this.Commands, Registration.Command).valueOrUndefined ?? [ ];
         Existing.push(Registered);
-        this.Commands.set(Registration.Command, Existing);
+        MutableHashMap.set(this.Commands, Registration.Command, Existing);
         this.Notify();
 
         return () =>
         {
-            const Commands = this.Commands.get(Registration.Command);
-            if (Commands === undefined)
-            {
-                return;
-            }
-            const Index = Commands.indexOf(Registered);
-            if (Index !== -1)
-            {
-                Commands.splice(Index, 1);
-                if (Commands.length === 0)
+            Option.map(
+                MutableHashMap.get(this.Commands, Registration.Command),
+                (Commands: Array<RegisteredCommand>) =>
                 {
-                    this.Commands.delete(Registration.Command);
+                    const Index = Commands.indexOf(Registered);
+                    if (Index !== -1)
+                    {
+                        Commands.splice(Index, 1);
+                        if (Commands.length === 0)
+                        {
+                            MutableHashMap.remove(this.Commands, Registration.Command);
+                        }
+
+                        this.Notify();
+                    }
                 }
-                this.Notify();
-            }
+            );
         };
     }
 
@@ -243,6 +261,18 @@ export class CommandRegistry
         };
     }
 
+    public RegisterShortcutGroup(GroupRegistration: GroupShortcut): () => void
+    {
+        MutableHashSet.add(this.ShortcutGroups, GroupRegistration);
+        this.Notify();
+
+        return () =>
+        {
+            MutableHashSet.remove(this.ShortcutGroups, GroupRegistration);
+            this.Notify();
+        }
+    }
+
     public RegisterInputHandler(
         ScopeId: string,
         Handler: RoutedInputHandler,
@@ -276,32 +306,40 @@ export class CommandRegistry
         const StartScopeId = Options.StartScopeId ?? TypeId;
         for (const ScopeId of this.GetScopePath(StartScopeId))
         {
-            const Registrations = (this.Commands.get(Command) ?? [ ])
-                .filter((Registration: RegisteredCommand) =>
-                    Registration.ScopeId === ScopeId
-                    && Registration.Enabled !== false
+            const RegistrationsOpt = Option.map(
+                MutableHashMap.get(this.Commands, Command),
+                Function.flow(
+                    Array.filter((Registration: RegisteredCommand) =>
+                        Registration.ScopeId === ScopeId
+                        && Registration.Enabled !== false
+                    ),
+                    Array.sort((Left: RegisteredCommand, Right: RegisteredCommand) =>
+                        Number.sign((Right.Priority ?? 0) - (Left.Priority ?? 0)
+                        || Right.Sequence - Left.Sequence)
+                    )
                 )
-                .sort((Left: RegisteredCommand, Right: RegisteredCommand) =>
-                    (Right.Priority ?? 0) - (Left.Priority ?? 0)
-                    || Right.Sequence - Left.Sequence
-                );
+            );
 
-            for (const Registration of Registrations)
+            if (Option.isSome(RegistrationsOpt))
             {
-                const Handled = Registration.Handler({
-                    Command,
-                    Data: Options.Data,
-                    Input: Options.Input,
-                    Key: Options.Key,
-                    ScopeId,
-                    TargetScopeId: StartScopeId
-                });
-                if (Handled !== false)
+                for (const Registration of RegistrationsOpt.value)
                 {
-                    return true;
+                    const Handled = Registration.Handler({
+                        Command,
+                        Data: Options.Data,
+                        Input: Options.Input,
+                        Key: Options.Key,
+                        ScopeId,
+                        TargetScopeId: StartScopeId
+                    });
+                    if (Handled !== false)
+                    {
+                        return true;
+                    }
                 }
             }
         }
+
         return false;
     }
 
@@ -421,6 +459,27 @@ export class CommandRegistry
         return Result;
     }
 
+    public static IsShortcutInGroup(ScopeId: string, Id: string): (Shortcut: RegisteredShortcut) => boolean
+    {
+        return (Shortcut: RegisteredShortcut) => Shortcut.Id === Id && Shortcut.ScopeId === ScopeId;
+    }
+
+    public GetShortcutGroups(StartScopeId: string = TypeId): ReadonlyArray<GroupShortcut>
+    {
+        const Shortcuts = this.GetShortcuts(StartScopeId);
+
+        return Array.filter(
+            this.ShortcutGroups,
+            (Group: GroupShortcut) =>
+                Array.some(
+                    Group.Commands,
+                    (Id: string) =>
+                        Array.some(
+                            Shortcuts,
+                            CommandRegistry.IsShortcutInGroup(Group.ScopeId, Id)))
+        );
+    }
+
     private GetScopePath(StartScopeId: string): ReadonlyArray<string>
     {
         const Result: Array<string> = [ ];
@@ -434,7 +493,8 @@ export class CommandRegistry
                 break;
             }
             Visited.add(Current);
-            Current = this.Scopes.get(Current)?.ParentId ?? TypeId;
+            Current =
+                MutableHashMap.get(this.Scopes, Current).valueOrUndefined?.ParentId ?? TypeId;
         }
         if (!Result.includes(TypeId))
         {
@@ -466,8 +526,8 @@ export/**
        * @since 1.0.0
        */
 const CommandScope = ({
-    children,
-    Id
+    Id,
+    children
 }: CommandScopeProps): React.ReactNode =>
 {
     const { Commands } = UseInteraction();

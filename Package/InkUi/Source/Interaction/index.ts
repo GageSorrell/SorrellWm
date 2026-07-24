@@ -12,4 +12,5 @@
 export * from "./Command.tsx";
 export * from "./Context.tsx";
 export * from "./Focus.tsx";
+export * from "./Key.ts";
 export * from "./Shortcut.ts";

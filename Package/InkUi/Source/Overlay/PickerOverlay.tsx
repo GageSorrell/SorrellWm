@@ -138,8 +138,8 @@ const PickerOverlay = <Value,>({
                                     : ` — ${ Item.Description }` }
                             </Ink.Text>
                         ) }
-                        SelectedIndex={ Selected }
-                        SetSelectedIndex={ SetSelected } />
+                        Index={ Selected }
+                        OnChangeIndex={ SetSelected } />
                 ) }
         </Overlay>
     );

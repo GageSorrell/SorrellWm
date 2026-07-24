@@ -12,8 +12,9 @@
 import * as Ink from "ink";
 import * as React from "react";
 import { CommandScopeContext, InteractionContext, UseInteraction } from "./Context.tsx";
-import { useTheme } from "../Theme.tsx";
 import { JumpBadge } from "../Badge/JumpBadge.tsx";
+import { useTheme } from "../Theme.tsx";
+import { Array, Boolean, Function, pipe, Struct } from "effect";
 
 /**
  * A registered shortcut with internal annotations.
@@ -71,6 +72,13 @@ export interface InternalShortcut extends RegisteredShortcut
     readonly Hidden: boolean;
     readonly Priority: number;
     readonly Sequence: number;
+}
+
+export interface GroupShortcut extends Pick<ShortcutRegistration, "ScopeId">
+{
+    readonly Commands: ReadonlyArray<string>;
+    readonly Label: string;
+    readonly Glyph: string;
 }
 
 /**
@@ -278,15 +286,12 @@ const useShortcut = (
     const KeysKey = typeof Keys === "string" ? Keys : Keys.join("\0");
 
     React.useLayoutEffect(() => Commands.RegisterShortcut({
+        ...Struct.pick(Options, [ "Description", "Id", "Label" ]),
+
         Command,
-        ...(Options.Description === undefined
-            ? {}
-            : { Description: Options.Description }),
         Enabled: Options.Enabled ?? true,
         Hidden: Options.Hidden ?? false,
-        ...(Options.Id === undefined ? {} : { Id: Options.Id }),
         Keys: KeysKey.split("\0"),
-        ...(Options.Label === undefined ? {} : { Label: Options.Label }),
         Priority: Options.Priority ?? 0,
         ScopeId
     }), [
@@ -301,6 +306,24 @@ const useShortcut = (
         Options.Priority,
         ScopeId
     ]);
+};
+
+export/**
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const useShortcutGroup = (
+    Group: Omit<GroupShortcut, "ScopeId">
+): void =>
+{
+    const { Commands } = UseInteraction();
+    const ScopeId = React.useContext(CommandScopeContext);
+
+    React.useLayoutEffect(
+        () => Commands.RegisterShortcutGroup(Struct.assign(Group, { ScopeId })),
+        [ Commands, ScopeId ]
+    );
 };
 
 /** {@inheritDoc Shortcut} */
@@ -379,7 +402,13 @@ const useRoutedInput = (
     }, [ Active, Interaction, Priority, ScopeId ]);
 };
 
-export const ShortcutFooter = (): React.ReactNode =>
+export/**
+       * Display available shortcuts in a footer.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const ShortcutFooter = (): React.ReactNode =>
 {
     const { Commands } = UseInteraction();
     const Shortcuts = Commands.GetActiveShortcuts();
@@ -406,6 +435,34 @@ export const ShortcutFooter = (): React.ReactNode =>
         );
     };
 
+    const GroupHotkey = ({ Glyph: GlyphOverride, Label }: GroupShortcut): React.ReactNode =>
+    {
+        return (
+            <Ink.Box gap={ 1 }>
+                <JumpBadge Hint={ GlyphOverride } />
+                <Ink.Text color={ Theme.Text }>
+                    { Label }
+                </Ink.Text>
+            </Ink.Box>
+        );
+    };
+
+    const Groups = Commands.GetShortcutGroups();
+
+    const UngroupedShortcuts = Array.filter(
+        GetDisplayableShortcuts(Shortcuts),
+        (InternalShortcut: InternalShortcut) => pipe(
+            Groups,
+            Array.map(Struct.get("Commands")),
+            Array.every(
+                Function.flow(
+                    Array.contains(InternalShortcut.Command),
+                    Boolean.not
+                )
+            )
+        )
+    );
+
     return (
         <Ink.Box
             alignItems="flex-start"
@@ -415,10 +472,17 @@ export const ShortcutFooter = (): React.ReactNode =>
             flexWrap="wrap"
             justifyContent="space-around">
             {
-                GetDisplayableShortcuts(Shortcuts).map((ActiveShortcut: InternalShortcut) =>
+                UngroupedShortcuts.map((ActiveShortcut: InternalShortcut) =>
                     <Hotkey
                         { ...ActiveShortcut }
                         key={ ActiveShortcut.Keys.join("+") }
+                    />)
+            }
+            {
+                Groups.map((Group: GroupShortcut) =>
+                    <GroupHotkey
+                        { ...Group }
+                        key={ Group.Commands.join("!") }
                     />)
             }
         </Ink.Box>
