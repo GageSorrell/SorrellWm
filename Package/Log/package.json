@@ -1,0 +1,126 @@
+{
+    "name": "@sorrell/log",
+    "version": "1.0.0",
+    "description": "Effect-first structured logging for Sorrell applications.",
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Log#readme",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/Log",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./Category": {
+            "import": "./Distribution/Category.js",
+            "types": "./Distribution/Category.d.ts"
+        },
+        "./Effect": {
+            "import": "./Distribution/Effect/index.js",
+            "types": "./Distribution/Effect/index.d.ts"
+        },
+        "./Forward": {
+            "import": "./Distribution/Forward/index.js",
+            "types": "./Distribution/Forward/index.d.ts"
+        },
+        "./Global": {
+            "import": "./Distribution/Global.js",
+            "types": "./Distribution/Global.d.ts"
+        },
+        "./Loggable": {
+            "import": "./Distribution/Loggable.js",
+            "types": "./Distribution/Loggable.d.ts"
+        },
+        "./Native": {
+            "import": "./Distribution/Native/index.js",
+            "types": "./Distribution/Native/index.d.ts"
+        },
+        "./Node": {
+            "import": "./Distribution/Node/index.js",
+            "types": "./Distribution/Node/index.d.ts"
+        },
+        "./Node/ConsoleSink": {
+            "import": "./Distribution/Node/ConsoleSink.js",
+            "types": "./Distribution/Node/ConsoleSink.d.ts"
+        },
+        "./Node/FileSink": {
+            "import": "./Distribution/Node/FileSink.js",
+            "types": "./Distribution/Node/FileSink.d.ts"
+        },
+        "./Node/NamedPipe": {
+            "import": "./Distribution/Node/NamedPipe.js",
+            "types": "./Distribution/Node/NamedPipe.d.ts"
+        },
+        "./Node/NamedPipeSink": {
+            "import": "./Distribution/Node/NamedPipeSink.js",
+            "types": "./Distribution/Node/NamedPipeSink.d.ts"
+        },
+        "./React": {
+            "import": "./Distribution/React/index.js",
+            "types": "./Distribution/React/index.d.ts"
+        },
+        "./Testing": {
+            "import": "./Distribution/Testing/index.js",
+            "types": "./Distribution/Testing/index.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "Distribution",
+        "IMPLEMENTATION_PLAN.md",
+        "native/include",
+        "License.md",
+        "ReadMe.md"
+    ],
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../../Package/EsLintConfigSorrell --ext .ts,.tsx Source Test",
+        "pretest": "npm run test:native:build",
+        "test": "vitest run",
+        "test:native:build": "node ./Test/NativeFixture/build.mjs",
+        "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
+    },
+    "dependencies": {
+        "chalk": "^5.6.2"
+    },
+    "devDependencies": {
+        "@testing-library/react": "16.3.2",
+        "@sorrell/tsconfig": "1.0.0",
+        "@types/node": "26.1.1",
+        "@types/react": "19.2.17",
+        "@types/react-dom": "19.2.3",
+        "cross-env": "10.1.0",
+        "effect": "4.0.0-beta.101",
+        "jsdom": "29.1.1",
+        "node-addon-api": "8.9.0",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    },
+    "peerDependencies": {
+        "effect": "^4.0.0-beta.101",
+        "react": ">=18 <20"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        }
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    }
+}

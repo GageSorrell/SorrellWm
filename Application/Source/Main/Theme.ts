@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as AppSettings from "./AppSettings.ts";
+import * as AppSettings from "./AppSettings/AppSettings.ts";
 import { Effect, Option } from "effect";
 import { ColorScheme } from "../Shared/Theme.ts";
 import type { RendererTheme } from "../Shared/Theme.ts";

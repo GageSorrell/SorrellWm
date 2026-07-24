@@ -36,6 +36,27 @@ Generated files are written to `Application/Build` and `Application/Distribution
 The smoke command launches the unpacked application without showing a window and
 verifies the renderer-to-preload-to-main IPC path.
 
+## Logs
+
+The Electron main process routes its Effect logs through `@sorrell/log` to the
+terminal and to a discoverable Windows named pipe. Start the application, then
+open its Ink log viewer from another terminal:
+
+```powershell
+npm run logs -w @sorrell/wm
+```
+
+The client auto-discovers the running endpoint. SorrellWm uses named-pipe port
+`43817` by default; set `SORRELL_WM_LOG_PORT` before starting the application
+to override it, and connect explicitly with
+`sorrell-log-client $env:SORRELL_WM_LOG_PORT` when more than one local log
+producer is active.
+
+The client receives retained global values when it connects, including the
+application start time, current managed-window count, and active workspace
+count. Global values are retained for seven days by the main-process logging
+sink and are updated whenever the tiling state changes.
+
 ## Native modules
 
 Install every native Node/Node-API package as a production dependency of this

@@ -1,0 +1,71 @@
+{
+    "name": "@sorrell/ink-ui",
+    "version": "1.0.0",
+    "description": "Reusable, themed terminal UI components for Ink.",
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/InkUi#readme",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/InkUi",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "Distribution",
+        "License.md",
+        "ReadMe.md"
+    ],
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "build:showcase": "tsc -p ./tsconfig.showcase.json",
+        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts,.tsx Source Showcase Test",
+        "showcase": "npm run build:showcase && node ./Intermediate/Showcase/Showcase/index.js",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json && tsc --noEmit -p ./tsconfig.showcase.json"
+    },
+    "peerDependencies": {
+        "ink": "^7.1.0",
+        "react": ">=19.2.0 <20"
+    },
+    "peerDependenciesMeta": {
+        "ink": {
+            "optional": false
+        },
+        "react": {
+            "optional": false
+        }
+    },
+    "devDependencies": {
+        "@sorrell/tsconfig": "1.0.0",
+        "@types/node": "26.1.1",
+        "@types/react": "19.2.17",
+        "cross-env": "10.1.0",
+        "ink": "7.1.0",
+        "ink-testing-library": "4.0.0",
+        "react": "19.2.7",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    },
+    "dependencies": {
+        "effect": "^4.0.0-beta"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    }
+}

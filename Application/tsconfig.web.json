@@ -1,5 +1,5 @@
 {
-    "extends": "../Configuration/tsconfig.base.json",
+    "extends": "@sorrell/tsconfig",
     "compilerOptions": {
         "jsx": "react-jsx",
         "lib": [

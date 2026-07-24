@@ -1,0 +1,11 @@
+{
+  "name": "@sorrell/tsconfig",
+  "version": "1.0.0",
+  "description": "A base tsconfig.json, inspired by the guide on https://effect.solutions.",
+  "exports":
+  {
+    ".": "./tsconfig.json"
+  },
+  "keywords": [ ],
+  "type": "module"
+}

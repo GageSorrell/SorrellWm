@@ -58,6 +58,10 @@
       "import": "./Distribution/MessageLoop.js",
       "types": "./Distribution/MessageLoop.d.ts"
     },
+    "./Screen": {
+      "import": "./Distribution/Screen.js",
+      "types": "./Distribution/Screen.d.ts"
+    },
     "./Theme": {
       "import": "./Distribution/Theme.js",
       "types": "./Distribution/Theme.d.ts"

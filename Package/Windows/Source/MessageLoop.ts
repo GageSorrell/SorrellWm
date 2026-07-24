@@ -58,16 +58,16 @@ export type SubscribableMessage = keyof MessageArgument;
  *
  * @param Message - The `WM_MOVE` message identifier.
  * @param Callback - The listener to invoke with the window's new position.
- * @returns {Attempt.AttemptResult<Subscription.Id>} The registration identifier or native error.
+ * @returns {Attempt.Attempt<Subscription.Id>} The registration identifier or native error.
  */
 export function Subscribe(
     Message: WM.MOVE,
     Callback: Listener<WM.MOVE>
-): Attempt.AttemptResult<Subscription.Id>;
+): Attempt.Attempt<Subscription.Id>;
 export function Subscribe<Message extends SubscribableMessage>(
     Message: Message,
     Callback: Listener<Message>
-): Attempt.AttemptResult<Subscription.Id>
+): Attempt.Attempt<Subscription.Id>
 {
     const NativeCallback: Subscription.NativeCallback = (Argument: unknown): void =>
     {
@@ -86,9 +86,9 @@ export function Subscribe<Message extends SubscribableMessage>(
  * executing on the JavaScript thread is allowed to finish.
  *
  * @param SubscriptionId - The identifier returned by {@link Subscribe}.
- * @returns {Attempt.AttemptResult<void>} Success, or the native error.
+ * @returns {Attempt.Attempt<void>} Success, or the native error.
  */
-export function Unsubscribe(SubscriptionId: Subscription.Id): Attempt.AttemptResult<void>
+export function Unsubscribe(SubscriptionId: Subscription.Id): Attempt.Attempt<void>
 {
     return Attempt.AsResult(Binding.MessageLoop.Unsubscribe(SubscriptionId));
 }
@@ -98,9 +98,9 @@ export function Unsubscribe(SubscriptionId: Subscription.Id): Attempt.AttemptRes
  *
  * Only one loop can be active per Electron process.
  *
- * @returns {Attempt.AttemptResult<Thread.ThreadId>} The thread identifier or native error.
+ * @returns {Attempt.Attempt<Thread.ThreadId>} The thread identifier or native error.
  */
-export function Start(): Attempt.AttemptResult<Thread.ThreadId>
+export function Start(): Attempt.Attempt<Thread.ThreadId>
 {
     return Attempt.AsResult(Binding.MessageLoop.Start());
 }
@@ -108,9 +108,9 @@ export function Start(): Attempt.AttemptResult<Thread.ThreadId>
 /**
  * Post `WM_QUIT` to the dedicated message loop and join its thread.
  *
- * @returns {Attempt.AttemptResult<void>} Success, or the native error.
+ * @returns {Attempt.Attempt<void>} Success, or the native error.
  */
-export function Stop(): Attempt.AttemptResult<void>
+export function Stop(): Attempt.Attempt<void>
 {
     return Attempt.AsResult(Binding.MessageLoop.Stop());
 }

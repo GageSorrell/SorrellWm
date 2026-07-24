@@ -9,8 +9,8 @@
  * @license   MIT
  */
 
-import * as TilingManager from "../Source/Main/TilingManager.js";
-import * as TilingTree from "../Source/Main/TilingTree.js";
+import * as TilingManager from "../Source/Main/Tiling/Manager.ts";
+import * as TilingTree from "../Source/Main/Tiling/Tree.ts";
 import { Effect, Option, Result } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
@@ -128,14 +128,14 @@ describe("TilingManager", () =>
         const ResultValue = await Effect.runPromise(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
-            yield* Manager.Manage(
+            yield* Manager.Tile(
                 Hwnd(2),
                 Hwnd(1),
                 TilingTree.Orientation.Horizontal
             );
             yield* Manager.SetPanelRatio(TilingTree.WorkspaceId(WorkArea), [ ], 0.25);
             const SplitState = yield* Manager.Snapshot;
-            yield* Manager.Unmanage(Hwnd(1), true);
+            yield* Manager.Float(Hwnd(1), true);
 
             return {
                 FinalState: yield* Manager.Snapshot,

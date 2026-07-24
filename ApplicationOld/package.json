@@ -87,7 +87,7 @@
     "@sorrell/react": "^1.0.1",
     "@sorrell/utilities": "1.2.33",
     "dot-prop": "^10.1.0",
-    "effect": "^4.0.0-beta.78",
+    "effect": "^4.0.0-beta.101",
     "electron-debug": "^4.1.0",
     "electron-log": "^5.4.3",
     "reactive-event": "^0.0.58",

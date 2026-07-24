@@ -38,10 +38,10 @@
         "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
     },
     "devDependencies": {
-        "@effect/platform-node": "4.0.0-beta.99",
+        "@effect/platform-node": "4.0.0-beta.101",
         "@types/node": "26.1.1",
         "cross-env": "10.1.0",
-        "effect": "4.0.0-beta.99",
+        "effect": "4.0.0-beta.101",
         "typescript": "6.0.2",
         "vitest": "4.1.10"
     },
@@ -50,6 +50,6 @@
         "npm": ">=12.0.1"
     },
     "peerDependencies": {
-        "effect": "^4.0.0-beta.99"
+        "effect": "^4.0.0-beta.101"
     }
 }

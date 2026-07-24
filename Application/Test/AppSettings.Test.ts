@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as AppSettings from "../Source/Main/AppSettings.js";
+import * as AppSettings from "../Source/Main/AppSettings/AppSettings.ts";
 import { Effect, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -113,8 +113,16 @@ describe("AppSettings schema", () =>
             OverlayBackdropIntensity: 50,
             OverlayRoundedCorners: true,
             RunAtStartup: true,
+            ShowTitlebarFlyout: true,
             Theme: "System"
         });
+    });
+
+    it("accepts an explicit titlebar-flyout preference", async() =>
+    {
+        const Decoded = await DecodeSettings({ ShowTitlebarFlyout: false });
+
+        expect(Decoded.ShowTitlebarFlyout).toBe(false);
     });
 
     it.each([ 0, 100 ])("accepts a backdrop intensity of %i", async(Intensity: number) =>

@@ -54,6 +54,8 @@ class FakeWindow extends EventEmitter
 
     IgnoreMouseEvents: boolean = false;
 
+    Visible: boolean = false;
+
     readonly id: number = FakeWindow.NextId++;
 
     readonly webContents: FakeWebContents = {
@@ -96,15 +98,28 @@ class FakeWindow extends EventEmitter
         this.emit("focus");
     }
 
+    getNativeWindowHandle(): Buffer
+    {
+        const Handle = Buffer.alloc(8);
+        Handle.writeBigUInt64LE(BigInt(this.id));
+        return Handle;
+    }
+
     hide(): void
     {
         this.HideCount += 1;
+        this.Visible = false;
         this.emit("hide");
     }
 
     isDestroyed(): boolean
     {
         return this.Destroyed;
+    }
+
+    isVisible(): boolean
+    {
+        return this.Visible;
     }
 
     async loadURL(_Url: string): Promise<void>
@@ -122,12 +137,14 @@ class FakeWindow extends EventEmitter
     show(): void
     {
         this.ShowCount += 1;
+        this.Visible = true;
         this.emit("show");
     }
 
     showInactive(): void
     {
         this.ShowInactiveCount += 1;
+        this.Visible = true;
         this.emit("show");
     }
 
@@ -186,8 +203,9 @@ describe("BrowserWindow", () =>
             {
                 const Service = yield* BrowserWindow;
 
-                yield* Service.Open(GetBackdropWindowSpec());
+                const Handle = yield* Service.Open(GetBackdropWindowSpec());
                 yield* Service.ShowInactive(Key.Backdrop);
+                expect(yield* Service.GetNativeHandle(Handle.Key)).toBe(BigInt(Handle.ElectronWindowId));
             }),
             Effect.provide(MakeLive(FakeDependencies(Windows, ConstructorOptions)))
         ));

@@ -29,9 +29,10 @@ import {
 } from "effect";
 import electron, { app } from "electron";
 import type { Box } from "@sorrell/math";
-import { ToRectangle as BoxToRectangle } from "./Utility/Math/Box.ts";
+import { ToRectangle as BoxToRectangle } from "./Utility/Math/Box.js";
+import { DevFeatures } from "./Development/DevFeatures.ts";
+import type { Handle as WindowsHandle } from "@sorrell/windows";
 import { join } from "path";
-import { DevFeatures } from "./DevFeatures.ts";
 
 const TypeId = "~sorrell/wm/Main/BrowserWindow" as const;
 
@@ -70,7 +71,9 @@ export type Operation =
     | "Close"
     | "Destroy"
     | "Focus"
+    | "GetNativeHandle"
     | "Hide"
+    | "IsVisible"
     | "Send"
     | "SetIgnoreMouseEvents"
     | "SetBounds"
@@ -160,6 +163,12 @@ export interface BrowserWindowImpl
 
     /** Focus an open window. */
     readonly Focus: (Key: Key) => Effect.Effect<void, Error>;
+
+    /** Determine whether an open window is currently visible. */
+    readonly IsVisible: (Key: Key) => Effect.Effect<boolean, Error>;
+
+    /** Get the native Win32 handle for an open Electron window. */
+    readonly GetNativeHandle: (Key: Key) => Effect.Effect<WindowsHandle.HWND, Error>;
 
     /** Request a normal, cancellable close. */
     readonly RequestClose: (Key: Key) => Effect.Effect<void, Error>;
@@ -616,10 +625,45 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
                 "Destroy",
                 (Window: ElectronBrowserWindow) => Window.destroy()
             ),
+            GetNativeHandle: (KeyValue: Key) => pipe(
+                GetManaged(KeyValue),
+                Effect.flatMap((Managed: ManagedWindow) => Effect.try({
+                    catch: (Cause: unknown) => new BrowserWindowOperationError({
+                        Cause,
+                        Key: KeyValue,
+                        Operation: "GetNativeHandle"
+                    }),
+                    try: (): WindowsHandle.HWND =>
+                    {
+                        const Value = Managed.Window.getNativeWindowHandle();
+                        const NumericValue = Value.byteLength === 8
+                            ? Value.readBigUInt64LE(0)
+                            : BigInt(Value.readUInt32LE(0));
+
+                        if (NumericValue === 0n)
+                        {
+                            throw new Error("Electron returned a null native window handle.");
+                        }
+
+                        return NumericValue as WindowsHandle.HWND;
+                    }
+                }))
+            ),
             Hide: (KeyValue: Key) => Operate(
                 KeyValue,
                 "Hide",
                 (Window: ElectronBrowserWindow) => Window.hide()
+            ),
+            IsVisible: (KeyValue: Key) => pipe(
+                GetManaged(KeyValue),
+                Effect.flatMap((Managed: ManagedWindow) => Effect.try({
+                    catch: (Cause: unknown) => new BrowserWindowOperationError({
+                        Cause,
+                        Key: KeyValue,
+                        Operation: "IsVisible"
+                    }),
+                    try: () => Managed.Window.isVisible()
+                }))
             ),
             Open: (SpecificationValue: Spec) =>
                 OpenOrEnsure(SpecificationValue, false),
@@ -758,7 +802,7 @@ const OverlayWindowSpec = Effect.gen(function* ()
 });
 
 export/** Construct the main application-window specification. */
-const GetMainWindowSpec = (): Spec =>
+const MainWindowSpec = Effect.gen(function*()
 {
     const { Options: BaseOptions, Url } = GetSpecBase();
     const OverlayOptions: BrowserWindowConstructorOptions =
@@ -779,4 +823,4 @@ const GetMainWindowSpec = (): Spec =>
         ShowWhenReady,
         Url: WithWindowKey(Url, Key.Main)
     } as const;
-};
+});

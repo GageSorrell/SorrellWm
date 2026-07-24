@@ -6,6 +6,8 @@
                 "Source/Native/Initialization.cpp",
                 "Source/Native/Keyboard.cpp",
                 "Source/Native/MessageLoop.cpp",
+                "Source/Native/Monitor.cpp",
+                "Source/Native/ScreenCapture.cpp",
                 "Source/Native/Theme.cpp",
                 "Source/Native/Utility.cpp",
                 "Source/Native/Window.cpp",
@@ -20,6 +22,14 @@
                 "_UNICODE"
             ],
             "libraries": [
+                "advapi32.lib",
+                "gdi32.lib",
+                "ole32.lib",
+                "propsys.lib",
+                "setupapi.lib",
+                "shell32.lib",
+                "shlwapi.lib",
+                "windowscodecs.lib",
                 "user32.lib"
             ],
             "include_dirs": ["<!@(node -p \"require('node-addon-api').include\")"],

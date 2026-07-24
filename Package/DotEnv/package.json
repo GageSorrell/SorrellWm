@@ -1,0 +1,26 @@
+{
+  "name": "@sorrell/dotenv",
+  "version": "1.0.0",
+  "description": "",
+  "exports":
+  {
+    ".":
+    {
+        "import": "./Distribution/index.js",
+        "types": "./Distribution/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "keywords": [ ],
+  "type": "module",
+  "dependencies": {
+    "effect": "^4.0.0-beta.101"
+  },
+  "devDependencies": {
+    "@sorrell/tsconfig": "1.0.0",
+    "typescript": "6.0.2"
+  }
+}

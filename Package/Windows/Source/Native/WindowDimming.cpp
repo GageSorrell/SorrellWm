@@ -11,6 +11,7 @@
 
 #include "./WindowDimming.h"
 
+#include <algorithm>
 #include <cmath>
 #include <dwmapi.h>
 #include <exception>
@@ -201,6 +202,11 @@ namespace
 
         if (
             Context.ExcludedWindows.contains(Window)
+            || std::find(
+                DimmingWindows.cbegin(),
+                DimmingWindows.cend(),
+                Window
+            ) != DimmingWindows.cend()
             || IsWindowVisible(Window) == FALSE
             || IsIconic(Window) != FALSE
             || IsCloaked(Window)

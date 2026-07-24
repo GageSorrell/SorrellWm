@@ -13,6 +13,8 @@
 #include "./Core.h"
 #include "./Keyboard.h"
 #include "./MessageLoop.h"
+#include "./Monitor.h"
+#include "./ScreenCapture.h"
 #include "./Theme.h"
 #include "./Window.h"
 #include "./WindowDimming.h"
@@ -53,7 +55,25 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetAccentColor)
     );
 
+    Napi::Object Screen = Napi::Object::New(Environment);
+    Screen.Set(
+        "Capture",
+        Napi::Function::New(Environment, CaptureScreen)
+    );
+    Screen.Set(
+        "GetMonitors",
+        Napi::Function::New(Environment, GetMonitors)
+    );
+    Screen.Set(
+        "GetMonitorBrand",
+        Napi::Function::New(Environment, GetMonitorBrand)
+    );
+
     Napi::Object Window = Napi::Object::New(Environment);
+    Window.Set(
+        "Capture",
+        Napi::Function::New(Environment, CaptureWindow)
+    );
     Window.Set(
         "ClearWindowDimming",
         Napi::Function::New(Environment, ClearWindowDimming)
@@ -71,12 +91,24 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetCursorPosition)
     );
     Window.Set(
+        "GetIcon",
+        Napi::Function::New(Environment, GetWindowIcon)
+    );
+    Window.Set(
         "GetForegroundWindow",
         Napi::Function::New(Environment, GetForegroundWindow_Node)
     );
     Window.Set(
+        "GetHoveredMaximizeButton",
+        Napi::Function::New(Environment, GetHoveredMaximizeButton)
+    );
+    Window.Set(
         "GetManageableTopLevelWindows",
         Napi::Function::New(Environment, GetManageableTopLevelWindows)
+    );
+    Window.Set(
+        "GetMouseHoverTime",
+        Napi::Function::New(Environment, GetMouseHoverTime)
     );
     Window.Set(
         "GetWindowRect",
@@ -95,6 +127,14 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, HasRoundedCorners)
     );
     Window.Set(
+        "IsSnapLayoutsOnHoverEnabled",
+        Napi::Function::New(Environment, IsSnapLayoutsOnHoverEnabled)
+    );
+    Window.Set(
+        "IsSnapWindowsEnabled",
+        Napi::Function::New(Environment, IsSnapWindowsEnabled)
+    );
+    Window.Set(
         "SetForegroundWindow",
         Napi::Function::New(Environment, SetForegroundWindow_Node)
     );
@@ -105,6 +145,7 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
 
     Exports.Set("Keyboard", Keyboard);
     Exports.Set("MessageLoop", MessageLoop);
+    Exports.Set("Screen", Screen);
     Exports.Set("Theme", Theme);
     Exports.Set("Window", Window);
 

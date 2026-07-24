@@ -47,6 +47,9 @@ export interface AppApi
         /** Execute a current-screen command through the main-process command pipeline. */
         readonly invoke: (Id: OverlayCommandId) => Promise<void>;
 
+        /** Preview a directional Focus command, or clear the preview with `null`. */
+        readonly preview: (Id: OverlayCommandId | null) => Promise<void>;
+
         /** Observe changes to the current overlay screen or its command catalog. */
         readonly onChanged: (
             Listener: (Screen: OverlayScreenDto) => void
@@ -71,6 +74,7 @@ const AppApiChannel = Object.freeze({
     BackdropShow: "backdrop:show" as const,
     OverlayBack: "overlay:back" as const,
     OverlayCommandInvoke: "overlay-command:invoke" as const,
+    OverlayFocusPreview: "overlay-focus:preview" as const,
     OverlayScreenChanged: "overlay-screen:changed" as const,
     OverlayScreenGet: "overlay-screen:get" as const,
     Ping: "application:ping",

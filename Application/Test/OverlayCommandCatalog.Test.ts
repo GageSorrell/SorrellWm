@@ -7,10 +7,10 @@
  * @license   MIT
  */
 
-import * as Hotkey from "../Source/Main/Hotkey.js";
+import * as Hotkey from "../Source/Main/Input/Hotkey.ts";
 import { type OverlayCommandDto, OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
 import { describe, expect, it, vi } from "vitest";
-import { FromKeybindSettings } from "../Source/Main/OverlayCommandCatalog.js";
+import { FromKeybindSettings } from "../Source/Main/Overlay/CommandCatalog.ts";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
@@ -63,7 +63,13 @@ describe("OverlayCommandCatalog", () =>
     {
         const Screen = FromKeybindSettings(
             OverlayScreenId.Focus,
-            Hotkey.DefaultKeybindSettings
+            Hotkey.DefaultKeybindSettings,
+            {
+                FocusMoveLeft: {
+                    Icon: "left-icon",
+                    Title: "Left App"
+                }
+            }
         );
 
         expect(Screen).toMatchObject({
@@ -76,5 +82,15 @@ describe("OverlayCommandCatalog", () =>
             "FocusMoveDown",
             "FocusMoveRight"
         ]);
+        expect(Screen.Commands[0]).toMatchObject({
+            Disabled: false,
+            Target: {
+                Icon: "left-icon",
+                Title: "Left App"
+            }
+        });
+        expect(Screen.Commands.slice(1).every(
+            (Command: OverlayCommandDto) => Command.Disabled
+        )).toBe(true);
     });
 });

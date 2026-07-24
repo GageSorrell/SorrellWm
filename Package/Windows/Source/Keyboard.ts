@@ -66,9 +66,9 @@ interface NativeEventArgument extends NativeEvent
  * Subscribe to all key transitions anywhere on the desktop.
  *
  * @param Callback - The listener to invoke on Electron's JavaScript thread.
- * @returns {Attempt.AttemptResult<Subscription.Id>} The registration identifier or native error.
+ * @returns {Attempt.Attempt<Subscription.Id>} The registration identifier or native error.
  */
-export function Subscribe(Callback: Listener): Attempt.AttemptResult<Subscription.Id>
+export function Subscribe(Callback: Listener): Attempt.Attempt<Subscription.Id>
 {
     const NativeCallback: Subscription.NativeCallback = (Argument: unknown): void =>
     {
@@ -90,9 +90,9 @@ export function Subscribe(Callback: Listener): Attempt.AttemptResult<Subscriptio
  * Remove a global keyboard subscription.
  *
  * @param SubscriptionId - The identifier returned by {@link Subscribe}.
- * @returns {Attempt.AttemptResult<void>} Success, or the native error.
+ * @returns {Attempt.Attempt<void>} Success, or the native error.
  */
-export function Unsubscribe(SubscriptionId: Subscription.Id): Attempt.AttemptResult<void>
+export function Unsubscribe(SubscriptionId: Subscription.Id): Attempt.Attempt<void>
 {
     return Attempt.AsResult(Binding.Keyboard.Unsubscribe(SubscriptionId));
 }

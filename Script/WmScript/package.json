@@ -1,0 +1,18 @@
+{
+    "name": "@sorrell/wm-script",
+    "version": "0.1.0",
+    "description": "Local Windows configuration scripts for SorrellWm.",
+    "private": true,
+    "license": "MIT",
+    "os": [
+        "win32"
+    ],
+    "scripts": {
+        "snap:off": "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./SetSnapWindows.ps1 -State Off",
+        "snap:on": "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./SetSnapWindows.ps1 -State On"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    }
+}

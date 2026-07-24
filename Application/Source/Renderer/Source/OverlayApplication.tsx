@@ -11,6 +11,7 @@
 
 import {
     AddSquareRegular,
+    AppGenericRegular,
     ArrowDownRegular,
     ArrowLeft16Regular,
     ArrowLeftRegular,
@@ -113,6 +114,11 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> = {
 };
 
 const UseStyles = makeStyles({
+    ApplicationIconImage: {
+        height: "1.5rem",
+        objectFit: "contain",
+        width: "1.5rem"
+    },
     BackButton: {
         borderRadius: tokens.borderRadiusNone,
         boxSizing: "border-box",
@@ -195,6 +201,7 @@ const OverlayApplication = (): React.JSX.Element =>
         {
             IsMounted = false;
             StopScreenUpdates();
+            void window.sorrell.overlay.preview(null);
         };
     }, [ ]);
 
@@ -211,6 +218,14 @@ const OverlayApplication = (): React.JSX.Element =>
         void window.sorrell.overlay.back().catch((Cause: unknown) =>
         {
             SetErrorMessage(`Could not return to the previous screen: ${ String(Cause) }`);
+        });
+    };
+
+    const Preview = (Id: OverlayCommandIdType | null): void =>
+    {
+        void window.sorrell.overlay.preview(Id).catch((Cause: unknown) =>
+        {
+            SetErrorMessage(`Could not preview ${ Id ?? "Focus" }: ${ String(Cause) }`);
         });
     };
 
@@ -283,13 +298,34 @@ const OverlayApplication = (): React.JSX.Element =>
                     {
                         const CommandPresentation = Presentation[Command.Id];
                         const Icon = CommandPresentation.Icon;
+                        const Description = Command.Target?.Title
+                            ?? (Command.Disabled
+                                ? "No window in this direction."
+                                : CommandPresentation.Description);
+                        const ApplicationIcon = Command.Target === undefined
+                            ? undefined
+                            : Command.Target.Icon === undefined
+                                ? <AppGenericRegular />
+                                : (
+                                    <img
+                                        alt=""
+                                        className={ Styles.ApplicationIconImage }
+                                        src={ `data:image/png;base64,${ Command.Target.Icon }` } />
+                                );
 
                         return (
                             <CommandButton
                                 Active={ false }
-                                Description={ CommandPresentation.Description }
+                                ApplicationIcon={ ApplicationIcon }
+                                Description={ Description }
+                                Disabled={ Command.Disabled }
                                 Icon={ <Icon /> }
                                 Label={ CommandPresentation.Label }
+                                OnHoverChange={ Command.Target === undefined
+                                    ? undefined
+                                    : (Hovered: boolean) => Preview(
+                                        Hovered ? Command.Id : null
+                                    ) }
                                 OnInvoke={ () => Invoke(Command.Id) }
                                 Shortcut={ Command.Shortcut }
                                 key={ Command.Id } />

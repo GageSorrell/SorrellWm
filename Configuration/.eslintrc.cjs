@@ -7,6 +7,10 @@
 
 module.exports = {
     root: true,
+    ignorePatterns:
+    [
+        "**/Noodle/*"
+    ],
     extends: [ "@sorrell/eslint-config" ],
     rules: {
         "jsdoc/no-blank-block-descriptions": "off",

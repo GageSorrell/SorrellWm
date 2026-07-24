@@ -19,7 +19,7 @@ export default defineConfig({
         {
             lib:
             {
-                entry: join(ApplicationDirectory, "Source/Main/index.ts")
+                entry: join(ApplicationDirectory, "Source/Main/Entry.ts")
             },
             outDir: join(BuildDirectory, "Main"),
             rollupOptions:
@@ -37,7 +37,7 @@ export default defineConfig({
             externalizeDeps: false,
             lib:
             {
-                entry: join(ApplicationDirectory, "Source/Preload/index.ts")
+                entry: join(ApplicationDirectory, "Source/Preload/Entry.ts")
             },
             outDir: join(BuildDirectory, "Preload"),
             rollupOptions:

@@ -1,0 +1,17 @@
+{
+    "extends": "@sorrell/tsconfig",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "noEmit": false,
+        "outDir": "./Intermediate/Showcase",
+        "rootDir": ".",
+        "tsBuildInfoFile": "./Intermediate/TypeScript/tsconfig.showcase.tsbuildinfo",
+        "types": [
+            "node"
+        ]
+    },
+    "include": [
+        "Showcase",
+        "Source"
+    ]
+}

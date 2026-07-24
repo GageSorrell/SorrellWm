@@ -402,8 +402,6 @@ Napi::Value SubscribeToKeyboard(const Napi::CallbackInfo& CallbackInfo)
         return Out.Fail(Error.what());
     }
 
-    std::cout << "Subscribed to keyboard event with Identifier " << Identifier << std::endl;
-
     return Out.Succeed(Napi::Number::New(Environment, Identifier));
 }
 

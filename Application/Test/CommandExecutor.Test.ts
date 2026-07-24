@@ -9,10 +9,10 @@
  * @license   MIT
  */
 
-import * as AppSettings from "../Source/Main/AppSettings.js";
+import * as AppSettings from "../Source/Main/AppSettings/AppSettings.ts";
 import * as BrowserWindow from "../Source/Main/BrowserWindow.js";
-import * as CommandResolver from "../Source/Main/CommandResolver.js";
-import * as OverlaySession from "../Source/Main/OverlaySession.js";
+import * as CommandResolver from "../Source/Main/Command/Resolver.ts";
+import * as OverlaySession from "../Source/Main/Overlay/Session.ts";
 import * as Ui from "../Source/Main/Command/Ui.js";
 import * as Wm from "../Source/Main/Command/Wm.js";
 import { Box, type Box as MathBox } from "@sorrell/math";
@@ -20,7 +20,7 @@ import {
     CommandExecutor,
     Live,
     UnsupportedCommandError
-} from "../Source/Main/CommandExecutor.js";
+} from "../Source/Main/Command/Executor.ts";
 import { Deferred, Effect, Layer, Option, Queue, Result, Stream, pipe } from "effect";
 import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
 import { type OverlayScreenDto, OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
@@ -108,7 +108,7 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(Live),
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
-            Effect.provide(FakeOverlaySession),
+            Effect.provide(FakeOverlaySession()),
             Effect.provide(IdleResolver)
         ));
 
@@ -157,7 +157,7 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(Live),
             Effect.provide(FakeAppSettings(73)),
             Effect.provide(FakeBrowserWindow(Operations)),
-            Effect.provide(FakeOverlaySession),
+            Effect.provide(FakeOverlaySession()),
             Effect.provide(IdleResolver)
         ));
 
@@ -169,6 +169,39 @@ describe("CommandExecutor.Execute", () =>
             "SetForegroundWindow:42"
         ]);
         expect(WindowsWindow.SetForegroundWindow).toHaveBeenCalledWith(ForegroundWindow);
+    });
+
+    it("focuses the current directional target and closes the overlay", async() =>
+    {
+        const TargetWindow = 84n as Handle.HWND;
+        const Operations = new Array<string>();
+        vi.mocked(WindowsWindow.SetForegroundWindow).mockImplementation((
+            WindowHandle: Handle.HWND
+        ) =>
+        {
+            Operations.push(`SetForegroundWindow:${ WindowHandle }`);
+            return Result.succeed(undefined);
+        });
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "FocusMoveRight"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(Option.some(TargetWindow))),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Operations).toEqual([
+            "Hide:Overlay",
+            "SetForegroundWindow:84"
+        ]);
     });
 });
 
@@ -203,7 +236,7 @@ describe("CommandExecutor.Live", () =>
                     Operations,
                     Deferred.succeed(Hidden, undefined)
                 )),
-                Effect.provide(FakeOverlaySession),
+                Effect.provide(FakeOverlaySession()),
                 Effect.provide(ResolverLive)
             );
         }));
@@ -230,6 +263,7 @@ const FakeAppSettings = (
         OverlayBackdropIntensity,
         OverlayRoundedCorners: true,
         RunAtStartup: true,
+        ShowTitlebarFlyout: true,
         Theme: "System"
     };
     const Service: AppSettings.Service = {
@@ -246,9 +280,12 @@ const FakeAppSettings = (
     return Layer.succeed(AppSettings.AppSettings, Service);
 };
 
-const FakeOverlaySession = Layer.suspend(() =>
+const FakeOverlaySession = (
+    FocusTarget: Option.Option<Handle.HWND> = Option.none()
+) => Layer.suspend(() =>
 {
     let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.Home ];
+    let ActivationWindow = Option.none<Handle.HWND>();
     const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.Home;
 
     return Layer.succeed(OverlaySession.OverlaySession, {
@@ -257,20 +294,37 @@ const FakeOverlaySession = Layer.suspend(() =>
             Stack = Stack.length > 1 ? Stack.slice(0, -1) : Stack;
         }),
         Changes: Stream.empty,
+        ClearActivationWindow: Effect.sync((): void =>
+        {
+            ActivationWindow = Option.none();
+        }),
+        ClearFocusPreview: Effect.void,
         Current: Effect.sync(Current),
         Navigate: (Screen: OverlayScreenId) => Effect.sync((): void =>
         {
             Stack = [ ...Stack, Screen ];
         }),
+        PreviewFocusTarget: () => Effect.void,
         Reset: Effect.sync((): void =>
         {
             Stack = [ OverlayScreenId.Home ];
+        }),
+        ResolveFocusTarget: () => Effect.succeed(FocusTarget),
+        SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
+        {
+            ActivationWindow = Option.some(WindowHandle);
         }),
         Snapshot: Effect.sync((): OverlayScreenDto => ({
             CanGoBack: Stack.length > 1,
             Commands: [ ],
             Id: Current()
-        }))
+        })),
+        TakeActivationWindow: Effect.sync(() =>
+        {
+            const CurrentActivationWindow = ActivationWindow;
+            ActivationWindow = Option.none();
+            return CurrentActivationWindow;
+        })
     });
 });
 
@@ -291,7 +345,9 @@ const FakeBrowserWindow = (
         Events: Stream.empty,
         Focus: (Key: BrowserWindow.Key) => Record(`Focus:${ Key }`),
         ForceClose: (Key: BrowserWindow.Key) => Record(`ForceClose:${ Key }`),
+        GetNativeHandle: () => Effect.succeed(99n as Handle.HWND),
         Hide: (Key: BrowserWindow.Key) => pipe(Record(`Hide:${ Key }`), Effect.andThen(OnHide)),
+        IsVisible: (_Key: BrowserWindow.Key) => Effect.succeed(false),
         Open: (Specification: BrowserWindow.Spec) => pipe(
             Record(`Open:${ Specification.Key }`),
             Effect.as({

@@ -10,10 +10,11 @@
  */
 
 export * as Subscription from "./Subscription.js";
+export * as File from "./File.js";
 export * as Handle from "./Handle.js";
-export * as Key from "./Key.js";
 export * as Keyboard from "./Keyboard.js";
 export * as MessageLoop from "./MessageLoop.js";
+export * as Screen from "./Screen.js";
 export * as Theme from "./Theme.js";
 export * as Thread from "./Thread.js";
 export * as Time from "./Time.js";

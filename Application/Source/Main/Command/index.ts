@@ -10,5 +10,7 @@
  */
 
 export * as Command from "./Command.ts";
+export * as Executor from "./Executor.ts";
+export * as Resolver from "./Resolver.ts";
 export * as Ui from "./Ui.ts";
 export * as Wm from "./Wm.ts";

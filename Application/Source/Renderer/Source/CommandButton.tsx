@@ -23,14 +23,26 @@ import type { ShortcutDto } from "../../Shared/Hotkey.js";
 export interface CommandButtonProps
 {
     readonly Active: boolean;
+    readonly ApplicationIcon?: React.ReactNode | undefined;
     readonly Description: string;
+    readonly Disabled?: boolean | undefined;
     readonly Icon: NonNullable<ButtonProps["icon"]>;
     readonly Label: string;
+    readonly OnHoverChange?: ((Hovered: boolean) => void) | undefined;
     readonly OnInvoke: () => void;
     readonly Shortcut: ShortcutDto;
 }
 
 const UseStyles = makeStyles({
+    ApplicationIcon: {
+        alignItems: "center",
+        display: "inline-flex",
+        flexShrink: 0,
+        fontSize: "1.5rem",
+        height: "1.5rem",
+        justifyContent: "center",
+        width: "1.5rem"
+    },
     Button: {
         display: "grid",
         gridTemplateColumns: "auto minmax(0, 1fr) auto",
@@ -70,6 +82,11 @@ const UseStyles = makeStyles({
         display: "inline-flex",
         fontFamily: "inherit",
         ...shorthands.gap("0.25rem")
+    },
+    Trailing: {
+        alignItems: "center",
+        display: "inline-flex",
+        ...shorthands.gap("0.75rem")
     }
 });
 
@@ -109,8 +126,11 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
             appearance={ Props.Active ? "primary" : "subtle" }
             aria-pressed={ Props.Active }
             className={ Styles.Button }
+            disabled={ Props.Disabled === true }
             icon={ Props.Icon }
             onClick={ Props.OnInvoke }
+            onMouseEnter={ () => Props.OnHoverChange?.(true) }
+            onMouseLeave={ () => Props.OnHoverChange?.(false) }
             size="large"
             title={ Props.Description }>
             <span className={ Styles.Content }>
@@ -119,16 +139,26 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
                     { Props.Description }
                 </span>
             </span>
-            <kbd
-                aria-label={ ShortcutParts.join(" plus ") }
-                className={ Styles.Shortcut }>
-                { ShortcutParts.map((Part: string, Index: number) => (
-                    <React.Fragment key={ Part }>
-                        { Index > 0 && <span aria-hidden="true">+</span> }
-                        <span className={ Styles.Keycap }>{ Part }</span>
-                    </React.Fragment>
-                )) }
-            </kbd>
+            <span className={ Styles.Trailing }>
+                { Props.ApplicationIcon !== undefined && (
+                    <span
+                        aria-hidden="true"
+                        className={ Styles.ApplicationIcon }
+                        data-testid="application-icon">
+                        { Props.ApplicationIcon }
+                    </span>
+                ) }
+                <kbd
+                    aria-label={ ShortcutParts.join(" plus ") }
+                    className={ Styles.Shortcut }>
+                    { ShortcutParts.map((Part: string, Index: number) => (
+                        <React.Fragment key={ Part }>
+                            { Index > 0 && <span aria-hidden="true">+</span> }
+                            <span className={ Styles.Keycap }>{ Part }</span>
+                        </React.Fragment>
+                    )) }
+                </kbd>
+            </span>
         </Button>
     );
 };

@@ -11,6 +11,7 @@
  */
 
 export * as Cardinal from "./Cardinal.ts";
+export * as Error from "./Error.ts";
 export * as Function from "./Function.ts";
 export * as Math from "./Math/index.ts";
 

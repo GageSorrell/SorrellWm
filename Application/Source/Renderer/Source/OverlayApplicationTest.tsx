@@ -7,7 +7,11 @@
  * @license   MIT
  */
 
-import type { OverlayCommandDto, OverlayScreenDto } from "../../Shared/OverlayCommand.js";
+import type {
+    OverlayCommandDto,
+    OverlayCommandTargetDto,
+    OverlayScreenDto
+} from "../../Shared/OverlayCommand.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { OverlayApplication } from "./OverlayApplication.js";
@@ -26,10 +30,28 @@ const HomeScreen: OverlayScreenDto = {
 const FocusScreen: OverlayScreenDto = {
     CanGoBack: true,
     Commands: [
-        Command("FocusMoveLeft", "SelectLeft", "H", 0x48),
-        Command("FocusMoveUp", "SelectUp", "K", 0x4B),
-        Command("FocusMoveDown", "SelectDown", "J", 0x4A),
-        Command("FocusMoveRight", "SelectRight", "L", 0x4C)
+        Command(
+            "FocusMoveLeft",
+            "SelectLeft",
+            "H",
+            0x48,
+            { Icon: "left-icon", Title: "Left App" }
+        ),
+        Command(
+            "FocusMoveUp",
+            "SelectUp",
+            "K",
+            0x4B,
+            { Title: "Upper App" }
+        ),
+        Command("FocusMoveDown", "SelectDown", "J", 0x4A, undefined, true),
+        Command(
+            "FocusMoveRight",
+            "SelectRight",
+            "L",
+            0x4C,
+            { Title: "Right App" }
+        )
     ],
     Id: "Focus"
 };
@@ -41,16 +63,17 @@ describe("OverlayApplication", () =>
         vi.clearAllMocks();
         vi.mocked(window.sorrell.overlay.get).mockResolvedValue(HomeScreen);
         vi.mocked(window.sorrell.overlay.invoke).mockResolvedValue();
+        vi.mocked(window.sorrell.overlay.preview).mockResolvedValue();
     });
 
     it("renders the primary commands in action-key order and invokes them", async() =>
     {
         render(<OverlayApplication />);
 
-        expect(await screen.findByRole("button", { name: "Choose Action" }))
+        expect(await screen.findByRole("button", { name: "SorrellWm" }))
             .toHaveAttribute("aria-current", "page");
         expect(screen.getByText("Choose how to manage your windows.")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /back/i })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Go Back" })).toBeDisabled();
 
         const CommandsRegion = screen.getByRole("region", { name: "Available commands" });
         const Buttons = within(CommandsRegion).getAllByRole("button");
@@ -72,7 +95,7 @@ describe("OverlayApplication", () =>
         expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("Move");
     });
 
-    it("renders the Focus screen's four placeholder commands and can go back", async() =>
+    it("renders Focus targets, icons, disabled directions, previews, and navigation", async() =>
     {
         vi.mocked(window.sorrell.overlay.get).mockResolvedValue(FocusScreen);
         render(<OverlayApplication />);
@@ -81,22 +104,39 @@ describe("OverlayApplication", () =>
             .toHaveAttribute("aria-current", "page");
         expect(screen.getByText("Choose a direction to move the focus selection."))
             .toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /move left/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /move up/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /move down/i })).toBeInTheDocument();
+        const MoveLeft = screen.getByRole("button", { name: /move left/i });
+        const MoveUp = screen.getByRole("button", { name: /move up/i });
+        const MoveDown = screen.getByRole("button", { name: /move down/i });
+
+        expect(MoveLeft).toHaveTextContent("Left App");
+        expect(MoveUp).toHaveTextContent("Upper App");
+        expect(MoveDown).toBeDisabled();
+        expect(MoveDown).toHaveTextContent("No window in this direction.");
         expect(screen.getByRole("button", { name: /move right/i })).toBeInTheDocument();
+        expect(within(MoveLeft).getByTestId("application-icon").querySelector("img"))
+            .toHaveAttribute("src", "data:image/png;base64,left-icon");
+        expect(within(MoveUp).getByTestId("application-icon").querySelector("svg"))
+            .not.toBeNull();
+        expect(within(MoveDown).queryByTestId("application-icon")).not.toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole("button", { name: /move left/i }));
+        fireEvent.mouseEnter(MoveLeft);
+        expect(window.sorrell.overlay.preview).toHaveBeenCalledWith("FocusMoveLeft");
+        fireEvent.mouseLeave(MoveLeft);
+        expect(window.sorrell.overlay.preview).toHaveBeenLastCalledWith(null);
+
+        fireEvent.click(MoveLeft);
         expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("FocusMoveLeft");
+        fireEvent.click(MoveDown);
+        expect(window.sorrell.overlay.invoke).toHaveBeenCalledTimes(1);
 
-        const BackButton = screen.getByRole("button", { name: "Back to Choose Action" });
+        const BackButton = screen.getByRole("button", { name: "Go Back" });
         expect(BackButton).toHaveAttribute("title", "Back");
         expect(BackButton).not.toHaveTextContent("Back");
 
         fireEvent.click(BackButton);
         expect(window.sorrell.overlay.back).toHaveBeenCalledOnce();
 
-        fireEvent.click(screen.getByRole("button", { name: "Choose Action" }));
+        fireEvent.click(screen.getByRole("button", { name: "SorrellWm" }));
         expect(window.sorrell.overlay.back).toHaveBeenCalledTimes(2);
     });
 });
@@ -106,10 +146,13 @@ function Command(
     Id: OverlayCommandDto["Id"],
     HotkeyId: OverlayCommandDto["HotkeyId"],
     KeyLabel: string,
-    KeyCode: number
+    KeyCode: number,
+    Target?: OverlayCommandTargetDto,
+    Disabled: boolean = false
 ): OverlayCommandDto
 {
     return {
+        Disabled,
         HotkeyId,
         Id,
         Shortcut:
@@ -123,6 +166,7 @@ function Command(
                 Shift: false,
                 Super: false
             }
-        }
+        },
+        ...(Target === undefined ? { } : { Target })
     };
 }

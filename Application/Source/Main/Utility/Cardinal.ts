@@ -11,16 +11,14 @@
 
 import { Function, type Record } from "effect";
 
-const TypeIdKey = "~sorrell/wm/Main/Utility/Cardinal" as const;
-
 export/** The type ID of this module. */
-const TypeId: unique symbol = Symbol.for(TypeIdKey);
+const TypeId = "~sorrell/wm/Main/Utility/Cardinal" as const;
 
 /** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
 
 const GetKey = (...Labels: ReadonlyArray<string>): string =>
-    [ TypeIdKey, "Cardinal", ...Labels ].join("!");
+    [ TypeId, "Cardinal", ...Labels ].join("!");
 
 export/** The upward direction in the plane, corresponding to the `+Y` direction in usual terms. */
 const Up: unique symbol = Symbol.for(GetKey("Up"));

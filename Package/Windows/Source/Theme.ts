@@ -11,7 +11,7 @@
 
 import { Option, pipe } from "effect";
 import { Attempt } from "./Internal/index.js";
-import { Binding } from "./Binding.ts";
+import { Binding } from "./Binding.js";
 
 /** A Windows accent color represented as a six-digit hexadecimal color. */
 export type AccentColor = `#${string}`;

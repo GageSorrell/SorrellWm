@@ -38,7 +38,8 @@ Object.defineProperty(window, "sorrell", {
                 Id: "Home"
             })),
             invoke: vi.fn(() => Promise.resolve()),
-            onChanged: vi.fn(() => (): void => undefined)
+            onChanged: vi.fn(() => (): void => undefined),
+            preview: vi.fn(() => Promise.resolve())
         },
         ping: vi.fn<() => Promise<string>>(() => Promise.resolve("pong")),
         platform: "win32",

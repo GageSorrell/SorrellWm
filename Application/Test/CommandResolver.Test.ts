@@ -9,14 +9,14 @@
  * @license   MIT
  */
 
-import * as OverlaySession from "../Source/Main/OverlaySession.js";
+import * as OverlaySession from "../Source/Main/Overlay/Session.ts";
 import * as Windows from "@sorrell/windows";
 import {
     CommandResolver,
     Live,
     Resolve,
     type Resolved
-} from "../Source/Main/CommandResolver.js";
+} from "../Source/Main/Command/Resolver.ts";
 import { Effect, Layer, Option, Stream, pipe } from "effect";
 import {
     Hotkey,
@@ -25,7 +25,7 @@ import {
     type Match,
     Phase,
     type Phase as PhaseType
-} from "../Source/Main/Hotkey.js";
+} from "../Source/Main/Input/Hotkey.ts";
 import { describe, expect, it, vi } from "vitest";
 import { OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
 
@@ -200,10 +200,16 @@ describe("CommandResolver.Live", () =>
 const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Back: Effect.void,
     Changes: Stream.succeed(OverlayScreenId.Home),
+    ClearActivationWindow: Effect.void,
+    ClearFocusPreview: Effect.void,
     Current: Effect.succeed(OverlayScreenId.Home),
     Navigate: () => Effect.void,
+    PreviewFocusTarget: () => Effect.void,
     Reset: Effect.void,
-    Snapshot: Effect.succeed({ CanGoBack: false, Commands: [ ], Id: OverlayScreenId.Home })
+    ResolveFocusTarget: () => Effect.succeed(Option.none()),
+    SetActivationWindow: () => Effect.void,
+    Snapshot: Effect.succeed({ CanGoBack: false, Commands: [ ], Id: OverlayScreenId.Home }),
+    TakeActivationWindow: Effect.succeed(Option.none())
 });
 
 const Activation = (InId: Id, Key: Windows.VK.VK, InPhase: PhaseType): Match => ({

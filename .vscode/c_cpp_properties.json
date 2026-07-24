@@ -2,21 +2,18 @@
     "configurations": [
         {
             "name": "Win32",
-            "includePath":
-            [
-                "${workspaceFolder}/Application/Windows/Source/**",
-                "${workspaceFolder}/Application/Windows/ThirdParty/**"
+            "includePath": [
+                "${workspaceFolder}/Package/Windows/Source/**",
+                "${workspaceFolder}/Package/Windows/ThirdParty/**",
+                "${workspaceFolder}/Package/Windows/node_modules/node-addon-api/*"
             ],
-            "defines":
-            [
+            "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "browse":
-            {
-                "path":
-                [
+            "browse": {
+                "path": [
                     "${workspaceFolder}/Application/Windows/Source/**",
                     "${workspaceFolder}/Application/Windows/ThirdParty/**",
                     "${workspaceFolder}/Application/Windows/node_modules/node-addon-api",

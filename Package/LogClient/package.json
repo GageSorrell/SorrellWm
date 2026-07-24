@@ -1,0 +1,94 @@
+{
+    "name": "@sorrell/log-client",
+    "version": "1.0.0",
+    "description": "Effect-powered Ink client for viewing local @sorrell/log streams.",
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/LogClient#readme",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/LogClient",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "bin": {
+        "sorrell-log-client": "./Distribution/Cli.js"
+    },
+    "exports": {
+        ".": {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./Client": {
+            "import": "./Distribution/Client.js",
+            "types": "./Distribution/Client.d.ts"
+        },
+        "./Components": {
+            "import": "./Distribution/Components.js",
+            "types": "./Distribution/Components.d.ts"
+        },
+        "./Global": {
+            "import": "./Distribution/Global.js",
+            "types": "./Distribution/Global.d.ts"
+        },
+        "./Arguments": {
+            "import": "./Distribution/Arguments.js",
+            "types": "./Distribution/Arguments.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "Distribution",
+        "License.md",
+        "ReadMe.md"
+    ],
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts,.tsx Source Test",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
+    },
+    "dependencies": {
+        "@sorrell/log": "1.0.0",
+        "effect": "^4.0.0-beta.101"
+    },
+    "peerDependencies": {
+        "@sorrell/ink-ui": "^1.0.0",
+        "ink": "^7.1.0",
+        "react": ">=19.2.0 <20"
+    },
+    "peerDependenciesMeta": {
+        "@sorrell/ink-ui": {
+            "optional": true
+        },
+        "ink": {
+            "optional": true
+        },
+        "react": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@sorrell/ink-ui": "1.0.0",
+        "@sorrell/tsconfig": "1.0.0",
+        "@types/node": "26.1.1",
+        "@types/react": "19.2.17",
+        "cross-env": "10.1.0",
+        "ink": "7.1.0",
+        "ink-testing-library": "4.0.0",
+        "react": "19.2.7",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    }
+}

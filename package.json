@@ -39,12 +39,18 @@
     },
     "workspaces": [
         "Application",
+        "Package/AppSettings",
+        "Package/DotEnv",
         "Package/EsBuildConfigSorrell",
         "Package/EsLintConfigSorrell",
-        "Package/AppSettings",
+        "Package/Log",
+        "Package/LogClient",
+        "Package/InkUi",
         "Package/Math",
         "Script/Setup",
+        "Script/WmScript",
         "Package/SorrellWmCodeExtension",
+        "Package/TsConfigSorrell",
         "Package/Windows"
     ],
     "allowScripts": {

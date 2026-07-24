@@ -64,9 +64,21 @@ const GetOverlayCommandDefinitions = (
     : HomeCommandDefinitions;
 
 /** A primary overlay command prepared for the renderer. */
+export interface OverlayCommandTargetDto
+{
+    /** Raw base64-encoded PNG data for the target application's icon. */
+    readonly Icon?: string;
+
+    /** The target window's current title. */
+    readonly Title: string;
+}
+
+/** A primary overlay command prepared for the renderer. */
 export interface OverlayCommandDto extends OverlayCommandDefinition
 {
+    readonly Disabled: boolean;
     readonly Shortcut: ShortcutDto;
+    readonly Target?: OverlayCommandTargetDto;
 }
 
 /** A complete renderer-safe snapshot of the current overlay screen. */
@@ -89,6 +101,19 @@ const IsOverlayScreenId = (Value: unknown): Value is OverlayScreenId =>
 
 const IsBoolean = (Value: unknown): Value is boolean => typeof Value === "boolean";
 
+const IsOverlayCommandTargetDto = (Value: unknown): Value is OverlayCommandTargetDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<OverlayCommandTargetDto>;
+
+    return typeof Candidate.Title === "string"
+        && (Candidate.Icon === undefined || typeof Candidate.Icon === "string");
+};
+
 const IsOverlayCommandDto = (Value: unknown): Value is OverlayCommandDto =>
 {
     if (typeof Value !== "object" || Value === null)
@@ -102,12 +127,17 @@ const IsOverlayCommandDto = (Value: unknown): Value is OverlayCommandDto =>
 
     return IsOverlayCommandId(Candidate.Id)
         && IsHotkeyId(Candidate.HotkeyId)
+        && IsBoolean(Candidate.Disabled)
         && typeof Shortcut?.KeyCode === "number"
         && typeof Shortcut.KeyLabel === "string"
         && IsBoolean(Modifiers?.Alt)
         && IsBoolean(Modifiers.Control)
         && IsBoolean(Modifiers.Shift)
-        && IsBoolean(Modifiers.Super);
+        && IsBoolean(Modifiers.Super)
+        && (
+            Candidate.Target === undefined
+            || IsOverlayCommandTargetDto(Candidate.Target)
+        );
 };
 
 export/** Determine whether an IPC value is a complete valid overlay-screen snapshot. */
