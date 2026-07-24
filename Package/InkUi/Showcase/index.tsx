@@ -9,10 +9,6 @@
  * @license   MIT
  */
 
-import type { ComponentType } from "react";
-import { useState } from "react";
-import { Box, Text, render, useApp, useInput, useWindowSize } from "ink";
-import { InteractionExample } from "./InteractionExample.js";
 import {
     Badge,
     CenterText,
@@ -26,8 +22,11 @@ import {
     HeaderBar,
     HeaderTable,
     HelpOverlay,
+    InteractionProvider,
     JsonBodyViewer,
     JumpBadge,
+    type MouseEvent,
+    MouseProvider,
     Overlay,
     PickerOverlay,
     ScrollArea,
@@ -40,6 +39,7 @@ import {
     ThemeProvider,
     TimelineDetailOverlay,
     TimelineEntry,
+    type TimelineEvent,
     TimelineTab,
     Tips,
     Toast,
@@ -49,8 +49,12 @@ import {
     View,
     ViewPane,
     YamlEditorOverlay,
-    type TimelineEvent
+    useMouseEvent
 } from "../Source/index.js";
+import { Box, type Key, Text, render, useApp, useInput, useWindowSize } from "ink";
+import type { ComponentType } from "react";
+import { InteractionExample } from "./InteractionExample.js";
+import { useState } from "react";
 
 const TimelineEvents: ReadonlyArray<TimelineEvent> = [
     {
@@ -183,7 +187,31 @@ const ViewExample = (): React.JSX.Element => (
     </View>
 );
 
-interface ShowcaseItem {
+const MouseReadout = (): React.JSX.Element =>
+{
+    const [ Event, SetEvent ] = useState<MouseEvent.MouseEvent | undefined>();
+    useMouseEvent(SetEvent);
+    return (
+        <Text>
+            { Event === undefined
+                ? "Move, click, drag, or scroll the mouse."
+                : `${ Event._tag }${
+                    "Position" in Event
+                        ? ` at ${ Event.Position.X },${ Event.Position.Y }`
+                        : ""
+                }` }
+        </Text>
+    );
+};
+
+const MouseProviderExample = (): React.JSX.Element => (
+    <MouseProvider>
+        <MouseReadout />
+    </MouseProvider>
+);
+
+interface ShowcaseItem
+{
     readonly Component: ComponentType;
     readonly Name: string;
 }
@@ -244,6 +272,7 @@ const Items: ReadonlyArray<ShowcaseItem> = [
     },
     { Component: InteractionExample, Name: "InteractionProvider" },
     { Component: () => <JumpBadge Hint="g" />, Name: "JumpBadge" },
+    { Component: MouseProviderExample, Name: "MouseProvider" },
     {
         Component: () => <Overlay Title="Example">Overlay content</Overlay>,
         Name: "Overlay"
@@ -332,13 +361,15 @@ const Showcase = (): React.JSX.Element =>
     const [ Page, SetPage ] = useState<ShowcaseItem | undefined>();
     const [ Selected, SetSelected ] = useState(0);
 
-    useInput((Input, Key) =>
+    useInput((Input: string, Key: Key) =>
     {
         if (Page !== undefined && Key.escape)
         {
             SetPage(undefined);
         }
-        else if (Page === undefined && (Input === "q" || Key.escape))
+        // else if (Input === "q" || Key.escape)
+        else if (Input === 100 as unknown as string)
+        // else if (Page === undefined && (Input === "q" || Key.escape))
         {
             exit();
         }
@@ -361,29 +392,31 @@ const Showcase = (): React.JSX.Element =>
     }
 
     return (
-        <Box flexDirection="column">
-            <GradientBadge Text="@sorrell/ink-ui showcase" />
-            <Text color={ DefaultTheme.TextMuted }>
-                Use ↑/↓ and Enter. Press q or Escape to exit.
-            </Text>
-            <ScrollArea
-                Height={ Math.max(4, rows - 4) }
-                Items={ Items }
-                OnSelect={ SetPage }
-                RenderItem={ (
-                    Item: ShowcaseItem,
-                    _Index: number,
-                    IsSelected: boolean
-                ) => (
-                    <Text color={ IsSelected
-                        ? DefaultTheme.Primary
-                        : DefaultTheme.Text }>
-                        { IsSelected ? "› " : "  " }{ Item.Name }
-                    </Text>
-                ) }
-                SelectedIndex={ Selected }
-                SetSelectedIndex={ SetSelected } />
-        </Box>
+        <InteractionProvider>
+            <Box flexDirection="column">
+                <GradientBadge Text="@sorrell/ink-ui showcase" />
+                <Text color={ DefaultTheme.TextMuted }>
+                    Use ↑/↓ and Enter. Press q or Escape to exit.
+                </Text>
+                <ScrollArea
+                    Height={ Math.max(4, rows - 4) }
+                    Items={ Items }
+                    OnSelect={ SetPage }
+                    RenderItem={ (
+                        Item: ShowcaseItem,
+                        _Index: number,
+                        IsSelected: boolean
+                    ) => (
+                        <Text color={ IsSelected
+                            ? DefaultTheme.Primary
+                            : DefaultTheme.Text }>
+                            { IsSelected ? "› " : "  " }{ Item.Name }
+                        </Text>
+                    ) }
+                    SelectedIndex={ Selected }
+                    SetSelectedIndex={ SetSelected } />
+            </Box>
+        </InteractionProvider>
     );
 };
 
@@ -392,7 +425,8 @@ render(
         <Showcase />
     </ThemeProvider>,
     {
-        alternateScreen: true,
+        // alternateScreen: true,
+        alternateScreen: false,
         exitOnCtrlC: true
     }
 );

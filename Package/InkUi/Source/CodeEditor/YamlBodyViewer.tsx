@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/Editor/YamlBodyViewer
+ * @module @sorrell/ink-ui/CodeEditor/YamlBodyViewer
  *
  * @file      YamlBodyViewer.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -9,11 +9,11 @@
  * @license   MIT
  */
 
-import * as Ink from "ink";
+import type * as Ink from "ink";
 import * as React from "react";
-import { useRoutedInput } from "../Interaction/Shortcut.ts";
-import { Overlay } from "../Overlay/Overlay.tsx";
 import { CodeEditor } from "./CodeEditor.tsx";
+import { Overlay } from "../Overlay/Overlay.tsx";
+import { useRoutedInput } from "../Interaction/Shortcut.ts";
 
 /** {@inheritDoc YamlEditorOverlay} */
 export interface YamlEditorOverlayProps
@@ -29,7 +29,7 @@ export interface YamlEditorOverlayProps
 export/**
        * Presents an editable YAML document inside a modal overlay.
        *
-       * @category Editor
+       * @category CodeEditor
        * @since 1.0.0
        */
 const YamlEditorOverlay = ({

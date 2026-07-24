@@ -13,7 +13,7 @@ import type * as Ink from "ink";
 import * as React from "react";
 import { FormatTimestamp } from "./FormatTimestamp.ts";
 import { HeaderTable } from "../Header/HeaderTable.tsx";
-import { JsonBodyViewer } from "../Editor/JsonBodyViewer.tsx";
+import { JsonBodyViewer } from "../CodeEditor/JsonBodyViewer.tsx";
 import { Overlay } from "../Overlay/Overlay.tsx";
 import { Tabs } from "../Tabs.tsx";
 import type { TimelineEvent } from "./TimelineEvent.ts";

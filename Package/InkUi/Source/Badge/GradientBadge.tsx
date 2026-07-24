@@ -1,7 +1,7 @@
 /**
+ * A badge whose text has a gradient.
  *
- *
- * @module @sorrell/ink-ui/GradientBadge
+ * @module @sorrell/ink-ui/Badge/GradientBadge
  *
  * @file      GradientBadge.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>

@@ -1,7 +1,7 @@
 /**
+ * A small, framed indicator.
  *
- *
- * @module @sorrell/ink-ui/Badge
+ * @module @sorrell/ink-ui/Badge/Badge
  *
  * @file      Badge.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -11,7 +11,7 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { useTheme } from "../Theme.js";
+import { useTheme } from "../Theme.tsx";
 
 /** {@inheritDoc Badge} */
 export interface BadgeProps extends React.PropsWithChildren

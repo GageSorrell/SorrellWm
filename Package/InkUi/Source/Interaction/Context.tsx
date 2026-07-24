@@ -13,11 +13,12 @@ import * as Ink from "ink";
 import * as React from "react";
 import { CommandRegistry, FocusCommands } from "./Command.js";
 import { FocusRegistry } from "./Focus.js";
+import { ShortcutFooter } from "./Shortcut.ts";
 
 export/** The identifier for this module. */
 const TypeId = "@sorrell/ink-ui/Interaction/Context" as const;
 
-interface InteractionContextValue
+interface InteractionContext
 {
     readonly Commands: CommandRegistry;
     readonly Focus: FocusRegistry;
@@ -30,7 +31,10 @@ export/**
        * @since 1.0.0
        */
 const InteractionContext =
-    React.createContext<InteractionContextValue | undefined>(undefined);
+    React.createContext<InteractionContext>({
+        Commands: undefined as unknown as any,
+        Focus: undefined as unknown as any
+    });
 
 export/**
        * The context that handles focus.
@@ -56,7 +60,7 @@ export/**
        * @category Interaction
        * @since 1.0.0
        */
-const UseInteraction = (): InteractionContextValue =>
+const UseInteraction = (): InteractionContext =>
 {
     const Context = React.useContext(InteractionContext);
     if (Context === undefined)
@@ -73,6 +77,7 @@ export interface InteractionProviderProps extends React.PropsWithChildren
 {
     readonly Active?: boolean;
     readonly InitialFocus?: string | undefined;
+    readonly ShowFooter?: boolean;
     readonly Wrap?: boolean;
 }
 
@@ -86,6 +91,7 @@ const InteractionProvider = ({
     Active = true,
     children,
     InitialFocus,
+    ShowFooter = true,
     Wrap = true
 }: InteractionProviderProps): React.ReactNode =>
 {
@@ -158,15 +164,21 @@ const InteractionProvider = ({
     }, { isActive: Active });
 
     const Context = React.useMemo(
-        () => ({ Commands, Focus }),
-        [ Commands, Focus ]
+        () => ({ Commands, Focus, ShowFooter }),
+        [ Commands, Focus, ShowFooter ]
     );
 
     return (
         <InteractionContext.Provider value={ Context }>
             <CommandScopeContext.Provider value={ TypeId }>
                 <FocusScopeContext.Provider value={ TypeId }>
-                    { children }
+                    { Context.ShowFooter
+                        ? <>
+                            { children }
+                            <ShortcutFooter />
+                        </>
+                        : children
+                    }
                 </FocusScopeContext.Provider>
             </CommandScopeContext.Provider>
         </InteractionContext.Provider>

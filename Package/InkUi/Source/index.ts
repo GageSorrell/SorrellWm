@@ -9,11 +9,15 @@
  * @license   MIT
  */
 
+export * from "./Badge/index.js";
+export * from "./Header/index.js";
 export * from "./CenterText.js";
 export * from "./Checkbox.js";
+export * from "./CodeEditor/index.ts";
 export * from "./CompletionMenu.tsx";
 export * from "./Frame.tsx";
 export * from "./Interaction/index.ts";
+export * from "./Mouse/index.ts";
 export * from "./Overlay/index.ts";
 export * from "./ScrollArea.tsx";
 export * from "./Select.tsx";

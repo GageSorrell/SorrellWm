@@ -1,7 +1,7 @@
 /**
+ * A badge that indicates a keybind that can be pressed to perform a relevant action.
  *
- *
- * @module @sorrell/ink-ui/JumpBadge
+ * @module @sorrell/ink-ui/Badge/JumpBadge
  *
  * @file      JumpBadge.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>

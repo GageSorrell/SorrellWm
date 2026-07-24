@@ -12,6 +12,8 @@
 import * as Ink from "ink";
 import * as React from "react";
 import { CommandScopeContext, InteractionContext, UseInteraction } from "./Context.tsx";
+import { useTheme } from "../Theme.tsx";
+import { JumpBadge } from "../Badge/JumpBadge.tsx";
 
 /**
  * A registered shortcut with internal annotations.
@@ -165,55 +167,55 @@ const GetKeyChord = (
     let Base: string | undefined;
     if (Key.upArrow)
     {
-        Base = "up";
+        Base = "↑";
     }
     else if (Key.downArrow)
     {
-        Base = "down";
+        Base = "↓";
     }
     else if (Key.leftArrow)
     {
-        Base = "left";
+        Base = "←";
     }
     else if (Key.rightArrow)
     {
-        Base = "right";
+        Base = "→";
     }
     else if (Key.pageUp)
     {
-        Base = "pageup";
+        Base = "PgUp";
     }
     else if (Key.pageDown)
     {
-        Base = "pagedown";
+        Base = "PgDn";
     }
     else if (Key.home)
     {
-        Base = "home";
+        Base = "Home";
     }
     else if (Key.end)
     {
-        Base = "end";
+        Base = "End";
     }
     else if (Key.return)
     {
-        Base = "enter";
+        Base = "⏎";
     }
     else if (Key.escape)
     {
-        Base = "escape";
+        Base = "Esc";
     }
     else if (Key.tab)
     {
-        Base = "tab";
+        Base = "⭾";
     }
     else if (Key.backspace)
     {
-        Base = "backspace";
+        Base = "⌫";
     }
     else if (Key.delete)
     {
-        Base = "delete";
+        Base = "del";
     }
     else if (Input === " ")
     {
@@ -268,7 +270,7 @@ export/**
 const useShortcut = (
     Keys: string | ReadonlyArray<string>,
     Command: string,
-    Options: UseShortcutOptions = {}
+    Options: UseShortcutOptions = { }
 ): void =>
 {
     const { Commands } = UseInteraction();
@@ -362,10 +364,11 @@ const useRoutedInput = (
 
     React.useLayoutEffect(() =>
     {
-        if (Interaction === undefined)
+        if (Interaction === undefined || Interaction.Commands === undefined)
         {
             return;
         }
+
         return Interaction.Commands.RegisterInputHandler(
             ScopeId,
             (Input: string, Key: Ink.Key) =>
@@ -374,4 +377,50 @@ const useRoutedInput = (
             Priority
         );
     }, [ Active, Interaction, Priority, ScopeId ]);
+};
+
+export const ShortcutFooter = (): React.ReactNode =>
+{
+    const { Commands } = UseInteraction();
+    const Shortcuts = Commands.GetActiveShortcuts();
+
+    const Theme = useTheme();
+
+    const GetDisplayableShortcuts = (In: ReadonlyArray<InternalShortcut>) =>
+    {
+        return In.filter(({ Label }: InternalShortcut) =>
+        {
+            return Label !== undefined;
+        });
+    };
+
+    const Hotkey = ({ Keys, Label }: InternalShortcut): React.ReactNode =>
+    {
+        return (
+            <Ink.Box gap={ 1 }>
+                <JumpBadge Hint={ Keys.join("+") } />
+                <Ink.Text color={ Theme.Text }>
+                    { Label }
+                </Ink.Text>
+            </Ink.Box>
+        );
+    };
+
+    return (
+        <Ink.Box
+            alignItems="flex-start"
+            borderTop
+            borderTopColor={ Theme.Border }
+            flexDirection="row"
+            flexWrap="wrap"
+            justifyContent="space-around">
+            {
+                GetDisplayableShortcuts(Shortcuts).map((ActiveShortcut: InternalShortcut) =>
+                    <Hotkey
+                        { ...ActiveShortcut }
+                        key={ ActiveShortcut.Keys.join("+") }
+                    />)
+            }
+        </Ink.Box>
+    );
 };

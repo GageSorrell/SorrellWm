@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/Editor/JsonBodyViewer
+ * @module @sorrell/ink-ui/CodeEditor/JsonBodyViewer
  *
  * @file      JsonBodyViewer.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -22,7 +22,7 @@ export interface JsonBodyViewerProps
 export/**
        * Pretty-prints and syntax-highlights JSON-compatible data.
        *
-       * @category Editor
+       * @category CodeEditor
        * @since 1.0.0
        */
 const JsonBodyViewer = ({

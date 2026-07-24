@@ -362,6 +362,23 @@ export class CommandRegistry
         return false;
     }
 
+    public GetAllShortcuts(): ReadonlyArray<InternalShortcut>
+    {
+        return structuredClone(this.Shortcuts);
+    }
+
+    public GetActiveShortcuts(): ReadonlyArray<InternalShortcut>
+    {
+        const RegisteredShortcuts: ReadonlyArray<RegisteredShortcut> = this.GetShortcuts();
+        return RegisteredShortcuts.map((Registered: RegisteredShortcut) =>
+        {
+            return this.Shortcuts.find((Internal: InternalShortcut) =>
+            {
+                return Registered.Id === Internal.Id;
+            })!;
+        });
+    }
+
     public GetShortcuts(StartScopeId: string = TypeId): ReadonlyArray<RegisteredShortcut>
     {
         const Result: Array<RegisteredShortcut> = [ ];

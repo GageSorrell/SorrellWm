@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/Editor/CodeLanguage
+ * @module @sorrell/ink-ui/CodeEditor/CodeLanguage
  *
  * @file      CodeLanguage.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -12,7 +12,7 @@
 /**
  * The languages supported by the `CodeEditor` component.
  *
- * @category Editor
+ * @category CodeEditor
  * @since 1.0.0
  */
 export type CodeLanguage =

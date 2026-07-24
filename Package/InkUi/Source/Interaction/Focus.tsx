@@ -57,9 +57,9 @@ export class FocusRegistry
     private readonly Scopes = new Map<string, RegisteredFocusScope>();
     private CurrentId: string | undefined;
     private InitialFocus: string | undefined;
-    private InitialFocusApplied = false;
-    private Sequence = 0;
-    private Version = 0;
+    private InitialFocusApplied: boolean = false;
+    private Sequence: number = 0;
+    private Version: number = 0;
 
     public constructor(InitialFocus?: string, Wrap = true)
     {
@@ -487,6 +487,7 @@ export class FocusRegistry
     }
 }
 
+/** {@inheritDoc FocusScope} */
 export interface FocusScopeProps extends React.PropsWithChildren
 {
     readonly Active?: boolean;
@@ -579,6 +580,7 @@ const FocusScope = ({
     );
 };
 
+/** {@inheritDoc useFocusable} */
 export interface UseFocusableOptions
 {
     readonly AutoFocus?: boolean;
@@ -590,6 +592,12 @@ export interface UseFocusableOptions
     readonly Order?: number;
 }
 
+/**
+ * Imperative handle given by {@link useFocusable}.
+ *
+ * @category Interaction
+ * @since 1.0.0
+ */
 export interface FocusableState
 {
     readonly Blur: () => void;
@@ -664,16 +672,17 @@ const UseFocusableRegistration = ({
     };
 };
 
-/**
- * Registers a custom component with the nearest focus scope.
- *
- * @category Interaction
- * @since 1.0.0
- */
-export const useFocusable = (
-    Options: UseFocusableOptions = {}
+export/**
+       * Registers a custom component with the nearest focus scope.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const useFocusable = (
+    Options: UseFocusableOptions = { }
 ): FocusableState => UseFocusableRegistration(Options);
 
+/** {@inheritDoc Focusable} */
 export interface FocusableProps extends UseFocusableOptions
 {
     readonly children?:
@@ -681,13 +690,13 @@ export interface FocusableProps extends UseFocusableOptions
         | ((State: FocusableState) => React.ReactNode);
 }
 
-/**
- * Registers its render-prop child as a focus target and command target.
- *
- * @category Interaction
- * @since 1.0.0
- */
-export const Focusable = ({
+export/**
+       * Registers its render-prop child as a focus target and command target.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const Focusable = ({
     children,
     Id,
     ...Options
@@ -720,6 +729,7 @@ export const Focusable = ({
     );
 };
 
+/** {@inheritDoc useFocusManager} */
 export interface FocusManager
 {
     readonly Blur: () => void;
@@ -731,13 +741,13 @@ export interface FocusManager
     readonly FocusedId: string | undefined;
 }
 
-/**
- * Returns programmatic focus controls and the currently focused identifier.
- *
- * @category Interaction
- * @since 1.0.0
- */
-export const useFocusManager = (): FocusManager =>
+export/**
+       * Returns programmatic focus controls and the currently focused identifier.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const useFocusManager = (): FocusManager =>
 {
     const { Focus } = UseInteraction();
     React.useSyncExternalStore(

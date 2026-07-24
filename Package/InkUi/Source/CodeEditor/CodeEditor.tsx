@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/Editor/CodeEditor
+ * @module @sorrell/ink-ui/CodeEditor/CodeEditor
  *
  * @file      CodeEditor.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -126,7 +126,7 @@ const TokenizeYaml = (Line: string): ReadonlyArray<SyntaxSegment> =>
 export/**
        * Edits or views multiline code with lightweight JSON and YAML highlighting.
        *
-       * @category Editor
+       * @category CodeEditor
        * @since 1.0.0
        */
 const CodeEditor = ({

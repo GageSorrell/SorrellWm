@@ -151,6 +151,32 @@ Key chords are case-insensitive and normalize common names, so
 handles the command by returning `true` or `void`; return `false` to let the
 same command bubble to the parent scope.
 
+### Mouse input
+
+- `MouseProvider`
+- `useMouse`
+- `useMouseEvent`
+- `useTerminalMouseTracking`
+- `ParseTerminalMouseInput`
+
+`MouseProvider` enables SGR mouse and focus reporting and owns a single input
+listener for its descendants. Gesture recognition is terminal-native and does
+not load platform adapters. Double-click timing, allowable click drift, and
+drag activation distance are configured directly:
+
+```tsx
+<MouseProvider
+    DoubleClickTimeMs={500}
+    DoubleClickMaxDistance={1}
+    DragActivationDistance={{ X: 1, Y: 2 }}>
+    <App />
+</MouseProvider>
+```
+
+Distances are measured in terminal cells. A number applies to both axes.
+Defaults are 500 milliseconds and one cell. Subscribe inside the provider with
+`useMouseEvent`; use `useTerminalMouseTracking` only for a standalone listener.
+
 ### Input
 
 - `CompletionMenu`
@@ -181,14 +207,14 @@ same command bubble to the parent scope.
 
 ## Showcase
 
-The showcase is not part of the main package build. Build it separately:
+The showcase is not part of the main package build. Build it separately,
 
 ```sh
 npm run build:showcase --workspace @sorrell/ink-ui
 ```
 
 The generated files are written under `Intermediate/`, which is ignored by
-Git and npm. Run the interactive showcase with:
+Git and npm. Run the interactive showcase with
 
 ```sh
 npm run showcase --workspace @sorrell/ink-ui

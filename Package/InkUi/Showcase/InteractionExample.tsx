@@ -15,11 +15,12 @@ import {
     Command,
     CommandScope,
     Focusable,
+    type FocusableState,
     FocusScope,
     InteractionProvider,
     Shortcut,
     useCommandManager
-} from "../Source/Interaction.js";
+} from "../Source/Interaction/index.js";
 
 const ShortcutSummary = (): React.ReactNode =>
 {
@@ -64,7 +65,7 @@ export const InteractionExample = (): React.ReactNode =>
                             ) }
                         </Focusable>
                         <Focusable Id="second">
-                            { ({ Focused }) => (
+                            { ({ Focused }: FocusableState) => (
                                 <Text { ...(Focused ? { color: "cyan" } : {}) }>
                                     { Focused ? "› " : "  " }Second field
                                 </Text>

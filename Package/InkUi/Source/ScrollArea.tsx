@@ -12,6 +12,7 @@
 import * as Ink from "ink";
 import * as React from "react";
 import { useRoutedInput } from "./Interaction/Shortcut.ts";
+import { useCommand } from "./Interaction/Command.tsx";
 
 /** {@inheritDoc ScrollArea} */
 export interface ScrollAreaProps<A>
@@ -57,6 +58,9 @@ const ScrollArea = <A,>({
             SetSelectedIndex?.(SafeSelected);
         }
     }, [ SafeSelected, SelectedIndex, SetSelectedIndex ]);
+
+    // @TODO Make this use commands instead, and allow commands
+    // with keybinds to be assigned footer items arbitrarily with icons.
 
     useRoutedInput((_Input: string, Key: Ink.Key) =>
     {
