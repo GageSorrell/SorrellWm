@@ -29,6 +29,7 @@ const OverlayCommandId = Object.freeze({
     FocusMoveUp: "FocusMoveUp" as const,
     Insert: "Insert" as const,
     Move: "Move" as const,
+    OpenPerAppSettings: "OpenPerAppSettings" as const,
     Resize: "Resize" as const
 } as const);
 
@@ -67,11 +68,15 @@ const GetOverlayCommandDefinitions = (
 export interface OverlayCommandTargetDto
 {
     /** Raw base64-encoded PNG data for the target application's icon. */
-    readonly Icon?: string;
+    readonly Icon: string | undefined;
 
     /** The target window's current title. */
     readonly Title: string;
 }
+
+export/** {@inheritDoc OverlayCommandTargetDto:type} */
+const OverlayCommandTargetDto = (Args: Partial<OverlayCommandTargetDto>): OverlayCommandTargetDto =>
+    ({ Icon: Args.Icon, Title: Args.Title ?? "Untitled window" });
 
 /** A primary overlay command prepared for the renderer. */
 export interface OverlayCommandDto extends OverlayCommandDefinition
@@ -86,6 +91,7 @@ export interface OverlayScreenDto
 {
     readonly CanGoBack: boolean;
     readonly Commands: ReadonlyArray<OverlayCommandDto>;
+    readonly BottomCommand?: Required<OverlayCommandDto>;
     readonly Id: OverlayScreenId;
 }
 

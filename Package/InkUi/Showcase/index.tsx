@@ -43,14 +43,12 @@ import {
     TimelineTab,
     Tips,
     Toast,
-    UseInteraction,
     ValidationNotice,
     VarInput,
     VarText,
     View,
     ViewPane,
     YamlEditorOverlay,
-    useCommand,
     useMouseEvent
 } from "../Source/index.js";
 import { Box, type Key, Text, render, useApp, useInput, useWindowSize } from "ink";

@@ -11,7 +11,7 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { CommandRegistry, FocusCommands } from "./Command.js";
+import { BuiltIn, CommandRegistry } from "./Command.js";
 import { FocusRegistry } from "./Focus.js";
 import { ShortcutFooter } from "./Shortcut.ts";
 
@@ -114,22 +114,22 @@ const InteractionProvider = ({
     {
         const Disposers = [
             Commands.Register({
-                Command: FocusCommands.First,
+                Command: BuiltIn.Focus.First,
                 Handler: () => Focus.FocusFirst(),
                 ScopeId: TypeId
             }),
             Commands.Register({
-                Command: FocusCommands.Last,
+                Command: BuiltIn.Focus.Last,
                 Handler: () => Focus.FocusLast(),
                 ScopeId: TypeId
             }),
             Commands.Register({
-                Command: FocusCommands.Next,
+                Command: BuiltIn.Focus.Next,
                 Handler: () => Focus.FocusNext(),
                 ScopeId: TypeId
             }),
             Commands.Register({
-                Command: FocusCommands.Previous,
+                Command: BuiltIn.Focus.Previous,
                 Handler: () => Focus.FocusPrevious(),
                 ScopeId: TypeId
             })

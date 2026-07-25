@@ -9,19 +9,18 @@
  * @license   MIT
  */
 
-import * as AppSettings from "../AppSettings/AppSettings.ts";
 import * as BoxUtility from "../Utility/Math/Box.js";
-import * as BrowserWindow from "../BrowserWindow.ts";
 import * as OverlayCommandCatalog from "./CommandCatalog.ts";
+import { AppSettings, BrowserWindow } from "../index.ts";
 import {
     OverlayCommandId as CommandId,
     type OverlayCommandId,
-    type OverlayCommandTargetDto,
+    OverlayCommandTargetDto,
     type OverlayScreenDto,
     type OverlayScreenId,
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.js";
-import { Context, Effect, Layer, Option, Ref, Result, Stream, SubscriptionRef } from "effect";
+import { Context, Effect, Layer, Option, Ref, Result, Stream, Struct, SubscriptionRef } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import type { Box } from "@sorrell/math";
 
@@ -214,9 +213,7 @@ const ResolveTarget = (
     );
 };
 
-const GetTargetPresentation = (
-    Target: FocusWindowCandidate
-): OverlayCommandTargetDto =>
+const GetTargetPresentation = (Target: FocusWindowCandidate): OverlayCommandTargetDto =>
 {
     const Title = Option.getOrElse(
         Option.filter(
@@ -225,12 +222,13 @@ const GetTargetPresentation = (
         ),
         () => "Untitled window"
     );
+
     const Icon = Window.GetIcon(Target.Window);
 
     return {
-        ...(Option.isSome(Icon) ? { Icon: Icon.value } : { }),
+        Icon: Icon.valueOrUndefined,
         Title
-    };
+    } as const;
 };
 
 export/** Live overlay navigation state scoped to the application runtime. */
@@ -320,17 +318,24 @@ const Live = Layer.effect(
 
                 if (CurrentScreen === ScreenId.Focus)
                 {
-                    const CurrentWindow = yield* Ref.get(ActivationWindow);
+                    const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
 
                     for (const Id of FocusCommandIds)
                     {
-                        const Target = ResolveTarget(CurrentWindow, Id);
+                        const Target = ResolveTarget(CurrentWindowOpt, Id);
 
                         if (Option.isSome(Target))
                         {
                             FocusTargets[Id] = GetTargetPresentation(Target.value);
                         }
                     }
+
+                    FocusTargets.OpenPerAppSettings = OverlayCommandTargetDto({
+                        Title: Option.getOrElse(
+                            Option.flatMap(CurrentWindowOpt, Window.GetWindowText),
+                            () => "Untitled window"
+                        )
+                    });
                 }
 
                 return OverlayCommandCatalog.FromKeybindSettings(

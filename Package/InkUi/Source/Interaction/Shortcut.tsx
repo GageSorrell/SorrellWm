@@ -11,10 +11,22 @@
 
 import * as Ink from "ink";
 import * as React from "react";
+import {
+    Array,
+    Boolean,
+    Function,
+    Option,
+    Predicate,
+    Struct,
+    pipe
+} from "effect";
+import {
+    type CommandId,
+    CommandIdToString,
+    useCommandManager
+} from "./Command.tsx";
 import { CommandScopeContext, InteractionContext, UseInteraction } from "./Context.tsx";
-import { JumpBadge } from "../Badge/JumpBadge.tsx";
 import { useTheme } from "../Theme.tsx";
-import { Array, Boolean, Function, pipe, Struct } from "effect";
 
 /**
  * A registered shortcut with internal annotations.
@@ -24,7 +36,7 @@ import { Array, Boolean, Function, pipe, Struct } from "effect";
  */
 export interface ShortcutRegistration
 {
-    readonly Command: string;
+    readonly Command: CommandId;
     readonly Description?: string | undefined;
     readonly Enabled?: boolean;
     readonly Hidden?: boolean;
@@ -74,9 +86,15 @@ export interface InternalShortcut extends RegisteredShortcut
     readonly Sequence: number;
 }
 
+/**
+ * A group of shortcuts that are represented with a custom, unified entry in the footer.
+ *
+ * @category Interaction
+ * @since 1.0.0
+ */
 export interface GroupShortcut extends Pick<ShortcutRegistration, "ScopeId">
 {
-    readonly Commands: ReadonlyArray<string>;
+    readonly Commands: Array.NonEmptyReadonlyArray<CommandId>;
     readonly Label: string;
     readonly Glyph: string;
 }
@@ -104,23 +122,66 @@ export/**
        */
 const KeyAliases: Readonly<Record<string, string>> =
     {
-        cmd: "meta",
-        command: "meta",
-        control: "ctrl",
-        del: "delete",
-        downarrow: "down",
-        esc: "escape",
-        leftarrow: "left",
-        option: "meta",
-        pgdn: "pagedown",
-        pgup: "pageup",
-        return: "enter",
-        rightarrow: "right",
-        spacebar: "space",
-        upArrow: "up",
-        uparrow: "up",
-        win: "super",
-        windows: "super"
+        alt: "Alt",
+        // alt: "⎇",
+        backTab: "⇤",
+        backspace: "⌫",
+        // break: "⎊",
+        break: "Break",
+        capsLock: "⇪",
+        clear: "⌧",
+        cmd: "⌘",
+        command: "⌘",
+        // ctrl: "⌃",
+        ctrl: "Ctrl",
+        del: "⌦",
+        downArrow: "↓",
+        end: "End",
+        // end: "⇲",
+        esc: "Esc",
+        escape: "Esc",
+        home: "Home",
+        // Home: "⇱",
+        ins: "Ins",
+        // insert: "⎀",
+        leftArrow: "←",
+        // numLock: "⇭",
+        numLock: "NumLock",
+        option: "⌥",
+        // pageDown: "⇟",
+        // pause: "⎉",
+        pause: "Pause",
+        pgdn: "PgDn",
+        pgup: "PgUp",
+        // pgUp: "⇞",
+        // pgUp: "⇞",
+        printScreen: "PrScr",
+        // printScreen: "⎙",
+        return: "⏎",
+        rightArrow: "→",
+        shift: "⇧",
+        space: "␣",
+        tab: "⇥",
+        upArrow: "↑",
+        win: "⊞",
+        windows: "⊞"
+        // cmd: "meta",
+        // command: "meta",
+        // control: "ctrl",
+        // del: "delete",
+        // downarrow: "down",
+        // esc: "escape",
+        // leftarrow: "left",
+        // option: "meta",
+        // pgdn: "pagedown",
+        // pgup: "pageup",
+        // return: "enter",
+        // rightarrow: "right",
+        // spacebar: "space",
+        // upArrow: "up",
+        // uparrow: "up",
+        // win: "super",
+        // windows: "super"
     };
 
 export/**
@@ -167,95 +228,118 @@ export/**
        * @category Interaction
        * @since 1.0.0
        */
-const GetKeyChord = (
-    Input: string,
-    Key: Ink.Key
-): string | undefined =>
+const GetKeyChordUnsafe: {
+    (Input: string, Key: Ink.Key): string;
+    (Key: Ink.Key): string;
+} = (InputOrKey: string | Ink.Key, MaybeKey?: Ink.Key): string =>
+{
+    return GetKeyChord(InputOrKey as any, MaybeKey as any).valueOrUndefined!;
+};
+
+export/**
+       * Converts Ink input data to the canonical chord used by shortcuts.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const GetKeyChord: {
+    (Input: string, Key: Ink.Key): Option.Option<string>;
+    (Key: Ink.Key): Option.Option<string>;
+} = (InputOrKey: string | Ink.Key, MaybeKey?: Ink.Key): Option.Option<string> =>
 {
     let Base: string | undefined;
-    if (Key.upArrow)
+
+    const KeyArg: Ink.Key = Predicate.isObject(InputOrKey)
+        ? InputOrKey
+        : MaybeKey!;
+
+    const InputArg: string | undefined = Predicate.isObject(InputOrKey)
+        ? undefined
+        : InputOrKey;
+
+    if (KeyArg.upArrow)
     {
         Base = "↑";
     }
-    else if (Key.downArrow)
+    else if (KeyArg.downArrow)
     {
         Base = "↓";
     }
-    else if (Key.leftArrow)
+    else if (KeyArg.leftArrow)
     {
         Base = "←";
     }
-    else if (Key.rightArrow)
+    else if (KeyArg.rightArrow)
     {
         Base = "→";
     }
-    else if (Key.pageUp)
+    else if (KeyArg.pageUp)
     {
         Base = "PgUp";
     }
-    else if (Key.pageDown)
+    else if (KeyArg.pageDown)
     {
         Base = "PgDn";
     }
-    else if (Key.home)
+    else if (KeyArg.home)
     {
         Base = "Home";
     }
-    else if (Key.end)
+    else if (KeyArg.end)
     {
         Base = "End";
     }
-    else if (Key.return)
+    else if (KeyArg.return)
     {
         Base = "⏎";
     }
-    else if (Key.escape)
+    else if (KeyArg.escape)
     {
         Base = "Esc";
     }
-    else if (Key.tab)
+    else if (KeyArg.tab)
     {
         Base = "⭾";
     }
-    else if (Key.backspace)
+    else if (KeyArg.backspace)
     {
         Base = "⌫";
     }
-    else if (Key.delete)
+    else if (KeyArg.delete)
     {
         Base = "del";
     }
-    else if (Input === " ")
+    else if (InputArg === " ")
     {
-        Base = "space";
+        Base = "␣";
     }
     else if (
-        Key.ctrl
-        && Input.length === 1
-        && Input.charCodeAt(0) >= 1
-        && Input.charCodeAt(0) <= 26
+        KeyArg.ctrl
+        && InputArg!.length === 1
+        && InputArg!.charCodeAt(0) >= 1
+        && InputArg!.charCodeAt(0) <= 26
     )
     {
-        Base = String.fromCharCode(Input.charCodeAt(0) + 96);
+        Base = String.fromCharCode(InputArg!.charCodeAt(0) + 96);
     }
-    else if (Input.length === 1)
+    else if (InputArg!.length === 1)
     {
-        Base = Input.toLowerCase();
+        Base = InputArg!.toLowerCase();
     }
 
     if (Base === undefined)
     {
-        return undefined;
+        return Option.none();
     }
 
-    return NormalizeKeyChord([
-        ...(Key.ctrl ? [ "ctrl" ] : [ ]),
-        ...(Key.meta ? [ "meta" ] : [ ]),
-        ...(Key.super ? [ "super" ] : [ ]),
-        ...(Key.hyper ? [ "hyper" ] : [ ]),
-        ...(Key.shift ? [ "shift" ] : [ ]),
+    return Option.some(NormalizeKeyChord([
+        ...(KeyArg.ctrl ? [ "ctrl" ] : [ ]),
+        ...(KeyArg.meta ? [ "meta" ] : [ ]),
+        ...(KeyArg.super ? [ "super" ] : [ ]),
+        ...(KeyArg.hyper ? [ "hyper" ] : [ ]),
+        ...(KeyArg.shift ? [ "shift" ] : [ ]),
         Base
-    ].join("+"));
+    ].join("+")));
 };
 
 /** {@inheritDoc useShortcut} */
@@ -277,7 +361,7 @@ export/**
        */
 const useShortcut = (
     Keys: string | ReadonlyArray<string>,
-    Command: string,
+    Command: CommandId,
     Options: UseShortcutOptions = { }
 ): void =>
 {
@@ -298,6 +382,7 @@ const useShortcut = (
         Command,
         Commands,
         KeysKey,
+        Options,
         Options.Description,
         Options.Enabled,
         Options.Hidden,
@@ -322,7 +407,7 @@ const useShortcutGroup = (
 
     React.useLayoutEffect(
         () => Commands.RegisterShortcutGroup(Struct.assign(Group, { ScopeId })),
-        [ Commands, ScopeId ]
+        [ Commands, Group, ScopeId ]
     );
 };
 
@@ -330,7 +415,7 @@ const useShortcutGroup = (
 export interface ShortcutProps extends UseShortcutOptions
 {
     readonly children?: React.ReactNode;
-    readonly Command: string;
+    readonly Command: CommandId;
     readonly Keys: string | ReadonlyArray<string>;
 }
 
@@ -411,23 +496,27 @@ export/**
 const ShortcutFooter = (): React.ReactNode =>
 {
     const { Commands } = UseInteraction();
-    const Shortcuts = Commands.GetActiveShortcuts();
+    // const Shortcuts = Commands.GetActiveShortcuts();
+    const Shortcuts = Commands.GetAllShortcuts();
 
     const Theme = useTheme();
 
-    const GetDisplayableShortcuts = (In: ReadonlyArray<InternalShortcut>) =>
-    {
-        return In.filter(({ Label }: InternalShortcut) =>
-        {
-            return Label !== undefined;
-        });
-    };
+    // const GetDisplayableShortcuts = (In: ReadonlyArray<InternalShortcut>) =>
+    // {
+    //     return In.filter(({ Label }: InternalShortcut) =>
+    //     {
+    //         return Label !== undefined;
+    //     });
+    // };
 
-    const Hotkey = ({ Keys, Label }: InternalShortcut): React.ReactNode =>
+    const HotkeyBase = ({ Glyph, Label }: Pick<GroupShortcut, "Glyph" | "Label">): React.ReactNode =>
     {
         return (
-            <Ink.Box gap={ 1 }>
-                <JumpBadge Hint={ Keys.join("+") } />
+            <Ink.Box>
+                <Ink.Text color={ Theme.Name }>
+                    { Glyph }
+                </Ink.Text>
+                <Ink.Text color={ Theme.TextMuted }>·</Ink.Text>
                 <Ink.Text color={ Theme.Text }>
                     { Label }
                 </Ink.Text>
@@ -435,22 +524,20 @@ const ShortcutFooter = (): React.ReactNode =>
         );
     };
 
-    const GroupHotkey = ({ Glyph: GlyphOverride, Label }: GroupShortcut): React.ReactNode =>
+    const Hotkey = ({ Keys, Label = "" }: InternalShortcut): React.ReactNode =>
     {
-        return (
-            <Ink.Box gap={ 1 }>
-                <JumpBadge Hint={ GlyphOverride } />
-                <Ink.Text color={ Theme.Text }>
-                    { Label }
-                </Ink.Text>
-            </Ink.Box>
-        );
+        const Glyph: string = Array.join(Keys, "+");
+        return <HotkeyBase { ...{ Glyph, Label } } />;
     };
+
+    const GroupHotkey = ({ Glyph, Label }: GroupShortcut): React.ReactNode =>
+        <HotkeyBase { ...{ Glyph, Label } } />;
 
     const Groups = Commands.GetShortcutGroups();
 
     const UngroupedShortcuts = Array.filter(
-        GetDisplayableShortcuts(Shortcuts),
+        // GetDisplayableShortcuts(Shortcuts),
+        Shortcuts,
         (InternalShortcut: InternalShortcut) => pipe(
             Groups,
             Array.map(Struct.get("Commands")),
@@ -463,6 +550,40 @@ const ShortcutFooter = (): React.ReactNode =>
         )
     );
 
+    // eslint-disable-next-line no-console
+    console.log("ALL Shortcuts: " + pipe(
+        Shortcuts,
+        Array.map(Struct.get("Command")),
+        Array.map(CommandIdToString),
+        Array.join(", ")
+    ) + (UngroupedShortcuts.length === 0 ? "(None)" : ""));
+
+    // eslint-disable-next-line no-console
+    console.log("Ungrouped Shortcuts: " + pipe(
+        UngroupedShortcuts,
+        Array.map(Struct.get("Command")),
+        Array.map(CommandIdToString),
+        Array.join(", ")
+    ) + (UngroupedShortcuts.length === 0 ? "(None)" : ""));
+
+    // eslint-disable-next-line no-console
+    console.log("Grouped Shortcuts: " + pipe(
+        Groups,
+        Array.flatMap(Struct.get("Commands")),
+        Array.map(CommandIdToString),
+        Array.join(", ")
+    ) + (Groups.length === 0 ? "(None)" : ""));
+
+    const { Shortcuts: ManagerShortcuts } = useCommandManager();
+
+    // eslint-disable-next-line no-console
+    console.log("Manager Shortcuts: " + pipe(
+        ManagerShortcuts,
+        Array.map(Struct.get("Command")),
+        Array.map(CommandIdToString),
+        Array.join(", ")
+    ) + (ManagerShortcuts.length === 0 ? "(None)" : ""));
+
     return (
         <Ink.Box
             alignItems="flex-start"
@@ -470,7 +591,9 @@ const ShortcutFooter = (): React.ReactNode =>
             borderTopColor={ Theme.Border }
             flexDirection="row"
             flexWrap="wrap"
-            justifyContent="space-around">
+            justifyContent="space-around"
+            minHeight={ (UngroupedShortcuts.length + Groups.length) > 0 ? 2 : 0 }
+            paddingTop={ 1 }>
             {
                 UngroupedShortcuts.map((ActiveShortcut: InternalShortcut) =>
                     <Hotkey
@@ -482,7 +605,7 @@ const ShortcutFooter = (): React.ReactNode =>
                 Groups.map((Group: GroupShortcut) =>
                     <GroupHotkey
                         { ...Group }
-                        key={ Group.Commands.join("!") }
+                        key={ pipe(Group.Commands, Array.map(CommandIdToString), Array.join(".")) }
                     />)
             }
         </Ink.Box>

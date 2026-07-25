@@ -1,5 +1,5 @@
 /**
- *
+ * Combines text entry with dollar-variable completion suggestions.
  *
  * @module @sorrell/ink-ui/VarInput
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Highlights resolved and unresolved dollar-prefixed variables.
  *
  * @module @sorrell/ink-ui/VarText
  *

@@ -37,7 +37,7 @@ export default defineConfig({
             externalizeDeps: false,
             lib:
             {
-                entry: join(ApplicationDirectory, "Source/Preload/Entry.ts")
+                entry: join(ApplicationDirectory, "Source/Preload/index.ts")
             },
             outDir: join(BuildDirectory, "Preload"),
             rollupOptions:

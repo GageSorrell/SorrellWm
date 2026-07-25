@@ -9,31 +9,34 @@
  * @license   MIT
  */
 
+import type * as Ink from "ink";
 import { Struct } from "effect";
-import * as Ink from "ink";
 
 export const EmptyKey: Ink.Key =
     {
-        upArrow: false,
         downArrow: false,
         leftArrow: false,
         rightArrow: false,
+        upArrow: false,
+
         pageDown: false,
         pageUp: false,
-        home: false,
+
         end: false,
-        return: false,
-        escape: false,
-        ctrl: false,
-        shift: false,
-        tab: false,
+        home: false,
+
         backspace: false,
-        delete: false,
-        meta: false,
-        super: false,
-        hyper: false,
         capsLock: false,
-        numLock: false
+        ctrl: false,
+        delete: false,
+        escape: false,
+        hyper: false,
+        meta: false,
+        numLock: false,
+        return: false,
+        shift: false,
+        super: false,
+        tab: false
     } as const;
 
 export const Key = (Self: Partial<Ink.Key>): Ink.Key =>

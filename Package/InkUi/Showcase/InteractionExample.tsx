@@ -18,17 +18,26 @@ import {
     type FocusableState,
     FocusScope,
     InteractionProvider,
+    type RegisteredShortcut,
     Shortcut,
     useCommandManager
 } from "../Source/Interaction/index.js";
+import { Predicate } from "effect";
 
 const ShortcutSummary = (): React.ReactNode =>
 {
     const { Shortcuts } = useCommandManager();
+    const SummaryLabel = (Item: RegisteredShortcut) =>
+        Item.Label ??
+        (Predicate.isSymbol(Item.Command)
+            ? Symbol.keyFor(Item.Command)
+            : Command) ??
+        Item.Id;
+
     return (
         <Text dimColor>
-            { Shortcuts.map((Item) =>
-                `${ Item.Keys.join("/") }: ${ Item.Label ?? Item.Command }`
+            { Shortcuts.map((Item: RegisteredShortcut) =>
+                `${ Item.Keys.join("/") }: ${ SummaryLabel(Item) }`
             ).join(" · ") }
         </Text>
     );

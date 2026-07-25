@@ -1,5 +1,5 @@
 /**
- * Terminal.Gui-style framed views with shared border junctions.
+ * `Terminal.Gui`-style framed views with shared border junctions.
  *
  * @module @sorrell/ink-ui/View
  *

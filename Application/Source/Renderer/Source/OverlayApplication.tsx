@@ -22,7 +22,8 @@ import {
     BoardRegular,
     CursorClickRegular,
     type FluentIcon,
-    ResizeLargeRegular
+    ResizeLargeRegular,
+    WindowSettingsRegular
 } from "@fluentui/react-icons";
 import {
     Breadcrumb,
@@ -34,6 +35,7 @@ import {
     shorthands,
     tokens
 } from "@fluentui/react-components";
+import { CommandButton, CompactCommandButton } from "./CommandButton.js";
 import {
     type OverlayCommandDto,
     OverlayCommandId,
@@ -42,7 +44,7 @@ import {
     OverlayScreenId
 } from "../../Shared/OverlayCommand.js";
 import { useEffect, useState } from "react";
-import { CommandButton } from "./CommandButton.js";
+import { Predicate, Struct } from "effect";
 
 interface CommandPresentation
 {
@@ -51,13 +53,15 @@ interface CommandPresentation
     readonly Label: string;
 }
 
+interface CompactCommandPresentation extends Omit<CommandPresentation, "Description"> { }
+
 interface ScreenPresentation
 {
     readonly Description: string;
     readonly Label: string;
 }
 
-const Presentation: Record<OverlayCommandIdType, CommandPresentation> =
+const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation | CompactCommandPresentation>> =
     {
         [ OverlayCommandId.Focus ]: {
             Description: "Choose a window to focus.",
@@ -67,22 +71,22 @@ const Presentation: Record<OverlayCommandIdType, CommandPresentation> =
         [ OverlayCommandId.FocusMoveDown ]: {
             Description: "Move the focus selection down.",
             Icon: ArrowDownRegular,
-            Label: "Move Down"
+            Label: "Focus Down"
         },
         [ OverlayCommandId.FocusMoveLeft ]: {
             Description: "Move the focus selection left.",
             Icon: ArrowLeftRegular,
-            Label: "Move Left"
+            Label: "Focus Left"
         },
         [ OverlayCommandId.FocusMoveRight ]: {
             Description: "Move the focus selection right.",
             Icon: ArrowRightRegular,
-            Label: "Move Right"
+            Label: "Focus Right"
         },
         [ OverlayCommandId.FocusMoveUp ]: {
             Description: "Move the focus selection up.",
             Icon: ArrowUpRegular,
-            Label: "Move Up"
+            Label: "Focus Up"
         },
         [ OverlayCommandId.Insert ]: {
             Description: "Insert a window into the layout.",
@@ -98,8 +102,13 @@ const Presentation: Record<OverlayCommandIdType, CommandPresentation> =
             Description: "Resize a window in the layout.",
             Icon: ResizeLargeRegular,
             Label: "Resize"
+        },
+        [ OverlayCommandId.OpenPerAppSettings ]:
+        {
+            Icon: WindowSettingsRegular,
+            Label: "Open SorrellWM settings for @TODO"
         }
-    };
+    } as const;
 
 const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> = {
     [ OverlayScreenId.Focus ]: {
@@ -108,18 +117,20 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> = {
     },
     [ OverlayScreenId.Home ]:
     {
-        Description: "Choose how to manage your windows.",
+        Description: "Choose the type of action to perform.",
         Label: "SorrellWm"
     }
 };
 
 const UseStyles = makeStyles({
-    ApplicationIconImage: {
+    ApplicationIconImage:
+    {
         height: "1.5rem",
         objectFit: "contain",
         width: "1.5rem"
     },
-    BackButton: {
+    BackButton:
+    {
         borderRadius: tokens.borderRadiusNone,
         boxSizing: "border-box",
         height: "48px",
@@ -127,8 +138,8 @@ const UseStyles = makeStyles({
         padding: 0,
         width: "48px"
     },
-    BackButtonSlot: {
-        // alignSelf: "flex-start",
+    BackButtonSlot:
+    {
         flexShrink: 0,
         height: "48px",
         width: "40px"
@@ -142,15 +153,22 @@ const UseStyles = makeStyles({
         height: "48px",
         padding: 0
     },
-    CommandList: {
+    CommandList:
+    {
         display: "grid",
         marginTop: "clamp(1.5rem, 5vh, 3rem)",
         ...shorthands.gap("0.65rem")
     },
-    Content: {
-        ...shorthands.padding("clamp(1.5rem, 5vw, 3rem)")
+    Content:
+    {
+        ...shorthands.padding("clamp(1.5rem, 5vw, 3rem)"),
+        alignItems: "stretch",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between"
     },
-    Description: {
+    Description:
+    {
         color: tokens.colorNeutralForeground2,
         fontSize: tokens.fontSizeBase300,
         lineHeight: tokens.lineHeightBase300,
@@ -176,7 +194,7 @@ const OverlayApplication = (): React.JSX.Element =>
 {
     const Styles = UseStyles();
     const [ CurrentScreen, SetCurrentScreen ] = useState<OverlayScreenDto | undefined>();
-    const [ ErrorMessage, SetErrorMessage ] = useState<string | undefined>();
+    const [ ErrorMessage /* , SetErrorMessage */ ] = useState<string | undefined>();
 
     useEffect(() =>
     {
@@ -189,13 +207,14 @@ const OverlayApplication = (): React.JSX.Element =>
             {
                 SetCurrentScreen(Current);
             }
-        }).catch((Cause: unknown) =>
-        {
-            if (IsMounted)
-            {
-                SetErrorMessage(`Could not load commands: ${ String(Cause) }`);
-            }
         });
+        // }).catch((Cause: unknown) =>
+        // {
+        //     if (IsMounted)
+        //     {
+        //         SetErrorMessage(`Could not load commands: ${ String(Cause) }`);
+        //     }
+        // });
 
         return (): void =>
         {
@@ -207,26 +226,27 @@ const OverlayApplication = (): React.JSX.Element =>
 
     const Invoke = (Id: OverlayCommandIdType): void =>
     {
-        void window.sorrell.overlay.invoke(Id).catch((Cause: unknown) =>
-        {
-            SetErrorMessage(`Could not invoke ${ Id }: ${ String(Cause) }`);
-        });
+        void window.sorrell.overlay.invoke(Id);
+        // void window.sorrell.overlay.invoke(Id).catch((Cause: unknown) =>
+        // {
+        //     SetErrorMessage(`Could not invoke ${ Id }: ${ String(Cause) }`);
+        // });
     };
 
-    const Back = (): void =>
-    {
-        void window.sorrell.overlay.back().catch((Cause: unknown) =>
-        {
-            SetErrorMessage(`Could not return to the previous screen: ${ String(Cause) }`);
-        });
-    };
+    const Back = window.sorrell.overlay.back;
+    //     void window.sorrell.overlay.back().catch((Cause: unknown) =>
+    //     {
+    //         SetErrorMessage(`Could not return to the previous screen: ${ String(Cause) }`);
+    //     });
+    // };
 
     const Preview = (Id: OverlayCommandIdType | null): void =>
     {
-        void window.sorrell.overlay.preview(Id).catch((Cause: unknown) =>
-        {
-            SetErrorMessage(`Could not preview ${ Id ?? "Focus" }: ${ String(Cause) }`);
-        });
+        void window.sorrell.overlay.preview(Id);
+        // void window.sorrell.overlay.preview(Id).catch((Cause: unknown) =>
+        // {
+        //     SetErrorMessage(`Could not preview ${ Id ?? "Focus" }: ${ String(Cause) }`);
+        // });
     };
 
     const CurrentPresentation = CurrentScreen === undefined
@@ -247,6 +267,7 @@ const OverlayApplication = (): React.JSX.Element =>
                             icon={ <ArrowLeft16Regular /> }
                             onClick={ Back }
                             shape="square"
+                            style={ CanGoBack ? { } : { pointerEvents: "none" } }
                             title="Back"
                         />
                     </div>
@@ -298,9 +319,16 @@ const OverlayApplication = (): React.JSX.Element =>
                     {
                         const CommandPresentation = Presentation[Command.Id];
                         const Icon = CommandPresentation.Icon;
+                        if (!Predicate.hasProperty(CommandPresentation, "Description"))
+                        {
+                            throw new Error(
+                                `Command ${ Command.Id } corresponds to a Presentation with no ` +
+                                "Description, but it should have one."
+                            );
+                        }
                         const Description = Command.Target?.Title
                             ?? (Command.Disabled
-                                ? "No window in this direction."
+                                ? undefined
                                 : CommandPresentation.Description);
                         const ApplicationIcon = Command.Target === undefined
                             ? undefined
@@ -316,9 +344,6 @@ const OverlayApplication = (): React.JSX.Element =>
                         return (
                             <CommandButton
                                 Active={ false }
-                                ApplicationIcon={ ApplicationIcon }
-                                Description={ Description }
-                                Disabled={ Command.Disabled }
                                 Icon={ <Icon /> }
                                 Label={ CommandPresentation.Label }
                                 OnHoverChange={ Command.Target === undefined
@@ -327,10 +352,36 @@ const OverlayApplication = (): React.JSX.Element =>
                                         Hovered ? Command.Id : null
                                     ) }
                                 OnInvoke={ () => Invoke(Command.Id) }
-                                Shortcut={ Command.Shortcut }
-                                key={ Command.Id } />
+                                key={ Command.Id }
+                                { ...Struct.pick(Command, [ "Disabled", "Shortcut" ]) }
+                                { ...{ ApplicationIcon, Description } }
+                            />
                         );
                     }) }
+                </section>
+                <section style={ {
+                    alignItems: "center",
+                    backgroundColor: "pink",
+                    bottom: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    height: 48,
+                    justifyContent: "center",
+                    left: 0,
+                    position: "absolute",
+                    width: "100%"
+                } }>
+                    {
+                        CurrentScreen?.BottomCommand !== undefined &&
+                        <CompactCommandButton
+                            Active
+                            Icon={ <WindowSettingsRegular /> }
+                            Label={ CurrentScreen.BottomCommand.Target.Title }
+                            OnInvoke={ () => Invoke(CurrentScreen.BottomCommand!.Id) }
+                            Shortcut={ CurrentScreen.BottomCommand!.Shortcut }
+                            key={ CurrentScreen.BottomCommand!.Id }
+                        />
+                    }
                 </section>
             </div>
         </main>

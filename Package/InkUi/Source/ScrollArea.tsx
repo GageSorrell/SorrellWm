@@ -11,10 +11,16 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { GetKeyChord, useShortcut, useShortcutGroup } from "./Interaction/Shortcut.ts";
-import { useCommand } from "./Interaction/Command.tsx";
+import {
+    BuiltIn,
+    type CommandEvent,
+    type CommandHandler,
+    type CommandId,
+    useCommand
+} from "./Interaction/Command.tsx";
+import { GetKeyChordUnsafe, useShortcut, useShortcutGroup } from "./Interaction/Shortcut.ts";
 import { Key } from "./Interaction/Key.ts";
-// import { useCommand } from "./Interaction/Command.tsx";
+import { Predicate } from "effect";
 
 /** {@inheritDoc ScrollArea} */
 export interface ScrollAreaProps<A>
@@ -64,37 +70,42 @@ const ScrollArea = <A,>({
     // @TODO Make this use commands instead, and allow commands
     // with keybinds to be assigned footer items arbitrarily with icons.
 
-    useCommand("Move.Up", () =>
-    {
-        OnChangeIndex?.(Math.max(0, SafeSelected - 1));
-    });
+    const LogCommand = (Id: CommandId) => Predicate.isSymbol(Id)
+        ? (Symbol.keyFor(Id) ?? "UNKNOWN BUILT-IN COMMAND")
+        : Id;
 
-    useCommand("Move.PageUp", () =>
+    const useScrollAreaCommand = <A,>(Id: CommandId, Listener: CommandHandler<A>) =>
     {
-        OnChangeIndex?.(Math.max(0, SafeSelected - SafeHeight));
-    });
+        // eslint-disable-next-line no-console
+        console.log(`useScrollAreaCommand: ${ LogCommand(Id) }`);
+        useCommand<A>(
+            Id,
+            (Event: CommandEvent<A>) =>
+            {
+                // eslint-disable-next-line no-console
+                console.log(`Listener: ${ LogCommand(Event.Command) }`);
+                Listener(Event);
+            },
+            { Enabled: Active && Items.length > 0 }
+        );
+    };
 
-    useCommand("Move.Down", () =>
-    {
-        OnChangeIndex?.(Math.min(LastIndex, SafeSelected + 1));
-    });
+    useScrollAreaCommand(BuiltIn.Move.Up, () => OnChangeIndex?.(Math.max(0, SafeSelected - 1)));
 
-    useCommand("Move.PageDown", () =>
-    {
-        OnChangeIndex?.(Math.min(LastIndex, SafeSelected + SafeHeight));
-    });
+    useScrollAreaCommand(BuiltIn.Move.PageUp, () => OnChangeIndex?.(Math.max(0, SafeSelected - SafeHeight)));
 
-    useCommand("Move.Home", () =>
-    {
-        OnChangeIndex?.(0);
-    });
+    useScrollAreaCommand(BuiltIn.Move.Down, () => OnChangeIndex?.(Math.min(LastIndex, SafeSelected + 1)));
 
-    useCommand("Move.Home", () =>
-    {
-        OnChangeIndex?.(LastIndex);
-    });
+    useScrollAreaCommand(
+        BuiltIn.Move.PageDown,
+        () => OnChangeIndex?.(Math.min(LastIndex, SafeSelected + SafeHeight))
+    );
 
-    useCommand("Commit", () =>
+    useScrollAreaCommand(BuiltIn.Move.Home, () => OnChangeIndex?.(0));
+
+    useScrollAreaCommand(BuiltIn.Move.End, () => OnChangeIndex?.(LastIndex));
+
+    useScrollAreaCommand(BuiltIn.Commit, () =>
     {
         const Item = Items[SafeSelected];
         if (Item !== undefined)
@@ -103,15 +114,19 @@ const ScrollArea = <A,>({
         }
     });
 
-    useShortcut(GetKeyChord("", Key({ upArrow: true }))!, "Move.Up");
-    useShortcut(GetKeyChord("", Key({ downArrow: true }))!, "Move.Down");
-    useShortcut(GetKeyChord("", Key({ pageUp: true }))!, "Move.PageUp");
-    useShortcut(GetKeyChord("", Key({ pageDown: true }))!, "Move.PageDown");
-    useShortcut(GetKeyChord("", Key({ home: true }))!, "Move.Home");
-    useShortcut(GetKeyChord("", Key({ return: true }))!, "Commit");
+    useShortcut(GetKeyChordUnsafe(Key({ upArrow: true }))!, BuiltIn.Move.Up);
+    useShortcut(GetKeyChordUnsafe(Key({ downArrow: true }))!, BuiltIn.Move.Down);
+
+    useShortcut(GetKeyChordUnsafe(Key({ pageUp: true }))!, BuiltIn.Move.PageUp, { Label: "Page up" });
+    useShortcut(GetKeyChordUnsafe(Key({ pageDown: true }))!, BuiltIn.Move.PageDown, { Label: "Page down" });
+
+    useShortcut(GetKeyChordUnsafe(Key({ home: true }))!, BuiltIn.Move.Home, { Label: "Go to top" });
+    useShortcut(GetKeyChordUnsafe(Key({ end: true }))!, BuiltIn.Move.End, { Label: "Go to bottom" });
+
+    useShortcut(GetKeyChordUnsafe(Key({ return: true }))!, BuiltIn.Commit, { Label: "Select" });
 
     useShortcutGroup({
-        Commands: [ "Move.Up", "Move.Down" ],
+        Commands: [ BuiltIn.Move.Up, BuiltIn.Move.Down ],
         Glyph: "⇅",
         Label: "Move Up/Down"
     });

@@ -24,7 +24,7 @@ export interface CommandButtonProps
 {
     readonly Active: boolean;
     readonly ApplicationIcon?: React.ReactNode | undefined;
-    readonly Description: string;
+    readonly Description: string | undefined;
     readonly Disabled?: boolean | undefined;
     readonly Icon: NonNullable<ButtonProps["icon"]>;
     readonly Label: string;
@@ -34,7 +34,8 @@ export interface CommandButtonProps
 }
 
 const UseStyles = makeStyles({
-    ApplicationIcon: {
+    ApplicationIcon:
+    {
         alignItems: "center",
         display: "inline-flex",
         flexShrink: 0,
@@ -43,7 +44,8 @@ const UseStyles = makeStyles({
         justifyContent: "center",
         width: "1.5rem"
     },
-    Button: {
+    Button:
+    {
         display: "grid",
         gridTemplateColumns: "auto minmax(0, 1fr) auto",
         minHeight: "4.5rem",
@@ -52,19 +54,24 @@ const UseStyles = makeStyles({
         ...shorthands.gap("0.9rem"),
         ...shorthands.padding("0.8rem", "1rem")
     },
-    Content: {
+    Content:
+    {
         display: "grid",
         minWidth: 0,
         ...shorthands.gap("0.2rem")
     },
-    Description: {
+    Description:
+    {
         color: tokens.colorNeutralForeground2,
+        display: "inline-block",
         fontSize: "0.82rem",
+        minBlockSize: "1lh",
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap"
     },
-    Keycap: {
+    Keycap:
+    {
         backgroundColor: tokens.colorNeutralBackground3,
         borderRadius: "0.4rem",
         minWidth: "1.8rem",
@@ -72,10 +79,12 @@ const UseStyles = makeStyles({
         ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
         ...shorthands.padding("0.3rem", "0.45rem")
     },
-    Label: {
+    Label:
+    {
         fontWeight: 600
     },
-    Shortcut: {
+    Shortcut:
+    {
         alignItems: "center",
         backgroundColor: "transparent",
         color: tokens.colorNeutralForeground1,
@@ -83,7 +92,8 @@ const UseStyles = makeStyles({
         fontFamily: "inherit",
         ...shorthands.gap("0.25rem")
     },
-    Trailing: {
+    Trailing:
+    {
         alignItems: "center",
         display: "inline-flex",
         ...shorthands.gap("0.75rem")
@@ -138,6 +148,60 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
                 <span className={ Styles.Description }>
                     { Props.Description }
                 </span>
+            </span>
+            <span className={ Styles.Trailing }>
+                { Props.ApplicationIcon !== undefined && (
+                    <span
+                        aria-hidden="true"
+                        className={ Styles.ApplicationIcon }
+                        data-testid="application-icon">
+                        { Props.ApplicationIcon }
+                    </span>
+                ) }
+                <kbd
+                    aria-label={ ShortcutParts.join(" plus ") }
+                    className={ Styles.Shortcut }>
+                    { ShortcutParts.map((Part: string, Index: number) => (
+                        <React.Fragment key={ Part }>
+                            { Index > 0 && <span aria-hidden="true">+</span> }
+                            <span className={ Styles.Keycap }>{ Part }</span>
+                        </React.Fragment>
+                    )) }
+                </kbd>
+            </span>
+        </Button>
+    );
+};
+
+/**
+ * A compact button representing an action that is less relevant to the user's
+ * experience.
+ *
+ * @category Interaction
+ * @since 0.1.0
+ */
+export interface CompactCommandButtonProps extends Omit<CommandButtonProps, "Description"> { }
+
+export/** Render a primary overlay command with renderer-specific presentation. */
+const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode =>
+{
+    const Styles = UseStyles();
+    const ShortcutParts = GetShortcutParts(Props.Shortcut);
+
+    return (
+        <Button
+            appearance={ Props.Active ? "primary" : "subtle" }
+            aria-pressed={ Props.Active }
+            className={ Styles.Button }
+            disabled={ Props.Disabled === true }
+            icon={ Props.Icon }
+            onClick={ Props.OnInvoke }
+            onMouseEnter={ () => Props.OnHoverChange?.(true) }
+            onMouseLeave={ () => Props.OnHoverChange?.(false) }
+            size="small"
+            title={ Props.Label }>
+            <span className={ Styles.Content }>
+                <span className={ Styles.Label }>{ Props.Label }</span>
             </span>
             <span className={ Styles.Trailing }>
                 { Props.ApplicationIcon !== undefined && (

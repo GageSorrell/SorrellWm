@@ -23,6 +23,14 @@
             "import": "./Distribution/index.js",
             "types": "./Distribution/index.d.ts"
         },
+        "./Mouse": {
+            "import": "./Distribution/Mouse/index.js",
+            "types": "./Distribution/Mouse/index.d.ts"
+        },
+        "./Three": {
+            "import": "./Distribution/Three/index.js",
+            "types": "./Distribution/Three/index.d.ts"
+        },
         "./package.json": "./package.json"
     },
     "files": [
@@ -40,7 +48,8 @@
     },
     "peerDependencies": {
         "ink": "^7.1.0",
-        "react": ">=19.2.0 <20"
+        "react": ">=19.2.0 <20",
+        "three": "^0.185.1"
     },
     "peerDependenciesMeta": {
         "ink": {
@@ -48,16 +57,21 @@
         },
         "react": {
             "optional": false
+        },
+        "three": {
+            "optional": true
         }
     },
     "devDependencies": {
         "@sorrell/tsconfig": "1.0.0",
         "@types/node": "26.1.1",
         "@types/react": "19.2.17",
+        "@types/three": "^0.185.0",
         "cross-env": "10.1.0",
         "ink": "7.1.0",
         "ink-testing-library": "4.0.0",
         "react": "19.2.7",
+        "three": "^0.185.1",
         "typescript": "6.0.2",
         "vitest": "4.1.10"
     },

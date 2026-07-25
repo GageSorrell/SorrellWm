@@ -16,45 +16,50 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { OverlayApplication } from "./OverlayApplication.js";
 
-const Commands: ReadonlyArray<OverlayCommandDto> = [
-    Command("Focus", "SelectLeft", "H", 0x48),
-    Command("Insert", "SelectUp", "K", 0x4B),
-    Command("Move", "SelectDown", "J", 0x4A),
-    Command("Resize", "SelectRight", "L", 0x4C)
-];
-const HomeScreen: OverlayScreenDto = {
-    CanGoBack: false,
-    Commands,
-    Id: "Home"
-};
-const FocusScreen: OverlayScreenDto = {
-    CanGoBack: true,
-    Commands: [
-        Command(
-            "FocusMoveLeft",
-            "SelectLeft",
-            "H",
-            0x48,
-            { Icon: "left-icon", Title: "Left App" }
-        ),
-        Command(
-            "FocusMoveUp",
-            "SelectUp",
-            "K",
-            0x4B,
-            { Title: "Upper App" }
-        ),
-        Command("FocusMoveDown", "SelectDown", "J", 0x4A, undefined, true),
-        Command(
-            "FocusMoveRight",
-            "SelectRight",
-            "L",
-            0x4C,
-            { Title: "Right App" }
-        )
-    ],
-    Id: "Focus"
-};
+const Commands: ReadonlyArray<OverlayCommandDto> =
+    [
+        Command("Focus", "SelectLeft", "H", 0x48),
+        Command("Insert", "SelectUp", "K", 0x4B),
+        Command("Move", "SelectDown", "J", 0x4A),
+        Command("Resize", "SelectRight", "L", 0x4C)
+    ] as const;
+
+const HomeScreen: OverlayScreenDto =
+    {
+        CanGoBack: false,
+        Commands,
+        Id: "Home"
+    } as const;
+
+const FocusScreen: OverlayScreenDto =
+    {
+        CanGoBack: true,
+        Commands: [
+            Command(
+                "FocusMoveLeft",
+                "SelectLeft",
+                "H",
+                0x48,
+                { Icon: "left-icon", Title: "Left App" }
+            ),
+            Command(
+                "FocusMoveUp",
+                "SelectUp",
+                "K",
+                0x4B,
+                { Title: "Upper App" }
+            ),
+            Command("FocusMoveDown", "SelectDown", "J", 0x4A, undefined, true),
+            Command(
+                "FocusMoveRight",
+                "SelectRight",
+                "L",
+                0x4C,
+                { Title: "Right App" }
+            )
+        ],
+        Id: "Focus"
+    } as const;
 
 describe("OverlayApplication", () =>
 {
@@ -72,7 +77,7 @@ describe("OverlayApplication", () =>
 
         expect(await screen.findByRole("button", { name: "SorrellWm" }))
             .toHaveAttribute("aria-current", "page");
-        expect(screen.getByText("Choose how to manage your windows.")).toBeInTheDocument();
+        expect(screen.getByText("Choose the type of action to perform.")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Go Back" })).toBeDisabled();
 
         const CommandsRegion = screen.getByRole("region", { name: "Available commands" });

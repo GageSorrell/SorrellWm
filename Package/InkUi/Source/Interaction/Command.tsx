@@ -11,6 +11,15 @@
 
 import type * as Ink from "ink";
 import * as React from "react";
+import {
+    Array,
+    Function,
+    MutableHashMap,
+    MutableHashSet,
+    Number,
+    Option,
+    Predicate
+} from "effect";
 import { CommandScopeContext, TypeId, UseInteraction } from "./Context.tsx";
 import {
     GetKeyChord,
@@ -22,25 +31,154 @@ import {
     type RoutedInputHandler,
     type ShortcutRegistration
 } from "./Shortcut.ts";
-import { Array, Function, MutableHashMap, MutableHashSet, Number, Option } from "effect";
+
+const GetBuiltInKey = (...Labels: Array.NonEmptyReadonlyArray<string>) =>
+    `~sorrell/ink-ui/Interaction/Command!BuiltIn!${ Labels.join("!") }`;
+
+namespace BuiltInCommand
+{
+    export/**
+           * The "focus first" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const First: unique symbol = Symbol.for(GetBuiltInKey("Focus", "First"));
+
+    export/**
+           * The "focus last" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Last: unique symbol = Symbol.for(GetBuiltInKey("Focus", "Last"));
+
+    export/**
+           * The "focus next" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Next: unique symbol = Symbol.for(GetBuiltInKey("Focus", "Next"));
+
+    export/**
+           * The "focus previous" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Previous: unique symbol = Symbol.for(GetBuiltInKey("Focus", "Previous"));
+
+    export/**
+           * The "move up" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Up: unique symbol = Symbol.for(GetBuiltInKey("Move", "Up"));
+
+    export/**
+           * The "move down" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Down: unique symbol = Symbol.for(GetBuiltInKey("Move", "Down"));
+
+    export/**
+           * The "move left" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Left: unique symbol = Symbol.for(GetBuiltInKey("Move", "Left"));
+
+    export/**
+           * The "move right" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Right: unique symbol = Symbol.for(GetBuiltInKey("Move", "Right"));
+
+    export/**
+           * The "page up" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const PageUp: unique symbol = Symbol.for(GetBuiltInKey("Move", "PageUp"));
+
+    export/**
+           * The "page down" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const PageDown: unique symbol = Symbol.for(GetBuiltInKey("Move", "PageDown"));
+
+    export/**
+           * The "go home" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Home: unique symbol = Symbol.for(GetBuiltInKey("Move", "Home"));
+
+    export/**
+           * The "go to end" command.
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const End: unique symbol = Symbol.for(GetBuiltInKey("Move", "End"));
+
+    export/**
+           * The command to accept, confirm, or commit something (or *to* something).
+           *
+           * @category Interaction
+           * @since 1.0.0
+           */
+    const Commit: unique symbol = Symbol.for(GetBuiltInKey("Commit"));
+}
 
 export/**
-       * The identifiers of the focus commands supplied by `InteractionProvider`.
+       * The identifiers of the built-in commands supplied by `InteractionProvider`.
        *
        * @category Interaction
        * @since 1.0.0
        */
-const FocusCommands =
-    {
-        First: "focus.first",
-        Last: "focus.last",
-        Next: "focus.next",
-        Previous: "focus.previous"
-    } as const;
+const BuiltIn =
+    Object.freeze({
+        Commit: BuiltInCommand.Commit,
+        Focus:
+        {
+            First: BuiltInCommand.First,
+            Last: BuiltInCommand.Last,
+            Next: BuiltInCommand.Next,
+            Previous: BuiltInCommand.Previous
+        },
+        Move:
+        {
+            Down: BuiltInCommand.Down,
+            Left: BuiltInCommand.Left,
+            Right: BuiltInCommand.Right,
+            Up: BuiltInCommand.Up,
 
-/** {@inheritDoc FocusCommands} */
-export type FocusCommand =
-    typeof FocusCommands[keyof typeof FocusCommands];
+            End: BuiltInCommand.End,
+            Home: BuiltInCommand.Home,
+
+            PageDown: BuiltInCommand.PageDown,
+            PageUp: BuiltInCommand.PageUp
+        }
+    } as const);
+
+type LeafValues<A> = A extends object
+    ? { [ Key in keyof A ]: LeafValues<A[Key]>; }[keyof A]
+    : A;
+
+/** {@inheritDoc BuiltIn} */
+export type BuiltIn = LeafValues<typeof BuiltIn>;
 
 /**
  * An instance of a command that is executed.
@@ -50,7 +188,7 @@ export type FocusCommand =
  */
 export interface CommandEvent<Data = unknown>
 {
-    readonly Command: string;
+    readonly Command: CommandId;
     readonly Data: Data | undefined;
     readonly Input: string | undefined;
     readonly Key: Ink.Key | undefined;
@@ -75,7 +213,7 @@ export type CommandHandler<Data = unknown> =
  */
 export interface CommandRegistration<Data = unknown>
 {
-    readonly Command: string;
+    readonly Command: CommandId;
     readonly Enabled?: boolean;
     readonly Handler: CommandHandler<Data>;
     readonly Priority?: number;
@@ -88,13 +226,8 @@ export interface CommandRegistration<Data = unknown>
  * @category Interaction
  * @since 1.0.0
  */
-export interface RegisteredCommand
+export interface RegisteredCommand extends Required<CommandRegistration<unknown>>
 {
-    readonly Command: string;
-    readonly Enabled: boolean;
-    readonly Handler: CommandHandler<unknown>;
-    readonly Priority: number;
-    readonly ScopeId: string;
     readonly Sequence: number;
 }
 
@@ -123,6 +256,24 @@ export interface ExecuteCommandOptions<Data = unknown>
     readonly Key?: Ink.Key;
     readonly StartScopeId?: string;
 }
+
+export/**
+       * Get a `CommandId` as a string, converting `BuiltIn` symbols to their respective keys.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const CommandIdToString = (Arg: CommandId) =>
+{
+    if (Predicate.isString(Arg))
+    {
+        return Arg;
+    }
+    else
+    {
+        return Symbol.keyFor(Arg) ?? "UNKNOWN BUILT-IN COMMAND";
+    }
+};
 
 /**
  * Stores hierarchical command handlers, routed input handlers, and key
@@ -191,15 +342,16 @@ export class CommandRegistry
         Registration: CommandRegistration<Data>
     ): () => void
     {
-        const Registered: RegisteredCommand = {
-            Command: Registration.Command,
-            Enabled: Registration.Enabled ?? true,
-            Handler: (Event: CommandEvent<unknown>) =>
-                Registration.Handler(Event as CommandEvent<Data>),
-            Priority: Registration.Priority ?? 0,
-            ScopeId: Registration.ScopeId,
-            Sequence: this.Sequence++
-        };
+        const Registered: RegisteredCommand =
+            {
+                Command: Registration.Command,
+                Enabled: Registration.Enabled ?? true,
+                Handler: (Event: CommandEvent<unknown>) =>
+                    Registration.Handler(Event as CommandEvent<Data>),
+                Priority: Registration.Priority ?? 0,
+                ScopeId: Registration.ScopeId,
+                Sequence: this.Sequence++
+            };
         const Existing = MutableHashMap.get(this.Commands, Registration.Command).valueOrUndefined ?? [ ];
         Existing.push(Registered);
         MutableHashMap.set(this.Commands, Registration.Command, Existing);
@@ -229,6 +381,8 @@ export class CommandRegistry
 
     public RegisterShortcut(Registration: ShortcutRegistration): () => void
     {
+        // eslint-disable-next-line no-console
+        console.log(`Registering shortcut with ID ${ CommandIdToString(Registration.Command) }.`);
         const Keys = (
             typeof Registration.Keys === "string"
                 ? [ Registration.Keys ]
@@ -270,7 +424,7 @@ export class CommandRegistry
         {
             MutableHashSet.remove(this.ShortcutGroups, GroupRegistration);
             this.Notify();
-        }
+        };
     }
 
     public RegisterInputHandler(
@@ -299,7 +453,7 @@ export class CommandRegistry
     }
 
     public Execute<Data = unknown>(
-        Command: string,
+        Command: CommandId,
         Options: ExecuteCommandOptions<Data> = { }
     ): boolean
     {
@@ -352,13 +506,13 @@ export class CommandRegistry
         const Chord = GetKeyChord(Input, Key);
         for (const ScopeId of this.GetScopePath(StartScopeId))
         {
-            if (Chord !== undefined)
+            if (Option.isSome(Chord))
             {
                 const Shortcuts = this.Shortcuts
                     .filter((Shortcut: InternalShortcut) =>
                         Shortcut.ScopeId === ScopeId
                         && Shortcut.Enabled
-                        && Shortcut.Keys.includes(Chord)
+                        && Shortcut.Keys.includes(Chord.value)
                     )
                     .sort((Left: InternalShortcut, Right: InternalShortcut) =>
                         Right.Priority - Left.Priority
@@ -402,7 +556,7 @@ export class CommandRegistry
 
     public GetAllShortcuts(): ReadonlyArray<InternalShortcut>
     {
-        return structuredClone(this.Shortcuts);
+        return [ ...this.Shortcuts ];
     }
 
     public GetActiveShortcuts(): ReadonlyArray<InternalShortcut>
@@ -459,9 +613,9 @@ export class CommandRegistry
         return Result;
     }
 
-    public static IsShortcutInGroup(ScopeId: string, Id: string): (Shortcut: RegisteredShortcut) => boolean
+    public static IsShortcutInGroup(ScopeId: string, Id: CommandId): (Shortcut: RegisteredShortcut) => boolean
     {
-        return (Shortcut: RegisteredShortcut) => Shortcut.Id === Id && Shortcut.ScopeId === ScopeId;
+        return (Shortcut: RegisteredShortcut) => Shortcut.Command === Id && Shortcut.ScopeId === ScopeId;
     }
 
     public GetShortcutGroups(StartScopeId: string = TypeId): ReadonlyArray<GroupShortcut>
@@ -473,7 +627,7 @@ export class CommandRegistry
             (Group: GroupShortcut) =>
                 Array.some(
                     Group.Commands,
-                    (Id: string) =>
+                    (Id: CommandId) =>
                         Array.some(
                             Shortcuts,
                             CommandRegistry.IsShortcutInGroup(Group.ScopeId, Id)))
@@ -554,6 +708,14 @@ export interface UseCommandOptions
     readonly Priority?: number;
 }
 
+/**
+ * An identifier of a command.  Built-in commands are specified as `unique symbol`s.
+ *
+ * @category Interaction
+ * @since 1.0.0
+ */
+export type CommandId = BuiltIn | string;
+
 export/**
        * Registers a handler for a command in the nearest command scope.
        *
@@ -561,7 +723,7 @@ export/**
        * @since 1.0.0
        */
 const useCommand = <Data = unknown>(
-    Command: string,
+    Command: CommandId,
     Handler: CommandHandler<Data>,
     Options: UseCommandOptions = { }
 ): void =>

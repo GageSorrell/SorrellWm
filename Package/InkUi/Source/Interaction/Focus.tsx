@@ -10,8 +10,18 @@
  */
 
 import * as React from "react";
+import {
+    Array,
+    Function,
+    MutableHashMap,
+    MutableHashSet,
+    Number,
+    Option,
+    Struct,
+    UndefinedOr,
+    pipe
+} from "effect";
 import { CommandScopeContext, FocusScopeContext, TypeId, UseInteraction } from "./Context.tsx";
-import { Array, Function, MutableHashMap, MutableHashSet, Number, Option, pipe, Struct, UndefinedOr } from "effect";
 
 /**
  * The argument used to define a focusable region of the application.
@@ -486,7 +496,7 @@ export class FocusRegistry
             Current = pipe(
                 Option.flatMap(
                     Current,
-                    (CurrentVal) => MutableHashMap.get(this.Scopes, CurrentVal)
+                    (CurrentVal: string) => MutableHashMap.get(this.Scopes, CurrentVal)
                 ),
                 Option.map(Struct.get("ParentId"))
             );

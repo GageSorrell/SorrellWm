@@ -51,6 +51,7 @@
         "Script/WmScript",
         "Package/SorrellWmCodeExtension",
         "Package/TsConfigSorrell",
+        "Package/Utility",
         "Package/Windows"
     ],
     "allowScripts": {

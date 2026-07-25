@@ -1,0 +1,24 @@
+{
+  "name": "@sorrell/utility",
+  "version": "1.0.0",
+  "description": "General-purpose utilities for TypeScript and effect.",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./Function": {
+      "import": "./Distribution/Function.js",
+      "types": "./Distribution/Function.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "keywords": [],
+  "type": "module",
+  "devDependencies": {
+    "@sorrell/tsconfig": "1.0.0"
+  }
+}
