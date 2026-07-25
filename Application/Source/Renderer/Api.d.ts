@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import type { AppApi } from "../../Shared/Api.js";
+import type { AppApi } from "../Shared/Api.js";
 
 declare global
 {

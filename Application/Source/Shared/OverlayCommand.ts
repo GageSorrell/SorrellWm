@@ -57,12 +57,24 @@ const FocusCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.FocusMoveRight }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
+const HomeSecondaryCommandDefinition = Object.freeze({
+    HotkeyId: HotkeyId.Toggle,
+    Id: OverlayCommandId.OpenPerAppSettings
+} as const satisfies OverlayCommandDefinition);
+
 export/** Get the ordered command definitions available on an overlay screen. */
 const GetOverlayCommandDefinitions = (
     ScreenId: OverlayScreenId
 ): ReadonlyArray<OverlayCommandDefinition> => ScreenId === OverlayScreenId.Focus
     ? FocusCommandDefinitions
     : HomeCommandDefinitions;
+
+export/** Get the secondary command definition available on an overlay screen, if any. */
+const GetOverlaySecondaryCommandDefinition = (
+    ScreenId: OverlayScreenId
+): OverlayCommandDefinition | undefined => ScreenId === OverlayScreenId.Home
+    ? HomeSecondaryCommandDefinition
+    : undefined;
 
 /** A primary overlay command prepared for the renderer. */
 export interface OverlayCommandTargetDto
@@ -86,13 +98,20 @@ export interface OverlayCommandDto extends OverlayCommandDefinition
     readonly Target?: OverlayCommandTargetDto;
 }
 
+/** A compact secondary overlay command prepared for the renderer. */
+export interface OverlaySecondaryCommandDto extends OverlayCommandDto
+{
+    readonly Label: string;
+    readonly Target?: never;
+}
+
 /** A complete renderer-safe snapshot of the current overlay screen. */
 export interface OverlayScreenDto
 {
     readonly CanGoBack: boolean;
     readonly Commands: ReadonlyArray<OverlayCommandDto>;
-    readonly BottomCommand?: Required<OverlayCommandDto>;
     readonly Id: OverlayScreenId;
+    readonly SecondaryCommand?: OverlaySecondaryCommandDto;
 }
 
 export/** Determine whether an IPC value names a primary overlay command. */
@@ -146,6 +165,11 @@ const IsOverlayCommandDto = (Value: unknown): Value is OverlayCommandDto =>
         );
 };
 
+const IsOverlaySecondaryCommandDto = (Value: unknown): Value is OverlaySecondaryCommandDto =>
+    IsOverlayCommandDto(Value)
+    && typeof (Value as Partial<OverlaySecondaryCommandDto>).Label === "string"
+    && (Value as Partial<OverlaySecondaryCommandDto>).Target === undefined;
+
 export/** Determine whether an IPC value is a complete valid overlay-screen snapshot. */
 const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
 {
@@ -159,5 +183,9 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
     return IsBoolean(Candidate.CanGoBack)
         && Array.isArray(Candidate.Commands)
         && Candidate.Commands.every(IsOverlayCommandDto)
-        && IsOverlayScreenId(Candidate.Id);
+        && IsOverlayScreenId(Candidate.Id)
+        && (
+            Candidate.SecondaryCommand === undefined
+            || IsOverlaySecondaryCommandDto(Candidate.SecondaryCommand)
+        );
 };

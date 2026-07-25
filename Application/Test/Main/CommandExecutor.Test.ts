@@ -9,21 +9,21 @@
  * @license   MIT
  */
 
-import * as AppSettings from "../Source/Main/AppSettings/AppSettings.ts";
-import * as BrowserWindow from "../Source/Main/BrowserWindow.js";
-import * as CommandResolver from "../Source/Main/Command/Resolver.ts";
-import * as OverlaySession from "../Source/Main/Overlay/Session.ts";
-import * as Ui from "../Source/Main/Command/Ui.js";
-import * as Wm from "../Source/Main/Command/Wm.js";
+import * as AppSettings from "../../Source/Main/AppSettings/AppSettings.ts";
+import * as BrowserWindow from "../../Source/Main/BrowserWindow.ts";
+import * as CommandResolver from "../../Source/Main/Command/Resolver.ts";
+import * as OverlaySession from "../../Source/Main/Overlay/Session.ts";
+import * as Ui from "../../Source/Main/Command/Ui.ts";
+import * as Wm from "../../Source/Main/Command/Wm.ts";
 import { Box, type Box as MathBox } from "@sorrell/math";
 import {
     CommandExecutor,
     Live,
     UnsupportedCommandError
-} from "../Source/Main/Command/Executor.ts";
+} from "../../Source/Main/Command/Executor.ts";
 import { Deferred, Effect, Layer, Option, Queue, Result, Stream, pipe } from "effect";
 import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
-import { type OverlayScreenDto, OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
+import { type OverlayScreenDto, OverlayScreenId } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@sorrell/windows", async() =>

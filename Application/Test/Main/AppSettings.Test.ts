@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as AppSettings from "../Source/Main/AppSettings/AppSettings.ts";
+import * as AppSettings from "../../Source/Main/AppSettings/AppSettings.ts";
 import { Effect, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 

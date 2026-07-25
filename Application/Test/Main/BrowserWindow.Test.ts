@@ -16,7 +16,7 @@ import {
     Key,
     MakeLive,
     type Spec
-} from "../Source/Main/BrowserWindow.js";
+} from "../../Source/Main/BrowserWindow.ts";
 import type {
     BrowserWindowConstructorOptions,
     BrowserWindow as ElectronBrowserWindow,

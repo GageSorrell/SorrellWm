@@ -113,6 +113,7 @@ const OnActivate = (
 
     if (process.env?.["STATIC_OVERLAY"]?.toLowerCase() === "true")
     {
+        yield* PublishOverlayScreen(BrowserWindows, Session);
         return yield* Effect.void;
     }
 
@@ -144,6 +145,7 @@ const OnActivate = (
     if (Option.isSome(ActivationTarget))
     {
         yield* Session.SetActivationWindow(ActivationTarget.value.Window);
+        yield* PublishOverlayScreen(BrowserWindows, Session);
         yield* Console.log("Overlay activated successfully.");
         yield* BrowserWindows.SetBounds(
             BrowserWindow.Key.Overlay,
@@ -165,6 +167,7 @@ const OnActivate = (
     }
     else
     {
+        yield* PublishOverlayScreen(BrowserWindows, Session);
         yield* Console.log(
             "Overlay activation was attempted, but there was no foreground window to overlay."
         );
@@ -243,7 +246,6 @@ const ExecuteUi = (
             return Effect.gen(function*()
             {
                 yield* Session.Reset;
-                yield* PublishOverlayScreen(BrowserWindows, Session);
                 yield* OnActivate(BrowserWindows, Settings, Session);
             });
         case "Deactivate":

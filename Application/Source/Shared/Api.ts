@@ -56,7 +56,6 @@ export interface AppApi
         ) => () => void;
     };
 
-    readonly ping: () => Promise<string>;
     readonly platform: string;
     readonly theme:
     {
@@ -77,7 +76,6 @@ const AppApiChannel = Object.freeze({
     OverlayFocusPreview: "overlay-focus:preview" as const,
     OverlayScreenChanged: "overlay-screen:changed" as const,
     OverlayScreenGet: "overlay-screen:get" as const,
-    Ping: "application:ping",
     ThemeChanged: "theme:changed",
     ThemeGet: "theme:get"
 } as const);

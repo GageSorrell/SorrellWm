@@ -17,9 +17,9 @@ import {
 } from "@fluentui/react-components";
 import { useEffect, useMemo, useState } from "react";
 import { Application } from "./Application.js";
-import { ColorScheme } from "../../Shared/Theme.js";
+import { ColorScheme } from "../Shared/Theme.js";
 import { CreateFluentTheme } from "./Theme.js";
-import type { RendererTheme } from "../../Shared/Theme.js";
+import type { RendererTheme } from "../Shared/Theme.js";
 
 const GetInitialRendererTheme = (): RendererTheme => ({
     AccentColor: null,

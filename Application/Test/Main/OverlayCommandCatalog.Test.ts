@@ -7,10 +7,10 @@
  * @license   MIT
  */
 
-import * as Hotkey from "../Source/Main/Input/Hotkey.ts";
-import { type OverlayCommandDto, OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
+import * as Hotkey from "../../Source/Main/Input/Hotkey.ts";
+import { type OverlayCommandDto, OverlayScreenId } from "../../Source/Shared/OverlayCommand.ts";
 import { describe, expect, it, vi } from "vitest";
-import { FromKeybindSettings } from "../Source/Main/Overlay/CommandCatalog.ts";
+import { FromKeybindSettings } from "../../Source/Main/Overlay/CommandCatalog.ts";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
@@ -57,6 +57,34 @@ describe("OverlayCommandCatalog", () =>
             { HotkeyId: "SelectDown", Id: "Move", KeyLabel: "T" },
             { HotkeyId: "SelectRight", Id: "Resize", KeyLabel: "N" }
         ]);
+    });
+
+    it("projects the Home secondary command with its application label and shortcut", () =>
+    {
+        const Screen = FromKeybindSettings(
+            OverlayScreenId.Home,
+            Hotkey.DefaultKeybindSettings,
+            { },
+            "Visual Studio Code"
+        );
+
+        expect(Screen.SecondaryCommand).toEqual({
+            Disabled: false,
+            HotkeyId: "Toggle",
+            Id: "OpenPerAppSettings",
+            Label: "Configure how SorrellWm manages Visual Studio Code windows",
+            Shortcut: {
+                KeyCode: 0x09,
+                KeyLabel: "TAB",
+                Modifiers: {
+                    Alt: false,
+                    Control: false,
+                    Shift: false,
+                    Super: false
+                }
+            }
+        });
+        expect(Screen.SecondaryCommand).not.toHaveProperty("Target");
     });
 
     it("projects direction commands for the Focus screen", () =>

@@ -9,8 +9,8 @@
  * @license   MIT
  */
 
-import * as TilingManager from "../Source/Main/Tiling/Manager.ts";
-import * as TilingTree from "../Source/Main/Tiling/Tree.ts";
+import * as TilingManager from "../../Source/Main/Tiling/Manager.ts";
+import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
 import { Effect, Option, Result } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";

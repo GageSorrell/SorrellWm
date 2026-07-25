@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Root } from "./Root.js";
+import { Root } from "../../Source/Renderer/Root.js";
 
 describe("Root", () =>
 {

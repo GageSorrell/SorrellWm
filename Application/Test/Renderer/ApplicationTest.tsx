@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-import { Application } from "./Application.js";
+import { Application } from "../../Source/Renderer/Application.js";
 
 describe("Application", () =>
 {

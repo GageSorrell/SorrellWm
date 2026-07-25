@@ -1,20 +1,24 @@
 {
     "extends": "@sorrell/tsconfig",
-    "compilerOptions": {
+    "compilerOptions":
+    {
         "jsx": "react-jsx",
-        "lib": [
+        "lib":
+        [
             "DOM",
             "DOM.Iterable",
             "ES2024"
         ],
         "module": "Preserve",
         "moduleResolution": "Bundler",
-        "types": [
+        "types":
+        [
             "@testing-library/jest-dom",
             "vite/client"
         ]
     },
-    "include": [
+    "include":
+    [
         "Source/Renderer/**/*.ts",
         "Source/Renderer/**/*.tsx",
         "Source/Shared/**/*.ts"

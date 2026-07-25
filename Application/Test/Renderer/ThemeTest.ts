@@ -9,10 +9,10 @@
  * @license   MIT
  */
 
-import { CreateBrandVariants, CreateFluentTheme } from "./Theme.js";
+import { CreateBrandVariants, CreateFluentTheme } from "../../Source/Renderer/Theme.ts";
 import { describe, expect, it } from "vitest";
 import { webDarkTheme, webLightTheme } from "@fluentui/react-components";
-import { ColorScheme } from "../../Shared/Theme.js";
+import { ColorScheme } from "../../Source/Shared/Theme.ts";
 
 describe("CreateFluentTheme", () =>
 {

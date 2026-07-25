@@ -9,14 +9,14 @@
  * @license   MIT
  */
 
-import * as OverlaySession from "../Source/Main/Overlay/Session.ts";
+import * as OverlaySession from "../../Source/Main/Overlay/Session.ts";
 import * as Windows from "@sorrell/windows";
 import {
     CommandResolver,
     Live,
     Resolve,
     type Resolved
-} from "../Source/Main/Command/Resolver.ts";
+} from "../../Source/Main/Command/Resolver.ts";
 import { Effect, Layer, Option, Stream, pipe } from "effect";
 import {
     Hotkey,
@@ -25,9 +25,9 @@ import {
     type Match,
     Phase,
     type Phase as PhaseType
-} from "../Source/Main/Input/Hotkey.ts";
+} from "../../Source/Main/Input/Hotkey.ts";
 import { describe, expect, it, vi } from "vitest";
-import { OverlayScreenId } from "../Source/Shared/OverlayCommand.js";
+import { OverlayScreenId } from "../../Source/Shared/OverlayCommand.ts";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
@@ -63,7 +63,15 @@ vi.mock("@sorrell/windows", () => ({
         RWIN: 0x5C,
         SHIFT: 0x10,
         T: 0x54,
-        VK: [ 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x4E, 0x54, 0x83, 0xA6 ]
+        TAB: 0x09,
+        VK: [ 0x09, 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x4E, 0x54, 0x83, 0xA6 ]
+    },
+    Window:
+    {
+        GetManageableTopLevelWindows: (): ReadonlyArray<bigint> => [ ],
+        GetWindowRect: (): undefined => undefined,
+        GetWindowWorkArea: (): undefined => undefined,
+        SetWindowRect: (): undefined => undefined
     }
 }));
 
@@ -145,6 +153,17 @@ describe("CommandResolver.Resolve", () =>
             Activation(Id.Back, Windows.VK.BROWSER_BACK, Phase.Pressed),
             OverlayScreenId.Focus
         ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
+    });
+
+    it("maps the Toggle key to the Home secondary command", () =>
+    {
+        expect(Option.getOrThrow(Resolve(
+            Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed)
+        ))).toMatchObject({
+            Category: "Ui",
+            Id: "OpenPerAppSettings",
+            _tag: "NoOpOverlayCommand"
+        });
     });
 
     it("does not invent commands for actions without command semantics", () =>

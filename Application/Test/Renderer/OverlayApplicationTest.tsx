@@ -11,10 +11,10 @@ import type {
     OverlayCommandDto,
     OverlayCommandTargetDto,
     OverlayScreenDto
-} from "../../Shared/OverlayCommand.js";
+} from "../../Source/Shared/OverlayCommand.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { OverlayApplication } from "./OverlayApplication.js";
+import { OverlayApplication } from "../../Source/Renderer/OverlayApplication.js";
 
 const Commands: ReadonlyArray<OverlayCommandDto> =
     [
@@ -28,7 +28,23 @@ const HomeScreen: OverlayScreenDto =
     {
         CanGoBack: false,
         Commands,
-        Id: "Home"
+        Id: "Home",
+        SecondaryCommand: {
+            Disabled: false,
+            HotkeyId: "Toggle",
+            Id: "OpenPerAppSettings",
+            Label: "Configure how SorrellWm manages Visual Studio Code windows",
+            Shortcut: {
+                KeyCode: 0x09,
+                KeyLabel: "TAB",
+                Modifiers: {
+                    Alt: false,
+                    Control: false,
+                    Shift: false,
+                    Super: false
+                }
+            }
+        }
     } as const;
 
 const FocusScreen: OverlayScreenDto =
@@ -47,7 +63,7 @@ const FocusScreen: OverlayScreenDto =
                 "SelectUp",
                 "K",
                 0x4B,
-                { Title: "Upper App" }
+                { Icon: undefined, Title: "Upper App" }
             ),
             Command("FocusMoveDown", "SelectDown", "J", 0x4A, undefined, true),
             Command(
@@ -55,7 +71,7 @@ const FocusScreen: OverlayScreenDto =
                 "SelectRight",
                 "L",
                 0x4C,
-                { Title: "Right App" }
+                { Icon: undefined, Title: "Right App" }
             )
         ],
         Id: "Focus"
@@ -98,6 +114,17 @@ describe("OverlayApplication", () =>
 
         fireEvent.click(Buttons[2] as HTMLElement);
         expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("Move");
+
+        const SecondaryRegion = screen.getByLabelText("Secondary command");
+        const SecondaryButton = within(SecondaryRegion).getByRole("button", {
+            name: /configure how sorrellwm manages visual studio code windows/i
+        });
+        expect(SecondaryButton).toHaveTextContent("TAB");
+        expect(within(SecondaryButton).queryByTestId("application-icon"))
+            .not.toBeInTheDocument();
+
+        fireEvent.click(SecondaryButton);
+        expect(window.sorrell.overlay.invoke).toHaveBeenLastCalledWith("OpenPerAppSettings");
     });
 
     it("renders Focus targets, icons, disabled directions, previews, and navigation", async() =>

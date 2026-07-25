@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as BoxUtility from "../Source/Main/Utility/Math/Box.js";
+import * as BoxUtility from "../../Source/Main/Utility/Math/Box.ts";
 import { Box, Int, IntInterval, IntPoint } from "@sorrell/math";
 import { describe, expect, it } from "vitest";
 

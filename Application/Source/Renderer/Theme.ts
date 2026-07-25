@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import type { AccentColor, RendererTheme } from "../../Shared/Theme.js";
+import type { AccentColor, RendererTheme } from "../Shared/Theme.js";
 import {
     type BrandVariants,
     type Theme,
@@ -18,7 +18,7 @@ import {
     webDarkTheme,
     webLightTheme
 } from "@fluentui/react-components";
-import { ColorScheme } from "../../Shared/Theme.js";
+import { ColorScheme } from "../Shared/Theme.js";
 
 interface RgbColor
 {

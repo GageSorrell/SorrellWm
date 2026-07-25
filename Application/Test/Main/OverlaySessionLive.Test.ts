@@ -7,18 +7,18 @@
  * @license   MIT
  */
 
-import * as AppSettings from "../Source/Main/AppSettings/AppSettings.ts";
-import * as BrowserWindow from "../Source/Main/BrowserWindow.js";
+import * as AppSettings from "../../Source/Main/AppSettings/AppSettings.ts";
+import * as BrowserWindow from "../../Source/Main/BrowserWindow.ts";
 import { Effect, Layer, Option, Result, Stream, pipe } from "effect";
 import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
 import {
     Live,
     OverlaySession
-} from "../Source/Main/Overlay/Session.ts";
+} from "../../Source/Main/Overlay/Session.ts";
 import {
     type OverlayCommandDto,
     OverlayScreenId
-} from "../Source/Shared/OverlayCommand.js";
+} from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
 
@@ -41,7 +41,8 @@ vi.mock("@sorrell/windows", async() =>
             H: 0x48,
             N: 0x4E,
             T: 0x54,
-            VK: [ 0x44, 0x48, 0x4E, 0x54, 0x83 ]
+            TAB: 0x09,
+            VK: [ 0x09, 0x44, 0x48, 0x4E, 0x54, 0x83 ]
         },
         Window: {
             ClearWindowDimming: vi.fn(() => EffectModule.Result.succeed(undefined)),
@@ -98,6 +99,27 @@ beforeEach(() =>
 
 describe("OverlaySession.Live Focus targets", () =>
 {
+    it("publishes the activation application's secondary command on Home", async() =>
+    {
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows)
+        ));
+
+        expect(Snapshot.SecondaryCommand).toMatchObject({
+            Id: "OpenPerAppSettings",
+            Label: "Configure how SorrellWm manages Right App windows"
+        });
+        expect(Snapshot.SecondaryCommand).not.toHaveProperty("Target");
+    });
+
     it("publishes target metadata and previews only the current, overlay, and target windows", async() =>
     {
         const Snapshot = await Effect.runPromise(pipe(

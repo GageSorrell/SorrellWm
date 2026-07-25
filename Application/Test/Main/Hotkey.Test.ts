@@ -23,7 +23,7 @@ import {
     Make,
     Phase,
     ToSetting
-} from "../Source/Main/Input/Hotkey.ts";
+} from "../../Source/Main/Input/Hotkey.ts";
 import {
     Deferred,
     Effect,
@@ -36,7 +36,7 @@ import {
     pipe
 } from "effect";
 import { describe, expect, it, vi } from "vitest";
-import { Keyboard } from "../Source/Main/Input/Keyboard.ts";
+import { Keyboard } from "../../Source/Main/Input/Keyboard.ts";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:

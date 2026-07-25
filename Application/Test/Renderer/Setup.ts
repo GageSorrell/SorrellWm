@@ -41,7 +41,6 @@ Object.defineProperty(window, "sorrell", {
             onChanged: vi.fn(() => (): void => undefined),
             preview: vi.fn(() => Promise.resolve())
         },
-        ping: vi.fn<() => Promise<string>>(() => Promise.resolve("pong")),
         platform: "win32",
         theme:
         {

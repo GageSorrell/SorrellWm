@@ -16,6 +16,7 @@ import type * as Wm from "./Wm.ts";
 import { Context, Effect, Layer, Option, Result, Stream, pipe } from "effect";
 import {
     GetOverlayCommandDefinitions,
+    GetOverlaySecondaryCommandDefinition,
     type OverlayCommandDefinition,
     type OverlayCommandId,
     type OverlayScreenId,
@@ -38,12 +39,13 @@ const ResolveOverlayCommand = (
     Id: OverlayCommandId
 ): Option.Option<Resolved> =>
 {
-    const IsAvailable = GetOverlayCommandDefinitions(Screen).some((
+    const IsPrimaryCommand = GetOverlayCommandDefinitions(Screen).some((
         Definition: OverlayCommandDefinition
     ) =>
         Definition.Id === Id);
+    const IsSecondaryCommand = GetOverlaySecondaryCommandDefinition(Screen)?.Id === Id;
 
-    if (!IsAvailable)
+    if (!IsPrimaryCommand && !IsSecondaryCommand)
     {
         return Option.none();
     }
@@ -97,10 +99,13 @@ const Resolve = (
                 return Option.none();
             }
 
-            const Definition = GetOverlayCommandDefinitions(Screen).find((
-                Candidate: OverlayCommandDefinition
+            const Definition = [
+                ...GetOverlayCommandDefinitions(Screen),
+                GetOverlaySecondaryCommandDefinition(Screen)
+            ].find((
+                Candidate: OverlayCommandDefinition | undefined
             ) =>
-                Candidate.HotkeyId === Activation.Keybind.Id);
+                Candidate?.HotkeyId === Activation.Keybind.Id);
 
             return Definition === undefined
                 ? Option.none()

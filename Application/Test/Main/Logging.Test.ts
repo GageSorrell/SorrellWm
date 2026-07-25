@@ -9,8 +9,8 @@
  * @license   MIT
  */
 
-import * as Logging from "../Source/Main/Logging.ts";
-import * as TilingTree from "../Source/Main/Tiling/Tree.ts";
+import * as Logging from "../../Source/Main/Logging.ts";
+import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
 import {
     LogRuntime,
     Make as MakeLogRuntime

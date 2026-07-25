@@ -10,12 +10,12 @@
 import {
     type FocusWindowCandidate,
     SelectDirectionalWindow
-} from "../Source/Main/Overlay/Session.ts";
+} from "../../Source/Main/Overlay/Session.ts";
 import { describe, expect, it } from "vitest";
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";
 import { Option } from "effect";
-import { OverlayCommandId } from "../Source/Shared/OverlayCommand.js";
+import { OverlayCommandId } from "../../Source/Shared/OverlayCommand.ts";
 
 const Candidate = (
     Window: bigint,

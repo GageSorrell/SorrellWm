@@ -18,7 +18,7 @@ import {
     ResolveHoverDelayMilliseconds,
     ShouldShow
 } from
-    "../Source/Main/TitlebarFlyout.js";
+    "../../Source/Main/TitlebarFlyout.ts";
 import { describe, expect, it } from "vitest";
 import { Option } from "effect";
 

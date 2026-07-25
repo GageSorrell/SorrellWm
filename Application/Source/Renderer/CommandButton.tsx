@@ -17,7 +17,7 @@ import {
     shorthands,
     tokens
 } from "@fluentui/react-components";
-import type { ShortcutDto } from "../../Shared/Hotkey.js";
+import type { ShortcutDto } from "../Shared/Hotkey.js";
 
 /** Presentation properties for a primary overlay command. */
 export interface CommandButtonProps
@@ -53,6 +53,16 @@ const UseStyles = makeStyles({
         width: "100%",
         ...shorthands.gap("0.9rem"),
         ...shorthands.padding("0.8rem", "1rem")
+    },
+    CompactButton:
+    {
+        display: "grid",
+        gridTemplateColumns: "auto minmax(0, 1fr) auto",
+        maxWidth: "100%",
+        minHeight: "2.25rem",
+        textAlign: "left",
+        ...shorthands.gap("0.65rem"),
+        ...shorthands.padding("0.35rem", "0.75rem")
     },
     Content:
     {
@@ -192,7 +202,7 @@ const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode
         <Button
             appearance={ Props.Active ? "primary" : "subtle" }
             aria-pressed={ Props.Active }
-            className={ Styles.Button }
+            className={ Styles.CompactButton }
             disabled={ Props.Disabled === true }
             icon={ Props.Icon }
             onClick={ Props.OnInvoke }

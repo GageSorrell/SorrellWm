@@ -44,7 +44,8 @@ export/** Create a complete overlay-screen snapshot from the current settings. *
 const FromKeybindSettings = (
     ScreenId: OverlayCommand.OverlayScreenId,
     Values: ReadonlyArray<Hotkey.KeybindSetting>,
-    FocusTargetValues: FocusTargets = { }
+    FocusTargetValues: FocusTargets = { },
+    AppTitle?: string
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
@@ -72,9 +73,30 @@ const FromKeybindSettings = (
         }
     }
 
+    const SecondaryDefinition = AppTitle === undefined
+        ? undefined
+        : OverlayCommand.GetOverlaySecondaryCommandDefinition(ScreenId);
+    const SecondaryKeybind = SecondaryDefinition === undefined
+        ? undefined
+        : Keybinds.find((Value: Hotkey.KeybindSetting) =>
+            Value.Id === SecondaryDefinition.HotkeyId);
+    const SecondaryCommand = SecondaryDefinition === undefined || SecondaryKeybind === undefined
+        ? undefined
+        : Object.freeze({
+            ...SecondaryDefinition,
+            Disabled: false,
+            Label: `Configure how SorrellWm manages ${ AppTitle } windows`,
+            Shortcut: Object.freeze({
+                KeyCode: SecondaryKeybind.Key,
+                KeyLabel: GetKeyLabel(SecondaryKeybind.Key),
+                Modifiers: Object.freeze({ ...SecondaryKeybind.Modifiers })
+            })
+        });
+
     return Object.freeze({
         CanGoBack: ScreenId !== OverlayCommand.OverlayScreenId.Home,
         Commands: Object.freeze(Commands),
-        Id: ScreenId
+        Id: ScreenId,
+        ...(SecondaryCommand === undefined ? { } : { SecondaryCommand })
     });
 };

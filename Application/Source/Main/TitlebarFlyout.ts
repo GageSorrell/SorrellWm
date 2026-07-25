@@ -162,14 +162,10 @@ const Live = Layer.effect(
 
             yield* Session.Reset;
             yield* Session.SetActivationWindow(Hover.Window);
-            const Screen = yield* Session.Current;
             yield* BrowserWindows.Send(
                 BrowserWindow.Key.Overlay,
                 AppApiChannel.OverlayScreenChanged,
-                Overlay.CommandCatalog.FromKeybindSettings(
-                    Screen,
-                    yield* Settings.getSetting("Keybinds")
-                )
+                yield* Session.Snapshot
             );
             yield* BrowserWindows.SetBounds(BrowserWindow.Key.Overlay, OverlayBounds);
             yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Overlay);

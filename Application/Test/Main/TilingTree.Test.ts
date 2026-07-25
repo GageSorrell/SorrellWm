@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as TilingTree from "../Source/Main/Tiling/Tree.ts";
+import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
 import { describe, expect, it } from "vitest";
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";

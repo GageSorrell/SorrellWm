@@ -11,8 +11,8 @@
 
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BackdropApplication } from "./BackdropApplication.js";
-import type { BackdropPresentation } from "../../Shared/Backdrop.js";
+import { BackdropApplication } from "../../Source/Renderer/BackdropApplication.js";
+import type { BackdropPresentation } from "../../Source/Shared/Backdrop.js";
 
 describe("BackdropApplication", () =>
 {

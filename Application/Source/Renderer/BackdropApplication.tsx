@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useState } from "react";
-import type { BackdropPresentation } from "../../Shared/Backdrop.js";
+import type { BackdropPresentation } from "../Shared/Backdrop.js";
 import { makeStyles } from "@fluentui/react-components";
 
 const TransparentPresentation: BackdropPresentation = Object.freeze({

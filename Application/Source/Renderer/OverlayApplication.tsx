@@ -32,6 +32,7 @@ import {
     BreadcrumbItem,
     Button,
     makeStyles,
+    mergeClasses,
     shorthands,
     tokens
 } from "@fluentui/react-components";
@@ -42,85 +43,97 @@ import {
     type OverlayCommandId as OverlayCommandIdType,
     type OverlayScreenDto,
     OverlayScreenId
-} from "../../Shared/OverlayCommand.js";
-import { useEffect, useState } from "react";
+} from "../Shared/OverlayCommand.js";
 import { Predicate, Struct } from "effect";
+import { useEffect, useState } from "react";
 
-interface CommandPresentation
+interface Presentation
 {
     readonly Description: string;
+    readonly Label: string;
+}
+
+interface CommandPresentation extends Presentation
+{
     readonly Icon: FluentIcon;
-    readonly Label: string;
 }
 
-interface CompactCommandPresentation extends Omit<CommandPresentation, "Description"> { }
-
-interface ScreenPresentation
+interface CompactCommandPresentation
 {
-    readonly Description: string;
-    readonly Label: string;
+    readonly Icon: FluentIcon;
 }
+
+interface ScreenPresentation extends Presentation { }
 
 const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation | CompactCommandPresentation>> =
     {
-        [ OverlayCommandId.Focus ]: {
+        [ OverlayCommandId.Focus ]:
+        {
             Description: "Choose a window to focus.",
             Icon: CursorClickRegular,
             Label: "Focus"
         },
-        [ OverlayCommandId.FocusMoveDown ]: {
+        [ OverlayCommandId.FocusMoveDown ]:
+        {
             Description: "Move the focus selection down.",
             Icon: ArrowDownRegular,
             Label: "Focus Down"
         },
-        [ OverlayCommandId.FocusMoveLeft ]: {
+        [ OverlayCommandId.FocusMoveLeft ]:
+        {
             Description: "Move the focus selection left.",
             Icon: ArrowLeftRegular,
             Label: "Focus Left"
         },
-        [ OverlayCommandId.FocusMoveRight ]: {
+        [ OverlayCommandId.FocusMoveRight ]:
+        {
             Description: "Move the focus selection right.",
             Icon: ArrowRightRegular,
             Label: "Focus Right"
         },
-        [ OverlayCommandId.FocusMoveUp ]: {
+        [ OverlayCommandId.FocusMoveUp ]:
+        {
             Description: "Move the focus selection up.",
             Icon: ArrowUpRegular,
             Label: "Focus Up"
         },
-        [ OverlayCommandId.Insert ]: {
+        [ OverlayCommandId.Insert ]:
+        {
             Description: "Insert a window into the layout.",
             Icon: AddSquareRegular,
             Label: "Insert"
         },
-        [ OverlayCommandId.Move ]: {
+        [ OverlayCommandId.Move ]:
+        {
             Description: "Move a window within the layout.",
             Icon: ArrowMoveRegular,
             Label: "Move"
         },
-        [ OverlayCommandId.Resize ]: {
+        [ OverlayCommandId.Resize ]:
+        {
             Description: "Resize a window in the layout.",
             Icon: ResizeLargeRegular,
             Label: "Resize"
         },
         [ OverlayCommandId.OpenPerAppSettings ]:
         {
-            Icon: WindowSettingsRegular,
-            Label: "Open SorrellWM settings for @TODO"
+            Icon: WindowSettingsRegular
         }
     } as const;
 
-const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> = {
-    [ OverlayScreenId.Focus ]: {
-        Description: "Choose a direction to move the focus selection.",
-        Label: "Focus"
-    },
-    [ OverlayScreenId.Home ]:
+const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
     {
-        Description: "Choose the type of action to perform.",
-        Label: "SorrellWm"
-    }
-};
+        [ OverlayScreenId.Focus ]:
+        {
+            Description: "Choose a direction to move the focus selection.",
+            Label: "Focus"
+        },
+        [ OverlayScreenId.Home ]:
+        {
+            Description: "Choose the type of action to perform.",
+            Label: "SorrellWm"
+        }
+    };
 
 const UseStyles = makeStyles({
     ApplicationIconImage:
@@ -167,6 +180,10 @@ const UseStyles = makeStyles({
         flexDirection: "column",
         justifyContent: "space-between"
     },
+    ContentWithFooter:
+    {
+        paddingBottom: "calc(clamp(1.5rem, 5vw, 3rem) + 48px)"
+    },
     Description:
     {
         color: tokens.colorNeutralForeground2,
@@ -175,22 +192,40 @@ const UseStyles = makeStyles({
         maxWidth: "40rem",
         ...shorthands.margin(0)
     },
-    Error: {
+    Error:
+    {
         backgroundColor: tokens.colorPaletteRedBackground1,
         borderRadius: "0.5rem",
         color: tokens.colorPaletteRedForeground1,
         ...shorthands.border("1px", "solid", tokens.colorPaletteRedBorder2),
         ...shorthands.padding("0.75rem")
     },
-    Shell: {
+    Footer:
+    {
+        alignItems: "center",
+        backgroundColor: tokens.colorNeutralBackground1,
+        bottom: 0,
+        boxSizing: "border-box",
+        display: "flex",
+        height: "48px",
+        justifyContent: "center",
+        left: 0,
+        position: "absolute",
+        width: "100%",
+        ...shorthands.borderTop("1px", "solid", tokens.colorNeutralStroke2),
+        ...shorthands.padding(0, tokens.spacingHorizontalM)
+    },
+    Shell:
+    {
         backgroundColor: "transparent",
         minHeight: "100vh",
-        overflow: "hidden"
+        overflow: "hidden",
+        position: "relative"
     }
 });
 
 export/** Render the current primary commands in their backend-supplied order. */
-const OverlayApplication = (): React.JSX.Element =>
+const OverlayApplication = (): React.ReactNode =>
 {
     const Styles = UseStyles();
     const [ CurrentScreen, SetCurrentScreen ] = useState<OverlayScreenDto | undefined>();
@@ -253,6 +288,10 @@ const OverlayApplication = (): React.JSX.Element =>
         ? ScreenPresentation[OverlayScreenId.Home]
         : ScreenPresentation[CurrentScreen.Id];
     const CanGoBack = CurrentScreen?.CanGoBack === true;
+    const SecondaryCommand = CurrentScreen?.SecondaryCommand;
+    const SecondaryIcon = SecondaryCommand === undefined
+        ? undefined
+        : Presentation[SecondaryCommand.Id].Icon;
 
     return (
         <main className={ Styles.Shell }>
@@ -299,7 +338,10 @@ const OverlayApplication = (): React.JSX.Element =>
                 </div>
             </header>
 
-            <div className={ Styles.Content }>
+            <div className={ mergeClasses(
+                Styles.Content,
+                SecondaryCommand === undefined ? undefined : Styles.ContentWithFooter
+            ) }>
                 <p className={ Styles.Description }>
                     { CurrentPresentation.Description }
                 </p>
@@ -359,30 +401,21 @@ const OverlayApplication = (): React.JSX.Element =>
                         );
                     }) }
                 </section>
-                <section style={ {
-                    alignItems: "center",
-                    backgroundColor: "pink",
-                    bottom: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    height: 48,
-                    justifyContent: "center",
-                    left: 0,
-                    position: "absolute",
-                    width: "100%"
-                } }>
-                    {
-                        CurrentScreen?.BottomCommand !== undefined &&
+                { SecondaryCommand !== undefined && SecondaryIcon !== undefined && (
+                    <footer
+                        aria-label="Secondary command"
+                        className={ Styles.Footer }>
                         <CompactCommandButton
-                            Active
-                            Icon={ <WindowSettingsRegular /> }
-                            Label={ CurrentScreen.BottomCommand.Target.Title }
-                            OnInvoke={ () => Invoke(CurrentScreen.BottomCommand!.Id) }
-                            Shortcut={ CurrentScreen.BottomCommand!.Shortcut }
-                            key={ CurrentScreen.BottomCommand!.Id }
+                            Active={ false }
+                            Disabled={ SecondaryCommand.Disabled }
+                            Icon={ <SecondaryIcon /> }
+                            Label={ SecondaryCommand.Label }
+                            OnInvoke={ () => Invoke(SecondaryCommand.Id) }
+                            Shortcut={ SecondaryCommand.Shortcut }
+                            key={ SecondaryCommand.Id }
                         />
-                    }
-                </section>
+                    </footer>
+                ) }
             </div>
         </main>
     );

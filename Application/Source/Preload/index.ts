@@ -61,18 +61,6 @@ const OnBackdropShow = (
     };
 };
 
-const ping = async (): Promise<string> =>
-{
-    const response: unknown = await ipcRenderer.invoke(AppApiChannel.Ping);
-
-    if (typeof response !== "string")
-    {
-        throw new TypeError("The main process returned an invalid ping response.");
-    }
-
-    return response;
-};
-
 const BackOverlayScreen = async(): Promise<void> =>
 {
     await ipcRenderer.invoke(AppApiChannel.OverlayBack);
@@ -173,7 +161,6 @@ const applicationApi: AppApi = Object.freeze({
         onChanged: OnOverlayScreenChanged,
         preview: PreviewOverlayFocus
     }),
-    ping,
     platform: process.platform,
     theme: Object.freeze({
         get: GetRendererTheme,

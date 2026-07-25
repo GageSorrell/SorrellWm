@@ -15,12 +15,12 @@ import { AppSettings, BrowserWindow } from "../index.ts";
 import {
     OverlayCommandId as CommandId,
     type OverlayCommandId,
-    OverlayCommandTargetDto,
+    type OverlayCommandTargetDto,
     type OverlayScreenDto,
     type OverlayScreenId,
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.js";
-import { Context, Effect, Layer, Option, Ref, Result, Stream, Struct, SubscriptionRef } from "effect";
+import { Context, Effect, Layer, Option, Ref, Result, Stream, SubscriptionRef, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import type { Box } from "@sorrell/math";
 
@@ -311,6 +311,7 @@ const Live = Layer.effect(
             {
                 const CurrentScreen = yield* Current;
                 const CurrentSettings = yield* Settings.get;
+                const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
                 const FocusTargets: Partial<Record<
                     OverlayCommandId,
                     OverlayCommandTargetDto
@@ -318,8 +319,6 @@ const Live = Layer.effect(
 
                 if (CurrentScreen === ScreenId.Focus)
                 {
-                    const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
-
                     for (const Id of FocusCommandIds)
                     {
                         const Target = ResolveTarget(CurrentWindowOpt, Id);
@@ -329,19 +328,25 @@ const Live = Layer.effect(
                             FocusTargets[Id] = GetTargetPresentation(Target.value);
                         }
                     }
-
-                    FocusTargets.OpenPerAppSettings = OverlayCommandTargetDto({
-                        Title: Option.getOrElse(
-                            Option.flatMap(CurrentWindowOpt, Window.GetWindowText),
-                            () => "Untitled window"
-                        )
-                    });
                 }
+
+                const AppTitle = Option.map(CurrentWindowOpt, (CurrentWindow: Handle.HWND) =>
+                    pipe(
+                        Window.GetWindowText(CurrentWindow),
+                        Option.filter(
+                            (Value: string) => Value.trim().length > 0
+                        ),
+                        Option.map(
+                            (Value: string) => Value.trim()
+                        ),
+                        Option.getOrElse(() => "Untitled window")
+                    ));
 
                 return OverlayCommandCatalog.FromKeybindSettings(
                     CurrentScreen,
                     CurrentSettings.Keybinds,
-                    FocusTargets
+                    FocusTargets,
+                    AppTitle.valueOrUndefined
                 );
             }),
             TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none())
