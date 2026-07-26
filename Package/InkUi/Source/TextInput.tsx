@@ -11,8 +11,23 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { InsertAt, RemoveAt, RemoveBefore } from "./Internal/Input.tsx";
-import { useRoutedInput } from "./Interaction/Shortcut.ts";
+import { Box, type BoxMouseDownEvent, type BoxMouseDragEvent } from "./Box/index.js";
+import {
+    GetNextWordOffset,
+    GetPreviousWordOffset,
+    GetTextNavigationOffset,
+    GetTextSelection,
+    IsTerminalMouseInput,
+    IsTextNavigationKey,
+    RemoveAt,
+    RemoveBefore,
+    RemoveTextSelection,
+    ReplaceTextSelection,
+    type TextReplacement,
+    type TextSelection
+} from "./Internal/Input.js";
+import { Button as MouseButton } from "./Mouse/index.js";
+import { useRoutedInput } from "./Interaction/Shortcut.js";
 import { useTheme } from "./Theme.js";
 
 /** {@inheritDoc TextInput} */
@@ -43,26 +58,74 @@ const TextInput = ({
 {
     const Theme = useTheme();
     const [ Cursor, SetCursor ] = React.useState(Value.length);
+    const [ SelectionAnchor, SetSelectionAnchor ] = React.useState<number | undefined>(undefined);
+    const MouseAnchorReference = React.useRef<number | undefined>(undefined);
+    const Selection: TextSelection | undefined = GetTextSelection(SelectionAnchor, Cursor);
 
     React.useEffect(() =>
     {
         SetCursor((Current: number) => Math.min(Current, Value.length));
+        SetSelectionAnchor((Current: number | undefined) => Current === undefined
+            ? undefined
+            : Math.min(Current, Value.length));
     }, [ Value.length ]);
+
+    React.useEffect(() =>
+    {
+        if (!Focused)
+        {
+            SetSelectionAnchor(undefined);
+            MouseAnchorReference.current = undefined;
+        }
+    }, [ Focused ]);
+
+    const MoveCursor = React.useCallback((Target: number, Extend: boolean): void =>
+    {
+        SetSelectionAnchor((Current: number | undefined) => Extend
+            ? (Current ?? Cursor)
+            : undefined);
+        SetCursor(Target);
+    }, [ Cursor ]);
+
+    const ApplyReplacement = React.useCallback((Replacement: TextReplacement): void =>
+    {
+        SetCursor(Replacement.Cursor);
+        SetSelectionAnchor(undefined);
+        OnChange?.(Replacement.Value);
+    }, [ OnChange ]);
 
     useRoutedInput((Input: string, Key: Ink.Key) =>
     {
-        if (Key.leftArrow)
+        if (IsTerminalMouseInput(Input))
         {
-            SetCursor((Current: number) => Math.max(0, Current - 1));
-            return true;
+            return false;
         }
-        if (Key.rightArrow)
+        if (IsTextNavigationKey(Key))
         {
-            SetCursor((Current: number) => Math.min(Value.length, Current + 1));
+            MoveCursor(GetTextNavigationOffset(Value, Cursor, Key), Key.shift);
             return true;
         }
         if (Key.backspace)
         {
+            const Removed: TextReplacement | undefined = RemoveTextSelection(
+                Value,
+                Cursor,
+                SelectionAnchor
+            );
+            if (Removed !== undefined)
+            {
+                ApplyReplacement(Removed);
+                return true;
+            }
+            if (Key.ctrl)
+            {
+                const Target: number = GetPreviousWordOffset(Value, Cursor);
+                ApplyReplacement({
+                    Cursor: Target,
+                    Value: Value.slice(0, Target) + Value.slice(Cursor)
+                });
+                return true;
+            }
             const Next = RemoveBefore(Value, Cursor);
             if (Next !== Value)
             {
@@ -73,6 +136,22 @@ const TextInput = ({
         }
         if (Key.delete)
         {
+            const Removed: TextReplacement | undefined = RemoveTextSelection(
+                Value,
+                Cursor,
+                SelectionAnchor
+            );
+            if (Removed !== undefined)
+            {
+                ApplyReplacement(Removed);
+                return true;
+            }
+            if (Key.ctrl)
+            {
+                const Target: number = GetNextWordOffset(Value, Cursor);
+                ApplyReplacement({ Cursor, Value: Value.slice(0, Cursor) + Value.slice(Target) });
+                return true;
+            }
             OnChange?.(RemoveAt(Value, Cursor));
             return true;
         }
@@ -83,9 +162,7 @@ const TextInput = ({
         }
         if (Input.length > 0 && !Key.ctrl && !Key.meta)
         {
-            const Next = InsertAt(Value, Cursor, Input);
-            SetCursor(Cursor + Input.length);
-            OnChange?.(Next);
+            ApplyReplacement(ReplaceTextSelection(Value, Cursor, SelectionAnchor, Input));
             return true;
         }
         return false;
@@ -101,19 +178,57 @@ const TextInput = ({
     }
 
     const DisplayValue = Mask?.repeat(Value.length) ?? Value;
-    const Before = DisplayValue.slice(0, Cursor);
-    const Current = DisplayValue[Cursor] ?? " ";
-    const After = DisplayValue.slice(Cursor + 1);
+    const MouseOffset = (X: number): number => Math.min(Value.length, Math.max(0, X));
+    const OnMouseDown = (Event: BoxMouseDownEvent): void =>
+    {
+        if (!Focused || Event.Button !== MouseButton.Left)
+        {
+            return;
+        }
+        const Target: number = MouseOffset(Event.LocalPosition.X);
+        const Anchor: number = Event.Modifiers.Shift
+            ? (SelectionAnchor ?? Cursor)
+            : Target;
+        MouseAnchorReference.current = Anchor;
+        SetSelectionAnchor(Event.Modifiers.Shift ? Anchor : undefined);
+        SetCursor(Target);
+    };
+    const OnMouseDrag = (Event: BoxMouseDragEvent): void =>
+    {
+        if (!Focused || Event.Button !== MouseButton.Left)
+        {
+            return;
+        }
+        const Anchor: number = MouseAnchorReference.current ?? Cursor;
+        SetSelectionAnchor(Anchor);
+        SetCursor(MouseOffset(Event.LocalPosition.X));
+    };
 
     return (
-        <Ink.Text color={ Theme.Text }>
-            { Before }
-            <Ink.Text
-                backgroundColor={ Theme.Primary }
-                color={ Theme.Background }>
-                { Current }
+        <Box
+            onMouseDown={ OnMouseDown }
+            onMouseDrag={ OnMouseDrag }>
+            <Ink.Text color={ Theme.Text }>
+                { Selection === undefined
+                    ? <>
+                        { DisplayValue.slice(0, Cursor) }
+                        <Ink.Text
+                            backgroundColor={ Theme.Primary }
+                            color={ Theme.Background }>
+                            { DisplayValue[Cursor] ?? " " }
+                        </Ink.Text>
+                        { DisplayValue.slice(Cursor + 1) }
+                    </>
+                    : <>
+                        { DisplayValue.slice(0, Selection.Start) }
+                        <Ink.Text
+                            backgroundColor={ Theme.Primary }
+                            color={ Theme.Background }>
+                            { DisplayValue.slice(Selection.Start, Selection.End) }
+                        </Ink.Text>
+                        { DisplayValue.slice(Selection.End) }
+                    </> }
             </Ink.Text>
-            { After }
-        </Ink.Text>
+        </Box>
     );
 };

@@ -10,6 +10,33 @@
  */
 
 import * as React from "react";
+import type * as Ink from "ink";
+import type { ButtonAppearance } from "./Button/Button.js";
+
+export type ButtonStyleState = "Default" | "Disabled" | "Focused" | "Hovered" | "Pressed";
+
+/** Visual properties a theme can assign to one Button state. */
+export interface ButtonVisualStyle
+{
+    readonly BackgroundColor?: string | undefined;
+    readonly Bold?: boolean | undefined;
+    readonly BorderColor?: string | undefined;
+    readonly BorderStyle?: Ink.BoxProps["borderStyle"] | "compact" | undefined;
+    readonly Color?: string | undefined;
+    readonly DimColor?: boolean | undefined;
+    readonly PaddingX?: number | undefined;
+    readonly PaddingY?: number | undefined;
+}
+
+/** State styles for one Button appearance. Unspecified fields inherit from Default. */
+export type ButtonAppearanceTheme = {
+    readonly [State in ButtonStyleState]?: ButtonVisualStyle
+};
+
+/** Appearance-specific Button styles supplied by a theme. */
+export type ButtonTheme = {
+    readonly [Appearance in ButtonAppearance]?: ButtonAppearanceTheme
+};
 
 /** Colors used consistently by every Ink UI component. */
 export interface Theme
@@ -19,6 +46,7 @@ export interface Theme
     readonly BackgroundPanel: string;
     readonly Border: string;
     readonly BorderActive: string;
+    readonly Button?: ButtonTheme | undefined;
     readonly Error: string;
     readonly Info: string;
     readonly Name: string;
@@ -30,8 +58,120 @@ export interface Theme
     readonly Warning: string;
 }
 
-export/** The default dark theme. */
-const DefaultTheme: Theme = Object.freeze({
+type ThemeColors = Omit<Theme, "Button">;
+
+function CompleteTheme(Colors: ThemeColors): Theme
+{
+    return Object.freeze({
+        ...Colors,
+        Button: CreateButtonTheme(Colors)
+    });
+}
+
+/** Create palette-derived defaults for every Button appearance and state. */
+export function CreateButtonTheme(ThemeValue: ThemeColors): Required<ButtonTheme>
+{
+    const Disabled: ButtonVisualStyle = {
+        BackgroundColor: ThemeValue.BackgroundElement,
+        BorderColor: ThemeValue.Border,
+        Color: ThemeValue.TextMuted,
+        DimColor: true
+    };
+    const Base: ButtonVisualStyle = {
+        BorderStyle: "round",
+        PaddingX: 1,
+        PaddingY: 0
+    };
+
+    return {
+        outline: {
+            Default: { ...Base, BorderColor: ThemeValue.Border, Color: ThemeValue.Text },
+            Disabled: { ...Disabled, BackgroundColor: undefined },
+            Focused: { BorderColor: ThemeValue.Primary, Color: ThemeValue.Primary },
+            Hovered: { BorderColor: ThemeValue.BorderActive, Color: ThemeValue.Info },
+            Pressed: { BorderColor: ThemeValue.Secondary, Color: ThemeValue.Secondary }
+        },
+        primary: {
+            Default: {
+                ...Base,
+                BackgroundColor: ThemeValue.Primary,
+                Bold: true,
+                BorderColor: ThemeValue.Primary,
+                Color: ThemeValue.Background
+            },
+            Disabled,
+            Focused: {
+                BackgroundColor: ThemeValue.Secondary,
+                BorderColor: ThemeValue.Info,
+                Color: ThemeValue.Background
+            },
+            Hovered: {
+                BackgroundColor: ThemeValue.Info,
+                BorderColor: ThemeValue.Info,
+                Color: ThemeValue.Background
+            },
+            Pressed: {
+                BackgroundColor: ThemeValue.Success,
+                BorderColor: ThemeValue.Success,
+                Color: ThemeValue.Background
+            }
+        },
+        secondary: {
+            Default: {
+                ...Base,
+                BackgroundColor: ThemeValue.BackgroundElement,
+                BorderColor: ThemeValue.Border,
+                Color: ThemeValue.Text
+            },
+            Disabled,
+            Focused: { BorderColor: ThemeValue.Primary, Color: ThemeValue.Primary },
+            Hovered: {
+                BackgroundColor: ThemeValue.BackgroundPanel,
+                BorderColor: ThemeValue.BorderActive,
+                Color: ThemeValue.Info
+            },
+            Pressed: {
+                BackgroundColor: ThemeValue.Primary,
+                BorderColor: ThemeValue.Primary,
+                Color: ThemeValue.Background
+            }
+        },
+        subtle: {
+            Default: { ...Base, BorderStyle: undefined, Color: ThemeValue.TextMuted },
+            Disabled: { Color: ThemeValue.TextMuted, DimColor: true },
+            Focused: { BackgroundColor: ThemeValue.BackgroundElement, Color: ThemeValue.Primary },
+            Hovered: { BackgroundColor: ThemeValue.BackgroundPanel, Color: ThemeValue.Text },
+            Pressed: { BackgroundColor: ThemeValue.BackgroundElement, Color: ThemeValue.Secondary }
+        },
+        transparent: {
+            Default: { ...Base, BorderStyle: undefined, Color: ThemeValue.Text },
+            Disabled: { Color: ThemeValue.TextMuted, DimColor: true },
+            Focused: { Color: ThemeValue.Primary },
+            Hovered: { Color: ThemeValue.Secondary },
+            Pressed: { Color: ThemeValue.Info }
+        }
+    };
+}
+
+/** Resolve a Button style, including partial theme overrides and state inheritance. */
+export function ResolveButtonStyle(
+    ThemeValue: Theme,
+    Appearance: ButtonAppearance,
+    State: ButtonStyleState
+): ButtonVisualStyle
+{
+    const Defaults: ButtonAppearanceTheme = CreateButtonTheme(ThemeValue)[Appearance];
+    const Overrides: ButtonAppearanceTheme | undefined = ThemeValue.Button?.[Appearance];
+    return {
+        ...Defaults.Default,
+        ...Defaults[State],
+        ...Overrides?.Default,
+        ...Overrides?.[State]
+    };
+}
+
+/** The default dark theme. */
+export const DefaultTheme: Theme = CompleteTheme({
     Background: "#1f2335",
     BackgroundElement: "#292e42",
     BackgroundPanel: "#24283b",
@@ -55,8 +195,7 @@ export/**
        */
 const Themes: ReadonlyArray<Theme> = Object.freeze([
     DefaultTheme,
-    Object.freeze({
-        ...DefaultTheme,
+    CompleteTheme({
         Background: "#303446",
         BackgroundElement: "#414559",
         BackgroundPanel: "#363A4F",
@@ -72,8 +211,7 @@ const Themes: ReadonlyArray<Theme> = Object.freeze([
         TextMuted: "#838BA7",
         Warning: "#E5C890"
     }),
-    Object.freeze({
-        ...DefaultTheme,
+    CompleteTheme({
         Background: "#2d353b",
         BackgroundElement: "#3d484d",
         BackgroundPanel: "#343f44",
@@ -89,8 +227,7 @@ const Themes: ReadonlyArray<Theme> = Object.freeze([
         TextMuted: "#859289",
         Warning: "#dbbc7f"
     }),
-    Object.freeze({
-        ...DefaultTheme,
+    CompleteTheme({
         Background: "#15141b",
         BackgroundElement: "#29263c",
         BackgroundPanel: "#1f1d2e",
@@ -106,8 +243,7 @@ const Themes: ReadonlyArray<Theme> = Object.freeze([
         TextMuted: "#6d6d6d",
         Warning: "#ffca85"
     }),
-    Object.freeze({
-        ...DefaultTheme,
+    CompleteTheme({
         Background: "#0d1117",
         BackgroundElement: "#21262d",
         BackgroundPanel: "#161b22",
@@ -153,4 +289,3 @@ export/**
        * @since 1.0.0
        */
 const useTheme = (): Theme => React.useContext(Context);
-

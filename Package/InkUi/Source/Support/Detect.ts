@@ -10,8 +10,8 @@
  */
 
 import {
-    MouseGranularity,
     type ColorDepth,
+    MouseGranularity,
     type TerminalIdentity,
     type TerminalKind,
     type TerminalMultiplexer,
@@ -109,7 +109,7 @@ export function GetPassiveSupport(
     };
 }
 
-function DetectKind(Environment: NodeJS.ProcessEnv): TerminalKind
+const DetectKind = (Environment: NodeJS.ProcessEnv): TerminalKind =>
 {
     const Program: string = Environment.TERM_PROGRAM?.toLowerCase() ?? "";
     const Term: string = Environment.TERM?.toLowerCase() ?? "";
@@ -180,10 +180,10 @@ function DetectKind(Environment: NodeJS.ProcessEnv): TerminalKind
     }
 
     return "unknown";
-}
+};
 
 /** Determine which multiplexer is being used, if any. */
-function DetectMultiplexer(Environment: NodeJS.ProcessEnv): TerminalMultiplexer | undefined
+const DetectMultiplexer = (Environment: NodeJS.ProcessEnv): TerminalMultiplexer | undefined =>
 {
     if (Environment.TMUX !== undefined)
     {
@@ -194,10 +194,14 @@ function DetectMultiplexer(Environment: NodeJS.ProcessEnv): TerminalMultiplexer 
         return "screen";
     }
     return undefined;
-}
+};
 
-function ParseVersionReport(Report: string):
-    { readonly Kind: TerminalKind; readonly Version?: string } | undefined
+const ParseVersionReport = (Report: string):
+    | {
+        readonly Kind: TerminalKind;
+        readonly Version?: string;
+    }
+    | undefined =>
 {
     const Value: string = Report.trim();
     const Matchers: ReadonlyArray<readonly [ RegExp, TerminalKind ]> = [
@@ -221,9 +225,9 @@ function ParseVersionReport(Report: string):
     }
 
     return undefined;
-}
+};
 
-function GetEnvironmentVersion(Kind: TerminalKind, Environment: NodeJS.ProcessEnv): string | undefined
+const GetEnvironmentVersion = (Kind: TerminalKind, Environment: NodeJS.ProcessEnv): string | undefined =>
 {
     switch (Kind)
     {
@@ -233,13 +237,13 @@ function GetEnvironmentVersion(Kind: TerminalKind, Environment: NodeJS.ProcessEn
         case "wezterm": return Environment.TERM_PROGRAM_VERSION;
         default: return undefined;
     }
-}
+};
 
-function DetectColorDepth(
+const DetectColorDepth = (
     Environment: NodeJS.ProcessEnv,
     Terminal: TerminalIdentity,
     IsDumb: boolean
-): ColorDepth | undefined
+): ColorDepth | undefined =>
 {
     if (IsDumb)
     {
@@ -268,9 +272,9 @@ function DetectColorDepth(
         return 4;
     }
     return undefined;
-}
+};
 
-function KnownTrueColor(Kind: TerminalKind): boolean
+const KnownTrueColor = (Kind: TerminalKind): boolean =>
 {
     return [
         "alacritty",
@@ -285,9 +289,9 @@ function KnownTrueColor(Kind: TerminalKind): boolean
         "wezterm",
         "windows-terminal"
     ].includes(Kind);
-}
+};
 
-function SupportsKnownHyperlinks(Kind: TerminalKind): boolean
+const SupportsKnownHyperlinks = (Kind: TerminalKind): boolean =>
 {
     return [
         "alacritty",
@@ -303,7 +307,7 @@ function SupportsKnownHyperlinks(Kind: TerminalKind): boolean
         "wezterm",
         "windows-terminal"
     ].includes(Kind);
-}
+};
 
 function DetectUnicode(Environment: NodeJS.ProcessEnv, IsDumb: boolean): boolean | undefined
 {

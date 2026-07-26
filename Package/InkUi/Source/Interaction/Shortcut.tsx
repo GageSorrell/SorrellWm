@@ -24,9 +24,9 @@ import {
     type CommandId,
     CommandIdToString,
     useCommandManager
-} from "./Command.tsx";
-import { CommandScopeContext, InteractionContext, UseInteraction } from "./Context.tsx";
-import { useTheme } from "../Theme.tsx";
+} from "./Command.js";
+import { CommandScopeContext, InteractionContext, UseInteraction } from "./Context.js";
+import { useTheme } from "../Theme.js";
 
 /**
  * A registered shortcut with internal annotations.
@@ -550,29 +550,29 @@ const ShortcutFooter = (): React.ReactNode =>
         )
     );
 
-    // eslint-disable-next-line no-console
-    console.log("ALL Shortcuts: " + pipe(
-        Shortcuts,
-        Array.map(Struct.get("Command")),
-        Array.map(CommandIdToString),
-        Array.join(", ")
-    ) + (UngroupedShortcuts.length === 0 ? "(None)" : ""));
+    // // eslint-disable-next-line no-console
+    // console.log("ALL Shortcuts: " + pipe(
+    //     Shortcuts,
+    //     Array.map(Struct.get("Command")),
+    //     Array.map(CommandIdToString),
+    //     Array.join(", ")
+    // ) + (UngroupedShortcuts.length === 0 ? "(None)" : ""));
 
-    // eslint-disable-next-line no-console
-    console.log("Ungrouped Shortcuts: " + pipe(
-        UngroupedShortcuts,
-        Array.map(Struct.get("Command")),
-        Array.map(CommandIdToString),
-        Array.join(", ")
-    ) + (UngroupedShortcuts.length === 0 ? "(None)" : ""));
+    // // eslint-disable-next-line no-console
+    // console.log("Ungrouped Shortcuts: " + pipe(
+    //     UngroupedShortcuts,
+    //     Array.map(Struct.get("Command")),
+    //     Array.map(CommandIdToString),
+    //     Array.join(", ")
+    // ) + (UngroupedShortcuts.length === 0 ? "(None)" : ""));
 
-    // eslint-disable-next-line no-console
-    console.log("Grouped Shortcuts: " + pipe(
-        Groups,
-        Array.flatMap(Struct.get("Commands")),
-        Array.map(CommandIdToString),
-        Array.join(", ")
-    ) + (Groups.length === 0 ? "(None)" : ""));
+    // // eslint-disable-next-line no-console
+    // console.log("Grouped Shortcuts: " + pipe(
+    //     Groups,
+    //     Array.flatMap(Struct.get("Commands")),
+    //     Array.map(CommandIdToString),
+    //     Array.join(", ")
+    // ) + (Groups.length === 0 ? "(None)" : ""));
 
     const { Shortcuts: ManagerShortcuts } = useCommandManager();
 

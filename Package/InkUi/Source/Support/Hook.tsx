@@ -17,19 +17,31 @@ import type { TerminalFont, TerminalSupport } from "./Types.js";
 import { QueryTerminalFont } from "./Font.js";
 import { QueryTerminalSupport } from "./Query.js";
 
+const SupportValues = new WeakMap<NodeJS.WriteStream, TerminalSupport>();
+const SupportQueries = new WeakMap<NodeJS.WriteStream, Promise<TerminalSupport>>();
+
 /** Detect terminal features once for the current Ink input/output streams. */
 export function useTerminalSupport(): TerminalSupport | undefined
 {
     const { stdin, setRawMode } = Ink.useStdin();
     const { stdout } = Ink.useStdout();
-    const [ Support, SetSupport ] = React.useState<TerminalSupport>();
+    const [ Support, SetSupport ] = React.useState<TerminalSupport | undefined>(
+        () => SupportValues.get(stdout)
+    );
 
     React.useEffect(() =>
     {
         let Cancelled: boolean = false;
-        void QueryTerminalSupport({ SetRawMode: setRawMode, Stdin: stdin, Stdout: stdout })
+        let Query: Promise<TerminalSupport> | undefined = SupportQueries.get(stdout);
+        if (Query === undefined)
+        {
+            Query = QueryTerminalSupport({ SetRawMode: setRawMode, Stdin: stdin, Stdout: stdout });
+            SupportQueries.set(stdout, Query);
+        }
+        void Query
             .then((Value: TerminalSupport) =>
             {
+                SupportValues.set(stdout, Value);
                 if (!Cancelled) {SetSupport(Value);}
             });
         return () => { Cancelled = true; };

@@ -1,5 +1,13 @@
 module.exports = {
     extends: [ "../../Configuration/.eslintrc.cjs" ],
+    overrides: [
+        {
+            files: [ "Showcase/Stories/**/*.ts", "Showcase/Stories/**/*.tsx" ],
+            rules: {
+                "@stylistic/max-len": "off"
+            }
+        }
+    ],
     rules: {
         "@typescript-eslint/typedef": "off",
         "jsdoc/no-blank-blocks": "off",

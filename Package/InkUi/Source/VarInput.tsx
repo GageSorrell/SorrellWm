@@ -11,9 +11,9 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { CompletionMenu } from "./CompletionMenu.tsx";
+import { CompletionMenu } from "./CompletionMenu.js";
 import { TextInput } from "./TextInput.js";
-import { useRoutedInput } from "./Interaction/Shortcut.ts";
+import { useRoutedInput } from "./Interaction/Shortcut.js";
 
 /** {@inheritDoc VarInput} */
 export interface VarInputProps
@@ -64,7 +64,7 @@ const VarInput = ({
 
     useRoutedInput((_Input: string, Key: Ink.Key) =>
     {
-        if (Suggestions.length === 0)
+        if (Suggestions.length === 0 || Key.ctrl || Key.meta || Key.shift)
         {
             return false;
         }

@@ -11,8 +11,14 @@
 
 import * as Ink from "ink";
 import { render } from "ink-testing-library";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Svg } from "../Source/Svg/index.js";
+
+vi.mock("../Source/Support/Query.js", () => ({
+    QueryTerminalSupport: async () => ({ Sixel: false })
+}));
+
+const Flush = (): Promise<void> => new Promise((Resolve) => setImmediate(Resolve));
 
 describe("Svg", () =>
 {
@@ -32,6 +38,18 @@ describe("Svg", () =>
         ).lastFrame();
 
         expect(Frame).toBe("Unavailable");
+    });
+
+    it("renders a fallback when Sixel is unavailable", async () =>
+    {
+        const App = render(
+            <Svg fallback={ <Ink.Text>No Sixel</Ink.Text> }>
+                { "<svg width=\"16\" height=\"16\"><rect width=\"16\" height=\"16\"/></svg>" }
+            </Svg>
+        );
+
+        await Flush();
+        expect(App.lastFrame()).toBe("No Sixel");
     });
 
     it("renders a component fallback when SVG parsing fails", () =>

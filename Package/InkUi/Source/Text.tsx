@@ -20,9 +20,9 @@ import {
     type TextSvgLayout,
     type TextSvgStyle
 } from "./Text/Layout.js";
-import { Svg } from "./Svg/index.js";
-import { useTerminalFont, useTerminalSupport } from "./Support/Hook.js";
 import type { RgbColor, TerminalFont, TerminalSupport } from "./Support/Types.js";
+import { useTerminalFont, useTerminalSupport } from "./Support/Hook.js";
+import { Svg } from "./Svg/index.js";
 
 type LayoutPropKeys =
     | "alignContent"
@@ -108,7 +108,7 @@ export type TextProps = Ink.TextProps & LayoutProps & CssTextProps;
  * A different font or pixel geometry is laid out as SVG and rendered through
  * Sixel at the required number of terminal cells.
  */
-export function Text(Props: TextProps): React.ReactElement | null
+export function Text(Props: TextProps): React.ReactNode
 {
     return MayRequireSvg(Props)
         ? <EnhancedText { ...Props } />
@@ -128,7 +128,7 @@ export function GetDefaultFontFamily(
     }
 }
 
-function EnhancedText(Props: TextProps): React.ReactElement | null
+const EnhancedText = (Props: TextProps): React.ReactElement | null =>
 {
     const Support: TerminalSupport | undefined = useTerminalSupport();
     const Font: TerminalFont | undefined = useTerminalFont();
@@ -139,12 +139,13 @@ function EnhancedText(Props: TextProps): React.ReactElement | null
     const CellHeight: number = Support?.CellSizePixels?.Height ?? 16;
     const CellWidth: number = Support?.CellSizePixels?.Width ?? CellHeight * 0.5;
     const FontSize: number = ParseFontSize(ToCssLength(Props.fontSize), CellHeight);
-    const Context = {
-        FontSize,
-        RootFontSize: CellHeight,
-        ViewportHeight: (stdout.rows ?? 24) * CellHeight,
-        ViewportWidth: (stdout.columns ?? 80) * CellWidth
-    } as const;
+    const Context =
+        {
+            FontSize,
+            RootFontSize: CellHeight,
+            ViewportHeight: (stdout.rows ?? 24) * CellHeight,
+            ViewportWidth: (stdout.columns ?? 80) * CellWidth
+        } as const;
     const LetterSpacing: number = Props.letterSpacing === "normal"
         ? 0
         : (ParseCssLength(ToCssLength(Props.letterSpacing), Context) ?? 0);
@@ -227,11 +228,13 @@ function EnhancedText(Props: TextProps): React.ReactElement | null
     if (!RequiresSvg || Layout === undefined || Support?.Sixel !== true
         || Support.CellSizePixels === undefined)
     {
+        // return <><Ink.Text>RequiresSvg: { RequiresSvg }</Ink.Text><PlainText { ...Props } /></>;
         return <PlainText { ...Props } />;
     }
 
     const LayoutValues: LayoutProps = GetLayoutProps(Props);
     const NaturalWidth: number = Math.max(1, Math.ceil(Layout.Width / CellWidth) + HorizontalPadding);
+    const NaturalHeight: number = Math.max(1, Math.ceil(Layout.Height / CellHeight));
 
     return (
         <Ink.Box
@@ -242,15 +245,19 @@ function EnhancedText(Props: TextProps): React.ReactElement | null
                 : { "aria-hidden": Props["aria-hidden"] }) }
             ref={ BoxReference }
             width={ Props.width ?? NaturalWidth }>
-            <Svg fallback={ <PlainText { ...Props } /> }
+            <Svg height={ NaturalHeight }
                 width="100%">
                 { Layout.Svg }
             </Svg>
+            {/* <Svg fallback={ <PlainText { ...Props } /> }
+                width="100%">
+                { Layout.Svg }
+            </Svg> */}
         </Ink.Box>
     );
-}
+};
 
-function PlainText(Props: TextProps): React.ReactElement | null
+const PlainText = (Props: TextProps): React.ReactElement | null =>
 {
     const LayoutValues: LayoutProps = GetLayoutProps(Props);
     const HasLayout: boolean = Object.values(LayoutValues)
@@ -282,9 +289,9 @@ function PlainText(Props: TextProps): React.ReactElement | null
     );
 
     return HasLayout ? <Ink.Box { ...LayoutValues }>{ Value }</Ink.Box> : Value;
-}
+};
 
-function MakeSvgStyle(
+const MakeSvgStyle = (
     Props: TextProps,
     Support: TerminalSupport | undefined,
     FontFamily: string,
@@ -293,7 +300,7 @@ function MakeSvgStyle(
     WordSpacing: number,
     LineHeight: number,
     TextIndent: number
-): TextSvgStyle
+): TextSvgStyle =>
 {
     const TerminalForeground: string = RgbToCss(Support?.ForegroundColor)
         ?? ContrastColor(Support?.BackgroundColor);
@@ -339,9 +346,9 @@ function MakeSvgStyle(
         ...(Props.textTransform === undefined ? { } : { TextTransform: String(Props.textTransform) }),
         WordSpacing
     };
-}
+};
 
-function ShouldRenderSvg(
+const ShouldRenderSvg = (
     Props: TextProps,
     Font: TerminalFont | undefined,
     FontSize: number,
@@ -350,7 +357,7 @@ function ShouldRenderSvg(
     WordSpacing: number,
     LineHeight: number,
     TextIndent: number
-): boolean
+): boolean =>
 {
     const RequestedFamily: string | undefined = Props.fontFamily === undefined
         ? undefined
@@ -385,9 +392,9 @@ function ShouldRenderSvg(
         || Props.textTransform !== undefined
         || Props.whiteSpace !== undefined
         || Props.wordBreak !== undefined;
-}
+};
 
-function MayRequireSvg(Props: TextProps): boolean
+const MayRequireSvg = (Props: TextProps): boolean =>
 {
     return Props.fontFamily !== undefined
         || Props.fontSize !== undefined
@@ -410,11 +417,11 @@ function MayRequireSvg(Props: TextProps): boolean
         || Props.textTransform !== undefined
         || Props.whiteSpace !== undefined
         || Props.wordBreak !== undefined;
-}
+};
 
-function GetLayoutProps(Props: TextProps): LayoutProps
+const GetLayoutProps = (Props: TextProps): LayoutProps =>
 {
-    return {
+    const Values: LayoutProps = {
         alignContent: Props.alignContent,
         alignItems: Props.alignItems,
         alignSelf: Props.alignSelf,
@@ -458,9 +465,12 @@ function GetLayoutProps(Props: TextProps): LayoutProps
         top: Props.top,
         width: Props.width
     };
-}
+    return Object.fromEntries(
+        Object.entries(Values).filter((Entry: [ string, unknown ]) => Entry[1] !== undefined)
+    ) as LayoutProps;
+};
 
-function ToText(Value: React.ReactNode): string | undefined
+const ToText = (Value: React.ReactNode): string | undefined =>
 {
     if (Value === null || Value === undefined || typeof Value === "boolean")
     {
@@ -481,12 +491,12 @@ function ToText(Value: React.ReactNode): string | undefined
         return ToText(Value.props.children);
     }
     return undefined;
-}
+};
 
-function TransformPlainText(
+const TransformPlainText = (
     Value: React.ReactNode,
     Transform: React.CSSProperties["textTransform"]
-): React.ReactNode
+): React.ReactNode =>
 {
     const TextValue: string | undefined = ToText(Value);
     if (TextValue === undefined || Transform === undefined)
@@ -501,65 +511,71 @@ function TransformPlainText(
             Character.toLocaleUpperCase());
         default: return Value;
     }
-}
+};
 
-function ResolveInkWrap(Props: TextProps): Ink.TextProps["wrap"]
+const ResolveInkWrap = (Props: TextProps): Ink.TextProps["wrap"] =>
 {
     if (Props.wordBreak === "break-all" || Props.overflowWrap === "anywhere")
     {
         return "hard";
     }
     return Props.wrap;
-}
+};
 
-function IsTerminalFamily(Requested: string, Detected: string | undefined): boolean
+const IsTerminalFamily = (Requested: string, Detected: string | undefined): boolean =>
 {
     const Families: ReadonlyArray<string> = Requested.split(",").map(NormalizeFamily);
     const Preferred: string | undefined = Families[0];
     return Preferred === "monospace"
         || (Detected !== undefined && Preferred === NormalizeFamily(Detected));
-}
+};
 
-function NormalizeFamily(Value: string): string
+const NormalizeFamily = (Value: string): string =>
 {
     return Value.trim().replace(/^(["'])(.*)\1$/u, "$2").toLowerCase();
-}
+};
 
-function IsBold(Value: React.CSSProperties["fontWeight"]): boolean
+const IsBold = (Value: React.CSSProperties["fontWeight"]): boolean =>
 {
     return Value === "bold" || Value === "bolder"
         || (typeof Value === "number" && Value >= 600)
         || (typeof Value === "string" && /^\d+$/u.test(Value) && Number(Value) >= 600);
-}
+};
 
-function HasDecoration(Props: TextProps, Value: string): boolean
+const HasDecoration = (Props: TextProps, Value: string): boolean =>
 {
     return String(Props.textDecorationLine ?? "").split(/\s+/u).includes(Value);
-}
+};
 
-function TextDecoration(Props: TextProps): string | undefined
+const TextDecoration = (Props: TextProps): string | undefined =>
 {
     const Values: Array<string> = String(Props.textDecorationLine ?? "")
         .split(/\s+/u)
         .filter((Value: string) => Value.length > 0 && Value !== "none");
-    if (Props.underline && !Values.includes("underline")) {Values.push("underline");}
-    if (Props.strikethrough && !Values.includes("line-through")) {Values.push("line-through");}
+    if (Props.underline && !Values.includes("underline"))
+    {
+        Values.push("underline");
+    }
+    if (Props.strikethrough && !Values.includes("line-through"))
+    {
+        Values.push("line-through");
+    }
     return Values.length === 0 ? undefined : Values.join(" ");
-}
+};
 
-function NumericDimension(Value: number | string | undefined): number | undefined
+const NumericDimension = (Value: number | string | undefined): number | undefined =>
 {
     return typeof Value === "number" && Number.isFinite(Value) && Value > 0 ? Value : undefined;
-}
+};
 
-function GetHorizontalPadding(Props: TextProps): number
+const GetHorizontalPadding = (Props: TextProps): number =>
 {
     const Left: number = Props.paddingLeft ?? Props.paddingX ?? Props.padding ?? 0;
     const Right: number = Props.paddingRight ?? Props.paddingX ?? Props.padding ?? 0;
     return Math.max(0, Left) + Math.max(0, Right);
-}
+};
 
-function ResolveTabSize(Value: React.CSSProperties["tabSize"]): number | undefined
+const ResolveTabSize = (Value: React.CSSProperties["tabSize"]): number | undefined =>
 {
     if (typeof Value === "number")
     {
@@ -570,36 +586,42 @@ function ResolveTabSize(Value: React.CSSProperties["tabSize"]): number | undefin
         return Math.max(0, Number(Value));
     }
     return undefined;
-}
+};
 
-function ToCssLength(Value: unknown): CssLength | undefined
+const ToCssLength = (Value: unknown): CssLength | undefined =>
 {
     return typeof Value === "number" || typeof Value === "string" ? Value : undefined;
-}
+};
 
-function ToLineHeight(Value: unknown): CssLength | "normal" | undefined
+const ToLineHeight = (Value: unknown): CssLength | "normal" | undefined =>
 {
     return Value === "normal" || typeof Value === "number" || typeof Value === "string"
         ? Value
         : undefined;
-}
+};
 
-function RgbToCss(Value: RgbColor | undefined): string | undefined
+const RgbToCss = (Value: RgbColor | undefined): string | undefined =>
 {
     return Value === undefined ? undefined : `rgb(${ Value.Red }, ${ Value.Green }, ${ Value.Blue })`;
-}
+};
 
-function ContrastColor(Background: RgbColor | undefined): string
+const ContrastColor = (Background: RgbColor | undefined): string =>
 {
-    if (Background === undefined) {return "#ffffff";}
+    if (Background === undefined)
+    {
+        return "#ffffff";
+    }
     const Luminance: number = (Background.Red * 299 + Background.Green * 587
         + Background.Blue * 114) / 255_000;
     return Luminance > 0.5 ? "#000000" : "#ffffff";
-}
+};
 
-function ResolveSvgColor(Value: string | undefined): string | undefined
+const ResolveSvgColor = (Value: string | undefined): string | undefined =>
 {
-    if (Value === undefined) {return undefined;}
+    if (Value === undefined)
+    {
+        return undefined;
+    }
     const BrightColors: Readonly<Record<string, string>> = {
         blackBright: "#666666",
         blueBright: "#3b8eea",
@@ -611,12 +633,15 @@ function ResolveSvgColor(Value: string | undefined): string | undefined
         yellowBright: "#f5f543"
     };
     const Bright: string | undefined = BrightColors[Value];
-    if (Bright !== undefined) {return Bright;}
+    if (Bright !== undefined)
+    {
+        return Bright;
+    }
     const AnsiMatch: RegExpMatchArray | null = Value.match(/^ansi256\(\s*(\d+)\s*\)$/u);
     return AnsiMatch?.[1] === undefined ? Value : Ansi256Css(Number(AnsiMatch[1]));
-}
+};
 
-function Ansi256Css(Value: number): string
+const Ansi256Css = (Value: number): string =>
 {
     const Levels: ReadonlyArray<number> = [ 0, 95, 135, 175, 215, 255 ];
     let Red: number;
@@ -635,4 +660,4 @@ function Ansi256Css(Value: number): string
         Blue = Levels[Index % 6] ?? 0;
     }
     return `rgb(${ Red }, ${ Green }, ${ Blue })`;
-}
+};

@@ -9,14 +9,16 @@
  * @license   MIT
  */
 
-import { render } from "ink-testing-library";
-import { describe, expect, it } from "vitest";
 import {
     Display,
     DisplayFontFamilies,
     GetDisplayFont,
     RenderDisplayText
 } from "../Source/Display/index.js";
+import * as Ink from "ink";
+import * as React from "react";
+import { describe, expect, it } from "vitest";
+import { render } from "ink-testing-library";
 
 describe("Display font catalog", () =>
 {
@@ -98,5 +100,55 @@ describe("Display component", () =>
         expect(Natural.split("\n")[0]?.length).toBe(18);
         expect(Clipped.split("\n").every((Line) => Line.length <= 10)).toBe(true);
         expect(Clipped).toContain("████  ████");
+    });
+
+    it("keeps every bitmap row in layout instead of reflowing terminal glyphs", () =>
+    {
+        const Art: ReadonlyArray<string> = RenderDisplayText("Hi", { FontFamily: "ithaca" });
+        const Frame: string = render(
+            <Ink.Box flexDirection="column">
+                <Ink.Text>before</Ink.Text>
+                <Display fontFamily="ithaca">Hi</Display>
+                <Ink.Text>after</Ink.Text>
+            </Ink.Box>
+        ).lastFrame() ?? "";
+        const Rows: ReadonlyArray<string> = Frame.split("\n");
+
+        expect(Rows).toHaveLength(Art.length + 2);
+        expect(Rows[0]).toBe("before");
+        expect(Rows.at(-1)).toBe("after");
+        expect(Rows.slice(1, -1)).toEqual(Art.map((Line: string) => Line.trimEnd()));
+    });
+
+    it("preserves intrinsic height when a flex parent is shorter", () =>
+    {
+        const Art: ReadonlyArray<string> = RenderDisplayText(
+            "INK UI",
+            { FontFamily: "tinyunicode" }
+        );
+        const Reference = React.createRef<Ink.DOMElement>();
+        const Frame: string = render(
+            <Ink.Box height={ 3 }>
+                <Display fontFamily="tinyunicode"
+                    ref={ Reference }>INK UI</Display>
+            </Ink.Box>
+        ).lastFrame() ?? "";
+
+        expect(Art.length).toBeGreaterThan(3);
+        expect(Frame.split("\n")).toHaveLength(3);
+        expect(Reference.current).not.toBeNull();
+        expect(Ink.measureElement(Reference.current!).height).toBe(Art.length);
+    });
+
+    it("clips wide art before the physical terminal can wrap it", () =>
+    {
+        const Frame: string = render(
+            <Display fontFamily="8bitfortress">
+                THIS DISPLAY IS WIDER THAN THE TEST TERMINAL
+            </Display>
+        ).lastFrame() ?? "";
+
+        expect(Frame.split("\n").every((Line: string) => Array.from(Line).length <= 100)).toBe(true);
+        expect(Frame.split("\n")).toHaveLength(6);
     });
 });

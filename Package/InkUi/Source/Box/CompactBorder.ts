@@ -253,18 +253,22 @@ function ResolveCorners(
             Corner.Radius === undefined ? 0 : (ParseCssLength(Corner.Radius, Options) ?? 0)
         ))
     });
-    const Unscaled: ResolvedCorners = {
-        BottomLeft: Resolve(Options.BottomLeft),
-        BottomRight: Resolve(Options.BottomRight),
-        TopLeft: Resolve(Options.TopLeft),
-        TopRight: Resolve(Options.TopRight)
-    };
-    const Ratios: ReadonlyArray<number> = [
-        RadiusRatio(AvailableWidth, Unscaled.TopLeft.Radius + Unscaled.TopRight.Radius),
-        RadiusRatio(AvailableWidth, Unscaled.BottomLeft.Radius + Unscaled.BottomRight.Radius),
-        RadiusRatio(AvailableHeight, Unscaled.TopLeft.Radius + Unscaled.BottomLeft.Radius),
-        RadiusRatio(AvailableHeight, Unscaled.TopRight.Radius + Unscaled.BottomRight.Radius)
-    ];
+    const Unscaled: ResolvedCorners =
+        {
+            BottomLeft: Resolve(Options.BottomLeft),
+            BottomRight: Resolve(Options.BottomRight),
+            TopLeft: Resolve(Options.TopLeft),
+            TopRight: Resolve(Options.TopRight)
+        };
+
+    const Ratios: ReadonlyArray<number> =
+        [
+            RadiusRatio(AvailableWidth, Unscaled.TopLeft.Radius + Unscaled.TopRight.Radius),
+            RadiusRatio(AvailableWidth, Unscaled.BottomLeft.Radius + Unscaled.BottomRight.Radius),
+            RadiusRatio(AvailableHeight, Unscaled.TopLeft.Radius + Unscaled.BottomLeft.Radius),
+            RadiusRatio(AvailableHeight, Unscaled.TopRight.Radius + Unscaled.BottomRight.Radius)
+        ];
+
     const Scale: number = Math.min(1, ...Ratios);
     const ApplyScale = (Corner: ResolvedCorner): ResolvedCorner => ({
         ...Corner,
@@ -279,10 +283,8 @@ function ResolveCorners(
     };
 }
 
-function RadiusRatio(Available: number, Sum: number): number
-{
-    return Sum <= 0 ? 1 : Math.max(0, Available / Sum);
-}
+const RadiusRatio = (Available: number, Sum: number): number =>
+    Sum <= 0 ? 1 : Math.max(0, Available / Sum);
 
 function DrawSides(
     Canvas: Buffer,

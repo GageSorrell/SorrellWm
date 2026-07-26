@@ -11,6 +11,7 @@
     },
     "include": [
         "Source",
+        "Showcase",
         "Test"
     ]
 }

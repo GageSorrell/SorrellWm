@@ -23,6 +23,10 @@
             "import": "./Distribution/index.js",
             "types": "./Distribution/index.d.ts"
         },
+        "./Backdrop": {
+            "import": "./Distribution/Backdrop/index.js",
+            "types": "./Distribution/Backdrop/index.d.ts"
+        },
         "./Mouse": {
             "import": "./Distribution/Mouse/index.js",
             "types": "./Distribution/Mouse/index.d.ts"
@@ -31,9 +35,17 @@
             "import": "./Distribution/Box/index.js",
             "types": "./Distribution/Box/index.d.ts"
         },
+        "./Button": {
+            "import": "./Distribution/Button/index.js",
+            "types": "./Distribution/Button/index.d.ts"
+        },
         "./Display": {
             "import": "./Distribution/Display/index.js",
             "types": "./Distribution/Display/index.d.ts"
+        },
+        "./Help": {
+            "import": "./Distribution/Help/index.js",
+            "types": "./Distribution/Help/index.d.ts"
         },
         "./Text": {
             "import": "./Distribution/Text.js",
@@ -43,6 +55,10 @@
             "import": "./Distribution/Icon/index.js",
             "types": "./Distribution/Icon/index.d.ts"
         },
+        "./LaTeX": {
+            "import": "./Distribution/LaTeX/index.js",
+            "types": "./Distribution/LaTeX/index.d.ts"
+        },
         "./PhosphorIcon": {
             "import": "./Distribution/PhosphorIcon/index.js",
             "types": "./Distribution/PhosphorIcon/index.d.ts"
@@ -50,6 +66,14 @@
         "./PhosphorIcon/*": {
             "import": "./Distribution/PhosphorIcon/*.js",
             "types": "./Distribution/PhosphorIcon/*.d.ts"
+        },
+        "./Shadow": {
+            "import": "./Distribution/Shadow/index.js",
+            "types": "./Distribution/Shadow/index.d.ts"
+        },
+        "./ScrollView": {
+            "import": "./Distribution/ScrollView.js",
+            "types": "./Distribution/ScrollView.d.ts"
         },
         "./Svg": {
             "import": "./Distribution/Svg/index.js",
@@ -127,6 +151,7 @@
         "color-name": "1.1.4",
         "effect": "^4.0.0-beta",
         "jsonc-parser": "3.3.1",
+        "mathjax": "4.1.3",
         "sixel": "0.16.0"
     },
     "engines": {

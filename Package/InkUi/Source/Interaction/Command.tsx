@@ -20,7 +20,7 @@ import {
     Option,
     Predicate
 } from "effect";
-import { CommandScopeContext, TypeId, UseInteraction } from "./Context.tsx";
+import { CommandScopeContext, TypeId, UseInteraction } from "./Context.js";
 import {
     GetKeyChord,
     type GroupShortcut,
@@ -30,7 +30,7 @@ import {
     type RegisteredShortcut,
     type RoutedInputHandler,
     type ShortcutRegistration
-} from "./Shortcut.ts";
+} from "./Shortcut.js";
 
 const GetBuiltInKey = (...Labels: Array.NonEmptyReadonlyArray<string>) =>
     `~sorrell/ink-ui/Interaction/Command!BuiltIn!${ Labels.join("!") }`;
@@ -381,8 +381,6 @@ export class CommandRegistry
 
     public RegisterShortcut(Registration: ShortcutRegistration): () => void
     {
-        // eslint-disable-next-line no-console
-        console.log(`Registering shortcut with ID ${ CommandIdToString(Registration.Command) }.`);
         const Keys = (
             typeof Registration.Keys === "string"
                 ? [ Registration.Keys ]

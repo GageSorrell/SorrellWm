@@ -13,7 +13,7 @@ import * as Ink from "ink";
 import * as React from "react";
 import { BuiltIn, CommandRegistry } from "./Command.js";
 import { FocusRegistry } from "./Focus.js";
-import { ShortcutFooter } from "./Shortcut.ts";
+import { ShortcutFooter } from "./Shortcut.js";
 
 export/** The identifier for this module. */
 const TypeId = "@sorrell/ink-ui/Interaction/Context" as const;
@@ -31,10 +31,7 @@ export/**
        * @since 1.0.0
        */
 const InteractionContext =
-    React.createContext<InteractionContext>({
-        Commands: undefined as unknown as any,
-        Focus: undefined as unknown as any
-    });
+    React.createContext<InteractionContext | undefined>(undefined);
 
 export/**
        * The context that handles focus.
@@ -184,4 +181,3 @@ const InteractionProvider = ({
         </InteractionContext.Provider>
     );
 };
-

@@ -9,12 +9,52 @@
  * @license   MIT
  */
 
-import { GetDisplayFont, type DisplayFont, type DisplayFontFamily } from "./Fonts.generated.js";
+import { Array, String } from "effect";
+import { type DisplayFont, type DisplayFontFamily, GetDisplayFont } from "./Fonts.generated.js";
 
-export type DisplayFontScale = 0.5 | 1 | 2 | 4;
-export type DisplayShadowOffset = -5 | -4 | -3 | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
-export type DisplayShadowStyle = "light" | "medium" | "dark" | 0 | 1 | 2;
-export type DisplayTextAlign = "left" | "center" | "right";
+/**
+ * The size at which the font style is rendered.
+ *
+ * @category Style
+ * @since 1.0.0
+ */
+export type DisplayFontScale =
+    | 0.5
+    | 1
+    | 2
+    | 4;
+
+/**
+ * The number of cells to offset the shadow of display text.  Sign corresponds to direction.
+ *
+ * @category Style
+ * @since 1.0.0
+ */
+export type DisplayShadowOffset =
+    | -5
+    | -4
+    | -3
+    | -2
+    | -1
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5;
+
+export type DisplayShadowStyle =
+    | "light"
+    | "medium"
+    | "dark"
+    | 0
+    | 1
+    | 2;
+
+export type DisplayTextAlign =
+    | "left"
+    | "center"
+    | "right";
 
 export interface RenderDisplayOptions
 {
@@ -41,10 +81,19 @@ interface PreparedFont
 const PreparedFonts = new Map<string, PreparedFont>();
 const ShadowCharacters = [ "░", "▒", "▓" ] as const;
 
-/** Render text using the same bitmap, scaling, kerning, and shadow model as bit. */
-export function RenderDisplayText(Text: string, Options: RenderDisplayOptions): ReadonlyArray<string>
+export/**
+       * Render text using the same bitmap, scaling, kerning, and shadow model
+       * as {@link https://github.com/paulilaaso/bit | bit}.
+       *
+       * @category Render
+       * @since 1.0.0
+       */
+const RenderDisplayText = (Text: string, Options: RenderDisplayOptions): ReadonlyArray<string> =>
 {
-    if (Text.length === 0) {return [];}
+    if (Text.length === 0)
+    {
+        return [ ];
+    }
 
     const Scale: DisplayFontScale = NormalizeScale(Options.FontScale);
     const Font: PreparedFont = PrepareFont(Options.FontFamily, Scale);
@@ -72,13 +121,16 @@ export function RenderDisplayText(Text: string, Options: RenderDisplayOptions): 
         const Block: ReadonlyArray<string> = Blocks[Index] ?? [];
         if (Block.length === 1 && Block[0] === "")
         {
-            if (Index > 0) {Result.push("");}
+            if (Index > 0)
+            {
+                Result.push("");
+            }
             continue;
         }
 
         if (Index > 0 && Result.length > 0)
         {
-            Result.push(...Array.from({ length: LineSpacing }, () => ""));
+            Result.push(...Array.Array.from({ length: LineSpacing }, () => ""));
         }
 
         const Aligned: ReadonlyArray<string> = AlignBlock(Block, MaximumWidth, Alignment);
@@ -93,20 +145,32 @@ export function RenderDisplayText(Text: string, Options: RenderDisplayOptions): 
 
     const Width: number = BlockWidth(Result);
     return Result.map((Line: string) => Line.padEnd(Width));
-}
+};
 
-function PrepareFont(FontFamily: DisplayFontFamily, Scale: DisplayFontScale): PreparedFont
+const PrepareFont = (FontFamily: DisplayFontFamily, Scale: DisplayFontScale): PreparedFont =>
 {
     const Key = `${ FontFamily }:${ Scale }`;
     const Cached: PreparedFont | undefined = PreparedFonts.get(Key);
-    if (Cached !== undefined) {return Cached;}
+    if (Cached !== undefined)
+    {
+        return Cached;
+    }
 
     const Font: DisplayFont = GetDisplayFont(FontFamily);
-    const Scaled = Object.fromEntries(Object.entries(Font.Characters).map(([ Character, Lines ]) =>
-        [ Character, ScaleGlyph(Lines, Scale).filter((Line: string) => Line !== "") ]
-    )) as Record<string, ReadonlyArray<string>>;
-    const Height: number = Math.max(0, ...Object.values(Scaled)
-        .map((Lines) => Lines.length));
+    const Scaled = Object.fromEntries(
+        Object.entries(Font.Characters)
+            .map(([ Character, Lines ]: readonly [ string, ReadonlyArray<string> ]) =>
+                [ Character, Array.filter(ScaleGlyph(Lines, Scale), String.isNonEmpty) ]
+            )
+    ) as Record<string, ReadonlyArray<string>>;
+
+    const Height: number = Math.max(
+        0,
+        ...Object
+            .values(Scaled)
+            .map(Array.length)
+    );
+
     const Glyphs: Record<string, ReadonlyArray<string>> = { };
     const Widths: Record<string, number> = { };
 
@@ -114,7 +178,7 @@ function PrepareFont(FontFamily: DisplayFontFamily, Scale: DisplayFontScale): Pr
     {
         const Glyph: ReadonlyArray<string> = Lines.length === 0
             ? [ " " ]
-            : [ ...Lines, ...Array.from({ length: Math.max(0, Height - Lines.length) }, () => "") ];
+            : [ ...Lines, ...Array.Array.from({ length: Math.max(0, Height - Lines.length) }, () => "") ];
         Glyphs[Character] = Glyph;
         Widths[Character] = Character === " " ? 1 : BlockWidth(Glyph);
     }
@@ -122,16 +186,16 @@ function PrepareFont(FontFamily: DisplayFontFamily, Scale: DisplayFontScale): Pr
     const Prepared: PreparedFont = { Font, Glyphs, Height, Widths };
     PreparedFonts.set(Key, Prepared);
     return Prepared;
-}
+};
 
-function RenderLine(
+const RenderLine = (
     Text: string,
     Font: PreparedFont,
     CharacterSpacing: number,
     WordSpacing: number
-): ReadonlyArray<string>
+): ReadonlyArray<string> =>
 {
-    const Characters: ReadonlyArray<string> = Array.from(Text);
+    const Characters: ReadonlyArray<string> = Array.Array.from(Text);
     const DefaultWidth: number = GetDefaultWidth(Font);
     const Kerning = new Map<string, number>();
     const Width = (Character: string): number => Character === " "
@@ -152,10 +216,10 @@ function RenderLine(
         }
     }
 
-    const Result: Array<string> = [];
+    const Result: Array<string> = [ ];
     for (let Row = 0; Row < Font.Height; Row++)
     {
-        const Positions: Array<number> = Array.from({ length: Characters.length }, () => 0);
+        const Positions: Array<number> = Array.Array.from({ length: Characters.length }, () => 0);
         for (let Index = 1; Index < Characters.length; Index++)
         {
             const Previous: string = Characters[Index - 1] ?? "";
@@ -178,9 +242,12 @@ function RenderLine(
             const Fragment: string = Character === " "
                 ? " ".repeat(Math.ceil(0.5 + (IsWordBoundary(Characters, Index) ? WordSpacing : 0)))
                 : (Glyph(Character)[Row] ?? "");
-            const Pixels: ReadonlyArray<string> = Array.from(Fragment);
+            const Pixels: ReadonlyArray<string> = Array.Array.from(Fragment);
 
-            while (Canvas.length < X + Pixels.length) {Canvas.push(" ");}
+            while (Canvas.length < X + Pixels.length)
+            {
+                Canvas.push(" ");
+            }
             for (let Pixel = 0; Pixel < Pixels.length; Pixel++)
             {
                 const Value: string = Pixels[Pixel] ?? " ";
@@ -194,18 +261,21 @@ function RenderLine(
         Result.push(Canvas.join("").trimEnd());
     }
     return Result;
-}
+};
 
-function ScaleGlyph(Lines: ReadonlyArray<string>, Scale: DisplayFontScale): ReadonlyArray<string>
+const ScaleGlyph = (Lines: ReadonlyArray<string>, Scale: DisplayFontScale): ReadonlyArray<string> =>
 {
-    if (Scale === 1 || Lines.length === 0) {return Lines;}
+    if (Scale === 1 || Lines.length === 0)
+    {
+        return Lines;
+    }
 
     const Binary: Array<Array<number>> = [];
     for (const Line of Lines)
     {
         const Top: Array<number> = [];
         const Bottom: Array<number> = [];
-        for (const Pixel of Array.from(Line))
+        for (const Pixel of Array.Array.from(Line))
         {
             Top.push(Pixel === "█" || Pixel === "▀" ? 1 : 0);
             Bottom.push(Pixel === "█" || Pixel === "▄" ? 1 : 0);
@@ -222,54 +292,69 @@ function ScaleGlyph(Lines: ReadonlyArray<string>, Scale: DisplayFontScale): Read
         const Top: ReadonlyArray<number> = Scaled[Row] ?? [];
         const Bottom: ReadonlyArray<number> = Scaled[Row + 1] ?? [];
         const Width: number = Math.max(Top.length, Bottom.length);
-        Result.push(Array.from({ length: Width }, (_, Column: number) =>
+        Result.push(Array.Array.from({ length: Width }, (_: unknown, Column: number) =>
         {
             const Upper: number = Top[Column] ?? 0;
             const Lower: number = Bottom[Column] ?? 0;
-            if (Upper === 1 && Lower === 1) {return "█";}
-            if (Upper === 1) {return "▀";}
-            if (Lower === 1) {return "▄";}
+            if (Upper === 1 && Lower === 1)
+            {
+                return "█";
+            }
+            if (Upper === 1)
+            {
+                return "▀";
+            }
+            if (Lower === 1)
+            {
+                return "▄";
+            }
             return " ";
         }).join(""));
     }
     return Result;
-}
+};
 
-function Upscale(
+const Upscale = (
     Binary: ReadonlyArray<ReadonlyArray<number>>,
     Scale: 2 | 4
-): ReadonlyArray<ReadonlyArray<number>>
+): ReadonlyArray<ReadonlyArray<number>> =>
 {
     return Binary.flatMap((Row: ReadonlyArray<number>) =>
     {
         const Expanded: ReadonlyArray<number> = Row.flatMap((Pixel: number) =>
-            Array.from({ length: Scale }, () => Pixel));
-        return Array.from({ length: Scale }, () => [ ...Expanded ]);
+            Array.Array.from({ length: Scale }, () => Pixel));
+        return Array.Array.from({ length: Scale }, () => [ ...Expanded ]);
     });
-}
+};
 
-function Downscale(Binary: ReadonlyArray<ReadonlyArray<number>>): ReadonlyArray<ReadonlyArray<number>>
+const Downscale = (Binary: ReadonlyArray<ReadonlyArray<number>>): ReadonlyArray<ReadonlyArray<number>> =>
 {
     const Height: number = Math.floor(Binary.length / 2);
     const Width: number = Math.floor((Binary[0]?.length ?? 0) / 2);
-    if (Height === 0 || Width === 0) {return [ [ 0 ] ];}
+    if (Height === 0 || Width === 0)
+    {
+        return [ [ 0 ] ];
+    }
 
-    return Array.from({ length: Height }, (_, Row: number) =>
-        Array.from({ length: Width }, (_, Column: number) =>
+    return Array.Array.from({ length: Height }, (_: unknown, Row: number) =>
+        Array.Array.from({ length: Width }, (_: unknown, Column: number) =>
         {
             for (let Y = Row * 2; Y < Row * 2 + 2; Y++)
             {
                 for (let X = Column * 2; X < Column * 2 + 2; X++)
                 {
-                    if (Binary[Y]?.[X] === 1) {return 1;}
+                    if (Binary[Y]?.[X] === 1)
+                    {
+                        return 1;
+                    }
                 }
             }
             return 0;
         })
     );
-}
+};
 
-function ComputeKerning(Left: ReadonlyArray<string>, Right: ReadonlyArray<string>): number
+const ComputeKerning = (Left: ReadonlyArray<string>, Right: ReadonlyArray<string>): number =>
 {
     const Height: number = Math.max(Left.length, Right.length);
     const LeftWidth: number = BlockWidth(Left);
@@ -280,12 +365,15 @@ function ComputeKerning(Left: ReadonlyArray<string>, Right: ReadonlyArray<string
 
     for (let Row = 0; Row < Height; Row++)
     {
-        const LeftPixels: ReadonlyArray<string> = Array.from(Left[Row] ?? "".padEnd(LeftWidth));
-        const RightPixels: ReadonlyArray<string> = Array.from(Right[Row] ?? "");
+        const LeftPixels: ReadonlyArray<string> = Array.Array.from(Left[Row] ?? "".padEnd(LeftWidth));
+        const RightPixels: ReadonlyArray<string> = Array.Array.from(Right[Row] ?? "");
         const Rightmost: number = FindLastPixel(LeftPixels);
         const Leftmost: number = RightPixels.findIndex((Pixel: string) => Pixel !== " ");
         MaximumLeft = Math.max(MaximumLeft, Rightmost);
-        if (Leftmost >= 0) {MinimumRight = Math.min(MinimumRight, Leftmost);}
+        if (Leftmost >= 0)
+        {
+            MinimumRight = Math.min(MinimumRight, Leftmost);
+        }
         if (Rightmost >= 0 && Leftmost >= 0)
         {
             MinimumDistance = Math.min(MinimumDistance, LeftWidth + Leftmost - Rightmost);
@@ -295,47 +383,53 @@ function ComputeKerning(Left: ReadonlyArray<string>, Right: ReadonlyArray<string
 
     if (!HasOverlap)
     {
-        if (MaximumLeft < 0 || !Number.isFinite(MinimumRight)) {return 0;}
+        if (MaximumLeft < 0 || !Number.isFinite(MinimumRight))
+        {
+            return 0;
+        }
         MinimumDistance = LeftWidth + MinimumRight - MaximumLeft;
     }
     return 1 - MinimumDistance;
-}
+};
 
-function ApplyShadow(
+const ApplyShadow = (
     Block: ReadonlyArray<string>,
     Enabled: boolean,
     HorizontalOffset: number,
     VerticalOffset: number,
     ShadowCharacter: string
-): ReadonlyArray<string>
+): ReadonlyArray<string> =>
 {
-    if (!Enabled) {return Block;}
+    if (!Enabled)
+    {
+        return Block;
+    }
 
     const Width: number = BlockWidth(Block);
     const MinimumX: number = Math.min(0, HorizontalOffset);
     const MinimumY: number = Math.min(0, VerticalOffset);
     const CanvasWidth: number = Width + Math.abs(HorizontalOffset);
     const CanvasHeight: number = Block.length + Math.abs(VerticalOffset);
-    const Canvas: Array<Array<string>> = Array.from({ length: CanvasHeight }, () =>
-        Array.from({ length: CanvasWidth }, () => " "));
+    const Canvas: Array<Array<string>> = Array.Array.from({ length: CanvasHeight }, () =>
+        Array.Array.from({ length: CanvasWidth }, () => " "));
 
     PaintBlock(Canvas, Block, -MinimumX + HorizontalOffset, -MinimumY + VerticalOffset,
         () => ShadowCharacter);
     PaintBlock(Canvas, Block, -MinimumX, -MinimumY, (Pixel: string) => Pixel);
     return Canvas.map((Row: ReadonlyArray<string>) => Row.join("").trimEnd());
-}
+};
 
-function PaintBlock(
+const PaintBlock = (
     Canvas: Array<Array<string>>,
     Block: ReadonlyArray<string>,
     OffsetX: number,
     OffsetY: number,
     Paint: (Pixel: string) => string
-): void
+): void =>
 {
     for (let Y = 0; Y < Block.length; Y++)
     {
-        const Pixels: ReadonlyArray<string> = Array.from(Block[Y] ?? "");
+        const Pixels: ReadonlyArray<string> = Array.Array.from(Block[Y] ?? "");
         for (let X = 0; X < Pixels.length; X++)
         {
             const Pixel: string = Pixels[X] ?? " ";
@@ -345,13 +439,13 @@ function PaintBlock(
             }
         }
     }
-}
+};
 
-function AlignBlock(
+const AlignBlock = (
     Block: ReadonlyArray<string>,
     Width: number,
     Alignment: DisplayTextAlign
-): ReadonlyArray<string>
+): ReadonlyArray<string> =>
 {
     const OwnWidth: number = BlockWidth(Block);
     const Padding: number = Math.max(0, Width - OwnWidth);
@@ -359,74 +453,107 @@ function AlignBlock(
         : Alignment === "center" ? Math.floor(Padding / 2) : 0;
     return Block.map((Line: string) => " ".repeat(Left) + Line.padEnd(OwnWidth)
         + " ".repeat(Padding - Left));
-}
+};
 
-function DetectHalfPixels(Text: string, Font: PreparedFont): boolean
+const DetectHalfPixels = (Text: string, Font: PreparedFont): boolean =>
 {
-    return Array.from(Text).some((Character: string) =>
+    return Array.Array.from(Text).some((Character: string) =>
         Font.Glyphs[Character]?.some((Line: string) => /[▀▄]/u.test(Line)) === true);
-}
+};
 
-function IsWordBoundary(Characters: ReadonlyArray<string>, SpaceIndex: number): boolean
+const IsWordBoundary = (Characters: ReadonlyArray<string>, SpaceIndex: number): boolean =>
 {
-    if (Characters[SpaceIndex] !== " ") {return false;}
+    if (Characters[SpaceIndex] !== " ")
+    {
+        return false;
+    }
     let Before = SpaceIndex - 1;
-    while (Before >= 0 && Characters[Before] === " ") {Before--;}
+    while (Before >= 0 && Characters[Before] === " ")
+    {
+        Before--;
+    }
     let BeforeLength = 0;
-    while (Before >= 0 && Characters[Before] !== " ") {BeforeLength++; Before--;}
+    while (Before >= 0 && Characters[Before] !== " ")
+    {
+        BeforeLength++; Before--;
+    }
     let After = SpaceIndex + 1;
-    while (After < Characters.length && Characters[After] === " ") {After++;}
+    while (After < Characters.length && Characters[After] === " ")
+    {
+        After++;
+    }
     let AfterLength = 0;
-    while (After < Characters.length && Characters[After] !== " ") {AfterLength++; After++;}
+    while (After < Characters.length && Characters[After] !== " ")
+    {
+        AfterLength++; After++;
+    }
     return BeforeLength > 1 && AfterLength > 1;
-}
+};
 
-function GetDefaultWidth(Font: PreparedFont): number
+const GetDefaultWidth = (Font: PreparedFont): number =>
 {
     for (const Character of [ " ", "x", "M", "!" ])
     {
         const Width: number | undefined = Font.Widths[Character];
-        if (Width !== undefined && Width > 0) {return Width;}
+        if (Width !== undefined && Width > 0)
+        {
+            return Width;
+        }
     }
     return 4;
-}
+};
 
-function FindLastPixel(Pixels: ReadonlyArray<string>): number
+const FindLastPixel = (Pixels: ReadonlyArray<string>): number =>
 {
     for (let Index = Pixels.length - 1; Index >= 0; Index--)
     {
-        if (Pixels[Index] !== " ") {return Index;}
+        if (Pixels[Index] !== " ")
+        {
+            return Index;
+        }
     }
     return -1;
-}
+};
 
-function StripEmptyLines(Lines: ReadonlyArray<string>): ReadonlyArray<string>
+const StripEmptyLines = (Lines: ReadonlyArray<string>): ReadonlyArray<string> =>
 {
     let Start = 0;
     let End = Lines.length;
-    while (Start < End && (Lines[Start] ?? "").trim().length === 0) {Start++;}
-    while (End > Start && (Lines[End - 1] ?? "").trim().length === 0) {End--;}
+    while (Start < End && (Lines[Start] ?? "").trim().length === 0)
+    {
+        Start++;
+    }
+    while (End > Start && (Lines[End - 1] ?? "").trim().length === 0)
+    {
+        End--;
+    }
     return Lines.slice(Start, End);
-}
+};
 
-function BlockWidth(Lines: ReadonlyArray<string>): number
+const BlockWidth = (Lines: ReadonlyArray<string>): number =>
 {
-    return Math.max(0, ...Lines.map((Line: string) => Array.from(Line).length));
-}
+    return Math.max(0, ...Lines.map((Line: string) => Array.Array.from(Line).length));
+};
 
-function ClampInteger(Value: number, Minimum: number, Maximum: number): number
+const ClampInteger = (Value: number, Minimum: number, Maximum: number): number =>
 {
     return Math.min(Maximum, Math.max(Minimum, Math.trunc(Value)));
-}
+};
 
-function NormalizeScale(Value: DisplayFontScale | undefined): DisplayFontScale
+const NormalizeScale = (Value: DisplayFontScale | undefined): DisplayFontScale =>
 {
     return Value === 0.5 || Value === 2 || Value === 4 ? Value : 1;
-}
+};
 
-function NormalizeShadowStyle(Value: DisplayShadowStyle | undefined): 0 | 1 | 2
+const NormalizeShadowStyle = (Value: DisplayShadowStyle | undefined): 0 | 1 | 2 =>
 {
-    if (Value === "medium" || Value === 1) {return 1;}
-    if (Value === "dark" || Value === 2) {return 2;}
+    if (Value === "medium" || Value === 1)
+    {
+        return 1;
+    }
+    if (Value === "dark" || Value === 2)
+    {
+        return 2;
+    }
     return 0;
-}
+};

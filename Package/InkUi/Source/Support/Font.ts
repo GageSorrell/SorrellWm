@@ -1,5 +1,5 @@
 /**
- *
+ * Terminal-specific font discovery.
  *
  * @module @sorrell/ink-ui/Support/Font
  *
@@ -9,17 +9,16 @@
  * @license   MIT
  */
 
-/** Terminal-specific font discovery. */
-
 import * as Path from "node:path";
+import { Array, Option, Predicate, String, flow, pipe } from "effect";
 import type {
     TerminalFont,
     TerminalFontQueryOptions,
     TerminalIdentity
 } from "./Types.js";
-import { TerminalFontSource } from "./Types.js";
 import { DetectTerminal } from "./Detect.js";
 import { QueryTerminalSupport } from "./Query.js";
+import { TerminalFontSource } from "./Types.js";
 import { execFile } from "node:child_process";
 import { homedir } from "node:os";
 import { parse } from "jsonc-parser";
@@ -42,16 +41,20 @@ export async function QueryTerminalFont(
             ?? (await QueryTerminalSupport(Options)).Terminal
             ?? DetectTerminal(Environment);
         const Result: TerminalFont | undefined = await QueryForTerminal(Terminal, Environment, Home);
-        if (Result !== undefined) {return Result;}
+        if (Result !== undefined)
+        {
+            return Result;
+        }
 
-        const EnvironmentFont: string | undefined = FirstValue(
+        const EnvironmentFont: Option.Option<string> = FirstValue(
             Environment.TERMINAL_FONT,
             Environment.TERM_FONT,
             Environment.LC_TERMINAL_FONT
         );
-        return EnvironmentFont === undefined
-            ? undefined
-            : { Family: EnvironmentFont, Source: TerminalFontSource.Environment() };
+
+        return Option.isSome(EnvironmentFont)
+            ? { Family: EnvironmentFont.value, Source: TerminalFontSource.Environment() }
+            : undefined;
     }
     catch
     {
@@ -67,11 +70,11 @@ export async function QueryTerminalFontFamily(
     return (await QueryTerminalFont(Options))?.Family;
 }
 
-async function QueryForTerminal(
+const QueryForTerminal = async (
     Terminal: TerminalIdentity,
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     switch (Terminal.Kind)
     {
@@ -84,14 +87,15 @@ async function QueryForTerminal(
         case "iterm2": return QueryItermFont(Environment, Home);
         default: return undefined;
     }
-}
+};
 
-async function QueryWindowsTerminalFont(
-    Environment: NodeJS.ProcessEnv
-): Promise<TerminalFont | undefined>
+const QueryWindowsTerminalFont = async (Env: NodeJS.ProcessEnv): Promise<TerminalFont | undefined> =>
 {
-    const LocalAppData: string | undefined = Environment.LOCALAPPDATA;
-    if (LocalAppData === undefined) {return undefined;}
+    const LocalAppData: string | undefined = Env.LOCALAPPDATA;
+    if (LocalAppData === undefined)
+    {
+        return undefined;
+    }
     const Paths: ReadonlyArray<string> = [
         Path.join(LocalAppData, "Packages", "Microsoft.WindowsTerminal_8wekyb3d8bbwe",
             "LocalState", "settings.json"),
@@ -105,17 +109,26 @@ async function QueryWindowsTerminalFont(
     for (const ConfigPath of Paths)
     {
         const Content: string | undefined = await ReadText(ConfigPath);
-        if (Content === undefined) {continue;}
+        if (Content === undefined)
+        {
+            continue;
+        }
         const Settings: unknown = parse(Content);
-        if (!IsRecord(Settings)) {continue;}
+        if (!IsRecord(Settings))
+        {
+            continue;
+        }
         const Profiles: unknown = Settings.profiles;
-        if (!IsRecord(Profiles)) {continue;}
+        if (!IsRecord(Profiles))
+        {
+            continue;
+        }
         const Defaults: UnknownRecord = IsRecord(Profiles.defaults) ? Profiles.defaults : { };
         const ProfileList: ReadonlyArray<unknown> = Array.isArray(Profiles.list) ? Profiles.list : [ ];
         const ProfileKey: string | undefined = FirstValue(
-            Environment.WT_PROFILE_ID,
+            Env.WT_PROFILE_ID,
             StringValue(Settings.defaultProfile)
-        );
+        ).valueOrUndefined;
         const Profile: UnknownRecord | undefined = ProfileList
             .filter(IsRecord)
             .find((Candidate: UnknownRecord) => ProfileMatches(Candidate, ProfileKey));
@@ -129,27 +142,43 @@ async function QueryWindowsTerminalFont(
     }
 
     return undefined;
-}
+};
 
-function ProfileMatches(Profile: UnknownRecord, ProfileKey: string | undefined): boolean
+const ProfileMatches = (Profile: UnknownRecord, ProfileKey: string | undefined): boolean =>
 {
-    if (ProfileKey === undefined) {return false;}
+    if (ProfileKey === undefined)
+    {
+        return false;
+    }
     const Key: string = NormalizeIdentifier(ProfileKey);
     return [ StringValue(Profile.guid), StringValue(Profile.name) ]
         .some((Value: string | undefined) => Value !== undefined && NormalizeIdentifier(Value) === Key);
-}
+};
 
-function GetWindowsFontFace(Profile: UnknownRecord | undefined): string | undefined
+const GetWindowsFontFace = (Profile: UnknownRecord | undefined): string | undefined =>
 {
-    if (Profile === undefined) {return undefined;}
-    const Font: unknown = Profile.font;
-    return FirstValue(IsRecord(Font) ? StringValue(Font.face) : undefined, StringValue(Profile.fontFace));
-}
+    if (Profile === undefined)
+    {
+        return undefined;
+    }
 
-async function QueryKittyFont(
+    const Font: unknown = Profile.font;
+
+    const Values: ReadonlyArray<string | undefined> =
+        [
+            IsRecord(Font)
+                ? StringValue(Font.face)
+                : undefined,
+            StringValue(Profile.fontFace)
+        ] as const;
+
+    return FirstValue(...Values).valueOrUndefined;
+};
+
+const QueryKittyFont = async (
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     const ConfigDirectory: string = Environment.KITTY_CONFIG_DIRECTORY
         ?? Path.join(Environment.XDG_CONFIG_HOME ?? Path.join(Home, ".config"), "kitty");
@@ -158,28 +187,40 @@ async function QueryKittyFont(
     return Family === undefined
         ? undefined
         : { ConfigPath, Family, Source: TerminalFontSource.Configuration() };
-}
+};
 
-async function ReadKittyFont(
+const ReadKittyFont = async (
     ConfigPath: string,
     Environment: NodeJS.ProcessEnv,
     Seen: Set<string>
-): Promise<string | undefined>
+): Promise<string | undefined> =>
 {
     const ResolvedPath: string = Path.resolve(ConfigPath);
-    if (Seen.has(ResolvedPath) || Seen.size >= 16) {return undefined;}
+    if (Seen.has(ResolvedPath) || Seen.size >= 16)
+    {
+        return undefined;
+    }
     Seen.add(ResolvedPath);
     const Content: string | undefined = await ReadText(ResolvedPath);
-    if (Content === undefined) {return undefined;}
+    if (Content === undefined)
+    {
+        return undefined;
+    }
     let Family: string | undefined;
 
     for (const Line of LogicalLines(Content))
     {
         const Match: RegExpMatchArray | null = Line.match(/^\s*([^\s#]+)\s+(.*?)\s*$/);
-        if (Match === null) {continue;}
+        if (Match === null)
+        {
+            continue;
+        }
         const Key: string = Match[1] ?? "";
         const Value: string = Match[2] ?? "";
-        if (Key === "font_family") {Family = Unquote(Value);}
+        if (Key === "font_family")
+        {
+            Family = Unquote(Value);
+        }
         if (Key === "include")
         {
             const IncludePath: string = ExpandPath(Value, Environment, Path.dirname(ResolvedPath));
@@ -187,12 +228,12 @@ async function ReadKittyFont(
         }
     }
     return Family;
-}
+};
 
-async function QueryKonsoleFont(
+const QueryKonsoleFont = async (
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     const ConfigHome: string = Environment.XDG_CONFIG_HOME ?? Path.join(Home, ".config");
     const DataHome: string = Environment.XDG_DATA_HOME ?? Path.join(Home, ".local", "share");
@@ -202,7 +243,10 @@ async function QueryKonsoleFont(
         const KonsoleRc: string | undefined = await ReadText(Path.join(ConfigHome, "konsolerc"));
         ProfileName = KonsoleRc?.match(/^DefaultProfile=(.+)$/m)?.[1]?.trim();
     }
-    if (ProfileName === undefined) {return undefined;}
+    if (ProfileName === undefined)
+    {
+        return undefined;
+    }
     const FileName: string = ProfileName.endsWith(".profile") ? ProfileName : `${ ProfileName }.profile`;
     const ConfigPath: string = Path.isAbsolute(FileName)
         ? FileName
@@ -213,12 +257,12 @@ async function QueryKonsoleFont(
     return Family === undefined || Family.length === 0
         ? undefined
         : { ConfigPath, Family: Unquote(Family), Source: TerminalFontSource.Configuration() };
-}
+};
 
-async function QueryGhosttyFont(
+const QueryGhosttyFont = (
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     const ConfigHome: string = Environment.XDG_CONFIG_HOME ?? Path.join(Home, ".config");
     const Paths: ReadonlyArray<string> = Environment.GHOSTTY_CONFIG_FILE === undefined
@@ -228,12 +272,12 @@ async function QueryGhosttyFont(
         ]
         : [ Environment.GHOSTTY_CONFIG_FILE ];
     return QueryKeyValueFont(Paths, /^\s*font-family\s*=\s*(.+?)\s*$/gm);
-}
+};
 
-async function QueryAlacrittyFont(
+const QueryAlacrittyFont = async (
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     const ConfigHome: string = Environment.XDG_CONFIG_HOME ?? Path.join(Home, ".config");
     const Paths: ReadonlyArray<string> = Environment.ALACRITTY_CONFIG_FILE === undefined
@@ -247,7 +291,10 @@ async function QueryAlacrittyFont(
     for (const ConfigPath of Paths)
     {
         const Content: string | undefined = await ReadText(ConfigPath);
-        if (Content === undefined) {continue;}
+        if (Content === undefined)
+        {
+            continue;
+        }
         const TomlSection: string | undefined = Content.match(/\[font\.normal\]([\s\S]*?)(?=\n\s*\[|$)/)?.[1];
         const Family: string | undefined = TomlSection?.match(/^\s*family\s*=\s*(.+?)\s*$/m)?.[1]
             ?? Content.match(/^\s{4,}family:\s*(.+?)\s*$/m)?.[1];
@@ -261,12 +308,12 @@ async function QueryAlacrittyFont(
         }
     }
     return undefined;
-}
+};
 
-async function QueryWezTermFont(
+const QueryWezTermFont = async (
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     const ConfigHome: string = Environment.XDG_CONFIG_HOME ?? Path.join(Home, ".config");
     const Paths: ReadonlyArray<string> = Environment.WEZTERM_CONFIG_FILE === undefined
@@ -276,7 +323,10 @@ async function QueryWezTermFont(
     for (const ConfigPath of Paths)
     {
         const Content: string | undefined = await ReadText(ConfigPath);
-        if (Content === undefined) {continue;}
+        if (Content === undefined)
+        {
+            continue;
+        }
         const Family: string | undefined = Content.match(/font\s*=\s*wezterm\.font\(\s*["']([^"']+)/)?.[1]
             ?? Content.match(/font\s*=\s*wezterm\.font_with_fallback\(\s*\{\s*["']([^"']+)/)?.[1];
         if (Family !== undefined)
@@ -285,14 +335,17 @@ async function QueryWezTermFont(
         }
     }
     return undefined;
-}
+};
 
-async function QueryItermFont(
+const QueryItermFont = async (
     Environment: NodeJS.ProcessEnv,
     Home: string
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
-    if (process.platform !== "darwin") {return undefined;}
+    if (process.platform !== "darwin")
+    {
+        return undefined;
+    }
     const ConfigPath: string = Path.join(Home, "Library", "Preferences", "com.googlecode.iterm2.plist");
     try
     {
@@ -301,14 +354,17 @@ async function QueryItermFont(
             timeout: 1_000
         });
         const Settings: unknown = JSON.parse(stdout);
-        if (!IsRecord(Settings)) {return undefined;}
+        if (!IsRecord(Settings))
+        {
+            return undefined;
+        }
         const Bookmarks: ReadonlyArray<unknown> = Array.isArray(Settings["New Bookmarks"])
             ? Settings["New Bookmarks"]
             : [ ];
         const ProfileKey: string | undefined = FirstValue(
             Environment.ITERM_PROFILE,
             StringValue(Settings["Default Bookmark Guid"])
-        );
+        ).valueOrUndefined;
         const Profile: UnknownRecord | undefined = Bookmarks.filter(IsRecord)
             .find((Candidate: UnknownRecord) => [ Candidate.Name, Candidate.Guid ]
                 .some((Value: unknown) => StringValue(Value) === ProfileKey));
@@ -322,17 +378,20 @@ async function QueryItermFont(
     {
         return undefined;
     }
-}
+};
 
-async function QueryKeyValueFont(
+const QueryKeyValueFont = async (
     Paths: ReadonlyArray<string>,
     Pattern: RegExp
-): Promise<TerminalFont | undefined>
+): Promise<TerminalFont | undefined> =>
 {
     for (const ConfigPath of Paths)
     {
         const Content: string | undefined = await ReadText(ConfigPath);
-        if (Content === undefined) {continue;}
+        if (Content === undefined)
+        {
+            continue;
+        }
         Pattern.lastIndex = 0;
         const Matches: ReadonlyArray<RegExpMatchArray> = [ ...Content.matchAll(Pattern) ];
         const Family: string | undefined = Matches.at(-1)?.[1];
@@ -342,13 +401,13 @@ async function QueryKeyValueFont(
                 ConfigPath,
                 Family: Unquote(Family.trim()),
                 Source: TerminalFontSource.Configuration()
-            };
+            } as const;
         }
     }
     return undefined;
-}
+};
 
-function LogicalLines(Content: string): ReadonlyArray<string>
+const LogicalLines = (Content: string): ReadonlyArray<string> =>
 {
     const Lines: Array<string> = [ ];
     for (const Line of Content.split(/\r?\n/))
@@ -363,45 +422,55 @@ function LogicalLines(Content: string): ReadonlyArray<string>
         }
     }
     return Lines;
-}
+};
 
-function ExpandPath(Value: string, Environment: NodeJS.ProcessEnv, Base: string): string
+const ExpandPath = (Value: string, Environment: NodeJS.ProcessEnv, Base: string): string =>
 {
     const Expanded: string = Unquote(Value)
         .replace(/^~(?=$|[\\/])/, Environment.HOME ?? homedir())
         .replace(/\$\{([^}]+)\}/g, (_Match: string, Name: string) => Environment[Name] ?? "");
     return Path.isAbsolute(Expanded) ? Expanded : Path.join(Base, Expanded);
-}
+};
 
-async function ReadText(FilePath: string): Promise<string | undefined>
+const ReadText = async (FilePath: string): Promise<string | undefined> =>
 {
-    try { return await readFile(FilePath, "utf8"); }
-    catch { return undefined; }
-}
+    try
+    {
+        return await readFile(FilePath, "utf8");
+    }
+    catch
+    {
+        return undefined;
+    }
+};
 
-function FirstValue(...Values: ReadonlyArray<string | undefined>): string | undefined
-{
-    return Values.find((Value: string | undefined) => Value !== undefined && Value.trim().length > 0)?.trim();
-}
+const FirstValue = (...Values: ReadonlyArray<string | undefined>): Option.Option<string> =>
+    pipe(
+        Values,
+        Array.filter(Predicate.isNotUndefined),
+        Array.findFirst(flow(String.trim, String.isNonEmpty)),
+        Option.map(String.trim)
+    );
 
-function StringValue(Value: unknown): string | undefined
-{
-    return typeof Value === "string" && Value.trim().length > 0 ? Value.trim() : undefined;
-}
+const StringValue = (Value: unknown): string | undefined =>
+    (
+        typeof Value === "string" &&
+        Value.trim().length > 0
+    )
+        ? Value.trim()
+        : undefined;
 
-function NormalizeIdentifier(Value: string): string
+const NormalizeIdentifier = (Value: string): string =>
 {
     return Value.trim().replace(/^\{?|\}?$/g, "").toLowerCase();
-}
+};
 
-function Unquote(Value: string): string
+const Unquote = (Value: string): string =>
 {
     return Value.trim().replace(/^(["'])(.*)\1$/, "$2");
-}
+};
 
 type UnknownRecord = Record<string, unknown>;
 
-function IsRecord(Value: unknown): Value is UnknownRecord
-{
-    return typeof Value === "object" && Value !== null && !Array.isArray(Value);
-}
+const IsRecord = (Value: unknown): Value is UnknownRecord =>
+    typeof Value === "object" && Value !== null && !Array.isArray(Value);

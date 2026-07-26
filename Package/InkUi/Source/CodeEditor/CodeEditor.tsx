@@ -15,6 +15,7 @@ import type { CodeLanguage } from "./index.ts";
 import { TextArea } from "../TextArea.tsx";
 import { ValidationNotice } from "../ValidationNotice.tsx";
 import { useTheme } from "../Theme.tsx";
+// import { Box } from "../Box/Box.tsx";
 
 /** {@inheritDoc CodeEditor} */
 export interface CodeEditorProps
@@ -162,20 +163,16 @@ const CodeEditor = ({
 
     return (
         <Ink.Box flexDirection="column">
-            <Ink.Text
-                bold
-                color={ Theme.TextMuted }>
-                { Language.toLocaleUpperCase() }
-                { ReadOnly ? " · read only" : " · Ctrl+Enter to submit" }
-            </Ink.Text>
-            <TextArea
-                Focused={ Focused }
-                Height={ Height }
-                OnChange={ OnChange }
-                OnSubmit={ OnSubmit }
-                ReadOnly={ ReadOnly }
-                RenderLine={ RenderLine }
-                Value={ Value } />
+            <Ink.Box flexDirection="row-reverse">
+                <Ink.Text
+                    bold
+                    color={ Theme.TextMuted }
+                    inverse>
+                    { Language.toLocaleUpperCase() }
+                    { ReadOnly ? " · read only" : " · Ctrl+Enter to submit" }
+                </Ink.Text>
+            </Ink.Box>
+            <TextArea { ...{  Focused, Height, OnChange, OnSubmit, ReadOnly, RenderLine, Value } } />
             <ValidationNotice Message={ ValidationMessage } />
         </Ink.Box>
     );

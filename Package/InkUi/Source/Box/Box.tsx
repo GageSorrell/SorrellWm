@@ -12,10 +12,16 @@
 import * as Ink from "ink";
 import * as React from "react";
 import {
-    BoxMouseRegion,
+    type BoxElevation,
+    RenderBoxShadow,
+    type RenderedBoxShadow
+} from "./Shadow.js";
+import {
     type BoxMouseHandlers,
+    BoxMouseRegion,
     HasBoxMouseHandlers
 } from "./Mouse.js";
+import { CancelBoxPaint, QueueBoxPaint } from "./Paint.js";
 import {
     type CompactBorderOptions,
     type CompactCornerOptions,
@@ -23,30 +29,43 @@ import {
     RenderCompactBorder,
     type Rgba
 } from "./CompactBorder.js";
+import {
+    type ShadowContextValue,
+    type ShadowDefaults,
+    useShadowDefaults
+} from "../Shadow/index.js";
 import { QueryTerminalSupport } from "../Support/Query.js";
 import type { TerminalSupport } from "../Support/Types.js";
 import { createRequire } from "node:module";
 import { image2sixel } from "sixel";
+import { useTerminalBackgroundColor } from "../Backdrop/index.js";
 
 /** Props for {@link Box}. */
 export type BoxProps = Omit<Ink.BoxProps, "borderStyle"> & BoxMouseHandlers &
 {
+    readonly children?: React.ReactNode;
     /** Use `compact` for a one-pixel Sixel border at the content-facing cell edges. */
-    readonly borderStyle?: Ink.BoxProps["borderStyle"] | "compact";
+    readonly borderStyle?: Ink.BoxProps["borderStyle"] | "compact" | undefined;
     /** Radius shared by all compact corners, in pixels or as a CSS length. */
-    readonly borderRadius?: number | string;
-    readonly borderTopLeftRadius?: number | string;
-    readonly borderTopRightRadius?: number | string;
-    readonly borderBottomRightRadius?: number | string;
-    readonly borderBottomLeftRadius?: number | string;
+    readonly borderRadius?: number | string | undefined;
+    readonly borderTopLeftRadius?: number | string | undefined;
+    readonly borderTopRightRadius?: number | string | undefined;
+    readonly borderBottomRightRadius?: number | string | undefined;
+    readonly borderBottomLeftRadius?: number | string | undefined;
     /** CSS shape shared by all compact corners. */
-    readonly cornerShape?: CornerShapeValue;
-    readonly cornerTopLeftShape?: CornerShapeValue;
-    readonly cornerTopRightShape?: CornerShapeValue;
-    readonly cornerBottomRightShape?: CornerShapeValue;
-    readonly cornerBottomLeftShape?: CornerShapeValue;
+    readonly cornerShape?: CornerShapeValue | undefined;
+    readonly cornerTopLeftShape?: CornerShapeValue | undefined;
+    readonly cornerTopRightShape?: CornerShapeValue | undefined;
+    readonly cornerBottomRightShape?: CornerShapeValue | undefined;
+    readonly cornerBottomLeftShape?: CornerShapeValue | undefined;
     /** @deprecated Use `cornerShape`. */
-    readonly compactCornerStyle?: CornerShapeValue;
+    readonly compactCornerStyle?: CornerShapeValue | undefined;
+    /** Sixel shadow height. Zero disables the shadow. */
+    readonly elevation?: BoxElevation | undefined;
+    /** Base shadow color blended with the background at each shadow pixel. */
+    readonly shadowColor?: string | undefined;
+    /** Paint order used when pixel effects overlap other components. */
+    readonly zOrder?: number | undefined;
 };
 
 interface Position
@@ -79,6 +98,7 @@ const Require = createRequire(import.meta.url);
 const CssColorNames = Require("color-name") as Readonly<Record<string, ReadonlyArray<number>>>;
 
 const DefaultColor: Rgba = [ 255, 255, 255, 255 ] as const;
+const DefaultShadowColor: Rgba = [ 0, 0, 0, 255 ] as const;
 
 const AnsiColors: Readonly<Record<string, Rgba>> =
     {
@@ -117,6 +137,7 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
 {
     const {
         borderStyle,
+        elevation,
         onAuxClick,
         onClick,
         onContextMenu,
@@ -130,6 +151,8 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
         onMouseOver,
         onMouseUp,
         onWheel,
+        shadowColor,
+        zOrder,
         ...InkProps
     }: BoxProps = Props;
     const MouseHandlers: BoxMouseHandlers = {
@@ -158,7 +181,28 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
     delete InkProps.cornerShape;
     delete InkProps.cornerTopLeftShape;
     delete InkProps.cornerTopRightShape;
+    const TerminalBackgroundColor: string | undefined = useTerminalBackgroundColor();
+    const EffectiveBackgroundColor: string | undefined = Props.backgroundColor
+        ?? TerminalBackgroundColor;
+    if (EffectiveBackgroundColor !== undefined)
+    {
+        InkProps.backgroundColor = EffectiveBackgroundColor;
+    }
     const IsCompact: boolean = borderStyle === "compact";
+    const ShadowContext: ShadowContextValue = useShadowDefaults();
+    const ResolvedElevation: BoxElevation = NormalizeElevation(
+        elevation ?? ShadowContext.Defaults.elevation ?? 0
+    );
+    const ElevationDefaults: Omit<ShadowDefaults, "elevation"> | undefined =
+        ResolvedElevation === 0 ? undefined : ShadowContext.ElevationDefaults[ResolvedElevation];
+    const ResolvedShadowColor: string | undefined = shadowColor
+        ?? ElevationDefaults?.shadowColor
+        ?? ShadowContext.Defaults.shadowColor;
+    const ResolvedZOrder: number = NormalizeZOrder(
+        zOrder ?? ElevationDefaults?.zOrder ?? ShadowContext.Defaults.zOrder ?? 0
+    );
+    const HasShadow: boolean = ResolvedElevation > 0;
+    const NeedsPixelRendering: boolean = IsCompact || HasShadow;
     const { stdin, setRawMode } = Ink.useStdin();
     const { stdout } = Ink.useStdout();
     const InternalReference = React.useRef<Ink.DOMElement>(null);
@@ -168,6 +212,7 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
     const CacheReference = React.useRef<
         { readonly Key: string; readonly Sixel: string } | undefined
     >(undefined);
+    const PaintIdReference = React.useRef<object>({ });
 
     const SetReference = React.useCallback((Node: Ink.DOMElement | null): void =>
     {
@@ -195,7 +240,7 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
     {
         let Cancelled: boolean = false;
 
-        if (!IsCompact)
+        if (!NeedsPixelRendering)
         {
             return;
         }
@@ -225,20 +270,21 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
         {
             Cancelled = true;
         };
-    }, [ IsCompact, SchedulePaint, setRawMode, stdin, stdout ]);
+    }, [ NeedsPixelRendering, SchedulePaint, setRawMode, stdin, stdout ]);
 
     React.useEffect(() =>
     {
         CacheReference.current = undefined;
         FailedReference.current = false;
-    }, [ Props ]);
+    }, [ Props, ResolvedElevation, ResolvedShadowColor, ShadowContext.Lofi ]);
 
     const Paint = React.useCallback((): void =>
     {
         const CellSizeValue: CellSize | undefined = CellSizeReference.current;
         const Reference: Ink.DOMElement | null = InternalReference.current;
 
-        if (!IsCompact || CellSizeValue === undefined || Reference === null || FailedReference.current)
+        if (!NeedsPixelRendering || CellSizeValue === undefined
+            || Reference === null || FailedReference.current)
         {
             return;
         }
@@ -258,33 +304,92 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
 
             const PixelWidth: number = Math.round(CellWidth * CellSizeValue.Width);
             const PixelHeight: number = Math.round(CellHeight * CellSizeValue.Height);
-            const Options: CompactBorderOptions = CreateBorderOptions(
-                Props,
-                CellSizeValue,
-                PixelWidth,
-                PixelHeight,
-                Props.backgroundColor === undefined
-                    ? undefined
-                    : (FindInheritedBackground(Reference) ?? CellSizeValue.BackgroundColor)
-            );
-            const CacheKey: string = JSON.stringify(Options);
+            const OuterBackground: Rgba | undefined = FindInheritedBackground(Reference)
+                ?? CellSizeValue.BackgroundColor;
+            const BorderOptions: CompactBorderOptions | undefined = IsCompact
+                ? CreateBorderOptions(
+                    Props,
+                    CellSizeValue,
+                    PixelWidth,
+                    PixelHeight,
+                    EffectiveBackgroundColor === undefined ? undefined : OuterBackground
+                )
+                : undefined;
+            const Shadow: RenderedBoxShadow | undefined = ResolvedElevation === 0
+                ? undefined
+                : RenderBoxShadow({
+                    BackgroundColor: OuterBackground ?? DefaultShadowColor,
+                    BoxHeight: PixelHeight,
+                    BoxWidth: PixelWidth,
+                    CellHeight: CellSizeValue.Height,
+                    CellWidth: CellSizeValue.Width,
+                    Elevation: ResolvedElevation,
+                    Lofi: ShadowContext.Lofi,
+                    ShadowColor: ParseColor(ResolvedShadowColor) ?? DefaultShadowColor
+                });
+            const CanvasWidth: number = Shadow?.Width ?? PixelWidth;
+            const CanvasHeight: number = Shadow?.Height ?? PixelHeight;
+            const LeftCells: number = (Shadow?.Insets.Left ?? 0) / CellSizeValue.Width;
+            const TopCells: number = (Shadow?.Insets.Top ?? 0) / CellSizeValue.Height;
+            const ExpandedPosition: Position = {
+                ...PositionValue,
+                Column: PositionValue.Column - LeftCells,
+                Row: PositionValue.Row - TopCells
+            };
+            const ExpandedCellWidth: number = CanvasWidth / CellSizeValue.Width;
+            const ExpandedCellHeight: number = CanvasHeight / CellSizeValue.Height;
+
+            if (!IsFullyVisible(
+                ExpandedPosition,
+                ExpandedCellWidth,
+                ExpandedCellHeight,
+                stdout
+            ))
+            {
+                return;
+            }
+
+            const CacheKey: string = JSON.stringify({
+                BorderOptions,
+                CanvasHeight,
+                CanvasWidth,
+                Elevation: ResolvedElevation,
+                Lofi: ShadowContext.Lofi,
+                OuterBackground,
+                ShadowColor: ResolvedShadowColor
+            });
             let Sixel: string | undefined = CacheReference.current?.Key === CacheKey
                 ? CacheReference.current.Sixel
                 : undefined;
 
             if (Sixel === undefined)
             {
-                const Pixels: Buffer = RenderCompactBorder(Options);
-                Sixel = image2sixel(Pixels, PixelWidth, PixelHeight, 16, 1);
+                const Pixels: Buffer = Shadow?.Pixels ?? Buffer.alloc(CanvasWidth * CanvasHeight * 4);
+                if (BorderOptions !== undefined)
+                {
+                    Composite(
+                        Pixels,
+                        CanvasWidth,
+                        RenderCompactBorder(BorderOptions),
+                        PixelWidth,
+                        PixelHeight,
+                        Shadow?.Insets.Left ?? 0,
+                        Shadow?.Insets.Top ?? 0
+                    );
+                }
+                Sixel = image2sixel(Pixels, CanvasWidth, CanvasHeight, 64, 1);
                 CacheReference.current = { Key: CacheKey, Sixel };
             }
 
-            const MoveUp: number = PositionValue.AppHeight - PositionValue.Row;
-            const MoveRight: string = PositionValue.Column > 0
-                ? `\u001B[${ PositionValue.Column }C`
+            const MoveUp: number = ExpandedPosition.AppHeight - ExpandedPosition.Row;
+            const MoveRight: string = ExpandedPosition.Column > 0
+                ? `\u001B[${ ExpandedPosition.Column }C`
                 : "";
 
-            stdout.write(
+            QueueBoxPaint(
+                stdout,
+                PaintIdReference.current,
+                ResolvedZOrder,
                 `\u001B7${ MoveUp > 0 ? `\u001B[${ MoveUp }A` : "" }\r${ MoveRight }${ Sixel }\u001B8`
             );
         }
@@ -292,7 +397,17 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
         {
             FailedReference.current = true;
         }
-    }, [ IsCompact, Props, stdout ]);
+    }, [
+        EffectiveBackgroundColor,
+        IsCompact,
+        NeedsPixelRendering,
+        Props,
+        ResolvedElevation,
+        ResolvedShadowColor,
+        ResolvedZOrder,
+        ShadowContext.Lofi,
+        stdout
+    ]);
 
     PaintReference.current = Paint;
 
@@ -310,6 +425,19 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
             stdout.off("resize", SchedulePaint);
         };
     }, [ SchedulePaint, stdout ]);
+
+    React.useEffect(() => () =>
+    {
+        CancelBoxPaint(stdout, PaintIdReference.current);
+    }, [ stdout ]);
+
+    React.useEffect(() =>
+    {
+        if (!NeedsPixelRendering)
+        {
+            CancelBoxPaint(stdout, PaintIdReference.current);
+        }
+    }, [ NeedsPixelRendering, stdout ]);
 
     return (
         <React.Profiler id="@sorrell/ink-ui/Box"
@@ -330,6 +458,47 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
 });
 
 Box.displayName = "Box";
+
+const NormalizeElevation = (Value: BoxElevation | number): BoxElevation =>
+{
+    if (!Number.isInteger(Value) || Value < 0 || Value > 5)
+    {
+        return 0;
+    }
+
+    return Value as BoxElevation;
+};
+
+const NormalizeZOrder = (Value: number): number =>
+{
+    return Number.isFinite(Value) ? Math.trunc(Value) : 0;
+};
+
+/** Place one RGBA image over another, including transparent source pixels. */
+function Composite(
+    Destination: Buffer,
+    DestinationWidth: number,
+    Source: Buffer,
+    SourceWidth: number,
+    SourceHeight: number,
+    DestinationX: number,
+    DestinationY: number
+): void
+{
+    for (let Row: number = 0; Row < SourceHeight; Row += 1)
+    {
+        const SourceStart: number = Row * SourceWidth * 4;
+        const DestinationStart: number = (
+            (DestinationY + Row) * DestinationWidth + DestinationX
+        ) * 4;
+        Source.copy(
+            Destination,
+            DestinationStart,
+            SourceStart,
+            SourceStart + SourceWidth * 4
+        );
+    }
+}
 
 /**
  * Construct border options from `BoxProps`.

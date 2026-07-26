@@ -51,17 +51,41 @@ render(<App />, { alternateScreen: true });
 ### Display
 
 - `Badge`
+- `BackdropProvider`
 - `Box`
+- `Button`
 - `CenterText`
 - `Checkbox`
 - `GradientBadge`
 - `HeaderBar`
 - `HeaderTable`
 - `JumpBadge`
+- `LaTeX`
+- `ShadowProvider`
 - `StatusBar`
 - `Tips`
 - `Toast`
 - `ValidationNotice`
+
+`BackdropProvider` paints its assumed full-screen region with a darker form of
+the detected terminal background:
+
+```tsx
+import { BackdropProvider } from "@sorrell/ink-ui/Backdrop";
+import { Box } from "@sorrell/ink-ui/Box";
+
+<BackdropProvider>
+    <Box>Content uses the original terminal background.</Box>
+</BackdropProvider>
+```
+
+Most terminal backgrounds are darkened by a consistent percentage; very dark
+colors use a stronger reduction to preserve as much visible separation as
+possible. Pass `backgroundColor` to override the generated backdrop color.
+The terminal's original color becomes the default background for every `Box`,
+while an explicit `Box.backgroundColor` still takes precedence. If the
+terminal background cannot be determined, the provider introduces no layout
+or color and an otherwise unstyled `Box` leaves `backgroundColor` unset.
 
 `Box` accepts every Ink `Box` prop and adds a Sixel-backed `compact` border.
 The border still reserves Ink's normal border cells, but its one-pixel line is
@@ -80,6 +104,31 @@ import { Box } from "@sorrell/ink-ui/Box";
 </Box>
 ```
 
+`Box.elevation` accepts the integer levels 0 through 5. Positive levels draw
+a Sixel shadow without changing layout; larger values increase its reach and
+downward offset. `shadowColor` is the base color blended with the underlying
+terminal or ancestor background, and `zOrder` orders overlapping pixel
+effects from low to high:
+
+```tsx
+import { ShadowProvider } from "@sorrell/ink-ui/Shadow";
+
+<ShadowProvider
+    defaults={{ shadowColor: "#05070a", zOrder: 0 }}
+    elevationDefaults={{
+        2: { zOrder: 2 },
+        4: { shadowColor: "#101828", zOrder: 4 },
+    }}>
+    <Box elevation={4}>Floating panel</Box>
+</ShadowProvider>
+```
+
+The provider also accepts `elevation`, `shadowColor`, and `zOrder` directly as
+defaults. Set `lofi` to use stable ordered dithering for a splotchy,
+shaded-character-like shadow. Elevation zero is a no-op, and all shadow props
+silently do nothing when Sixel support or terminal cell pixel dimensions are
+unavailable. Shadow pixels never cover the Box that casts them.
+
 `cornerShape` accepts the CSS `<corner-shape-value>` keywords `round`,
 `squircle`, `square`, `bevel`, `scoop`, and `notch`, or a string such as
 `superellipse(-0.75)`. Use `cornerTopLeftShape`, `cornerTopRightShape`,
@@ -96,6 +145,50 @@ For shaped corners, pixels outside the border retain the nearest ancestor
 background, or the terminal's OSC 11 background when there is no ancestor
 background. If Sixel or the terminal cell pixel size cannot be determined,
 the component keeps its layout and silently omits the pixel border.
+
+`Button` combines themed appearance variants with the Interaction and Mouse
+providers:
+
+```tsx
+import { Button } from "@sorrell/ink-ui/Button";
+
+<InteractionProvider ShowFooter={false}>
+    <MouseProvider>
+        <Button
+            Appearance="primary"
+            Icon={<SaveIcon />}
+            Id="save"
+            OnPress={() => save()}>
+            Save
+        </Button>
+    </MouseProvider>
+</InteractionProvider>
+```
+
+The `primary`, `secondary`, `subtle`, `transparent`, and `outline`
+appearances each have default, focused, hovered, pressed, and disabled theme
+states. A theme can replace any state without having to provide all of them:
+
+```tsx
+const CustomTheme = {
+    ...DefaultTheme,
+    Button: {
+        ...DefaultTheme.Button,
+        primary: {
+            ...DefaultTheme.Button?.primary,
+            Pressed: {
+                BackgroundColor: "magenta",
+                Color: "white",
+            },
+        },
+    },
+} satisfies Theme;
+```
+
+With Ink's Kitty keyboard `reportEventTypes` flag enabled, a focused button
+stays pressed for the full duration that Enter or Space is held. On terminals
+that only report completed keypresses, it commits immediately and briefly
+flashes the pressed style. Mouse presses remain active until release.
 
 `Text` wraps Ink's `Text` for terminal-sized content and switches to an
 SVG/Sixel rendering when the requested font metrics cannot be represented by
@@ -177,7 +270,30 @@ import { Svg } from "@sorrell/ink-ui/Svg";
 
 When no width or height is supplied, `Svg` converts the SVG's intrinsic pixel
 dimensions to cells and centers the image in those cells. It emits nothing if
-the terminal cannot report its pixel cell size or does not support Sixel.
+the terminal cannot report its pixel cell size or does not support Sixel,
+unless a `fallback` was supplied.
+
+`LaTeX` converts raw TeX to SVG with MathJax and passes the result through
+`Svg`:
+
+```tsx
+import { Text } from "ink";
+import { LaTeX } from "@sorrell/ink-ui/LaTeX";
+
+<LaTeX
+    color="cyan"
+    fallback={<Text>Math unavailable</Text>}
+    width={24}>
+    {String.raw`\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}`}
+</LaTeX>
+```
+
+The child is raw TeX without `$` delimiters. Display layout is enabled by
+default; set `display={false}` for inline math metrics. `color` defaults to
+the active theme's text color, and all `Svg` sizing props are accepted.
+Malformed TeX, unavailable Sixel support, missing cell pixel dimensions, and
+rasterization failures are passed to the element or error-component supplied
+through `fallback`. Without a fallback these cases render nothing.
 
 `Icon` is the one-cell form of `Svg`:
 

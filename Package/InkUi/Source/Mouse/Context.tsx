@@ -163,12 +163,34 @@ const useMouseEvent = (
     {
         throw new Error("useMouseEvent must be used inside a MouseProvider.");
     }
+    useMouseEventSubscription(Context, OnEvent, IsEnabled);
+};
 
+/**
+ * Subscribes when a provider exists and otherwise remains inactive.
+ *
+ * @internal
+ */
+export const useOptionalMouseEvent = (
+    OnEvent: (Event: MouseEvent.MouseEvent) => void,
+    IsEnabled: boolean = true
+): void =>
+{
+    const Context = React.useContext(MouseContext);
+    useMouseEventSubscription(Context, OnEvent, IsEnabled);
+};
+
+const useMouseEventSubscription = (
+    Context: MouseContextValue | undefined,
+    OnEvent: (Event: MouseEvent.MouseEvent) => void,
+    IsEnabled: boolean
+): void =>
+{
     const HandlerReference = React.useRef(OnEvent);
     HandlerReference.current = OnEvent;
     React.useEffect(() =>
     {
-        if (!IsEnabled)
+        if (!IsEnabled || Context === undefined)
         {
             return;
         }

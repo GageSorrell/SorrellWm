@@ -67,9 +67,10 @@ type LayoutPropKeys =
     | "top"
     | "width";
 
-type DisplayLayoutProps = {
-    readonly [Key in LayoutPropKeys]?: Ink.BoxProps[Key] | undefined
-};
+type DisplayLayoutProps =
+    {
+        readonly [Key in LayoutPropKeys]?: Ink.BoxProps[Key] | undefined
+    };
 
 type DisplayInkTextProps = Omit<Ink.TextProps, "children">;
 
@@ -99,15 +100,25 @@ export type DisplayProps = DisplayInkTextProps & DisplayLayoutProps & {
     readonly wordSpacing?: number;
 };
 
-/**
- * Render a string as terminal-native bitmap display text.
- *
- * The font and scale establish intrinsic dimensions. As with preformatted web
- * content, explicit CSS-like size props constrain the outer box rather than
- * mutating the font scale. Overflow remains visible unless hidden explicitly.
- */
-export function Display(Props: DisplayProps): React.ReactElement | null
+export/**
+       * Render a string as terminal-native bitmap display text.
+       *
+       * The font and scale establish intrinsic dimensions. As with preformatted web
+       * content, explicit CSS-like size props constrain the outer box rather than
+       * mutating the font scale. Art is clipped at the terminal viewport instead of
+       * being allowed to trigger the terminal's own line wrapping, which would make
+       * Ink's cursor position diverge from the rows actually drawn. Vertical output
+       * retains its intrinsic height and follows the usual visible-overflow behavior.
+       *
+       * @category Component
+       * @since 1.0.0
+       */
+const Display = React.forwardRef<Ink.DOMElement, DisplayProps>(function DisplayComponent(
+    Props: DisplayProps,
+    ForwardedReference: React.ForwardedRef<Ink.DOMElement>
+): React.ReactElement | null
 {
+    const { stdout } = Ink.useStdout();
     const FontFamily: DisplayFontFamily = Props.fontFamily ?? DefaultDisplayFontFamily;
     const Lines: ReadonlyArray<string> = React.useMemo(() => RenderDisplayText(
         Props.children,
@@ -138,90 +149,135 @@ export function Display(Props: DisplayProps): React.ReactElement | null
     ]);
     const Width: number = Math.max(0, ...Lines.map((Line: string) => Array.from(Line).length));
     const Height: number = Lines.length;
-    const Content: string = Lines.join("\n");
 
-    if (Props.children.length === 0 || Lines.length === 0) {return null;}
+    if (Props.children.length === 0 || Lines.length === 0)
+    {
+        return null;
+    }
 
     return (
         <Ink.Box
-            { ...GetLayoutProps(Props) }
+            { ...GetLayoutProps(Props, stdout.columns, Height) }
             aria-label={ Props["aria-label"] ?? Props.children }
             { ...(Props["aria-hidden"] === undefined
                 ? { }
-                : { "aria-hidden": Props["aria-hidden"] }) }>
+                : { "aria-hidden": Props["aria-hidden"] }) }
+            ref={ ForwardedReference }>
             <Ink.Box
+                flexDirection="column"
                 flexShrink={ 0 }
                 height={ Height }
+                minHeight={ Height }
                 width={ Width }>
-                <Ink.Text
-                    aria-hidden={ true }
-                    { ...(Props.backgroundColor === undefined
-                        ? { }
-                        : { backgroundColor: Props.backgroundColor }) }
-                    bold={ Props.bold ?? false }
-                    { ...(Props.color === undefined ? { } : { color: Props.color }) }
-                    dimColor={ Props.dimColor ?? false }
-                    inverse={ Props.inverse ?? false }
-                    italic={ Props.italic ?? false }
-                    strikethrough={ Props.strikethrough ?? false }
-                    underline={ Props.underline ?? false }
-                    wrap={ Props.wrap ?? "hard" }>
-                    { Content }
-                </Ink.Text>
+                { Lines.map((Line: string, Index: number) => (
+                    <Ink.Box
+                        flexShrink={ 0 }
+                        height={ 1 }
+                        key={ Index }
+                        width={ Width }>
+                        <Ink.Text
+                            aria-hidden={ true }
+                            { ...(Props.backgroundColor === undefined
+                                ? { }
+                                : { backgroundColor: Props.backgroundColor }) }
+                            bold={ Props.bold ?? false }
+                            { ...(Props.color === undefined ? { } : { color: Props.color }) }
+                            dimColor={ Props.dimColor ?? false }
+                            inverse={ Props.inverse ?? false }
+                            italic={ Props.italic ?? false }
+                            strikethrough={ Props.strikethrough ?? false }
+                            underline={ Props.underline ?? false }
+                            wrap="truncate-end">
+                            { Line }
+                        </Ink.Text>
+                    </Ink.Box>
+                )) }
             </Ink.Box>
         </Ink.Box>
     );
-}
+});
 
-function GetLayoutProps(Props: DisplayProps): DisplayLayoutProps
+Display.displayName = "Display";
+
+const GetLayoutProps = (
+    Props: DisplayProps,
+    TerminalWidth: number | undefined,
+    IntrinsicHeight: number
+): DisplayLayoutProps =>
 {
-    const Values: DisplayLayoutProps = {
-        alignContent: Props.alignContent,
-        alignItems: Props.alignItems,
-        alignSelf: Props.alignSelf,
-        aspectRatio: Props.aspectRatio,
-        bottom: Props.bottom,
-        columnGap: Props.columnGap,
-        display: Props.display,
-        flexBasis: Props.flexBasis,
-        flexDirection: Props.flexDirection,
-        flexGrow: Props.flexGrow,
-        flexShrink: Props.flexShrink,
-        flexWrap: Props.flexWrap,
-        gap: Props.gap,
-        height: Props.height,
-        justifyContent: Props.justifyContent,
-        left: Props.left,
-        margin: Props.margin,
-        marginBottom: Props.marginBottom,
-        marginLeft: Props.marginLeft,
-        marginRight: Props.marginRight,
-        marginTop: Props.marginTop,
-        marginX: Props.marginX,
-        marginY: Props.marginY,
-        maxHeight: Props.maxHeight,
-        maxWidth: Props.maxWidth,
-        minHeight: Props.minHeight,
-        minWidth: Props.minWidth,
-        overflow: Props.overflow,
-        overflowX: Props.overflowX,
-        overflowY: Props.overflowY,
-        padding: Props.padding,
-        paddingBottom: Props.paddingBottom,
-        paddingLeft: Props.paddingLeft,
-        paddingRight: Props.paddingRight,
-        paddingTop: Props.paddingTop,
-        paddingX: Props.paddingX,
-        paddingY: Props.paddingY,
-        position: Props.position,
-        right: Props.right,
-        rowGap: Props.rowGap,
-        top: Props.top,
-        width: Props.width
-    };
+    const Values: DisplayLayoutProps =
+        {
+            alignContent: Props.alignContent,
+            alignItems: Props.alignItems,
+            alignSelf: Props.alignSelf,
+            aspectRatio: Props.aspectRatio,
+            bottom: Props.bottom,
+            columnGap: Props.columnGap,
+            display: Props.display,
+            flexBasis: Props.flexBasis,
+            flexDirection: Props.flexDirection,
+            flexGrow: Props.flexGrow,
+            flexShrink: Props.flexShrink ?? 0,
+            flexWrap: Props.flexWrap,
+            gap: Props.gap,
+            height: Props.height,
+            justifyContent: Props.justifyContent,
+            left: Props.left,
+            margin: Props.margin,
+            marginBottom: Props.marginBottom,
+            marginLeft: Props.marginLeft,
+            marginRight: Props.marginRight,
+            marginTop: Props.marginTop,
+            marginX: Props.marginX,
+            marginY: Props.marginY,
+            maxHeight: Props.maxHeight,
+            maxWidth: ConstrainWidthToTerminal(Props.maxWidth, TerminalWidth),
+            minHeight: Props.minHeight ?? (Props.height === undefined && Props.maxHeight === undefined
+                ? IntrinsicHeight
+                : undefined),
+            minWidth: Props.minWidth,
+            overflow: Props.overflow,
+            overflowX: Props.overflowX ?? (Props.overflow === undefined ? "hidden" : undefined),
+            overflowY: Props.overflowY,
+            padding: Props.padding,
+            paddingBottom: Props.paddingBottom,
+            paddingLeft: Props.paddingLeft,
+            paddingRight: Props.paddingRight,
+            paddingTop: Props.paddingTop,
+            paddingX: Props.paddingX,
+            paddingY: Props.paddingY,
+            position: Props.position,
+            right: Props.right,
+            rowGap: Props.rowGap,
+            top: Props.top,
+            width: Props.width
+        };
+
     return Object.fromEntries(Object.entries(Values)
         .filter((Entry: [string, unknown]) => Entry[1] !== undefined)) as DisplayLayoutProps;
-}
+};
+
+const ConstrainWidthToTerminal = (
+    Value: Ink.BoxProps["maxWidth"],
+    TerminalSize: number | undefined
+): Ink.BoxProps["maxWidth"] =>
+{
+    if (TerminalSize === undefined || TerminalSize <= 0)
+    {
+        return Value;
+    }
+    if (Value === undefined)
+    {
+        return TerminalSize;
+    }
+    if (typeof Value === "number")
+    {
+        return Math.min(Value, TerminalSize);
+    }
+
+    const Percentage: number = Number.parseFloat(Value);
+    return Number.isFinite(Percentage) && Percentage > 100 ? "100%" : Value;
+};
 
 export {
     DefaultDisplayFontFamily,

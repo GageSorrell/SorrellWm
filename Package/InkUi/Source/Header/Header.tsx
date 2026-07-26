@@ -27,9 +27,6 @@ const H1: {
         {
             fontSize: "2em",
             fontWeight: "bold",
-            padding: 0,
-            // Number of cells, like how ink handles these with its `Box` component.
-            paddingLeft: 1,
             marginBottom: 1,
             marginTop: 1
         } as const;
@@ -47,19 +44,21 @@ export/**
        */
 const H2: {
     (Props: TextProps): React.ReactNode;
-} = ({ children, ...Tail }: TextProps) =>
+// } = ({ children, ...Tail }: TextProps) =>
+} = ({ children }: TextProps) =>
 {
-    const Defaults: TextProps =
-        {
-            fontSize: "1.5em",
-            fontWeight: "bold",
-            marginBottom: 1,
-            marginTop: 1
-        } as const;
+    // const Defaults: TextProps =
+    //     {
+    //         fontSize: "1.5em",
+    //         fontWeight: "bold",
+    //         marginBottom: 1,
+    //         marginTop: 1
+    //     } as const;
 
-    const Props: TextProps = Struct.assign(Defaults, Tail);
+    // const Props: TextProps = Struct.assign(Defaults, Tail);
 
-    return  <Text { ...Props }>{ children }</Text>;
+    // return <Text { ...Props }>{ children }</Text>;
+    return <Text fontSize={ 2 }>{ children }</Text>;
 };
 
 export/**

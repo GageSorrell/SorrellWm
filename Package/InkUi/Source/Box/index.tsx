@@ -10,6 +10,14 @@
  */
 
 export type { CornerShapeKeyword, CornerShapeValue } from "./CompactBorder.js";
+export {
+    type BoxElevation,
+    type BoxShadowOptions,
+    GetShadowInsets,
+    type RenderedBoxShadow,
+    RenderBoxShadow,
+    type ShadowInsets
+} from "./Shadow.js";
 export type {
     BoxMouseBounds,
     BoxMouseDownEvent,

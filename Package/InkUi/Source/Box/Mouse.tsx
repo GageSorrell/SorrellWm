@@ -11,7 +11,7 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { Button, MouseEvent, useMouseEvent } from "../Mouse/index.js";
+import { Button, MouseEvent, useOptionalMouseEvent } from "../Mouse/index.js";
 
 /** A zero-based position relative to a Box's top-left cell. */
 export interface BoxMousePosition
@@ -21,8 +21,9 @@ export interface BoxMousePosition
 }
 
 /** A terminal mouse event augmented with its target Box and local position. */
-export type BoxMouseEvent<Event extends MouseEvent.LocalMouseEvent = MouseEvent.LocalMouseEvent> =
-    Event & {
+export type BoxMouseEvent<EventType extends MouseEvent.LocalMouseEvent = MouseEvent.LocalMouseEvent> =
+    EventType &
+    {
         readonly CurrentTarget: Ink.DOMElement;
         readonly LocalPosition: BoxMousePosition;
     };
@@ -30,15 +31,19 @@ export type BoxMouseEvent<Event extends MouseEvent.LocalMouseEvent = MouseEvent.
 export type BoxMouseDownEvent = BoxMouseEvent<
     Extract<MouseEvent.MouseEvent, { readonly _tag: "Press" }>
 >;
+
 export type BoxMouseUpEvent = BoxMouseEvent<
     Extract<MouseEvent.MouseEvent, { readonly _tag: "Release" }>
 >;
+
 export type BoxMouseMoveEvent = BoxMouseEvent<
     Extract<MouseEvent.MouseEvent, { readonly _tag: "Move" | "Drag" }>
 >;
+
 export type BoxMouseDragEvent = BoxMouseEvent<
     Extract<MouseEvent.MouseEvent, { readonly _tag: "Drag" }>
 >;
+
 export type BoxWheelEvent = BoxMouseEvent<
     Extract<MouseEvent.MouseEvent, { readonly _tag: "Wheel" }>
 >;
@@ -83,10 +88,13 @@ export function BoxMouseRegion(Props: BoxMouseRegionProps): null
     const LastEventReference = React.useRef<BoxMouseEvent | undefined>(undefined);
     const PressedButtonsReference = React.useRef(new Set<Button.Button>());
 
-    useMouseEvent((Event: MouseEvent.MouseEvent): void =>
+    useOptionalMouseEvent((Event: MouseEvent.MouseEvent): void =>
     {
         const Target: Ink.DOMElement | null = Props.TargetReference.current;
-        if (Target === null) {return;}
+        if (Target === null)
+        {
+            return;
+        }
 
         if (!MouseEvent.IsLocalMouseEvent(Event))
         {
@@ -153,13 +161,19 @@ export function BoxMouseRegion(Props: BoxMouseRegionProps): null
                     if (Event.Button === Button.Left)
                     {
                         Props.onClick?.(ReleaseEvent);
-                        if (Event.Click._tag === "Double") {Props.onDoubleClick?.(ReleaseEvent);}
+                        if (Event.Click._tag === "Double")
+                        {
+                            Props.onDoubleClick?.(ReleaseEvent);
+                        }
                     }
                     else
                     {
                         Props.onAuxClick?.(ReleaseEvent);
                     }
-                    if (Event.Button === Button.Right) {Props.onContextMenu?.(ReleaseEvent);}
+                    if (Event.Button === Button.Right)
+                    {
+                        Props.onContextMenu?.(ReleaseEvent);
+                    }
                 }
                 break;
             }

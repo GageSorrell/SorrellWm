@@ -12,16 +12,14 @@
 import * as React from "react";
 import {
     Array,
-    Function,
     MutableHashMap,
     MutableHashSet,
     Number,
     Option,
     Struct,
-    UndefinedOr,
     pipe
 } from "effect";
-import { CommandScopeContext, FocusScopeContext, TypeId, UseInteraction } from "./Context.tsx";
+import { CommandScopeContext, FocusScopeContext, TypeId, UseInteraction } from "./Context.js";
 
 /**
  * The argument used to define a focusable region of the application.
@@ -81,8 +79,7 @@ export class FocusRegistry
     private readonly Listeners: MutableHashSet.MutableHashSet<() => void> =
         MutableHashSet.empty<() => void>();
 
-    private readonly Scopes: MutableHashMap.MutableHashMap<string, RegisteredFocusScope> =
-        MutableHashMap.empty<string, RegisteredFocusScope>();
+    private readonly Scopes: MutableHashMap.MutableHashMap<string, RegisteredFocusScope>;
 
     private readonly RootScope: RegisteredFocusScope;
     private CurrentId: Option.Option<string> = Option.none();
@@ -94,6 +91,7 @@ export class FocusRegistry
     public constructor(InitialFocus?: string, Wrap: boolean = true)
     {
         this.InitialFocus = Option.fromUndefinedOr(InitialFocus);
+        this.Scopes = MutableHashMap.empty<string, RegisteredFocusScope>();
         this.RootScope =
             {
                 Active: true,
@@ -366,6 +364,17 @@ export class FocusRegistry
         return this.Move(-1);
     }
 
+    /** Whether the current focus belongs to this scope or one of its descendants. */
+    public IsFocusWithin(ScopeId: string): boolean
+    {
+        const Current = Option.flatMap(
+            this.CurrentId,
+            (CurrentId: string) => MutableHashMap.get(this.Entries, CurrentId)
+        );
+        return Option.isSome(Current)
+            && this.IsScopeDescendant(Current.value.ScopeId, ScopeId);
+    }
+
     private Move(Direction: 1 | -1): boolean
     {
         const Current = Option.flatMap(
@@ -373,75 +382,55 @@ export class FocusRegistry
             (CurrentId: string) => MutableHashMap.get(this.Entries, CurrentId)
         );
 
-        const Trap = Option.flatMap(Current, Function.flow(Struct.get("ScopeId"), this.FindNearestTrap));
-
-        const Candidates = Option.map(
-            Trap,
-            Function.flow(
-                UndefinedOr.map(Struct.get("Id")),
-                this.GetCandidates
-            )
+        const Trap = Option.flatMap(
+            Current,
+            (TheCurrent: RegisteredFocus) => this.FindNearestTrap(TheCurrent.ScopeId)
         );
+        const Candidates = this.GetCandidates(Trap.valueOrUndefined?.Id);
 
-        if ((Candidates.valueOrUndefined?.length ?? 0) === 0)
+        if (Candidates.length === 0)
         {
             return false;
         }
 
-        if (Option.isNone(Current) && Option.isSome(Candidates))
+        if (Option.isNone(Current))
         {
             const Initial = Direction === 1
-                ? Candidates.value[0]
-                : Candidates.value[Candidates.value.length - 1];
+                ? Candidates[0]
+                : Candidates[Candidates.length - 1];
 
             return Initial === undefined ? false : this.Focus(Initial.Id);
         }
 
-        const CurrentIndex = Option.flatMap(
-            Current,
-            (TheCurrent: RegisteredFocus) => Option.flatMap(
-                Candidates,
-                Array.findFirstIndex(
-                    (Element: RegisteredFocus, _: number) => Element.Id === TheCurrent.Id
-                )
-            )
-        );
-
-        if (Option.isNone(CurrentIndex) || CurrentIndex.value === -1)
-        {
-            return Option.getOrElse(Option.map(Candidates, (TheCandidates: ReadonlyArray<RegisteredFocus>) =>
-            {
-                const Initial = Direction === 1
-                    ? TheCandidates[0]
-                    : TheCandidates[TheCandidates.length - 1];
-                return Initial === undefined ? false : this.Focus(Initial.Id);
-            }), () => false);
-        }
-
-        const NextIndex = CurrentIndex.value + Direction;
-        if (Option.isSome(Candidates) && NextIndex >= 0 && NextIndex < Candidates.value.length)
-        {
-            return this.Focus(Candidates.value[NextIndex]!.Id);
-        }
-
-        const Wrap = pipe(
-            Option.map(
-                Current,
-                Function.flow(
-                    Struct.get("ScopeId"),
-                    this.GetWrap
-                )
+        const CurrentIndex = pipe(
+            Candidates,
+            Array.findFirstIndex(
+                (Element: RegisteredFocus, _: number) => Element.Id === Current.value.Id
             ),
-            Option.getOrElse(() => false)
+            Option.getOrElse(() => -1)
         );
 
-        if (!Wrap)
+        if (CurrentIndex === -1)
+        {
+            const Initial = Direction === 1
+                ? Candidates[0]
+                : Candidates[Candidates.length - 1];
+            return Initial === undefined ? false : this.Focus(Initial.Id);
+        }
+
+        const NextIndex = CurrentIndex + Direction;
+        if (NextIndex >= 0 && NextIndex < Candidates.length)
+        {
+            return this.Focus(Candidates[NextIndex]!.Id);
+        }
+
+        if (!this.GetWrap(Current.value.ScopeId))
         {
             return false;
         }
         return this.Focus(Direction === 1
-            ? Candidates.valueOrUndefined![0]!.Id
-            : Candidates.valueOrUndefined![Candidates.valueOrUndefined!.length - 1]!.Id);
+            ? Candidates[0]!.Id
+            : Candidates[Candidates.length - 1]!.Id);
     }
 
     private GetCandidates(ScopeId?: string): Array<RegisteredFocus>
@@ -850,6 +839,7 @@ export interface FocusManager
     readonly FocusNext: () => boolean;
     readonly FocusPrevious: () => boolean;
     readonly FocusedId: Option.Option<string>;
+    readonly IsFocusWithin: (ScopeId: string) => boolean;
 }
 
 export/**
@@ -866,8 +856,14 @@ const useFocusManager = (): FocusManager =>
         Focus.GetSnapshot,
         Focus.GetSnapshot
     );
-    return Struct.assign(
-        Struct.pick(Focus, [ "Blur", "Focus", "FocusFirst", "FocusLast", "FocusNext", "FocusPrevious" ]),
-        { FocusedId: Focus.GetFocusedId() }
-    );
+    return {
+        Blur: () => Focus.Blur(),
+        Focus: (Id: string) => Focus.Focus(Id),
+        FocusFirst: (ScopeId?: string) => Focus.FocusFirst(ScopeId),
+        FocusLast: (ScopeId?: string) => Focus.FocusLast(ScopeId),
+        FocusNext: () => Focus.FocusNext(),
+        FocusPrevious: () => Focus.FocusPrevious(),
+        FocusedId: Focus.GetFocusedId(),
+        IsFocusWithin: (ScopeId: string) => Focus.IsFocusWithin(ScopeId)
+    };
 };

@@ -16,31 +16,35 @@ import { Icon, type IconProps } from "../Icon/index.js";
 import { renderToStaticMarkup } from "react-dom/server";
 
 /** Props shared by every generated Phosphor icon component. */
-export interface PhosphorIconProps extends Omit<
-    React.SVGProps<SVGSVGElement>,
-    "height" | "width"
->
+export interface PhosphorIconProps extends
+    Omit<React.SVGProps<SVGSVGElement>, "height" | "width">,
+    Pick<IconProps, "fallback">
 {
     readonly alt?: string;
-    readonly fallback?: IconProps["fallback"];
     readonly mirrored?: boolean;
 }
 
 /** A generated, fixed-weight Phosphor icon component. */
 export type PhosphorIconComponent = React.ComponentType<PhosphorIconProps>;
 
-type PhosphorWeight = "bold" | "duotone" | "fill" | "light" | "regular" | "thin";
-type SourceComponent = React.ElementType<React.SVGProps<SVGSVGElement> & {
-    readonly mirrored?: boolean;
-    readonly size?: number | string;
-    readonly weight?: PhosphorWeight;
-}>;
+type PhosphorWeight =
+    | "bold"
+    | "duotone"
+    | "fill"
+    | "light"
+    | "regular"
+    | "thin";
+
+type SourceComponent =
+    React.ElementType<React.SVGProps<SVGSVGElement> &
+    {
+        readonly mirrored?: boolean;
+        readonly size?: number | string;
+        readonly weight?: PhosphorWeight;
+    }>;
 
 /** Creates a one-cell adapter for one Phosphor icon and weight. */
-export function CreatePhosphorIcon(
-    Name: string,
-    Weight: PhosphorWeight
-): PhosphorIconComponent
+export function CreatePhosphorIcon(Name: string, Weight: PhosphorWeight): PhosphorIconComponent
 {
     const Component = (Props: PhosphorIconProps): React.ReactElement =>
     {
@@ -49,11 +53,16 @@ export function CreatePhosphorIcon(
         try
         {
             const Source: SourceComponent = GetSourceComponent(Name);
-            const Markup: string = renderToStaticMarkup(React.createElement(Source, {
-                ...SvgProps,
-                size: 256,
-                weight: Weight
-            }));
+            const Markup: string = renderToStaticMarkup(
+                React.createElement(
+                    Source,
+                    {
+                        ...SvgProps,
+                        size: 256,
+                        weight: Weight
+                    }
+                )
+            );
 
             return <Icon
                 { ...(fallback === undefined ? { } : { fallback }) }

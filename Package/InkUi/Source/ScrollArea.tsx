@@ -20,7 +20,6 @@ import {
 } from "./Interaction/Command.tsx";
 import { GetKeyChordUnsafe, useShortcut, useShortcutGroup } from "./Interaction/Shortcut.ts";
 import { Key } from "./Interaction/Key.ts";
-import { Predicate } from "effect";
 
 /** {@inheritDoc ScrollArea} */
 export interface ScrollAreaProps<A>
@@ -70,20 +69,16 @@ const ScrollArea = <A,>({
     // @TODO Make this use commands instead, and allow commands
     // with keybinds to be assigned footer items arbitrarily with icons.
 
-    const LogCommand = (Id: CommandId) => Predicate.isSymbol(Id)
-        ? (Symbol.keyFor(Id) ?? "UNKNOWN BUILT-IN COMMAND")
-        : Id;
+    // const LogCommand = (Id: CommandId) => Predicate.isSymbol(Id)
+    //     ? (Symbol.keyFor(Id) ?? "UNKNOWN BUILT-IN COMMAND")
+    //     : Id;
 
     const useScrollAreaCommand = <A,>(Id: CommandId, Listener: CommandHandler<A>) =>
     {
-        // eslint-disable-next-line no-console
-        console.log(`useScrollAreaCommand: ${ LogCommand(Id) }`);
         useCommand<A>(
             Id,
             (Event: CommandEvent<A>) =>
             {
-                // eslint-disable-next-line no-console
-                console.log(`Listener: ${ LogCommand(Event.Command) }`);
                 Listener(Event);
             },
             { Enabled: Active && Items.length > 0 }

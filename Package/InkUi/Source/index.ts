@@ -10,7 +10,9 @@
  */
 
 export * from "./Badge/index.js";
+export * from "./Backdrop/index.js";
 export * from "./Box/index.js";
+export * from "./Button/index.js";
 export * from "./Header/index.js";
 export * from "./CenterText.js";
 export * from "./Checkbox.js";
@@ -18,12 +20,16 @@ export * from "./CodeEditor/index.ts";
 export * from "./CompletionMenu.tsx";
 export * from "./Display/index.js";
 export * from "./Frame.tsx";
+export * from "./Help/index.js";
 export * from "./Icon/index.js";
+export * from "./LaTeX/index.js";
 export * from "./Interaction/index.ts";
 export * as Mouse from "./Mouse/index.ts";
 export * from "./Overlay/index.ts";
 export * from "./ScrollArea.tsx";
+export * from "./ScrollView.js";
 export * from "./Select.tsx";
+export * from "./Shadow/index.js";
 export * from "./StatusBar.tsx";
 export * as Support from "./Support/index.js";
 export * from "./Svg/index.js";

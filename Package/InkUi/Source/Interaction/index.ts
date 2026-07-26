@@ -9,8 +9,8 @@
  * @license   MIT
  */
 
-export * from "./Command.tsx";
-export * from "./Context.tsx";
-export * from "./Focus.tsx";
-export * from "./Key.ts";
-export * from "./Shortcut.ts";
+export * from "./Command.js";
+export * from "./Context.js";
+export * from "./Focus.js";
+export * from "./Key.js";
+export * from "./Shortcut.js";
