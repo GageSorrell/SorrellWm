@@ -12,7 +12,13 @@
 import type * as Ink from "ink";
 import { Struct } from "effect";
 
-export const EmptyKey: Ink.Key =
+export/**
+       * An empty `ink` key.
+       *
+       * @category Interaction
+       * @since 1.0.0
+       */
+const EmptyKey: Ink.Key =
     {
         downArrow: false,
         leftArrow: false,
@@ -39,7 +45,12 @@ export const EmptyKey: Ink.Key =
         tab: false
     } as const;
 
-export const Key = (Self: Partial<Ink.Key>): Ink.Key =>
+export/**
+       * Define an `ink` Key by defining some properties; all others become `false`.
+       *
+       * @since 1.0.0
+       */
+const Key = (Self: Partial<Ink.Key>): Ink.Key =>
 {
     return Struct.assign(EmptyKey, Self) as Ink.Key;
 };

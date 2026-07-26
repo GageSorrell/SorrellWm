@@ -9,10 +9,10 @@
  * @license   MIT
  */
 
-import type { Button, Click, Scroll } from "./index.ts";
+import type { Button, Click, Scroll } from "./index.js";
 import { Data, type Option } from "effect";
 import type { IntPoint } from "@sorrell/math";
-import type { Modifiers } from "./Modifiers.ts";
+import type { Modifiers } from "./Modifiers.js";
 
 /** Properties shared by every terminal mouse event. */
 export interface MouseEventBase

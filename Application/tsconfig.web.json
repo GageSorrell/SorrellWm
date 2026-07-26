@@ -21,6 +21,7 @@
     [
         "Source/Renderer/**/*.ts",
         "Source/Renderer/**/*.tsx",
-        "Source/Shared/**/*.ts"
+        "Source/Shared/**/*.ts",
+        "Test/Renderer/**/*.ts"
     ]
 }

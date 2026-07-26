@@ -47,6 +47,7 @@ vi.mock("@sorrell/windows", async() =>
         Window: {
             ClearWindowDimming: vi.fn(() => EffectModule.Result.succeed(undefined)),
             DimWindowsExcept: vi.fn(() => EffectModule.Result.succeed(undefined)),
+            GetApplicationName: vi.fn(() => EffectModule.Option.none()),
             GetIcon: vi.fn(() => EffectModule.Option.none()),
             GetManageableTopLevelWindows: vi.fn(() =>
                 EffectModule.Result.succeed([ ])),
@@ -86,6 +87,9 @@ beforeEach(() =>
     vi.mocked(WindowsWindow.GetWindowText).mockImplementation((
         Window: Handle.HWND
     ) => Option.some(Window === LeftWindow ? "Left App" : "Right App"));
+    vi.mocked(WindowsWindow.GetApplicationName).mockReturnValue(
+        Option.some("Visual Studio Code")
+    );
     vi.mocked(WindowsWindow.GetIcon).mockImplementation((
         Window: Handle.HWND
     ) => Window === RightWindow ? Option.some("right-icon") : Option.none());
@@ -115,9 +119,31 @@ describe("OverlaySession.Live Focus targets", () =>
 
         expect(Snapshot.SecondaryCommand).toMatchObject({
             Id: "OpenPerAppSettings",
-            Label: "Configure how SorrellWm manages Right App windows"
+            Label: "Configure how SorrellWm manages Visual Studio Code windows"
         });
         expect(Snapshot.SecondaryCommand).not.toHaveProperty("Target");
+        expect(WindowsWindow.GetApplicationName).toHaveBeenCalledWith(CurrentWindow);
+    });
+
+    it("falls back when the activation application's name is unavailable", async() =>
+    {
+        vi.mocked(WindowsWindow.GetApplicationName).mockReturnValue(Option.none());
+
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows)
+        ));
+
+        expect(Snapshot.SecondaryCommand?.Label).toBe(
+            "Configure how SorrellWm manages this application's windows"
+        );
     });
 
     it("publishes target metadata and previews only the current, overlay, and target windows", async() =>

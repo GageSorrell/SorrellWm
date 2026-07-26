@@ -81,6 +81,12 @@ export/** Get the current foreground window, if a window is focused. */
 const GetForegroundWindow: { (): Option.Option<Handle.HWND>; } =
     Attempt.ToOption(Binding.Window.GetForegroundWindow);
 
+export/** Get the display name of the application that owns a window. */
+const GetApplicationName = (Window: Handle.HWND): Option.Option<string> =>
+    typeof Binding.Window.GetApplicationName === "function"
+        ? Attempt.AsOption(Binding.Window.GetApplicationName(Window))
+        : Option.none();
+
 export/** Get the maximize button beneath the cursor, if one is being hovered. */
 const GetHoveredMaximizeButton = (): Option.Option<HoveredMaximizeButton> =>
     typeof Binding.Window.GetHoveredMaximizeButton !== "function"

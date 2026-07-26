@@ -27,6 +27,38 @@
             "import": "./Distribution/Mouse/index.js",
             "types": "./Distribution/Mouse/index.d.ts"
         },
+        "./Box": {
+            "import": "./Distribution/Box/index.js",
+            "types": "./Distribution/Box/index.d.ts"
+        },
+        "./Display": {
+            "import": "./Distribution/Display/index.js",
+            "types": "./Distribution/Display/index.d.ts"
+        },
+        "./Text": {
+            "import": "./Distribution/Text.js",
+            "types": "./Distribution/Text.d.ts"
+        },
+        "./Icon": {
+            "import": "./Distribution/Icon/index.js",
+            "types": "./Distribution/Icon/index.d.ts"
+        },
+        "./PhosphorIcon": {
+            "import": "./Distribution/PhosphorIcon/index.js",
+            "types": "./Distribution/PhosphorIcon/index.d.ts"
+        },
+        "./PhosphorIcon/*": {
+            "import": "./Distribution/PhosphorIcon/*.js",
+            "types": "./Distribution/PhosphorIcon/*.d.ts"
+        },
+        "./Svg": {
+            "import": "./Distribution/Svg/index.js",
+            "types": "./Distribution/Svg/index.d.ts"
+        },
+        "./Support": {
+            "import": "./Distribution/Support/index.js",
+            "types": "./Distribution/Support/index.d.ts"
+        },
         "./Three": {
             "import": "./Distribution/Three/index.js",
             "types": "./Distribution/Three/index.d.ts"
@@ -36,26 +68,37 @@
     "files": [
         "Distribution",
         "License.md",
-        "ReadMe.md"
+        "ReadMe.md",
+        "ThirdPartyNotices.md"
     ],
     "scripts": {
         "build": "tsc -p ./tsconfig.json",
         "build:showcase": "tsc -p ./tsconfig.showcase.json",
         "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts,.tsx Source Showcase Test",
         "showcase": "npm run build:showcase && node ./Intermediate/Showcase/Showcase/index.js",
+        "generate:bit-fonts": "node ./Script/GenerateBitFonts.mjs",
+        "generate:phosphor-icons": "node ./Script/GeneratePhosphorIcons.mjs",
         "test": "vitest run",
         "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json && tsc --noEmit -p ./tsconfig.showcase.json"
     },
     "peerDependencies": {
+        "@phosphor-icons/react": "^2.1.10",
         "ink": "^7.1.0",
         "react": ">=19.2.0 <20",
+        "react-dom": ">=19.2.0 <20",
         "three": "^0.185.1"
     },
     "peerDependenciesMeta": {
+        "@phosphor-icons/react": {
+            "optional": true
+        },
         "ink": {
             "optional": false
         },
         "react": {
+            "optional": false
+        },
+        "react-dom": {
             "optional": false
         },
         "three": {
@@ -63,21 +106,28 @@
         }
     },
     "devDependencies": {
+        "@phosphor-icons/react": "2.1.10",
         "@sorrell/tsconfig": "1.0.0",
         "@types/node": "26.1.1",
         "@types/react": "19.2.17",
+        "@types/react-dom": "19.2.3",
         "@types/three": "^0.185.0",
         "cross-env": "10.1.0",
         "ink": "7.1.0",
         "ink-testing-library": "4.0.0",
         "react": "19.2.7",
+        "react-dom": "19.2.7",
         "three": "^0.185.1",
         "typescript": "6.0.2",
         "vitest": "4.1.10"
     },
     "dependencies": {
+        "@resvg/resvg-js": "2.6.2",
         "@sorrell/math": "1.0.0",
-        "effect": "^4.0.0-beta"
+        "color-name": "1.1.4",
+        "effect": "^4.0.0-beta",
+        "jsonc-parser": "3.3.1",
+        "sixel": "0.16.0"
     },
     "engines": {
         "node": ">=26.5.0",

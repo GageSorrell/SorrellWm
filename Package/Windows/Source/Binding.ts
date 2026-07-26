@@ -61,6 +61,9 @@ export interface NativeBinding
     };
     readonly Window:
     {
+        readonly GetApplicationName?: (
+            Window: Handle.HWND
+        ) => Attempt.NativeAttempt<string>;
         readonly Capture?: (
             Window: Handle.HWND
         ) => Attempt.NativeAttempt<string>;

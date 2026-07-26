@@ -1,15 +1,13 @@
 /**
  *
  *
- * @module @sorrell/wm/Renderer/ApplicationProgrammingInterface
+ * @module @sorrell/wm/Renderer/Api
  *
  * @file      ApplicationProgrammingInterface.d.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
-
-import type { AppApi } from "../Shared/Api.js";
 
 declare global
 {

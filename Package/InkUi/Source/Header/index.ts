@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+export * from "./Header.tsx";
 export * from "./HeaderBar.tsx";
 export * from "./HeaderTable.tsx";
 export * from "./HeaderTableRow.tsx";

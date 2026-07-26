@@ -9,100 +9,94 @@
  * @license   MIT
  */
 
-import { describe, expect, it } from "vitest";
 import { render } from "ink-testing-library";
+import { describe, expect, it } from "vitest";
 import {
-    Badge,
-    CenterText,
-    Checkbox,
-    DefaultTheme,
-    GradientBadge,
-    HeaderBar,
-    HeaderTable,
-    JumpBadge,
-    StatusBar,
-    ThemeProvider,
-    Tips,
-    Toast,
-    ValidationNotice
-} from "../Source/index.js";
+    Display,
+    DisplayFontFamilies,
+    GetDisplayFont,
+    RenderDisplayText
+} from "../Source/Display/index.js";
 
-const Render = (Value: React.ReactElement): string =>
-    render(<ThemeProvider>{ Value }</ThemeProvider>).lastFrame() ?? "";
-
-describe("display components", () =>
+describe("Display font catalog", () =>
 {
-    it("Badge renders its content", () =>
+    it("embeds every font offered by bit with its metadata", () =>
     {
-        expect(Render(<Badge>Ready</Badge>)).toContain("Ready");
+        expect(DisplayFontFamilies).toHaveLength(125);
+        expect(DisplayFontFamilies).toContain("ithaca");
+        expect(DisplayFontFamilies).toContain("unsciithin");
+        expect(GetDisplayFont("ithaca")).toMatchObject({
+            Author: "GGBotNet",
+            License: "OFL-1.1",
+            Name: "ithaca"
+        });
+    });
+});
+
+describe("Display renderer", () =>
+{
+    it("matches bit's normal-scale ithaca rendering", () =>
+    {
+        expect(RenderDisplayText("Hi", { FontFamily: "ithaca" })).toEqual([
+            "████  ████    ████  ",
+            "████  ████          ",
+            "████  ████  ██████  ",
+            "████  ████    ████  ",
+            "██████████    ████  ",
+            "████  ████    ████  ",
+            "████  ████    ████  ",
+            "████  ████    ████  ",
+            "████  ████  ████████"
+        ]);
     });
 
-    it("GradientBadge renders every character", () =>
+    it("supports bit's scale and shadow values", () =>
     {
-        expect(Render(<GradientBadge Text="Gradient" />)).toContain("Gradient");
+        const Normal = RenderDisplayText("A", { FontFamily: "ithaca" });
+        const Double = RenderDisplayText("A", { FontFamily: "ithaca", FontScale: 2 });
+        const Shadowed = RenderDisplayText("A", {
+            FontFamily: "ithaca",
+            Shadow: true,
+            ShadowHorizontalOffset: 2,
+            ShadowStyle: "dark",
+            ShadowVerticalOffset: 1
+        });
+
+        expect(Double.length).toBeGreaterThan(Normal.length);
+        expect(Math.max(...Double.map((Line) => Line.length)))
+            .toBeGreaterThan(Math.max(...Normal.map((Line) => Line.length)));
+        expect(Shadowed.join("\n")).toContain("▓");
+        expect(Shadowed.length).toBe(Normal.length + 1);
+    });
+});
+
+describe("Display component", () =>
+{
+    it("renders bitmap text through Ink", () =>
+    {
+        const Frame: string = render(
+            <Display fontFamily="ithaca">Hi</Display>
+        ).lastFrame() ?? "";
+
+        expect(Frame).toContain("████  ████    ████");
+        expect(Frame.split("\n")).toHaveLength(9);
     });
 
-    it("Checkbox renders checked state", () =>
+    it("lets an explicit box clip intrinsic art without changing font scale", () =>
     {
-        expect(Render(<Checkbox Checked
-            Label="Enabled" />)).toContain("[x] Enabled");
-    });
+        const Natural: string = render(
+            <Display fontFamily="ithaca">Hi</Display>
+        ).lastFrame() ?? "";
+        const Clipped: string = render(
+            <Display fontFamily="ithaca"
+                overflowX="hidden"
+                width={ 10 }>
+                Hi
+            </Display>
+        ).lastFrame() ?? "";
 
-    it("CenterText renders its children", () =>
-    {
-        expect(Render(<CenterText Width={ 20 }>Centered</CenterText>)).toContain("Centered");
-    });
-
-    it("HeaderBar renders its title", () =>
-    {
-        expect(Render(<HeaderBar Title="Heading" />)).toContain("Heading");
-    });
-
-    it("HeaderTable renders name-value rows", () =>
-    {
-        expect(Render(<HeaderTable Rows={ [ { Name: "Name", Value: "Value" } ] } />))
-            .toContain("Name │ Value");
-    });
-
-    it("JumpBadge renders its hint", () =>
-    {
-        expect(Render(<JumpBadge Hint="g" />)).toContain("[g]");
-    });
-
-    it("StatusBar renders every item", () =>
-    {
-        expect(Render(<StatusBar Items={ [ { Label: "READY" }, { Label: "ONLINE" } ] } />))
-            .toContain("READY ONLINE");
-    });
-
-    it("Toast renders its message", () =>
-    {
-        expect(Render(<Toast DurationMilliseconds={ 60_000 }
-            Message="Saved" />))
-            .toContain("Saved");
-    });
-
-    it("Tips renders the selected tip", () =>
-    {
-        expect(Render(<Tips Index={ 0 }
-            Tips={ [ "Use arrows." ] } />))
-            .toContain("Tip: Use arrows.");
-    });
-
-    it("ValidationNotice renders a supplied error", () =>
-    {
-        expect(Render(<ValidationNotice Message="Invalid value" />))
-            .toContain("Invalid value");
-    });
-
-    it("ThemeProvider renders descendants with a custom theme", () =>
-    {
-        const Frame = render(
-            <ThemeProvider Theme={ { ...DefaultTheme, Name: "Test" } }>
-                <Badge>Themed</Badge>
-            </ThemeProvider>
-        ).lastFrame();
-
-        expect(Frame).toContain("Themed");
+        expect(Natural.split("\n")[0]?.length).toBe(18);
+        expect(Clipped.split("\n").every((Line) => Line.length <= 10)).toBe(true);
+        expect(Clipped).toContain("████  ████");
     });
 });

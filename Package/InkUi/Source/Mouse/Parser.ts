@@ -18,7 +18,7 @@ import {
     MouseEvent,
     Scroll,
     type TrackingOptions
-} from "./index.ts";
+} from "./index.js";
 import { Data, Effect, Option } from "effect";
 import { IntPoint } from "@sorrell/math";
 

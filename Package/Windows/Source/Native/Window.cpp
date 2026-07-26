@@ -6,6 +6,12 @@
 
 namespace
 {
+    struct LanguageAndCodePage
+    {
+        WORD Language;
+        WORD CodePage;
+    };
+
     std::optional<HWND> GetWindowArgument(
         const Napi::CallbackInfo& CallbackInfo,
         std::size_t Index = 0
@@ -74,6 +80,147 @@ namespace
         }
 
         return Rectangle;
+    }
+
+    std::optional<std::wstring> GetExecutablePath(HWND WindowHandle)
+    {
+        DWORD ProcessId = 0;
+        GetWindowThreadProcessId(WindowHandle, &ProcessId);
+        if (ProcessId == 0)
+        {
+            return std::nullopt;
+        }
+
+        HANDLE Process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, ProcessId);
+        if (Process == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        std::wstring ExecutablePath(32768, L'\0');
+        DWORD PathLength = static_cast<DWORD>(ExecutablePath.size());
+        const BOOL QueryResult = QueryFullProcessImageNameW(
+            Process,
+            0,
+            ExecutablePath.data(),
+            &PathLength
+        );
+        CloseHandle(Process);
+
+        if (QueryResult == FALSE || PathLength == 0)
+        {
+            return std::nullopt;
+        }
+
+        ExecutablePath.resize(PathLength);
+        return ExecutablePath;
+    }
+
+    std::optional<std::wstring> GetVersionString(
+        const std::vector<BYTE>& VersionInfo,
+        const LanguageAndCodePage& Translation,
+        const wchar_t* Name
+    )
+    {
+        wchar_t Query[128] { };
+        if (swprintf_s(
+            Query,
+            L"\\StringFileInfo\\%04x%04x\\%s",
+            Translation.Language,
+            Translation.CodePage,
+            Name
+        ) < 0)
+        {
+            return std::nullopt;
+        }
+
+        wchar_t* Value = nullptr;
+        UINT ValueLength = 0;
+        if (VerQueryValueW(
+            VersionInfo.data(),
+            Query,
+            reinterpret_cast<void**>(&Value),
+            &ValueLength
+        ) == FALSE || Value == nullptr || ValueLength <= 1)
+        {
+            return std::nullopt;
+        }
+
+        std::wstring Result(Value, ValueLength - 1);
+        const std::size_t First = Result.find_first_not_of(L" \t\r\n");
+        if (First == std::wstring::npos)
+        {
+            return std::nullopt;
+        }
+
+        const std::size_t Last = Result.find_last_not_of(L" \t\r\n");
+        return Result.substr(First, Last - First + 1);
+    }
+
+    std::optional<std::wstring> GetExecutableApplicationName(
+        const std::wstring& ExecutablePath
+    )
+    {
+        DWORD IgnoredHandle = 0;
+        const DWORD VersionInfoSize = GetFileVersionInfoSizeW(
+            ExecutablePath.c_str(),
+            &IgnoredHandle
+        );
+        if (VersionInfoSize == 0)
+        {
+            return std::nullopt;
+        }
+
+        std::vector<BYTE> VersionInfo(VersionInfoSize);
+        if (GetFileVersionInfoW(
+            ExecutablePath.c_str(),
+            0,
+            VersionInfoSize,
+            VersionInfo.data()
+        ) == FALSE)
+        {
+            return std::nullopt;
+        }
+
+        LanguageAndCodePage* Translations = nullptr;
+        UINT TranslationsSize = 0;
+        if (VerQueryValueW(
+            VersionInfo.data(),
+            L"\\VarFileInfo\\Translation",
+            reinterpret_cast<void**>(&Translations),
+            &TranslationsSize
+        ) == FALSE || Translations == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        const std::size_t TranslationCount = TranslationsSize
+            / sizeof(LanguageAndCodePage);
+        for (std::size_t Index = 0; Index < TranslationCount; ++Index)
+        {
+            const LanguageAndCodePage& Translation = Translations[Index];
+            const std::optional<std::wstring> FileDescription = GetVersionString(
+                VersionInfo,
+                Translation,
+                L"FileDescription"
+            );
+            if (FileDescription.has_value())
+            {
+                return FileDescription;
+            }
+
+            const std::optional<std::wstring> ProductName = GetVersionString(
+                VersionInfo,
+                Translation,
+                L"ProductName"
+            );
+            if (ProductName.has_value())
+            {
+                return ProductName;
+            }
+        }
+
+        return std::nullopt;
     }
 
     bool IsManageableTopLevelWindow(HWND WindowHandle)
@@ -397,6 +544,40 @@ Napi::Value GetManageableTopLevelWindows(const Napi::CallbackInfo& CallbackInfo)
     }
 
     return Out.Succeed(Handles);
+}
+
+Napi::Value GetApplicationName(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> WindowHandle = GetWindowArgument(CallbackInfo);
+
+    if (!WindowHandle.has_value())
+    {
+        return Out.Fail("Expected a valid window handle.");
+    }
+
+    const std::optional<std::wstring> ExecutablePath = GetExecutablePath(
+        WindowHandle.value()
+    );
+    if (!ExecutablePath.has_value())
+    {
+        return Out.Fail("Could not get the window application's executable path.");
+    }
+
+    const std::optional<std::wstring> ApplicationName = GetExecutableApplicationName(
+        ExecutablePath.value()
+    );
+    if (!ApplicationName.has_value())
+    {
+        return Out.Fail("Could not get the window application's display name.");
+    }
+
+    return Out.Succeed(Napi::String::New(
+        Environment,
+        reinterpret_cast<const char16_t*>(ApplicationName->data()),
+        ApplicationName->size()
+    ));
 }
 
 Napi::Value GetWindowRect_Node(const Napi::CallbackInfo& CallbackInfo)

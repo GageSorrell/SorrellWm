@@ -9,9 +9,9 @@
  * @license   MIT
  */
 
-import type { Button, Parser } from "./index.ts";
+import type { Button, Parser } from "./index.js";
 import { Data } from "effect";
-import type { ProtocolNum } from "./Button.ts";
+import type { ProtocolNum } from "./Button.js";
 
 export/** The runtime identifier for scroll values. */
 const TypeId: unique symbol = Symbol.for("~sorrell/ink-ui/Mouse/Scroll");

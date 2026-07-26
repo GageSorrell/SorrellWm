@@ -9,4 +9,5 @@
  * @license   MIT
  */
 
+export * as SorrellData from "./Data.js";
 export * as SorrellFunction from "./Function.ts";

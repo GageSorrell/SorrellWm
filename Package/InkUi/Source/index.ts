@@ -10,18 +10,23 @@
  */
 
 export * from "./Badge/index.js";
+export * from "./Box/index.js";
 export * from "./Header/index.js";
 export * from "./CenterText.js";
 export * from "./Checkbox.js";
 export * from "./CodeEditor/index.ts";
 export * from "./CompletionMenu.tsx";
+export * from "./Display/index.js";
 export * from "./Frame.tsx";
+export * from "./Icon/index.js";
 export * from "./Interaction/index.ts";
 export * as Mouse from "./Mouse/index.ts";
 export * from "./Overlay/index.ts";
 export * from "./ScrollArea.tsx";
 export * from "./Select.tsx";
 export * from "./StatusBar.tsx";
+export * as Support from "./Support/index.js";
+export * from "./Svg/index.js";
 export * from "./Tabs.tsx";
 export * from "./Text.tsx";
 export * as Three from "./Three/index.ts";

@@ -40,12 +40,18 @@ export type FocusTargets = Readonly<Partial<
     Record<OverlayCommand.OverlayCommandId, OverlayCommand.OverlayCommandTargetDto>
 >>;
 
+/** The application over which an overlay is currently displayed. */
+export interface OverlayApplicationTarget
+{
+    readonly Name?: string;
+}
+
 export/** Create a complete overlay-screen snapshot from the current settings. */
 const FromKeybindSettings = (
     ScreenId: OverlayCommand.OverlayScreenId,
     Values: ReadonlyArray<Hotkey.KeybindSetting>,
     FocusTargetValues: FocusTargets = { },
-    AppTitle?: string
+    ApplicationTarget?: OverlayApplicationTarget
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
@@ -73,7 +79,7 @@ const FromKeybindSettings = (
         }
     }
 
-    const SecondaryDefinition = AppTitle === undefined
+    const SecondaryDefinition = ApplicationTarget === undefined
         ? undefined
         : OverlayCommand.GetOverlaySecondaryCommandDefinition(ScreenId);
     const SecondaryKeybind = SecondaryDefinition === undefined
@@ -85,7 +91,9 @@ const FromKeybindSettings = (
         : Object.freeze({
             ...SecondaryDefinition,
             Disabled: false,
-            Label: `Configure how SorrellWm manages ${ AppTitle } windows`,
+            Label: ApplicationTarget?.Name === undefined
+                ? "Configure how SorrellWm manages this application's windows"
+                : `Configure how SorrellWm manages ${ ApplicationTarget.Name } windows`,
             Shortcut: Object.freeze({
                 KeyCode: SecondaryKeybind.Key,
                 KeyLabel: GetKeyLabel(SecondaryKeybind.Key),

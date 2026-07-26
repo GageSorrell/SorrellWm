@@ -74,9 +74,8 @@ export interface ViewProps extends React.PropsWithChildren
     readonly Rows: ReadonlyArray<number>;
 }
 
-interface NormalizedPane
+interface NormalizedPane extends React.PropsWithChildren
 {
-    readonly Children: React.ReactNode;
     readonly Column: number;
     readonly ColumnSpan: number;
     readonly Key: string | number;
@@ -146,7 +145,6 @@ const NormalizePanes = (Value: React.ReactNode): ReadonlyArray<NormalizedPane> =
         }
 
         return {
-            Children: Child.props.children,
             Column: NonNegativeInteger(Child.props.Column, "ViewPane Column"),
             ColumnSpan: PositiveInteger(
                 Child.props.ColumnSpan ?? 1,
@@ -156,7 +154,8 @@ const NormalizePanes = (Value: React.ReactNode): ReadonlyArray<NormalizedPane> =
             PaddingX: NonNegativeInteger(Child.props.PaddingX ?? 0, "ViewPane PaddingX"),
             PaddingY: NonNegativeInteger(Child.props.PaddingY ?? 0, "ViewPane PaddingY"),
             Row: NonNegativeInteger(Child.props.Row, "ViewPane Row"),
-            RowSpan: PositiveInteger(Child.props.RowSpan ?? 1, "ViewPane RowSpan")
+            RowSpan: PositiveInteger(Child.props.RowSpan ?? 1, "ViewPane RowSpan"),
+            children: Child.props.children
         };
     });
 
@@ -316,10 +315,10 @@ const View = ({
                     0,
                     Pane.Bottom - Pane.Top - 1 - (Pane.PaddingY * 2)
                 );
-                const Content = typeof Pane.Children === "string"
-                    || typeof Pane.Children === "number"
-                    ? <Ink.Text>{ Pane.Children }</Ink.Text>
-                    : Pane.Children;
+                const Content = typeof Pane.children === "string"
+                    || typeof Pane.children === "number"
+                    ? <Ink.Text>{ Pane.children }</Ink.Text>
+                    : Pane.children;
 
                 return ContentWidth === 0 || ContentHeight === 0
                     ? null

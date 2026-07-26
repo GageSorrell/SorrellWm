@@ -330,23 +330,25 @@ const Live = Layer.effect(
                     }
                 }
 
-                const AppTitle = Option.map(CurrentWindowOpt, (CurrentWindow: Handle.HWND) =>
-                    pipe(
-                        Window.GetWindowText(CurrentWindow),
-                        Option.filter(
-                            (Value: string) => Value.trim().length > 0
-                        ),
-                        Option.map(
-                            (Value: string) => Value.trim()
-                        ),
-                        Option.getOrElse(() => "Untitled window")
-                    ));
+                const ApplicationTarget = Option.map(
+                    CurrentWindowOpt,
+                    (CurrentWindow: Handle.HWND) =>
+                    {
+                        const Name = pipe(
+                            Window.GetApplicationName(CurrentWindow),
+                            Option.filter((Value: string) => Value.trim().length > 0),
+                            Option.map((Value: string) => Value.trim())
+                        );
+
+                        return Option.isNone(Name) ? { } : { Name: Name.value };
+                    }
+                );
 
                 return OverlayCommandCatalog.FromKeybindSettings(
                     CurrentScreen,
                     CurrentSettings.Keybinds,
                     FocusTargets,
-                    AppTitle.valueOrUndefined
+                    ApplicationTarget.valueOrUndefined
                 );
             }),
             TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none())

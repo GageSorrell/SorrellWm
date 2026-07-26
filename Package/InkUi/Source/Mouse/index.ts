@@ -9,12 +9,11 @@
  * @license   MIT
  */
 
-export * as Button from "./Button.ts";
-export * as Click from "./Click.ts";
-export * from "./Context.ts";
-export * as Modifiers from "./Modifiers.ts";
-export * as MouseEvent from "./MouseEvent.ts";
-export * as Parser from "./Parser.ts";
-export * as Scroll from "./Scroll.ts";
-export * from "./Tracking.ts";
-
+export * as Button from "./Button.js";
+export * as Click from "./Click.js";
+export * from "./Context.js";
+export * as Modifiers from "./Modifiers.js";
+export * as MouseEvent from "./MouseEvent.js";
+export * as Parser from "./Parser.js";
+export * as Scroll from "./Scroll.js";
+export * from "./Tracking.js";

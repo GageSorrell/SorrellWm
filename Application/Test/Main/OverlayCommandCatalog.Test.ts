@@ -65,7 +65,7 @@ describe("OverlayCommandCatalog", () =>
             OverlayScreenId.Home,
             Hotkey.DefaultKeybindSettings,
             { },
-            "Visual Studio Code"
+            { Name: "Visual Studio Code" }
         );
 
         expect(Screen.SecondaryCommand).toEqual({
@@ -85,6 +85,20 @@ describe("OverlayCommandCatalog", () =>
             }
         });
         expect(Screen.SecondaryCommand).not.toHaveProperty("Target");
+    });
+
+    it("uses an application-oriented fallback when its name is unavailable", () =>
+    {
+        const Screen = FromKeybindSettings(
+            OverlayScreenId.Home,
+            Hotkey.DefaultKeybindSettings,
+            { },
+            { }
+        );
+
+        expect(Screen.SecondaryCommand?.Label).toBe(
+            "Configure how SorrellWm manages this application's windows"
+        );
     });
 
     it("projects direction commands for the Focus screen", () =>

@@ -11,8 +11,16 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { DefaultMouseGestureSettings, InstallTerminalMouseTracking, MouseEvent, Parser, ResolveMouseDistance, UninstallTerminalMouseTracking, type Scroll } from "./index.ts";
-import type { MouseDistance, MouseOptions, TrackingOptions } from "./Tracking.tsx";
+import {
+    DefaultMouseGestureSettings,
+    InstallTerminalMouseTracking,
+    type MouseEvent,
+    Parser,
+    ResolveMouseDistance,
+    type Scroll,
+    UninstallTerminalMouseTracking
+} from "./index.js";
+import type { MouseDistance, MouseOptions, TrackingOptions } from "./Tracking.js";
 import { Effect } from "effect";
 
 interface MouseContextValue
