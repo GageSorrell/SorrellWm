@@ -193,7 +193,7 @@ const FakeDependencies = (
 
 describe("BrowserWindow", () =>
 {
-    it("constructs a transparent, input-transparent transient backdrop", async() =>
+    it("constructs a transparent, input-transparent transient backdrop", async () =>
     {
         const Windows = new Array<FakeWindow>();
         const ConstructorOptions = new Array<BrowserWindowConstructorOptions>();
@@ -222,7 +222,7 @@ describe("BrowserWindow", () =>
         expect(Windows[0]?.ShowInactiveCount).toBe(1);
     });
 
-    it("opens a concurrent singleton once and destroys it with the service scope", async() =>
+    it("opens a concurrent singleton once and destroys it with the service scope", async () =>
     {
         const Windows = new Array<FakeWindow>();
         const ConstructorOptions = new Array<BrowserWindowConstructorOptions>();
@@ -291,7 +291,7 @@ describe("BrowserWindow", () =>
         expect(ExternalUrls).toEqual([ "https://sorrell.sh" ]);
     });
 
-    it("keeps a cancelled normal close registered but recreates after a forced close", async() =>
+    it("keeps a cancelled normal close registered but recreates after a forced close", async () =>
     {
         const Windows = new Array<FakeWindow>();
         const ConstructorOptions = new Array<BrowserWindowConstructorOptions>();
@@ -326,7 +326,7 @@ describe("BrowserWindow", () =>
         expect(Windows).toHaveLength(2);
     });
 
-    it("fails readiness and destroys a window whose renderer cannot load", async() =>
+    it("fails readiness and destroys a window whose renderer cannot load", async () =>
     {
         const Windows = new Array<FakeWindow>();
         const ConstructorOptions = new Array<BrowserWindowConstructorOptions>();

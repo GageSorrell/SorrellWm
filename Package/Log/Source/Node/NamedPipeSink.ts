@@ -45,7 +45,7 @@ export interface NamedPipeSinkOptions
     readonly Process?: ProcessMetadata;
     readonly MaximumBufferedRecords?: number;
     readonly MaximumClientBufferBytes?: number;
-    readonly GlobalRetention?: DurationType.Input;
+    readonly GlobalRetention?: DurationType.FilePath;
     readonly Now?: () => number;
 }
 

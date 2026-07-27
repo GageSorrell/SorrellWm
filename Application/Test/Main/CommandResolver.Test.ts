@@ -188,7 +188,7 @@ describe("CommandResolver.Resolve", () =>
 
 describe("CommandResolver.Live", () =>
 {
-    it("emits mapped commands in activation order and filters unresolved actions", async() =>
+    it("emits mapped commands in activation order and filters unresolved actions", async () =>
     {
         const HotkeyLive = Layer.succeed(Hotkey, {
             Matches: Stream.fromIterable([

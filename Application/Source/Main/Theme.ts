@@ -152,7 +152,7 @@ export/**
 const GetTheme = Effect.fn("GetTheme")(function* ()
 {
     const Settings = yield* AppSettings.AppSettings;
-    const EncodedTheme: Encoded.Encoded = yield* Settings.getSetting("Theme");
+    const EncodedTheme: Encoded.Encoded = yield* Settings.GetSetting("Theme");
     return Encoded.Decoded(EncodedTheme);
 });
 
@@ -165,6 +165,6 @@ const SetTheme = Effect.fn("SetTheme")(
     function* (NewTheme: Theme)
     {
         const Settings = yield* AppSettings.AppSettings;
-        return yield* Settings.setSetting("Theme", Encoded.Encoded(NewTheme));
+        return yield* Settings.SetSetting("Theme", Encoded.Encoded(NewTheme));
     }
 );

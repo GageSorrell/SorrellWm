@@ -18,7 +18,7 @@ export interface ForwardSinkOptions
 {
     readonly Send: (Records: ReadonlyArray<LogRecord>) => void | Promise<void>;
     readonly MaximumBatchSize?: number;
-    readonly FlushInterval?: DurationType.Input;
+    readonly FlushInterval?: DurationType.FilePath;
     readonly MaximumRecordBytes?: number;
 }
 

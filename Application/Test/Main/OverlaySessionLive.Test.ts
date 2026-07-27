@@ -22,7 +22,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
 
-vi.mock("@sorrell/windows", async() =>
+vi.mock("@sorrell/windows", async () =>
 {
     const EffectModule = await import("effect");
 
@@ -103,7 +103,7 @@ beforeEach(() =>
 
 describe("OverlaySession.Live Focus targets", () =>
 {
-    it("publishes the activation application's secondary command on Home", async() =>
+    it("publishes the activation application's secondary command on Home", async () =>
     {
         const Snapshot = await Effect.runPromise(pipe(
             Effect.gen(function*()
@@ -125,7 +125,7 @@ describe("OverlaySession.Live Focus targets", () =>
         expect(WindowsWindow.GetApplicationName).toHaveBeenCalledWith(CurrentWindow);
     });
 
-    it("falls back when the activation application's name is unavailable", async() =>
+    it("falls back when the activation application's name is unavailable", async () =>
     {
         vi.mocked(WindowsWindow.GetApplicationName).mockReturnValue(Option.none());
 
@@ -146,7 +146,7 @@ describe("OverlaySession.Live Focus targets", () =>
         );
     });
 
-    it("publishes target metadata and previews only the current, overlay, and target windows", async() =>
+    it("publishes target metadata and previews only the current, overlay, and target windows", async () =>
     {
         const Snapshot = await Effect.runPromise(pipe(
             Effect.gen(function*()
@@ -199,14 +199,14 @@ const CurrentSettings: AppSettings.AppSettings = {
 };
 
 const FakeAppSettings = Layer.succeed(AppSettings.AppSettings, {
-    changes: Stream.empty,
-    get: Effect.succeed(CurrentSettings),
-    getSetting: <Key extends keyof AppSettings.AppSettings>(
+    Changes: Stream.empty,
+    FilePath: Effect.succeed(CurrentSettings),
+    Layer: <Key extends keyof AppSettings.AppSettings>(
         KeyValue: Key
     ) => Effect.succeed(CurrentSettings[KeyValue]),
-    set: () => Effect.void,
-    setSetting: () => Effect.void,
-    update: () => Effect.void
+    Set: () => Effect.void,
+    SetSetting: () => Effect.void,
+    Update: () => Effect.void
 });
 
 const FakeBrowserWindows = Layer.succeed(

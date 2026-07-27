@@ -1,5 +1,5 @@
 /**
- *
+ * Application-wide settings via `@sorrell/app-settings`.
  *
  * @module @sorrell/wm/Main/AppSettings
  *
@@ -10,5 +10,5 @@
  */
 
 export * from "./AppSettings.js";
-export * as Sync from "./AppSettingsSynchronization.js";
+export * as Sync from "./AppSettingsSync.js";
 

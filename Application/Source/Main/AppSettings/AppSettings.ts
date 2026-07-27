@@ -1,5 +1,5 @@
 /**
- *
+ * Application-wide settings via `@sorrell/app-settings`.
  *
  * @module @sorrell/wm/Main/AppSettings/AppSettings
  *
@@ -12,10 +12,12 @@
 import * as Hotkey from "../Input/Hotkey.ts";
 import * as _AppSettings from "@sorrell/app-settings";
 import { Effect, Schema, pipe } from "effect";
+// import { L10n } from "../../Shared/index.ts";
 
-export/** The application-settings module identifier used for tracing. */
+export/** The type identifier for this module. */
 const TypeId = "~sorrell/wm/Main/AppSettings/AppSettings" as const;
-/** The type of the application-settings module identifier. */
+
+/** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
 
 const SettingsSchema = Schema.Struct({
@@ -60,10 +62,12 @@ export/**
        *
        * @since 0.1.0
        */
-const AppSettings = _AppSettings.make(
+const AppSettings = _AppSettings.Make(
     SettingsSchema,
     {
-        initial:
+        // ApplicationName: L10n.Common.AppName,
+        ApplicationName: "SorrellWm",
+        Initial:
         {
             Keybinds: Array.from(Hotkey.DefaultKeybindSettings),
             OverlayBackdropIntensity: 2,

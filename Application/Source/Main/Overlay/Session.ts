@@ -310,7 +310,7 @@ const Live = Layer.effect(
             Snapshot: Effect.gen(function*()
             {
                 const CurrentScreen = yield* Current;
-                const CurrentSettings = yield* Settings.get;
+                const CurrentSettings = yield* Settings.Get;
                 const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
                 const FocusTargets: Partial<Record<
                     OverlayCommandId,

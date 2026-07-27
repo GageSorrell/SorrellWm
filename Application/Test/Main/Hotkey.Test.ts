@@ -131,7 +131,7 @@ describe("Hotkey.IsMatch", () =>
 
 describe("Hotkey.Live", () =>
 {
-    it("uses keybind updates without recreating the keyboard event source", async() =>
+    it("uses keybind updates without recreating the keyboard event source", async () =>
     {
         const InitialKeybind = Make(Id.Activate, Windows.VK.F20);
         const UpdatedKeybind = Make(Id.Toggle, Windows.VK.A);
@@ -206,7 +206,7 @@ describe("Hotkey.Live", () =>
         });
     });
 
-    it("emits press, repeat, and release for the keybind matched on initial key-down", async() =>
+    it("emits press, repeat, and release for the keybind matched on initial key-down", async () =>
     {
         const ActivationKeybind = Make(Id.Activate, Windows.VK.F20, { Control: true });
         const Matches = await Effect.runPromise(Effect.scoped(Effect.gen(function*()

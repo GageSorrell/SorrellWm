@@ -55,18 +55,13 @@ const OnBackdropShow = (
         queueMicrotask((): void => Listener(Presentation));
     }
 
-    return (): void =>
-    {
-        BackdropListeners.delete(Listener);
-    };
+    return () => void BackdropListeners.delete(Listener);
 };
 
-const BackOverlayScreen = async(): Promise<void> =>
-{
-    await ipcRenderer.invoke(AppApiChannel.OverlayBack);
-};
+const BackOverlayScreen = async (): Promise<void> =>
+    void await ipcRenderer.invoke(AppApiChannel.OverlayBack);
 
-const GetOverlayScreen = async(): Promise<OverlayScreenDto> =>
+const GetOverlayScreen = async (): Promise<OverlayScreenDto> =>
 {
     const Response: unknown = await ipcRenderer.invoke(AppApiChannel.OverlayScreenGet);
 
@@ -78,7 +73,7 @@ const GetOverlayScreen = async(): Promise<OverlayScreenDto> =>
     return Response;
 };
 
-const InvokeOverlayCommand = async(Id: OverlayCommandId): Promise<void> =>
+const InvokeOverlayCommand = async (Id: OverlayCommandId): Promise<void> =>
 {
     if (!IsOverlayCommandId(Id))
     {
@@ -88,7 +83,7 @@ const InvokeOverlayCommand = async(Id: OverlayCommandId): Promise<void> =>
     await ipcRenderer.invoke(AppApiChannel.OverlayCommandInvoke, Id);
 };
 
-const PreviewOverlayFocus = async(
+const PreviewOverlayFocus = async (
     Id: OverlayCommandId | null
 ): Promise<void> =>
 {
@@ -119,7 +114,7 @@ const OnOverlayScreenChanged = (
     };
 };
 
-const GetRendererTheme = async(): Promise<RendererTheme> =>
+const GetRendererTheme = async (): Promise<RendererTheme> =>
 {
     const Response: unknown = await ipcRenderer.invoke(AppApiChannel.ThemeGet);
 

@@ -216,7 +216,7 @@ module.exports = {
                 custom:
                 {
                     match: true,
-                    regex: "^(?:[AER]|[A-Z][a-z].+)$"
+                    regex: "^(?:[AEKR]|[A-Z][a-z].+)$"
                 },
                 format: [ "PascalCase" ],
                 selector: "typeParameter"

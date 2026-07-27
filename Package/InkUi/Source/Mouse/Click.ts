@@ -15,7 +15,8 @@ import type { IntPoint } from "@sorrell/math";
 /** The recognized click gestures. */
 export type Click = Data.TaggedEnum<{
     readonly Single: { };
-    readonly Double: {
+    readonly Double:
+    {
         readonly Duration: number;
         readonly Drift: IntPoint.IntPoint;
     };

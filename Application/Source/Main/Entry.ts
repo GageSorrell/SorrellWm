@@ -9,20 +9,17 @@
  * @license   MIT
  */
 
+import * as AppSettings from "./AppSettings/index.ts";
+import * as BrowserWindow from "./BrowserWindow.ts";
+import * as Command from "./Command/index.ts";
+import * as Input from "./Input/index.ts";
 import * as Logging from "./Logging.ts";
+import * as MessageLoop from "./MessageLoop.ts";
+import * as Overlay from "./Overlay/index.ts";
 import * as OverlayShared from "../Shared/OverlayCommand.ts";
-import {
-    AppSettings,
-    BrowserWindow,
-    Command,
-    Development,
-    Input,
-    MessageLoop,
-    Overlay,
-    Theme,
-    Tiling,
-    TitlebarFlyout
-} from "./index.ts";
+import * as Theme from "./Theme.ts";
+import * as Tiling from "./Tiling/index.ts";
+import * as TitlebarFlyout from "./TitlebarFlyout.ts";
 import { Effect, Layer, ManagedRuntime, Option, Stream, pipe } from "effect";
 import {
     type Event,
@@ -36,11 +33,13 @@ import {
 } from "electron";
 import { isAbsolute, join, relative } from "node:path";
 import { AppApiChannel } from "../Shared/Api.ts";
+import { DevFeatures } from "./Development/index.ts";
 import { NodeServices } from "@effect/platform-node";
 import type { RendererTheme } from "../Shared/Theme.ts";
 import { pathToFileURL } from "node:url";
 
 const RendererProtocolScheme: string = "sorrell";
+
 const LogConfiguration = Logging.MakeConfiguration({
     Application: {
         Name: "SorrellWm",
@@ -49,10 +48,12 @@ const LogConfiguration = Logging.MakeConfiguration({
     MinimumLevel: app.isPackaged ? "Info" : "Debug",
     Port: 6969
 });
+
 const AppSettingsLive = pipe(
-    AppSettings.AppSettings.layer,
+    AppSettings.AppSettings.Layer,
     Layer.provide(NodeServices.layer)
 );
+
 const OverlaySessionLive = pipe(
     Overlay.Session.Live,
     Layer.provideMerge(Layer.mergeAll(
@@ -60,7 +61,8 @@ const OverlaySessionLive = pipe(
         BrowserWindow.Live
     ))
 );
-const AppSettingsSynchronizationLive = pipe(
+
+const AppSettingsSyncLive = pipe(
     AppSettings.Sync.Live,
     Layer.provideMerge(Layer.mergeAll(
         AppSettingsLive,
@@ -68,21 +70,24 @@ const AppSettingsSynchronizationLive = pipe(
         OverlaySessionLive
     ))
 );
+
 const KeyboardLive = pipe(
     Input.Keyboard.Live,
     Layer.provideMerge(MessageLoop.Live)
 );
+
 const HotkeyLive = Layer.unwrap(pipe(
     AppSettings.AppSettings,
     Effect.map((Settings: AppSettings.Service) =>
         Input.Hotkey.Live(pipe(
-            Settings.changes,
+            Settings.Changes,
             Stream.map((Current: AppSettings.AppSettings) =>
                 Input.Hotkey.KeybindSetFromSettings(Current.Keybinds)
             )
         ))
     )
 ));
+
 const NativeServicesLive = pipe(
     HotkeyLive,
     Layer.provideMerge(Layer.mergeAll(AppSettingsLive, KeyboardLive))
@@ -94,7 +99,7 @@ const CommandResolverLive = pipe(
 const CommandServicesLive = pipe(
     Command.Executor.Live,
     Layer.provideMerge(Layer.mergeAll(
-        AppSettingsSynchronizationLive,
+        AppSettingsSyncLive,
         CommandResolverLive
     ))
 );
@@ -106,6 +111,7 @@ const TitlebarFlyoutLive = pipe(
         OverlaySessionLive
     ))
 );
+
 const ApplicationCoreLive = Layer.mergeAll(
     CommandServicesLive,
     Tiling.Manager.Live,
@@ -121,7 +127,7 @@ const ApplicationServicesLive = pipe(
     ),
     Layer.provideMerge(LogConfiguration.Layer)
 );
-const ApplicationRuntime = ManagedRuntime.make(ApplicationServicesLive as any);
+const ApplicationRuntime = ManagedRuntime.make(ApplicationServicesLive);
 let IsApplicationRuntimeStarted: boolean = false;
 let IsApplicationRuntimeDisposing: boolean = false;
 
@@ -157,9 +163,6 @@ const registerRendererProtocol = (): void =>
         return net.fetch(pathToFileURL(rendererPath).toString());
     });
 };
-
-ipcMain.removeHandler(AppApiChannel.Ping);
-ipcMain.handle(AppApiChannel.Ping, () => "pong");
 
 ipcMain.removeHandler(AppApiChannel.ThemeGet);
 ipcMain.handle(AppApiChannel.ThemeGet, Theme.GetRendererTheme);
@@ -241,21 +244,27 @@ const PublishRendererTheme = (): void =>
 
     void ApplicationRuntime.runPromise(Effect.gen(function*()
     {
+        const CatchWindowNotFound =
+            Effect.catchTag<any, any, any, any, any>("BrowserWindowNotFoundError", () => Effect.void);
+
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
+
         yield* Effect.all([
-            BrowserWindows.Send(
-                BrowserWindow.Key.Main,
-                AppApiChannel.ThemeChanged,
-                CurrentTheme
-            ).pipe(
-                Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
+            pipe(
+                BrowserWindows.Send(
+                    BrowserWindow.Key.Main,
+                    AppApiChannel.ThemeChanged,
+                    CurrentTheme
+                ),
+                CatchWindowNotFound
             ),
-            BrowserWindows.Send(
-                BrowserWindow.Key.Overlay,
-                AppApiChannel.ThemeChanged,
-                CurrentTheme
-            ).pipe(
-                Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
+            pipe(
+                BrowserWindows.Send(
+                    BrowserWindow.Key.Overlay,
+                    AppApiChannel.ThemeChanged,
+                    CurrentTheme
+                ),
+                CatchWindowNotFound
             )
         ], { discard: true });
     }));
@@ -275,12 +284,12 @@ const StartApplication = Effect.gen(function*()
     yield* TitlebarFlyout.TitlebarFlyout;
     const BrowserWindows = yield* BrowserWindow.BrowserWindow;
     const Settings = yield* AppSettings.AppSettings;
-    const InitialSettings = yield* Settings.get;
+    const InitialSettings = yield* Settings.Get;
     const CompleteKeybinds = Input.Hotkey.WithDefaultKeybindSettings(InitialSettings.Keybinds);
 
     if (CompleteKeybinds !== InitialSettings.Keybinds)
     {
-        yield* Settings.setSetting("Keybinds", CompleteKeybinds);
+        yield* Settings.SetSetting("Keybinds", CompleteKeybinds);
     }
 
     yield* Command.Executor.CommandExecutor;
@@ -290,12 +299,11 @@ const StartApplication = Effect.gen(function*()
     yield* Overlay.Session.OverlaySession;
     yield* MessageLoop.MessageLoop;
 
-    // const CurrentSettings = yield* Settings.get;
     const Specification = yield* BrowserWindow.MainWindowSpec;
     yield* BrowserWindows.Ensure(Specification);
     yield* BrowserWindows.Ensure(yield* BrowserWindow.OverlayWindowSpec);
 
-    if ((yield* Development.DevFeatures).StaticOverlay)
+    if ((yield* DevFeatures).StaticOverlay)
     {
         yield* BrowserWindows.Show("Overlay");
     }
@@ -316,6 +324,8 @@ void app.whenReady().then(async (): Promise<void> =>
     }
     catch (Cause: unknown)
     {
+        /* eslint-disable-next-line no-console */
+        console.error(Cause);
         IsApplicationRuntimeDisposing = true;
         await ApplicationRuntime.runPromise(
             Effect.logError("SorrellWm failed to start.", Cause)
@@ -344,16 +354,15 @@ app.on("before-quit", (event: Event): void =>
     );
 });
 
-app.on("activate", () =>
-{
-    void ApplicationRuntime.runPromise(Effect.gen(function*()
+app.on("activate", () => void ApplicationRuntime.runPromise(
+    Effect.gen(function*()
     {
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
         yield* BrowserWindows.Ensure(yield* BrowserWindow.MainWindowSpec);
         yield* BrowserWindows.Show(BrowserWindow.Key.Main);
         yield* BrowserWindows.Focus(BrowserWindow.Key.Main);
-    }));
-});
+    }))
+);
 
 app.on("window-all-closed", () =>
 {

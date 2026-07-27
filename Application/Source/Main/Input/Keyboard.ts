@@ -1,5 +1,6 @@
 /**
- *
+ * Observe and respond to the state of the keyboard, including when the window manager
+ * overlay is not focused.
  *
  * @module @sorrell/wm/Main/Keyboard
  *
@@ -11,10 +12,10 @@
 
 import { Context, Data, Effect, Layer, Queue, type Scope, Stream, pipe } from "effect";
 import { Keyboard as NativeKeyboard, type Subscription } from "@sorrell/windows";
-import type { SimpleError } from "../Utility/Error.ts";
 import { MessageLoop } from "../MessageLoop.ts";
+import type { SimpleError } from "../Utility/Error.ts";
 
-export/** The type ID of this module. */
+export/** The type identifier of this module. */
 const TypeId = "~sorrell/wm/Main/Main/Keyboard" as const;
 
 /** {@inheritDoc TypeId:var} */

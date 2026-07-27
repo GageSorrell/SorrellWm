@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/wm/Main/Utility/Math
+ * @module @sorrell/wm/Shared/Localization/en_US/index
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -9,4 +9,4 @@
  * @license   MIT
  */
 
-export * as Box from "./Box.ts";
+export * from "./Overlay.ts";

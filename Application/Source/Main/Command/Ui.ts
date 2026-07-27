@@ -1,5 +1,5 @@
 /**
- *
+ * Commands that mutate the SorrellWm UI.
  *
  * @module @sorrell/wm/Main/Command/Ui
  *

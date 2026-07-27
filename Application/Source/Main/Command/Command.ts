@@ -1,5 +1,6 @@
 /**
- *
+ * Commands are user-facilitated actions that result in modifying the state of the application,
+ * and in most cases, the state of the Windows window manager.
  *
  * @module @sorrell/wm/Main/Command/Command
  *
@@ -14,12 +15,22 @@ import type { Unify } from "effect/Unify";
 
 const TypeIdKey = "~sorrell/wm/Main/Command/Command" as const;
 
-export/** The TypeId for this module. */
+export/**
+       * The type identifier for this module.
+       *
+       * @category Command
+       * @since 0.1.0
+       */
 const TypeId: unique symbol = Symbol.for(TypeIdKey);
 
 /** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
 
+/**
+ *
+ * @category Command
+ * @since 0.1.0
+ */
 export interface Command<out CategoryType extends string = string>
 {
     readonly [ TypeId ]: TypeId;
@@ -27,6 +38,12 @@ export interface Command<out CategoryType extends string = string>
     readonly _tag: string;
 };
 
+/**
+ * Any command.
+ *
+ * @category Command
+ * @since 0.1.0
+ */
 export interface Any extends Command<any> { }
 
 const Proto =
@@ -35,10 +52,23 @@ const Proto =
 
         Category: "",
         _tag: ""
-    } as any;
+    } as const;
 
+/**
+ * This namespace mirrors the functionality provided by {@link Data!TaggedEnum},
+ * scoped to creating commands.
+ *
+ * @category Command
+ * @since 0.1.0
+ */
 export namespace Command
 {
+    /**
+     * The constructor for a set of commands.
+     *
+     * @category Constructor
+     * @since 0.1.0
+     */
     export type Constructor<A extends Any> = Types.Simplify<
     {
         readonly [ Tag in A["_tag"] ]: Data.TaggedEnum.ConstructorFrom<
@@ -72,7 +102,8 @@ export namespace Command
         }
     }>;
 
-    export const Constructor = <EnumType extends Enum<any, any>>(
+    export/** {@inheritDoc Constructor:type} */
+    const Constructor = <EnumType extends Enum<any, any>>(
         Category: EnumType["Category"]
     ): () => Constructor<EnumType> =>
         () => new Proxy(
@@ -160,23 +191,28 @@ const IsCommand: {
     (Value: unknown): Value is Command;
 } = Predicate.hasProperty(TypeId) as any;
 
-export const $is: {
+export/**
+       * Guard for commands of any category.
+       *
+       * @category Guard
+       * @since 0.1.0
+       */
+const $is: {
     <const Category extends string>(Category: Category): (Self: Any) => Self is Command<Category>;
 
     <const Category extends string>(Self: Any, Category: Category): Self is Command<Category>;
 } = Function.dual(2, <const CategoryType extends string>(
     Self: Any,
-    Category: CategoryType): Self is Command<CategoryType> =>
-{
-    return Self.Category === Category;
-});
+    Category: CategoryType): Self is Command<CategoryType> => Self.Category === Category
+);
 
-/**
- * Match a command's category.
- *
- * @since 0.1.0
- */
-export const $match: {
+export/**
+       * Match a command's category.
+       *
+       * @category Command
+       * @since 0.1.0
+       */
+const $match: {
     <A, const Categories extends string>(
         Cases: {
             readonly [ Key in Categories ]: (Self: Command<Key>) => A;

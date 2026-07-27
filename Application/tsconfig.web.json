@@ -19,6 +19,7 @@
     },
     "include":
     [
+        "Source/Renderer/Api.d.ts",
         "Source/Renderer/**/*.ts",
         "Source/Renderer/**/*.tsx",
         "Source/Shared/**/*.ts",

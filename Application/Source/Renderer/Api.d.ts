@@ -18,3 +18,5 @@ declare global
         readonly sorrell: AppApi;
     }
 }
+
+export { };

@@ -43,11 +43,12 @@
         "@effect/platform-node": "4.0.0-beta.101",
         "@fluentui/react-components": "9.74.4",
         "@fluentui/react-icons": "2.0.333",
-        "@sorrell/app-settings": "1.0.0",
+        "@sorrell/app-settings": "2.0.1",
         "@sorrell/log": "1.0.0",
         "@sorrell/math": "1.0.0",
         "@sorrell/utility": "1.0.0",
-        "@sorrell/windows": "1.0.0"
+        "@sorrell/windows": "1.0.0",
+        "react-intl": "10.1.18"
     },
     "devDependencies": {
         "@sorrell/ink-ui": "1.0.0",

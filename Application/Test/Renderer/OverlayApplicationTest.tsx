@@ -87,7 +87,7 @@ describe("OverlayApplication", () =>
         vi.mocked(window.sorrell.overlay.preview).mockResolvedValue();
     });
 
-    it("renders the primary commands in action-key order and invokes them", async() =>
+    it("renders the primary commands in action-key order and invokes them", async () =>
     {
         render(<OverlayApplication />);
 
@@ -127,7 +127,7 @@ describe("OverlayApplication", () =>
         expect(window.sorrell.overlay.invoke).toHaveBeenLastCalledWith("OpenPerAppSettings");
     });
 
-    it("renders Focus targets, icons, disabled directions, previews, and navigation", async() =>
+    it("renders Focus targets, icons, disabled directions, previews, and navigation", async () =>
     {
         vi.mocked(window.sorrell.overlay.get).mockResolvedValue(FocusScreen);
         render(<OverlayApplication />);

@@ -21,6 +21,7 @@ import { type Handle, Window } from "@sorrell/windows";
 import type { OverlayCommandId, OverlayScreenDto } from "../../Shared/OverlayCommand.ts";
 import { AppApiChannel } from "../../Shared/Api.ts";
 import type { BackdropPresentation } from "../../Shared/Backdrop.ts";
+import { DevFeatures } from "../Development/DevFeatures.ts";
 
 export/** The service identifier for command execution. */
 const TypeId = "~sorrell/wm/Main/Command/Executor" as const;
@@ -111,7 +112,7 @@ const OnActivate = (
     yield* Session.ClearActivationWindow;
     yield* Session.ClearFocusPreview;
 
-    if (process.env?.["STATIC_OVERLAY"]?.toLowerCase() === "true")
+    if ((yield* DevFeatures).StaticOverlay)
     {
         yield* PublishOverlayScreen(BrowserWindows, Session);
         return yield* Effect.void;
@@ -154,7 +155,7 @@ const OnActivate = (
 
         if (IsBackdropEnabled)
         {
-            const BackdropIntensity = yield* Settings.getSetting("OverlayBackdropIntensity");
+            const BackdropIntensity = yield* Settings.GetSetting("OverlayBackdropIntensity");
 
             yield* ShowBackdrop(
                 BrowserWindows,

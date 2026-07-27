@@ -9,10 +9,10 @@
  * @license   MIT
  */
 
+import * as Error from "./Error.ts";
 import * as NodePath from "node:path";
 import {
     Context,
-    Data,
     type Duration,
     Effect,
     FileSystem,
@@ -29,15 +29,31 @@ import {
 } from "effect";
 import { homedir } from "node:os";
 
-const TypeIdKey = "~sorrell/app-settings/AppSettings" as const;
+export/**
+       * The type identifier of this module.
+       *
+       * @category AppSettings
+       * @since 1.0.0
+       */
+const TypeId = "~sorrell/app-settings/AppSettings" as const;
 
-export/** The application directory name used by default. */
-const DefaultApplicationName = "SorrellWm";
+/** {@inheritDoc TypeId:var} */
+export type TypeId = typeof TypeId;
 
-export/** The settings filename used by default. */
+export/**
+       * The settings filename used by default.
+       *
+       * @category Default
+       * @since 2.0.0
+       */
 const DefaultFileName = "settings.json";
 
-/** Operating-system identifiers understood by the default path resolver. */
+/**
+ * Operating-system identifiers understood by the default path resolver.
+ *
+ * @category Platform
+ * @since 2.0.0
+ */
 export type Platform =
     | "aix"
     | "android"
@@ -51,133 +67,113 @@ export type Platform =
     | "sunos"
     | "win32";
 
-/** Identifies the file operation that failed. */
-export type FileOperation =
-    | "Check"
-    | "CreateDirectory"
-    | "CreateTemporary"
-    | "Read"
-    | "Replace"
-    | "Watch"
-    | "Write";
-
-/** Identifies the JSON operation that failed. */
-export type JsonOperation = "Parse" | "Stringify";
-
-/** Identifies the schema operation that failed. */
-export type ValidationOperation = "Decode" | "Encode";
-
-/** A failure raised while accessing the settings file. */
-export class FileError extends Data.TaggedError("AppSettingsFileError")<{
-    readonly cause: PlatformError.PlatformError;
-    readonly filePath: string;
-    readonly operation: FileOperation;
-}> { }
-
-/** A failure raised while parsing or serializing the JSON document. */
-export class JsonError extends Data.TaggedError("AppSettingsJsonError")<{
-    readonly cause: unknown;
-    readonly filePath: string;
-    readonly operation: JsonOperation;
-}> { }
-
-/** A settings value that did not satisfy the supplied schema. */
-export class ValidationError extends Data.TaggedError("AppSettingsValidationError")<{
-    readonly cause: SchemaError.SchemaError;
-    readonly filePath: string;
-    readonly operation: ValidationOperation;
-}> { }
-
-/** Errors that can occur while loading settings from disk. */
-export type LoadError = FileError | JsonError | ValidationError;
-
-/** Errors that can occur while persisting settings to disk. */
-export type WriteError = FileError | JsonError | ValidationError;
-
-/** Errors that can prevent the settings layer from being constructed. */
-export type InitializationError = LoadError | WriteError;
-
-/** Options used to resolve the platform-default settings path. */
+/**
+ * Options used to resolve the platform-default settings path.
+ *
+ * @category Constructor
+ * @since 1.0.0
+ */
 export interface DefaultFilePathOptions
 {
     /** The app-specific directory name. Defaults to `SorrellWm`. */
-    readonly applicationName?: string;
+    readonly ApplicationName: string;
 
     /** Environment variables used for platform directory discovery. Defaults to `process.env`. */
-    readonly environment?: Readonly<Record<string, string | undefined>>;
+    readonly Env?: Readonly<Record<string, string | undefined>>;
 
     /** The settings filename. Defaults to `settings.json`. */
-    readonly fileName?: string;
+    readonly FileName?: string;
 
     /** The user home directory. Defaults to the value returned by `os.homedir()`. */
-    readonly homeDirectory?: string;
+    readonly HomeDir?: string;
 
     /** The operating system. Defaults to `process.platform`. */
-    readonly platform?: Platform;
+    readonly Platform?: Platform;
 }
 
-/** Optional behavior used when constructing an app-settings service. */
+/**
+ * Optional behavior used when constructing an app-settings service.
+ *
+ * @category Constructor
+ * @since 1.0.0
+ */
 export interface MakeOptions<Settings extends object>
 {
     /** The app directory name used when `filePath` is omitted. */
-    readonly applicationName?: string;
+    readonly ApplicationName: string;
 
     /** A custom settings path. When omitted, the platform default is used. */
-    readonly filePath?: string;
+    readonly FilePath?: string;
 
     /** The filename used when `filePath` is omitted. */
-    readonly fileName?: string;
+    readonly FileName?: string;
 
     /** A value to persist when the settings file does not yet exist. */
-    readonly initial?: Settings;
+    readonly Initial?: Settings;
 
     /** JSON indentation. Defaults to four spaces. */
-    readonly jsonSpace?: number | string;
+    readonly JsonIndentNum?: number | string;
 
     /** Time used to coalesce bursts of file-system events. Defaults to 50 ms. */
-    readonly watchDebounce?: Duration.Input;
+    readonly WatchDebounce?: Duration.Input;
 
     /** Delay before restarting a failed file watcher. Defaults to one second. */
-    readonly watchRetryDelay?: Duration.Input;
+    readonly WatchRetryDelay?: Duration.Input;
 }
 
-/** The operations exposed by a constructed app-settings service. */
+/**
+ * The operations exposed by a constructed app-settings service.
+ *
+ * @category Constructor
+ * @since 1.0.0
+ */
 export interface Service<Settings extends object>
 {
     /** A stream containing the current settings followed by every committed update. */
-    readonly changes: Stream.Stream<Settings>;
+    readonly Changes: Stream.Stream<Settings>;
 
     /** Retrieves the complete current settings value. */
-    readonly get: Effect.Effect<Settings>;
+    readonly Get: Effect.Effect<Settings>;
 
     /** Retrieves one setting from the current settings value. */
-    readonly getSetting: <Key extends keyof Settings>(Key: Key) => Effect.Effect<Settings[Key]>;
+    readonly GetSetting: <Key extends keyof Settings>(Key: Key) => Effect.Effect<Settings[Key]>;
 
     /** Replaces and persists the complete settings value. */
-    readonly set: (Settings: Settings) => Effect.Effect<void, WriteError>;
+    readonly Set: (Settings: Settings) => Effect.Effect<void, Error.Any>;
 
     /** Replaces and persists one setting. */
-    readonly setSetting: <Key extends keyof Settings>(
+    readonly SetSetting: <Key extends keyof Settings>(
         Key: Key,
         Value: Settings[Key]
-    ) => Effect.Effect<void, WriteError>;
+    ) => Effect.Effect<void, Error.Any>;
 
     /** Computes, validates, and persists a replacement settings value. */
-    readonly update: (
+    readonly Update: (
         Update: (Settings: Settings) => Settings
-    ) => Effect.Effect<void, WriteError>;
+    ) => Effect.Effect<void, Error.Any>;
 }
 
-/** The nominal context identifier for a settings service at a particular path. */
+/**
+ * The nominal context identifier for a settings service at a particular path.
+ *
+ * @category Constructor
+ * @since 1.0.0
+ */
 export interface Identifier<Settings extends object, FilePath extends string>
 {
-    readonly [TypeIdKey]: {
-        readonly filePath: FilePath;
-        readonly settings: Settings;
+    readonly [ TypeId ]:
+    {
+        readonly FilePath: FilePath;
+        readonly Settings: Settings;
     };
 }
 
-/** A settings service tag together with the scoped layer that provides it. */
+/**
+ * A settings service tag together with the scoped layer that provides it.
+ *
+ * @category AppSettings
+ * @since 1.0.0
+ */
 export interface Tag<
     Settings extends object,
     Encoded,
@@ -187,21 +183,29 @@ export interface Tag<
 > extends Context.Service<Identifier<Settings, FilePath>, Service<Settings>>
 {
     /** The custom or platform-default path resolved during construction. */
-    readonly filePath: FilePath;
+    readonly FilePath: FilePath;
 
     /** A scoped layer that loads, persists, and monitors the settings file. */
-    readonly layer: Layer.Layer<
+    readonly Layer: Layer.Layer<
         Identifier<Settings, FilePath>,
-        InitializationError,
-        DecodingServices | EncodingServices | FileSystem.FileSystem | Path.Path
+        Error.Any,
+        | DecodingServices
+        | EncodingServices
+        | FileSystem.FileSystem
+        | Path.Path
     >;
 
     /** The schema supplied when this service was constructed. */
-    readonly schema: Schema.Codec<Settings, Encoded, DecodingServices, EncodingServices>;
+    readonly Schema: Schema.Codec<Settings, Encoded, DecodingServices, EncodingServices>;
 }
 
-/** An effectful function that reconciles committed settings with external state. */
-export type Synchronizer<Settings extends object, E = never, R = never> =
+/**
+ * An effectful function that reconciles committed settings with external state.
+ *
+ * @category Mutator
+ * @since 1.0.0
+ */
+export type SyncFn<Settings extends object, E = never, R = never> =
     (NewSettings: Settings) => Effect.Effect<void, E, R>;
 
 export/**
@@ -210,16 +214,20 @@ export/**
        * The current value is applied when the layer starts. Synchronizer failures are
        * logged without terminating the stream, and requirements are preserved in the
        * returned layer so application services can be provided downstream of settings.
+       *
+       * @category Mutator
+       * @since 1.0.0
        */
-const synchronize = <Settings extends object, Identifier, Error, Requirements>(
+const Sync = <Settings extends object, Identifier, Error, Requirements>(
     SettingsTag: Context.Key<Identifier, Service<Settings>>,
-    Synchronize: Synchronizer<Settings, Error, Requirements>
+    Synchronize: SyncFn<Settings, Error, Requirements>
 ): Layer.Layer<never, never, Identifier | Requirements> => Layer.effectDiscard(
     Effect.gen(function*()
     {
         const SettingsService = yield* SettingsTag;
 
-        yield* SettingsService.changes.pipe(
+        yield* pipe(
+            SettingsService.Changes,
             Stream.runForEach((Current: Settings) => Effect.suspend(() => Synchronize(Current)).pipe(
                 Effect.catch((ErrorValue: Error) => Effect.logWarning(
                     `Settings synchronization failed for ${ SettingsTag.key }; `
@@ -243,8 +251,11 @@ export/**
        *
        * Changes to unrelated settings are ignored using `Object.is` equality. The
        * synchronizer receives both the selected value and the complete committed value.
+       *
+       * @category Mutator
+       * @since 1.0.0
        */
-const synchronizeSetting = <
+const SyncSetting = <
     Settings extends object,
     Identifier,
     Key extends keyof Settings,
@@ -262,7 +273,8 @@ const synchronizeSetting = <
     {
         const SettingsService = yield* SettingsTag;
 
-        yield* SettingsService.changes.pipe(
+        yield* pipe(
+            SettingsService.Changes,
             Stream.map((Current: Settings): SelectedSetting<Settings, Key> => ({
                 Current,
                 Value: Current[KeyValue]
@@ -271,9 +283,8 @@ const synchronizeSetting = <
                 Previous: SelectedSetting<Settings, Key>,
                 Current: SelectedSetting<Settings, Key>
             ): boolean => Object.is(Previous.Value, Current.Value)),
-            Stream.runForEach(({ Current, Value }: SelectedSetting<Settings, Key>) => Effect.suspend(
-                () => Synchronize(Value, Current)
-            ).pipe(
+            Stream.runForEach(({ Current, Value }: SelectedSetting<Settings, Key>) => pipe(
+                Effect.suspend(() => Synchronize(Value, Current)),
                 Effect.catch((ErrorValue: Error) => Effect.logWarning(
                     `Settings synchronization failed for ${ SettingsTag.key }[${ String(KeyValue) }]; `
                     + "the committed value remains active.",
@@ -287,8 +298,8 @@ const synchronizeSetting = <
 
 interface State<Settings extends object>
 {
-    readonly json: string;
-    readonly settings: Settings;
+    readonly Json: string;
+    readonly Settings: Settings;
 }
 
 interface ResolvedOptions<Settings extends object>
@@ -299,6 +310,12 @@ interface ResolvedOptions<Settings extends object>
     readonly watchRetryDelay: Duration.Input;
 }
 
+/**
+ * A resolved file path.
+ *
+ * @category Internal
+ * @since 1.0.0
+ */
 type ResolvedFilePath<Input> = Input extends string
     ? Input
     : Input extends { readonly filePath: infer FilePath extends string; }
@@ -310,14 +327,17 @@ type ResolvedFilePath<Input> = Input extends string
  *
  * Windows uses roaming application data, macOS uses Application Support, and
  * other platforms use the XDG configuration directory convention.
+ *
+ * @category Accessor
+ * @since 1.0.0
  */
-export function defaultFilePath(Options: DefaultFilePathOptions = { }): string
+export function GetDefaultFilePath(Options: DefaultFilePathOptions): string
 {
-    const ApplicationName = Options.applicationName ?? DefaultApplicationName;
-    const Environment = Options.environment ?? process.env;
-    const FileName = Options.fileName ?? DefaultFileName;
-    const HomeDirectory = Options.homeDirectory ?? homedir();
-    const Platform: Platform = Options.platform ?? process.platform;
+    const ApplicationName = Options.ApplicationName;
+    const Environment = Options.Env ?? process.env;
+    const FileName = Options.FileName ?? DefaultFileName;
+    const HomeDirectory = Options.HomeDir ?? homedir();
+    const Platform: Platform = Options.Platform ?? process.platform;
 
     if (Platform === "win32")
     {
@@ -363,17 +383,22 @@ export function defaultFilePath(Options: DefaultFilePathOptions = { }): string
  * When the file does not exist, `options.initial` is used. If it is omitted,
  * the schema decodes an empty object so schema defaults can supply the initial
  * value.
+ *
+ * @category Constructor
+ * @since 1.0.0
  */
-export function make<
+export function Make<
     Settings extends object,
     Encoded,
     DecodingServices,
     EncodingServices,
-    const Input extends string | MakeOptions<Settings> | undefined = undefined
+    const Input extends
+        | string
+        | MakeOptions<Settings>
+        | undefined = undefined
 >(
     SettingsSchema: Schema.Codec<Settings, Encoded, DecodingServices, EncodingServices>,
-    FilePathOrOptions?: Input,
-    LegacyOptions?: Input extends string ? Omit<MakeOptions<Settings>, "filePath"> : never
+    Options: MakeOptions<Settings>
 ): Tag<
     Settings,
     Encoded,
@@ -382,21 +407,19 @@ export function make<
     ResolvedFilePath<Input>
 >
 {
-    const Options: MakeOptions<Settings> | undefined = typeof FilePathOrOptions === "string"
-        ? LegacyOptions
-        : FilePathOrOptions;
-    const SettingsFilePath: string = typeof FilePathOrOptions === "string"
-        ? FilePathOrOptions
-        : Options?.filePath ?? defaultFilePath(Options);
-    const Resolved: ResolvedOptions<Settings> = {
-        initial: Options?.initial === undefined ? Option.none() : Option.some(Options.initial),
-        jsonSpace: Options?.jsonSpace ?? 4,
-        watchDebounce: Options?.watchDebounce ?? "50 millis",
-        watchRetryDelay: Options?.watchRetryDelay ?? "1 second"
-    };
+    const SettingsFilePath: string = Options?.FilePath ?? GetDefaultFilePath(Options);
+    const Resolved: ResolvedOptions<Settings> =
+        {
+            initial: Options?.Initial === undefined
+                ? Option.none()
+                : Option.some(Options.Initial),
+            jsonSpace: Options?.JsonIndentNum ?? 4,
+            watchDebounce: Options?.WatchDebounce ?? "50 millis",
+            watchRetryDelay: Options?.WatchRetryDelay ?? "1 second"
+        };
 
     const ServiceTag = Context.Service<Identifier<Settings, string>, Service<Settings>>(
-        `${ TypeIdKey }/${ SettingsFilePath }`
+        `${ TypeId }/${ SettingsFilePath }`
     );
 
     const Live = Layer.effect(
@@ -405,9 +428,9 @@ export function make<
     );
 
     return Object.assign(ServiceTag, {
-        filePath: SettingsFilePath,
-        layer: Live,
-        schema: SettingsSchema
+        FilePath: SettingsFilePath,
+        Layer: Live,
+        Schema: SettingsSchema
     }) as unknown as Tag<
         Settings,
         Encoded,
@@ -423,8 +446,12 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
     Options: ResolvedOptions<Settings>
 ): Effect.Effect<
     Service<Settings>,
-    InitializationError,
-    DecodingServices | EncodingServices | FileSystem.FileSystem | Path.Path | Scope.Scope
+    Error.Any,
+    | DecodingServices
+    | EncodingServices
+    | FileSystem.FileSystem
+    | Path.Path
+    | Scope.Scope
 > => Effect.gen(function*()
 {
     const Fs = yield* FileSystem.FileSystem;
@@ -435,40 +462,40 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
 
     yield* pipe(
         Fs.makeDirectory(DirectoryPath, { recursive: true }),
-        Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-            cause: Cause,
-            filePath: AbsoluteFilePath,
-            operation: "CreateDirectory"
+        Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+            Cause,
+            FilePath: AbsoluteFilePath,
+            Op: "CreateDirectory"
         }))
     );
 
-    const Decode = (Input: unknown): Effect.Effect<Settings, ValidationError> =>
+    const Decode = (Input: unknown): Effect.Effect<Settings, Error.ValidationError> =>
         pipe(
             Schema.decodeUnknownEffect(SettingsSchema)(Input),
             Effect.provide(SchemaServices),
-            Effect.mapError((Cause: SchemaError.SchemaError) => new ValidationError({
-                cause: Cause,
-                filePath: AbsoluteFilePath,
-                operation: "Decode"
+            Effect.mapError((Cause: SchemaError.SchemaError) => new Error.ValidationError({
+                Cause,
+                FilePath: AbsoluteFilePath,
+                Op: "Decode"
             }))
         );
 
-    const Encode = (Value: Settings): Effect.Effect<Encoded, ValidationError> =>
+    const Encode = (Value: Settings): Effect.Effect<Encoded, Error.ValidationError> =>
         pipe(
             Schema.encodeEffect(SettingsSchema)(Value),
             Effect.provide(SchemaServices),
-            Effect.mapError((Cause: SchemaError.SchemaError) => new ValidationError({
-                cause: Cause,
-                filePath: AbsoluteFilePath,
-                operation: "Encode"
+            Effect.mapError((Cause: SchemaError.SchemaError) => new Error.ValidationError({
+                Cause,
+                FilePath: AbsoluteFilePath,
+                Op: "Encode"
             }))
         );
 
-    const Stringify = (Value: Encoded): Effect.Effect<string, JsonError> => Effect.try({
-        catch: (Cause: unknown) => new JsonError({
-            cause: Cause,
-            filePath: AbsoluteFilePath,
-            operation: "Stringify"
+    const Stringify = (Value: Encoded): Effect.Effect<string, Error.JsonError> => Effect.try({
+        catch: (Cause: unknown) => new Error.JsonError({
+            Cause,
+            FilePath: AbsoluteFilePath,
+            Op: "Stringify"
         }),
         try: (): string =>
         {
@@ -483,35 +510,35 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         }
     });
 
-    const EncodeState = (Value: Settings): Effect.Effect<State<Settings>, JsonError | ValidationError> =>
+    const EncodeState = (Value: Settings) =>
         pipe(
             Encode(Value),
             Effect.flatMap(Stringify),
-            Effect.map((Json: string) => ({ json: Json, settings: Value }))
+            Effect.map((Json: string) => ({ Json, Settings: Value }))
         );
 
-    const Parse = (Json: string): Effect.Effect<unknown, JsonError> => Effect.try({
-        catch: (Cause: unknown) => new JsonError({
-            cause: Cause,
-            filePath: AbsoluteFilePath,
-            operation: "Parse"
+    const Parse = (Json: string): Effect.Effect<unknown, Error.JsonError> => Effect.try({
+        catch: (Cause: unknown) => new Error.JsonError({
+            Cause,
+            FilePath: AbsoluteFilePath,
+            Op: "Parse"
         }),
         try: () => JSON.parse(Json) as unknown
     });
 
-    const ReadState: Effect.Effect<State<Settings>, LoadError> = pipe(
+    const ReadState: Effect.Effect<State<Settings>, Error.Any> = pipe(
         Fs.readFileString(AbsoluteFilePath),
-        Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-            cause: Cause,
-            filePath: AbsoluteFilePath,
-            operation: "Read"
+        Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+            Cause,
+            FilePath: AbsoluteFilePath,
+            Op: "Read"
         })),
         Effect.flatMap(Parse),
         Effect.flatMap(Decode),
         Effect.flatMap(EncodeState)
     );
 
-    const WriteJson = (Json: string): Effect.Effect<void, FileError> =>
+    const WriteJson = (Json: string): Effect.Effect<void, Error.FileError> =>
         Effect.acquireUseRelease(
             pipe(
                 Fs.makeTempFile({
@@ -519,39 +546,39 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
                     prefix: `.${ PathService.basename(AbsoluteFilePath) }-`,
                     suffix: ".tmp"
                 }),
-                Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-                    cause: Cause,
-                    filePath: AbsoluteFilePath,
-                    operation: "CreateTemporary"
+                Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+                    Cause,
+                    FilePath: AbsoluteFilePath,
+                    Op: "CreateTemporary"
                 }))),
             (TemporaryPath: string) => pipe(Fs.writeFileString(TemporaryPath, Json),
-                Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-                    cause: Cause,
-                    filePath: AbsoluteFilePath,
-                    operation: "Write"
+                Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+                    Cause,
+                    FilePath: AbsoluteFilePath,
+                    Op: "Write"
                 })),
                 Effect.flatMap(() => pipe(Fs.rename(TemporaryPath, AbsoluteFilePath),
-                    Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-                        cause: Cause,
-                        filePath: AbsoluteFilePath,
-                        operation: "Replace"
+                    Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+                        Cause,
+                        FilePath: AbsoluteFilePath,
+                        Op: "Replace"
                     }))
                 ))
             ),
             (TemporaryPath: string) => pipe(Fs.remove(TemporaryPath, { force: true }), Effect.ignore)
         );
 
-    const Persist = (Value: Settings): Effect.Effect<State<Settings>, WriteError> =>
+    const Persist = (Value: Settings): Effect.Effect<State<Settings>, Error.Any> =>
         EncodeState(Value).pipe(
-            Effect.tap((StateValue: State<Settings>) => WriteJson(StateValue.json))
+            Effect.tap((StateValue: State<Settings>) => WriteJson(StateValue.Json))
         );
 
     const Exists: boolean = yield* pipe(
         Fs.exists(AbsoluteFilePath),
-        Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-            cause: Cause,
-            filePath: AbsoluteFilePath,
-            operation: "Check"
+        Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+            Cause,
+            FilePath: AbsoluteFilePath,
+            Op: "Check"
         }))
     );
 
@@ -564,61 +591,65 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
 
     const StateRef = yield* SubscriptionRef.make(InitialState);
 
-    const Set = (Value: Settings): Effect.Effect<void, WriteError> =>
+    const Set = (Value: Settings): Effect.Effect<void, Error.Any> => pipe(
         SubscriptionRef.updateSomeEffect(StateRef, (Current: State<Settings>) =>
             pipe(
                 EncodeState(Value),
-                Effect.flatMap((Next: State<Settings>) => Next.json === Current.json
+                Effect.flatMap((Next: State<Settings>) => Next.Json === Current.Json
                     ? Effect.succeed(Option.none())
-                    : WriteJson(Next.json).pipe(
+                    : pipe(WriteJson(Next.Json), Effect.as(Option.some(Next))
+                    ))
+            )
+        ),
+        Effect.uninterruptible
+    );
+
+    const Update = (UpdateValue: (Value: Settings) => Settings) => pipe(
+        SubscriptionRef.updateSomeEffect(
+            StateRef,
+            (Current: State<Settings>) => pipe(
+                Effect.sync(() => UpdateValue(Current.Settings)),
+                Effect.flatMap(EncodeState),
+                Effect.flatMap((Next: State<Settings>) => Next.Json === Current.Json
+                    ? Effect.succeed(Option.none())
+                    : WriteJson(Next.Json).pipe(
                         Effect.as(Option.some(Next))
                     ))
             )
-        ).pipe(Effect.uninterruptible);
-
-    const Update = (
-        UpdateValue: (Value: Settings) => Settings
-    ): Effect.Effect<void, WriteError> => SubscriptionRef.updateSomeEffect(
-        StateRef,
-        (Current: State<Settings>) => Effect.sync(() => UpdateValue(Current.settings)).pipe(
-            Effect.flatMap(EncodeState),
-            Effect.flatMap((Next: State<Settings>) => Next.json === Current.json
-                ? Effect.succeed(Option.none())
-                : WriteJson(Next.json).pipe(
-                    Effect.as(Option.some(Next))
-                ))
-        )
-    ).pipe(Effect.uninterruptible);
+        ),
+        Effect.uninterruptible
+    );
 
     const Reload: Effect.Effect<void> = SubscriptionRef.updateSomeEffect(
         StateRef,
         (Current: State<Settings>) => ReadState.pipe(
-            Effect.flatMap((Next: State<Settings>) => Next.json === Current.json
+            Effect.flatMap((Next: State<Settings>) => Next.Json === Current.Json
                 ? Effect.succeed(Option.none())
                 : Effect.succeed(Option.some(Next)))
         )
     ).pipe(
-        Effect.catch((ErrorValue: LoadError) => Effect.logWarning(
+        Effect.catch((ErrorValue: Error.Any) => Effect.logWarning(
             "Ignoring an invalid external app-settings update.",
             ErrorValue
         ))
     );
 
-    const WatchOnce: Effect.Effect<void, FileError> = Fs.watch(DirectoryPath).pipe(
+    const WatchOnce: Effect.Effect<void, Error.FileError> = pipe(
+        Fs.watch(DirectoryPath),
         Stream.filter((Event: FileSystem.WatchEvent) =>
             PathService.resolve(DirectoryPath, Event.path) === AbsoluteFilePath
         ),
         Stream.debounce(Options.watchDebounce),
         Stream.runForEach(() => Reload),
-        Effect.mapError((Cause: PlatformError.PlatformError) => new FileError({
-            cause: Cause,
-            filePath: AbsoluteFilePath,
-            operation: "Watch"
+        Effect.mapError((Cause: PlatformError.PlatformError) => new Error.FileError({
+            Cause,
+            FilePath: AbsoluteFilePath,
+            Op: "Watch"
         }))
     );
 
     yield* WatchOnce.pipe(
-        Effect.catch((ErrorValue: FileError) => Effect.logWarning(
+        Effect.catch((ErrorValue: Error.FileError) => Effect.logWarning(
             "The app-settings file watcher stopped; it will be restarted.",
             ErrorValue
         )),
@@ -628,24 +659,27 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
     );
 
     return {
-        changes: SubscriptionRef.changes(StateRef).pipe(
-            Stream.map((Value: State<Settings>) => Value.settings)
+        Changes: pipe(
+            SubscriptionRef.changes(StateRef),
+            Stream.map((Value: State<Settings>) => Value.Settings)
         ),
-        get: SubscriptionRef.get(StateRef).pipe(
-            Effect.map((Value: State<Settings>) => Value.settings)
+        Get: pipe(
+            SubscriptionRef.get(StateRef),
+            Effect.map((Value: State<Settings>) => Value.Settings)
         ),
-        getSetting: <Key extends keyof Settings>(Key: Key): Effect.Effect<Settings[Key]> =>
-            SubscriptionRef.get(StateRef).pipe(
-                Effect.map((Value: State<Settings>) => Value.settings[Key])
+        GetSetting: <Key extends keyof Settings>(Key: Key): Effect.Effect<Settings[Key]> =>
+            pipe(
+                SubscriptionRef.get(StateRef),
+                Effect.map((Value: State<Settings>) => Value.Settings[Key])
             ),
-        set: Set,
-        setSetting: <Key extends keyof Settings>(
-            Key: Key,
-            Value: Settings[Key]
-        ): Effect.Effect<void, WriteError> => Update((Current: Settings) => ({
+        Set,
+        SetSetting: <K extends keyof Settings>(
+            Key: K,
+            Value: Settings[K]
+        ): Effect.Effect<void, Error.Any> => Update((Current: Settings) => ({
             ...Current,
-            [Key]: Value
+            [ Key ]: Value
         })),
-        update: Update
-    };
+        Update
+    } as const;
 });

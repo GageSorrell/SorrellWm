@@ -1,7 +1,7 @@
 /**
+ * This module handles input from the keyboard and mouse.
  *
- *
- * @module @sorrell/wm/Main/Input/index
+ * @module @sorrell/wm/Main/Input
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

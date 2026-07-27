@@ -9,5 +9,6 @@
  * @license   MIT
  */
 
-export * as AppSettings from "./AppSettings.js";
 export * from "./AppSettings.js";
+export * from "./Error.js";
+export * from "./Operation.ts";

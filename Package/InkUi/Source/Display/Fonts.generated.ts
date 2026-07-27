@@ -153,7 +153,7 @@ export const DisplayFontFamilies =
 
 export type DisplayFontFamily = typeof DisplayFontFamilies[number];
 
-export const DefaultDisplayFontFamily: DisplayFontFamily = "kubasta";
+export const DefaultDisplayFontFamily: DisplayFontFamily = "nocturne";
 
 interface SerializedFont
 {

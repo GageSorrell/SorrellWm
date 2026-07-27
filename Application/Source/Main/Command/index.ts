@@ -1,7 +1,8 @@
 /**
+ * Commands are user-facilitated actions that result in modifying the state of the application,
+ * and in most cases, the state of the Windows window manager.
  *
- *
- * @module @sorrell/wm/Main/Command/index
+ * @module @sorrell/wm/Main/Command
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

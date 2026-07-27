@@ -166,12 +166,12 @@ const useMouseEvent = (
     useMouseEventSubscription(Context, OnEvent, IsEnabled);
 };
 
-/**
- * Subscribes when a provider exists and otherwise remains inactive.
- *
- * @internal
- */
-export const useOptionalMouseEvent = (
+export/**
+       * Subscribes when a provider exists and otherwise remains inactive.
+       *
+       * @internal
+       */
+const useOptionalMouseEvent = (
     OnEvent: (Event: MouseEvent.MouseEvent) => void,
     IsEnabled: boolean = true
 ): void =>

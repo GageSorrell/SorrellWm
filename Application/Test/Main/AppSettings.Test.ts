@@ -46,7 +46,7 @@ vi.mock("@sorrell/windows", () => ({
 
 describe("AppSettings schema", () =>
 {
-    it("supplies current defaults when decoding the legacy settings wrapper", async() =>
+    it("supplies current defaults when decoding the legacy settings wrapper", async () =>
     {
         const LegacySettings = {
             Settings: "{\"RunOnStartup\":false}",
@@ -118,21 +118,21 @@ describe("AppSettings schema", () =>
         });
     });
 
-    it("accepts an explicit titlebar-flyout preference", async() =>
+    it("accepts an explicit titlebar-flyout preference", async () =>
     {
         const Decoded = await DecodeSettings({ ShowTitlebarFlyout: false });
 
         expect(Decoded.ShowTitlebarFlyout).toBe(false);
     });
 
-    it.each([ 0, 100 ])("accepts a backdrop intensity of %i", async(Intensity: number) =>
+    it.each([ 0, 100 ])("accepts a backdrop intensity of %i", async (Intensity: number) =>
     {
         const Decoded = await DecodeSettings({ OverlayBackdropIntensity: Intensity });
 
         expect(Decoded.OverlayBackdropIntensity).toBe(Intensity);
     });
 
-    it.each([ -1, 50.5, 101 ])("rejects a backdrop intensity of %s", async(Intensity: number) =>
+    it.each([ -1, 50.5, 101 ])("rejects a backdrop intensity of %s", async (Intensity: number) =>
     {
         await expect(DecodeSettings({ OverlayBackdropIntensity: Intensity })).rejects.toBeDefined();
     });

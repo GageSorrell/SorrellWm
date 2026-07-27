@@ -26,7 +26,7 @@ import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
 import { type OverlayScreenDto, OverlayScreenId } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@sorrell/windows", async() =>
+vi.mock("@sorrell/windows", async () =>
 {
     const { Option: EffectOption, Result: EffectResult } = await import("effect");
 
@@ -84,7 +84,7 @@ beforeEach(() =>
 
 describe("CommandExecutor.Execute", () =>
 {
-    it("executes UI visibility commands and rejects unsupported commands", async() =>
+    it("executes UI visibility commands and rejects unsupported commands", async () =>
     {
         const Operations = new Array<string>();
         const Unsupported = await Effect.runPromise(pipe(
@@ -130,7 +130,7 @@ describe("CommandExecutor.Execute", () =>
         }
     });
 
-    it("restores foreground focus without displaying a backdrop", async() =>
+    it("restores foreground focus without displaying a backdrop", async () =>
     {
         const ForegroundWindow = 42n as Handle.HWND;
         const Operations = new Array<string>();
@@ -171,7 +171,7 @@ describe("CommandExecutor.Execute", () =>
         expect(WindowsWindow.SetForegroundWindow).toHaveBeenCalledWith(ForegroundWindow);
     });
 
-    it("focuses the current directional target and closes the overlay", async() =>
+    it("focuses the current directional target and closes the overlay", async () =>
     {
         const TargetWindow = 84n as Handle.HWND;
         const Operations = new Array<string>();
@@ -207,7 +207,7 @@ describe("CommandExecutor.Execute", () =>
 
 describe("CommandExecutor.Live", () =>
 {
-    it("consumes resolved commands sequentially without an explicit Execute call", async() =>
+    it("consumes resolved commands sequentially without an explicit Execute call", async () =>
     {
         const Operations = new Array<string>();
         const Completed = await Effect.runPromise(Effect.gen(function*()
@@ -267,14 +267,14 @@ const FakeAppSettings = (
         Theme: "System"
     };
     const Service: AppSettings.Service = {
-        changes: Stream.empty,
-        get: Effect.succeed(Current),
-        getSetting: <Key extends keyof AppSettings.AppSettings>(
+        Changes: Stream.empty,
+        FilePath: Effect.succeed(Current),
+        Layer: <Key extends keyof AppSettings.AppSettings>(
             KeyValue: Key
         ): Effect.Effect<AppSettings.AppSettings[Key]> => Effect.succeed(Current[KeyValue]),
-        set: () => Effect.void,
-        setSetting: () => Effect.void,
-        update: () => Effect.void
+        Set: () => Effect.void,
+        SetSetting: () => Effect.void,
+        Update: () => Effect.void
     };
 
     return Layer.succeed(AppSettings.AppSettings, Service);

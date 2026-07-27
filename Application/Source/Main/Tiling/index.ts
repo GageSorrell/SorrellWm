@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/wm/Main/Tiling/index
+ * @module @sorrell/wm/Main/Tiling
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

@@ -32,7 +32,7 @@ import { type LogSink, LogSinkError } from "../Sink.js";
 export interface FileSinkOptions
 {
     readonly Path: string;
-    readonly FlushInterval?: DurationType.Input;
+    readonly FlushInterval?: DurationType.FilePath;
     readonly MaximumFileSizeBytes?: number;
     readonly MaximumRetainedFiles?: number;
     readonly CreateParentDirectories?: boolean;

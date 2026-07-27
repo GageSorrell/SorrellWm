@@ -25,7 +25,8 @@ import {
     Effect,
     Layer,
     type LogLevel,
-    Stream
+    Stream,
+    pipe
 } from "effect";
 import { NodeMetadata } from "@sorrell/log/Node";
 
@@ -117,10 +118,16 @@ export function LogTilingState(
     State: TilingTree.State
 ): Effect.Effect<void, never, SorrellLogging.LogRuntime>
 {
-    return Effect.all([
-        LogGlobal(ManagedWindowCount, CountManagedWindows(State)),
-        LogGlobal(WorkspaceCount, State.Workspaces.length)
-    ], { discard: true }).pipe(Effect.orDie);
+    return pipe(
+        Effect.all(
+            [
+                LogGlobal(ManagedWindowCount, CountManagedWindows(State)),
+                LogGlobal(WorkspaceCount, State.Workspaces.length)
+            ],
+            { discard: true }
+        ),
+        Effect.orDie
+    );
 }
 
 /**

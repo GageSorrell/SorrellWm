@@ -178,7 +178,7 @@ const Live = Layer.effect(
 
         const Poll = Effect.gen(function*()
         {
-            const IsEnabled = yield* Settings.getSetting("ShowTitlebarFlyout");
+            const IsEnabled = yield* Settings.GetSetting("ShowTitlebarFlyout");
             const UseFallback = ShouldShow(
                 IsEnabled,
                 Window.IsSnapWindowsEnabled(),
