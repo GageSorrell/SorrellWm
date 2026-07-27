@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/Help/index
+ * @module @sorrell/ink-ui/Help
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

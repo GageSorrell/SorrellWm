@@ -230,11 +230,16 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
 
     const SchedulePaint = React.useCallback((): void =>
     {
+        if (!NeedsPixelRendering)
+        {
+            return;
+        }
+
         setImmediate(() =>
         {
             PaintReference.current();
         });
-    }, [ ]);
+    }, [ NeedsPixelRendering ]);
 
     React.useEffect(() =>
     {
@@ -259,8 +264,8 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
                                 Support.BackgroundColor.Blue,
                                 255
                             ],
-                        Height: Support.CellSizePixels.Height,
-                        Width: Support.CellSizePixels.Width
+                        Height: Support.CellSizePixels.Y,
+                        Width: Support.CellSizePixels.X
                     };
                     SchedulePaint();
                 }
@@ -418,13 +423,18 @@ const Box = React.forwardRef<Ink.DOMElement, BoxProps>(function BoxComponent(
 
     React.useEffect(() =>
     {
+        if (!NeedsPixelRendering)
+        {
+            return;
+        }
+
         stdout.on("resize", SchedulePaint);
 
         return () =>
         {
             stdout.off("resize", SchedulePaint);
         };
-    }, [ SchedulePaint, stdout ]);
+    }, [ NeedsPixelRendering, SchedulePaint, stdout ]);
 
     React.useEffect(() => () =>
     {

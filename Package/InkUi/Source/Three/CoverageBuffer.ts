@@ -1,7 +1,7 @@
 /**
  * Numeric coverage, depth, intensity, and color buffer for terminal rasterization.
  *
- * @module @sorrell/ink-three/CoverageBuffer
+ * @module @sorrell/ink-ui/Three/CoverageBuffer
  *
  * @file      CoverageBuffer.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

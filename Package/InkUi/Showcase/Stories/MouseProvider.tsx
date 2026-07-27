@@ -23,12 +23,12 @@ const Readout = (): React.ReactElement =>
 };
 const Basic = (): React.ReactElement => <MouseProvider><Readout /></MouseProvider>;
 export default SimpleStory({
-    Basic: { Code: "<MouseProvider>…</MouseProvider>", Preview: Basic },
+    Basic: { Code: "<MouseProvider>{ /* ... */ }</MouseProvider>", Preview: Basic },
     Description: "Installs one shared terminal mouse listener and recognizes clicks, drags, and wheels.",
     Examples:
     [
         {
-            Code: "<MouseProvider DoubleClickTimeMs={300}>…</MouseProvider>",
+            Code: "<MouseProvider DoubleClickTimeMs={300}>{ /* ... */ }</MouseProvider>",
             Preview: Basic,
             Title: "Gesture tuning"
         }

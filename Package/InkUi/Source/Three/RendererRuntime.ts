@@ -1,7 +1,7 @@
 /**
  * Effect runtime workflows for terminal scene rendering.
  *
- * @module @sorrell/ink-three/RendererRuntime
+ * @module @sorrell/ink-ui/Three/RendererRuntime
  *
  * @file      RendererRuntime.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

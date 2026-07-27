@@ -1,7 +1,7 @@
 /**
  * Terminal service definitions for Effect workflows.
  *
- * @module @sorrell/ink-three/Terminal/InkThreeTerminal
+ * @module @sorrell/ink-ui/Three/Terminal/InkThreeTerminal
  *
  * @file      InkThreeTerminal.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

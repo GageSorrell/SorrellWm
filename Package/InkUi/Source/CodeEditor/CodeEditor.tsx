@@ -1,5 +1,5 @@
 /**
- *
+ * Edits or views multiline code with lightweight JSON and YAML highlighting.
  *
  * @module @sorrell/ink-ui/CodeEditor/CodeEditor
  *

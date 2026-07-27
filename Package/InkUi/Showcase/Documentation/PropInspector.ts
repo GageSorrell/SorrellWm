@@ -1,5 +1,5 @@
 /**
- *
+ * Generate the data displayed in the table describing the props of a component.
  *
  * @module @sorrell/ink-ui/Showcase/Documentation/PropInspector
  *
@@ -17,6 +17,12 @@ import * as TypeScript from "typescript";
 import type { StorySource } from "../Story.js";
 import { fileURLToPath } from "node:url";
 
+/**
+ * The data that describes the props of a given component.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
 export interface PropDocumentation
 {
     readonly DefaultValue?: string;
@@ -27,10 +33,37 @@ export interface PropDocumentation
 }
 
 const Cache = new Map<string, ReadonlyArray<PropDocumentation>>();
+
+/**
+ * Get the root path of this package.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
+const ResolvePackageRoot = (): string =>
+{
+    const WorkingDirectory = process.cwd();
+    if (FileSystem.existsSync(Path.join(WorkingDirectory, "Source")) &&
+        FileSystem.existsSync(Path.join(WorkingDirectory, "tsconfig.json"))
+    )
+    {
+        return WorkingDirectory;
+    }
+
+    return Path.resolve(Path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+};
+
 const PackageRoot = ResolvePackageRoot();
+
 let Program: TypeScript.Program | undefined;
 
-export const InspectProps = (Definition: StorySource): ReadonlyArray<PropDocumentation> =>
+export/**
+       * Generate the data displayed in the table describing the props of a component.
+       *
+       * @category Documentation
+       * @since 1.0.0
+       */
+const InspectProps = (Definition: StorySource): ReadonlyArray<PropDocumentation> =>
 {
     const Key = `${ Definition.Path }#${ Definition.Props }`;
     const Cached = Cache.get(Key);
@@ -98,8 +131,14 @@ export const InspectProps = (Definition: StorySource): ReadonlyArray<PropDocumen
     {
         return [ ];
     }
-}
+};
 
+/**
+ * Create the TypeScript `Program` used to find data about components in the repos.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
 function GetProgram(): TypeScript.Program
 {
     if (Program === undefined)
@@ -119,18 +158,13 @@ function GetProgram(): TypeScript.Program
     return Program;
 }
 
-function ResolvePackageRoot(): string
-{
-    const WorkingDirectory = process.cwd();
-    if (FileSystem.existsSync(Path.join(WorkingDirectory, "Source"))
-        && FileSystem.existsSync(Path.join(WorkingDirectory, "tsconfig.json")))
-    {
-        return WorkingDirectory;
-    }
-    return Path.resolve(Path.dirname(fileURLToPath(import.meta.url)), "../../../..");
-}
-
-function FindDefaults(Source: TypeScript.SourceFile, Component: string): ReadonlyMap<string, string>
+/**
+ * Get the default values for the props of a given component.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
+const FindDefaults = (Source: TypeScript.SourceFile, Component: string): ReadonlyMap<string, string> =>
 {
     const Result = new Map<string, string>();
     const Visit = (Node: TypeScript.Node): void =>
@@ -154,4 +188,4 @@ function FindDefaults(Source: TypeScript.SourceFile, Component: string): Readonl
         Visit(ComponentStatement);
     }
     return Result;
-}
+};

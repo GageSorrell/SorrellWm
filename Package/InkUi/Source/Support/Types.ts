@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import type { IntPoint } from "@sorrell/math";
 import { Data } from "effect";
 
 /** A terminal emulator which can be identified without relying on `$TERM` alone. */
@@ -31,6 +32,12 @@ export type TerminalKind =
     | "xterm"
     | "unknown";
 
+/**
+ * The multiplexer used by the terminal, if any.
+ *
+ * @category Support
+ * @since 1.0.0
+ */
 export type TerminalMultiplexer =
     | "screen"
     | "tmux";
@@ -44,12 +51,6 @@ export interface TerminalIdentity
     readonly Version?: string;
 }
 
-export interface PixelSize
-{
-    readonly Height: number;
-    readonly Width: number;
-}
-
 /** An eight-bit RGB color reported by the terminal. */
 export interface RgbColor
 {
@@ -58,12 +59,19 @@ export interface RgbColor
     readonly Red: number;
 }
 
+/**
+ * The color depth that the terminal uses.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export type ColorDepth =
     | 1
     | 4
     | 8
     | 24;
 
+/** {@inheritDoc MouseGranularity} */
 export type MouseGranularity = Data.TaggedEnum<{
     readonly Cell: { };
     readonly Pixel: { };
@@ -72,7 +80,13 @@ export type MouseGranularity = Data.TaggedEnum<{
     readonly Unknown: { };
 }>;
 
-export const MouseGranularity = Data.taggedEnum<MouseGranularity>();
+export/**
+       * The level of granularity with which the terminal reports the position of the mouse cursor.
+       *
+       * @category Mouse
+       * @since 1.0.0
+       */
+const MouseGranularity = Data.taggedEnum<MouseGranularity>();
 
 /** Mouse protocols recognized by the terminal. `undefined` means that no reliable answer was available. */
 export interface MouseSupport
@@ -93,12 +107,13 @@ export interface TerminalSupport
     readonly AlternateScreen: boolean | undefined;
     readonly BackgroundColor: RgbColor | undefined;
     readonly BracketedPaste: boolean | undefined;
-    readonly CellSizePixels: PixelSize | undefined;
+    readonly CellSizePixels: IntPoint.IntPoint | undefined;
     readonly Clipboard: boolean | undefined;
     readonly ColorDepth: ColorDepth | undefined;
     readonly FocusEvents: boolean | undefined;
     readonly ForegroundColor: RgbColor | undefined;
     readonly Hyperlinks: boolean | undefined;
+    /** Support for the OSC 1337 `File` inline-image protocol. */
     readonly ItermImages: boolean | undefined;
     readonly KittyGraphics: boolean | undefined;
     readonly KittyKeyboard: boolean | undefined;

@@ -1,7 +1,7 @@
 /**
  * Triangle extraction helpers for supported ThreeJS mesh geometry.
  *
- * @module @sorrell/ink-three/Geometry/Triangle
+ * @module @sorrell/ink-ui/Three/Geometry/Triangle
  *
  * @file      Triangle.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

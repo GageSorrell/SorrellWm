@@ -30,7 +30,7 @@ export default SimpleStory({
     Examples:
     [
         {
-            Code: "<ConfirmOverlay Message=\"Delete file?\" ConfirmLabel=\"Delete\" … />",
+            Code: "<ConfirmOverlay Message=\"Delete file?\" ConfirmLabel=\"Delete\" ... />",
             Preview: Basic,
             Title: "Destructive confirmation"
         }

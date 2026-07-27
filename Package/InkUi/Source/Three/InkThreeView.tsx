@@ -1,7 +1,7 @@
 /**
  * Ink component for rendering ThreeJS scenes as terminal text.
  *
- * @module @sorrell/ink-three/InkThreeView
+ * @module @sorrell/ink-ui/Three/InkThreeView
  *
  * @file      InkThreeView.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>

@@ -20,7 +20,7 @@ const Footer = (): React.ReactElement => <Frame Active
 export default SimpleStory({
     Basic: { Code: "<Frame Title=\"Panel\">Framed content</Frame>", Preview: Basic },
     Description: "Adds a titled, themed frame around a region of content.",
-    Examples: [ { Code: "<Frame Active Title=\"Active\" Footer=\"Enter to continue\">…</Frame>", Preview: Footer, Title: "Active frame with footer" } ],
+    Examples: [ { Code: "<Frame Active Title=\"Active\" Footer=\"Enter to continue\">{ /* ... */ }</Frame>", Preview: Footer, Title: "Active frame with footer" } ],
     Name: "Frame",
     Source: { Component: "Frame", Path: "Frame.tsx", Props: "FrameProps" }
 });

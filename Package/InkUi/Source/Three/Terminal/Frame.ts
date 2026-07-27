@@ -1,7 +1,7 @@
 /**
  * Terminal frame model and string conversion helpers.
  *
- * @module @sorrell/ink-three/Terminal/Frame
+ * @module @sorrell/ink-ui/Three/Terminal/Frame
  *
  * @file      Frame.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

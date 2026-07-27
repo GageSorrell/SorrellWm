@@ -1,5 +1,5 @@
 /**
- *
+ * An event in a timeline.
  *
  * @module @sorrell/ink-ui/Timeline/TimelineEvent
  *

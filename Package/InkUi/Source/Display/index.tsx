@@ -69,36 +69,49 @@ type LayoutPropKeys =
 
 type DisplayLayoutProps =
     {
-        readonly [Key in LayoutPropKeys]?: Ink.BoxProps[Key] | undefined
+        readonly [ Key in LayoutPropKeys ]?: Ink.BoxProps[Key] | undefined;
     };
 
 type DisplayInkTextProps = Omit<Ink.TextProps, "children">;
 
 /** Props for {@link Display}. */
-export type DisplayProps = DisplayInkTextProps & DisplayLayoutProps & {
-    /** Text rendered through the selected bitmap font. */
-    readonly children: string;
-    /** Additional blank cells between glyphs. Matches bit's 0–10 range. */
-    readonly characterSpacing?: number;
-    /** One of the 125 bitmap fonts bundled by bit. */
-    readonly fontFamily?: DisplayFontFamily;
-    /** Bitmap scale offered by bit: half, normal, double, or quadruple. */
-    readonly fontScale?: DisplayFontScale;
-    /** Additional blank rows between explicit input lines. Matches bit's 0–10 range. */
-    readonly lineSpacing?: number;
-    /** Enable bit's shaded-cell drop shadow. */
-    readonly shadow?: boolean;
-    /** Horizontal shadow offset, from -5 through 5 cells. */
-    readonly shadowHorizontalOffset?: DisplayShadowOffset;
-    /** Light, medium, or dark shaded-cell shadow. Numeric bit values are also accepted. */
-    readonly shadowStyle?: DisplayShadowStyle;
-    /** Vertical shadow offset, from -5 through 5 cells. */
-    readonly shadowVerticalOffset?: DisplayShadowOffset;
-    /** Align separate input lines to the widest rendered line. */
-    readonly textAlign?: DisplayTextAlign;
-    /** Additional cells at word boundaries. Matches bit's 0–20 range. */
-    readonly wordSpacing?: number;
-};
+export type DisplayProps =
+    DisplayInkTextProps &
+    DisplayLayoutProps &
+    {
+        /** Text rendered through the selected bitmap font. */
+        readonly children: string;
+
+        /** Additional blank cells between glyphs. Matches bit's 0–10 range. */
+        readonly characterSpacing?: number;
+
+        /** One of the 125 bitmap fonts bundled by bit. */
+        readonly fontFamily?: DisplayFontFamily;
+
+        /** Bitmap scale offered by bit: half, normal, double, or quadruple. */
+        readonly fontScale?: DisplayFontScale;
+
+        /** Additional blank rows between explicit input lines. Matches bit's 0–10 range. */
+        readonly lineSpacing?: number;
+
+        /** Enable bit's shaded-cell drop shadow. */
+        readonly shadow?: boolean;
+
+        /** Horizontal shadow offset, from -5 through 5 cells. */
+        readonly shadowHorizontalOffset?: DisplayShadowOffset;
+
+        /** Light, medium, or dark shaded-cell shadow. Numeric bit values are also accepted. */
+        readonly shadowStyle?: DisplayShadowStyle;
+
+        /** Vertical shadow offset, from -5 through 5 cells. */
+        readonly shadowVerticalOffset?: DisplayShadowOffset;
+
+        /** Align separate input lines to the widest rendered line. */
+        readonly textAlign?: DisplayTextAlign;
+
+        /** Additional cells at word boundaries. Matches bit's 0–20 range. */
+        readonly wordSpacing?: number;
+    };
 
 export/**
        * Render a string as terminal-native bitmap display text.
@@ -123,16 +136,16 @@ const Display = React.forwardRef<Ink.DOMElement, DisplayProps>(function DisplayC
     const Lines: ReadonlyArray<string> = React.useMemo(() => RenderDisplayText(
         Props.children,
         {
-            CharacterSpacing: Props.characterSpacing,
+            CharacterSpacing: Props.characterSpacing ?? 1,
             FontFamily,
-            FontScale: Props.fontScale,
+            FontScale: Props.fontScale ?? 0.5,
             LineSpacing: Props.lineSpacing,
             Shadow: Props.shadow,
             ShadowHorizontalOffset: Props.shadowHorizontalOffset,
             ShadowStyle: Props.shadowStyle,
             ShadowVerticalOffset: Props.shadowVerticalOffset,
             TextAlign: Props.textAlign,
-            WordSpacing: Props.wordSpacing
+            WordSpacing: Props.wordSpacing ?? 2
         }
     ), [
         FontFamily,

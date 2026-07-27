@@ -1,7 +1,7 @@
 /**
  * Terminal RGB color helpers for renderer output and Ink views.
  *
- * @module @sorrell/ink-three/Terminal/Color
+ * @module @sorrell/ink-ui/Three/Terminal/Color
  *
  * @file      Color.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

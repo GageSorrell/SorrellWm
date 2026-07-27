@@ -25,9 +25,7 @@ export/**
        * @category Feedback
        * @since 1.0.0
        */
-const ValidationNotice = ({
-    Message
-}: ValidationNoticeProps): React.ReactNode | null =>
+const ValidationNotice = ({ Message }: ValidationNoticeProps): React.ReactNode | null =>
 {
     const Theme = useTheme();
 

@@ -10,7 +10,7 @@
  */
 
 import * as React from "react";
-import { Svg, type SvgProps } from "../Svg/index.js";
+import { Svg, type SvgProps } from "../Svg/Svg.tsx";
 
 /** Props for {@link Icon}. */
 export interface IconProps

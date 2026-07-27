@@ -1,5 +1,5 @@
 /**
- *
+ * Displays one timestamped event in a compact timeline row.
  *
  * @module @sorrell/ink-ui/Timeline/TimelineEntry
  *

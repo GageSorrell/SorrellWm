@@ -1,7 +1,7 @@
 /**
- * Render LaTeX mathematics as a Sixel image.
+ * Render Latex mathematics as a Sixel image.
  *
- * @module @sorrell/ink-ui/LaTeX
+ * @module @sorrell/ink-ui/Latex
  *
  * @file      index.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -15,14 +15,14 @@ import {
     Svg,
     type SvgFallback,
     type SvgProps
-} from "../Svg/index.js";
+} from "../Svg/Svg.tsx";
 import { pathToFileURL } from "node:url";
-import { useTheme } from "../Theme.js";
+import { useTheme } from "../Theme.tsx";
 
-/** Props for {@link LaTeX}. The source is raw TeX without math delimiters. */
-export interface LaTeXProps extends Omit<SvgProps, "children">
+/** Props for {@link Latex}. The source is raw tex without math delimiters. */
+export interface LatexProps extends Omit<SvgProps, "children">
 {
-    /** Raw TeX source, such as `String.raw` followed by `\\frac{a}{b}`. */
+    /** Raw tex source, such as `String.raw` followed by `\\frac{a}{b}`. */
     readonly children: string;
     /** SVG `currentColor` used by the generated formula. */
     readonly color?: string | undefined;
@@ -39,8 +39,8 @@ interface RenderResult
 
 let Initialization: Promise<MathJaxApi> | undefined;
 
-/** Render raw TeX through MathJax and display its SVG output using Sixel. */
-export function LaTeX(Props: LaTeXProps): React.ReactElement | null
+/** Render raw tex through MathJax and display its SVG output using Sixel. */
+export function Latex(Props: LatexProps): React.ReactElement | null
 {
     const {
         children,

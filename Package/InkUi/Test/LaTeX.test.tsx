@@ -11,9 +11,9 @@
 
 import * as Ink from "ink";
 import type * as React from "react";
-import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
 import { LaTeX } from "../Source/LaTeX/index.js";
+import { render } from "ink-testing-library";
 
 vi.mock("../Source/Support/Query.js", () => ({
     QueryTerminalSupport: async () => ({ Sixel: false })
@@ -45,7 +45,8 @@ describe("LaTeX", () =>
         );
 
         await WaitForFrame(App, (Frame: string) => Frame.includes("Sixel"));
-        expect(App.lastFrame()).toBe("The terminal does not support Sixel rendering.");
+        expect(App.lastFrame())
+            .toBe("The terminal does not support iTerm2 image or Sixel rendering.");
     });
 });
 

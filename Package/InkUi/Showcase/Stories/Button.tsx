@@ -14,9 +14,14 @@ import * as React from "react";
 import { Button } from "../../Source/Button/index.js";
 import { SimpleStory } from "./Factory.js";
 
-const Basic = (): React.ReactElement => <Button Disabled
-    Id="showcase-button">Continue</Button>;
-const Appearances = (): React.ReactElement => (
+const Basic = (): React.ReactElement =>
+    <Button
+        Disabled
+        Id="showcase-button">
+        Continue
+    </Button>;
+
+const Appearances = (): React.ReactElement =>
     <Ink.Box gap={ 1 }>
         <Button Appearance="primary"
             Disabled
@@ -24,8 +29,8 @@ const Appearances = (): React.ReactElement => (
         <Button Appearance="outline"
             Disabled
             Id="outline">Outline</Button>
-    </Ink.Box>
-);
+    </Ink.Box>;
+
 export default SimpleStory({
     Basic: { Code: "<Button Id=\"continue\">Continue</Button>", Preview: Basic },
     Description: "A themed focusable action with keyboard, mouse, hover, pressed, and disabled states.",

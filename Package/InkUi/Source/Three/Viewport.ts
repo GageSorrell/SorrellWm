@@ -1,7 +1,7 @@
 /**
  * The `Viewport` interface and related utilities.
  *
- * @module @sorrell/ink-three/Viewport
+ * @module @sorrell/ink-ui/Three/Viewport
  *
  * @file      Viewport.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

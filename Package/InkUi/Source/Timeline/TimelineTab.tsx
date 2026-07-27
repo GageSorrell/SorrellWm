@@ -1,5 +1,5 @@
 /**
- *
+ * Renders a keyboard-navigable history of timeline events.
  *
  * @module @sorrell/ink-ui/Timeline/TimelineTab
  *
@@ -46,22 +46,21 @@ const TimelineTab = ({
         return <Ink.Text color={ Theme.TextMuted }>No timeline events.</Ink.Text>;
     }
 
+    const RenderItem = (Event: TimelineEvent, _Index: number, IsSelected: boolean) =>
+        <TimelineEntry
+            Event={ Event }
+            Selected={ IsSelected }
+        />;
+
     return (
         <ScrollArea
             Active={ Active }
             Height={ Height }
-            Items={ Events }
-            OnSelect={ OnOpen }
-            RenderItem={ (
-                Event: TimelineEvent,
-                _Index: number,
-                IsSelected: boolean
-            ) => (
-                <TimelineEntry
-                    Event={ Event }
-                    Selected={ IsSelected } />
-            ) }
             Index={ Selected }
-            OnChangeIndex={ SetSelected } />
+            Items={ Events }
+            OnChangeIndex={ SetSelected }
+            OnSelect={ OnOpen }
+            RenderItem={ RenderItem }
+        />
     );
 };

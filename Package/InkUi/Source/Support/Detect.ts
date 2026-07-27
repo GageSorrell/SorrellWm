@@ -39,11 +39,16 @@ const Names: Readonly<Record<TerminalKind, string>> =
         xterm: "xterm"
     };
 
-/** Detect a terminal from conventional environment variables and an optional XTVERSION response. */
-export function DetectTerminal(
+export/**
+       * Detect a terminal from conventional environment variables and an optional XTVERSION response.
+       *
+       * @category Support
+       * @since 1.0.0
+       */
+const DetectTerminal = (
     Environment: NodeJS.ProcessEnv = process.env,
     VersionReport?: string
-): TerminalIdentity
+): TerminalIdentity =>
 {
     const Multiplexer: TerminalMultiplexer | undefined = DetectMultiplexer(Environment);
     const ReportIdentity: { readonly Kind: TerminalKind; readonly Version?: string } | undefined =
@@ -58,13 +63,18 @@ export function DetectTerminal(
         Name: Names[Kind],
         ...(Version === undefined ? { } : { Version })
     };
-}
+};
 
-/** Construct passive capability hints. Active query results should override these values. */
-export function GetPassiveSupport(
+export/**
+       * Construct passive capability hints. Active query results should override these values.
+       *
+       * @category Support
+       * @since 1.0.0
+       */
+const GetPassiveSupport = (
     Environment: NodeJS.ProcessEnv = process.env,
     Terminal: TerminalIdentity = DetectTerminal(Environment)
-): TerminalSupport
+): TerminalSupport =>
 {
     const Term: string = Environment.TERM?.toLowerCase() ?? "";
     const IsDumb: boolean = Term === "dumb";
@@ -72,6 +82,8 @@ export function GetPassiveSupport(
     const Modern: boolean = !IsDumb && Terminal.Kind !== "unknown" && Terminal.Kind !== "xterm";
     const Unicode: boolean | undefined = DetectUnicode(Environment, IsDumb);
     const MouseCell: boolean | undefined = IsDumb ? false : (Modern ? true : undefined);
+    const Features: ReadonlySet<string> | undefined =
+        ParseTerminalFeatures(Environment.TERM_FEATURES);
 
     return {
         AlternateScreen: IsDumb ? false : (Term.length > 0 ? true : undefined),
@@ -83,9 +95,12 @@ export function GetPassiveSupport(
         FocusEvents: IsDumb ? false : (Modern ? true : undefined),
         ForegroundColor: undefined,
         Hyperlinks: IsDumb ? false : (SupportsKnownHyperlinks(Terminal.Kind) ? true : undefined),
-        ItermImages: Terminal.Kind === "iterm2" && Terminal.Multiplexer === undefined
-            ? true
-            : (IsDumb ? false : undefined),
+        ItermImages: IsDumb
+            ? false
+            : (SupportsKnownItermImages(Terminal.Kind)
+                && Terminal.Multiplexer === undefined
+                ? true
+                : Features?.has("File")),
         KittyGraphics: Terminal.Kind === "kitty" && Terminal.Multiplexer === undefined
             ? true
             : (IsDumb ? false : undefined),
@@ -101,19 +116,40 @@ export function GetPassiveSupport(
             Sgr: IsDumb ? false : (Modern ? true : undefined),
             Supported: MouseCell
         },
-        Sixel: IsDumb ? false : undefined,
+        Sixel: IsDumb
+            ? false
+            : Features?.has("Sixel"),
         SynchronizedOutput: IsDumb ? false : undefined,
         Terminal,
         TrueColor: ColorDepth === undefined ? undefined : ColorDepth === 24,
         Unicode
     };
-}
+};
+
+export/**
+       * Parse the concatenated feature codes used by `TERM_FEATURES` and the
+       * `OSC 1337;Capabilities` response.
+       */
+const ParseTerminalFeatures = (Value: string | undefined): ReadonlySet<string> | undefined =>
+{
+    if (Value === undefined)
+    {
+        return undefined;
+    }
+
+    return new Set(Value.match(/[A-Z][a-z]*(?:\d+)?/gu) ?? [ ]);
+};
 
 const DetectKind = (Environment: NodeJS.ProcessEnv): TerminalKind =>
 {
     const Program: string = Environment.TERM_PROGRAM?.toLowerCase() ?? "";
     const Term: string = Environment.TERM?.toLowerCase() ?? "";
 
+    // Pane-scoped identifiers are stronger than inherited host-terminal variables.
+    if (Environment.WEZTERM_PANE !== undefined || Program.includes("wezterm"))
+    {
+        return "wezterm";
+    }
     if (Environment.WT_SESSION !== undefined)
     {
         return "windows-terminal";
@@ -133,10 +169,6 @@ const DetectKind = (Environment: NodeJS.ProcessEnv): TerminalKind =>
     if (Environment.ALACRITTY_SOCKET !== undefined || Program.includes("alacritty"))
     {
         return "alacritty";
-    }
-    if (Environment.WEZTERM_PANE !== undefined || Program.includes("wezterm"))
-    {
-        return "wezterm";
     }
     if (Environment.VSCODE_INJECTION !== undefined || Program === "vscode")
     {
@@ -309,7 +341,13 @@ const SupportsKnownHyperlinks = (Kind: TerminalKind): boolean =>
     ].includes(Kind);
 };
 
-function DetectUnicode(Environment: NodeJS.ProcessEnv, IsDumb: boolean): boolean | undefined
+/** Terminals known to implement the OSC 1337 `File` inline-image protocol. */
+const SupportsKnownItermImages = (Kind: TerminalKind): boolean =>
+{
+    return Kind === "iterm2" || Kind === "wezterm";
+};
+
+const DetectUnicode = (Environment: NodeJS.ProcessEnv, IsDumb: boolean): boolean | undefined =>
 {
     if (IsDumb)
     {
@@ -328,4 +366,4 @@ function DetectUnicode(Environment: NodeJS.ProcessEnv, IsDumb: boolean): boolean
         return true;
     }
     return undefined;
-}
+};

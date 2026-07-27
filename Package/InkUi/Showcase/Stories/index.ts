@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/Showcase/Stories/index
+ * @module @sorrell/ink-ui/Showcase/Stories
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -19,10 +19,11 @@ import CodeEditor from "./CodeEditor.js";
 import Command from "./Command.js";
 import CommandScope from "./CommandScope.js";
 import CompletionMenu from "./CompletionMenu.js";
+import type { ComponentStory } from "../Story.js";
 import ConfirmOverlay from "./ConfirmOverlay.js";
 import Display from "./Display.js";
-import Focusable from "./Focusable.js";
 import FocusScope from "./FocusScope.js";
+import Focusable from "./Focusable.js";
 import Frame from "./Frame.js";
 import GradientBadge from "./GradientBadge.js";
 import H1 from "./H1.js";
@@ -40,7 +41,7 @@ import InkThreeView from "./InkThreeView.js";
 import InteractionProvider from "./InteractionProvider.js";
 import JsonBodyViewer from "./JsonBodyViewer.js";
 import JumpBadge from "./JumpBadge.js";
-import LaTeX from "./LaTeX.js";
+import Latex from "./Latex.js";
 import MouseProvider from "./MouseProvider.js";
 import Overlay from "./Overlay.js";
 import PhosphorIcon from "./PhosphorIcon.js";
@@ -70,68 +71,74 @@ import VarText from "./VarText.js";
 import View from "./View.js";
 import ViewPane from "./ViewPane.js";
 import YamlEditorOverlay from "./YamlEditorOverlay.js";
-import type { ComponentStory } from "../Story.js";
 
-export const Stories: ReadonlyArray<ComponentStory> = [
-    BackdropProvider,
-    Badge,
-    Box,
-    Button,
-    CenterText,
-    Checkbox,
-    CodeEditor,
-    Command,
-    CommandScope,
-    CompletionMenu,
-    ConfirmOverlay,
-    Display,
-    Focusable,
-    FocusScope,
-    Frame,
-    GradientBadge,
-    H1,
-    H2,
-    H3,
-    H4,
-    H5,
-    H6,
-    HeaderBar,
-    HeaderTable,
-    HelpOverlay,
-    HelpProvider,
-    Icon,
-    InkThreeView,
-    InteractionProvider,
-    JsonBodyViewer,
-    JumpBadge,
-    LaTeX,
-    MouseProvider,
-    Overlay,
-    PhosphorIcon,
-    PickerOverlay,
-    ScrollArea,
-    ScrollView,
-    Select,
-    ShadowProvider,
-    Shortcut,
-    StatusBar,
-    Svg,
-    Tabs,
-    Text,
-    TextArea,
-    TextInput,
-    ThemePickerOverlay,
-    ThemeProvider,
-    TimelineDetailOverlay,
-    TimelineEntry,
-    TimelineTab,
-    Tips,
-    Toast,
-    Tooltip,
-    ValidationNotice,
-    VarInput,
-    VarText,
-    View,
-    ViewPane,
-    YamlEditorOverlay
-].sort((Left, Right) => Left.Name.localeCompare(Right.Name));
+export/**
+       * The stories provided by the showcase.
+       *
+       * @category Storybook
+       * @since 1.0.0
+       */
+const Stories: ReadonlyArray<ComponentStory> =
+    [
+        BackdropProvider,
+        Badge,
+        Box,
+        Button,
+        CenterText,
+        Checkbox,
+        CodeEditor,
+        Command,
+        CommandScope,
+        CompletionMenu,
+        ConfirmOverlay,
+        Display,
+        Focusable,
+        FocusScope,
+        Frame,
+        GradientBadge,
+        H1,
+        H2,
+        H3,
+        H4,
+        H5,
+        H6,
+        HeaderBar,
+        HeaderTable,
+        HelpOverlay,
+        HelpProvider,
+        Icon,
+        InkThreeView,
+        InteractionProvider,
+        JsonBodyViewer,
+        JumpBadge,
+        Latex,
+        MouseProvider,
+        Overlay,
+        PhosphorIcon,
+        PickerOverlay,
+        ScrollArea,
+        ScrollView,
+        Select,
+        ShadowProvider,
+        Shortcut,
+        StatusBar,
+        Svg,
+        Tabs,
+        Text,
+        TextArea,
+        TextInput,
+        ThemePickerOverlay,
+        ThemeProvider,
+        TimelineDetailOverlay,
+        TimelineEntry,
+        TimelineTab,
+        Tips,
+        Toast,
+        Tooltip,
+        ValidationNotice,
+        VarInput,
+        VarText,
+        View,
+        ViewPane,
+        YamlEditorOverlay
+    ].sort((Left: ComponentStory, Right: ComponentStory) => Left.Name.localeCompare(Right.Name));

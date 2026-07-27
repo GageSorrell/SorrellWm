@@ -1,7 +1,7 @@
 /**
  * Typed renderer errors for Effect workflows.
  *
- * @module @sorrell/ink-three/InkThreeError
+ * @module @sorrell/ink-ui/Three/InkThreeError
  *
  * @file      InkThreeError.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

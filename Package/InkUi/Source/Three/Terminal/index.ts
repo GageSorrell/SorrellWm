@@ -1,7 +1,7 @@
 /**
  * Functionality relating to the terminal.  This module exports most of the API surface.
  *
- * @module @sorrell/ink-three/Terminal
+ * @module @sorrell/ink-ui/Three/Terminal
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

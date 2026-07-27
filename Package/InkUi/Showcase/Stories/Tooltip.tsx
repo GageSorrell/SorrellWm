@@ -18,7 +18,7 @@ const Basic = (): React.ReactElement => <HelpProvider icon={ <Ink.Text>?</Ink.Te
 export default SimpleStory({
     Basic: { Code: "<Tooltip content=\"More information\"><Box>Hover target</Box></Tooltip>", Preview: Basic },
     Description: "Associates delayed mouse and Help Mode content with exactly one child.",
-    Examples: [ { Code: "<Tooltip content={<Details />} position=\"right\">…</Tooltip>", Preview: Basic, Title: "Rich content" } ],
+    Examples: [ { Code: "<Tooltip content={<Details />} position=\"right\">{ /* ... */ }</Tooltip>", Preview: Basic, Title: "Rich content" } ],
     Name: "Tooltip",
     Source: { Component: "Tooltip", Path: "Help/Help.tsx", Props: "TooltipProps" }
 });

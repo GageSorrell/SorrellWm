@@ -1,7 +1,7 @@
 /**
  * Effect service for rendering ThreeJS scenes into terminal frames.
  *
- * @module @sorrell/ink-three/SceneRenderer
+ * @module @sorrell/ink-ui/Three/SceneRenderer
  *
  * @file      SceneRenderer.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

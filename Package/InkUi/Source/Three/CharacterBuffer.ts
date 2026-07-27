@@ -1,7 +1,7 @@
 /**
  * Mutable fixed-size character grid for terminal cell output.
  *
- * @module @sorrell/ink-three/CharacterBuffer
+ * @module @sorrell/ink-ui/Three/CharacterBuffer
  *
  * @file      CharacterBuffer.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

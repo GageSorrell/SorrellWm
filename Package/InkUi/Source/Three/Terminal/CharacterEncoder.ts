@@ -1,7 +1,7 @@
 /**
  * Terminal character encoders for converting coverage buffers into frame cells.
  *
- * @module @sorrell/ink-three/Terminal/CharacterEncoder
+ * @module @sorrell/ink-ui/Three/Terminal/CharacterEncoder
  *
  * @file      CharacterEncoder.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

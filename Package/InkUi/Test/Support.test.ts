@@ -51,6 +51,15 @@ describe("DetectTerminal", () =>
         expect(DetectTerminal({ TERM: "screen-256color", TMUX: "socket" }, "kitty 0.42.1"))
             .toMatchObject({ Kind: "kitty", Multiplexer: "tmux", Version: "0.42.1" });
     });
+
+    it("prefers WezTerm's pane identity over an inherited WT_SESSION", () =>
+    {
+        expect(DetectTerminal({
+            TERM_PROGRAM: "WezTerm",
+            WEZTERM_PANE: "1",
+            WT_SESSION: "inherited"
+        }).Kind).toBe("wezterm");
+    });
 });
 
 describe("GetPassiveSupport", () =>
@@ -71,6 +80,38 @@ describe("GetPassiveSupport", () =>
         expect(Support.Mouse.Granularity._tag).toBe("None");
         expect(Support.TrueColor).toBe(false);
     });
+
+    it("reads image protocols from TERM_FEATURES", () =>
+    {
+        const Support = GetPassiveSupport({
+            TERM: "xterm-256color",
+            TERM_FEATURES: "FileSixel"
+        });
+
+        expect(Support.ItermImages).toBe(true);
+        expect(Support.Sixel).toBe(true);
+    });
+
+    it("recognizes WezTerm's iTerm2-compatible image protocol", () =>
+    {
+        const Support = GetPassiveSupport({
+            TERM: "xterm-256color",
+            TERM_FEATURES: "Sixel",
+            TERM_PROGRAM: "WezTerm",
+            WEZTERM_PANE: "1"
+        });
+
+        expect(Support.Terminal.Kind).toBe("wezterm");
+        expect(Support.ItermImages).toBe(true);
+    });
+
+    it("recognizes WezTerm image support after active identity detection", () =>
+    {
+        const Environment = { TERM: "xterm-256color" };
+        const Terminal = DetectTerminal(Environment, "WezTerm 20240203-110809-5046fc22");
+
+        expect(GetPassiveSupport(Environment, Terminal).ItermImages).toBe(true);
+    });
 });
 
 describe("QueryTerminalSupport", () =>
@@ -84,8 +125,9 @@ describe("QueryTerminalSupport", () =>
         let Raw: boolean = false;
         const SetRawMode = (Value: boolean): void => { Raw = Value; };
 
-        Stdout.once("data", () =>
+        Stdout.once("data", (Query: Buffer) =>
         {
+            expect(Query.toString()).toContain("\u001B]1337;Capabilities\u001B\\");
             Stdin.write([
                 "\u001B[6;20;10t",
                 "\u001B]10;rgb:aaaa/bbbb/cccc\u001B\\",
@@ -99,6 +141,7 @@ describe("QueryTerminalSupport", () =>
                 "\u001B[?2026;2$y",
                 "\u001B[?1u",
                 "\u001BP1+r5463\u001B\\",
+                "\u001B]1337;Capabilities=FileSixel\u001B\\",
                 "\u001B_Gi=31;OK\u001B\\"
             ].join(""));
         });
@@ -113,10 +156,11 @@ describe("QueryTerminalSupport", () =>
         });
 
         expect(Support.Terminal).toMatchObject({ Kind: "kitty", Version: "0.42.1" });
-        expect(Support.CellSizePixels).toEqual({ Height: 20, Width: 10 });
+        expect(Support.CellSizePixels).toMatchObject({ X: 10, Y: 20 });
         expect(Support.BackgroundColor).toEqual({ Blue: 86, Green: 52, Red: 18 });
         expect(Support.ForegroundColor).toEqual({ Blue: 204, Green: 187, Red: 170 });
         expect(Support.Sixel).toBe(true);
+        expect(Support.ItermImages).toBe(true);
         expect(Support.KittyGraphics).toBe(true);
         expect(Support.TrueColor).toBe(true);
         expect(Support.Mouse.Granularity._tag).toBe("Both");

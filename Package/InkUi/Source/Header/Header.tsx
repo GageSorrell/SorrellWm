@@ -1,5 +1,5 @@
 /**
- *
+ * Sixel-rendered headers with font sizes taken from typical CSS defaults.
  *
  * @module @sorrell/ink-ui/Header/Header
  *
@@ -10,13 +10,13 @@
  */
 
 import * as React from "react";
-import { Text, type TextProps } from "../Text.tsx";
+import { Text, type TextProps } from "../Text/Text.tsx";
 import { Struct } from "effect";
 
 export/**
        * A primary header.  Defaults are applied to be consistent with the web `h1` element.
        *
-       * @category Text
+       * @category Component
        * @since 1.0.0
        */
 const H1: {
@@ -39,32 +39,30 @@ const H1: {
 export/**
        * A secondary header.  Defaults are applied to be consistent with the web `h2` element.
        *
-       * @category Text
+       * @category Component
        * @since 1.0.0
        */
 const H2: {
     (Props: TextProps): React.ReactNode;
-// } = ({ children, ...Tail }: TextProps) =>
-} = ({ children }: TextProps) =>
+} = ({ children, ...Tail }: TextProps) =>
 {
-    // const Defaults: TextProps =
-    //     {
-    //         fontSize: "1.5em",
-    //         fontWeight: "bold",
-    //         marginBottom: 1,
-    //         marginTop: 1
-    //     } as const;
+    const Defaults: TextProps =
+        {
+            fontSize: "1.5em",
+            fontWeight: "bold",
+            marginBottom: 1,
+            marginTop: 1
+        } as const;
 
-    // const Props: TextProps = Struct.assign(Defaults, Tail);
+    const Props: TextProps = Struct.assign(Defaults, Tail);
 
-    // return <Text { ...Props }>{ children }</Text>;
-    return <Text fontSize={ 2 }>{ children }</Text>;
+    return <Text { ...Props }>{ children }</Text>;
 };
 
 export/**
        * A tertiary header.  Defaults are applied to be consistent with the web `h3` element.
        *
-       * @category Text
+       * @category Component
        * @since 1.0.0
        */
 const H3: {
@@ -74,6 +72,7 @@ const H3: {
     const Defaults: TextProps =
         {
             fontSize: "1.17em",
+            fontWeight: "bold",
             marginBottom: 1,
             marginTop: 1
         } as const;
@@ -86,7 +85,7 @@ const H3: {
 export/**
        * A quaternary header.  Defaults are applied to be consistent with the web `h4` element.
        *
-       * @category Text
+       * @category Component
        * @since 1.0.0
        */
 const H4: {
@@ -96,6 +95,7 @@ const H4: {
     const Defaults: TextProps =
         {
             fontSize: "1.17em",
+            fontWeight: "bold",
             marginBottom: 1,
             marginTop: 2
         } as const;
@@ -108,7 +108,7 @@ const H4: {
 export/**
        * A quinary header.  Defaults are applied to be consistent with the web `h5` element.
        *
-       * @category Text
+       * @category Component
        * @since 1.0.0
        */
 const H5: {
@@ -118,6 +118,7 @@ const H5: {
     const Defaults: TextProps =
         {
             fontSize: "0.83em",
+            fontWeight: "bold",
             marginBottom: 1,
             marginTop: 2
         } as const;
@@ -130,7 +131,7 @@ const H5: {
 export/**
        * A senary header.  Defaults are applied to be consistent with the web `h6` element.
        *
-       * @category Text
+       * @category Component
        * @since 1.0.0
        */
 const H6: {
@@ -140,6 +141,7 @@ const H6: {
     const Defaults: TextProps =
         {
             fontSize: "0.67em",
+            fontWeight: "bold",
             marginBottom: 2,
             marginTop: 2
         } as const;

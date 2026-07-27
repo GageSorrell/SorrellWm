@@ -1,5 +1,5 @@
 /**
- *
+ * Centers text horizontally within an Ink layout region.
  *
  * @module @sorrell/ink-ui/CenterText
  *

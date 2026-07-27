@@ -1,5 +1,5 @@
 /**
- *
+ * Displays a title with optional content aligned to either side.
  *
  * @module @sorrell/ink-ui/Header/HeaderBar
  *
@@ -25,7 +25,7 @@ export interface HeaderBarProps
 export/**
        * Displays a title with optional content aligned to either side.
        *
-       * @category Display
+       * @category Component
        * @since 1.0.0
        */
 const HeaderBar = ({

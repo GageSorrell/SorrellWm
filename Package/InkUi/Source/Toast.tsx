@@ -1,5 +1,5 @@
 /**
- *
+ * Displays a transient, themed notification.
  *
  * @module @sorrell/ink-ui/Toast
  *
@@ -23,7 +23,7 @@ export interface ToastProps
 }
 
 export/**
-       * Displays a transient themed notification.
+       * Displays a transient, themed notification.
        *
        * @category Feedback
        * @since 1.0.0

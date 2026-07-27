@@ -1,7 +1,7 @@
 /**
  * Terminal glyph rendering mode names and defaults.
  *
- * @module @sorrell/ink-three/Terminal/RenderMode
+ * @module @sorrell/ink-ui/Three/Terminal/RenderMode
  *
  * @file      RenderMode.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

@@ -1,7 +1,7 @@
 /**
  *
  *
- * @module @sorrell/ink-ui/LaTeX/MathJax.d
+ * @module @sorrell/ink-ui/Latex/MathJax.d
  *
  * @file      MathJax.d.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

@@ -1,9 +1,9 @@
 /**
- * Render SVG content in Sixel-capable terminals.
+ * Render SVG content with the iTerm2 image protocol or Sixel.
  *
- * @module @sorrell/ink-ui/Svg
+ * @module @sorrell/ink-ui/Svg/Svg
  *
- * @file      index.tsx
+ * @file      Svg.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -11,12 +11,12 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { type RenderedImage, Resvg } from "@resvg/resvg-js";
 import { FINALIZER, introducer, sixelEncode } from "sixel";
+import { RegisterPainter, RequestPaint } from "./Paint.ts";
+import { type RenderedImage, Resvg } from "@resvg/resvg-js";
+import type { RgbColor, TerminalSupport } from "../Support/Types.ts";
 import { renderToStaticMarkup } from "react-dom/server";
-import { useTerminalSupport } from "../Support/Hook.js";
-import type { RgbColor, TerminalSupport } from "../Support/Types.js";
-import { RegisterPainter, RequestPaint } from "./Paint.js";
+import { useTerminalSupport } from "../Support/Hook.tsx";
 
 type SizeProps = Pick<Ink.BoxProps,
     | "width"
@@ -30,11 +30,13 @@ type SizeProps = Pick<Ink.BoxProps,
 /** An SVG element accepted by {@link Svg}. */
 export type SvgElement = React.ReactElement<React.SVGProps<SVGSVGElement>, "svg">;
 
-/** A component rendered when SVG/Sixel rendering or its terminal requirements fail. */
+/** A component rendered when SVG image rendering or its terminal requirements fail. */
 export type SvgFallback = React.ReactElement | React.ComponentType<{ readonly error: Error }>;
 
 /** Pixel-edge treatment used while rasterizing an SVG. */
-export type SvgRasterization = "crisp" | "smooth";
+export type SvgRasterization =
+    | "crisp"
+    | "smooth";
 
 /** Props for {@link Svg}. Dimensions use the same terminal-cell units as Ink's `Box`. */
 export interface SvgProps extends SizeProps
@@ -57,7 +59,11 @@ interface TerminalCapabilities
     readonly BackgroundColor?: RgbColor;
     readonly CellHeight: number;
     readonly CellWidth: number;
+    readonly ItermDoNotMoveCursor: boolean;
+    readonly Protocol: ImageProtocol;
 }
+
+type ImageProtocol = "iterm2" | "sixel";
 
 interface Position
 {
@@ -67,10 +73,12 @@ interface Position
 }
 
 /**
- * Renders one SVG element as a Sixel image.
+ * Renders one SVG element as an inline terminal image.
  *
  * When no fallback is supplied, the component emits nothing if the terminal
- * does not report both its cell pixel dimensions and Sixel support.
+ * does not report its cell pixel dimensions and at least one supported image
+ * protocol. The iTerm2 protocol is preferred when both it and Sixel are
+ * available.
  */
 export function Svg(Props: SvgProps): React.ReactElement | null
 {
@@ -91,24 +99,27 @@ export function Svg(Props: SvgProps): React.ReactElement | null
     const BoxReference = React.useRef<Ink.DOMElement>(null);
     const Mounted = React.useRef<boolean>(true);
     const RasterCache = React.useRef<
-        { readonly Key: string; readonly Sixel: string } | undefined
+        { readonly Image: string; readonly Key: string } | undefined
     >(undefined);
     const [ Failure, SetFailure ] = React.useState<Error>();
+    const Protocol: ImageProtocol | undefined = SelectImageProtocol(Support);
     const Capabilities: TerminalCapabilities | undefined = React.useMemo(() =>
-        Support?.Sixel === true && Support.CellSizePixels !== undefined
+        Protocol !== undefined && Support?.CellSizePixels !== undefined
             ? {
                 ...(Support.BackgroundColor === undefined
                     ? { }
                     : { BackgroundColor: Support.BackgroundColor }),
-                CellHeight: Support.CellSizePixels.Height,
-                CellWidth: Support.CellSizePixels.Width
+                CellHeight: Support.CellSizePixels.Y,
+                CellWidth: Support.CellSizePixels.X,
+                ItermDoNotMoveCursor: Support.Terminal.Kind === "wezterm",
+                Protocol
             }
             : undefined,
-    [ Support ]);
+    [ Protocol, Support ]);
     const CapabilityFailure: Error | undefined = Support === undefined
         ? undefined
-        : (Support.Sixel !== true
-            ? new Error("The terminal does not support Sixel rendering.")
+        : (Protocol === undefined
+            ? new Error("The terminal does not support iTerm2 image or Sixel rendering.")
             : (Support.CellSizePixels === undefined
                 ? new Error("The terminal cell pixel size could not be determined.")
                 : undefined));
@@ -143,7 +154,9 @@ export function Svg(Props: SvgProps): React.ReactElement | null
         Preparation.Svg?.Content,
         Capabilities?.BackgroundColor,
         Capabilities?.CellHeight,
-        Capabilities?.CellWidth
+        Capabilities?.CellWidth,
+        Capabilities?.ItermDoNotMoveCursor,
+        Capabilities?.Protocol
     ]);
 
     const Paint = React.useCallback((WriteValue: (Value: string) => void): void =>
@@ -176,22 +189,27 @@ export function Svg(Props: SvgProps): React.ReactElement | null
 
             const PixelWidth: number = Math.max(1, Math.round(CellWidth * Capabilities.CellWidth));
             const PixelHeight: number = Math.max(1, Math.round(CellHeight * Capabilities.CellHeight));
-            const CacheKey: string = `${ Prepared.Content }\u0000${ PixelWidth }x${ PixelHeight }`
-                + `\u0000${ rasterization }`;
-            let Sixel: string | undefined = RasterCache.current?.Key === CacheKey
-                ? RasterCache.current.Sixel
+            const CacheKey: string = `${ Capabilities.Protocol }\u0000${ Prepared.Content }`
+                + `\u0000${ PixelWidth }x${ PixelHeight }\u0000${ CellWidth }x${ CellHeight }`
+                + `\u0000${ rasterization }\u0000${ Capabilities.ItermDoNotMoveCursor }`;
+            let Image: string | undefined = RasterCache.current?.Key === CacheKey
+                ? RasterCache.current.Image
                 : undefined;
 
-            if (Sixel === undefined)
+            if (Image === undefined)
             {
-                Sixel = RenderSixel(
+                Image = RenderImage(
+                    Capabilities.Protocol,
                     Prepared,
                     PixelWidth,
                     PixelHeight,
+                    CellWidth,
+                    CellHeight,
                     Capabilities.BackgroundColor,
+                    Capabilities.ItermDoNotMoveCursor,
                     rasterization
                 );
-                RasterCache.current = { Key: CacheKey, Sixel };
+                RasterCache.current = { Image, Key: CacheKey };
             }
 
             const IsFullscreen: boolean = stdout.isTTY === true
@@ -204,7 +222,7 @@ export function Svg(Props: SvgProps): React.ReactElement | null
                 : "";
 
             WriteValue(
-                `\u001B7${ MoveUp > 0 ? `\u001B[${ MoveUp }A` : "" }\r${ MoveRight }${ Sixel }\u001B8`
+                `\u001B7${ MoveUp > 0 ? `\u001B[${ MoveUp }A` : "" }\r${ MoveRight }${ Image }\u001B8`
             );
         }
         catch (Error: unknown)
@@ -218,12 +236,19 @@ export function Svg(Props: SvgProps): React.ReactElement | null
 
     const PaintReference = React.useRef(Paint);
     PaintReference.current = Paint;
+    const RegisteredPainter = React.useCallback(
+        (WriteValue: (Value: string) => void): void =>
+            PaintReference.current(WriteValue),
+        [ ]
+    );
     React.useEffect(() =>
     {
-        return RegisterPainter(stdout, (WriteValue: (Value: string) => void): void =>
-            PaintReference.current(WriteValue));
-    }, [ stdout ]);
-    React.useEffect(() => RequestPaint(stdout), [ Paint, stdout ]);
+        return RegisterPainter(stdout, RegisteredPainter);
+    }, [ RegisteredPainter, stdout ]);
+    React.useEffect(
+        () => RequestPaint(stdout, RegisteredPainter),
+        [ Paint, RegisteredPainter, stdout ]
+    );
 
     const RenderingError: Error | undefined = Preparation.Error ?? CapabilityFailure ?? Failure;
 
@@ -261,6 +286,20 @@ export function Svg(Props: SvgProps): React.ReactElement | null
     );
 }
 
+/** Prefer iTerm2 inline images and retain Sixel as the fallback. */
+function SelectImageProtocol(Support: TerminalSupport | undefined): ImageProtocol | undefined
+{
+    if (Support?.ItermImages === true)
+    {
+        return "iterm2";
+    }
+    if (Support?.Sixel === true)
+    {
+        return "sixel";
+    }
+    return undefined;
+}
+
 /**
  * Prepare an SVG `string` or `SVGElement` to be rasterized.
  *
@@ -286,6 +325,63 @@ function PrepareSvg(Child: string | SvgElement): PreparedSvg
     return { Content, Height, Width };
 }
 
+/** Rasterize and encode an SVG with the selected terminal image protocol. */
+function RenderImage(
+    Protocol: ImageProtocol,
+    SvgValue: PreparedSvg,
+    PixelWidth: number,
+    PixelHeight: number,
+    CellWidth: number,
+    CellHeight: number,
+    BackgroundColor: RgbColor | undefined,
+    ItermDoNotMoveCursor: boolean,
+    Rasterization: SvgRasterization
+): string
+{
+    return Protocol === "iterm2"
+        ? RenderItermImage(
+            SvgValue,
+            PixelWidth,
+            PixelHeight,
+            CellWidth,
+            CellHeight,
+            ItermDoNotMoveCursor,
+            Rasterization
+        )
+        : RenderSixel(
+            SvgValue,
+            PixelWidth,
+            PixelHeight,
+            BackgroundColor,
+            Rasterization
+        );
+}
+
+/** Encode a rasterized SVG with the OSC 1337 `File` inline-image protocol. */
+function RenderItermImage(
+    SvgValue: PreparedSvg,
+    PixelWidth: number,
+    PixelHeight: number,
+    CellWidth: number,
+    CellHeight: number,
+    DoNotMoveCursor: boolean,
+    Rasterization: SvgRasterization
+): string
+{
+    const Png: Buffer = RasterizeSvg(
+        SvgValue,
+        PixelWidth,
+        PixelHeight,
+        Rasterization,
+        true
+    ).asPng();
+    const ArgumentsValue: string = `inline=1;size=${ Png.length };width=${ CellWidth }`
+        + `;height=${ CellHeight };preserveAspectRatio=1`
+        + (DoNotMoveCursor ? ";doNotMoveCursor=1" : "");
+
+    return `\u001B]1337;File=${ ArgumentsValue }:${ Png.toString("base64") }\u0007`;
+}
+
 /** Render a rasterized SVG image into sixel content. */
 function RenderSixel(
     SvgValue: PreparedSvg,
@@ -295,10 +391,8 @@ function RenderSixel(
     Rasterization: SvgRasterization
 ): string
 {
-    const Scale: number = Math.min(PixelWidth / SvgValue.Width, PixelHeight / SvgValue.Height);
-    const Rendered: RenderedImage = new Resvg(SvgValue.Content, {
-        fitTo: { mode: "zoom", value: Scale }
-    }).render();
+    const Rendered: RenderedImage =
+        RasterizeSvg(SvgValue, PixelWidth, PixelHeight, Rasterization, false);
     const Canvas: Buffer = Buffer.alloc(PixelWidth * PixelHeight * 4);
     const CopyWidth: number = Math.min(PixelWidth, Rendered.width);
     const CopyHeight: number = Math.min(PixelHeight, Rendered.height);
@@ -325,6 +419,37 @@ function RenderSixel(
     return introducer(1)
         + sixelEncode(Canvas, PixelWidth, PixelHeight, Palette)
         + FINALIZER;
+}
+
+/** Rasterize an SVG to fit within a terminal-cell pixel rectangle. */
+function RasterizeSvg(
+    SvgValue: PreparedSvg,
+    PixelWidth: number,
+    PixelHeight: number,
+    Rasterization: SvgRasterization,
+    UseSvgCrispEdges: boolean
+): RenderedImage
+{
+    const Scale: number = Math.min(PixelWidth / SvgValue.Width, PixelHeight / SvgValue.Height);
+    const Content: string = Rasterization === "crisp" && UseSvgCrispEdges
+        ? WithCrispEdges(SvgValue.Content)
+        : SvgValue.Content;
+
+    return new Resvg(Content, {
+        fitTo: { mode: "zoom", value: Scale }
+    }).render();
+}
+
+/** Make crisp rendering available to PNG-backed protocols as well as Sixel. */
+function WithCrispEdges(Content: string): string
+{
+    return Content.replace(
+        /<svg\b([^>]*)>/u,
+        (Element: string, Attributes: string): string =>
+            /\bshape-rendering\s*=/u.test(Attributes)
+                ? Element
+                : `<svg shape-rendering="crispEdges"${ Attributes }>`
+    );
 }
 
 /** Preserve transparent pixels and composite partial alpha when the terminal background is known. */
@@ -377,13 +502,11 @@ function CrispAlpha(Value: number): number
     return Math.round(Contrasted * 7) / 7 * 255;
 }
 
-function Blend(Foreground: number, Background: number, Opacity: number): number
-{
-    return Math.round(Foreground * Opacity + Background * (1 - Opacity));
-}
+const Blend = (Foreground: number, Background: number, Opacity: number): number =>
+    Math.round(Foreground * Opacity + Background * (1 - Opacity));
 
 /** Use exact colors for ordinary SVGs and a bounded palette for complex gradients. */
-function MakePalette(Canvas: Buffer): Array<[ number, number, number ]>
+const MakePalette = (Canvas: Buffer): Array<[ number, number, number ]> =>
 {
     const Colors = new Map<number, [ number, number, number ]>();
     for (let Offset: number = 0; Offset < Canvas.length; Offset += 4)
@@ -397,9 +520,9 @@ function MakePalette(Canvas: Buffer): Array<[ number, number, number ]>
         if (Colors.size > 256) {return FixedPalette();}
     }
     return Colors.size === 0 ? [ [ 0, 0, 0 ] ] : [ ...Colors.values() ];
-}
+};
 
-function FixedPalette(): Array<[ number, number, number ]>
+const FixedPalette = (): Array<[ number, number, number ]> =>
 {
     const Palette: Array<[ number, number, number ]> = [ ];
     const Levels: ReadonlyArray<number> = [ 0, 51, 102, 153, 204, 255 ];
@@ -416,10 +539,10 @@ function FixedPalette(): Array<[ number, number, number ]>
         Palette.push([ Gray, Gray, Gray ]);
     }
     return Palette;
-}
+};
 
 /** Get the position of a given element on the screen. */
-function GetPosition(Node: Ink.DOMElement | null): Position | undefined
+const GetPosition = (Node: Ink.DOMElement | null): Position | undefined =>
 {
     if (Node?.yogaNode === undefined)
     {
@@ -444,15 +567,15 @@ function GetPosition(Node: Ink.DOMElement | null): Position | undefined
     }
 
     return { AppHeight, Column, Row };
-}
+};
 
 /** Whether a given boundary is contained by the screen. */
-function IsFullyVisible(
+const IsFullyVisible = (
     PositionValue: Position,
     Width: number,
     Height: number,
     Stdout: NodeJS.WriteStream
-): boolean
+): boolean =>
 {
     const Columns: number | undefined = Stdout.columns;
     const Rows: number | undefined = Stdout.rows;
@@ -464,7 +587,7 @@ function IsFullyVisible(
         && PositionValue.Column >= 0
         && PositionValue.Row >= FirstVisibleRow
         && PositionValue.Row + Height <= PositionValue.AppHeight;
-}
+};
 
 /** Create a fallback element. */
 function RenderFallback(Fallback: SvgFallback | undefined, Error: Error): React.ReactElement | null

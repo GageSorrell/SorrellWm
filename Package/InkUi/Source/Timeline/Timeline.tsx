@@ -1,5 +1,5 @@
 /**
- * Generic timeline components ported from Noodle's response history views.
+ * Timelines display events that occur over time.
  *
  * @module @sorrell/ink-ui/Timeline
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Timelines display events that occur over time.
  *
  * @module @sorrell/ink-ui/Timeline
  *

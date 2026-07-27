@@ -101,12 +101,13 @@ interface DragState
     readonly Offset: number;
 }
 
-const EmptyMetrics: ScrollMetrics = {
-    ContentHeight: 0,
-    ContentWidth: 0,
-    ViewportHeight: 0,
-    ViewportWidth: 0
-};
+const EmptyMetrics: ScrollMetrics =
+    {
+        ContentHeight: 0,
+        ContentWidth: 0,
+        ViewportHeight: 0,
+        ViewportWidth: 0
+    };
 
 /** Calculate a proportional scrollbar thumb at block-element eighth-cell resolution. */
 export function GetScrollbarGeometry(

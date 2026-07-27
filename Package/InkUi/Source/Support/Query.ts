@@ -9,15 +9,15 @@
  * @license   MIT
  */
 
-import { DetectTerminal, GetPassiveSupport } from "./Detect.js";
+import { DetectTerminal, GetPassiveSupport, ParseTerminalFeatures } from "./Detect.js";
 import {
     MouseGranularity,
     type MouseSupport,
-    type PixelSize,
     type RgbColor,
     type TerminalQueryOptions,
     type TerminalSupport
 } from "./Types.js";
+import { IntPoint } from "@sorrell/math";
 
 const QueryCache = new WeakMap<NodeJS.WriteStream, Promise<TerminalSupport>>();
 const ModeNumbers = [ 1000, 1002, 1003, 1004, 1006, 1016, 2004, 2026 ] as const;
@@ -46,12 +46,12 @@ export function QueryTerminalSupport(Options: TerminalQueryOptions = { }): Promi
     return Query;
 }
 
-async function QuerySupport(
+const QuerySupport = async (
     Stdin: NodeJS.ReadStream,
     Stdout: NodeJS.WriteStream,
     Environment: NodeJS.ProcessEnv,
     Options: TerminalQueryOptions
-): Promise<TerminalSupport>
+): Promise<TerminalSupport> =>
 {
     const Passive: TerminalSupport = GetPassiveSupport(Environment);
     if (!Stdin.isTTY || !Stdout.isTTY) {return Passive;}
@@ -65,13 +65,13 @@ async function QuerySupport(
     {
         return Passive;
     }
-}
+};
 
-function CollectResponses(
+const CollectResponses = (
     Stdin: NodeJS.ReadStream,
     Stdout: NodeJS.WriteStream,
     Options: TerminalQueryOptions
-): Promise<string>
+): Promise<string> =>
 {
     /* eslint-disable-next-line @typescript-eslint/typedef */
     return new Promise((Resolve) =>
@@ -125,11 +125,13 @@ function CollectResponses(
             const KittyGraphicsQuery: string = "\u001B_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\u001B\\";
             const TrueColorQuery: string = "\u001BP+q5463;524742\u001B\\";
             const ItermCellQuery: string = "\u001B]1337;ReportCellSize\u0007";
+            const TerminalFeaturesQuery: string = "\u001B]1337;Capabilities\u001B\\";
             Stdout.write(
                 "\u001B]10;?\u001B\\\u001B]11;?\u001B\\\u001B[16t\u001B[14t\u001B[>q\u001B[?u" +
                 ModeQueries +
                 TrueColorQuery +
                 ItermCellQuery +
+                TerminalFeaturesQuery +
                 KittyGraphicsQuery +
                 "\u001B[c"
             );
@@ -139,28 +141,36 @@ function CollectResponses(
             Timeout = setTimeout(Finish, 0);
         }
     });
-}
+};
 
 /* eslint-disable no-control-regex */
-function MergeResponse(
+
+const MergeResponse = (
     Passive: TerminalSupport,
     Response: string,
     Stdout: NodeJS.WriteStream,
     Environment: NodeJS.ProcessEnv
-): TerminalSupport
+): TerminalSupport =>
 {
     const VersionReport: string | undefined =
         MatchValue(Response, /\u001BP>\|([^\u001B\u0007]+)(?:\u001B\\|\u0007)/);
 
     const Terminal = DetectTerminal(Environment, VersionReport);
     const Modes: ReadonlyMap<number, boolean> = ParseModes(Response);
-    const CellSizePixels: PixelSize | undefined = ParseCellSize(Response, Stdout);
+    const CellSizePixels: IntPoint.IntPoint | undefined = ParseCellSize(Response, Stdout);
     const BackgroundColor: RgbColor | undefined = ParseBackgroundColor(Response);
     const ForegroundColor: RgbColor | undefined = ParseDynamicColor(Response, 10);
     const Attributes: string | undefined = MatchValue(Response, /\u001B\[\?(\d+(?:;\d+)*)c/);
-    const Sixel: boolean | undefined = Attributes === undefined
-        ? Passive.Sixel
-        : Attributes.split(";").includes("4");
+    const FeatureReport: string | undefined = MatchValue(
+        Response,
+        /\u001B\]1337;Capabilities=([A-Za-z0-9]*)(?:\u001B\\|\u0007)/
+    );
+    const Features: ReadonlySet<string> | undefined = ParseTerminalFeatures(FeatureReport);
+    const Sixel: boolean | undefined = Features === undefined
+        ? (Attributes === undefined
+            ? Passive.Sixel
+            : Attributes.split(";").includes("4"))
+        : Features.has("Sixel");
     const KittyReply: RegExpMatchArray | null = Response.match(/\u001B_Gi=31;([^\u001B]*)(?:\u001B\\)/);
     const KittyGraphics: boolean | undefined = KittyReply === null
         ? (Attributes === undefined ? Passive.KittyGraphics : false)
@@ -172,33 +182,39 @@ function MergeResponse(
     const Mouse: MouseSupport = MakeMouseSupport(CellMouse, PixelMouse, SgrMouse);
     const KittyKeyboardReply: boolean | undefined = /\u001B\[\?\d+u/.test(Response) ? true : undefined;
     const ItermCellSize: boolean = /\u001B\]1337;ReportCellSize=/.test(Response);
+    const ResolvedTerminal = ItermCellSize && Terminal.Kind === "unknown"
+        ? DetectTerminal({ ...Environment, TERM_PROGRAM: "iTerm.app" }, VersionReport)
+        : Terminal;
+    const IdentityItermImages: boolean | undefined =
+        GetPassiveSupport(Environment, ResolvedTerminal).ItermImages;
 
     return {
         ...Passive,
         BackgroundColor,
         BracketedPaste: Modes.get(2004) ?? Passive.BracketedPaste,
         CellSizePixels,
+        ColorDepth: TrueColorReply === true ? 24 : Passive.ColorDepth,
         FocusEvents: Modes.get(1004) ?? Passive.FocusEvents,
         ForegroundColor,
+        ItermImages: Features === undefined
+            ? (ItermCellSize ? true : IdentityItermImages)
+            : Features.has("File"),
         KittyGraphics,
         KittyKeyboard: KittyKeyboardReply ?? Passive.KittyKeyboard,
         Mouse,
         Sixel,
         SynchronizedOutput: Modes.get(2026) ?? Passive.SynchronizedOutput,
-        Terminal: ItermCellSize && Terminal.Kind === "unknown"
-            ? DetectTerminal({ ...Environment, TERM_PROGRAM: "iTerm.app" }, VersionReport)
-            : Terminal,
-        TrueColor: TrueColorReply ?? Passive.TrueColor,
-        ColorDepth: TrueColorReply === true ? 24 : Passive.ColorDepth
+        Terminal: ResolvedTerminal,
+        TrueColor: TrueColorReply ?? Passive.TrueColor
     };
-}
+};
 
-function ParseBackgroundColor(Response: string): RgbColor | undefined
+const ParseBackgroundColor = (Response: string): RgbColor | undefined =>
 {
     return ParseDynamicColor(Response, 11);
-}
+};
 
-function ParseDynamicColor(Response: string, Slot: number): RgbColor | undefined
+const ParseDynamicColor = (Response: string, Slot: number): RgbColor | undefined =>
 {
     const Pattern = new RegExp(
         `\\u001B\\]${ Slot };rgb:([\\da-f]{1,4})/([\\da-f]{1,4})/([\\da-f]{1,4})` +
@@ -219,9 +235,9 @@ function ParseDynamicColor(Response: string, Slot: number): RgbColor | undefined
     return Red === undefined || Green === undefined || Blue === undefined
         ? undefined
         : { Blue, Green, Red };
-}
+};
 
-function ScaleHexColor(Value: string | undefined): number | undefined
+const ScaleHexColor = (Value: string | undefined): number | undefined =>
 {
     if (Value === undefined || Value.length === 0)
     {
@@ -232,9 +248,9 @@ function ScaleHexColor(Value: string | undefined): number | undefined
     const Maximum: number = 16 ** Value.length - 1;
 
     return Number.isFinite(Parsed) ? Math.round(Parsed / Maximum * 255) : undefined;
-}
+};
 
-function ParseModes(Response: string): ReadonlyMap<number, boolean>
+const ParseModes = (Response: string): ReadonlyMap<number, boolean> =>
 {
     const Modes = new Map<number, boolean>();
     const Pattern: RegExp = /\u001B\[\?(\d+);(\d+)\$y/g;
@@ -245,25 +261,28 @@ function ParseModes(Response: string): ReadonlyMap<number, boolean>
         if (Number.isFinite(Mode) && Number.isFinite(Status)) {Modes.set(Mode, Status !== 0);}
     }
     return Modes;
-}
+};
 
-function ParseCellSize(Response: string, Stdout: NodeJS.WriteStream): PixelSize | undefined
+const ParseCellSize = (
+    Response: string,
+    Stdout: NodeJS.WriteStream
+): IntPoint.IntPoint | undefined =>
 {
     const CellMatch: RegExpMatchArray | null = Response.match(/\u001B\[6;(\d+);(\d+);?t/);
-    let Height: number | undefined = PositiveNumber(CellMatch?.[1]);
-    let Width: number | undefined = PositiveNumber(CellMatch?.[2]);
+    let Y: number | undefined = PositiveNumber(CellMatch?.[1]);
+    let X: number | undefined = PositiveNumber(CellMatch?.[2]);
     const ItermMatch: RegExpMatchArray | null = Response.match(
         /\u001B\]1337;ReportCellSize=([\d.]+);([\d.]+)(?:;([\d.]+))?(?:\u0007|\u001B\\)/
     );
 
-    if ((Height === undefined || Width === undefined) && ItermMatch !== null)
+    if ((Y === undefined || X === undefined) && ItermMatch !== null)
     {
         const Scale: number = PositiveNumber(ItermMatch[3]) ?? 1;
-        Height = (PositiveNumber(ItermMatch[1]) ?? 0) * Scale;
-        Width = (PositiveNumber(ItermMatch[2]) ?? 0) * Scale;
+        Y = (PositiveNumber(ItermMatch[1]) ?? 0) * Scale;
+        X = (PositiveNumber(ItermMatch[2]) ?? 0) * Scale;
     }
 
-    if (Height === undefined || Width === undefined || Height <= 0 || Width <= 0)
+    if (Y === undefined || X === undefined || Y <= 0 || X <= 0)
     {
         const WindowMatch: RegExpMatchArray | null = Response.match(/\u001B\[4;(\d+);(\d+);?t/);
         const WindowHeight: number | undefined = PositiveNumber(WindowMatch?.[1]);
@@ -272,30 +291,37 @@ function ParseCellSize(Response: string, Stdout: NodeJS.WriteStream): PixelSize 
             && Stdout.rows !== undefined && Stdout.rows > 0
             && Stdout.columns !== undefined && Stdout.columns > 0)
         {
-            Height = WindowHeight / Stdout.rows;
-            Width = WindowWidth / Stdout.columns;
+            Y = WindowHeight / Stdout.rows;
+            X = WindowWidth / Stdout.columns;
         }
     }
 
-    return Height === undefined || Width === undefined || Height <= 0 || Width <= 0
+    return Y === undefined || X === undefined || Y <= 0 || X <= 0
         ? undefined
-        : { Height, Width };
-}
+        : IntPoint.IntPoint(X, Y);
+};
 
-function ParseTrueColorReply(Response: string): boolean | undefined
+const ParseTrueColorReply = (Response: string): boolean | undefined =>
 {
-    // XTGETTCAP returns 1+r for a recognized capability and 0+r otherwise.
-    if (/\u001BP1\+r(?:5463|524742)(?:=|;|\u001B)/.test(Response)) {return true;}
-    if (/\u001BP0\+r(?:5463|524742)(?:;|\u001B)/.test(Response)) {return false;}
+    /* XTGETTCAP returns 1+r for a recognized capability and 0+r otherwise. */
+    if (/\u001BP1\+r(?:5463|524742)(?:=|;|\u001B)/.test(Response))
+    {
+        return true;
+    }
+    if (/\u001BP0\+r(?:5463|524742)(?:;|\u001B)/.test(Response))
+    {
+        return false;
+    }
     return undefined;
-}
+};
 
 /* eslint-enable no-control-regex */
-function MakeMouseSupport(
+
+const MakeMouseSupport = (
     Cell: boolean | undefined,
     Pixel: boolean | undefined,
     Sgr: boolean | undefined
-): MouseSupport
+): MouseSupport =>
 {
     const Supported: boolean | undefined = Cell === true || Pixel === true
         ? true
@@ -308,24 +334,24 @@ function MakeMouseSupport(
                 ? MouseGranularity.Cell()
                 : (Supported === false ? MouseGranularity.None() : MouseGranularity.Unknown())));
     return { Cell, Granularity, Pixel, Sgr, Supported };
-}
+};
 
-function AnyMode(Modes: ReadonlyMap<number, boolean>, Values: ReadonlyArray<number>): boolean | undefined
+const AnyMode = (Modes: ReadonlyMap<number, boolean>, Values: ReadonlyArray<number>): boolean | undefined =>
 {
     const Answers: ReadonlyArray<boolean | undefined> = Values.map((Value: number) => Modes.get(Value));
     if (Answers.includes(true)) {return true;}
     if (Answers.every((Value: boolean | undefined) => Value === false)) {return false;}
     return undefined;
-}
+};
 
-function MatchValue(Value: string, Pattern: RegExp): string | undefined
+const MatchValue = (Value: string, Pattern: RegExp): string | undefined =>
 {
     return Value.match(Pattern)?.[1];
-}
+};
 
-function PositiveNumber(Value: string | undefined): number | undefined
+const PositiveNumber = (Value: string | undefined): number | undefined =>
 {
     if (Value === undefined) {return undefined;}
     const Result: number = Number(Value);
     return Number.isFinite(Result) && Result > 0 ? Result : undefined;
-}
+};

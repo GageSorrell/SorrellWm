@@ -15,9 +15,9 @@ import { SimpleStory } from "./Factory.js";
 
 const Basic = (): React.ReactElement => <ThemeProvider Theme={ { ...DefaultTheme, Primary: "#ff79c6" } }><Badge>Themed</Badge></ThemeProvider>;
 export default SimpleStory({
-    Basic: { Code: "<ThemeProvider Theme={theme}>…</ThemeProvider>", Preview: Basic },
+    Basic: { Code: "<ThemeProvider Theme={theme}>{ /* ... */ }</ThemeProvider>", Preview: Basic },
     Description: "Supplies a consistent color and component-style theme to descendants.",
-    Examples: [ { Code: "<ThemeProvider Theme={{...DefaultTheme, Primary: \"#ff79c6\"}}>…</ThemeProvider>", Preview: Basic, Title: "Palette override" } ],
+    Examples: [ { Code: "<ThemeProvider Theme={{...DefaultTheme, Primary: \"#ff79c6\"}}>{ /* ... */ }</ThemeProvider>", Preview: Basic, Title: "Palette override" } ],
     Name: "ThemeProvider",
     Source: { Component: "ThemeProvider", Path: "Theme.tsx", Props: "ThemeProviderProps" }
 });

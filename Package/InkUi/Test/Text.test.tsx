@@ -11,7 +11,8 @@
 
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import { GetDefaultFontFamily, Text } from "../Source/Text.js";
+import { Resvg } from "@resvg/resvg-js";
+import { GetDefaultFontFamily, Text } from "../Source/Text/Text.js";
 import {
     LayoutTextSvg,
     ParseFontSize,
@@ -166,5 +167,35 @@ describe("Text SVG layout", () =>
 
         expect(Layout.Width % 10).toBe(0);
         expect(Layout.Height % 20).toBe(0);
+    });
+
+    it("synthesizes visible weight when the terminal font has no bold face", () =>
+    {
+        const Render = (FontWeight: string): number =>
+        {
+            const Layout = LayoutTextSvg({
+                Style: { ...Style, FontWeight },
+                Text: "Tertiary heading",
+                Wrap: {
+                    Hyphens: undefined,
+                    LineBreak: undefined,
+                    OverflowWrap: undefined,
+                    TabSize: undefined,
+                    WhiteSpace: undefined,
+                    WordBreak: undefined
+                }
+            });
+            const Pixels: Uint8Array = new Resvg(Layout.Svg, {
+                font: { defaultFontFamily: "monospace", loadSystemFonts: true }
+            }).render().pixels;
+            let Alpha = 0;
+            for (let Offset: number = 3; Offset < Pixels.length; Offset += 4)
+            {
+                Alpha += Pixels[Offset] ?? 0;
+            }
+            return Alpha;
+        };
+
+        expect(Render("bold")).toBeGreaterThan(Render("normal"));
     });
 });

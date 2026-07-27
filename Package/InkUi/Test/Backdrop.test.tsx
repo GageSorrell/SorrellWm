@@ -73,6 +73,7 @@ describe("BackdropProvider", () =>
             .toBe("rgb(33, 41, 49)");
         expect((ExplicitBox as unknown as Ink.DOMElement).style.backgroundColor)
             .toBe("#abcdef");
+        expect(Mocks.QueryTerminalSupport).toHaveBeenCalledTimes(1);
     });
 
     it("uses an explicit backdrop color without changing the Box default", async () =>

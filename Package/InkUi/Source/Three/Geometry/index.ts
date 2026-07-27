@@ -1,7 +1,7 @@
 /**
  * Models and utilities for geometry in ThreeJS.
  *
- * @module @sorrell/ink-three/Geometry
+ * @module @sorrell/ink-ui/Three/Geometry
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

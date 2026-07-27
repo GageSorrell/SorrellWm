@@ -1,5 +1,5 @@
 /**
- *
+ * An example consists of rendered content, and the code used to generate that content.
  *
  * @module @sorrell/ink-ui/Showcase/Documentation/Example
  *
@@ -11,23 +11,30 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { Box } from "../../Source/Box/index.js";
 import {
-    type FocusableState,
     FocusScope,
+    type FocusableState,
     useFocusable,
     useRoutedInput
 } from "../../Source/Interaction/index.js";
-import { useTheme } from "../../Source/Theme.js";
+import { Box } from "../../Source/Box/index.js";
 import type { StoryExample } from "../Story.js";
+import { useTheme } from "../../Source/Theme.js";
 
+/** {@inheritDoc Example} */
 export interface ExampleProps
 {
     readonly AvailableWidth: number;
     readonly Example: StoryExample;
 }
 
-export function Example({ AvailableWidth, Example: Definition }: ExampleProps): React.ReactElement
+export/**
+       * An example consists of rendered content, and the code used to generate that content.
+       *
+       * @category Documentation
+       * @since 1.0.0
+       */
+const Example = ({ AvailableWidth, Example: Definition }: ExampleProps): React.ReactElement =>
 {
     const Theme = useTheme();
     const Wide = AvailableWidth >= 86;
@@ -53,8 +60,11 @@ export function Example({ AvailableWidth, Example: Definition }: ExampleProps): 
                             </FocusScope>
                         </StoryErrorBoundary>
                     </Panel>
-                    <Panel Title="Code"
-                        Width="50%"><Code Value={ Definition.Code } /></Panel>
+                    <Panel
+                        Title="Code"
+                        Width="50%">
+                        <Code Value={ Definition.Code } />
+                    </Panel>
                 </Ink.Box>
                 : <Ink.Box flexDirection="column">
                     <ExampleTabs Id={ `${ ExampleId }-tabs` }
@@ -74,7 +84,7 @@ export function Example({ AvailableWidth, Example: Definition }: ExampleProps): 
                 </Ink.Box> }
         </Ink.Box>
     );
-}
+};
 
 interface ExampleTabsProps
 {
@@ -83,14 +93,22 @@ interface ExampleTabsProps
     readonly Value: "preview" | "code";
 }
 
-function ExampleTabs({ Id, OnChange, Value }: ExampleTabsProps): React.ReactElement
+const ExampleTabs = ({ Id, OnChange, Value }: ExampleTabsProps): React.ReactElement =>
 {
     const Theme = useTheme();
     const Focus: FocusableState = useFocusable({ Id });
-    const Items = [
-        { Id: "preview", Label: "Preview" },
-        { Id: "code", Label: "Code" }
-    ] as const;
+
+    interface Item
+    {
+        readonly Id: "code" | "preview";
+        readonly Label: string;
+    }
+
+    const Items: ReadonlyArray<Item> =
+        [
+            { Id: "preview", Label: "Preview" },
+            { Id: "code", Label: "Code" }
+        ] as const;
 
     useRoutedInput((Input: string, Key: Ink.Key): boolean =>
     {
@@ -115,7 +133,7 @@ function ExampleTabs({ Id, OnChange, Value }: ExampleTabsProps): React.ReactElem
             <Ink.Text color={ Focus.Focused ? Theme.Primary : Theme.TextMuted }>
                 { Focus.Focused ? "› " : "  " }
             </Ink.Text>
-            { Items.map((Item) =>
+            { Items.map((Item: Item) =>
             {
                 const Selected = Value === Item.Id;
                 return (
@@ -125,8 +143,7 @@ function ExampleTabs({ Id, OnChange, Value }: ExampleTabsProps): React.ReactElem
                         {
                             Focus.Focus();
                             OnChange(Item.Id);
-                        } }
-                        paddingX={ 1 }>
+                        } }>
                         <Ink.Text
                             { ...(Focus.Focused && Selected
                                 ? { backgroundColor: Theme.BackgroundElement }
@@ -141,7 +158,7 @@ function ExampleTabs({ Id, OnChange, Value }: ExampleTabsProps): React.ReactElem
             }) }
         </Box>
     );
-}
+};
 
 interface StoryErrorBoundaryProps extends React.PropsWithChildren
 {
@@ -193,10 +210,13 @@ class StoryErrorBoundary extends React.Component<
     }
 }
 
-function Panel({ children, Title, Width }: React.PropsWithChildren<{
+interface PanelProps extends React.PropsWithChildren
+{
     readonly Title: string;
     readonly Width: Ink.BoxProps["width"];
-}>): React.ReactElement
+}
+
+const Panel = ({ children, Title, Width }: PanelProps): React.ReactElement =>
 {
     const Theme = useTheme();
     return (
@@ -204,16 +224,24 @@ function Panel({ children, Title, Width }: React.PropsWithChildren<{
             borderColor={ Theme.Border }
             borderStyle="round"
             flexDirection="column"
+            gap={ 1 }
             minHeight={ 12 }
             paddingX={ 1 }
             width={ Width }>
-            <Ink.Text color={ Theme.TextMuted }>{ Title }</Ink.Text>
+            <Ink.Text color={ Theme.TextMuted }>
+                { Title }
+            </Ink.Text>
             { children }
         </Ink.Box>
     );
+};
+
+interface CodeProps
+{
+    readonly Value: string;
 }
 
-function Code({ Value }: { readonly Value: string }): React.ReactElement
+const Code = ({ Value }: CodeProps): React.ReactElement =>
 {
     const Theme = useTheme();
     return (
@@ -227,4 +255,4 @@ function Code({ Value }: { readonly Value: string }): React.ReactElement
             )) }
         </Ink.Text>
     );
-}
+};

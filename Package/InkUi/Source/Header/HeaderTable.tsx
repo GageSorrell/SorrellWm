@@ -1,5 +1,5 @@
 /**
- *
+ * Renders aligned name-value rows suitable for headers and metadata.
  *
  * @module @sorrell/ink-ui/Header/HeaderTable
  *
@@ -11,8 +11,19 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import type { HeaderTableRow } from "./HeaderTableRow.tsx";
 import { useTheme } from "../Theme.js";
+
+/**
+ * The row in a HeaderTable.
+ *
+ * @category Display
+ * @since 1.0.0
+ */
+export interface HeaderTableRow
+{
+    readonly Name: string;
+    readonly Value: string;
+}
 
 /** {@inheritDoc HeaderTable} */
 export interface HeaderTableProps
@@ -23,7 +34,7 @@ export interface HeaderTableProps
 export/**
        * Renders aligned name-value rows suitable for headers and metadata.
        *
-       * @category Display
+       * @category Component
        * @since 1.0.0
        */
 const HeaderTable = ({ Rows }: HeaderTableProps): React.ReactNode =>

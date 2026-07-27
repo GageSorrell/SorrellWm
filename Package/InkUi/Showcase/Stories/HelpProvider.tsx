@@ -29,14 +29,16 @@ const Basic = (): React.ReactElement => (
 export default SimpleStory({
     Basic:
     {
-        Code: "<HelpProvider>\n  <Tooltip content=\"Contextual help\"><Box>Hover me</Box></Tooltip>\n</HelpProvider>",
+        Code:
+            "<HelpProvider>\n  <Tooltip content=\"Contextual help\"><Box>Hover me</Box>" +
+            "</Tooltip>\n</HelpProvider>",
         Preview: Basic
     },
     Description: "Coordinates delayed mouse tooltips and keyboard-driven application Help Mode.",
     Examples:
     [
         {
-            Code: "<Tooltip content=\"Saved files\" position=\"right\">…</Tooltip>",
+            Code: "<Tooltip content=\"Saved files\" position=\"right\">{ /* ... */ }</Tooltip>",
             Preview: Basic,
             Title: "Positioned tooltip"
         }

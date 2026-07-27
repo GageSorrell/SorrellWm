@@ -1,5 +1,5 @@
 /**
- *
+ * Displays a checked or unchecked terminal checkbox.
  *
  * @module @sorrell/ink-ui/Checkbox
  *

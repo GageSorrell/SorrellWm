@@ -19,7 +19,10 @@ const DefaultDarkenRatio = 0.18;
 const VeryDarkDarkenRatio = 0.45;
 const VeryDarkLuminance = 0.025;
 
-const TerminalBackgroundContext = React.createContext<string | undefined>(undefined);
+// `undefined` means that no provider exists; `null` means that a provider is
+// present but terminal detection did not produce a background color.
+const TerminalBackgroundContext =
+    React.createContext<string | null | undefined>(undefined);
 
 /** Props for {@link BackdropProvider}. */
 export interface BackdropProviderProps extends React.PropsWithChildren
@@ -43,24 +46,19 @@ export function BackdropProvider({
     const TerminalRgb: RgbColor | undefined = Support?.BackgroundColor;
     const TerminalBackground: string | undefined = RgbToCss(TerminalRgb);
 
-    if (TerminalRgb === undefined || TerminalBackground === undefined)
-    {
-        return <>{ children }</>;
-    }
-
-    const BackdropColor: string = backgroundColor
-        ?? DarkenTerminalBackground(TerminalRgb);
-
     return (
-        <TerminalBackgroundContext.Provider value={ TerminalBackground }>
-            <Ink.Box
-                backgroundColor={ BackdropColor }
-                flexDirection="column"
-                flexGrow={ 1 }
-                height="100%"
-                width="100%">
-                { children }
-            </Ink.Box>
+        <TerminalBackgroundContext.Provider value={ TerminalBackground ?? null }>
+            { TerminalRgb === undefined || TerminalBackground === undefined
+                ? children
+                : <Ink.Box
+                    backgroundColor={ backgroundColor
+                        ?? DarkenTerminalBackground(TerminalRgb) }
+                    flexDirection="column"
+                    flexGrow={ 1 }
+                    height="100%"
+                    width="100%">
+                    { children }
+                </Ink.Box> }
         </TerminalBackgroundContext.Provider>
     );
 }
@@ -72,7 +70,7 @@ export function BackdropProvider({
  */
 export function useTerminalBackgroundColor(): string | undefined
 {
-    const ProvidedColor: string | undefined = React.useContext(TerminalBackgroundContext);
+    const ProvidedColor: string | null | undefined = React.useContext(TerminalBackgroundContext);
     const { stdin, setRawMode } = Ink.useStdin();
     const { stdout } = Ink.useStdout();
     const [ DetectedColor, SetDetectedColor ] = React.useState<string>();
@@ -102,7 +100,7 @@ export function useTerminalBackgroundColor(): string | undefined
         };
     }, [ ProvidedColor, setRawMode, stdin, stdout ]);
 
-    return ProvidedColor ?? DetectedColor;
+    return ProvidedColor === null ? undefined : (ProvidedColor ?? DetectedColor);
 }
 
 /** Produce the default contrast-aware backdrop color for a terminal background. */

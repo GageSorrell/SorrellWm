@@ -18,9 +18,9 @@ const Basic = (): React.ReactElement => <ShadowProvider elevation={ 2 }><Box pad
 const Lofi = (): React.ReactElement => <ShadowProvider elevation={ 3 }
     lofi><Box paddingX={ 1 }><Ink.Text>Lo-fi</Ink.Text></Box></ShadowProvider>;
 export default SimpleStory({
-    Basic: { Code: "<ShadowProvider elevation={2}>…</ShadowProvider>", Preview: Basic },
+    Basic: { Code: "<ShadowProvider elevation={2}>{ /* ... */ }</ShadowProvider>", Preview: Basic },
     Description: "Supplies application and per-elevation defaults for Sixel box shadows.",
-    Examples: [ { Code: "<ShadowProvider elevation={3} lofi>…</ShadowProvider>", Preview: Lofi, Title: "Lo-fi shadows" } ],
+    Examples: [ { Code: "<ShadowProvider elevation={3} lofi>{ /* ... */ }</ShadowProvider>", Preview: Lofi, Title: "Lo-fi shadows" } ],
     Name: "ShadowProvider",
     Source: { Component: "ShadowProvider", Path: "Shadow/index.tsx", Props: "ShadowProviderProps" }
 });

@@ -1,7 +1,7 @@
 /**
  * Edge extraction helpers for supported ThreeJS line and mesh objects.
  *
- * @module @sorrell/ink-three/Geometry/Edge
+ * @module @sorrell/ink-ui/Three/Geometry/Edge
  *
  * @file      Edge.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

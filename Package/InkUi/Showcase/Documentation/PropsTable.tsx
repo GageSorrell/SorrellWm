@@ -1,5 +1,5 @@
 /**
- *
+ * A table that displays the props of a given component.
  *
  * @module @sorrell/ink-ui/Showcase/Documentation/PropsTable
  *
@@ -11,12 +11,18 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { useTheme } from "../../Source/Theme.js";
 import type { PropDocumentation } from "./PropInspector.js";
+import { useTheme } from "../../Source/Theme.js";
 
-export function PropsTable({ Props }: {
+export/**
+       * A table that displays the props of a given component.
+       *
+       * @category Documentation
+       * @since 1.0.0
+       */
+const PropsTable = ({ Props }: {
     readonly Props: ReadonlyArray<PropDocumentation>;
-}): React.ReactElement
+}): React.ReactElement =>
 {
     const Theme = useTheme();
     if (Props.length === 0)
@@ -45,9 +51,9 @@ export function PropsTable({ Props }: {
             )) }
         </Ink.Box>
     );
-}
+};
 
-function Row({
+const Row = ({
     Description,
     Name,
     Type,
@@ -59,7 +65,7 @@ function Row({
     readonly Type: string;
     readonly Value: string;
     readonly bold?: boolean;
-}): React.ReactElement
+}): React.ReactElement =>
 {
     const Theme = useTheme();
     return (
@@ -81,4 +87,4 @@ function Row({
                     color={ Theme.Text }>{ Description }</Ink.Text></Ink.Box>
         </Ink.Box>
     );
-}
+};

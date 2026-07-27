@@ -17,11 +17,11 @@ import { ThemeProvider } from "../Source/Theme.js";
 
 Ink.render(
     <ThemeProvider>
-        <InteractionProvider ShowFooter={ false }>
-            <MouseProvider>
+        <MouseProvider>
+            <InteractionProvider ShowFooter={ false }>
                 <Showcase />
-            </MouseProvider>
-        </InteractionProvider>
+            </InteractionProvider>
+        </MouseProvider>
     </ThemeProvider>,
     {
         alternateScreen: true,

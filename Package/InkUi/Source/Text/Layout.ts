@@ -9,10 +9,23 @@
  * @license   MIT
  */
 
+import { Array, String, pipe } from "effect";
 import { type BBox, Resvg } from "@resvg/resvg-js";
 
+/**
+ * The primitives that can be used to define length in a CSS format.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export type CssLength = number | string;
 
+/**
+ * The props that are used to render SVG text.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export interface TextSvgStyle
 {
     readonly BackgroundColor?: string | undefined;
@@ -38,6 +51,12 @@ export interface TextSvgStyle
     readonly WordSpacing: number;
 }
 
+/**
+ * The props that determine how text is wrapped when rendered as SVG.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export interface TextWrapStyle
 {
     readonly Hyphens: string | undefined;
@@ -48,6 +67,12 @@ export interface TextWrapStyle
     readonly WordBreak: string | undefined;
 }
 
+/**
+ * The props that determine how the layout of text is determined when rendering SVG.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export interface TextSvgLayoutOptions
 {
     readonly CellHeight?: number | undefined;
@@ -58,6 +83,12 @@ export interface TextSvgLayoutOptions
     readonly Wrap: TextWrapStyle;
 }
 
+/**
+ * The layout of text in rendered SVG.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export interface TextSvgLayout
 {
     readonly Height: number;
@@ -66,6 +97,12 @@ export interface TextSvgLayout
     readonly Width: number;
 }
 
+/**
+ * The CSS values that are used to render text in SVG.
+ *
+ * @category Render
+ * @since 1.0.0
+ */
 export interface CssLengthContext
 {
     readonly FontSize: number;
@@ -75,18 +112,22 @@ export interface CssLengthContext
 }
 
 const LengthPattern: RegExp = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))([a-z%]*)$/iu;
-const FontSizeFactors: Readonly<Record<string, number>> = {
-    "xx-small": 0.6,
-    "x-small": 0.75,
-    small: 0.89,
-    medium: 1,
-    large: 1.2,
-    "x-large": 1.5,
-    "xx-large": 2,
-    "xxx-large": 3,
-    smaller: 0.8,
-    larger: 1.2
-};
+const FontSizeFactors: Readonly<Record<string, number>> =
+    {
+        /* eslint-disable sort-keys */
+        "xx-small": 0.6,
+        "x-small": 0.75,
+        small: 0.89,
+        medium: 1,
+        large: 1.2,
+        "x-large": 1.5,
+        "xx-large": 2,
+        "xxx-large": 3,
+        smaller: 0.8,
+        larger: 1.2
+        /* eslint-enable sort-keys */
+    } as const;
+
 const MeasurementCache = new Map<string, number>();
 
 /** Resolve a web-style `font-size` against the terminal's usual size. */
@@ -209,7 +250,7 @@ export function LayoutTextSvg(Options: TextSvgLayoutOptions): TextSvgLayout
     return { Height, Lines, Svg, Width };
 }
 
-function MakeTextMeasurer(Style: TextSvgStyle): (Value: string) => number
+const MakeTextMeasurer = (Style: TextSvgStyle): (Value: string) => number =>
 {
     const Cache = new Map<string, number>();
     const StyleKey: string = JSON.stringify(Style);
@@ -228,9 +269,9 @@ function MakeTextMeasurer(Style: TextSvgStyle): (Value: string) => number
         Cache.set(Value, Width);
         return Width;
     };
-}
+};
 
-function MeasureMarkerRight(Value: string, Style: TextSvgStyle, StyleKey: string): number
+const MeasureMarkerRight = (Value: string, Style: TextSvgStyle, StyleKey: string): number =>
 {
     const CacheKey: string = `${ StyleKey }\u0000${ Value }`;
     const Cached: number | undefined = MeasurementCache.get(CacheKey);
@@ -241,7 +282,7 @@ function MeasureMarkerRight(Value: string, Style: TextSvgStyle, StyleKey: string
 
     const Padding: number = 8;
     const EstimatedWidth: number = Math.max(64, Math.ceil(
-        Padding * 2 + (Array.from(Value).length + 2)
+        Padding * 2 + (Array.Array.from(Value).length + 2)
             * (Style.FontSize * 2 + Math.abs(Style.LetterSpacing) + Math.abs(Style.WordSpacing))
     ));
     const Height: number = Math.max(8, Math.ceil(Style.LineHeight * 2));
@@ -257,22 +298,20 @@ function MeasureMarkerRight(Value: string, Style: TextSvgStyle, StyleKey: string
     const Result: number = Bounds === undefined ? Padding : Bounds.x + Bounds.width;
     MeasurementCache.set(CacheKey, Result);
     return Result;
-}
+};
 
-function RoundToCell(Value: number, CellSize: number | undefined): number
-{
-    return CellSize === undefined || !Number.isFinite(CellSize) || CellSize <= 0
+const RoundToCell = (Value: number, CellSize: number | undefined): number =>
+    CellSize === undefined || !Number.isFinite(CellSize) || CellSize <= 0
         ? Value
         : Math.max(CellSize, Math.ceil(Value / CellSize) * CellSize);
-}
 
-function WrapText(
+const WrapText = (
     Text: string,
     MaximumWidth: number | undefined,
     Measure: (Value: string) => number,
     Wrap: TextWrapStyle,
     Style: TextSvgStyle
-): ReadonlyArray<string>
+): ReadonlyArray<string> =>
 {
     const WhiteSpace: string = Wrap.WhiteSpace ?? "normal";
     const PreserveNewlines: boolean = [ "pre", "pre-line", "pre-wrap", "break-spaces" ]
@@ -307,16 +346,16 @@ function WrapText(
         ));
     }
     return Result.length === 0 ? [ "" ] : Result;
-}
+};
 
-function WrapLine(
+const WrapLine = (
     Value: string,
     MaximumWidth: number,
     Measure: (Value: string) => number,
     Wrap: TextWrapStyle,
     TextIndent: number,
     IsFirstVisualLine: boolean
-): ReadonlyArray<string>
+): ReadonlyArray<string> =>
 {
     const BreakEverywhere: boolean = Wrap.WordBreak === "break-all"
         || Wrap.WordBreak === "break-word"
@@ -327,7 +366,7 @@ function WrapLine(
         || Wrap.OverflowWrap === "break-word"
         || Wrap.Hyphens === "auto";
     const Tokens: ReadonlyArray<string> = BreakEverywhere
-        ? Array.from(Value)
+        ? Array.Array.from(Value)
         : SegmentWords(Value, Wrap.WordBreak === "keep-all");
     const Lines: Array<string> = [ ];
     let Current: string = "";
@@ -356,10 +395,11 @@ function WrapLine(
     }
 
     Lines.push(Wrap.WhiteSpace === "break-spaces" ? Current : Current.trimEnd());
-    return Lines;
-}
 
-function SegmentWords(Value: string, KeepAll: boolean): ReadonlyArray<string>
+    return Lines;
+};
+
+const SegmentWords = (Value: string, KeepAll: boolean): ReadonlyArray<string> =>
 {
     if (KeepAll)
     {
@@ -368,18 +408,18 @@ function SegmentWords(Value: string, KeepAll: boolean): ReadonlyArray<string>
 
     const Segmenter = new Intl.Segmenter(undefined, { granularity: "word" });
     return [ ...Segmenter.segment(Value) ].map((Value: Intl.SegmentData) => Value.segment);
-}
+};
 
-function BreakToken(
+const BreakToken = (
     Value: string,
     MaximumWidth: number,
     Measure: (Value: string) => number
-): ReadonlyArray<string>
+): ReadonlyArray<string> =>
 {
     const Lines: Array<string> = [ ];
     let Current: string = "";
 
-    for (const Character of Array.from(Value))
+    for (const Character of Array.Array.from(Value))
     {
         if (Current.length > 0 && Measure(Current + Character) > MaximumWidth)
         {
@@ -393,15 +433,15 @@ function BreakToken(
     }
     Lines.push(Current);
     return Lines;
-}
+};
 
-function MakeSvg(
+const MakeSvg = (
     Lines: ReadonlyArray<string>,
     Width: number,
     Height: number,
     Style: TextSvgStyle,
     Measure: (Value: string) => number
-): string
+): string =>
 {
     const Background: string = Style.BackgroundColor === undefined
         ? ""
@@ -422,46 +462,74 @@ function MakeSvg(
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${ Width }" height="${ Height }" ` +
         `viewBox="0 0 ${ Width } ${ Height }">${ Background }${ TextLines }</svg>`;
-}
+};
 
-function FontAttributes(Style: TextSvgStyle): string
+const FontAttributes = (Style: TextSvgStyle): string =>
 {
-    return [
-        `font-family="${ EscapeAttribute(Style.FontFamily) }"`,
-        Style.FontFeatureSettings === undefined
-            ? ""
-            : `font-feature-settings="${ EscapeAttribute(Style.FontFeatureSettings) }"`,
-        Style.FontKerning === undefined
-            ? ""
-            : `font-kerning="${ EscapeAttribute(Style.FontKerning) }"`,
-        Style.FontOpticalSizing === undefined
-            ? ""
-            : `font-optical-sizing="${ EscapeAttribute(Style.FontOpticalSizing) }"`,
-        `font-size="${ Style.FontSize }px"`,
-        Style.FontSizeAdjust === undefined
-            ? ""
-            : `font-size-adjust="${ Style.FontSizeAdjust }"`,
-        Style.FontStyle === undefined ? "" : `font-style="${ EscapeAttribute(Style.FontStyle) }"`,
-        Style.FontStretch === undefined ? "" : `font-stretch="${ EscapeAttribute(Style.FontStretch) }"`,
-        Style.FontVariant === undefined ? "" : `font-variant="${ EscapeAttribute(Style.FontVariant) }"`,
-        Style.FontWeight === undefined ? "" : `font-weight="${ Style.FontWeight }"`,
-        Style.FontVariationSettings === undefined
-            ? ""
-            : `font-variation-settings="${ EscapeAttribute(Style.FontVariationSettings) }"`,
-        `letter-spacing="${ Style.LetterSpacing }px"`,
-        `word-spacing="${ Style.WordSpacing }px"`,
-        Style.TextDecoration === undefined
-            ? ""
-            : `text-decoration="${ EscapeAttribute(Style.TextDecoration) }"`
-    ].filter((Value: string) => Value.length > 0).join(" ");
-}
+    const SyntheticBold: boolean = IsBoldWeight(Style.FontWeight);
+    const SyntheticBoldWidth: number = Math.max(0.5, Style.FontSize * 0.04);
+    const Attributes =
+        [
+            `font-family="${ EscapeAttribute(Style.FontFamily) }"`,
+            Style.FontFeatureSettings === undefined
+                ? ""
+                : `font-feature-settings="${ EscapeAttribute(Style.FontFeatureSettings) }"`,
+            Style.FontKerning === undefined
+                ? ""
+                : `font-kerning="${ EscapeAttribute(Style.FontKerning) }"`,
+            Style.FontOpticalSizing === undefined
+                ? ""
+                : `font-optical-sizing="${ EscapeAttribute(Style.FontOpticalSizing) }"`,
+            `font-size="${ Style.FontSize }px"`,
+            Style.FontSizeAdjust === undefined
+                ? ""
+                : `font-size-adjust="${ Style.FontSizeAdjust }"`,
+            Style.FontStyle === undefined ? "" : `font-style="${ EscapeAttribute(Style.FontStyle) }"`,
+            Style.FontStretch === undefined ? "" : `font-stretch="${ EscapeAttribute(Style.FontStretch) }"`,
+            Style.FontVariant === undefined ? "" : `font-variant="${ EscapeAttribute(Style.FontVariant) }"`,
+            Style.FontWeight === undefined ? "" : `font-weight="${ Style.FontWeight }"`,
+            Style.FontVariationSettings === undefined
+                ? ""
+                : `font-variation-settings="${ EscapeAttribute(Style.FontVariationSettings) }"`,
+            SyntheticBold ? `stroke="${ EscapeAttribute(Style.Color) }"` : "",
+            SyntheticBold ? `stroke-width="${ SyntheticBoldWidth }"` : "",
+            SyntheticBold ? "stroke-linejoin=\"round\"" : "",
+            SyntheticBold ? "paint-order=\"stroke fill\"" : "",
+            `letter-spacing="${ Style.LetterSpacing }px"`,
+            `word-spacing="${ Style.WordSpacing }px"`,
+            Style.TextDecoration === undefined
+                ? ""
+                : `text-decoration="${ EscapeAttribute(Style.TextDecoration) }"`
+        ] as const;
 
-function AlignLine(
+    return pipe(Attributes, Array.filter(String.isNonEmpty), Array.join(" "));
+};
+
+const IsBoldWeight = (Value: number | string | undefined): boolean =>
+{
+    if (typeof Value === "number")
+    {
+        return Value >= 600;
+    }
+    if (Value === undefined)
+    {
+        return false;
+    }
+    const Normalized: string = Value.trim().toLowerCase();
+    if (Normalized === "bold" || Normalized === "bolder")
+    {
+        return true;
+    }
+    const Numeric: number = Number(Normalized);
+    return Number.isFinite(Numeric) && Numeric >= 600;
+};
+
+const AlignLine = (
     TextAlign: string,
     Width: number,
     LineWidth: number,
     Indent: number
-): number
+): number =>
 {
     switch (TextAlign)
     {
@@ -470,9 +538,9 @@ function AlignLine(
         case "end": return Math.max(0, Width - LineWidth);
         default: return Math.max(0, Indent);
     }
-}
+};
 
-function TransformText(Value: string, Transform: string | undefined): string
+const TransformText = (Value: string, Transform: string | undefined): string =>
 {
     switch (Transform)
     {
@@ -482,22 +550,18 @@ function TransformText(Value: string, Transform: string | undefined): string
             Character.toLocaleUpperCase());
         default: return Value;
     }
-}
+};
 
-function FirstFontFamily(Value: string): string
-{
-    return Value.split(",")[0]?.trim().replace(/^(["'])(.*)\1$/u, "$2") || "monospace";
-}
+const FirstFontFamily = (Value: string): string =>
+    Value.split(",")[0]?.trim().replace(/^(["'])(.*)\1$/u, "$2") || "monospace";
 
-function EscapeText(Value: string): string
+const EscapeText = (Value: string): string =>
 {
     return Value
         .replace(/&/gu, "&amp;")
         .replace(/</gu, "&lt;")
         .replace(/>/gu, "&gt;");
-}
+};
 
-function EscapeAttribute(Value: string): string
-{
-    return EscapeText(Value).replace(/"/gu, "&quot;");
-}
+const EscapeAttribute = (Value: string): string =>
+    EscapeText(Value).replace(/"/gu, "&quot;");

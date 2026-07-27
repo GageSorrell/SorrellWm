@@ -19,7 +19,7 @@ const Basic = (): React.ReactElement => <Svg fallback={ <Ink.Text>[SVG preview]<
 export default SimpleStory({
     Basic: { Code: "<Svg>{svgSource}</Svg>", Preview: Basic },
     Description: "Rasterizes string or React SVG content and paints it in terminals with Sixel support.",
-    Examples: [ { Code: "<Svg width={12} height={4} fallback={<Text>Unavailable</Text>}>…</Svg>", Preview: Basic, Title: "Explicit cell size and fallback" } ],
+    Examples: [ { Code: "<Svg width={12} height={4} fallback={<Text>Unavailable</Text>}>{ /* ... */ }</Svg>", Preview: Basic, Title: "Explicit cell size and fallback" } ],
     Name: "Svg",
     Source: { Component: "Svg", Path: "Svg/index.tsx", Props: "SvgProps" }
 });

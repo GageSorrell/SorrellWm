@@ -17,12 +17,12 @@ import { describe, expect, it, vi } from "vitest";
 import { Icon } from "../Source/Icon/index.js";
 import { Svg } from "../Source/Svg/index.js";
 import { RegisterPainter } from "../Source/Svg/Paint.js";
-import { Text } from "../Source/Text.js";
+import { Text } from "../Source/Text/Text.js";
 
 vi.mock("../Source/Support/Query.js", () => ({
     QueryTerminalSupport: async () => ({
         BackgroundColor: { Blue: 0, Green: 0, Red: 0 },
-        CellSizePixels: { Height: 16, Width: 8 },
+        CellSizePixels: { X: 8, Y: 16 },
         Sixel: true,
         Terminal: { Kind: "windows-terminal", Name: "Windows Terminal" }
     })
@@ -42,6 +42,27 @@ const RedSquare = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"8\" height=
 
 describe("persistent SVG rendering", () =>
 {
+    it("paints every initially mounted SVG in one frame", async () =>
+    {
+        const App = render(
+            <Ink.Box>
+                <Svg height={ 1 }
+                    width={ 1 }>{ RedSquare }</Svg>
+                <Svg height={ 1 }
+                    width={ 1 }>{ RedSquare }</Svg>
+                <Svg height={ 1 }
+                    width={ 1 }>{ RedSquare }</Svg>
+            </Ink.Box>
+        );
+
+        await Flush();
+
+        const PaintFrames: ReadonlyArray<string> = App.frames.filter((Frame: string) =>
+            Frame.includes("\u001BP0;1;q"));
+        expect(PaintFrames).toHaveLength(1);
+        expect((PaintFrames[0]?.split("\u001BP0;1;q").length ?? 1) - 1).toBe(3);
+    });
+
     it("coalesces every synchronized Ink frame with its image repaint", async () =>
     {
         const Writes: Array<string> = [ ];
@@ -69,6 +90,79 @@ describe("persistent SVG rendering", () =>
         Unregister();
     });
 
+    it("coalesces ordinary Ink frames with their image repaint", async () =>
+    {
+        const Writes: Array<string> = [ ];
+        const Stream = {
+            write: (Value: string): boolean =>
+            {
+                Writes.push(Value);
+                return true;
+            }
+        } as unknown as NodeJS.WriteStream;
+        const Unregister: () => void = RegisterPainter(Stream, (WriteValue) =>
+            WriteValue("image"));
+        await Flush();
+        Writes.length = 0;
+
+        Stream.write("frame");
+
+        expect(Writes).toEqual([
+            "\u001B[?2026hframeimage\u001B[?2026l"
+        ]);
+        Unregister();
+    });
+
+    it("emits an initial multi-image restore as one synchronized write", async () =>
+    {
+        const Writes: Array<string> = [ ];
+        const Stream = {
+            write: (Value: string): boolean =>
+            {
+                Writes.push(Value);
+                return true;
+            }
+        } as unknown as NodeJS.WriteStream;
+        const UnregisterFirst: () => void = RegisterPainter(Stream, (WriteValue) =>
+            WriteValue("first"));
+        const UnregisterSecond: () => void = RegisterPainter(Stream, (WriteValue) =>
+            WriteValue("second"));
+
+        await Flush();
+
+        expect(Writes).toEqual([
+            "\u001B[?2026hfirstsecond\u001B[?2026l"
+        ]);
+        UnregisterFirst();
+        UnregisterSecond();
+    });
+
+    it("does not repaint existing images when another painter registers later", async () =>
+    {
+        const Writes: Array<string> = [ ];
+        const Stream = {
+            write: (Value: string): boolean =>
+            {
+                Writes.push(Value);
+                return true;
+            }
+        } as unknown as NodeJS.WriteStream;
+        const UnregisterFirst: () => void = RegisterPainter(Stream, (WriteValue) =>
+            WriteValue("first"));
+        await Flush();
+        Writes.length = 0;
+
+        const UnregisterSecond: () => void = RegisterPainter(Stream, (WriteValue) =>
+            WriteValue("second"));
+        await Flush();
+
+        expect(Writes).toEqual([
+            "\u001B[?2026hsecond\u001B[?2026l"
+        ]);
+        UnregisterFirst();
+        UnregisterSecond();
+    });
+
     it("repaints an SVG after an unrelated Ink rerender", async () =>
     {
         const View = (Label: string): React.ReactElement => (
@@ -92,14 +186,16 @@ describe("persistent SVG rendering", () =>
         expect(InitialPaints).toBeGreaterThan(0);
         expect(FinalPaints).toBeGreaterThan(InitialPaints);
         expect(App.frames.some((Frame: string) =>
-            Frame.startsWith("\u001B7\u001B[2A\r"))).toBe(true);
+            Frame.includes("after") && Frame.includes("\u001BP0;1;q"))).toBe(true);
+        expect(App.frames.some((Frame: string) =>
+            Frame.includes("\u001B7\u001B[2A\r"))).toBe(true);
     });
 
     it("does not turn a transparent SVG background into an opaque palette color", async () =>
     {
         const App = render(<Icon src={ RedSquare } />);
         await Flush();
-        const Paint: string | undefined = App.frames.findLast((Frame: string) =>
+        const Paint: string | undefined = [ ...App.frames ].reverse().find((Frame: string) =>
             Frame.includes("\u001BP0;1;q"));
 
         expect(Paint).toContain("#0;2;100;0;0");
@@ -117,7 +213,7 @@ describe("persistent SVG rendering", () =>
             </Svg>
         );
         await Flush();
-        const Paint: string = App.frames.findLast((Frame: string) =>
+        const Paint: string = [ ...App.frames ].reverse().find((Frame: string) =>
             Frame.includes("\u001BP0;1;q")) ?? "";
         const PaletteEntries: ReadonlyArray<string> = Paint.match(/#\d+;2;/gu) ?? [ ];
 

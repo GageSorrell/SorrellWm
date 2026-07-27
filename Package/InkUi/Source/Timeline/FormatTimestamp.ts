@@ -1,5 +1,5 @@
 /**
- *
+ * Format a timestamp to display in a `Timeline`.
  *
  * @module @sorrell/ink-ui/Timeline/FormatTimestamp
  *

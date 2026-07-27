@@ -1,5 +1,7 @@
 /**
- *
+ * A story is rich documentation of a component, collection of components,
+ * or design patterns and recommendations.  Stories contain descriptions,
+ * examples, and long-form writing.
  *
  * @module @sorrell/ink-ui/Showcase/Story
  *
@@ -12,6 +14,13 @@
 import type * as React from "react";
 import { InspectProps, type PropDocumentation } from "./Documentation/PropInspector.js";
 
+/**
+ * An example shown on showcase page.  Examples contain content, and the code
+ * responsible for generating the content.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
 export interface StoryExample
 {
     readonly Code: string;
@@ -20,6 +29,12 @@ export interface StoryExample
     readonly Title: string;
 }
 
+/**
+ * The identifying props for a component in the showcase.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
 export interface StorySource
 {
     readonly Component: string;
@@ -27,6 +42,12 @@ export interface StorySource
     readonly Props: string;
 }
 
+/**
+ * The content in a showcase page.
+ *
+ * @category Documentation
+ * @since 1.0.0
+ */
 export interface ComponentStory
 {
     readonly Basic: StoryExample;
@@ -36,9 +57,15 @@ export interface ComponentStory
     readonly Props: ReadonlyArray<PropDocumentation>;
 }
 
-export function DefineStory(Story: Omit<ComponentStory, "Props"> & {
+export/**
+       * Create a story for a given component.
+       *
+       * @category Constructor
+       * @since 1.0.0
+       */
+const DefineStory = (Story: Omit<ComponentStory, "Props"> & {
     readonly Source: StorySource;
-}): ComponentStory
+}): ComponentStory =>
 {
     return {
         Basic: Story.Basic,
@@ -47,4 +74,4 @@ export function DefineStory(Story: Omit<ComponentStory, "Props"> & {
         Name: Story.Name,
         Props: InspectProps(Story.Source)
     };
-}
+};

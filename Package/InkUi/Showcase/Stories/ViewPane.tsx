@@ -21,7 +21,14 @@ const Basic = (): React.ReactElement => <View Active
 export default SimpleStory({
     Basic: { Code: "<ViewPane Column={0} Row={0}>Pane content</ViewPane>", Preview: Basic },
     Description: "Places content in one cell or span of a View grid.",
-    Examples: [ { Code: "<ViewPane Column={0} Row={0} ColumnSpan={2}>…</ViewPane>", Preview: Basic, Title: "Column span" } ],
+    Examples:
+    [
+        {
+            Code: "<ViewPane Column={0} Row={0} ColumnSpan={2}>{ /* ... */ }</ViewPane>",
+            Preview: Basic,
+            Title: "Column span"
+        }
+    ],
     Name: "ViewPane",
     Source: { Component: "ViewPane", Path: "View.tsx", Props: "ViewPaneProps" }
 });

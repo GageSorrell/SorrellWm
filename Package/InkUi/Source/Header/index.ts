@@ -1,5 +1,5 @@
 /**
- *
+ * Header components, including rich headers, and headers of customizable font size.
  *
  * @module @sorrell/ink-ui/Header
  *
@@ -12,4 +12,3 @@
 export * from "./Header.tsx";
 export * from "./HeaderBar.tsx";
 export * from "./HeaderTable.tsx";
-export * from "./HeaderTableRow.tsx";

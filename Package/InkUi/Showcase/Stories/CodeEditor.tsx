@@ -9,13 +9,20 @@
  * @license   MIT
  */
 
-import { SimpleStory } from "./Factory.js";
 import { StatefulCodeEditor as Basic } from "./Shared.js";
+import { SimpleStory } from "./Factory.js";
 
 export default SimpleStory({
     Basic: { Code: "<CodeEditor Language=\"json\" Value={value} OnChange={setValue} />", Preview: Basic },
     Description: "A controlled multiline editor with language-aware formatting and validation.",
-    Examples: [ { Code: "<CodeEditor Language=\"yaml\" Value={yaml} OnChange={setYaml} />", Preview: Basic, Title: "Structured documents" } ],
+    Examples:
+    [
+        {
+            Code: "<CodeEditor Language=\"yaml\" Value={yaml} OnChange={setYaml} />",
+            Preview: Basic,
+            Title: "Structured documents"
+        }
+    ],
     Name: "CodeEditor",
     Source: { Component: "CodeEditor", Path: "CodeEditor/CodeEditor.tsx", Props: "CodeEditorProps" }
 });

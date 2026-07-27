@@ -17,7 +17,7 @@ const Basic = (): React.ReactElement => <Overlay Title="Example">Overlay content
 export default SimpleStory({
     Basic: { Code: "<Overlay Title=\"Example\">Overlay content</Overlay>", Preview: Basic },
     Description: "Centers framed modal content in a prominent terminal region.",
-    Examples: [ { Code: "<Overlay Title=\"Settings\" Footer=\"Escape to close\">…</Overlay>", Preview: Basic, Title: "Custom footer" } ],
+    Examples: [ { Code: "<Overlay Title=\"Settings\" Footer=\"Escape to close\">{ /* ... */ }</Overlay>", Preview: Basic, Title: "Custom footer" } ],
     Name: "Overlay",
     Source: { Component: "Overlay", Path: "Overlay/Overlay.tsx", Props: "OverlayProps" }
 });

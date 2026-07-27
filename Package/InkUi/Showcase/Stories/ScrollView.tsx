@@ -55,7 +55,7 @@ export default SimpleStory({
     },
     Description: "A measured, two-axis viewport with CSS-like overflow, Interaction focus, keyboard controls, and mouse-operable scrollbars.",
     Examples: [ {
-        Code: "<ScrollView height={4} width={24} VerticalScrollbarThumb=\"┃\" HorizontalScrollbarThumb=\"━\">\n  <Box width={40}>…</Box>\n</ScrollView>",
+        Code: "<ScrollView height={4} width={24} VerticalScrollbarThumb=\"┃\" HorizontalScrollbarThumb=\"━\">\n  <Box width={40}>{ /* ... */ }</Box>\n</ScrollView>",
         Preview: TwoAxis,
         Title: "Two-axis scrolling and custom bars"
     } ],

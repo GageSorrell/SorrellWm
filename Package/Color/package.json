@@ -1,0 +1,55 @@
+{
+  "name": "@sorrell/color",
+  "private": false,
+  "version": "1.0.0",
+  "description": "Color types and utilities.",
+  "files": [
+    "Distribution"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "test": "npm run build && node --test ./Test/*.test.mjs"
+  },
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./Color": {
+      "import": "./Distribution/Color.js",
+      "types": "./Distribution/Color.d.ts"
+    },
+    "./LinearColor": {
+      "import": "./Distribution/LinearColor.js",
+      "types": "./Distribution/LinearColor.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Color#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/Color",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "peerDependencies": {
+    "effect": "^4.0.0-beta"
+  },
+  "dependencies": {
+    "@sorrell/math": "^1.0.0",
+    "color-convert": "2.0.1"
+  },
+  "devDependencies": {
+    "@types/color-convert": "2.0.4",
+    "effect": "^4.0.0-beta"
+  }
+}

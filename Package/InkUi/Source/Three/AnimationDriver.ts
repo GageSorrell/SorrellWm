@@ -1,7 +1,7 @@
 /**
  * Effect service for interruptible render animation loops.
  *
- * @module @sorrell/ink-three/AnimationDriver
+ * @module @sorrell/ink-ui/Three/AnimationDriver
  *
  * @file      AnimationDriver.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

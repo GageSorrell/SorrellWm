@@ -1,7 +1,7 @@
 /**
  * Ink text with CSS-like font sizing and Sixel rendering.
  *
- * @module @sorrell/ink-ui/Text
+ * @module @sorrell/ink-ui/Text/Text
  *
  * @file      Text.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -19,10 +19,10 @@ import {
     ParseLineHeight,
     type TextSvgLayout,
     type TextSvgStyle
-} from "./Text/Layout.js";
-import type { RgbColor, TerminalFont, TerminalSupport } from "./Support/Types.js";
-import { useTerminalFont, useTerminalSupport } from "./Support/Hook.js";
-import { Svg } from "./Svg/index.js";
+} from "./Layout.ts";
+import type { RgbColor, TerminalFont, TerminalSupport } from "../Support/Types.ts";
+import { useTerminalFont, useTerminalSupport } from "../Support/Hook.tsx";
+import { Svg } from "../Svg/Svg.tsx";
 
 type LayoutPropKeys =
     | "alignContent"
@@ -68,9 +68,10 @@ type LayoutPropKeys =
     | "top"
     | "width";
 
-type LayoutProps = {
-    readonly [Key in LayoutPropKeys]?: Ink.BoxProps[Key] | undefined
-};
+type LayoutProps =
+    {
+        readonly [Key in LayoutPropKeys]?: Ink.BoxProps[Key] | undefined
+    };
 
 type CssTextProps = Pick<React.CSSProperties,
     | "fontFamily"
@@ -99,26 +100,37 @@ type CssTextProps = Pick<React.CSSProperties,
     | "wordSpacing">;
 
 /** Props for {@link Text}. CSS typography properties are provided directly. */
-export type TextProps = Ink.TextProps & LayoutProps & CssTextProps;
+export type TextProps =
+    Ink.TextProps &
+    LayoutProps &
+    CssTextProps;
 
-/**
- * Ink's `Text`, extended with web-style typography.
- *
- * Text that the terminal can represent natively remains ordinary Ink text.
- * A different font or pixel geometry is laid out as SVG and rendered through
- * Sixel at the required number of terminal cells.
- */
-export function Text(Props: TextProps): React.ReactNode
+export/**
+       * Ink's `Text`, extended with web-style typography.
+       *
+       * Text that the terminal can represent natively remains ordinary Ink text.
+       * A different font or pixel geometry is laid out as SVG and rendered through
+       * Sixel at the required number of terminal cells.
+       *
+       * @category Component
+       * @since 1.0.0
+       */
+const Text = (Props: TextProps): React.ReactNode =>
 {
     return MayRequireSvg(Props)
         ? <EnhancedText { ...Props } />
         : <PlainText { ...Props } />;
-}
+};
 
-/** Return a platform-appropriate CSS monospace fallback list. */
-export function GetDefaultFontFamily(
+export/**
+       * Return a platform-appropriate CSS monospace fallback list.
+       *
+       * @category Render
+       * @since 1.0.0
+       */
+const GetDefaultFontFamily = (
     Platform: NodeJS.Platform = process.platform
-): string
+): string =>
 {
     switch (Platform)
     {
@@ -126,7 +138,7 @@ export function GetDefaultFontFamily(
         case "darwin": return "Menlo, Monaco, monospace";
         default: return "\"DejaVu Sans Mono\", \"Liberation Mono\", monospace";
     }
-}
+};
 
 const EnhancedText = (Props: TextProps): React.ReactElement | null =>
 {
@@ -136,8 +148,8 @@ const EnhancedText = (Props: TextProps): React.ReactElement | null =>
     const BoxReference = React.useRef<Ink.DOMElement>(null);
     const Metrics: Ink.UseBoxMetricsResult = Ink.useBoxMetrics(BoxReference);
     const TextValue: string | undefined = ToText(Props.children);
-    const CellHeight: number = Support?.CellSizePixels?.Height ?? 16;
-    const CellWidth: number = Support?.CellSizePixels?.Width ?? CellHeight * 0.5;
+    const CellHeight: number = Support?.CellSizePixels?.Y ?? 16;
+    const CellWidth: number = Support?.CellSizePixels?.X ?? CellHeight * 0.5;
     const FontSize: number = ParseFontSize(ToCssLength(Props.fontSize), CellHeight);
     const Context =
         {
@@ -245,7 +257,9 @@ const EnhancedText = (Props: TextProps): React.ReactElement | null =>
                 : { "aria-hidden": Props["aria-hidden"] }) }
             ref={ BoxReference }
             width={ Props.width ?? NaturalWidth }>
-            <Svg height={ NaturalHeight }
+            <Svg
+                height={ NaturalHeight }
+                rasterization="crisp"
                 width="100%">
                 { Layout.Svg }
             </Svg>

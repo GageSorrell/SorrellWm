@@ -1,5 +1,5 @@
 /**
- *
+ * The page that displays Storybook-like details for a component.
  *
  * @module @sorrell/ink-ui/Showcase/Documentation/Page
  *
@@ -11,14 +11,16 @@
 
 import * as Ink from "ink";
 import * as React from "react";
-import { Box } from "../../Source/Box/index.js";
-import { H2 } from "../../Source/Header/index.js";
-import { ScrollView } from "../../Source/ScrollView.js";
 import type { ComponentStory, StoryExample } from "../Story.js";
+import { Box } from "../../Source/Box/index.js";
 import { Example } from "./Example.js";
+import { H2 } from "../../Source/Header/index.js";
 import { PropsTable } from "./PropsTable.js";
+import { ScrollView } from "../../Source/ScrollView.js";
 import { useTheme } from "../../Source/Theme.js";
+import { Display } from "../../Source/index.js";
 
+/** {@inheritDoc ComponentPage} */
 export interface ComponentPageProps
 {
     readonly AvailableWidth: number;
@@ -32,7 +34,23 @@ export interface ComponentPageProps
     readonly Props: ComponentStory["Props"];
 }
 
-export function ComponentPage({
+const SplitWords = (Value: string): string =>
+{
+    if (Value.length <= 1)
+    {
+        return Value;
+    }
+
+    return Value[0] + Value.slice(1).replace(/[A-Z]/g, " $&");
+};
+
+export/**
+       * The page that displays Storybook-like details for a component.
+       *
+       * @category Documentation
+       * @since 1.0.0
+       */
+const ComponentPage = ({
     AvailableWidth,
     BasicExample,
     Description,
@@ -42,7 +60,7 @@ export function ComponentPage({
     Name,
     Order,
     Props
-}: ComponentPageProps): React.ReactElement
+}: ComponentPageProps): React.ReactElement =>
 {
     const Theme = useTheme();
     return (
@@ -56,11 +74,14 @@ export function ComponentPage({
             { ...(Order === undefined ? { } : { Order }) }
             overflowX="clip"
             paddingX={ 2 }>
-            <Ink.Text
+            <Display>
+                { SplitWords(Name) }
+            </Display>
+            {/* <Ink.Text
                 bold
                 color={ Theme.Primary }>
                 { Name }
-            </Ink.Text>
+            </Ink.Text> */}
             <Section Title="Description">
                 <Ink.Text color={ Theme.Text }>{ Description }</Ink.Text>
             </Section>
@@ -80,20 +101,23 @@ export function ComponentPage({
             </Section>
         </ScrollView>
     );
-}
+};
 
-function Section({ children, Title }: React.PropsWithChildren<{
+const Section = ({ children, Title }: React.PropsWithChildren<{
     readonly Title: string;
-}>): React.ReactElement
+}>): React.ReactElement =>
 {
     return (
         <Box
             flexDirection="column"
             flexWrap="nowrap">
-            <H2 fontSize={ 2 }>{ Title }</H2>
+            <H2>{ Title }</H2>
             <Ink.Box minHeight={ 1 } />
-            <Ink.Box flexDirection="column"
-                marginLeft={ 1 }>{ children }</Ink.Box>
+            <Ink.Box
+                flexDirection="column"
+                marginLeft={ 1 }>
+                { children }
+            </Ink.Box>
         </Box>
     );
-}
+};

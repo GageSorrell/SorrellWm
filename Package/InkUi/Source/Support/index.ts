@@ -1,7 +1,10 @@
 /**
+ * Query features that the current terminal provides, and
+ * define behavior to handle different sets of terminal capabilities.
+ * Detectable features include identity, feature, cell-size, mouse,
+ * graphics, and font detection.
  *
- *
- * @module @sorrell/ink-ui/Support/index
+ * @module @sorrell/ink-ui/Support
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -10,7 +13,6 @@
  */
 
 /**
- * Terminal identity, feature, cell-size, mouse, graphics, and font detection.
  *
  * @module @sorrell/ink-ui/Support
  */

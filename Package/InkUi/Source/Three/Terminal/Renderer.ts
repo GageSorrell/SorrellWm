@@ -1,7 +1,7 @@
 /**
  * Pure terminal renderer for projecting ThreeJS scenes into text frames.
  *
- * @module @sorrell/ink-three/Terminal/Renderer
+ * @module @sorrell/ink-ui/Three/Terminal/Renderer
  *
  * @file      Renderer.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

@@ -168,6 +168,24 @@ describe("Box", () =>
         const Bounds = GetBoxMouseBounds(Target as unknown as Ink.DOMElement);
         expect(Bounds).toMatchObject({ Left: 1, Right: 4 });
     });
+
+    it("does not install resize painters for ordinary text-layout boxes", () =>
+    {
+        const App = render(<></>);
+        const InitialListeners: number = App.stdout.listenerCount("resize");
+
+        App.rerender(
+            <>
+                { Array.from({ length: 20 }, (_, Index: number) => (
+                    <Box key={ Index }>
+                        <Ink.Text>{ Index }</Ink.Text>
+                    </Box>
+                )) }
+            </>
+        );
+
+        expect(App.stdout.listenerCount("resize")).toBe(InitialListeners);
+    });
 });
 
 describe("compact border CSS lengths", () =>

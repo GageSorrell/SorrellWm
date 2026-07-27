@@ -1,7 +1,7 @@
 /**
+ * A themed button activated by primary clicks, Enter, or Space.
  *
- *
- * @module @sorrell/ink-ui/Button/index
+ * @module @sorrell/ink-ui/Button
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -9,5 +9,4 @@
  * @license   MIT
  */
 
-/** Public Button component exports. */
 export * from "./Button.js";

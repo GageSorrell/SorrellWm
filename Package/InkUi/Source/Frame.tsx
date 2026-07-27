@@ -1,5 +1,5 @@
 /**
- *
+ * Draws a themed border and optional title around terminal content.
  *
  * @module @sorrell/ink-ui/Frame
  *

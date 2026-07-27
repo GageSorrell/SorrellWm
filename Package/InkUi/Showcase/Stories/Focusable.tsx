@@ -13,12 +13,12 @@ import { InteractionExample as Basic } from "../InteractionExample.js";
 import { SimpleStory } from "./Factory.js";
 
 export default SimpleStory({
-    Basic: { Code: "<Focusable Id=\"field\">{({Focused}) => …}</Focusable>", Preview: Basic },
+    Basic: { Code: "<Focusable Id=\"field\">{({Focused}) => ...}</Focusable>", Preview: Basic },
     Description: "Registers a focus target and exposes its current focus state to a render function.",
     Examples:
     [
         {
-            Code: "<Focusable AutoFocus Id=\"primary\">…</Focusable>",
+            Code: "<Focusable AutoFocus Id=\"primary\">{ /* ... */ }</Focusable>",
             Preview: Basic,
             Title: "Automatic focus"
         }

@@ -13,9 +13,9 @@ import { InteractionExample as Basic } from "../InteractionExample.js";
 import { SimpleStory } from "./Factory.js";
 
 export default SimpleStory({
-    Basic: { Code: "<InteractionProvider>\n  <Focusable Id=\"first\">…</Focusable>\n</InteractionProvider>", Preview: Basic },
+    Basic: { Code: "<InteractionProvider>\n  <Focusable Id=\"first\">{ /* ... */ }</Focusable>\n</InteractionProvider>", Preview: Basic },
     Description: "Coordinates application focus, commands, routed input, and discoverable shortcuts.",
-    Examples: [ { Code: "<InteractionProvider InitialFocus=\"save\" ShowFooter={false}>…</InteractionProvider>", Preview: Basic, Title: "Initial focus" } ],
+    Examples: [ { Code: "<InteractionProvider InitialFocus=\"save\" ShowFooter={false}>{ /* ... */ }</InteractionProvider>", Preview: Basic, Title: "Initial focus" } ],
     Name: "InteractionProvider",
     Source: { Component: "InteractionProvider", Path: "Interaction/Context.tsx", Props: "InteractionProviderProps" }
 });

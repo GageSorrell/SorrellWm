@@ -1,7 +1,7 @@
 /**
  * Themed, focusable terminal button.
  *
- * @module @sorrell/ink-ui/Button
+ * @module @sorrell/ink-ui/Button/Button
  *
  * @file      Button.tsx
  * @author    Gage Sorrell <gage@sorrell.sh>

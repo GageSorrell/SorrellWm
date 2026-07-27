@@ -1,7 +1,7 @@
 /**
  * Effect service for consuming terminal frames.
  *
- * @module @sorrell/ink-three/FrameSink
+ * @module @sorrell/ink-ui/Three/FrameSink
  *
  * @file      FrameSink.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

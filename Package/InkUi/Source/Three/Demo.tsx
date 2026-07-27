@@ -1,7 +1,7 @@
 /**
  * Demo `ink` application that renders an animated ThreeJS scene.
  *
- * @module @sorrell/ink-three/Demo
+ * @module @sorrell/ink-ui/Three/Demo
  * @internal
  *
  * @file      Demo.tsx

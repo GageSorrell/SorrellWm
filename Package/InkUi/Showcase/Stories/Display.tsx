@@ -13,8 +13,8 @@ import * as React from "react";
 import { Display } from "../../Source/index.js";
 import { SimpleStory } from "./Factory.js";
 
-const Basic = (): React.ReactElement => <Display fontFamily="tinyunicode">INK UI</Display>;
-const Shadow = (): React.ReactElement => <Display fontFamily="tinyunicode">STORY</Display>;
+const Basic = (): React.ReactElement => <Display fontFamily="tinyunicode">Ink UI</Display>;
+const Shadow = (): React.ReactElement => <Display fontFamily="tinyunicode">Story</Display>;
 export default SimpleStory({
     Basic: { Code: "<Display fontFamily=\"tiny\">INK UI</Display>", Preview: Basic },
     Description: "Renders strings with Bit's terminal display fonts, scaling, and shadow treatments.",

@@ -1,5 +1,5 @@
 /**
- *
+ * The root of the Storybook-inspired documentation viewer.
  *
  * @module @sorrell/ink-ui/Showcase/Documentation/Viewport
  *
@@ -22,6 +22,7 @@ export interface ViewportProps extends React.PropsWithChildren
 export/**
        * The root of the Storybook-inspired documentation viewer.
        *
+       * @category Component
        * @since 1.0.0
        */
 const Viewport = ({ Active, children, Height }: ViewportProps): React.ReactElement =>

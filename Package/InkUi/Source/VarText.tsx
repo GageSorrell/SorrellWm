@@ -28,10 +28,7 @@ export/**
        * @category Input
        * @since 1.0.0
        */
-const VarText = ({
-    Text: Value,
-    Values
-}: VarTextProps): React.ReactNode =>
+const VarText = ({ Text: Value, Values }: VarTextProps): React.ReactNode =>
 {
     const Theme = useTheme();
     const Nodes = new Array<React.ReactNode>();

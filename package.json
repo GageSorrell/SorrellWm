@@ -45,6 +45,7 @@
         "Package/EsLintConfigSorrell",
         "Package/Log",
         "Package/LogClient",
+        "Package/Color",
         "Package/InkUi",
         "Package/Math",
         "Script/Setup",

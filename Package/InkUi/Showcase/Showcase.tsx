@@ -23,7 +23,14 @@ const NavigationScopeId = "showcase-navigation-pane";
 const PageFocusId = "showcase-page";
 const PageScopeId = "showcase-page-pane";
 
-export const Showcase = (): React.ReactElement =>
+export/**
+       * A Storybook-inspired app that contains documentation and examples for components,
+       * design patterns, and more.
+       *
+       * @category Documentation
+       * @since 1.0.0
+       */
+const Showcase = (): React.ReactElement =>
 {
     const Theme = useTheme();
     const Focus = useFocusManager();
@@ -57,9 +64,16 @@ export const Showcase = (): React.ReactElement =>
         if (!Focus.Focus(PageFocusId))
         {
             Focus.FocusFirst(PageScopeId);
-
         }
     }, [ Focus, Story ]);
+
+    React.useEffect(() =>
+    {
+        if (Collapsed)
+        {
+            Focus.FocusFirst(PageScopeId);
+        }
+    }, [ Collapsed, Focus ]);
 
     useRoutedInput((Input: string, Key: Ink.Key): boolean =>
     {

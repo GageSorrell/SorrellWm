@@ -28,7 +28,7 @@ const Fallback = (): React.ReactElement => <Ink.Text>Three.js terminal renderer<
 export default SimpleStory({
     Basic: { Code: "<InkThreeView Scene={scene} Camera={camera} Width={20} Height={6} />", Preview: Basic },
     Description: "Projects a Three.js scene into a character or color terminal framebuffer.",
-    Examples: [ { Code: "<InkThreeView RenderWireframe RenderColor Color=\"#66ccff\" … />", Preview: Fallback, Title: "Wireframe color" } ],
+    Examples: [ { Code: "<InkThreeView RenderWireframe RenderColor Color=\"#66ccff\" ... />", Preview: Fallback, Title: "Wireframe color" } ],
     Name: "InkThreeView",
     Source: { Component: "InkThreeView", Path: "Three/InkThreeView.tsx", Props: "InkThreeViewProps" }
 });
