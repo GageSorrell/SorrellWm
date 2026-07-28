@@ -128,6 +128,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetMouseHoverTime)
     );
     Window.Set(
+        "GetRefreshRate",
+        Napi::Function::New(Environment, GetRefreshRate)
+    );
+    Window.Set(
         "GetWindowRect",
         Napi::Function::New(Environment, GetWindowRect_Node)
     );

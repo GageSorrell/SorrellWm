@@ -865,6 +865,43 @@ Napi::Value GetWindowWorkArea(const Napi::CallbackInfo& CallbackInfo)
     return Out.Succeed(RectangleToNapi(Environment, Information.rcWork));
 }
 
+Napi::Value GetRefreshRate(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> WindowHandle = GetWindowArgument(CallbackInfo);
+
+    if (!WindowHandle.has_value())
+    {
+        return Out.Fail("Expected a valid top-level window handle.");
+    }
+
+    const HMONITOR Monitor = MonitorFromWindow(
+        WindowHandle.value(),
+        MONITOR_DEFAULTTONEAREST
+    );
+    MONITORINFOEXW Information { };
+    Information.cbSize = sizeof(Information);
+
+    if (Monitor == nullptr || GetMonitorInfoW(Monitor, &Information) == FALSE)
+    {
+        return Out.Fail("Could not get the window's monitor.");
+    }
+
+    DEVMODEW DeviceMode { };
+    DeviceMode.dmSize = sizeof(DeviceMode);
+
+    if (
+        EnumDisplaySettingsW(Information.szDevice, ENUM_CURRENT_SETTINGS, &DeviceMode) == FALSE
+        || DeviceMode.dmDisplayFrequency <= 1
+    )
+    {
+        return Out.Fail("Could not get the monitor's refresh rate.");
+    }
+
+    return Out.Succeed(Napi::Number::New(Environment, DeviceMode.dmDisplayFrequency));
+}
+
 Napi::Value SetForegroundWindow_Node(const Napi::CallbackInfo& CallbackInfo)
 {
     const Napi::Env Environment = CallbackInfo.Env();

@@ -432,6 +432,11 @@ const FakeAppSettings = (
 {
     const Current: AppSettings.AppSettings = {
         Keybinds: [ ],
+        MoveFineSpeed: 16,
+        MoveStepPrimary: 20,
+        MoveStepPrimarySpeedFactor: 4,
+        MoveStepSecondary: 50,
+        MoveStepSecondarySpeedFactor: 4,
         OverlayBackdropIntensity,
         OverlayRoundedCorners: true,
         RunAtStartup: true,
@@ -460,6 +465,7 @@ const FakeOverlaySession = (
     let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.Home ];
     let ActivationWindow = InitialActivationWindow;
     let PrimaryModifierHeld = false;
+    let FineModifierHeld = false;
     let CurrentFocusFailure: Option.Option<OverlaySession.FocusFailure> = Option.none();
     const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.Home;
 
@@ -475,6 +481,7 @@ const FakeOverlaySession = (
         }),
         ClearFocusPreview: Effect.void,
         Current: Effect.sync(Current),
+        FineModifierHeld: Effect.sync(() => FineModifierHeld),
         FocusFailure: Effect.sync(() => CurrentFocusFailure),
         GetActivationApplicationName: Effect.succeed(Option.none<string>()),
         GetActivationWindow: Effect.sync(() => ActivationWindow),
@@ -496,6 +503,10 @@ const FakeOverlaySession = (
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
         {
             ActivationWindow = Option.some(WindowHandle);
+        }),
+        SetFineModifierHeld: (Held: boolean) => Effect.sync((): void =>
+        {
+            FineModifierHeld = Held;
         }),
         SetPrimaryModifierHeld: (Held: boolean) => Effect.sync((): void =>
         {

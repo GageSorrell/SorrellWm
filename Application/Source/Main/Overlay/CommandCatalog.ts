@@ -52,7 +52,10 @@ const FromKeybindSettings = (
     Values: ReadonlyArray<Hotkey.KeybindSetting>,
     FocusTargetValues: FocusTargets = { },
     ApplicationTarget?: OverlayApplicationTarget,
-    PrimaryModifierHeld: boolean = false
+    PrimaryModifierHeld: boolean = false,
+    FineModifierHeld: boolean = false,
+    PrimaryDistance: number = OverlayCommand.MoveDistance.Primary,
+    SecondaryDistance: number = OverlayCommand.MoveDistance.Secondary
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
@@ -103,12 +106,22 @@ const FromKeybindSettings = (
     const ModifierKeybind = ScreenId === OverlayCommand.OverlayScreenId.Move
         ? Keybinds.find((Value: Hotkey.KeybindSetting) => Value.Id === Hotkey.Id.PrimaryModifier)
         : undefined;
-    const DistanceToggle = ModifierKeybind === undefined
+    const FineModifierKeybind = ScreenId === OverlayCommand.OverlayScreenId.Move
+        ? Keybinds.find((Value: Hotkey.KeybindSetting) => Value.Id === Hotkey.Id.FineModifier)
+        : undefined;
+    const DistanceToggle = ModifierKeybind === undefined || FineModifierKeybind === undefined
         ? undefined
         : Object.freeze({
             Active: PrimaryModifierHeld,
-            PrimaryDistance: OverlayCommand.MoveDistance.Primary,
-            SecondaryDistance: OverlayCommand.MoveDistance.Secondary,
+            FineActive: FineModifierHeld,
+            FineDistance: OverlayCommand.MoveDistance.Fine,
+            FineShortcut: Object.freeze({
+                KeyCode: FineModifierKeybind.Key,
+                KeyLabel: GetKeyLabel(FineModifierKeybind.Key),
+                Modifiers: Object.freeze({ ...FineModifierKeybind.Modifiers })
+            }),
+            PrimaryDistance,
+            SecondaryDistance,
             Shortcut: Object.freeze({
                 KeyCode: ModifierKeybind.Key,
                 KeyLabel: GetKeyLabel(ModifierKeybind.Key),

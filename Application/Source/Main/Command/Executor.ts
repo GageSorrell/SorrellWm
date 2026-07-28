@@ -18,13 +18,29 @@ import * as OverlaySession from "../Overlay/Session.ts";
 import * as Tiling from "../Tiling/index.ts";
 import type * as Ui from "./Ui.ts";
 import { Box, IntPoint } from "@sorrell/math";
-import { Console, Context, Data, Effect, Layer, Number, Option, Result, Stream, pipe } from "effect";
-import { type Handle, Window } from "@sorrell/windows";
 import {
+    Console,
+    Context,
+    Data,
+    Duration,
+    Effect,
+    Fiber,
+    Layer,
+    Number,
+    Option,
+    Result,
+    Stream,
+    pipe
+} from "effect";
+import {
+    GetOverlayCommandDefinitions,
     MoveDistance,
+    type OverlayCommandDefinition,
     type OverlayCommandId,
-    type OverlayScreenDto
+    type OverlayScreenDto,
+    OverlayScreenId
 } from "../../Shared/OverlayCommand.ts";
+import { type Handle, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../../Shared/Api.ts";
 import type { BackdropPresentation } from "../../Shared/Backdrop.ts";
 import { DevFeatures } from "../Development/DevFeatures.ts";
@@ -277,19 +293,16 @@ const IsWindowTiled = (
 ): boolean => Snapshot.Workspaces.some((Workspace: Tiling.Tree.Workspace) =>
     Tiling.Tree.HasWindow(Workspace.Root, WindowValue));
 
-const MoveWindowDirection = (
+const MoveWindowByOffset = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
-    Id: OverlayCommandId
+    ActivationWindow: Handle.HWND,
+    OffsetX: number,
+    OffsetY: number
 ) => Effect.gen(function*()
 {
-    const UnitsByCommandId = MoveDirectionUnits as
-        Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
-    const Unit = UnitsByCommandId[Id];
-    const ActivationWindow = yield* Session.GetActivationWindow;
-
-    if (Unit === undefined || Option.isNone(ActivationWindow))
+    if (OffsetX === 0 && OffsetY === 0)
     {
         return;
     }
@@ -298,28 +311,25 @@ const MoveWindowDirection = (
     // tiling manager instead.
     const Snapshot = yield* TilingManager.Snapshot;
 
-    if (IsWindowTiled(Snapshot, ActivationWindow.value))
+    if (IsWindowTiled(Snapshot, ActivationWindow))
     {
         return;
     }
 
-    const CurrentBounds = Window.GetWindowRect(ActivationWindow.value);
+    const CurrentBounds = Window.GetWindowRect(ActivationWindow);
 
     if (Option.isNone(CurrentBounds))
     {
         return;
     }
 
-    const Held = yield* Session.PrimaryModifierHeld;
-    const Distance = Held ? MoveDistance.Secondary : MoveDistance.Primary;
-    const Offset = { X: Unit.X * Distance, Y: Unit.Y * Distance };
     const NewBounds = Box.Box(
-        CurrentBounds.value.Top + Offset.Y,
-        CurrentBounds.value.Right + Offset.X,
-        CurrentBounds.value.Bottom + Offset.Y,
-        CurrentBounds.value.Left + Offset.X
+        CurrentBounds.value.Top + OffsetY,
+        CurrentBounds.value.Right + OffsetX,
+        CurrentBounds.value.Bottom + OffsetY,
+        CurrentBounds.value.Left + OffsetX
     );
-    const MoveResult = Window.SetWindowRect(ActivationWindow.value, NewBounds);
+    const MoveResult = Window.SetWindowRect(ActivationWindow, NewBounds);
 
     if (Result.isFailure(MoveResult))
     {
@@ -335,6 +345,160 @@ const MoveWindowDirection = (
     );
 
     yield* PublishOverlayScreen(BrowserWindows, Session);
+});
+
+// Alt (FineModifier) forces the 1px fine step regardless of whether Shift
+// (PrimaryModifier) is also held, taking precedence over it.
+const GetActiveMoveDistance = (
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl
+) => Effect.gen(function*()
+{
+    const FineHeld = yield* Session.FineModifierHeld;
+
+    if (FineHeld)
+    {
+        return MoveDistance.Fine;
+    }
+
+    const Held = yield* Session.PrimaryModifierHeld;
+    return Held
+        ? yield* Settings.GetSetting("MoveStepSecondary")
+        : yield* Settings.GetSetting("MoveStepPrimary");
+});
+
+const MoveWindowDirection = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Id: OverlayCommandId
+) => Effect.gen(function*()
+{
+    const UnitsByCommandId = MoveDirectionUnits as
+        Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
+    const Unit = UnitsByCommandId[Id];
+    const ActivationWindow = yield* Session.GetActivationWindow;
+
+    if (Unit === undefined || Option.isNone(ActivationWindow))
+    {
+        return;
+    }
+
+    const Distance = yield* GetActiveMoveDistance(Settings, Session);
+
+    yield* MoveWindowByOffset(
+        BrowserWindows,
+        Session,
+        TilingManager,
+        ActivationWindow.value,
+        Unit.X * Distance,
+        Unit.Y * Distance
+    );
+});
+
+// Mirrors conventional Windows key-repeat behavior: an initial pause before
+// holding a direction key starts moving the window continuously.
+const MoveAnimationInitialDelayMillis = 500;
+const DefaultRefreshRateHz = 60;
+
+// Alt (FineModifier) forces the fine step's own configured speed regardless of
+// whether Shift (PrimaryModifier) is also held, taking precedence over it. The
+// primary/secondary speeds are configured as multiples of their step size
+// rather than as their own fixed pixel/second value.
+const GetActiveMovePixelsPerSecond = (
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl
+) => Effect.gen(function*()
+{
+    const FineHeld = yield* Session.FineModifierHeld;
+
+    if (FineHeld)
+    {
+        return yield* Settings.GetSetting("MoveFineSpeed");
+    }
+
+    const Held = yield* Session.PrimaryModifierHeld;
+
+    return Held
+        ? (yield* Settings.GetSetting("MoveStepSecondary"))
+            * (yield* Settings.GetSetting("MoveStepSecondarySpeedFactor"))
+        : (yield* Settings.GetSetting("MoveStepPrimary"))
+            * (yield* Settings.GetSetting("MoveStepPrimarySpeedFactor"));
+});
+
+const AnimateMoveWindow = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Id: OverlayCommandId
+) => Effect.gen(function*()
+{
+    const UnitsByCommandId = MoveDirectionUnits as
+        Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
+    const Unit = UnitsByCommandId[Id];
+
+    if (Unit === undefined)
+    {
+        return;
+    }
+
+    yield* Effect.sleep(Duration.millis(MoveAnimationInitialDelayMillis));
+
+    const ActivationWindow = yield* Session.GetActivationWindow;
+
+    if (Option.isNone(ActivationWindow))
+    {
+        return;
+    }
+
+    const RefreshRateHz = Option.getOrElse(
+        Window.GetRefreshRate(ActivationWindow.value),
+        () => DefaultRefreshRateHz
+    );
+    const FrameIntervalMillis = 1000 / RefreshRateHz;
+
+    // Sub-pixel travel per frame is common at high refresh rates or low
+    // speeds; carrying the fractional remainder forward keeps the average
+    // speed correct instead of stalling until a whole pixel accumulates.
+    let CarryPixelsX = 0;
+    let CarryPixelsY = 0;
+
+    yield* pipe(
+        Effect.gen(function*()
+        {
+            const PixelsPerSecond = yield* GetActiveMovePixelsPerSecond(Settings, Session);
+            const PixelsPerFrame = PixelsPerSecond * (FrameIntervalMillis / 1000);
+
+            CarryPixelsX += Unit.X * PixelsPerFrame;
+            CarryPixelsY += Unit.Y * PixelsPerFrame;
+
+            const StepX = Math.trunc(CarryPixelsX);
+            const StepY = Math.trunc(CarryPixelsY);
+
+            CarryPixelsX -= StepX;
+            CarryPixelsY -= StepY;
+
+            const CurrentActivationWindow = yield* Session.GetActivationWindow;
+
+            if (Option.isNone(CurrentActivationWindow))
+            {
+                return;
+            }
+
+            yield* MoveWindowByOffset(
+                BrowserWindows,
+                Session,
+                TilingManager,
+                CurrentActivationWindow.value,
+                StepX,
+                StepY
+            );
+        }),
+        Effect.andThen(Effect.sleep(Duration.millis(FrameIntervalMillis))),
+        Effect.forever
+    );
 });
 
 const PublishOverlayScreen = (
@@ -408,6 +572,11 @@ const ExecuteUi = (
                 Session.SetPrimaryModifierHeld(Command.Held),
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
+        case "SetFineModifierHeld":
+            return pipe(
+                Session.SetFineModifierHeld(Command.Held),
+                Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
+            );
         case "NoOpOverlayCommand":
             if (Command.Id.startsWith("FocusMove"))
             {
@@ -416,7 +585,7 @@ const ExecuteUi = (
 
             if (Command.Id.startsWith("MoveWindow"))
             {
-                return MoveWindowDirection(BrowserWindows, Session, TilingManager, Command.Id);
+                return MoveWindowDirection(BrowserWindows, Settings, Session, TilingManager, Command.Id);
             }
 
             return Effect.void;
@@ -483,6 +652,69 @@ const Live = Layer.effect(
             ),
             Stream.runForEach((Event: BrowserWindow.Event) =>
                 Hotkeys.SetOverlayActive(Event._tag === "Shown")),
+            Effect.forkScoped({ startImmediately: true })
+        );
+
+        // Smoothly animate a held Move-direction key instead of relying on the
+        // resolved single-press commands above, which only fire once per
+        // physical key-down.
+        const AnimationScope = yield* Effect.scope;
+        const ActiveMoveAnimations = new Map<Hotkey.Id, Fiber.Fiber<void, Error>>();
+
+        const StopMoveAnimation = (KeybindId: Hotkey.Id): Effect.Effect<void> =>
+            Effect.suspend(() =>
+            {
+                const ExistingFiber = ActiveMoveAnimations.get(KeybindId);
+
+                if (ExistingFiber === undefined)
+                {
+                    return Effect.void;
+                }
+
+                ActiveMoveAnimations.delete(KeybindId);
+                return Fiber.interrupt(ExistingFiber);
+            });
+
+        yield* pipe(
+            Hotkeys.Matches,
+            Stream.runForEach((Activation: Hotkey.Match) => Effect.gen(function*()
+            {
+                if (Activation.Phase === Hotkey.Phase.Released)
+                {
+                    yield* StopMoveAnimation(Activation.Keybind.Id);
+                    return;
+                }
+
+                if (Activation.Phase !== Hotkey.Phase.Pressed)
+                {
+                    return;
+                }
+
+                const Screen = yield* Session.Current;
+
+                if (Screen !== OverlayScreenId.Move)
+                {
+                    return;
+                }
+
+                const Definition = GetOverlayCommandDefinitions(OverlayScreenId.Move).find(
+                    (Candidate: OverlayCommandDefinition) =>
+                        Candidate.HotkeyId === Activation.Keybind.Id
+                );
+
+                if (Definition === undefined)
+                {
+                    return;
+                }
+
+                yield* StopMoveAnimation(Activation.Keybind.Id);
+
+                const AnimationFiber = yield* Effect.forkIn(
+                    AnimateMoveWindow(BrowserWindows, Settings, Session, TilingManager, Definition.Id),
+                    AnimationScope
+                );
+                ActiveMoveAnimations.set(Activation.Keybind.Id, AnimationFiber);
+            })),
             Effect.forkScoped({ startImmediately: true })
         );
 

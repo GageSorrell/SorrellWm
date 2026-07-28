@@ -289,6 +289,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     ClearActivationWindow: Effect.void,
     ClearFocusPreview: Effect.void,
     Current: Effect.succeed(OverlayScreenId.Home),
+    FineModifierHeld: Effect.succeed(false),
     FocusFailure: Effect.succeed(Option.none()),
     GetActivationApplicationName: Effect.succeed(Option.none()),
     GetActivationWindow: Effect.succeed(Option.none()),
@@ -299,6 +300,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Reset: Effect.void,
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,
+    SetFineModifierHeld: () => Effect.void,
     SetPrimaryModifierHeld: () => Effect.void,
     Snapshot: Effect.succeed({ CanGoBack: false, Commands: [ ], Id: OverlayScreenId.Home }),
     TakeActivationWindow: Effect.succeed(Option.none())

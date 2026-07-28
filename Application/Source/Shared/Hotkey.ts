@@ -17,6 +17,7 @@ const HotkeyId = Object.freeze({
     Commit: "Commit" as const,
     CycleNext: "CycleNext" as const,
     CyclePrevious: "CyclePrevious" as const,
+    FineModifier: "FineModifier" as const,
     PrimaryModifier: "PrimaryModifier" as const,
     SelectDown: "SelectDown" as const,
     SelectLeft: "SelectLeft" as const,

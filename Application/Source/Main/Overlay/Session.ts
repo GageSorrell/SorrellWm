@@ -174,6 +174,12 @@ export interface OverlaySessionImpl
     /** Update whether the primary modifier is currently held. */
     readonly SetPrimaryModifierHeld: (Held: boolean) => Effect.Effect<void>;
 
+    /** Whether the fine-step modifier (e.g. Alt) is currently held. */
+    readonly FineModifierHeld: Effect.Effect<boolean>;
+
+    /** Update whether the fine-step modifier is currently held. */
+    readonly SetFineModifierHeld: (Held: boolean) => Effect.Effect<void>;
+
     /** The most recent Focus-direction failure still being shown, if any. */
     readonly FocusFailure: Effect.Effect<Option.Option<FocusFailure>>;
 
@@ -285,6 +291,7 @@ const Live = Layer.effect(
         const Settings = yield* AppSettings.AppSettings;
         const ActivationWindow = yield* Ref.make(Option.none<Handle.HWND>());
         const PrimaryModifierHeldRef = yield* Ref.make(false);
+        const FineModifierHeldRef = yield* Ref.make(false);
         const ExcludedFocusWindows = yield* Ref.make<ReadonlySet<Handle.HWND>>(new Set());
         const FocusFailureRef = yield* Ref.make(Option.none<FocusFailure>());
         const Stack = yield* SubscriptionRef.make<ReadonlyArray<OverlayScreenId>>(
@@ -320,6 +327,7 @@ const Live = Layer.effect(
             ClearActivationWindow: Ref.set(ActivationWindow, Option.none()),
             ClearFocusPreview,
             Current,
+            FineModifierHeld: Ref.get(FineModifierHeldRef),
             FocusFailure: Ref.get(FocusFailureRef),
             GetActivationApplicationName: pipe(
                 Ref.get(ActivationWindow),
@@ -381,6 +389,8 @@ const Live = Layer.effect(
             ResolveFocusTarget: ResolveCurrentFocusTarget,
             SetActivationWindow: (WindowHandle: Handle.HWND) =>
                 Ref.set(ActivationWindow, Option.some(WindowHandle)),
+            SetFineModifierHeld: (Held: boolean) =>
+                Ref.set(FineModifierHeldRef, Held),
             SetPrimaryModifierHeld: (Held: boolean) =>
                 Ref.set(PrimaryModifierHeldRef, Held),
             Snapshot: Effect.gen(function*()
@@ -389,6 +399,7 @@ const Live = Layer.effect(
                 const CurrentSettings = yield* Settings.Get;
                 const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
                 const Held = yield* Ref.get(PrimaryModifierHeldRef);
+                const FineHeld = yield* Ref.get(FineModifierHeldRef);
                 const Excluded = yield* Ref.get(ExcludedFocusWindows);
                 const FocusTargets: Partial<Record<
                     OverlayCommandId,
@@ -422,7 +433,10 @@ const Live = Layer.effect(
                     CurrentSettings.Keybinds,
                     FocusTargets,
                     ApplicationTarget.valueOrUndefined,
-                    Held
+                    Held,
+                    FineHeld,
+                    CurrentSettings.MoveStepPrimary,
+                    CurrentSettings.MoveStepSecondary
                 );
 
                 return CurrentScreen === ScreenId.Focus && Option.isSome(CurrentFocusFailure)

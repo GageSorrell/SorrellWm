@@ -126,6 +126,16 @@ const Resolve = (
                 Held: Hotkey.IsKeybindPressed(Activation.Keybind, Activation.PressedKeys)
             }));
 
+        case Hotkey.Id.FineModifier:
+            if (Activation.Phase === Hotkey.Phase.Repeated)
+            {
+                return Option.none();
+            }
+
+            return Option.some(UiCommands.SetFineModifierHeld({
+                Held: Hotkey.IsKeybindPressed(Activation.Keybind, Activation.PressedKeys)
+            }));
+
         default:
         {
             if (Activation.Phase !== Hotkey.Phase.Pressed)

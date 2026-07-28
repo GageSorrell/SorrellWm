@@ -140,6 +140,12 @@ const GetMouseHoverTime = (): Option.Option<number> =>
         ? Attempt.AsOption(Binding.Window.GetMouseHoverTime())
         : Option.none();
 
+export/** Get the refresh rate in Hz of the monitor nearest a window. */
+const GetRefreshRate = (Window: Handle.HWND): Option.Option<number> =>
+    typeof Binding.Window.GetRefreshRate !== "function"
+        ? Option.none()
+        : Attempt.AsOption(Binding.Window.GetRefreshRate(Window));
+
 export/** Get a window's current outer bounds in screen coordinates. */
 const GetWindowRect = (Window: Handle.HWND): Option.Option<Box.Box> => pipe(
     Binding.Window.GetWindowRect(Window),

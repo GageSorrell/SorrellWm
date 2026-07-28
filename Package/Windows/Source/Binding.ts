@@ -100,6 +100,9 @@ export interface NativeBinding
         readonly GetManageableTopLevelWindows: () =>
         Attempt.NativeAttempt<ReadonlyArray<Handle.HWND>>;
         readonly GetMouseHoverTime?: () => Attempt.NativeAttempt<number>;
+        readonly GetRefreshRate?: (
+            Window: Handle.HWND
+        ) => Attempt.NativeAttempt<number>;
         readonly GetWindowRect: (
             Window: Handle.HWND
         ) => Attempt.NativeAttempt<Box.BoxArg<number>>;

@@ -25,6 +25,31 @@ const SettingsSchema = Schema.Struct({
         Schema.Array(Hotkey.KeybindSettingSchema),
         Schema.withDecodingDefaultKey(Effect.succeed(Hotkey.DefaultKeybindSettings))
     ),
+    MoveFineSpeed: pipe(
+        Schema.Number,
+        Schema.check(Schema.isGreaterThan(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(16))
+    ),
+    MoveStepPrimary: pipe(
+        Schema.Int,
+        Schema.check(Schema.isGreaterThan(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(20))
+    ),
+    MoveStepPrimarySpeedFactor: pipe(
+        Schema.Number,
+        Schema.check(Schema.isGreaterThan(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(4))
+    ),
+    MoveStepSecondary: pipe(
+        Schema.Int,
+        Schema.check(Schema.isGreaterThan(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(50))
+    ),
+    MoveStepSecondarySpeedFactor: pipe(
+        Schema.Number,
+        Schema.check(Schema.isGreaterThan(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(4))
+    ),
     OverlayBackdropIntensity: pipe(
         Schema.Int,
         Schema.check(
@@ -70,6 +95,11 @@ const AppSettings = _AppSettings.Make(
         Initial:
         {
             Keybinds: Array.from(Hotkey.DefaultKeybindSettings),
+            MoveFineSpeed: 16,
+            MoveStepPrimary: 20,
+            MoveStepPrimarySpeedFactor: 4,
+            MoveStepSecondary: 50,
+            MoveStepSecondarySpeedFactor: 4,
             OverlayBackdropIntensity: 2,
             OverlayRoundedCorners: true,
             RunAtStartup: true,

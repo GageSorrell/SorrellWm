@@ -43,6 +43,7 @@ export type OverlayCommandId = typeof OverlayCommandId[keyof typeof OverlayComma
 
 export/** The distance, in pixels, a floating window moves per direction command. */
 const MoveDistance = Object.freeze({
+    Fine: 1 as const,
     Primary: 20 as const,
     Secondary: 50 as const
 });
@@ -141,13 +142,25 @@ export interface OverlayDistanceToggleDto
     /** Whether the secondary distance is currently active (the modifier is held). */
     readonly Active: boolean;
 
+    /**
+     * Whether the fine step distance is currently active (its modifier is
+     * held). Takes precedence over {@link Active} when both are true.
+     */
+    readonly FineActive: boolean;
+
+    /** The move distance, in pixels, used while the fine-step modifier is held. */
+    readonly FineDistance: number;
+
+    /** The keybind that forces the fine step distance while held. */
+    readonly FineShortcut: ShortcutDto;
+
     /** The move distance, in pixels, used while the modifier is not held. */
     readonly PrimaryDistance: number;
 
     /** The move distance, in pixels, used while the modifier is held. */
     readonly SecondaryDistance: number;
 
-    /** The keybind that toggles between the two distances while held. */
+    /** The keybind that toggles between the primary and secondary distances while held. */
     readonly Shortcut: ShortcutDto;
 }
 
@@ -241,6 +254,9 @@ const IsOverlayDistanceToggleDto = (Value: unknown): Value is OverlayDistanceTog
     const Candidate = Value as Partial<OverlayDistanceToggleDto>;
 
     return IsBoolean(Candidate.Active)
+        && IsBoolean(Candidate.FineActive)
+        && typeof Candidate.FineDistance === "number"
+        && IsShortcutDto(Candidate.FineShortcut)
         && typeof Candidate.PrimaryDistance === "number"
         && typeof Candidate.SecondaryDistance === "number"
         && IsShortcutDto(Candidate.Shortcut);

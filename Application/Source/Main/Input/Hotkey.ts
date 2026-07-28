@@ -116,6 +116,7 @@ const DefaultKeybindValues: ReadonlyArray<Keybind> = Object.freeze([
     Make(Id.Activate, VK.F20),
     Make(Id.Back, VK.BROWSER_BACK),
     Make(Id.Cancel, VK.ESCAPE),
+    Make(Id.FineModifier, VK.MENU),
     Make(Id.PrimaryModifier, VK.SHIFT),
     Make(Id.SelectLeft, VK.D),
     Make(Id.SelectUp, VK.H),
@@ -246,16 +247,31 @@ const IsKeybindPressed = (
     PressedKeys: ReadonlyArray<VK.VK>
 ): boolean => GetKeyFamily(Keybind.Key).some((Key: VK.VK) => PressedKeys.includes(Key));
 
-/** The physical keys of whichever keybind is currently bound to PrimaryModifier. */
+// Both the distance-toggle modifier (PrimaryModifier, e.g. Shift) and the
+// fine-step modifier (FineModifier, e.g. Alt) represent application-level
+// toggles rather than traditional chord modifiers, so holding either must not
+// block a keybind that doesn't itself require it.
+const SoftModifierIds: ReadonlyArray<Id> = [ Id.PrimaryModifier, Id.FineModifier ];
+
+/** The physical keys of whichever keybinds are currently bound to a soft modifier. */
 const GetSoftModifierKeys = (Keybinds: KeybindSet): ReadonlySet<VK.VK> =>
 {
-    const PrimaryModifierKeybind = Array.from(Keybinds).find(
-        (Keybind: Keybind) => Keybind.Id === Id.PrimaryModifier
-    );
+    const Keys = new Set<VK.VK>();
 
-    return PrimaryModifierKeybind === undefined
-        ? NoSoftModifierKeys
-        : new Set(GetKeyFamily(PrimaryModifierKeybind.Key));
+    for (const Keybind of Keybinds)
+    {
+        if (!SoftModifierIds.includes(Keybind.Id))
+        {
+            continue;
+        }
+
+        for (const Key of GetKeyFamily(Keybind.Key))
+        {
+            Keys.add(Key);
+        }
+    }
+
+    return Keys.size === 0 ? NoSoftModifierKeys : Keys;
 };
 
 /** Every physical key any configured keybind could trigger on, deduplicated. */
@@ -381,7 +397,7 @@ const ProcessKeyboardEvent = (
 export/**
        * Construct a hotkey service that continuously matches the latest supplied keybinds.
        *
-       * A keybind stream must emit its current value when subscribed. Each later
+       * A keybind stream must emit its current value when subscribed.  Each later
        * emission replaces the active keybinds without recreating the keyboard hook.
        * A fixed KeybindSet remains supported for callers that do not need rebinding.
        *

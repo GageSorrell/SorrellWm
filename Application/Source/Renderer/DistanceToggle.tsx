@@ -65,6 +65,12 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
 
+    // Alt (fine step) takes precedence over Shift (secondary distance) when
+    // both are held.
+    const IsPrimaryActive = !Props.FineActive && !Props.Active;
+    const IsSecondaryActive = !Props.FineActive && Props.Active;
+    const IsFineActive = Props.FineActive;
+
     return (
         <div
             aria-label="Move distance"
@@ -72,24 +78,33 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
             <span className={ Styles.Label }>Toggle Distance</span>
             <span className={ Styles.Values }>
                 <span
-                    aria-pressed={ !Props.Active }
+                    aria-pressed={ IsPrimaryActive }
                     className={ mergeClasses(
                         Styles.Value,
-                        !Props.Active && Styles.ValueActive
+                        IsPrimaryActive && Styles.ValueActive
                     ) }>
                     { Props.PrimaryDistance }
                 </span>
                 <span
-                    aria-pressed={ Props.Active }
+                    aria-pressed={ IsSecondaryActive }
                     className={ mergeClasses(
                         Styles.Value,
-                        Props.Active && Styles.ValueActive
+                        IsSecondaryActive && Styles.ValueActive
                     ) }>
                     { Props.SecondaryDistance }
+                </span>
+                <span
+                    aria-pressed={ IsFineActive }
+                    className={ mergeClasses(
+                        Styles.Value,
+                        IsFineActive && Styles.ValueActive
+                    ) }>
+                    { Props.FineDistance }
                 </span>
             </span>
             <span className={ Styles.Shortcut }>
                 <Keybind Keys={ GetShortcutParts(Props.Shortcut) } />
+                <Keybind Keys={ GetShortcutParts(Props.FineShortcut) } />
             </span>
         </div>
     );

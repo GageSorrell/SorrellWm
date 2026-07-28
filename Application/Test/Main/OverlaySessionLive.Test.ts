@@ -230,6 +230,11 @@ describe("OverlaySession.Live DistanceToggle", () =>
 
 const CurrentSettings: AppSettings.AppSettings = {
     Keybinds: [ ],
+    MoveFineSpeed: 16,
+    MoveStepPrimary: 20,
+    MoveStepPrimarySpeedFactor: 4,
+    MoveStepSecondary: 50,
+    MoveStepSecondarySpeedFactor: 4,
     OverlayBackdropIntensity: 50,
     OverlayRoundedCorners: true,
     RunAtStartup: true,

@@ -64,6 +64,15 @@ export type UiCommand = Command.Command.Enum<"Ui", {
     {
         readonly Held: boolean;
     }
+
+    /**
+     * Update whether the fine-step modifier (e.g. Alt) is currently held.
+     * @since 0.1.0
+     */
+    readonly SetFineModifierHeld:
+    {
+        readonly Held: boolean;
+    }
 }>;
 
 export/** Construct immutable user-interface commands. */

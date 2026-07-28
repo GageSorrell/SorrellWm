@@ -271,12 +271,6 @@ const UseStyles = makeStyles({
         gap: "0.5rem",
         marginTop: "-0.5rem"
     },
-    FocusLayout:
-    {
-        display: "grid",
-        gap: "clamp(0.75rem, 2.5vh, 1.5rem)",
-        marginTop: "clamp(0.75rem, 2.5vh, 1.5rem)"
-    },
     Footer:
     {
         alignItems: "center",
@@ -291,6 +285,12 @@ const UseStyles = makeStyles({
         padding: `0 ${ tokens.spacingHorizontalM }`,
         position: "absolute",
         width: "100%"
+    },
+    PadLayout:
+    {
+        display: "grid",
+        gap: "clamp(0.75rem, 2.5vh, 1.5rem)",
+        marginTop: "clamp(0.75rem, 2.5vh, 1.5rem)"
     },
     Shell:
     {
@@ -347,17 +347,18 @@ const OverlayApplication = (): React.ReactNode =>
     const DistanceToggleDto = CurrentScreen?.DistanceToggle;
     const HasFooter = SecondaryCommand !== undefined || DistanceToggleDto !== undefined;
     const IsFocusScreen = CurrentScreen?.Id === OverlayScreenId.Focus;
+    const IsMoveScreen = CurrentScreen?.Id === OverlayScreenId.Move;
 
     const FindCommand = (Id: OverlayCommandIdType): OverlayCommandDto | undefined =>
         CurrentScreen?.Commands.find((Candidate: OverlayCommandDto) => Candidate.Id === Id);
 
-    const GetFocusCommand = (Id: OverlayCommandIdType): OverlayCommandDto =>
+    const GetCommand = (Id: OverlayCommandIdType): OverlayCommandDto =>
     {
         const Command = FindCommand(Id);
 
         if (Command === undefined)
         {
-            throw new Error(`Focus screen is missing the ${ Id } command.`);
+            throw new Error(`The current screen is missing the ${ Id } command.`);
         }
 
         return Command;
@@ -385,7 +386,7 @@ const OverlayApplication = (): React.ReactNode =>
         Color: Option.Option<string>
     ): DirectionalPadDirection =>
     {
-        const Command = GetFocusCommand(Id);
+        const Command = GetCommand(Id);
 
         return {
             Color,
@@ -397,6 +398,9 @@ const OverlayApplication = (): React.ReactNode =>
             Shortcut: Command.Shortcut
         };
     };
+
+    const ToMovePadDirection = (Id: OverlayCommandIdType): DirectionalPadDirection =>
+        ToPadDirection(Id, Option.none());
 
     return (
         <main className={ Styles.Shell }>
@@ -460,7 +464,7 @@ const OverlayApplication = (): React.ReactNode =>
                 ) }
 
                 { IsFocusScreen ? (
-                    <div className={ Styles.FocusLayout }>
+                    <div className={ Styles.PadLayout }>
                         { CurrentScreen?.FocusFailure !== undefined && (
                             <MessageBar
                                 intent="warning"
@@ -491,7 +495,7 @@ const OverlayApplication = (): React.ReactNode =>
                                 OverlayCommandId.FocusMoveRight
                             ].map((Id: OverlayCommandIdType) =>
                             {
-                                const Command = GetFocusCommand(Id);
+                                const Command = GetCommand(Id);
 
                                 return (
                                     <FocusDirectionButton
@@ -507,6 +511,14 @@ const OverlayApplication = (): React.ReactNode =>
                                 );
                             }) }
                         </section>
+                    </div>
+                ) : IsMoveScreen ? (
+                    <div className={ Styles.PadLayout }>
+                        <DirectionalPad
+                            Down={ ToMovePadDirection(OverlayCommandId.MoveWindowDown) }
+                            Left={ ToMovePadDirection(OverlayCommandId.MoveWindowLeft) }
+                            Right={ ToMovePadDirection(OverlayCommandId.MoveWindowRight) }
+                            Up={ ToMovePadDirection(OverlayCommandId.MoveWindowUp) } />
                     </div>
                 ) : (
                     <section
