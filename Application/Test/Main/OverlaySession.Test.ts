@@ -70,4 +70,22 @@ describe("OverlaySession.SelectDirectionalWindow", () =>
             OverlayCommandId.FocusMoveRight
         ))).toBe(true);
     });
+
+    it("assigns a diagonal candidate to only one direction, never both", () =>
+    {
+        // Below and to the left of Current, but further left than down, so it
+        // should only ever qualify as a Left candidate, not also as Down.
+        const DownLeft = Candidate(7n, 150, 50, 250, -50);
+
+        expect(SelectDirectionalWindow(
+            Current,
+            [ DownLeft ],
+            OverlayCommandId.FocusMoveLeft
+        )).toEqual(Option.some(DownLeft));
+        expect(Option.isNone(SelectDirectionalWindow(
+            Current,
+            [ DownLeft ],
+            OverlayCommandId.FocusMoveDown
+        ))).toBe(true);
+    });
 });

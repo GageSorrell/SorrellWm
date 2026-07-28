@@ -10,7 +10,7 @@
  */
 
 import { Context, Effect, HashSet, Layer, PubSub, Schema, Stream, pipe } from "effect";
-import { type Keyboard as NativeKeyboard, VK } from "@sorrell/windows";
+import { Keyboard as NativeKeyboard, VK } from "@sorrell/windows";
 import { HotkeyId } from "../../Shared/Hotkey.ts";
 import { Keyboard } from "./Keyboard.ts";
 
@@ -115,6 +115,8 @@ const KeybindSetFromSettings = (Values: ReadonlyArray<KeybindSetting>): KeybindS
 const DefaultKeybindValues: ReadonlyArray<Keybind> = Object.freeze([
     Make(Id.Activate, VK.F20),
     Make(Id.Back, VK.BROWSER_BACK),
+    Make(Id.Cancel, VK.ESCAPE),
+    Make(Id.PrimaryModifier, VK.SHIFT),
     Make(Id.SelectLeft, VK.D),
     Make(Id.SelectUp, VK.H),
     Make(Id.SelectDown, VK.T),
@@ -164,6 +166,22 @@ export interface Match
 const IsAnyPressed = (PressedKeys: ReadonlySet<VK.VK>, Keys: ReadonlyArray<VK.VK>): boolean =>
     Keys.some((Key: VK.VK) => PressedKeys.has(Key));
 
+const ModifierKeyFamilies: ReadonlyArray<ReadonlyArray<VK.VK>> = [
+    [ VK.SHIFT, VK.LSHIFT, VK.RSHIFT ],
+    [ VK.CONTROL, VK.LCONTROL, VK.RCONTROL ],
+    [ VK.MENU, VK.LMENU, VK.RMENU ],
+    [ VK.LWIN, VK.RWIN ]
+];
+
+/**
+ * The set of physical keys that a keybind's trigger key represents. A bare
+ * modifier trigger (e.g. `VK.SHIFT`) matches either its left or right variant,
+ * since Windows only ever reports the specific variant as the physical key.
+ */
+const GetKeyFamily = (Key: VK.VK): ReadonlyArray<VK.VK> =>
+    ModifierKeyFamilies.find((Family: ReadonlyArray<VK.VK>) =>
+        Family.includes(Key)) ?? [ Key ];
+
 const GetModifiers = (PressedKeys: ReadonlySet<VK.VK>): Modifiers => ({
     Alt: IsAnyPressed(PressedKeys, [ VK.MENU, VK.LMENU, VK.RMENU ]),
     Control: IsAnyPressed(PressedKeys, [ VK.CONTROL, VK.LCONTROL, VK.RCONTROL ]),
@@ -171,29 +189,131 @@ const GetModifiers = (PressedKeys: ReadonlySet<VK.VK>): Modifiers => ({
     Super: IsAnyPressed(PressedKeys, [ VK.LWIN, VK.RWIN ])
 } as const);
 
+const NoSoftModifierKeys: ReadonlySet<VK.VK> = new Set();
+
 export/** Determine whether a keybind matches a trigger and the currently held modifiers. */
 const IsMatch = (
     Keybind: Keybind,
     TriggerKey: VK.VK,
-    PressedKeys: ReadonlySet<VK.VK>
+    PressedKeys: ReadonlySet<VK.VK>,
+    SoftModifierKeys: ReadonlySet<VK.VK> = NoSoftModifierKeys
 ): boolean =>
 {
-    if (Keybind.Key !== TriggerKey)
+    const TriggerFamily = GetKeyFamily(Keybind.Key);
+
+    if (!TriggerFamily.includes(TriggerKey))
     {
         return false;
     }
 
-    const CurrentModifiers = GetModifiers(PressedKeys);
+    // Exclude the trigger key's own family from the modifier comparison, so a
+    // bare-modifier keybind (e.g. Shift alone) is not disqualified by its own
+    // presence in `PressedKeys`.
+    const ModifierKeys = new Set(PressedKeys);
+    for (const Key of TriggerFamily)
+    {
+        ModifierKeys.delete(Key);
+    }
 
-    return Keybind.Modifiers.Alt === CurrentModifiers.Alt
-        && Keybind.Modifiers.Control === CurrentModifiers.Control
-        && Keybind.Modifiers.Shift === CurrentModifiers.Shift
-        && Keybind.Modifiers.Super === CurrentModifiers.Super;
+    const HeldModifiers = GetModifiers(ModifierKeys);
+
+    // Soft modifiers (the configured PrimaryModifier, e.g. Shift) represent an
+    // application-level toggle rather than a traditional chord modifier, so
+    // merely holding one must not block a keybind that doesn't itself require
+    // it. Keybinds that do require the modifier are unaffected, since they are
+    // still checked against the full, unfiltered held-modifier state.
+    const ModifierKeysWithoutSoft = new Set(
+        Array.from(ModifierKeys).filter((Key: VK.VK) => !SoftModifierKeys.has(Key))
+    );
+    const HeldModifiersWithoutSoft = GetModifiers(ModifierKeysWithoutSoft);
+
+    const MatchesModifier = (Required: boolean, Held: boolean, HeldWithoutSoft: boolean): boolean =>
+        Required ? Held : !HeldWithoutSoft;
+
+    return MatchesModifier(Keybind.Modifiers.Alt, HeldModifiers.Alt, HeldModifiersWithoutSoft.Alt)
+        && MatchesModifier(
+            Keybind.Modifiers.Control,
+            HeldModifiers.Control,
+            HeldModifiersWithoutSoft.Control
+        )
+        && MatchesModifier(Keybind.Modifiers.Shift, HeldModifiers.Shift, HeldModifiersWithoutSoft.Shift)
+        && MatchesModifier(Keybind.Modifiers.Super, HeldModifiers.Super, HeldModifiersWithoutSoft.Super);
+};
+
+export/** Determine whether any variant of a keybind's trigger key is currently held. */
+const IsKeybindPressed = (
+    Keybind: Keybind,
+    PressedKeys: ReadonlyArray<VK.VK>
+): boolean => GetKeyFamily(Keybind.Key).some((Key: VK.VK) => PressedKeys.includes(Key));
+
+/** The physical keys of whichever keybind is currently bound to PrimaryModifier. */
+const GetSoftModifierKeys = (Keybinds: KeybindSet): ReadonlySet<VK.VK> =>
+{
+    const PrimaryModifierKeybind = Array.from(Keybinds).find(
+        (Keybind: Keybind) => Keybind.Id === Id.PrimaryModifier
+    );
+
+    return PrimaryModifierKeybind === undefined
+        ? NoSoftModifierKeys
+        : new Set(GetKeyFamily(PrimaryModifierKeybind.Key));
+};
+
+/** Every physical key any configured keybind could trigger on, deduplicated. */
+const GetSuppressedKeys = (Keybinds: KeybindSet): ReadonlyArray<VK.VK> =>
+{
+    const Keys = new Set<VK.VK>();
+
+    for (const Keybind of Keybinds)
+    {
+        for (const Key of GetKeyFamily(Keybind.Key))
+        {
+            Keys.add(Key);
+        }
+    }
+
+    return Array.from(Keys);
+};
+
+/**
+ * The physical keys that must stay reserved even while the overlay is not
+ * showing: only the keybind that summons it. Every other keybind (Cancel,
+ * the directional keys, etc.) is meaningless outside the overlay, so
+ * reserving it globally would only ever steal keystrokes from other
+ * applications for no benefit — Escape in particular is relied on by nearly
+ * every other Windows application.
+ */
+const GetIdleSuppressedKeys = (Keybinds: KeybindSet): ReadonlyArray<VK.VK> =>
+{
+    const Keys = new Set<VK.VK>();
+
+    for (const Keybind of Keybinds)
+    {
+        if (Keybind.Id !== Id.Activate)
+        {
+            continue;
+        }
+
+        for (const Key of GetKeyFamily(Keybind.Key))
+        {
+            Keys.add(Key);
+        }
+    }
+
+    return Array.from(Keys);
 };
 
 interface HotkeyImpl
 {
     readonly Matches: Stream.Stream<Match>;
+
+    /**
+     * Widen or narrow which configured keybinds are reserved from foreign
+     * foreground applications. While inactive (the overlay is not showing),
+     * only the Activate keybind stays reserved, so summoning the overlay
+     * keeps working from anywhere without also hijacking keys like Escape
+     * that other applications need for their own purposes.
+     */
+    readonly SetOverlayActive: (Active: boolean) => Effect.Effect<void>;
 }
 
 /** A stream of keybind activations derived from the native keyboard stream. */
@@ -229,10 +349,11 @@ const ProcessKeyboardEvent = (
 
     PressedKeys.add(KeyboardEvent.Key);
     const PressedKeysSnapshot = Object.freeze(Array.from(PressedKeys));
+    const SoftModifierKeys = GetSoftModifierKeys(Keybinds);
     const KeybindMatches = KeyboardEvent.IsRepeat
         ? ActiveMatches.get(KeyboardEvent.Key) ?? [ ]
         : Array.from(Keybinds).filter((Keybind: Keybind) =>
-            IsMatch(Keybind, KeyboardEvent.Key, PressedKeys));
+            IsMatch(Keybind, KeyboardEvent.Key, PressedKeys, SoftModifierKeys));
 
     if (!KeyboardEvent.IsRepeat)
     {
@@ -286,27 +407,55 @@ const Live = (Source: KeybindSet | Stream.Stream<KeybindSet>) =>
             const ActiveMatches = new Map<VK.VK, ReadonlyArray<Keybind>>();
             const PressedKeys = new Set<VK.VK>();
 
+            let LatestKeybinds: KeybindSet = HashSet.empty();
+            let IsOverlayActive = false;
+
+            // Reserve either every configured hotkey's physical keys (while the
+            // overlay is showing) or only the Activate keybind's (otherwise), so
+            // the native hook stops forwarding reserved keys to whatever foreign
+            // application currently has OS keyboard focus, without permanently
+            // hijacking keys like Escape that other applications rely on.
+            const SyncSuppressedKeys = (): void =>
+            {
+                NativeKeyboard.SetSuppressedKeys(
+                    IsOverlayActive
+                        ? GetSuppressedKeys(LatestKeybinds)
+                        : GetIdleSuppressedKeys(LatestKeybinds)
+                );
+            };
+
             yield* pipe(
                 Keybinds,
-                Stream.switchMap((CurrentKeybinds: KeybindSet) => pipe(
-                    KeyboardEvents,
-                    Stream.map((KeyboardEvent: NativeKeyboard.Event) =>
-                    {
-                        ProcessKeyboardEvent(
-                            CurrentKeybinds,
-                            MatchPubSub,
-                            ActiveMatches,
-                            PressedKeys,
-                            KeyboardEvent
-                        );
-                    })
-                )),
+                Stream.switchMap((CurrentKeybinds: KeybindSet) =>
+                {
+                    LatestKeybinds = CurrentKeybinds;
+                    SyncSuppressedKeys();
+
+                    return pipe(
+                        KeyboardEvents,
+                        Stream.map((KeyboardEvent: NativeKeyboard.Event) =>
+                        {
+                            ProcessKeyboardEvent(
+                                CurrentKeybinds,
+                                MatchPubSub,
+                                ActiveMatches,
+                                PressedKeys,
+                                KeyboardEvent
+                            );
+                        })
+                    );
+                }),
                 Stream.runDrain,
                 Effect.forkScoped
             );
 
             return {
-                Matches: Stream.fromPubSub(MatchPubSub)
+                Matches: Stream.fromPubSub(MatchPubSub),
+                SetOverlayActive: (Active: boolean) => Effect.sync(() =>
+                {
+                    IsOverlayActive = Active;
+                    SyncSuppressedKeys();
+                })
             } as const;
         })
     );

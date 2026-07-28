@@ -231,6 +231,25 @@ describe("CommandResolver.Resolve", () =>
             Phase.Repeated
         )))).toBe(true);
     });
+
+    it("resolves the primary modifier's held state from either shift key", () =>
+    {
+        const Pressed = Option.getOrThrow(Resolve({
+            Keybind: Make(Id.PrimaryModifier, Windows.VK.SHIFT),
+            KeyboardEvent: { } as Windows.Keyboard.Event,
+            Phase: Phase.Pressed,
+            PressedKeys: [ Windows.VK.LSHIFT ]
+        }));
+        const Released = Option.getOrThrow(Resolve({
+            Keybind: Make(Id.PrimaryModifier, Windows.VK.SHIFT),
+            KeyboardEvent: { } as Windows.Keyboard.Event,
+            Phase: Phase.Released,
+            PressedKeys: [ ]
+        }));
+
+        expect(Pressed).toMatchObject({ Held: true, _tag: "SetPrimaryModifierHeld" });
+        expect(Released).toMatchObject({ Held: false, _tag: "SetPrimaryModifierHeld" });
+    });
 });
 
 describe("CommandResolver.Live", () =>
@@ -245,7 +264,8 @@ describe("CommandResolver.Live", () =>
                 Activation(Id.Commit, Windows.VK.A, Phase.Pressed),
                 Activation(Id.SelectLeft, Windows.VK.D, Phase.Pressed),
                 Activation(Id.Cancel, Windows.VK.A, Phase.Pressed)
-            ])
+            ]),
+            SetOverlayActive: (): Effect.Effect<void> => Effect.void
         });
         const Commands = await Effect.runPromise(pipe(
             Effect.gen(function*()
@@ -269,13 +289,17 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     ClearActivationWindow: Effect.void,
     ClearFocusPreview: Effect.void,
     Current: Effect.succeed(OverlayScreenId.Home),
+    FocusFailure: Effect.succeed(Option.none()),
     GetActivationApplicationName: Effect.succeed(Option.none()),
     GetActivationWindow: Effect.succeed(Option.none()),
     Navigate: () => Effect.void,
     PreviewFocusTarget: () => Effect.void,
+    PrimaryModifierHeld: Effect.succeed(false),
+    RecordFocusFailure: () => Effect.void,
     Reset: Effect.void,
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,
+    SetPrimaryModifierHeld: () => Effect.void,
     Snapshot: Effect.succeed({ CanGoBack: false, Commands: [ ], Id: OverlayScreenId.Home }),
     TakeActivationWindow: Effect.succeed(Option.none())
 });

@@ -41,6 +41,12 @@ const OverlayCommandId = Object.freeze({
 /** One of the overlay's primary commands. */
 export type OverlayCommandId = typeof OverlayCommandId[keyof typeof OverlayCommandId];
 
+export/** The distance, in pixels, a floating window moves per direction command. */
+const MoveDistance = Object.freeze({
+    Primary: 20 as const,
+    Secondary: 50 as const
+});
+
 /** The hotkey action that selects a primary overlay command. */
 export interface OverlayCommandDefinition
 {
@@ -129,11 +135,36 @@ export interface OverlaySecondaryCommandDto extends OverlayCommandDto
     readonly Target?: never;
 }
 
+/** The Move screen's live indicator of which move distance is currently active. */
+export interface OverlayDistanceToggleDto
+{
+    /** Whether the secondary distance is currently active (the modifier is held). */
+    readonly Active: boolean;
+
+    /** The move distance, in pixels, used while the modifier is not held. */
+    readonly PrimaryDistance: number;
+
+    /** The move distance, in pixels, used while the modifier is held. */
+    readonly SecondaryDistance: number;
+
+    /** The keybind that toggles between the two distances while held. */
+    readonly Shortcut: ShortcutDto;
+}
+
+/** Explains why the Focus screen could not move focus to a window. */
+export interface OverlayFocusFailureDto
+{
+    /** The title of the window that could not be focused. */
+    readonly WindowTitle: string;
+}
+
 /** A complete renderer-safe snapshot of the current overlay screen. */
 export interface OverlayScreenDto
 {
     readonly CanGoBack: boolean;
     readonly Commands: ReadonlyArray<OverlayCommandDto>;
+    readonly DistanceToggle?: OverlayDistanceToggleDto;
+    readonly FocusFailure?: OverlayFocusFailureDto;
     readonly Id: OverlayScreenId;
     readonly SecondaryCommand?: OverlaySecondaryCommandDto;
 }
@@ -171,22 +202,60 @@ const IsOverlayCommandDto = (Value: unknown): Value is OverlayCommandDto =>
     }
 
     const Candidate = Value as Partial<OverlayCommandDto>;
-    const Shortcut = Candidate.Shortcut;
-    const Modifiers = Shortcut?.Modifiers;
 
     return IsOverlayCommandId(Candidate.Id)
         && IsHotkeyId(Candidate.HotkeyId)
         && IsBoolean(Candidate.Disabled)
-        && typeof Shortcut?.KeyCode === "number"
-        && typeof Shortcut.KeyLabel === "string"
-        && IsBoolean(Modifiers?.Alt)
-        && IsBoolean(Modifiers.Control)
-        && IsBoolean(Modifiers.Shift)
-        && IsBoolean(Modifiers.Super)
+        && IsShortcutDto(Candidate.Shortcut)
         && (
             Candidate.Target === undefined
             || IsOverlayCommandTargetDto(Candidate.Target)
         );
+};
+
+const IsShortcutDto = (Value: unknown): Value is ShortcutDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<ShortcutDto>;
+    const Modifiers = Candidate.Modifiers;
+
+    return typeof Candidate.KeyCode === "number"
+        && typeof Candidate.KeyLabel === "string"
+        && IsBoolean(Modifiers?.Alt)
+        && IsBoolean(Modifiers.Control)
+        && IsBoolean(Modifiers.Shift)
+        && IsBoolean(Modifiers.Super);
+};
+
+const IsOverlayDistanceToggleDto = (Value: unknown): Value is OverlayDistanceToggleDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<OverlayDistanceToggleDto>;
+
+    return IsBoolean(Candidate.Active)
+        && typeof Candidate.PrimaryDistance === "number"
+        && typeof Candidate.SecondaryDistance === "number"
+        && IsShortcutDto(Candidate.Shortcut);
+};
+
+const IsOverlayFocusFailureDto = (Value: unknown): Value is OverlayFocusFailureDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<OverlayFocusFailureDto>;
+
+    return typeof Candidate.WindowTitle === "string";
 };
 
 const IsOverlaySecondaryCommandDto = (Value: unknown): Value is OverlaySecondaryCommandDto =>
@@ -219,5 +288,13 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
         && (
             Candidate.SecondaryCommand === undefined
             || IsOverlaySecondaryCommandDto(Candidate.SecondaryCommand)
+        )
+        && (
+            Candidate.DistanceToggle === undefined
+            || IsOverlayDistanceToggleDto(Candidate.DistanceToggle)
+        )
+        && (
+            Candidate.FocusFailure === undefined
+            || IsOverlayFocusFailureDto(Candidate.FocusFailure)
         );
 };

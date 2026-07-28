@@ -71,6 +71,13 @@ namespace
 
     HHOOK KeyboardHook = nullptr;
     std::bitset<256> PressedVirtualKeys;
+
+    /* The virtual keys currently reserved by SorrellWm's configured hotkeys.
+     * Read on the message-loop thread inside the hook procedure and written
+     * from JavaScript (via SetSuppressedKeys), so access is mutex-guarded. */
+    std::bitset<256> SuppressedVirtualKeys;
+    std::mutex SuppressionMutex;
+
     std::mutex SubscriptionMutex;
     std::unordered_map<
         SubId,
@@ -194,12 +201,44 @@ namespace
         }
     }
 
+    bool IsSuppressedKey(DWORD VkCode)
+    {
+        if (VkCode >= SuppressedVirtualKeys.size())
+        {
+            return false;
+        }
+
+        const std::lock_guard Lock(SuppressionMutex);
+        return SuppressedVirtualKeys.test(VkCode);
+    }
+
+    /* A hotkey should still reach the currently focused application when that
+     * application is one of SorrellWm's own windows (e.g. typing normally in
+     * the Settings window), so suppression only ever applies to some other,
+     * unrelated foreground application. */
+    bool IsForegroundWindowOwnedBySelf()
+    {
+        const HWND ForegroundWindow = GetForegroundWindow();
+
+        if (ForegroundWindow == nullptr)
+        {
+            return false;
+        }
+
+        DWORD ForegroundProcessId = 0;
+        GetWindowThreadProcessId(ForegroundWindow, &ForegroundProcessId);
+
+        return ForegroundProcessId == GetCurrentProcessId();
+    }
+
     LRESULT CALLBACK KeyboardHookProcedure(
         int Code,
         WPARAM WParameter,
         LPARAM LParameter
     )
     {
+        bool ShouldSuppress = false;
+
         if (Code == HC_ACTION)
         {
             const auto* KeyboardEvent = reinterpret_cast<KBDLLHOOKSTRUCT*>(
@@ -212,6 +251,7 @@ namespace
                     KeyboardEvent->vkCode
                 );
                 PressedVirtualKeys.set(KeyboardEvent->vkCode);
+                ShouldSuppress = IsSuppressedKey(KeyboardEvent->vkCode);
                 DispatchKeyboardEvent(
                     KeyboardState::Down,
                     *KeyboardEvent,
@@ -221,12 +261,18 @@ namespace
             else if (WParameter == WM_KEYUP || WParameter == WM_SYSKEYUP)
             {
                 PressedVirtualKeys.reset(KeyboardEvent->vkCode);
+                ShouldSuppress = IsSuppressedKey(KeyboardEvent->vkCode);
                 DispatchKeyboardEvent(
                     KeyboardState::Up,
                     *KeyboardEvent,
                     false
                 );
             }
+        }
+
+        if (ShouldSuppress && !IsForegroundWindowOwnedBySelf())
+        {
+            return 1;
         }
 
         return CallNextHookEx(
@@ -292,6 +338,9 @@ void StopKeyboardHook()
     }
 
     PressedVirtualKeys.reset();
+
+    const std::lock_guard Lock(SuppressionMutex);
+    SuppressedVirtualKeys.reset();
 }
 
 void CleanupKeyboardSubscriptions()
@@ -447,5 +496,52 @@ Napi::Value UnsubscribeFromKeyboard(const Napi::CallbackInfo& CallbackInfo)
     }
 
     RemovedSubscription->Release(napi_tsfn_abort);
+    return Out.Succeed(Environment.Undefined());
+}
+
+Napi::Value SetSuppressedKeys(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+
+    if (CallbackInfo.Length() != 1 || !CallbackInfo[0].IsArray())
+    {
+        return Out.Fail(
+            "Keyboard.SetSuppressedKeys requires an array of virtual-key codes."
+        );
+    }
+
+    const Napi::Array Keys = CallbackInfo[0].As<Napi::Array>();
+    std::bitset<256> NewSuppressedKeys;
+
+    for (std::uint32_t Index = 0; Index < Keys.Length(); ++Index)
+    {
+        const Napi::Value Element = Keys.Get(Index);
+
+        if (!Element.IsNumber())
+        {
+            return Out.Fail("Every suppressed key must be a virtual-key code.");
+        }
+
+        const double NumericKey = Element.As<Napi::Number>().DoubleValue();
+
+        if (
+            !std::isfinite(NumericKey)
+            || std::trunc(NumericKey) != NumericKey
+            || NumericKey < 0
+            || NumericKey >= static_cast<double>(NewSuppressedKeys.size())
+        )
+        {
+            return Out.Fail("Every suppressed key must be a valid virtual-key code.");
+        }
+
+        NewSuppressedKeys.set(static_cast<std::size_t>(NumericKey));
+    }
+
+    {
+        const std::lock_guard Lock(SuppressionMutex);
+        SuppressedVirtualKeys = NewSuppressedKeys;
+    }
+
     return Out.Succeed(Environment.Undefined());
 }

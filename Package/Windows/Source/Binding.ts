@@ -1,7 +1,8 @@
 /**
- *
+ * The API surface of the native module.
  *
  * @module @sorrell/windows/Binding
+ * @internal
  *
  * @file      Binding.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -10,13 +11,16 @@
  */
 
 import type { Box, IntPoint } from "@sorrell/math";
-import type { File, Handle, Subscription, Thread } from "./index.ts";
+import type { File, Handle, Subscription, Thread, VK } from "./index.ts";
 import type { Attempt } from "./Internal/index.ts";
 import { createRequire } from "node:module";
 
 /**
  * The API surface of the native module.
  * @internal
+ *
+ * @category Native
+ * @since 1.0.0
  */
 export interface NativeBinding
 {
@@ -42,6 +46,10 @@ export interface NativeBinding
         ) => Attempt.NativeAttempt<Subscription.Id>;
 
         readonly Unsubscribe: (SubscriptionId: Subscription.Id) => Attempt.NativeAttempt<void>;
+
+        readonly SetSuppressedKeys: (
+            Keys: ReadonlyArray<VK.VK>
+        ) => Attempt.NativeAttempt<void>;
     };
     readonly MessageLoop:
     {

@@ -31,6 +31,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         "Unsubscribe",
         Napi::Function::New(Environment, UnsubscribeFromKeyboard)
     );
+    Keyboard.Set(
+        "SetSuppressedKeys",
+        Napi::Function::New(Environment, SetSuppressedKeys)
+    );
 
     Napi::Object MessageLoop = Napi::Object::New(Environment);
     MessageLoop.Set(

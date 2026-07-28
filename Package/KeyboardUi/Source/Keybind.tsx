@@ -16,6 +16,7 @@
 
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { CompactKey } from "./CompactKey.tsx";
+import { Hash } from "effect";
 import type { ReactNode } from "react";
 
 const UseStyles = makeStyles({
@@ -43,7 +44,7 @@ const Keybind = ({ Keys }: KeybindProps): React.JSX.Element =>
         <div className={ Styles.Root }>
             {
                 Keys.map((Key: ReactNode, Index: number) => (
-                    <CompactKey key={ Index }>{ Key }</CompactKey>
+                    <CompactKey key={ Hash.array([ Key, Index ]) }>{ Key }</CompactKey>
                 ))
             }
         </div>

@@ -12,6 +12,7 @@
 import * as AppSettings from "../../Source/Main/AppSettings/AppSettings.ts";
 import * as BrowserWindow from "../../Source/Main/BrowserWindow.ts";
 import * as CommandResolver from "../../Source/Main/Command/Resolver.ts";
+import * as Hotkey from "../../Source/Main/Input/Hotkey.ts";
 import * as OverlaySession from "../../Source/Main/Overlay/Session.ts";
 import * as Tiling from "../../Source/Main/Tiling/index.ts";
 import * as Ui from "../../Source/Main/Command/Ui.ts";
@@ -108,6 +109,7 @@ describe("CommandExecutor.Execute", () =>
                 );
             }),
             Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession()),
@@ -158,6 +160,7 @@ describe("CommandExecutor.Execute", () =>
                 yield* Executor.Execute(UiCommands.Deactivate());
             }),
             Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
             Effect.provide(FakeAppSettings(73)),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession()),
@@ -199,6 +202,7 @@ describe("CommandExecutor.Execute", () =>
                 }));
             }),
             Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession(Option.some(TargetWindow))),
@@ -241,6 +245,7 @@ describe("CommandExecutor.Execute", () =>
                 }));
             }),
             Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession(Option.none(), Option.some(ActivationWindow))),
@@ -257,6 +262,51 @@ describe("CommandExecutor.Execute", () =>
         // not on a second, racy `GetWindowRect` re-query (`SetWindowRect` posts the
         // move asynchronously, so a re-query can return stale pre-move bounds).
         expect(WindowsWindow.GetWindowRect).toHaveBeenCalledTimes(1);
+    });
+
+    it("moves a floating activation window by 50px while the primary modifier is held", async () =>
+    {
+        const ActivationWindow = 84n as Handle.HWND;
+        const Operations = new Array<string>();
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.some(
+            Box.Box(0, 1200, 800, 0)
+        ));
+        vi.mocked(WindowsWindow.SetWindowRect).mockImplementation((
+            WindowHandle: Handle.HWND,
+            Bounds: MathBox.Box
+        ) =>
+        {
+            Operations.push(
+                `SetWindowRect:${ WindowHandle }:${ Bounds.Top },${ Bounds.Right },` +
+                `${ Bounds.Bottom },${ Bounds.Left }`
+            );
+            return Result.succeed(undefined);
+        });
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.SetPrimaryModifierHeld({ Held: true }));
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "MoveWindowRight"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(Option.none(), Option.some(ActivationWindow))),
+            Effect.provide(FakeTilingManager()),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Operations).toEqual([
+            "Send:Overlay:overlay-screen:changed:Home",
+            "SetWindowRect:84:0,1250,800,50",
+            "SetBounds:Overlay",
+            "Send:Overlay:overlay-screen:changed:Home"
+        ]);
     });
 
     it("does not move a tiled activation window", async () =>
@@ -276,6 +326,7 @@ describe("CommandExecutor.Execute", () =>
                 }));
             }),
             Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession(Option.none(), Option.some(ActivationWindow))),
@@ -314,6 +365,7 @@ describe("CommandExecutor.Live", () =>
                     return Operations;
                 }),
                 Effect.provide(Live),
+                Effect.provide(FakeHotkey()),
                 Effect.provide(FakeAppSettings()),
                 Effect.provide(FakeBrowserWindow(
                     Operations,
@@ -336,6 +388,11 @@ const IdleResolver = Layer.succeed(CommandResolver.CommandResolver, {
     Commands: Stream.never,
     Resolve: () => Effect.succeed(Option.none()),
     ResolveOverlayCommand: () => Effect.succeed(Option.none())
+});
+
+const FakeHotkey = (): Layer.Layer<Hotkey.Hotkey> => Layer.succeed(Hotkey.Hotkey, {
+    Matches: Stream.never,
+    SetOverlayActive: (): Effect.Effect<void> => Effect.void
 });
 
 const FakeTilingManager = (
@@ -402,6 +459,8 @@ const FakeOverlaySession = (
 {
     let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.Home ];
     let ActivationWindow = InitialActivationWindow;
+    let PrimaryModifierHeld = false;
+    let CurrentFocusFailure: Option.Option<OverlaySession.FocusFailure> = Option.none();
     const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.Home;
 
     return Layer.succeed(OverlaySession.OverlaySession, {
@@ -416,6 +475,7 @@ const FakeOverlaySession = (
         }),
         ClearFocusPreview: Effect.void,
         Current: Effect.sync(Current),
+        FocusFailure: Effect.sync(() => CurrentFocusFailure),
         GetActivationApplicationName: Effect.succeed(Option.none<string>()),
         GetActivationWindow: Effect.sync(() => ActivationWindow),
         Navigate: (Screen: OverlayScreenId) => Effect.sync((): void =>
@@ -423,6 +483,11 @@ const FakeOverlaySession = (
             Stack = [ ...Stack, Screen ];
         }),
         PreviewFocusTarget: () => Effect.void,
+        PrimaryModifierHeld: Effect.sync(() => PrimaryModifierHeld),
+        RecordFocusFailure: (Failure: OverlaySession.FocusFailure) => Effect.sync((): void =>
+        {
+            CurrentFocusFailure = Option.some(Failure);
+        }),
         Reset: Effect.sync((): void =>
         {
             Stack = [ OverlayScreenId.Home ];
@@ -431,6 +496,10 @@ const FakeOverlaySession = (
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
         {
             ActivationWindow = Option.some(WindowHandle);
+        }),
+        SetPrimaryModifierHeld: (Held: boolean) => Effect.sync((): void =>
+        {
+            PrimaryModifierHeld = Held;
         }),
         Snapshot: Effect.sync((): OverlayScreenDto => ({
             CanGoBack: Stack.length > 1,

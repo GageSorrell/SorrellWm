@@ -96,3 +96,17 @@ export function Unsubscribe(SubscriptionId: Subscription.Id): Attempt.Attempt<vo
 {
     return Attempt.AsResult(Binding.Keyboard.Unsubscribe(SubscriptionId));
 }
+
+/**
+ * Reserve a set of virtual keys as global hotkeys: while any of them is
+ * pressed or released, the low-level hook still reports the event, but the
+ * key is only forwarded to the foreground application when that application
+ * belongs to this process. Replaces any keys reserved by a previous call.
+ *
+ * @param Keys - The virtual keys to reserve. An empty array releases all of them.
+ * @returns {Attempt.Attempt<void>} Success, or the native error.
+ */
+export function SetSuppressedKeys(Keys: ReadonlyArray<VK.VK>): Attempt.Attempt<void>
+{
+    return Attempt.AsResult(Binding.Keyboard.SetSuppressedKeys(Keys));
+}

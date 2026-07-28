@@ -15,6 +15,7 @@ import {
     Hotkey,
     type Match as HotkeyMatch,
     Id,
+    IsKeybindPressed,
     IsMatch,
     type Keybind,
     KeybindSet,
@@ -41,6 +42,7 @@ import { Keyboard } from "../../Source/Main/Input/Keyboard.ts";
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
     {
+        SetSuppressedKeys: (): void => undefined,
         Subscribe: (): void => undefined,
         Unsubscribe: (): void => undefined
     },
@@ -54,6 +56,7 @@ vi.mock("@sorrell/windows", () => ({
         A: 0x41,
         BROWSER_BACK: 0xA6,
         CONTROL: 0x11,
+        D: 0x44,
         F20: 0x83,
         H: 0x48,
         J: 0x4A,
@@ -69,7 +72,7 @@ vi.mock("@sorrell/windows", () => ({
         RSHIFT: 0xA1,
         RWIN: 0x5C,
         SHIFT: 0x10,
-        VK: [ 0x41, 0x48, 0x4A, 0x4B, 0x4C, 0x83, 0xA6 ]
+        VK: [ 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x83, 0xA6 ]
     }
 }));
 
@@ -126,6 +129,87 @@ describe("Hotkey.IsMatch", () =>
             Windows.VK.F20,
             new Set([ Windows.VK.F20 ])
         )).toBe(false);
+    });
+
+    it("matches a bare-modifier keybind against either physical variant", () =>
+    {
+        const Keybind = Make(Id.PrimaryModifier, Windows.VK.SHIFT);
+
+        expect(IsMatch(
+            Keybind,
+            Windows.VK.LSHIFT,
+            new Set([ Windows.VK.LSHIFT ])
+        )).toBe(true);
+        expect(IsMatch(
+            Keybind,
+            Windows.VK.RSHIFT,
+            new Set([ Windows.VK.RSHIFT ])
+        )).toBe(true);
+    });
+
+    it("does not disqualify a bare-modifier keybind by its own held state", () =>
+    {
+        const Keybind = Make(Id.PrimaryModifier, Windows.VK.SHIFT);
+
+        // Without excluding the trigger's own family from the modifier
+        // comparison, `PressedKeys` containing LSHIFT would make `Shift`
+        // appear as an unrequested held modifier and the match would fail.
+        expect(IsMatch(
+            Keybind,
+            Windows.VK.LSHIFT,
+            new Set([ Windows.VK.LSHIFT ])
+        )).toBe(true);
+    });
+
+    it("does not let a held soft modifier block a keybind that doesn't require it", () =>
+    {
+        const SelectLeft = Make(Id.SelectLeft, Windows.VK.D);
+        const PressedKeys = new Set<Windows.VK.VK>([ Windows.VK.LSHIFT, Windows.VK.D ]);
+        const SoftModifierKeys = new Set<Windows.VK.VK>([
+            Windows.VK.SHIFT,
+            Windows.VK.LSHIFT,
+            Windows.VK.RSHIFT
+        ]);
+
+        expect(IsMatch(SelectLeft, Windows.VK.D, PressedKeys, SoftModifierKeys)).toBe(true);
+        // Without the soft-modifier exemption (the default when none is
+        // supplied), a held Shift would incorrectly block this keybind.
+        expect(IsMatch(SelectLeft, Windows.VK.D, PressedKeys)).toBe(false);
+    });
+
+    it("still requires an explicitly-configured soft modifier to be held", () =>
+    {
+        const ShiftD = Make(Id.SelectLeft, Windows.VK.D, { Shift: true });
+        const SoftModifierKeys = new Set<Windows.VK.VK>([
+            Windows.VK.SHIFT,
+            Windows.VK.LSHIFT,
+            Windows.VK.RSHIFT
+        ]);
+
+        expect(IsMatch(
+            ShiftD,
+            Windows.VK.D,
+            new Set([ Windows.VK.LSHIFT, Windows.VK.D ]),
+            SoftModifierKeys
+        )).toBe(true);
+        expect(IsMatch(
+            ShiftD,
+            Windows.VK.D,
+            new Set([ Windows.VK.D ]),
+            SoftModifierKeys
+        )).toBe(false);
+    });
+});
+
+describe("Hotkey.IsKeybindPressed", () =>
+{
+    it("reports held while either shift variant remains pressed", () =>
+    {
+        const Keybind = Make(Id.PrimaryModifier, Windows.VK.SHIFT);
+
+        expect(IsKeybindPressed(Keybind, [ Windows.VK.LSHIFT ])).toBe(true);
+        expect(IsKeybindPressed(Keybind, [ Windows.VK.RSHIFT ])).toBe(true);
+        expect(IsKeybindPressed(Keybind, [ ])).toBe(false);
     });
 });
 
@@ -250,6 +334,46 @@ describe("Hotkey.Live", () =>
         expect(Matches.every((Match: HotkeyMatch) => Match.Keybind === ActivationKeybind))
             .toBe(true);
         expect(Matches[2]?.PressedKeys).not.toContain(Windows.VK.LCONTROL);
+    });
+
+    it("still matches an unmodified keybind while the PrimaryModifier is held", async () =>
+    {
+        const PrimaryModifierKeybind = Make(Id.PrimaryModifier, Windows.VK.SHIFT);
+        const SelectLeft = Make(Id.SelectLeft, Windows.VK.D);
+        const Matches = await Effect.runPromise(Effect.scoped(Effect.gen(function*()
+        {
+            const EventQueue = yield* Queue.unbounded<Windows.Keyboard.Event>();
+            const KeyboardLive = Layer.succeed(Keyboard, {
+                Events: () => Effect.succeed(Stream.fromQueue(EventQueue))
+            });
+            const Program = Effect.gen(function*()
+            {
+                const Service = yield* Hotkey;
+                const Collected = yield* pipe(
+                    Service.Matches,
+                    Stream.take(2),
+                    Stream.runCollect,
+                    Effect.forkChild
+                );
+
+                yield* Effect.yieldNow;
+                yield* Queue.offer(EventQueue, KeyboardEvent(Windows.VK.LSHIFT));
+                yield* Queue.offer(EventQueue, KeyboardEvent(Windows.VK.D));
+
+                return Array.from(yield* Fiber.join(Collected));
+            });
+
+            return yield* pipe(
+                Program,
+                Effect.provide(Live(KeybindSet(PrimaryModifierKeybind, SelectLeft))),
+                Effect.provide(KeyboardLive)
+            );
+        })));
+
+        expect(Matches.map((Match: HotkeyMatch) => Match.Keybind.Id)).toEqual([
+            Id.PrimaryModifier,
+            Id.SelectLeft
+        ]);
     });
 });
 

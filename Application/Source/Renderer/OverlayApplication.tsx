@@ -31,11 +31,15 @@ import {
     BreadcrumbDivider,
     BreadcrumbItem,
     Button,
+    MessageBar,
+    MessageBarBody,
+    MessageBarTitle,
     makeStyles,
     mergeClasses,
     tokens
 } from "@fluentui/react-components";
 import { CommandButton, CompactCommandButton } from "./CommandButton.js";
+import { DirectionalPad, type DirectionalPadDirection } from "./DirectionalPad.js";
 import { Option, Predicate, Struct } from "effect";
 import {
     type OverlayCommandDto,
@@ -44,7 +48,10 @@ import {
     type OverlayScreenDto,
     OverlayScreenId
 } from "../Shared/OverlayCommand.js";
+import { type SampledColor, ToCssColor, UseDominantColor } from "./UseDominantColor.js";
 import { useEffect, useState } from "react";
+import { DistanceToggle } from "./DistanceToggle.js";
+import { FocusDirectionButton } from "./FocusDirectionButton.js";
 
 interface PresentationContext
 {
@@ -235,7 +242,7 @@ const UseStyles = makeStyles({
         alignItems: "stretch",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
         padding: "clamp(1.5rem, 5vw, 3rem)"
     },
     ContentWithFooter:
@@ -258,10 +265,22 @@ const UseStyles = makeStyles({
         color: tokens.colorPaletteRedForeground1,
         padding: "0.75rem"
     },
+    FocusButtons:
+    {
+        display: "grid",
+        gap: "0.5rem",
+        marginTop: "-0.5rem"
+    },
+    FocusLayout:
+    {
+        display: "grid",
+        gap: "clamp(0.75rem, 2.5vh, 1.5rem)",
+        marginTop: "clamp(0.75rem, 2.5vh, 1.5rem)"
+    },
     Footer:
     {
         alignItems: "center",
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: "transparent",
         borderTop: `1px solid ${ tokens.colorNeutralStroke2 }`,
         bottom: 0,
         boxSizing: "border-box",
@@ -294,62 +313,90 @@ const OverlayApplication = (): React.ReactNode =>
         let IsMounted = true;
         const StopScreenUpdates = window.sorrell.overlay.onChanged(SetCurrentScreen);
 
-        void window.sorrell.overlay.get().then((Current: OverlayScreenDto) =>
+        window.sorrell.overlay.get().then((Current: OverlayScreenDto) =>
         {
             if (IsMounted)
             {
                 SetCurrentScreen(Current);
             }
         });
-        // }).catch((Cause: unknown) =>
-        // {
-        //     if (IsMounted)
-        //     {
-        //         SetErrorMessage(`Could not load commands: ${ String(Cause) }`);
-        //     }
-        // });
 
-        return (): void =>
+        return () =>
         {
             IsMounted = false;
             StopScreenUpdates();
-            void window.sorrell.overlay.preview(null);
+            window.sorrell.overlay.preview(null);
         };
     }, [ ]);
 
-    const Invoke = (Id: OverlayCommandIdType): void =>
-    {
-        void window.sorrell.overlay.invoke(Id);
-        // void window.sorrell.overlay.invoke(Id).catch((Cause: unknown) =>
-        // {
-        //     SetErrorMessage(`Could not invoke ${ Id }: ${ String(Cause) }`);
-        // });
-    };
+    const Invoke: { (Id: OverlayCommandIdType): void; } = window.sorrell.overlay.invoke;
 
     const Back = window.sorrell.overlay.back;
-    //     void window.sorrell.overlay.back().catch((Cause: unknown) =>
-    //     {
-    //         SetErrorMessage(`Could not return to the previous screen: ${ String(Cause) }`);
-    //     });
-    // };
 
-    const Preview = (Id: OverlayCommandIdType | null): void =>
-    {
-        void window.sorrell.overlay.preview(Id);
-        // void window.sorrell.overlay.preview(Id).catch((Cause: unknown) =>
-        // {
-        //     SetErrorMessage(`Could not preview ${ Id ?? "Focus" }: ${ String(Cause) }`);
-        // });
-    };
+    const Preview: { (Id: OverlayCommandIdType | null): void; } = window.sorrell.overlay.preview;
 
     const CurrentPresentation = CurrentScreen === undefined
         ? ScreenPresentation[OverlayScreenId.Home]
         : ScreenPresentation[CurrentScreen.Id];
+
     const CanGoBack = CurrentScreen?.CanGoBack === true;
     const SecondaryCommand = CurrentScreen?.SecondaryCommand;
     const SecondaryIcon = SecondaryCommand === undefined
         ? undefined
         : Presentation[SecondaryCommand.Id].Icon;
+    const DistanceToggleDto = CurrentScreen?.DistanceToggle;
+    const HasFooter = SecondaryCommand !== undefined || DistanceToggleDto !== undefined;
+    const IsFocusScreen = CurrentScreen?.Id === OverlayScreenId.Focus;
+
+    const FindCommand = (Id: OverlayCommandIdType): OverlayCommandDto | undefined =>
+        CurrentScreen?.Commands.find((Candidate: OverlayCommandDto) => Candidate.Id === Id);
+
+    const GetFocusCommand = (Id: OverlayCommandIdType): OverlayCommandDto =>
+    {
+        const Command = FindCommand(Id);
+
+        if (Command === undefined)
+        {
+            throw new Error(`Focus screen is missing the ${ Id } command.`);
+        }
+
+        return Command;
+    };
+
+    // Sampled unconditionally (even outside the Focus screen) to satisfy the
+    // rules of hooks; each call no-ops when there is no target icon.
+    const ToColor = (Color: SampledColor | undefined): Option.Option<string> =>
+        Option.fromNullishOr(Color).pipe(Option.map(ToCssColor));
+    const FocusMoveDownColor = ToColor(
+        UseDominantColor(FindCommand(OverlayCommandId.FocusMoveDown)?.Target?.Icon)
+    );
+    const FocusMoveLeftColor = ToColor(
+        UseDominantColor(FindCommand(OverlayCommandId.FocusMoveLeft)?.Target?.Icon)
+    );
+    const FocusMoveRightColor = ToColor(
+        UseDominantColor(FindCommand(OverlayCommandId.FocusMoveRight)?.Target?.Icon)
+    );
+    const FocusMoveUpColor = ToColor(
+        UseDominantColor(FindCommand(OverlayCommandId.FocusMoveUp)?.Target?.Icon)
+    );
+
+    const ToPadDirection = (
+        Id: OverlayCommandIdType,
+        Color: Option.Option<string>
+    ): DirectionalPadDirection =>
+    {
+        const Command = GetFocusCommand(Id);
+
+        return {
+            Color,
+            Disabled: Command.Disabled,
+            OnHoverChange: Command.Target === undefined
+                ? undefined
+                : (Hovered: boolean) => Preview(Hovered ? Command.Id : null),
+            OnInvoke: () => Invoke(Command.Id),
+            Shortcut: Command.Shortcut
+        };
+    };
 
     return (
         <main className={ Styles.Shell }>
@@ -398,7 +445,7 @@ const OverlayApplication = (): React.ReactNode =>
 
             <div className={ mergeClasses(
                 Styles.Content,
-                SecondaryCommand === undefined ? undefined : Styles.ContentWithFooter
+                HasFooter ? Styles.ContentWithFooter : undefined
             ) }>
                 <p className={ Styles.Description }>
                     { ResolveDescription(CurrentPresentation, DefaultPresentationContext) }
@@ -412,56 +459,110 @@ const OverlayApplication = (): React.ReactNode =>
                     </p>
                 ) }
 
-                <section
-                    aria-label="Available commands"
-                    className={ Styles.CommandList }>
-                    { (CurrentScreen?.Commands ?? [ ]).map((Command: OverlayCommandDto) =>
-                    {
-                        const CommandPresentation = Presentation[Command.Id];
-                        const Icon = CommandPresentation.Icon;
-                        if (!Predicate.hasProperty(CommandPresentation, "Description"))
-                        {
-                            throw new Error(
-                                `Command ${ Command.Id } corresponds to a Presentation with no ` +
-                                "Description, but it should have one."
-                            );
-                        }
-                        const Description = Command.Target?.Title
-                            ?? (Command.Disabled
-                                ? undefined
-                                : ResolveDescription(CommandPresentation, {
-                                    ...DefaultPresentationContext,
-                                    WindowTitle: Option.fromNullishOr(Command.Target?.Title)
-                                }));
-                        const ApplicationIcon = Command.Target === undefined
-                            ? undefined
-                            : Command.Target.Icon === undefined
-                                ? <AppGenericRegular />
-                                : (
-                                    <img
-                                        alt=""
-                                        className={ Styles.ApplicationIconImage }
-                                        src={ `data:image/png;base64,${ Command.Target.Icon }` } />
-                                );
+                { IsFocusScreen ? (
+                    <div className={ Styles.FocusLayout }>
+                        { CurrentScreen?.FocusFailure !== undefined && (
+                            <MessageBar
+                                intent="warning"
+                                layout="multiline">
+                                <MessageBarBody>
+                                    <MessageBarTitle>
+                                        Could not move focus
+                                    </MessageBarTitle>
+                                    { CurrentScreen.FocusFailure.WindowTitle } could not be focused.
+                                </MessageBarBody>
+                            </MessageBar>
+                        ) }
 
-                        return (
-                            <CommandButton
-                                Active={ false }
-                                Icon={ <Icon /> }
-                                Label={ CommandPresentation.Label }
-                                OnHoverChange={ Command.Target === undefined
+                        <DirectionalPad
+                            Down={ ToPadDirection(OverlayCommandId.FocusMoveDown, FocusMoveDownColor) }
+                            Left={ ToPadDirection(OverlayCommandId.FocusMoveLeft, FocusMoveLeftColor) }
+                            Right={ ToPadDirection(OverlayCommandId.FocusMoveRight, FocusMoveRightColor) }
+                            Up={ ToPadDirection(OverlayCommandId.FocusMoveUp, FocusMoveUpColor) }
+                        />
+
+                        <section
+                            aria-label="Focus targets"
+                            className={ Styles.FocusButtons }>
+                            { [
+                                OverlayCommandId.FocusMoveUp,
+                                OverlayCommandId.FocusMoveDown,
+                                OverlayCommandId.FocusMoveLeft,
+                                OverlayCommandId.FocusMoveRight
+                            ].map((Id: OverlayCommandIdType) =>
+                            {
+                                const Command = GetFocusCommand(Id);
+
+                                return (
+                                    <FocusDirectionButton
+                                        Command={ Command }
+                                        Icon={ Presentation[Command.Id].Icon }
+                                        OnHoverChange={ Command.Target === undefined
+                                            ? undefined
+                                            : (Hovered: boolean) => Preview(
+                                                Hovered ? Command.Id : null
+                                            ) }
+                                        OnInvoke={ () => Invoke(Command.Id) }
+                                        key={ Command.Id } />
+                                );
+                            }) }
+                        </section>
+                    </div>
+                ) : (
+                    <section
+                        aria-label="Available commands"
+                        className={ Styles.CommandList }>
+                        { (CurrentScreen?.Commands ?? [ ]).map((Command: OverlayCommandDto) =>
+                        {
+                            const CommandPresentation = Presentation[Command.Id];
+                            const Icon = CommandPresentation.Icon;
+                            if (!Predicate.hasProperty(CommandPresentation, "Description"))
+                            {
+                                throw new Error(
+                                    `Command ${ Command.Id } corresponds to a Presentation with no ` +
+                                    "Description, but it should have one."
+                                );
+                            }
+                            const Description = Command.Target?.Title
+                                ?? (Command.Disabled
                                     ? undefined
-                                    : (Hovered: boolean) => Preview(
-                                        Hovered ? Command.Id : null
-                                    ) }
-                                OnInvoke={ () => Invoke(Command.Id) }
-                                key={ Command.Id }
-                                { ...Struct.pick(Command, [ "Disabled", "Shortcut" ]) }
-                                { ...{ ApplicationIcon, Description } }
-                            />
-                        );
-                    }) }
-                </section>
+                                    : ResolveDescription(
+                                        CommandPresentation,
+                                        {
+                                            ...DefaultPresentationContext,
+                                            WindowTitle: Option.fromNullishOr(Command.Target?.Title)
+                                        })
+                                );
+                            const ApplicationIcon = Command.Target === undefined
+                                ? undefined
+                                : Command.Target.Icon === undefined
+                                    ? <AppGenericRegular />
+                                    : (
+                                        <img
+                                            alt=""
+                                            className={ Styles.ApplicationIconImage }
+                                            src={ `data:image/png;base64,${ Command.Target.Icon }` } />
+                                    );
+
+                            return (
+                                <CommandButton
+                                    Active={ false }
+                                    Icon={ <Icon /> }
+                                    Label={ CommandPresentation.Label }
+                                    OnHoverChange={ Command.Target === undefined
+                                        ? undefined
+                                        : (Hovered: boolean) => Preview(
+                                            Hovered ? Command.Id : null
+                                        ) }
+                                    OnInvoke={ () => Invoke(Command.Id) }
+                                    key={ Command.Id }
+                                    { ...Struct.pick(Command, [ "Disabled", "Shortcut" ]) }
+                                    { ...{ ApplicationIcon, Description } }
+                                />
+                            );
+                        }) }
+                    </section>
+                ) }
                 { SecondaryCommand !== undefined && SecondaryIcon !== undefined && (
                     <footer
                         aria-label="Secondary command"
@@ -478,6 +579,13 @@ const OverlayApplication = (): React.ReactNode =>
                             Shortcut={ SecondaryCommand.Shortcut }
                             key={ SecondaryCommand.Id }
                         />
+                    </footer>
+                ) }
+                { DistanceToggleDto !== undefined && (
+                    <footer
+                        aria-label="Move distance"
+                        className={ Styles.Footer }>
+                        <DistanceToggle { ...DistanceToggleDto } />
                     </footer>
                 ) }
             </div>

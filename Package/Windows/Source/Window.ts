@@ -37,9 +37,7 @@ export/**
        * Pixels outside a rounded or explicitly region-shaped window are
        * transparent.
        */
-const Capture = (
-    Window: Handle.HWND
-): Option.Option<string> =>
+const Capture = (Window: Handle.HWND): Option.Option<string> =>
 {
     if (typeof Binding.Window.Capture === "function")
     {

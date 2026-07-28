@@ -116,6 +116,16 @@ const Resolve = (
                 ? Option.some(UiCommands.BackOverlayScreen())
                 : Option.none();
 
+        case Hotkey.Id.PrimaryModifier:
+            if (Activation.Phase === Hotkey.Phase.Repeated)
+            {
+                return Option.none();
+            }
+
+            return Option.some(UiCommands.SetPrimaryModifierHeld({
+                Held: Hotkey.IsKeybindPressed(Activation.Keybind, Activation.PressedKeys)
+            }));
+
         default:
         {
             if (Activation.Phase !== Hotkey.Phase.Pressed)

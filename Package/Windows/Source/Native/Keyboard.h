@@ -20,3 +20,4 @@ void CleanupKeyboardSubscriptions();
 
 Napi::Value SubscribeToKeyboard(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value UnsubscribeFromKeyboard(const Napi::CallbackInfo& CallbackInfo);
+Napi::Value SetSuppressedKeys(const Napi::CallbackInfo& CallbackInfo);

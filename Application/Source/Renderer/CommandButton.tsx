@@ -18,6 +18,7 @@ import {
 } from "@fluentui/react-components";
 import { Key, Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
+import { Effect } from "effect";
 
 /** Presentation properties for a primary overlay command. */
 export interface CommandButtonProps
@@ -110,6 +111,7 @@ const UseStyles = makeStyles({
     }
 });
 
+export/** Render a shortcut's modifier and key labels in display order. */
 const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode> =>
 {
     const Parts = new Array<React.ReactNode>();
@@ -118,7 +120,7 @@ const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode>
     {
         Parts.push("Ctrl");
     }
-    if (Shortcut.Modifiers.Shift)
+    if (Shortcut.Modifiers.Shift || Shortcut.KeyLabel.toLocaleLowerCase().includes("shift"))
     {
         Parts.push(<Key.Shift />);
     }
@@ -135,9 +137,16 @@ const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode>
     {
         Parts.push("⭾");
     }
-    else
+    else if (!Shortcut.KeyLabel.toLowerCase().includes("shift"))
     {
         Parts.push(Shortcut.KeyLabel);
+    }
+
+    // console.dir(Shortcut);
+
+    if (Shortcut.Modifiers.Shift)
+    {
+        console.log("SHIFT", Shortcut.KeyLabel);
     }
 
     return Parts;

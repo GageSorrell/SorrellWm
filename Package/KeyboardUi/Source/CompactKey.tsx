@@ -26,12 +26,11 @@ const UseStyles = makeStyles({
         display: "flex",
         fontSize: tokens.fontSizeBase200,
         fontWeight: tokens.fontWeightRegular,
-        // fontWeight: tokens.fontWeightRegular,
         justifyContent: "center",
         maxHeight: "1.25rem",
-        // maxWidth: "1.5rem",
         minHeight: "1.25rem",
-        minWidth: "1.25rem"
+        minWidth: "1.25rem",
+        userSelect: "none"
     }
 });
 

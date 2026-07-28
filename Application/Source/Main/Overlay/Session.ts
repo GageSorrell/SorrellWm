@@ -33,6 +33,16 @@ export interface FocusWindowCandidate
     readonly Window: Handle.HWND;
 }
 
+/**
+ * A window that could not be focused, excluded from Focus targets for the rest
+ * of the overlay session.
+ */
+export interface FocusFailure
+{
+    readonly Window: Handle.HWND;
+    readonly WindowTitle: string;
+}
+
 type FocusCommandId =
     | typeof CommandId.FocusMoveDown
     | typeof CommandId.FocusMoveLeft
@@ -49,22 +59,28 @@ const FocusCommandIds = Object.freeze([
 const IsFocusCommandId = (Id: OverlayCommandId): Id is FocusCommandId =>
     (FocusCommandIds as ReadonlyArray<OverlayCommandId>).includes(Id);
 
+// A candidate is assigned to whichever axis its offset is dominated by, so a
+// window can never qualify for two directions at once (e.g. one both left of
+// and below the current window is only ever a Left or a Down candidate, not
+// both).
 const IsInDirection = (
     Id: FocusCommandId,
     DeltaX: number,
     DeltaY: number
 ): boolean =>
 {
+    const IsHorizontal = Math.abs(DeltaX) > Math.abs(DeltaY);
+
     switch (Id)
     {
         case CommandId.FocusMoveDown:
-            return DeltaY > 0;
+            return !IsHorizontal && DeltaY > 0;
         case CommandId.FocusMoveLeft:
-            return DeltaX < 0;
+            return IsHorizontal && DeltaX < 0;
         case CommandId.FocusMoveRight:
-            return DeltaX > 0;
+            return IsHorizontal && DeltaX > 0;
         case CommandId.FocusMoveUp:
-            return DeltaY < 0;
+            return !IsHorizontal && DeltaY < 0;
     }
 };
 
@@ -152,6 +168,21 @@ export interface OverlaySessionImpl
     /** Set the window from which the overlay was activated. */
     readonly SetActivationWindow: (Window: Handle.HWND) => Effect.Effect<void>;
 
+    /** Whether the primary modifier (e.g. Shift) is currently held. */
+    readonly PrimaryModifierHeld: Effect.Effect<boolean>;
+
+    /** Update whether the primary modifier is currently held. */
+    readonly SetPrimaryModifierHeld: (Held: boolean) => Effect.Effect<void>;
+
+    /** The most recent Focus-direction failure still being shown, if any. */
+    readonly FocusFailure: Effect.Effect<Option.Option<FocusFailure>>;
+
+    /**
+     * Record that a window could not be focused: exclude it from Focus targets
+     * for the rest of this overlay session and surface an explanatory error.
+     */
+    readonly RecordFocusFailure: (Failure: FocusFailure) => Effect.Effect<void>;
+
     /** Project the current screen and keybind settings for a renderer. */
     readonly Snapshot: Effect.Effect<OverlayScreenDto>;
 
@@ -172,7 +203,8 @@ const GetCurrent = (Stack: ReadonlyArray<OverlayScreenId>): OverlayScreenId =>
     Stack.at(-1) ?? ScreenId.Home;
 
 const GetWindowCandidates = (
-    CurrentWindow: Handle.HWND
+    CurrentWindow: Handle.HWND,
+    Excluded: ReadonlySet<Handle.HWND>
 ): ReadonlyArray<FocusWindowCandidate> =>
 {
     const Windows = Window.GetManageableTopLevelWindows();
@@ -184,7 +216,7 @@ const GetWindowCandidates = (
 
     return Windows.success.flatMap((WindowHandle: Handle.HWND) =>
     {
-        if (WindowHandle === CurrentWindow)
+        if (WindowHandle === CurrentWindow || Excluded.has(WindowHandle))
         {
             return [ ];
         }
@@ -198,7 +230,8 @@ const GetWindowCandidates = (
 
 const ResolveTarget = (
     CurrentWindow: Option.Option<Handle.HWND>,
-    Id: OverlayCommandId
+    Id: OverlayCommandId,
+    Excluded: ReadonlySet<Handle.HWND>
 ): Option.Option<FocusWindowCandidate> =>
 {
     if (Option.isNone(CurrentWindow) || !IsFocusCommandId(Id))
@@ -214,7 +247,7 @@ const ResolveTarget = (
 
     return SelectDirectionalWindow(
         CurrentBounds.value,
-        GetWindowCandidates(CurrentWindow.value),
+        GetWindowCandidates(CurrentWindow.value, Excluded),
         Id
     );
 };
@@ -251,6 +284,9 @@ const Live = Layer.effect(
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
         const Settings = yield* AppSettings.AppSettings;
         const ActivationWindow = yield* Ref.make(Option.none<Handle.HWND>());
+        const PrimaryModifierHeldRef = yield* Ref.make(false);
+        const ExcludedFocusWindows = yield* Ref.make<ReadonlySet<Handle.HWND>>(new Set());
+        const FocusFailureRef = yield* Ref.make(Option.none<FocusFailure>());
         const Stack = yield* SubscriptionRef.make<ReadonlyArray<OverlayScreenId>>(
             Object.freeze([ ScreenId.Home ])
         );
@@ -259,36 +295,45 @@ const Live = Layer.effect(
         {
             Window.ClearWindowDimming();
         });
+        const ClearFocusFailure = Ref.set(FocusFailureRef, Option.none());
         const ResolveCurrentFocusTarget = (
             Id: OverlayCommandId
-        ): Effect.Effect<Option.Option<Handle.HWND>> => pipe(
-            Ref.get(ActivationWindow),
-            Effect.map((CurrentWindow: Option.Option<Handle.HWND>) =>
-                Option.map(ResolveTarget(CurrentWindow, Id), Struct.get("Window")))
-        );
+        ): Effect.Effect<Option.Option<Handle.HWND>> => Effect.gen(function*()
+        {
+            const CurrentWindow = yield* Ref.get(ActivationWindow);
+            const Excluded = yield* Ref.get(ExcludedFocusWindows);
+            return Option.map(ResolveTarget(CurrentWindow, Id, Excluded), Struct.get("Window"));
+        });
 
         return {
-            Back: SubscriptionRef.update(
-                Stack,
-                (Value: ReadonlyArray<OverlayScreenId>) =>
-                    Value.length > 1
-                        ? Object.freeze(Value.slice(0, -1))
-                        : Value
+            Back: pipe(
+                SubscriptionRef.update(
+                    Stack,
+                    (Value: ReadonlyArray<OverlayScreenId>) =>
+                        Value.length > 1
+                            ? Object.freeze(Value.slice(0, -1))
+                            : Value
+                ),
+                Effect.andThen(ClearFocusFailure)
             ),
             Changes: pipe(SubscriptionRef.changes(Stack), Stream.map(GetCurrent)),
             ClearActivationWindow: Ref.set(ActivationWindow, Option.none()),
             ClearFocusPreview,
             Current,
+            FocusFailure: Ref.get(FocusFailureRef),
             GetActivationApplicationName: pipe(
                 Ref.get(ActivationWindow),
                 Effect.map(Option.flatMap(GetApplicationName))
             ),
             GetActivationWindow: Ref.get(ActivationWindow),
-            Navigate: (Screen: OverlayScreenId) => SubscriptionRef.update(
-                Stack,
-                (Value: ReadonlyArray<OverlayScreenId>) => GetCurrent(Value) === Screen
-                    ? Value
-                    : Object.freeze([ ...Value, Screen ])
+            Navigate: (Screen: OverlayScreenId) => pipe(
+                SubscriptionRef.update(
+                    Stack,
+                    (Value: ReadonlyArray<OverlayScreenId>) => GetCurrent(Value) === Screen
+                        ? Value
+                        : Object.freeze([ ...Value, Screen ])
+                ),
+                Effect.andThen(ClearFocusFailure)
             ),
             PreviewFocusTarget: (Id: OverlayCommandId | null) => Effect.gen(function*()
             {
@@ -298,7 +343,8 @@ const Live = Layer.effect(
                 }
 
                 const CurrentWindow = yield* Ref.get(ActivationWindow);
-                const Target = ResolveTarget(CurrentWindow, Id);
+                const Excluded = yield* Ref.get(ExcludedFocusWindows);
+                const Target = ResolveTarget(CurrentWindow, Id, Excluded);
 
                 if (Option.isNone(CurrentWindow) || Option.isNone(Target))
                 {
@@ -319,15 +365,31 @@ const Live = Layer.effect(
                     return yield* Effect.fail(ResultValue.failure);
                 }
             }),
-            Reset: SubscriptionRef.set(Stack, Object.freeze([ ScreenId.Home ])),
+            PrimaryModifierHeld: Ref.get(PrimaryModifierHeldRef),
+            RecordFocusFailure: (Failure: FocusFailure) => pipe(
+                Ref.update(
+                    ExcludedFocusWindows,
+                    (Current: ReadonlySet<Handle.HWND>) => new Set([ ...Current, Failure.Window ])
+                ),
+                Effect.andThen(Ref.set(FocusFailureRef, Option.some(Failure)))
+            ),
+            Reset: pipe(
+                SubscriptionRef.set(Stack, Object.freeze([ ScreenId.Home ])),
+                Effect.andThen(Ref.set(ExcludedFocusWindows, new Set())),
+                Effect.andThen(ClearFocusFailure)
+            ),
             ResolveFocusTarget: ResolveCurrentFocusTarget,
             SetActivationWindow: (WindowHandle: Handle.HWND) =>
                 Ref.set(ActivationWindow, Option.some(WindowHandle)),
+            SetPrimaryModifierHeld: (Held: boolean) =>
+                Ref.set(PrimaryModifierHeldRef, Held),
             Snapshot: Effect.gen(function*()
             {
                 const CurrentScreen = yield* Current;
                 const CurrentSettings = yield* Settings.Get;
                 const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
+                const Held = yield* Ref.get(PrimaryModifierHeldRef);
+                const Excluded = yield* Ref.get(ExcludedFocusWindows);
                 const FocusTargets: Partial<Record<
                     OverlayCommandId,
                     OverlayCommandTargetDto
@@ -337,7 +399,7 @@ const Live = Layer.effect(
                 {
                     for (const Id of FocusCommandIds)
                     {
-                        const Target = ResolveTarget(CurrentWindowOpt, Id);
+                        const Target = ResolveTarget(CurrentWindowOpt, Id, Excluded);
 
                         if (Option.isSome(Target))
                         {
@@ -354,13 +416,21 @@ const Live = Layer.effect(
                         return Option.isNone(Name) ? { } : { Name: Name.value };
                     }
                 );
-
-                return OverlayCommandCatalog.FromKeybindSettings(
+                const CurrentFocusFailure = yield* Ref.get(FocusFailureRef);
+                const Screen = OverlayCommandCatalog.FromKeybindSettings(
                     CurrentScreen,
                     CurrentSettings.Keybinds,
                     FocusTargets,
-                    ApplicationTarget.valueOrUndefined
+                    ApplicationTarget.valueOrUndefined,
+                    Held
                 );
+
+                return CurrentScreen === ScreenId.Focus && Option.isSome(CurrentFocusFailure)
+                    ? {
+                        ...Screen,
+                        FocusFailure: { WindowTitle: CurrentFocusFailure.value.WindowTitle }
+                    }
+                    : Screen;
             }),
             TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none())
         } as const;

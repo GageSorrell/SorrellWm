@@ -55,6 +55,15 @@ export type UiCommand = Command.Command.Enum<"Ui", {
     {
         readonly Path: Option.Option<string>;
     }
+
+    /**
+     * Update whether the primary modifier (e.g. Shift) is currently held.
+     * @since 0.1.0
+     */
+    readonly SetPrimaryModifierHeld:
+    {
+        readonly Held: boolean;
+    }
 }>;
 
 export/** Construct immutable user-interface commands. */

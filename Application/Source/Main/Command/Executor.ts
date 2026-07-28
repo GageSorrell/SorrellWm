@@ -13,13 +13,18 @@ import * as AppSettings from "../AppSettings/AppSettings.ts";
 import * as BoxUtility from "../Utility/Math/Box.ts";
 import * as BrowserWindow from "../BrowserWindow.ts";
 import * as CommandResolver from "./Resolver.ts";
+import * as Hotkey from "../Input/Hotkey.ts";
 import * as OverlaySession from "../Overlay/Session.ts";
 import * as Tiling from "../Tiling/index.ts";
 import type * as Ui from "./Ui.ts";
 import { Box, IntPoint } from "@sorrell/math";
 import { Console, Context, Data, Effect, Layer, Number, Option, Result, Stream, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
-import type { OverlayCommandId, OverlayScreenDto } from "../../Shared/OverlayCommand.ts";
+import {
+    MoveDistance,
+    type OverlayCommandId,
+    type OverlayScreenDto
+} from "../../Shared/OverlayCommand.ts";
 import { AppApiChannel } from "../../Shared/Api.ts";
 import type { BackdropPresentation } from "../../Shared/Backdrop.ts";
 import { DevFeatures } from "../Development/DevFeatures.ts";
@@ -223,10 +228,19 @@ const FocusDirection = (
     {
         yield* Effect.log(FocusResult.failure.Message);
         yield* Effect.log(Target.value);
-        return yield* new WindowFocusRestorationError({
-            Message: FocusResult.failure.Message,
-            Window: Target.value
-        });
+
+        const WindowTitle = Option.getOrElse(
+            Option.filter(
+                Window.GetWindowText(Target.value),
+                (Value: string) => Value.trim().length > 0
+            ),
+            () => "Untitled window"
+        );
+
+        yield* Session.RecordFocusFailure({ Window: Target.value, WindowTitle });
+        yield* Session.ClearFocusPreview;
+        yield* PublishOverlayScreen(BrowserWindows, Session);
+        return;
     }
 
     // Keep the overlay open on the Focus screen, repainted over the newly-focused
@@ -247,16 +261,14 @@ const FocusDirection = (
     yield* PublishOverlayScreen(BrowserWindows, Session);
 });
 
-const MoveDistance = 20;
-
-const MoveOffsets: Readonly<Record<
+const MoveDirectionUnits: Readonly<Record<
     "MoveWindowDown" | "MoveWindowLeft" | "MoveWindowRight" | "MoveWindowUp",
     { readonly X: number; readonly Y: number; }
 >> = {
-    MoveWindowDown: { X: 0, Y: MoveDistance },
-    MoveWindowLeft: { X: -MoveDistance, Y: 0 },
-    MoveWindowRight: { X: MoveDistance, Y: 0 },
-    MoveWindowUp: { X: 0, Y: -MoveDistance }
+    MoveWindowDown: { X: 0, Y: 1 },
+    MoveWindowLeft: { X: -1, Y: 0 },
+    MoveWindowRight: { X: 1, Y: 0 },
+    MoveWindowUp: { X: 0, Y: -1 }
 };
 
 const IsWindowTiled = (
@@ -272,12 +284,12 @@ const MoveWindowDirection = (
     Id: OverlayCommandId
 ) => Effect.gen(function*()
 {
-    const OffsetsByCommandId = MoveOffsets as
+    const UnitsByCommandId = MoveDirectionUnits as
         Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
-    const Offset = OffsetsByCommandId[Id];
+    const Unit = UnitsByCommandId[Id];
     const ActivationWindow = yield* Session.GetActivationWindow;
 
-    if (Offset === undefined || Option.isNone(ActivationWindow))
+    if (Unit === undefined || Option.isNone(ActivationWindow))
     {
         return;
     }
@@ -298,6 +310,9 @@ const MoveWindowDirection = (
         return;
     }
 
+    const Held = yield* Session.PrimaryModifierHeld;
+    const Distance = Held ? MoveDistance.Secondary : MoveDistance.Primary;
+    const Offset = { X: Unit.X * Distance, Y: Unit.Y * Distance };
     const NewBounds = Box.Box(
         CurrentBounds.value.Top + Offset.Y,
         CurrentBounds.value.Right + Offset.X,
@@ -388,6 +403,11 @@ const ExecuteUi = (
                     Option.getOrNull(Command.Path)
                 );
             });
+        case "SetPrimaryModifierHeld":
+            return pipe(
+                Session.SetPrimaryModifierHeld(Command.Held),
+                Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
+            );
         case "NoOpOverlayCommand":
             if (Command.Id.startsWith("FocusMove"))
             {
@@ -438,6 +458,7 @@ const Live = Layer.effect(
         const Settings = yield* AppSettings.AppSettings;
         const Session = yield* OverlaySession.OverlaySession;
         const TilingManager = yield* Tiling.Manager.TilingManager;
+        const Hotkeys = yield* Hotkey.Hotkey;
         const Execute = MakeExecute(BrowserWindows, Settings, Session, TilingManager);
 
         yield* pipe(
@@ -447,6 +468,21 @@ const Live = Layer.effect(
                 && Event.Key === BrowserWindow.Key.Overlay
             ),
             Stream.runForEach(() => Session.ClearFocusPreview),
+            Effect.forkScoped({ startImmediately: true })
+        );
+
+        // The overlay's own keys (Cancel/Escape, the directional keys, etc.)
+        // should only be withheld from other applications while the overlay is
+        // actually visible; the Activate keybind stays reserved unconditionally
+        // so the overlay can still be summoned.
+        yield* pipe(
+            BrowserWindows.Events,
+            Stream.filter((Event: BrowserWindow.Event) =>
+                (Event._tag === "Closed" || Event._tag === "Hidden" || Event._tag === "Shown")
+                && Event.Key === BrowserWindow.Key.Overlay
+            ),
+            Stream.runForEach((Event: BrowserWindow.Event) =>
+                Hotkeys.SetOverlayActive(Event._tag === "Shown")),
             Effect.forkScoped({ startImmediately: true })
         );
 

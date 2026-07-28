@@ -51,7 +51,8 @@ const FromKeybindSettings = (
     ScreenId: OverlayCommand.OverlayScreenId,
     Values: ReadonlyArray<Hotkey.KeybindSetting>,
     FocusTargetValues: FocusTargets = { },
-    ApplicationTarget?: OverlayApplicationTarget
+    ApplicationTarget?: OverlayApplicationTarget,
+    PrimaryModifierHeld: boolean = false
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
@@ -99,10 +100,27 @@ const FromKeybindSettings = (
             ...(ApplicationTarget?.Name === undefined ? { } : { ApplicationName: ApplicationTarget.Name })
         });
 
+    const ModifierKeybind = ScreenId === OverlayCommand.OverlayScreenId.Move
+        ? Keybinds.find((Value: Hotkey.KeybindSetting) => Value.Id === Hotkey.Id.PrimaryModifier)
+        : undefined;
+    const DistanceToggle = ModifierKeybind === undefined
+        ? undefined
+        : Object.freeze({
+            Active: PrimaryModifierHeld,
+            PrimaryDistance: OverlayCommand.MoveDistance.Primary,
+            SecondaryDistance: OverlayCommand.MoveDistance.Secondary,
+            Shortcut: Object.freeze({
+                KeyCode: ModifierKeybind.Key,
+                KeyLabel: GetKeyLabel(ModifierKeybind.Key),
+                Modifiers: Object.freeze({ ...ModifierKeybind.Modifiers })
+            })
+        });
+
     return Object.freeze({
         CanGoBack: ScreenId !== OverlayCommand.OverlayScreenId.Home,
         Commands: Object.freeze(Commands),
         Id: ScreenId,
+        ...(DistanceToggle === undefined ? { } : { DistanceToggle }),
         ...(SecondaryCommand === undefined ? { } : { SecondaryCommand })
     });
 };

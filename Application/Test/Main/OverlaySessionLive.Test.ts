@@ -187,6 +187,47 @@ describe("OverlaySession.Live Focus targets", () =>
     });
 });
 
+describe("OverlaySession.Live DistanceToggle", () =>
+{
+    it("reflects the primary modifier's held state on the Move screen", async () =>
+    {
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.Navigate(OverlayScreenId.Move);
+                yield* Session.SetPrimaryModifierHeld(true);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows)
+        ));
+
+        expect(Snapshot.DistanceToggle).toMatchObject({
+            Active: true,
+            PrimaryDistance: 20,
+            SecondaryDistance: 50
+        });
+    });
+
+    it("omits the distance toggle outside the Move screen", async () =>
+    {
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows)
+        ));
+
+        expect(Snapshot.DistanceToggle).toBeUndefined();
+    });
+});
+
 const CurrentSettings: AppSettings.AppSettings = {
     Keybinds: [ ],
     OverlayBackdropIntensity: 50,
