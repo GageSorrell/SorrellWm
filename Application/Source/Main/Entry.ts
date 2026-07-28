@@ -10,6 +10,7 @@
  */
 
 import * as AppSettings from "./AppSettings/index.ts";
+import * as BoxUtility from "./Utility/Math/Box.ts";
 import * as BrowserWindow from "./BrowserWindow.ts";
 import * as Command from "./Command/index.ts";
 import * as Input from "./Input/index.ts";
@@ -20,6 +21,7 @@ import * as OverlayShared from "../Shared/OverlayCommand.ts";
 import * as Theme from "./Theme.ts";
 import * as Tiling from "./Tiling/index.ts";
 import * as TitlebarFlyout from "./TitlebarFlyout.ts";
+import { Box, IntPoint } from "@sorrell/math";
 import { Effect, Layer, ManagedRuntime, Option, Stream, pipe } from "effect";
 import {
     type Event,
@@ -29,6 +31,7 @@ import {
     nativeTheme,
     net,
     protocol,
+    screen,
     systemPreferences
 } from "electron";
 import { isAbsolute, join, relative } from "node:path";
@@ -270,6 +273,37 @@ const PublishRendererTheme = (): void =>
     }));
 };
 
+const HandleOnStartDevFeatures = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl
+) => Effect.gen(function* ()
+{
+    if ((yield* DevFeatures).OpenSettingsOnStart)
+    {
+        const Specification = yield* BrowserWindow.SettingsWindowSpec;
+        yield* BrowserWindows.Ensure(Specification);
+
+        const PrimaryDisplayArea = screen.getPrimaryDisplay().workArea;
+        const PrimaryDisplayBounds = Box.Box(
+            IntPoint.IntPoint(PrimaryDisplayArea.x, PrimaryDisplayArea.y),
+            IntPoint.IntPoint(
+                PrimaryDisplayArea.x + PrimaryDisplayArea.width,
+                PrimaryDisplayArea.y + PrimaryDisplayArea.height
+            )
+        );
+        const WindowSize = IntPoint.IntPoint(
+            Specification.Options.width ?? 0,
+            Specification.Options.height ?? 0
+        );
+
+        yield* BrowserWindows.SetBounds(
+            BrowserWindow.Key.Settings,
+            BoxUtility.Center(WindowSize, PrimaryDisplayBounds)
+        );
+        yield* BrowserWindows.Show(BrowserWindow.Key.Settings);
+        yield* BrowserWindows.Focus(BrowserWindow.Key.Settings);
+    }
+});
+
 const StartApplication = Effect.gen(function*()
 {
     yield* Effect.logInfo("Starting SorrellWm.", {
@@ -309,6 +343,8 @@ const StartApplication = Effect.gen(function*()
     }
 
     yield* Effect.logInfo("SorrellWm is ready.");
+
+    yield* HandleOnStartDevFeatures(BrowserWindows);
 });
 
 void app.whenReady().then(async (): Promise<void> =>

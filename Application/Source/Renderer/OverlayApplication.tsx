@@ -33,7 +33,6 @@ import {
     Button,
     makeStyles,
     mergeClasses,
-    shorthands,
     tokens
 } from "@fluentui/react-components";
 import { CommandButton, CompactCommandButton } from "./CommandButton.js";
@@ -169,16 +168,16 @@ const UseStyles = makeStyles({
     CommandList:
     {
         display: "grid",
-        marginTop: "clamp(1.5rem, 5vh, 3rem)",
-        ...shorthands.gap("0.65rem")
+        gap: "0.65rem",
+        marginTop: "clamp(1.5rem, 5vh, 3rem)"
     },
     Content:
     {
-        ...shorthands.padding("clamp(1.5rem, 5vw, 3rem)"),
         alignItems: "stretch",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between"
+        justifyContent: "space-between",
+        padding: "clamp(1.5rem, 5vw, 3rem)"
     },
     ContentWithFooter:
     {
@@ -189,31 +188,31 @@ const UseStyles = makeStyles({
         color: tokens.colorNeutralForeground2,
         fontSize: tokens.fontSizeBase300,
         lineHeight: tokens.lineHeightBase300,
-        maxWidth: "40rem",
-        ...shorthands.margin(0)
+        margin: 0,
+        maxWidth: "40rem"
     },
     Error:
     {
         backgroundColor: tokens.colorPaletteRedBackground1,
+        border: `1px solid ${ tokens.colorPaletteRedBorder2 }`,
         borderRadius: "0.5rem",
         color: tokens.colorPaletteRedForeground1,
-        ...shorthands.border("1px", "solid", tokens.colorPaletteRedBorder2),
-        ...shorthands.padding("0.75rem")
+        padding: "0.75rem"
     },
     Footer:
     {
         alignItems: "center",
         backgroundColor: tokens.colorNeutralBackground1,
+        borderTop: `1px solid ${ tokens.colorNeutralStroke2 }`,
         bottom: 0,
         boxSizing: "border-box",
         display: "flex",
         height: "48px",
         justifyContent: "center",
         left: 0,
+        padding: `0 ${ tokens.spacingHorizontalM }`,
         position: "absolute",
-        width: "100%",
-        ...shorthands.borderTop("1px", "solid", tokens.colorNeutralStroke2),
-        ...shorthands.padding(0, tokens.spacingHorizontalM)
+        width: "100%"
     },
     Shell:
     {

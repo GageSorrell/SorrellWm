@@ -23,7 +23,8 @@
     "scripts": {
         "build": "npm run typecheck && electron-vite build",
         "dev": "tsx ./Script/RunElectronVite.ts dev --watch",
-        "dev:overlay": "tsx ./Script/RunElectronVite.ts dev --watch",
+        "dev:overlay": "cross-env WM_DEV_STATIC_OVERLAY=true tsx ./Script/RunElectronVite.ts dev --watch",
+        "dev:settings": "cross-env WM_DEV_OPEN_SETTINGS_ON_START=true tsx ./Script/RunElectronVite.ts dev --watch",
         "dev:inspect": "tsx ./Script/RunElectronVite.ts dev --watch --inspect=5858",
         "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../Package/EsLintConfigSorrell --ext .cjs,.js,.jsx,.mjs,.mts,.ts,.tsx Source electron.vite.config.ts vitest.config.ts",
         "logs": "sorrell-log-client",

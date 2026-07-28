@@ -14,7 +14,6 @@ import {
     Button,
     type ButtonProps,
     makeStyles,
-    shorthands,
     tokens
 } from "@fluentui/react-components";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
@@ -47,28 +46,28 @@ const UseStyles = makeStyles({
     Button:
     {
         display: "grid",
+        gap: "0.9rem",
         gridTemplateColumns: "auto minmax(0, 1fr) auto",
         minHeight: "4.5rem",
+        padding: "0.8rem 1rem",
         textAlign: "left",
-        width: "100%",
-        ...shorthands.gap("0.9rem"),
-        ...shorthands.padding("0.8rem", "1rem")
+        width: "100%"
     },
     CompactButton:
     {
         display: "grid",
+        gap: "0.65rem",
         gridTemplateColumns: "auto minmax(0, 1fr) auto",
         maxWidth: "100%",
         minHeight: "2.25rem",
-        textAlign: "left",
-        ...shorthands.gap("0.65rem"),
-        ...shorthands.padding("0.35rem", "0.75rem")
+        padding: "0.35rem 0.75rem",
+        textAlign: "left"
     },
     Content:
     {
         display: "grid",
-        minWidth: 0,
-        ...shorthands.gap("0.2rem")
+        gap: "0.2rem",
+        minWidth: 0
     },
     Description:
     {
@@ -83,11 +82,11 @@ const UseStyles = makeStyles({
     Keycap:
     {
         backgroundColor: tokens.colorNeutralBackground3,
+        border: `1px solid ${ tokens.colorNeutralStroke2 }`,
         borderRadius: "0.4rem",
         minWidth: "1.8rem",
-        textAlign: "center",
-        ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
-        ...shorthands.padding("0.3rem", "0.45rem")
+        padding: "0.3rem 0.45rem",
+        textAlign: "center"
     },
     Label:
     {
@@ -100,13 +99,13 @@ const UseStyles = makeStyles({
         color: tokens.colorNeutralForeground1,
         display: "inline-flex",
         fontFamily: "inherit",
-        ...shorthands.gap("0.25rem")
+        gap: "0.25rem"
     },
     Trailing:
     {
         alignItems: "center",
         display: "inline-flex",
-        ...shorthands.gap("0.75rem")
+        gap: "0.75rem"
     }
 });
 

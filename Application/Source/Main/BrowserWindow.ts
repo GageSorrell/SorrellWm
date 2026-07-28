@@ -31,6 +31,7 @@ import electron, { app } from "electron";
 import type { Box } from "@sorrell/math";
 import { ToRectangle as BoxToRectangle } from "./Utility/Math/Box.js";
 import { DevFeatures } from "./Development/DevFeatures.ts";
+import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.ts";
 import type { Handle as WindowsHandle } from "@sorrell/windows";
 import { join } from "path";
 
@@ -822,5 +823,30 @@ const MainWindowSpec = Effect.gen(function*()
         Options: Struct.assign(BaseOptions, OverlayOptions),
         ShowWhenReady,
         Url: WithWindowKey(Url, Key.Main)
+    } as const;
+});
+
+export/** Construct the normal, persistent settings-window specification. */
+const SettingsWindowSpec = Effect.gen(function*()
+{
+    const { Options: BaseOptions, Url } = GetSpecBase();
+    const SettingsOptions: BrowserWindowConstructorOptions =
+        {
+            backgroundMaterial: "mica",
+            height: 640,
+            minHeight: 480,
+            minWidth: 640,
+            show: false,
+            title: "SorrellWm Settings",
+            titleBarOverlay: { height: SettingsTitlebarHeight },
+            titleBarStyle: "hidden",
+            width: 900
+        } as const;
+
+    return {
+        Key: Key.Settings,
+        Options: Struct.assign(BaseOptions, SettingsOptions),
+        ShowWhenReady: false,
+        Url: WithWindowKey(Url, Key.Settings)
     } as const;
 });

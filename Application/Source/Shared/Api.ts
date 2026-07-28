@@ -57,6 +57,11 @@ export interface AppApi
     };
 
     readonly platform: string;
+    readonly settings:
+    {
+        /** Observe requests to navigate the settings window to a given path. */
+        readonly onNavigate: (Listener: (Path: string | null) => void) => () => void;
+    };
     readonly theme:
     {
         /** Retrieve the theme currently resolved by Electron and Windows. */
@@ -76,6 +81,7 @@ const AppApiChannel = Object.freeze({
     OverlayFocusPreview: "overlay-focus:preview" as const,
     OverlayScreenChanged: "overlay-screen:changed" as const,
     OverlayScreenGet: "overlay-screen:get" as const,
+    SettingsNavigate: "settings:navigate" as const,
     ThemeChanged: "theme:changed",
     ThemeGet: "theme:get"
 } as const);

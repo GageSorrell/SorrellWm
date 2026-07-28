@@ -300,6 +300,7 @@ const FakeOverlaySession = (
         }),
         ClearFocusPreview: Effect.void,
         Current: Effect.sync(Current),
+        GetActivationApplicationName: Effect.succeed(Option.none<string>()),
         Navigate: (Screen: OverlayScreenId) => Effect.sync((): void =>
         {
             Stack = [ ...Stack, Screen ];

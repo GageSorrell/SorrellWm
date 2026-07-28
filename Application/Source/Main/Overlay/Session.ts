@@ -135,6 +135,9 @@ export interface OverlaySessionImpl
     /** Clear the window from which the overlay was activated. */
     readonly ClearActivationWindow: Effect.Effect<void>;
 
+    /** The application name of the window from which the overlay was activated, if any. */
+    readonly GetActivationApplicationName: Effect.Effect<Option.Option<string>>;
+
     /** Clear any active Focus hover preview. */
     readonly ClearFocusPreview: Effect.Effect<void>;
 
@@ -213,6 +216,12 @@ const ResolveTarget = (
     );
 };
 
+const GetApplicationName = (WindowHandle: Handle.HWND): Option.Option<string> => pipe(
+    Window.GetApplicationName(WindowHandle),
+    Option.filter((Value: string) => Value.trim().length > 0),
+    Option.map((Value: string) => Value.trim())
+);
+
 const GetTargetPresentation = (Target: FocusWindowCandidate): OverlayCommandTargetDto =>
 {
     const Title = Option.getOrElse(
@@ -267,6 +276,10 @@ const Live = Layer.effect(
             ClearActivationWindow: Ref.set(ActivationWindow, Option.none()),
             ClearFocusPreview,
             Current,
+            GetActivationApplicationName: pipe(
+                Ref.get(ActivationWindow),
+                Effect.map(Option.flatMap(GetApplicationName))
+            ),
             Navigate: (Screen: OverlayScreenId) => SubscriptionRef.update(
                 Stack,
                 (Value: ReadonlyArray<OverlayScreenId>) => GetCurrent(Value) === Screen
@@ -333,12 +346,7 @@ const Live = Layer.effect(
                     CurrentWindowOpt,
                     (CurrentWindow: Handle.HWND) =>
                     {
-                        const Name = pipe(
-                            Window.GetApplicationName(CurrentWindow),
-                            Option.filter((Value: string) => Value.trim().length > 0),
-                            Option.map((Value: string) => Value.trim())
-                        );
-
+                        const Name = GetApplicationName(CurrentWindow);
                         return Option.isNone(Name) ? { } : { Name: Name.value };
                     }
                 );

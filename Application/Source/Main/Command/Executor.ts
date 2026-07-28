@@ -281,7 +281,17 @@ const ExecuteUi = (
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
         case "OpenSettings":
-            // @TODO
+            return Effect.gen(function*()
+            {
+                yield* BrowserWindows.Ensure(yield* BrowserWindow.SettingsWindowSpec);
+                yield* BrowserWindows.Show(BrowserWindow.Key.Settings);
+                yield* BrowserWindows.Focus(BrowserWindow.Key.Settings);
+                yield* BrowserWindows.Send(
+                    BrowserWindow.Key.Settings,
+                    AppApiChannel.SettingsNavigate,
+                    Option.getOrNull(Command.Path)
+                );
+            });
         case "NoOpOverlayCommand":
             return Command.Id.startsWith("FocusMove")
                 ? FocusDirection(BrowserWindows, Session, Command.Id)

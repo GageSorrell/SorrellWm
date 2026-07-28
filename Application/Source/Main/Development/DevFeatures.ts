@@ -14,6 +14,7 @@ import { Config, Effect, pipe } from "effect";
 
 const Defaults =
     {
+        OpenSettingsOnStart: false,
         StaticOverlay: false,
         TileOnStart: false
     } as const;
@@ -26,6 +27,7 @@ export/**
        */
 const DevFeatures = pipe(
     Config.all({
+        OpenSettingsOnStart: Config.boolean("OPEN_SETTINGS_ON_START"),
         StaticOverlay: Config.boolean("STATIC_OVERLAY"),
         TileOnStart: Config.boolean("TILE_ON_START")
     }),

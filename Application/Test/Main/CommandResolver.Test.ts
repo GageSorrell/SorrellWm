@@ -155,15 +155,27 @@ describe("CommandResolver.Resolve", () =>
         ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
     });
 
-    it("maps the Toggle key to the Home secondary command", () =>
+    it("maps the Toggle key to opening the per-app settings section", () =>
     {
-        expect(Option.getOrThrow(Resolve(
+        const Resolved = Option.getOrThrow(Resolve(
             Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed)
-        ))).toMatchObject({
-            Category: "Ui",
-            Id: "OpenPerAppSettings",
-            _tag: "NoOpOverlayCommand"
-        });
+        ));
+
+        expect(Resolved).toMatchObject({ Category: "Ui", _tag: "OpenSettings" });
+        expect(Option.getOrThrow((Resolved as { Path: Option.Option<string>; }).Path))
+            .toBe("PerAppSettings");
+    });
+
+    it("includes the activation window's application name in the per-app settings path", () =>
+    {
+        const Resolved = Option.getOrThrow(Resolve(
+            Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
+            OverlayScreenId.Home,
+            Option.some("Notepad")
+        ));
+
+        expect(Option.getOrThrow((Resolved as { Path: Option.Option<string>; }).Path))
+            .toBe("PerAppSettings?Name=Notepad");
     });
 
     it("does not invent commands for actions without command semantics", () =>
@@ -222,6 +234,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     ClearActivationWindow: Effect.void,
     ClearFocusPreview: Effect.void,
     Current: Effect.succeed(OverlayScreenId.Home),
+    GetActivationApplicationName: Effect.succeed(Option.none()),
     Navigate: () => Effect.void,
     PreviewFocusTarget: () => Effect.void,
     Reset: Effect.void,

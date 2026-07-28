@@ -13,14 +13,14 @@ import { Root } from "./Root.js";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-const rootElement: HTMLElement | null = document.querySelector("#root");
+const RootElement: HTMLElement | null = document.querySelector("#root");
 
-if (rootElement === null)
+if (RootElement === null)
 {
     throw new Error("The renderer root element was not found.");
 }
 
-createRoot(rootElement).render(
+createRoot(RootElement).render(
     <StrictMode>
         <Root />
     </StrictMode>

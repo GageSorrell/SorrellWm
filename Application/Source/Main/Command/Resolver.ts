@@ -14,11 +14,12 @@ import * as OverlaySession from "../Overlay/Session.ts";
 import * as Ui from "./Ui.ts";
 import type * as Wm from "./Wm.ts";
 import { Context, Effect, Layer, Option, Result, Stream, pipe } from "effect";
+import { EncodeSettingsPath, SettingsSectionId } from "../../Shared/SettingsPath.ts";
 import {
     GetOverlayCommandDefinitions,
     GetOverlaySecondaryCommandDefinition,
     type OverlayCommandDefinition,
-    type OverlayCommandId,
+    OverlayCommandId,
     type OverlayScreenId,
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.ts";
@@ -36,7 +37,8 @@ const UiCommands = Ui.UiCommand();
 export/** Resolve an available screen command without retaining renderer details. */
 const ResolveOverlayCommand = (
     Screen: OverlayScreenId,
-    Id: OverlayCommandId
+    Id: OverlayCommandId,
+    ApplicationName: Option.Option<string> = Option.none()
 ): Option.Option<Resolved> =>
 {
     const IsPrimaryCommand = GetOverlayCommandDefinitions(Screen).some((
@@ -50,15 +52,32 @@ const ResolveOverlayCommand = (
         return Option.none();
     }
 
-    return Screen === ScreenId.Home && Id === "Focus"
-        ? Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Focus }))
-        : Option.some(UiCommands.NoOpOverlayCommand({ Id }));
+    if (Screen === ScreenId.Home && Id === "Focus")
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Focus }));
+    }
+
+    if (Id === OverlayCommandId.OpenPerAppSettings)
+    {
+        return Option.some(UiCommands.OpenSettings({
+            Path: Option.some(EncodeSettingsPath({
+                Params: Option.match(ApplicationName, {
+                    onNone: () => ({ }),
+                    onSome: (Name: string) => ({ Name })
+                }),
+                Section: SettingsSectionId.PerAppSettings
+            }))
+        }));
+    }
+
+    return Option.some(UiCommands.NoOpOverlayCommand({ Id }));
 };
 
 export/** Resolve one hotkey activation for an overlay screen. */
 const Resolve = (
     Activation: Hotkey.Match,
-    Screen: OverlayScreenId = ScreenId.Home
+    Screen: OverlayScreenId = ScreenId.Home,
+    ApplicationName: Option.Option<string> = Option.none()
 ): Option.Option<Resolved> =>
 {
     switch (Activation.Keybind.Id)
@@ -109,7 +128,7 @@ const Resolve = (
 
             return Definition === undefined
                 ? Option.none()
-                : ResolveOverlayCommand(Screen, Definition.Id);
+                : ResolveOverlayCommand(Screen, Definition.Id, ApplicationName);
         }
     }
 };
@@ -142,12 +161,18 @@ const Live = Layer.effect(
     {
         const Hotkeys = yield* Hotkey.Hotkey;
         const Session = yield* OverlaySession.OverlaySession;
-        const ResolveCurrent = (Activation: Hotkey.Match) => Session.Current.pipe(
-            Effect.map((Screen: OverlayScreenId) => Resolve(Activation, Screen))
-        );
-        const ResolveCurrentOverlayCommand = (Id: OverlayCommandId) => Session.Current.pipe(
-            Effect.map((Screen: OverlayScreenId) => ResolveOverlayCommand(Screen, Id))
-        );
+        const ResolveCurrent = (Activation: Hotkey.Match) => Effect.gen(function*()
+        {
+            const Screen = yield* Session.Current;
+            const ApplicationName = yield* Session.GetActivationApplicationName;
+            return Resolve(Activation, Screen, ApplicationName);
+        });
+        const ResolveCurrentOverlayCommand = (Id: OverlayCommandId) => Effect.gen(function*()
+        {
+            const Screen = yield* Session.Current;
+            const ApplicationName = yield* Session.GetActivationApplicationName;
+            return ResolveOverlayCommand(Screen, Id, ApplicationName);
+        });
 
         return {
             Commands: pipe(

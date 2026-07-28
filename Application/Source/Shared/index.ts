@@ -1,7 +1,7 @@
 /**
+ * Content shared by the backend and frontend.
  *
- *
- * @module @sorrell/wm/Shared/index
+ * @module @sorrell/wm/Shared
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

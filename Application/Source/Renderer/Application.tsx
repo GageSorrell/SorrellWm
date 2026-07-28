@@ -1,5 +1,5 @@
 /**
- *
+ * Route to the correct "application window."
  *
  * @module @sorrell/wm/Renderer/Application
  *
@@ -11,6 +11,7 @@
 
 import { BackdropApplication } from "./BackdropApplication.js";
 import { OverlayApplication } from "./OverlayApplication.js";
+import { SettingsApplication } from "./Settings.js";
 
 /**
  * Render the surface associated with the current logical browser window.
@@ -27,6 +28,8 @@ export function Application(): React.JSX.Element
             return <BackdropApplication />;
         case "Overlay":
             return <OverlayApplication />;
+        case "Settings":
+            return <SettingsApplication />;
     }
 
     throw new Error("Window was not specified in the \"window\" URL param.");

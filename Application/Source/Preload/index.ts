@@ -58,6 +58,41 @@ const OnBackdropShow = (
     return () => void BackdropListeners.delete(Listener);
 };
 
+const SettingsNavigateListeners = new Set<(Path: string | null) => void>();
+let LatestSettingsPath: string | null | undefined;
+
+const IsSettingsPath = (Value: unknown): Value is string | null =>
+    Value === null || typeof Value === "string";
+
+ipcRenderer.on(AppApiChannel.SettingsNavigate, (_Event: IpcRendererEvent, Value: unknown): void =>
+{
+    if (!IsSettingsPath(Value))
+    {
+        return;
+    }
+
+    LatestSettingsPath = Value;
+    for (const Listener of SettingsNavigateListeners)
+    {
+        Listener(Value);
+    }
+});
+
+const OnSettingsNavigate = (
+    Listener: (Path: string | null) => void
+): (() => void) =>
+{
+    SettingsNavigateListeners.add(Listener);
+
+    if (LatestSettingsPath !== undefined)
+    {
+        const Path: string | null = LatestSettingsPath;
+        queueMicrotask((): void => Listener(Path));
+    }
+
+    return () => void SettingsNavigateListeners.delete(Listener);
+};
+
 const BackOverlayScreen = async (): Promise<void> =>
     void await ipcRenderer.invoke(AppApiChannel.OverlayBack);
 
@@ -157,6 +192,9 @@ const applicationApi: AppApi = Object.freeze({
         preview: PreviewOverlayFocus
     }),
     platform: process.platform,
+    settings: Object.freeze({
+        onNavigate: OnSettingsNavigate
+    }),
     theme: Object.freeze({
         get: GetRendererTheme,
         onChanged: OnRendererThemeChanged
