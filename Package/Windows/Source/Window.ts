@@ -183,6 +183,24 @@ const IsSnapWindowsEnabled = (): Option.Option<boolean> =>
         ? Attempt.AsOption(Binding.Window.IsSnapWindowsEnabled())
         : Option.none();
 
+export/**
+       * Determine whether the process that owns a window is running elevated
+       * (as Administrator), or return `None` when Windows cannot be queried.
+       */
+const IsWindowElevated = (Window: Handle.HWND): Option.Option<boolean> =>
+    typeof Binding.Window.IsWindowElevated === "function"
+        ? Attempt.AsOption(Binding.Window.IsWindowElevated(Window))
+        : Option.none();
+
+export/**
+       * Determine whether the current process is running elevated (as
+       * Administrator), or return `None` when Windows cannot be queried.
+       */
+const IsCurrentProcessElevated = (): Option.Option<boolean> =>
+    typeof Binding.Window.IsCurrentProcessElevated === "function"
+        ? Attempt.AsOption(Binding.Window.IsCurrentProcessElevated())
+        : Option.none();
+
 export/** Activate a top-level window and direct keyboard input to it. */
 const SetForegroundWindow = (
     Window: Handle.HWND

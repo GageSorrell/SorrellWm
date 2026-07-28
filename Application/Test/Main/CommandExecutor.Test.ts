@@ -171,7 +171,7 @@ describe("CommandExecutor.Execute", () =>
         expect(WindowsWindow.SetForegroundWindow).toHaveBeenCalledWith(ForegroundWindow);
     });
 
-    it("focuses the current directional target and closes the overlay", async () =>
+    it("focuses the directional target and repaints the still-open overlay over it", async () =>
     {
         const TargetWindow = 84n as Handle.HWND;
         const Operations = new Array<string>();
@@ -182,6 +182,9 @@ describe("CommandExecutor.Execute", () =>
             Operations.push(`SetForegroundWindow:${ WindowHandle }`);
             return Result.succeed(undefined);
         });
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.some(
+            Box.Box(0, 1200, 800, 0)
+        ));
 
         await Effect.runPromise(pipe(
             Effect.gen(function*()
@@ -199,8 +202,9 @@ describe("CommandExecutor.Execute", () =>
         ));
 
         expect(Operations).toEqual([
-            "Hide:Overlay",
-            "SetForegroundWindow:84"
+            "SetForegroundWindow:84",
+            "SetBounds:Overlay",
+            "Send:Overlay:overlay-screen:changed:Home"
         ]);
     });
 });

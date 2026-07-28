@@ -114,28 +114,37 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
         },
         [ OverlayCommandId.Insert ]:
         {
-            Description: () => "Insert a window into the layout.",
+            Description: (Context: PresentationContext) =>
+                Context.IsTiled
+                    ? "Insert a window into the layout."
+                    : "Create a new floating window",
             Icon: AddSquareRegular,
             Label: "Insert"
         },
         [ OverlayCommandId.Move ]:
         {
-            Description: () => "Move a window within the layout.",
+            Description: (Context: PresentationContext) =>
+                Context.IsTiled
+                    ? "Move this window within the tiled layout."
+                    : "Change the position of this window.",
             Icon: ArrowMoveRegular,
             Label: "Move"
         },
         [ OverlayCommandId.Resize ]:
         {
-            Description: () => "Resize a window in the layout.",
+            Description: () => "Resize this window.",
             Icon: ResizeLargeRegular,
             Label: "Resize"
         },
         [ OverlayCommandId.OpenPerAppSettings ]:
         {
-            Description: (Context: PresentationContext) => Option.match(Context.ApplicationName, {
-                onNone: () => "Configure how SorrellWm manages this application's windows",
-                onSome: (Name: string) => `Configure how SorrellWm manages ${ Name } windows`
-            }),
+            Description: (Context: PresentationContext) => Option.match(
+                Context.ApplicationName,
+                {
+                    onNone: () => "Configure how SorrellWm manages this application's windows",
+                    onSome: (Name: string) => `Configure how SorrellWm manages ${ Name } windows`
+                }
+            ),
             Icon: WindowSettingsRegular,
             Label: "Per-App Settings"
         }
@@ -153,7 +162,7 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
             Description: "Choose the type of action to perform.",
             Label: "SorrellWm"
         }
-    };
+    } as const;
 
 const UseStyles = makeStyles({
     ApplicationIconImage:

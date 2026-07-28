@@ -281,6 +281,33 @@ namespace
         return TRUE;
     }
 
+    std::optional<bool> IsProcessTokenElevated(HANDLE Process)
+    {
+        HANDLE Token = nullptr;
+        if (OpenProcessToken(Process, TOKEN_QUERY, &Token) == FALSE)
+        {
+            return std::nullopt;
+        }
+
+        TOKEN_ELEVATION Elevation { };
+        DWORD ReturnedSize = 0;
+        const BOOL QueryResult = GetTokenInformation(
+            Token,
+            TokenElevation,
+            &Elevation,
+            sizeof(Elevation),
+            &ReturnedSize
+        );
+        CloseHandle(Token);
+
+        if (QueryResult == FALSE)
+        {
+            return std::nullopt;
+        }
+
+        return Elevation.TokenIsElevated != 0;
+    }
+
     std::optional<bool> GetSnapWindowsEnabled()
     {
         BOOL IsEnabled = FALSE;
@@ -757,6 +784,59 @@ Napi::Value IsSnapLayoutsOnHoverEnabled(const Napi::CallbackInfo& CallbackInfo)
     }
 
     return Out.Succeed(Napi::Boolean::New(Environment, IsEnabled != 0));
+}
+
+Napi::Value IsWindowElevated(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> WindowHandle = GetWindowArgument(CallbackInfo);
+
+    if (!WindowHandle.has_value())
+    {
+        return Out.Fail("Expected a valid window handle.");
+    }
+
+    DWORD ProcessId = 0;
+    GetWindowThreadProcessId(WindowHandle.value(), &ProcessId);
+    if (ProcessId == 0)
+    {
+        return Out.Fail("Could not get the window's owning process.");
+    }
+
+    const HANDLE Process = OpenProcess(
+        PROCESS_QUERY_LIMITED_INFORMATION,
+        FALSE,
+        ProcessId
+    );
+    if (Process == nullptr)
+    {
+        return Out.Fail("Could not open the window's owning process.");
+    }
+
+    const std::optional<bool> IsElevated = IsProcessTokenElevated(Process);
+    CloseHandle(Process);
+
+    if (!IsElevated.has_value())
+    {
+        return Out.Fail("Could not query the window's owning process token.");
+    }
+
+    return Out.Succeed(Napi::Boolean::New(Environment, IsElevated.value()));
+}
+
+Napi::Value IsCurrentProcessElevated(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<bool> IsElevated = IsProcessTokenElevated(GetCurrentProcess());
+
+    if (!IsElevated.has_value())
+    {
+        return Out.Fail("Could not query the current process token.");
+    }
+
+    return Out.Succeed(Napi::Boolean::New(Environment, IsElevated.value()));
 }
 
 Napi::Value GetWindowWorkArea(const Napi::CallbackInfo& CallbackInfo)

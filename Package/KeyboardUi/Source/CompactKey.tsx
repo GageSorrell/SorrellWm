@@ -22,15 +22,16 @@ const UseStyles = makeStyles({
         border: `${ tokens.strokeWidthThin } solid ${ tokens.colorNeutralStroke2 }`,
         borderRadius: tokens.borderRadiusMedium,
         boxSizing: "border-box",
-        color: tokens.colorNeutralForeground1,
+        color: tokens.colorNeutralForeground3,
         display: "flex",
         fontSize: tokens.fontSizeBase200,
-        fontWeight: tokens.fontWeightMedium,
+        fontWeight: tokens.fontWeightRegular,
+        // fontWeight: tokens.fontWeightRegular,
         justifyContent: "center",
-        maxHeight: "1.5rem",
-        maxWidth: "1.5rem",
-        minHeight: "1.5rem",
-        minWidth: "1.5rem"
+        maxHeight: "1.25rem",
+        // maxWidth: "1.5rem",
+        minHeight: "1.25rem",
+        minWidth: "1.25rem"
     }
 });
 

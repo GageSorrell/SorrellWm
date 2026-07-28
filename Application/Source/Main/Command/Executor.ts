@@ -109,6 +109,30 @@ const ShowBackdrop = (
     Effect.onError(() => pipe(CloseBackdrop(BrowserWindows), Effect.ignore))
 );
 
+// @TODO Verify that these min/max values are sensible.
+const ClampOverlayWidth = Number.clamp({ maximum: 800, minimum: 320 });
+const ClampOverlayHeight = Number.clamp({ maximum: 1024, minimum: 160 });
+
+const GetActivationTarget = (
+    TargetWindow: Handle.HWND
+): Option.Option<OverlayActivationTarget> => pipe(
+    Window.GetWindowRect(TargetWindow),
+    Option.map((ForegroundBox: Box.Box): OverlayActivationTarget =>
+    {
+        const Width = ClampOverlayWidth(Box.Width(ForegroundBox));
+        const Height = ClampOverlayHeight(Box.Height(ForegroundBox));
+
+        return {
+            ForegroundBounds: ForegroundBox,
+            OverlayBounds: BoxUtility.Center(
+                IntPoint.IntPoint(Width, Height),
+                ForegroundBox
+            ),
+            Window: TargetWindow
+        };
+    })
+);
+
 const OnActivate = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
@@ -124,29 +148,9 @@ const OnActivate = (
         return yield* Effect.void;
     }
 
-    // @TODO Verify that these min/max values are sensible.
-    const ClampWidth = Number.clamp({ maximum: 800, minimum: 320 });
-    const ClampHeight = Number.clamp({ maximum: 1024, minimum: 160 });
-
     const ActivationTarget: Option.Option<OverlayActivationTarget> = pipe(
         Window.GetForegroundWindow(),
-        Option.flatMap((ForegroundWindow: Handle.HWND) => pipe(
-            Window.GetWindowRect(ForegroundWindow),
-            Option.map((ForegroundBox: Box.Box): OverlayActivationTarget =>
-            {
-                const Width = ClampWidth(Box.Width(ForegroundBox));
-                const Height = ClampHeight(Box.Height(ForegroundBox));
-
-                return {
-                    ForegroundBounds: ForegroundBox,
-                    OverlayBounds: BoxUtility.Center(
-                        IntPoint.IntPoint(Width, Height),
-                        ForegroundBox
-                    ),
-                    Window: ForegroundWindow
-                };
-            })
-        ))
+        Option.flatMap(GetActivationTarget)
     );
 
     if (Option.isSome(ActivationTarget))
@@ -214,11 +218,6 @@ const FocusDirection = (
         return;
     }
 
-    yield* Session.ClearFocusPreview;
-    yield* BrowserWindows.Hide(BrowserWindow.Key.Overlay);
-    yield* Session.Reset;
-    yield* Session.ClearActivationWindow;
-
     const FocusResult = Window.SetForegroundWindow(Target.value);
     if (Result.isFailure(FocusResult))
     {
@@ -229,6 +228,23 @@ const FocusDirection = (
             Window: Target.value
         });
     }
+
+    // Keep the overlay open on the Focus screen, repainted over the newly-focused
+    // window, with its direction choices recomputed relative to that window.
+    yield* Session.ClearFocusPreview;
+    yield* Session.SetActivationWindow(Target.value);
+
+    const ActivationTarget = GetActivationTarget(Target.value);
+
+    if (Option.isSome(ActivationTarget))
+    {
+        yield* BrowserWindows.SetBounds(
+            BrowserWindow.Key.Overlay,
+            ActivationTarget.value.OverlayBounds
+        );
+    }
+
+    yield* PublishOverlayScreen(BrowserWindows, Session);
 });
 
 const PublishOverlayScreen = (
@@ -286,10 +302,10 @@ const ExecuteUi = (
             return Effect.gen(function*()
             {
                 yield* BrowserWindows.Ensure(yield* BrowserWindow.SettingsWindowSpec);
-                yield* BrowserWindows.Focus(BrowserWindow.Key.Overlay);
+                // yield* BrowserWindows.Focus(BrowserWindow.Key.Overlay);
                 yield* BrowserWindows.Show(BrowserWindow.Key.Settings);
                 yield* BrowserWindows.Focus(BrowserWindow.Key.Settings);
-                // yield* BrowserWindows.Hide(BrowserWindow.Key.Overlay);
+                yield* BrowserWindows.Hide(BrowserWindow.Key.Overlay);
                 yield* BrowserWindows.Send(
                     BrowserWindow.Key.Settings,
                     AppApiChannel.SettingsNavigate,

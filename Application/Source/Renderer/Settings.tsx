@@ -17,7 +17,7 @@ import { SettingsSidebar } from "./SettingsSidebar.js";
 import { SettingsTitlebar } from "./SettingsTitlebar.js";
 
 /** Below this content width, the sidebar collapses into a toggle-able overlay. */
-const PinnedSidebarMinWidth = 720;
+const PinnedSidebarMinWidth = 720 as const;
 
 const SectionLabel: Readonly<Record<SettingsSectionId, string>> =
     {
@@ -25,7 +25,8 @@ const SectionLabel: Readonly<Record<SettingsSectionId, string>> =
         [ SettingsSectionId.General ]: "General" as const,
         [ SettingsSectionId.Home ]: "Home" as const,
         [ SettingsSectionId.Keybinds ]: "Keybinds" as const,
-        [ SettingsSectionId.PerAppSettings ]: "Per-App Settings"
+        [ SettingsSectionId.Overlay ]: "Overlay" as const,
+        [ SettingsSectionId.PerAppSettings ]: "Per-App Settings" as const
     } as const;
 
 const UseStyles = makeStyles({

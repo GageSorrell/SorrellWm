@@ -139,6 +139,14 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, IsSnapWindowsEnabled)
     );
     Window.Set(
+        "IsWindowElevated",
+        Napi::Function::New(Environment, IsWindowElevated)
+    );
+    Window.Set(
+        "IsCurrentProcessElevated",
+        Napi::Function::New(Environment, IsCurrentProcessElevated)
+    );
+    Window.Set(
         "SetForegroundWindow",
         Napi::Function::New(Environment, SetForegroundWindow_Node)
     );

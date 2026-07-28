@@ -5,3 +5,5 @@
 
 * Review the settings UI components (the components for individual settings, and the keyboard/keybind components as well), and implement the settings UI for the current `AppSettings` settings
 
+* TODO: Holding direction key instead of just pressing direction key when changing focus temporarily makes every window but the overlay window and window that would be focused transparent and dimmed
+

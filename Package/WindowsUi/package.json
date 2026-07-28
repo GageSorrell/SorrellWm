@@ -1,0 +1,62 @@
+{
+  "name": "@sorrell/windows-ui",
+  "private": false,
+  "description": "React components for Windows applications, extending Microsoft's Fluent UI framework.",
+  "version": "1.0.0",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/WindowsUi#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/WindowsUi",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts,.tsx Source",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json"
+  },
+  "keywords": [
+    "fluent-ui",
+    "react",
+    "ui",
+    "windows"
+  ],
+  "type": "module",
+  "peerDependencies": {
+    "@fluentui/react-components": "^9.0.0",
+    "@fluentui/react-icons": "^2.0.0",
+    "react": ">=19.2.0 <20",
+    "react-dom": ">=19.2.0 <20"
+  },
+  "devDependencies": {
+    "@fluentui/react-components": "9.74.4",
+    "@fluentui/react-icons": "2.0.333",
+    "@sorrell/tsconfig": "1.0.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "cross-env": "10.1.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "typescript": "6.0.2"
+  },
+  "engines": {
+    "node": ">=26.5.0",
+    "npm": ">=12.0.1"
+  }
+}

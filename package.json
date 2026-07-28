@@ -50,14 +50,16 @@
         "Package/KeyboardUi",
         "Package/Math",
         "Package/SettingsUi",
-        "Script/Setup",
-        "Script/WmScript",
-        "Package/SorrellWmCodeExtension",
         "Package/TsConfigSorrell",
         "Package/Utility",
-        "Package/Windows"
+        "Package/Windows",
+        "Package/WindowsUi",
+        "Script/Setup",
+        "Script/WmScript",
+        "Package/SorrellWmCodeExtension"
     ],
-    "allowScripts": {
+    "allowScripts":
+    {
         "@vscode/vsce-sign@2.0.9": true,
         "electron-winstaller@5.4.0": true,
         "keytar@7.9.0": true,
