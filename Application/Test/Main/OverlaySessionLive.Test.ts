@@ -118,14 +118,14 @@ describe("OverlaySession.Live Focus targets", () =>
         ));
 
         expect(Snapshot.SecondaryCommand).toMatchObject({
-            Id: "OpenPerAppSettings",
-            Label: "Configure how SorrellWm manages Visual Studio Code windows"
+            ApplicationName: "Visual Studio Code",
+            Id: "OpenPerAppSettings"
         });
         expect(Snapshot.SecondaryCommand).not.toHaveProperty("Target");
         expect(WindowsWindow.GetApplicationName).toHaveBeenCalledWith(CurrentWindow);
     });
 
-    it("falls back when the activation application's name is unavailable", async () =>
+    it("omits the application name when it is unavailable", async () =>
     {
         vi.mocked(WindowsWindow.GetApplicationName).mockReturnValue(Option.none());
 
@@ -141,9 +141,7 @@ describe("OverlaySession.Live Focus targets", () =>
             Effect.provide(FakeBrowserWindows)
         ));
 
-        expect(Snapshot.SecondaryCommand?.Label).toBe(
-            "Configure how SorrellWm manages this application's windows"
-        );
+        expect(Snapshot.SecondaryCommand).not.toHaveProperty("ApplicationName");
     });
 
     it("publishes target metadata and previews only the current, overlay, and target windows", async () =>

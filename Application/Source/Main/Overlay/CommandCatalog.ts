@@ -91,14 +91,12 @@ const FromKeybindSettings = (
         : Object.freeze({
             ...SecondaryDefinition,
             Disabled: false,
-            Label: ApplicationTarget?.Name === undefined
-                ? "Configure how SorrellWm manages this application's windows"
-                : `Configure how SorrellWm manages ${ ApplicationTarget.Name }`,
             Shortcut: Object.freeze({
                 KeyCode: SecondaryKeybind.Key,
                 KeyLabel: GetKeyLabel(SecondaryKeybind.Key),
                 Modifiers: Object.freeze({ ...SecondaryKeybind.Modifiers })
-            })
+            }),
+            ...(ApplicationTarget?.Name === undefined ? { } : { ApplicationName: ApplicationTarget.Name })
         });
 
     return Object.freeze({

@@ -36,7 +36,7 @@ import {
     tokens
 } from "@fluentui/react-components";
 import { CommandButton, CompactCommandButton } from "./CommandButton.js";
-import { type Option, Predicate, Struct } from "effect";
+import { Option, Predicate, Struct } from "effect";
 import {
     type OverlayCommandDto,
     OverlayCommandId,
@@ -68,6 +68,17 @@ interface CommandPresentation extends Presentation
 }
 
 interface ScreenPresentation extends Presentation { }
+
+const DefaultPresentationContext: PresentationContext = Object.freeze({
+    ApplicationName: Option.none(),
+    IsTiled: false,
+    WindowTitle: Option.none()
+});
+
+const ResolveDescription = (
+    { Description }: Presentation,
+    Context: PresentationContext
+): string => typeof Description === "function" ? Description(Context) : Description;
 
 const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> =
     {
@@ -103,25 +114,30 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
         },
         [ OverlayCommandId.Insert ]:
         {
-            Description: "Insert a window into the layout.",
+            Description: () => "Insert a window into the layout.",
             Icon: AddSquareRegular,
             Label: "Insert"
         },
         [ OverlayCommandId.Move ]:
         {
-            Description: "Move a window within the layout.",
+            Description: () => "Move a window within the layout.",
             Icon: ArrowMoveRegular,
             Label: "Move"
         },
         [ OverlayCommandId.Resize ]:
         {
-            Description: "Resize a window in the layout.",
+            Description: () => "Resize a window in the layout.",
             Icon: ResizeLargeRegular,
             Label: "Resize"
         },
         [ OverlayCommandId.OpenPerAppSettings ]:
         {
-            Icon: WindowSettingsRegular
+            Description: (Context: PresentationContext) => Option.match(Context.ApplicationName, {
+                onNone: () => "Configure how SorrellWm manages this application's windows",
+                onSome: (Name: string) => `Configure how SorrellWm manages ${ Name } windows`
+            }),
+            Icon: WindowSettingsRegular,
+            Label: "Per-App Settings"
         }
     } as const;
 
@@ -347,7 +363,7 @@ const OverlayApplication = (): React.ReactNode =>
                 SecondaryCommand === undefined ? undefined : Styles.ContentWithFooter
             ) }>
                 <p className={ Styles.Description }>
-                    { CurrentPresentation.Description }
+                    { ResolveDescription(CurrentPresentation, DefaultPresentationContext) }
                 </p>
 
                 { ErrorMessage !== undefined && (
@@ -375,7 +391,10 @@ const OverlayApplication = (): React.ReactNode =>
                         const Description = Command.Target?.Title
                             ?? (Command.Disabled
                                 ? undefined
-                                : CommandPresentation.Description);
+                                : ResolveDescription(CommandPresentation, {
+                                    ...DefaultPresentationContext,
+                                    WindowTitle: Option.fromNullishOr(Command.Target?.Title)
+                                }));
                         const ApplicationIcon = Command.Target === undefined
                             ? undefined
                             : Command.Target.Icon === undefined
@@ -413,7 +432,10 @@ const OverlayApplication = (): React.ReactNode =>
                             Active={ false }
                             Disabled={ SecondaryCommand.Disabled }
                             Icon={ <SecondaryIcon /> }
-                            Label={ SecondaryCommand.Label }
+                            Label={ ResolveDescription(Presentation[SecondaryCommand.Id], {
+                                ...DefaultPresentationContext,
+                                ApplicationName: Option.fromNullishOr(SecondaryCommand.ApplicationName)
+                            }) }
                             OnInvoke={ () => Invoke(SecondaryCommand.Id) }
                             Shortcut={ SecondaryCommand.Shortcut }
                             key={ SecondaryCommand.Id }

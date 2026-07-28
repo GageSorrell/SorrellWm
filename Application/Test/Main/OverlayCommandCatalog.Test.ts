@@ -59,7 +59,7 @@ describe("OverlayCommandCatalog", () =>
         ]);
     });
 
-    it("projects the Home secondary command with its application label and shortcut", () =>
+    it("projects the Home secondary command with its application name and shortcut", () =>
     {
         const Screen = FromKeybindSettings(
             OverlayScreenId.Home,
@@ -69,10 +69,10 @@ describe("OverlayCommandCatalog", () =>
         );
 
         expect(Screen.SecondaryCommand).toEqual({
+            ApplicationName: "Visual Studio Code",
             Disabled: false,
             HotkeyId: "Toggle",
             Id: "OpenPerAppSettings",
-            Label: "Configure how SorrellWm manages Visual Studio Code windows",
             Shortcut: {
                 KeyCode: 0x09,
                 KeyLabel: "⭾",
@@ -88,7 +88,7 @@ describe("OverlayCommandCatalog", () =>
         expect(Screen.SecondaryCommand).not.toHaveProperty("Target");
     });
 
-    it("uses an application-oriented fallback when its name is unavailable", () =>
+    it("omits the application name when it is unavailable", () =>
     {
         const Screen = FromKeybindSettings(
             OverlayScreenId.Home,
@@ -97,9 +97,7 @@ describe("OverlayCommandCatalog", () =>
             { }
         );
 
-        expect(Screen.SecondaryCommand?.Label).toBe(
-            "Configure how SorrellWm manages this application's windows"
-        );
+        expect(Screen.SecondaryCommand).not.toHaveProperty("ApplicationName");
     });
 
     it("projects direction commands for the Focus screen", () =>

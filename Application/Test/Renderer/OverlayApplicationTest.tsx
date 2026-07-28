@@ -30,10 +30,10 @@ const HomeScreen: OverlayScreenDto =
         Commands,
         Id: "Home",
         SecondaryCommand: {
+            ApplicationName: "Visual Studio Code",
             Disabled: false,
             HotkeyId: "Toggle",
             Id: "OpenPerAppSettings",
-            Label: "Configure how SorrellWm manages Visual Studio Code windows",
             Shortcut: {
                 KeyCode: 0x09,
                 KeyLabel: "TAB",

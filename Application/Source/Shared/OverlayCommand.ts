@@ -101,7 +101,9 @@ export interface OverlayCommandDto extends OverlayCommandDefinition
 /** A compact secondary overlay command prepared for the renderer. */
 export interface OverlaySecondaryCommandDto extends OverlayCommandDto
 {
-    readonly Label: string;
+    /** The name of the application this command applies to, when known. */
+    readonly ApplicationName?: string;
+
     readonly Target?: never;
 }
 
@@ -166,9 +168,17 @@ const IsOverlayCommandDto = (Value: unknown): Value is OverlayCommandDto =>
 };
 
 const IsOverlaySecondaryCommandDto = (Value: unknown): Value is OverlaySecondaryCommandDto =>
-    IsOverlayCommandDto(Value)
-    && typeof (Value as Partial<OverlaySecondaryCommandDto>).Label === "string"
-    && (Value as Partial<OverlaySecondaryCommandDto>).Target === undefined;
+{
+    if (!IsOverlayCommandDto(Value))
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<OverlaySecondaryCommandDto>;
+
+    return Candidate.Target === undefined
+        && (Candidate.ApplicationName === undefined || typeof Candidate.ApplicationName === "string");
+};
 
 export/** Determine whether an IPC value is a complete valid overlay-screen snapshot. */
 const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
