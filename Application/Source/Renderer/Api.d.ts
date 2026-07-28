@@ -1,5 +1,5 @@
 /**
- *
+ * Augments the `Window` with the application API.
  *
  * @module @sorrell/wm/Renderer/Api
  *

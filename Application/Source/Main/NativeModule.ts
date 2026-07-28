@@ -1,5 +1,5 @@
 /**
- *
+ * Handles loading NodeJS native modules.
  *
  * @module @sorrell/wm/Main/NativeModule
  *

@@ -25,6 +25,10 @@ import { DevFeatures } from "../Development/DevFeatures.ts";
 
 export/** The service identifier for command execution. */
 const TypeId = "~sorrell/wm/Main/Command/Executor" as const;
+
+/** {@inheritDoc TypeId:var} */
+export type TypeId = typeof TypeId;
+
 const BackdropFadeDurationMilliseconds = 200;
 const IsBackdropEnabled: boolean = false;
 
@@ -69,7 +73,8 @@ export class CommandExecutor extends
 
 const CloseBackdrop = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl
-) => BrowserWindows.ForceClose(BrowserWindow.Key.Backdrop).pipe(
+) => pipe(
+    BrowserWindows.ForceClose(BrowserWindow.Key.Backdrop),
     Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
 );
 
@@ -77,30 +82,31 @@ const ShowBackdrop = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Bounds: Box.Box,
     Intensity: number
-) => Effect.gen(function*()
-{
-    yield* CloseBackdrop(BrowserWindows);
-
-    if (Intensity === 0)
+) => pipe(
+    Effect.gen(function*()
     {
-        return;
-    }
+        yield* CloseBackdrop(BrowserWindows);
 
-    const Presentation: BackdropPresentation = Object.freeze({
-        DurationMilliseconds: BackdropFadeDurationMilliseconds,
-        Intensity
-    });
+        if (Intensity === 0)
+        {
+            return;
+        }
 
-    yield* BrowserWindows.Open(BrowserWindow.GetBackdropWindowSpec());
-    yield* BrowserWindows.SetBounds(BrowserWindow.Key.Backdrop, Bounds);
-    yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Backdrop);
-    yield* BrowserWindows.Send(
-        BrowserWindow.Key.Backdrop,
-        AppApiChannel.BackdropShow,
-        Presentation
-    );
-}).pipe(
-    Effect.onError(() => CloseBackdrop(BrowserWindows).pipe(Effect.ignore))
+        const Presentation: BackdropPresentation = Object.freeze({
+            DurationMilliseconds: BackdropFadeDurationMilliseconds,
+            Intensity
+        });
+
+        yield* BrowserWindows.Open(BrowserWindow.GetBackdropWindowSpec());
+        yield* BrowserWindows.SetBounds(BrowserWindow.Key.Backdrop, Bounds);
+        yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Backdrop);
+        yield* BrowserWindows.Send(
+            BrowserWindow.Key.Backdrop,
+            AppApiChannel.BackdropShow,
+            Presentation
+        );
+    }),
+    Effect.onError(() => pipe(CloseBackdrop(BrowserWindows), Effect.ignore))
 );
 
 const OnActivate = (
@@ -178,12 +184,12 @@ const OnActivate = (
 
 const RestoreActivationWindowFocus = (
     Session: OverlaySession.OverlaySessionImpl
-) => Session.TakeActivationWindow.pipe(
+) => pipe(
+    Session.TakeActivationWindow,
     Effect.flatMap(Option.match({
         onNone: () => Effect.void,
-        onSome: (WindowHandle: Handle.HWND) => Effect.sync(() =>
-            Window.SetForegroundWindow(WindowHandle)
-        ).pipe(
+        onSome: (WindowHandle: Handle.HWND) => pipe(
+            Effect.sync(() => Window.SetForegroundWindow(WindowHandle)),
             Effect.flatMap(Effect.fromResult),
             Effect.mapError((Cause: { readonly Message: string; }) =>
                 new WindowFocusRestorationError({
@@ -226,7 +232,8 @@ const FocusDirection = (
 const PublishOverlayScreen = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Session: OverlaySession.OverlaySessionImpl
-) => Session.Snapshot.pipe(
+) => pipe(
+    Session.Snapshot,
     Effect.flatMap((Screen: OverlayScreenDto) => BrowserWindows.Send(
         BrowserWindow.Key.Overlay,
         AppApiChannel.OverlayScreenChanged,
@@ -250,7 +257,7 @@ const ExecuteUi = (
                 yield* OnActivate(BrowserWindows, Settings, Session);
             });
         case "Deactivate":
-            return Session.ClearFocusPreview.pipe(
+            return pipe(Session.ClearFocusPreview,
                 Effect.andThen(Session.Reset),
                 Effect.andThen(IsBackdropEnabled
                     ? Effect.all([
@@ -261,16 +268,20 @@ const ExecuteUi = (
                 Effect.andThen(RestoreActivationWindowFocus(Session))
             );
         case "BackOverlayScreen":
-            return Session.ClearFocusPreview.pipe(
+            return pipe(
+                Session.ClearFocusPreview,
                 Effect.andThen(Session.Back),
                 Effect.andThen(Console.log("BackOverlayScreen")),
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
         case "NavigateOverlayScreen":
-            return Session.ClearFocusPreview.pipe(
+            return pipe(
+                Session.ClearFocusPreview,
                 Effect.andThen(Session.Navigate(Command.ScreenId)),
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
+        case "OpenSettings":
+            // @TODO
         case "NoOpOverlayCommand":
             return Command.Id.startsWith("FocusMove")
                 ? FocusDirection(BrowserWindows, Session, Command.Id)
@@ -330,7 +341,8 @@ const Live = Layer.effect(
                     === BrowserWindow.Key.Overlay
                 && Event._tag === "Closed"
             ),
-            Stream.runForEach(() => CloseBackdrop(BrowserWindows).pipe(
+            Stream.runForEach(() => pipe(
+                CloseBackdrop(BrowserWindows),
                 Effect.ignore({
                     log: "Error",
                     message: "Could not close the overlay backdrop."

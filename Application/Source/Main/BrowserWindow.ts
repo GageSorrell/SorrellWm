@@ -1,5 +1,5 @@
 /**
- *
+ * Effectful management of `electron` `BrowserWindow`s.
  *
  * @module @sorrell/wm/Main/BrowserWindow
  *

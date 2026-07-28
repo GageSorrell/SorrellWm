@@ -1,5 +1,7 @@
 /**
- *
+ * When enabled, this draws the overlay window beneath the "maximize" button of a window
+ * when that button is hovered over.  This is similar to the behavior provided by Windows's
+ * snapping feature.
  *
  * @module @sorrell/wm/Main/TitlebarFlyout
  *

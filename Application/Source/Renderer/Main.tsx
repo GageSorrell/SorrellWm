@@ -1,5 +1,5 @@
 /**
- *
+ * The entrypoint of the frontend.
  *
  * @module @sorrell/wm/Renderer/Main
  *

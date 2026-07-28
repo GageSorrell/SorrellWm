@@ -1,5 +1,5 @@
 /**
- *
+ * Manages the Windows API message loop, accessed via `@sorrell/windows`.
  *
  * @module @sorrell/wm/Main/MessageLoop
  *
@@ -20,7 +20,9 @@ const TypeId = "~sorrell/wm/Main/MessageLoop" as const;
 export type TypeId = typeof TypeId;
 
 /** Identifies the native message-loop lifecycle operation that failed. */
-export type Op = "Start" | "Stop";
+export type Op =
+    | "Start"
+    | "Stop";
 
 /** A failure reported while managing the dedicated Win32 message loop. */
 export class WindowsMessageLoopError extends Data.TaggedError("WindowsMessageLoopError")<

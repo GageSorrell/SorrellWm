@@ -1,5 +1,5 @@
 /**
- *
+ * The preload script of `@sorrell/wm`.
  *
  * @module @sorrell/wm/Preload
  *

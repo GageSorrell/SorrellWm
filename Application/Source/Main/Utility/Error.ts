@@ -1,5 +1,5 @@
 /**
- *
+ * Utilities for creating and handling errors.
  *
  * @module @sorrell/wm/Main/Utility/Error
  *

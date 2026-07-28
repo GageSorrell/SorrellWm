@@ -20,7 +20,7 @@ import {
     type OverlayScreenId,
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.js";
-import { Context, Effect, Layer, Option, Ref, Result, Stream, SubscriptionRef, pipe } from "effect";
+import { Context, Effect, Layer, Option, Ref, Result, Stream, Struct, SubscriptionRef, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import type { Box } from "@sorrell/math";
 
@@ -242,29 +242,28 @@ const Live = Layer.effect(
         const Stack = yield* SubscriptionRef.make<ReadonlyArray<OverlayScreenId>>(
             Object.freeze([ ScreenId.Home ])
         );
-        const Current = SubscriptionRef.get(Stack).pipe(Effect.map(GetCurrent));
+        const Current = pipe(SubscriptionRef.get(Stack), Effect.map(GetCurrent));
         const ClearFocusPreview = Effect.sync(() =>
         {
             Window.ClearWindowDimming();
         });
         const ResolveCurrentFocusTarget = (
             Id: OverlayCommandId
-        ): Effect.Effect<Option.Option<Handle.HWND>> => Ref.get(ActivationWindow).pipe(
+        ): Effect.Effect<Option.Option<Handle.HWND>> => pipe(
+            Ref.get(ActivationWindow),
             Effect.map((CurrentWindow: Option.Option<Handle.HWND>) =>
-                Option.map(
-                    ResolveTarget(CurrentWindow, Id),
-                    (Target: FocusWindowCandidate) => Target.Window
-                )
-            )
+                Option.map(ResolveTarget(CurrentWindow, Id), Struct.get("Window")))
         );
 
         return {
-            Back: SubscriptionRef.update(Stack, (Value: ReadonlyArray<OverlayScreenId>) =>
-                Value.length > 1
-                    ? Object.freeze(Value.slice(0, -1))
-                    : Value
+            Back: SubscriptionRef.update(
+                Stack,
+                (Value: ReadonlyArray<OverlayScreenId>) =>
+                    Value.length > 1
+                        ? Object.freeze(Value.slice(0, -1))
+                        : Value
             ),
-            Changes: SubscriptionRef.changes(Stack).pipe(Stream.map(GetCurrent)),
+            Changes: pipe(SubscriptionRef.changes(Stack), Stream.map(GetCurrent)),
             ClearActivationWindow: Ref.set(ActivationWindow, Option.none()),
             ClearFocusPreview,
             Current,

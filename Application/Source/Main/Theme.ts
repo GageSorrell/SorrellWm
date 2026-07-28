@@ -1,5 +1,5 @@
 /**
- *
+ * Handles the application theme.
  *
  * @module @sorrell/wm/Main/Theme
  *

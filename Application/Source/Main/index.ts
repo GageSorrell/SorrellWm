@@ -1,5 +1,5 @@
 /**
- *
+ * Barrel exports of modules belonging to the backend.
  *
  * @module @sorrell/wm/Main
  *
