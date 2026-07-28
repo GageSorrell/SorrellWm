@@ -16,6 +16,7 @@ import {
     makeStyles,
     tokens
 } from "@fluentui/react-components";
+import { Key, Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
 
 /** Presentation properties for a primary overlay command. */
@@ -109,9 +110,9 @@ const UseStyles = makeStyles({
     }
 });
 
-const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<string> =>
+const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode> =>
 {
-    const Parts = new Array<string>();
+    const Parts = new Array<React.ReactNode>();
 
     if (Shortcut.Modifiers.Control)
     {
@@ -119,7 +120,7 @@ const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<string> =>
     }
     if (Shortcut.Modifiers.Shift)
     {
-        Parts.push("Shift");
+        Parts.push(<Key.Shift />);
     }
     if (Shortcut.Modifiers.Alt)
     {
@@ -127,10 +128,18 @@ const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<string> =>
     }
     if (Shortcut.Modifiers.Super)
     {
-        Parts.push("Win");
+        Parts.push(<Key.Super />);
     }
 
-    Parts.push(Shortcut.KeyLabel);
+    if (Shortcut.KeyLabel.toLowerCase() === "tab")
+    {
+        Parts.push("⭾");
+    }
+    else
+    {
+        Parts.push(Shortcut.KeyLabel);
+    }
+
     return Parts;
 };
 
@@ -167,16 +176,7 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
                         { Props.ApplicationIcon }
                     </span>
                 ) }
-                <kbd
-                    aria-label={ ShortcutParts.join(" plus ") }
-                    className={ Styles.Shortcut }>
-                    { ShortcutParts.map((Part: string, Index: number) => (
-                        <React.Fragment key={ Part }>
-                            { Index > 0 && <span aria-hidden="true">+</span> }
-                            <span className={ Styles.Keycap }>{ Part }</span>
-                        </React.Fragment>
-                    )) }
-                </kbd>
+                <Keybind Keys={ ShortcutParts } />
             </span>
         </Button>
     );
@@ -221,16 +221,7 @@ const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode
                         { Props.ApplicationIcon }
                     </span>
                 ) }
-                <kbd
-                    aria-label={ ShortcutParts.join(" plus ") }
-                    className={ Styles.Shortcut }>
-                    { ShortcutParts.map((Part: string, Index: number) => (
-                        <React.Fragment key={ Part }>
-                            { Index > 0 && <span aria-hidden="true">+</span> }
-                            <span className={ Styles.Keycap }>{ Part }</span>
-                        </React.Fragment>
-                    )) }
-                </kbd>
+                <Keybind Keys={ ShortcutParts } />
             </span>
         </Button>
     );

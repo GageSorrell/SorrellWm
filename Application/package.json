@@ -45,14 +45,15 @@
         "@fluentui/react-components": "9.74.4",
         "@fluentui/react-icons": "2.0.333",
         "@sorrell/app-settings": "2.0.1",
+        "@sorrell/keyboard-ui": "1.0.0",
         "@sorrell/log": "1.0.0",
         "@sorrell/math": "1.0.0",
+        "@sorrell/settings-ui": "1.0.0",
         "@sorrell/utility": "1.0.0",
         "@sorrell/windows": "1.0.0",
         "react-intl": "10.1.18"
     },
     "devDependencies": {
-        "@sorrell/ink-ui": "1.0.0",
         "@sorrell/log-client": "1.0.0",
         "@testing-library/dom": "10.4.1",
         "@testing-library/jest-dom": "6.9.1",

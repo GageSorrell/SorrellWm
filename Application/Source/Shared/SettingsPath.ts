@@ -15,6 +15,7 @@ const SettingsSectionId = Object.freeze({
     General: "General" as const,
     Home: "Home" as const,
     Keybinds: "Keybinds" as const,
+    Overlay: "Overlay" as const,
     PerAppSettings: "PerAppSettings" as const
 } as const);
 

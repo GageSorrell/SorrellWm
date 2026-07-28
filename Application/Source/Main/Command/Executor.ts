@@ -222,6 +222,8 @@ const FocusDirection = (
     const FocusResult = Window.SetForegroundWindow(Target.value);
     if (Result.isFailure(FocusResult))
     {
+        yield* Effect.log(FocusResult.failure.Message);
+        yield* Effect.log(Target.value);
         return yield* new WindowFocusRestorationError({
             Message: FocusResult.failure.Message,
             Window: Target.value
@@ -284,8 +286,10 @@ const ExecuteUi = (
             return Effect.gen(function*()
             {
                 yield* BrowserWindows.Ensure(yield* BrowserWindow.SettingsWindowSpec);
+                yield* BrowserWindows.Focus(BrowserWindow.Key.Overlay);
                 yield* BrowserWindows.Show(BrowserWindow.Key.Settings);
                 yield* BrowserWindows.Focus(BrowserWindow.Key.Settings);
+                // yield* BrowserWindows.Hide(BrowserWindow.Key.Overlay);
                 yield* BrowserWindows.Send(
                     BrowserWindow.Key.Settings,
                     AppApiChannel.SettingsNavigate,

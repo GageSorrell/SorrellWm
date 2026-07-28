@@ -36,6 +36,7 @@ import {
     tokens
 } from "@fluentui/react-components";
 import { CommandButton, CompactCommandButton } from "./CommandButton.js";
+import { type Option, Predicate, Struct } from "effect";
 import {
     type OverlayCommandDto,
     OverlayCommandId,
@@ -43,12 +44,21 @@ import {
     type OverlayScreenDto,
     OverlayScreenId
 } from "../Shared/OverlayCommand.js";
-import { Predicate, Struct } from "effect";
 import { useEffect, useState } from "react";
+
+interface PresentationContext
+{
+    readonly IsTiled: boolean;
+    readonly WindowTitle: Option.Option<string>;
+    readonly ApplicationName: Option.Option<string>;
+}
 
 interface Presentation
 {
-    readonly Description: string;
+    readonly Description:
+        | string
+        | ((Context: PresentationContext) => string);
+
     readonly Label: string;
 }
 
@@ -57,14 +67,9 @@ interface CommandPresentation extends Presentation
     readonly Icon: FluentIcon;
 }
 
-interface CompactCommandPresentation
-{
-    readonly Icon: FluentIcon;
-}
-
 interface ScreenPresentation extends Presentation { }
 
-const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation | CompactCommandPresentation>> =
+const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> =
     {
         [ OverlayCommandId.Focus ]:
         {

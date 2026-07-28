@@ -1,7 +1,7 @@
 {
     "extends": "@sorrell/tsconfig",
-    "compilerOptions":
-    {
+    "compilerOptions": {
+        "jsx": "react-jsx",
         "noEmit": false,
         "outDir": "./Distribution",
         "rootDir": "./Source"

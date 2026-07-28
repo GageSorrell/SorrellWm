@@ -1,0 +1,80 @@
+{
+  "name": "@sorrell/keyboard-ui",
+  "private": false,
+  "description": "Fluent-based UI for displaying and editing keyboard keys and keybinds.",
+  "version": "1.0.0",
+  "author": {
+    "email": "gage@sorrell.sh",
+    "name": "Gage Sorrell",
+    "url": "https://sorrell.sh"
+  },
+  "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/KeyboardUi#ReadMe",
+  "bugs": {
+    "url": "https://github.com/GageSorrell/SorrellWm/issues"
+  },
+  "repository": {
+    "directory": "Package/KeyboardUi",
+    "type": "git",
+    "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+  },
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./Distribution/index.js",
+      "types": "./Distribution/index.d.ts"
+    },
+    "./Keybind": {
+      "import": "./Distribution/CompactKeybind.js",
+      "types": "./Distribution/CompactKeybind.d.ts"
+    },
+    "./KeyChip": {
+      "import": "./Distribution/KeyChip.js",
+      "types": "./Distribution/KeyChip.d.ts"
+    },
+    "./KeybindBadge": {
+      "import": "./Distribution/KeybindBadge.js",
+      "types": "./Distribution/KeybindBadge.d.ts"
+    },
+    "./KeybindEditorDialogBody": {
+      "import": "./Distribution/KeybindEditorDialogBody.js",
+      "types": "./Distribution/KeybindEditorDialogBody.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts,.tsx Source",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json"
+  },
+  "keywords": [
+    "fluent-ui",
+    "keybind",
+    "keyboard",
+    "react",
+    "shortcut",
+    "ui"
+  ],
+  "type": "module",
+  "peerDependencies": {
+    "@fluentui/react-components": "^9.0.0",
+    "@fluentui/react-icons": "^2.0.0",
+    "react": ">=19.2.0 <20",
+    "react-dom": ">=19.2.0 <20"
+  },
+  "devDependencies": {
+    "@fluentui/react-components": "9.74.4",
+    "@fluentui/react-icons": "2.0.333",
+    "@sorrell/tsconfig": "1.0.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "cross-env": "10.1.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "typescript": "6.0.2"
+  },
+  "engines": {
+    "node": ">=26.5.0",
+    "npm": ">=12.0.1"
+  }
+}

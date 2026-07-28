@@ -75,8 +75,9 @@ describe("OverlayCommandCatalog", () =>
             Label: "Configure how SorrellWm manages Visual Studio Code windows",
             Shortcut: {
                 KeyCode: 0x09,
-                KeyLabel: "TAB",
-                Modifiers: {
+                KeyLabel: "⭾",
+                Modifiers:
+                {
                     Alt: false,
                     Control: false,
                     Shift: false,

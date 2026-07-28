@@ -836,7 +836,7 @@ const SettingsWindowSpec = Effect.gen(function*()
             height: 640,
             minHeight: 480,
             minWidth: 640,
-            show: false,
+            show: true,
             title: "SorrellWm Settings",
             titleBarOverlay: { height: SettingsTitlebarHeight },
             titleBarStyle: "hidden",

@@ -19,6 +19,7 @@ import {
     type FluentIcon,
     GiftOpenRegular,
     HomeRegular,
+    ListBarColor,
     MegaphoneRegular,
     SettingsRegular,
     WrenchColor
@@ -59,7 +60,7 @@ interface NavLeafDefinition
     readonly Section: SettingsSectionId;
 }
 
-const TopLevelLeaves: ReadonlyArray<NavLeafDefinition> =
+const TopLevelTop: ReadonlyArray<NavLeafDefinition> =
     [
         {
             Icon: HomeRegular,
@@ -73,13 +74,31 @@ const TopLevelLeaves: ReadonlyArray<NavLeafDefinition> =
         }
     ] as const;
 
-const WindowingLeaves: ReadonlyArray<NavLeafDefinition> =
+const TopLevelHead: ReadonlyArray<NavLeafDefinition> =
     [
         {
             Icon: AppsColor,
             Label: "Per-App Settings",
             Section: SettingsSectionId.PerAppSettings
         },
+        {
+            Icon: ListBarColor,
+            Label: "Overlay",
+            Section: SettingsSectionId.Overlay
+        }
+    ] as const;
+
+const TopLevelTail: ReadonlyArray<NavLeafDefinition> =
+    [
+        {
+            Icon: WrenchColor,
+            Label: "Advanced",
+            Section: SettingsSectionId.Advanced
+        }
+    ] as const;
+
+const WindowingLeaves: ReadonlyArray<NavLeafDefinition> =
+    [
         {
             Icon: ArrowSquareColor,
             Label: "Keybinds",
@@ -137,6 +156,28 @@ const UseStyles = makeStyles({
     {
         gap: "1rem",
         paddingLeft: "2.5rem"
+    },
+    NavSubItemSelected:
+    {
+        "::before":
+        {
+            backgroundColor: tokens.colorCompoundBrandForeground1,
+            borderRadius: tokens.borderRadiusCircular,
+            content: "\"\"",
+            height: "20px",
+            insetInlineStart: "0",
+            position: "absolute",
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: "4px"
+        },
+
+        ":hover":
+        {
+            backgroundColor: tokens.colorNeutralBackground2Hover
+        },
+
+        backgroundColor: tokens.colorNeutralBackground1Selected
     }
 });
 
@@ -156,11 +197,12 @@ const NavigationItems = ({ SelectedSection }: NavigationItemsProps): React.JSX.E
 
     const NavItemStyleBase = mergeClasses(Styles.Base, Styles.NavItem);
     const NavItemStyleSelected = mergeClasses(NavItemStyleBase, Styles.NavItemSelected);
-    const NavSubItemStyle = mergeClasses(NavItemStyleBase, Styles.NavSubItemBase);
+    const NavSubItemStyleBase = mergeClasses(NavItemStyleBase, Styles.NavSubItemBase);
+    const NavSubItemStyleSelected = mergeClasses(NavSubItemStyleBase, Styles.NavSubItemSelected);
 
     return (
         <>
-            { TopLevelLeaves.map(({ Icon, Label, Section }: NavLeafDefinition) =>
+            { TopLevelTop.map(({ Icon, Label, Section }: NavLeafDefinition) =>
             {
                 const IconElement = NavIcon(Icon);
                 const IsSpinning = Section === SettingsSectionId.General
@@ -182,6 +224,25 @@ const NavigationItems = ({ SelectedSection }: NavigationItemsProps): React.JSX.E
             }) }
 
             <NavDivider />
+            {
+                TopLevelHead.map(({ Icon, Label, Section }: NavLeafDefinition) =>
+                {
+                    const NavItemStyle = Section === SelectedSection
+                        ? NavItemStyleSelected
+                        : NavItemStyleBase;
+
+                    return (
+                        <NavItem
+                            className={ NavItemStyle }
+                            icon={ NavIcon(Icon) }
+                            key={ Section }
+                            value={ Section }>
+                            { Label }
+                        </NavItem>
+                    );
+                })
+            }
+
             <NavCategory value={ WindowingCategoryValue }>
                 <NavCategoryItem
                     className={ NavItemStyleBase }
@@ -192,7 +253,9 @@ const NavigationItems = ({ SelectedSection }: NavigationItemsProps): React.JSX.E
                 <NavSubItemGroup>
                     { WindowingLeaves.map(({ Icon, Label, Section }: NavLeafDefinition) => (
                         <NavSubItem
-                            className={ NavSubItemStyle }
+                            className={ Section === SelectedSection
+                                ? NavSubItemStyleSelected
+                                : NavSubItemStyleBase }
                             key={ Section }
                             value={ Section }>
                             { NavIcon(Icon) }
@@ -202,12 +265,24 @@ const NavigationItems = ({ SelectedSection }: NavigationItemsProps): React.JSX.E
                 </NavSubItemGroup>
             </NavCategory>
 
-            <NavItem
-                className={ SelectedSection === "Advanced" ? NavItemStyleSelected : NavItemStyleBase }
-                icon={ NavIcon(WrenchColor) }
-                value={ SettingsSectionId.Advanced }>
-                Advanced
-            </NavItem>
+            {
+                TopLevelTail.map(({ Icon, Label, Section }: NavLeafDefinition) =>
+                {
+                    const NavItemStyle = Section === SelectedSection
+                        ? NavItemStyleSelected
+                        : NavItemStyleBase;
+
+                    return (
+                        <NavItem
+                            className={ NavItemStyle }
+                            icon={ NavIcon(Icon) }
+                            key={ Section }
+                            value={ Section }>
+                            { Label }
+                        </NavItem>
+                    );
+                })
+            }
         </>
     );
 };
