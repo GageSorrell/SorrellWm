@@ -14,7 +14,8 @@ import { HotkeyId, IsHotkeyId, type ShortcutDto } from "./Hotkey.js";
 export/** Stable identifiers for the overlay's navigable screens. */
 const OverlayScreenId = Object.freeze({
     Focus: "Focus" as const,
-    Home: "Home" as const
+    Home: "Home" as const,
+    Move: "Move" as const
 } as const);
 
 /** One of the overlay's navigable screens. */
@@ -29,6 +30,10 @@ const OverlayCommandId = Object.freeze({
     FocusMoveUp: "FocusMoveUp" as const,
     Insert: "Insert" as const,
     Move: "Move" as const,
+    MoveWindowDown: "MoveWindowDown" as const,
+    MoveWindowLeft: "MoveWindowLeft" as const,
+    MoveWindowRight: "MoveWindowRight" as const,
+    MoveWindowUp: "MoveWindowUp" as const,
     OpenPerAppSettings: "OpenPerAppSettings" as const,
     Resize: "Resize" as const
 } as const);
@@ -57,6 +62,13 @@ const FocusCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.FocusMoveRight }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
+const MoveCommandDefinitions = Object.freeze([
+    { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.MoveWindowLeft },
+    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.MoveWindowUp },
+    { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.MoveWindowDown },
+    { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.MoveWindowRight }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
 const HomeSecondaryCommandDefinition = Object.freeze({
     HotkeyId: HotkeyId.Toggle,
     Id: OverlayCommandId.OpenPerAppSettings
@@ -65,9 +77,19 @@ const HomeSecondaryCommandDefinition = Object.freeze({
 export/** Get the ordered command definitions available on an overlay screen. */
 const GetOverlayCommandDefinitions = (
     ScreenId: OverlayScreenId
-): ReadonlyArray<OverlayCommandDefinition> => ScreenId === OverlayScreenId.Focus
-    ? FocusCommandDefinitions
-    : HomeCommandDefinitions;
+): ReadonlyArray<OverlayCommandDefinition> =>
+{
+    switch (ScreenId)
+    {
+        case OverlayScreenId.Focus:
+            return FocusCommandDefinitions;
+        case OverlayScreenId.Move:
+            return MoveCommandDefinitions;
+        case OverlayScreenId.Home:
+        default:
+            return HomeCommandDefinitions;
+    }
+};
 
 export/** Get the secondary command definition available on an overlay screen, if any. */
 const GetOverlaySecondaryCommandDefinition = (

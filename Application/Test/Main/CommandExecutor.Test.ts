@@ -13,6 +13,7 @@ import * as AppSettings from "../../Source/Main/AppSettings/AppSettings.ts";
 import * as BrowserWindow from "../../Source/Main/BrowserWindow.ts";
 import * as CommandResolver from "../../Source/Main/Command/Resolver.ts";
 import * as OverlaySession from "../../Source/Main/Overlay/Session.ts";
+import * as Tiling from "../../Source/Main/Tiling/index.ts";
 import * as Ui from "../../Source/Main/Command/Ui.ts";
 import * as Wm from "../../Source/Main/Command/Wm.ts";
 import { Box, type Box as MathBox } from "@sorrell/math";
@@ -66,7 +67,8 @@ vi.mock("@sorrell/windows", async () =>
         {
             GetForegroundWindow: vi.fn(() => EffectOption.none()),
             GetWindowRect: vi.fn(() => EffectOption.none()),
-            SetForegroundWindow: vi.fn(() => EffectResult.succeed(undefined))
+            SetForegroundWindow: vi.fn(() => EffectResult.succeed(undefined)),
+            SetWindowRect: vi.fn(() => EffectResult.succeed(undefined))
         }
     };
 });
@@ -109,6 +111,7 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager()),
             Effect.provide(IdleResolver)
         ));
 
@@ -158,6 +161,7 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(FakeAppSettings(73)),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager()),
             Effect.provide(IdleResolver)
         ));
 
@@ -198,6 +202,7 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(FakeAppSettings()),
             Effect.provide(FakeBrowserWindow(Operations)),
             Effect.provide(FakeOverlaySession(Option.some(TargetWindow))),
+            Effect.provide(FakeTilingManager()),
             Effect.provide(IdleResolver)
         ));
 
@@ -206,6 +211,80 @@ describe("CommandExecutor.Execute", () =>
             "SetBounds:Overlay",
             "Send:Overlay:overlay-screen:changed:Home"
         ]);
+    });
+
+    it("moves a floating activation window by 20px and repaints the overlay over it", async () =>
+    {
+        const ActivationWindow = 84n as Handle.HWND;
+        const Operations = new Array<string>();
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.some(
+            Box.Box(0, 1200, 800, 0)
+        ));
+        vi.mocked(WindowsWindow.SetWindowRect).mockImplementation((
+            WindowHandle: Handle.HWND,
+            Bounds: MathBox.Box
+        ) =>
+        {
+            Operations.push(
+                `SetWindowRect:${ WindowHandle }:${ Bounds.Top },${ Bounds.Right },` +
+                `${ Bounds.Bottom },${ Bounds.Left }`
+            );
+            return Result.succeed(undefined);
+        });
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "MoveWindowRight"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(Option.none(), Option.some(ActivationWindow))),
+            Effect.provide(FakeTilingManager()),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Operations).toEqual([
+            "SetWindowRect:84:0,1220,800,20",
+            "SetBounds:Overlay",
+            "Send:Overlay:overlay-screen:changed:Home"
+        ]);
+        // The overlay must be centered on the bounds we just moved the window to,
+        // not on a second, racy `GetWindowRect` re-query (`SetWindowRect` posts the
+        // move asynchronously, so a re-query can return stale pre-move bounds).
+        expect(WindowsWindow.GetWindowRect).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not move a tiled activation window", async () =>
+    {
+        const ActivationWindow = 84n as Handle.HWND;
+        const Operations = new Array<string>();
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.some(
+            Box.Box(0, 1200, 800, 0)
+        ));
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "MoveWindowRight"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(Option.none(), Option.some(ActivationWindow))),
+            Effect.provide(FakeTilingManager([ ActivationWindow ])),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Operations).toEqual([ ]);
+        expect(WindowsWindow.SetWindowRect).not.toHaveBeenCalled();
     });
 });
 
@@ -241,6 +320,7 @@ describe("CommandExecutor.Live", () =>
                     Deferred.succeed(Hidden, undefined)
                 )),
                 Effect.provide(FakeOverlaySession()),
+                Effect.provide(FakeTilingManager()),
                 Effect.provide(ResolverLive)
             );
         }));
@@ -257,6 +337,37 @@ const IdleResolver = Layer.succeed(CommandResolver.CommandResolver, {
     Resolve: () => Effect.succeed(Option.none()),
     ResolveOverlayCommand: () => Effect.succeed(Option.none())
 });
+
+const FakeTilingManager = (
+    TiledWindows: ReadonlyArray<Handle.HWND> = []
+): Layer.Layer<Tiling.Manager.TilingManager> =>
+{
+    const Root = TiledWindows.reduce<Tiling.Tree.Node | null>(
+        (CurrentRoot: Tiling.Tree.Node | null, WindowValue: Handle.HWND) =>
+            Tiling.Tree.InsertWindow(
+                CurrentRoot,
+                { InitialBounds: Box.Box(0, 100, 100, 0), Window: WindowValue },
+                Tiling.Tree.Orientation.Horizontal
+            ),
+        null
+    );
+    const Snapshot: Tiling.Tree.State = {
+        Workspaces: Root === null ? [ ] : [ { Bounds: Box.Box(0, 1920, 1080, 0), Id: "Fake", Root } ]
+    };
+    const Service: Tiling.Manager.TilingManagerImpl = {
+        Changes: Stream.empty,
+        Float: () => Effect.void,
+        Move: () => Effect.void,
+        Reconcile: Effect.void,
+        Refresh: Effect.void,
+        SetPanelOrientation: () => Effect.void,
+        SetPanelRatio: () => Effect.void,
+        Snapshot: Effect.succeed(Snapshot),
+        Tile: () => Effect.void
+    };
+
+    return Layer.succeed(Tiling.Manager.TilingManager, Service);
+};
 
 const FakeAppSettings = (
     OverlayBackdropIntensity: number = 50
@@ -285,11 +396,12 @@ const FakeAppSettings = (
 };
 
 const FakeOverlaySession = (
-    FocusTarget: Option.Option<Handle.HWND> = Option.none()
+    FocusTarget: Option.Option<Handle.HWND> = Option.none(),
+    InitialActivationWindow: Option.Option<Handle.HWND> = Option.none()
 ) => Layer.suspend(() =>
 {
     let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.Home ];
-    let ActivationWindow = Option.none<Handle.HWND>();
+    let ActivationWindow = InitialActivationWindow;
     const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.Home;
 
     return Layer.succeed(OverlaySession.OverlaySession, {
@@ -305,6 +417,7 @@ const FakeOverlaySession = (
         ClearFocusPreview: Effect.void,
         Current: Effect.sync(Current),
         GetActivationApplicationName: Effect.succeed(Option.none<string>()),
+        GetActivationWindow: Effect.sync(() => ActivationWindow),
         Navigate: (Screen: OverlayScreenId) => Effect.sync((): void =>
         {
             Stack = [ ...Stack, Screen ];

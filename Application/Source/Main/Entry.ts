@@ -103,7 +103,8 @@ const CommandServicesLive = pipe(
     Command.Executor.Live,
     Layer.provideMerge(Layer.mergeAll(
         AppSettingsSyncLive,
-        CommandResolverLive
+        CommandResolverLive,
+        Tiling.Manager.Live
     ))
 );
 const TitlebarFlyoutLive = pipe(

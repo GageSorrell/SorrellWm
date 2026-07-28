@@ -112,6 +112,30 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ArrowUpRegular,
             Label: "Focus Up"
         },
+        [ OverlayCommandId.MoveWindowDown ]:
+        {
+            Description: "Move the window down.",
+            Icon: ArrowDownRegular,
+            Label: "Move Down"
+        },
+        [ OverlayCommandId.MoveWindowLeft ]:
+        {
+            Description: "Move the window left.",
+            Icon: ArrowLeftRegular,
+            Label: "Move Left"
+        },
+        [ OverlayCommandId.MoveWindowRight ]:
+        {
+            Description: "Move the window right.",
+            Icon: ArrowRightRegular,
+            Label: "Move Right"
+        },
+        [ OverlayCommandId.MoveWindowUp ]:
+        {
+            Description: "Move the window up.",
+            Icon: ArrowUpRegular,
+            Label: "Move Up"
+        },
         [ OverlayCommandId.Insert ]:
         {
             Description: (Context: PresentationContext) =>
@@ -161,6 +185,11 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
         {
             Description: "Choose the type of action to perform.",
             Label: "SorrellWm"
+        },
+        [ OverlayScreenId.Move ]:
+        {
+            Description: "Choose a direction to move the window.",
+            Label: "Move"
         }
     } as const;
 

@@ -4,6 +4,7 @@
             "target_name": "SorrellWindows",
             "sources": [
                 "Source/Native/Initialization.cpp",
+                "Source/Native/Isolate.cpp",
                 "Source/Native/Keyboard.cpp",
                 "Source/Native/MessageLoop.cpp",
                 "Source/Native/Monitor.cpp",

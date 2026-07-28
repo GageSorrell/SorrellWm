@@ -138,6 +138,9 @@ export interface OverlaySessionImpl
     /** The application name of the window from which the overlay was activated, if any. */
     readonly GetActivationApplicationName: Effect.Effect<Option.Option<string>>;
 
+    /** The current window from which the overlay was activated, if any. */
+    readonly GetActivationWindow: Effect.Effect<Option.Option<Handle.HWND>>;
+
     /** Clear any active Focus hover preview. */
     readonly ClearFocusPreview: Effect.Effect<void>;
 
@@ -280,6 +283,7 @@ const Live = Layer.effect(
                 Ref.get(ActivationWindow),
                 Effect.map(Option.flatMap(GetApplicationName))
             ),
+            GetActivationWindow: Ref.get(ActivationWindow),
             Navigate: (Screen: OverlayScreenId) => SubscriptionRef.update(
                 Stack,
                 (Value: ReadonlyArray<OverlayScreenId>) => GetCurrent(Value) === Screen

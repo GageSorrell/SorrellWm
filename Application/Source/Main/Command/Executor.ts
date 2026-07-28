@@ -14,6 +14,7 @@ import * as BoxUtility from "../Utility/Math/Box.ts";
 import * as BrowserWindow from "../BrowserWindow.ts";
 import * as CommandResolver from "./Resolver.ts";
 import * as OverlaySession from "../Overlay/Session.ts";
+import * as Tiling from "../Tiling/index.ts";
 import type * as Ui from "./Ui.ts";
 import { Box, IntPoint } from "@sorrell/math";
 import { Console, Context, Data, Effect, Layer, Number, Option, Result, Stream, pipe } from "effect";
@@ -113,24 +114,23 @@ const ShowBackdrop = (
 const ClampOverlayWidth = Number.clamp({ maximum: 800, minimum: 320 });
 const ClampOverlayHeight = Number.clamp({ maximum: 1024, minimum: 160 });
 
+const GetOverlayBoundsFor = (ForegroundBox: Box.Box): Box.Box =>
+{
+    const Width = ClampOverlayWidth(Box.Width(ForegroundBox));
+    const Height = ClampOverlayHeight(Box.Height(ForegroundBox));
+
+    return BoxUtility.Center(IntPoint.IntPoint(Width, Height), ForegroundBox);
+};
+
 const GetActivationTarget = (
     TargetWindow: Handle.HWND
 ): Option.Option<OverlayActivationTarget> => pipe(
     Window.GetWindowRect(TargetWindow),
-    Option.map((ForegroundBox: Box.Box): OverlayActivationTarget =>
-    {
-        const Width = ClampOverlayWidth(Box.Width(ForegroundBox));
-        const Height = ClampOverlayHeight(Box.Height(ForegroundBox));
-
-        return {
-            ForegroundBounds: ForegroundBox,
-            OverlayBounds: BoxUtility.Center(
-                IntPoint.IntPoint(Width, Height),
-                ForegroundBox
-            ),
-            Window: TargetWindow
-        };
-    })
+    Option.map((ForegroundBox: Box.Box): OverlayActivationTarget => ({
+        ForegroundBounds: ForegroundBox,
+        OverlayBounds: GetOverlayBoundsFor(ForegroundBox),
+        Window: TargetWindow
+    }))
 );
 
 const OnActivate = (
@@ -247,6 +247,81 @@ const FocusDirection = (
     yield* PublishOverlayScreen(BrowserWindows, Session);
 });
 
+const MoveDistance = 20;
+
+const MoveOffsets: Readonly<Record<
+    "MoveWindowDown" | "MoveWindowLeft" | "MoveWindowRight" | "MoveWindowUp",
+    { readonly X: number; readonly Y: number; }
+>> = {
+    MoveWindowDown: { X: 0, Y: MoveDistance },
+    MoveWindowLeft: { X: -MoveDistance, Y: 0 },
+    MoveWindowRight: { X: MoveDistance, Y: 0 },
+    MoveWindowUp: { X: 0, Y: -MoveDistance }
+};
+
+const IsWindowTiled = (
+    Snapshot: Tiling.Tree.State,
+    WindowValue: Handle.HWND
+): boolean => Snapshot.Workspaces.some((Workspace: Tiling.Tree.Workspace) =>
+    Tiling.Tree.HasWindow(Workspace.Root, WindowValue));
+
+const MoveWindowDirection = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Id: OverlayCommandId
+) => Effect.gen(function*()
+{
+    const OffsetsByCommandId = MoveOffsets as
+        Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
+    const Offset = OffsetsByCommandId[Id];
+    const ActivationWindow = yield* Session.GetActivationWindow;
+
+    if (Offset === undefined || Option.isNone(ActivationWindow))
+    {
+        return;
+    }
+
+    // Only floating windows move directly; tiled windows are repositioned by the
+    // tiling manager instead.
+    const Snapshot = yield* TilingManager.Snapshot;
+
+    if (IsWindowTiled(Snapshot, ActivationWindow.value))
+    {
+        return;
+    }
+
+    const CurrentBounds = Window.GetWindowRect(ActivationWindow.value);
+
+    if (Option.isNone(CurrentBounds))
+    {
+        return;
+    }
+
+    const NewBounds = Box.Box(
+        CurrentBounds.value.Top + Offset.Y,
+        CurrentBounds.value.Right + Offset.X,
+        CurrentBounds.value.Bottom + Offset.Y,
+        CurrentBounds.value.Left + Offset.X
+    );
+    const MoveResult = Window.SetWindowRect(ActivationWindow.value, NewBounds);
+
+    if (Result.isFailure(MoveResult))
+    {
+        return;
+    }
+
+    // Center the overlay on the bounds we just moved the window to, rather than
+    // re-querying the OS: `SetWindowRect` posts the move asynchronously, so an
+    // immediate `GetWindowRect` can still race and return the pre-move bounds.
+    yield* BrowserWindows.SetBounds(
+        BrowserWindow.Key.Overlay,
+        GetOverlayBoundsFor(NewBounds)
+    );
+
+    yield* PublishOverlayScreen(BrowserWindows, Session);
+});
+
 const PublishOverlayScreen = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Session: OverlaySession.OverlaySessionImpl
@@ -263,6 +338,7 @@ const ExecuteUi = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
     Command: Ui.UiCommand
 ) =>
 {
@@ -313,16 +389,25 @@ const ExecuteUi = (
                 );
             });
         case "NoOpOverlayCommand":
-            return Command.Id.startsWith("FocusMove")
-                ? FocusDirection(BrowserWindows, Session, Command.Id)
-                : Effect.void;
+            if (Command.Id.startsWith("FocusMove"))
+            {
+                return FocusDirection(BrowserWindows, Session, Command.Id);
+            }
+
+            if (Command.Id.startsWith("MoveWindow"))
+            {
+                return MoveWindowDirection(BrowserWindows, Session, TilingManager, Command.Id);
+            }
+
+            return Effect.void;
     }
 };
 
 const MakeExecute = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
-    Session: OverlaySession.OverlaySessionImpl
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl
 ): CommandExecutorImpl["Execute"] => Effect.fn("CommandExecutor.Execute")(
     function* (Command: CommandResolver.Resolved)
     {
@@ -333,6 +418,7 @@ const MakeExecute = (
                     BrowserWindows,
                     Settings,
                     Session,
+                    TilingManager,
                     Command
                 );
 
@@ -351,7 +437,8 @@ const Live = Layer.effect(
         const Resolver = yield* CommandResolver.CommandResolver;
         const Settings = yield* AppSettings.AppSettings;
         const Session = yield* OverlaySession.OverlaySession;
-        const Execute = MakeExecute(BrowserWindows, Settings, Session);
+        const TilingManager = yield* Tiling.Manager.TilingManager;
+        const Execute = MakeExecute(BrowserWindows, Settings, Session, TilingManager);
 
         yield* pipe(
             BrowserWindows.Events,

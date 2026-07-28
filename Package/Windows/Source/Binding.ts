@@ -67,6 +67,10 @@ export interface NativeBinding
         readonly Capture?: (
             Window: Handle.HWND
         ) => Attempt.NativeAttempt<string>;
+        readonly ClearIsolation?: () => Attempt.NativeAttempt<void>;
+        readonly ShowIsolation?: (
+            ExcludedWindows: ReadonlyArray<Handle.HWND>
+        ) => Attempt.NativeAttempt<void>;
         readonly ClearWindowDimming: () => Attempt.NativeAttempt<void>;
         readonly DimWindowsExcept: (
             ExcludedWindows: ReadonlyArray<Handle.HWND>

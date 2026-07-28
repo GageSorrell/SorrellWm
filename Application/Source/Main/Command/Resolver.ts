@@ -57,6 +57,11 @@ const ResolveOverlayCommand = (
         return Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Focus }));
     }
 
+    if (Screen === ScreenId.Home && Id === "Move")
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Move }));
+    }
+
     if (Id === OverlayCommandId.OpenPerAppSettings)
     {
         return Option.some(UiCommands.OpenSettings({

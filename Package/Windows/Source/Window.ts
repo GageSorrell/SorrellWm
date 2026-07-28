@@ -53,6 +53,27 @@ const Capture = (
     return Option.none();
 };
 
+export/** Remove every overlay created by {@link ShowIsolation}. */
+const ClearIsolation = (): Attempt.Attempt<void> =>
+    typeof Binding.Window.ClearIsolation === "function"
+        ? Attempt.AsResult(Binding.Window.ClearIsolation())
+        : MissingTilingApi("ClearIsolation");
+
+export/**
+       * Cover each visible, non-minimized top-level window not present in the
+       * exclusion set with an opaque black, titlebar-less window that is
+       * hidden from the taskbar and Alt+Tab.
+       *
+       * This is independent of {@link DimWindowsExcept}/{@link ShowBackdrop}: it
+       * replaces any windows created by a prior call to {@link ShowIsolation}, but
+       * leaves dimming/backdrop overlays untouched, and vice versa.
+       */
+const ShowIsolation = (
+    ExcludedWindows: ReadonlyArray<Handle.HWND>
+): Attempt.Attempt<void> => typeof Binding.Window.ShowIsolation === "function"
+    ? Attempt.AsResult(Binding.Window.ShowIsolation(ExcludedWindows))
+    : MissingTilingApi("ShowIsolation");
+
 export/** Remove every overlay created by {@link DimWindowsExcept} or {@link ShowBackdrop}. */
 const ClearWindowDimming = (): Attempt.Attempt<void> =>
     Attempt.AsResult(Binding.Window.ClearWindowDimming());

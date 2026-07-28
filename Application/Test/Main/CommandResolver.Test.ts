@@ -118,13 +118,15 @@ describe("CommandResolver.Resolve", () =>
             ScreenId: "Focus",
             _tag: "NavigateOverlayScreen"
         });
-        expect(Commands.slice(1)).toMatchObject(Mappings.slice(1).map((
-            [ , , Id ]: typeof Mappings[number]
-        ) => ({
+        expect(Commands[2]).toMatchObject({
             Category: "Ui",
-            Id,
-            _tag: "NoOpOverlayCommand"
-        })));
+            ScreenId: "Move",
+            _tag: "NavigateOverlayScreen"
+        });
+        expect([ Commands[1], Commands[3] ]).toMatchObject([
+            { Category: "Ui", Id: "Insert", _tag: "NoOpOverlayCommand" },
+            { Category: "Ui", Id: "Resize", _tag: "NoOpOverlayCommand" }
+        ]);
     });
 
     it("maps the same action keys to the Focus screen's direction commands", () =>
@@ -153,6 +155,39 @@ describe("CommandResolver.Resolve", () =>
             Activation(Id.Back, Windows.VK.BROWSER_BACK, Phase.Pressed),
             OverlayScreenId.Focus
         ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
+    });
+
+    it("maps the same action keys to the Move screen's direction commands", () =>
+    {
+        const Mappings = [
+            [ Id.SelectLeft, Windows.VK.D, "MoveWindowLeft" ],
+            [ Id.SelectUp, Windows.VK.H, "MoveWindowUp" ],
+            [ Id.SelectDown, Windows.VK.T, "MoveWindowDown" ],
+            [ Id.SelectRight, Windows.VK.N, "MoveWindowRight" ]
+        ] as const;
+
+        expect(Mappings.map((
+            [ HotkeyId, Key ]: typeof Mappings[number]
+        ) => Option.getOrThrow(Resolve(
+            Activation(HotkeyId, Key, Phase.Pressed),
+            OverlayScreenId.Move
+        )))).toMatchObject(Mappings.map((
+            [ , , CommandId ]: typeof Mappings[number]
+        ) => ({
+            Category: "Ui",
+            Id: CommandId,
+            _tag: "NoOpOverlayCommand"
+        })));
+
+        expect(Option.getOrThrow(Resolve(
+            Activation(Id.Back, Windows.VK.BROWSER_BACK, Phase.Pressed),
+            OverlayScreenId.Move
+        ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
+
+        expect(Resolve(
+            Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
+            OverlayScreenId.Move
+        )).toEqual(Option.none());
     });
 
     it("maps the Toggle key to opening the per-app settings section", () =>
@@ -235,6 +270,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     ClearFocusPreview: Effect.void,
     Current: Effect.succeed(OverlayScreenId.Home),
     GetActivationApplicationName: Effect.succeed(Option.none()),
+    GetActivationWindow: Effect.succeed(Option.none()),
     Navigate: () => Effect.void,
     PreviewFocusTarget: () => Effect.void,
     Reset: Effect.void,

@@ -11,6 +11,7 @@
  */
 
 #include "./Core.h"
+#include "./Isolate.h"
 #include "./Keyboard.h"
 #include "./MessageLoop.h"
 #include "./Monitor.h"
@@ -77,6 +78,14 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
     Window.Set(
         "Capture",
         Napi::Function::New(Environment, CaptureWindow)
+    );
+    Window.Set(
+        "ClearIsolation",
+        Napi::Function::New(Environment, ClearIsolation)
+    );
+    Window.Set(
+        "ShowIsolation",
+        Napi::Function::New(Environment, ShowIsolation)
     );
     Window.Set(
         "ClearWindowDimming",
@@ -161,6 +170,7 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
     Exports.Set("Theme", Theme);
     Exports.Set("Window", Window);
 
+    napi_add_env_cleanup_hook(Environment, CleanupIsolation, nullptr);
     napi_add_env_cleanup_hook(Environment, CleanupMessageLoop, nullptr);
     napi_add_env_cleanup_hook(Environment, CleanupWindowDimming, nullptr);
 
