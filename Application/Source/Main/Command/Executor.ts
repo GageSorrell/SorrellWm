@@ -42,7 +42,7 @@ import {
     OverlayScreenId,
     ResizeMode
 } from "../../Shared/OverlayCommand.ts";
-import { type Handle, Window } from "@sorrell/windows";
+import { type Handle, Screen, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../../Shared/Api.ts";
 import type { BackdropPresentation } from "../../Shared/Backdrop.ts";
 import { DevFeatures } from "../Development/DevFeatures.ts";
@@ -169,26 +169,63 @@ const GetActivationTarget = (
     }))
 );
 
+const IsFullscreenActivationTarget = (
+    Target: OverlayActivationTarget
+): boolean =>
+{
+    const Monitors = Screen.GetMonitors();
+    if (Result.isFailure(Monitors))
+    {
+        return false;
+    }
+
+    return Monitors.success.some((Monitor: Screen.MonitorInfo): boolean =>
+        Target.ForegroundBounds.Left <= Monitor.Monitor.Left
+        && Target.ForegroundBounds.Top <= Monitor.Monitor.Top
+        && Target.ForegroundBounds.Right >= Monitor.Monitor.Right
+        && Target.ForegroundBounds.Bottom >= Monitor.Monitor.Bottom
+    );
+};
+
 const OnActivate = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl
-) => Effect.gen(function* ()
+) => Effect.gen(function*()
 {
-    yield* Session.ClearActivationWindow;
-    yield* Session.ClearFocusPreview;
-
-    if ((yield* DevFeatures).StaticOverlay)
-    {
-        yield* PublishOverlayScreen(BrowserWindows, Session);
-        return yield* Effect.void;
-    }
-
+    const StaticOverlay = (yield* DevFeatures).StaticOverlay;
     const ActivationTarget: Option.Option<OverlayActivationTarget> = pipe(
         Window.GetForegroundWindow(),
         Option.flatMap(GetActivationTarget)
     );
+    const IgnoreInFullscreen = StaticOverlay
+        ? false
+        : yield* Settings.GetSetting("IgnoreActivationKeybindInFullscreen");
+
+    if (
+        IgnoreInFullscreen
+        && Option.isSome(ActivationTarget)
+        && IsFullscreenActivationTarget(ActivationTarget.value)
+    )
+    {
+        yield* Logging.LogInfo(
+            "Overlay",
+            "Ignored the activation keybind because the foreground window is fullscreen.",
+            { Window: ActivationTarget.value.Window }
+        );
+        return;
+    }
+
+    yield* Session.Reset;
+    yield* Session.ClearActivationWindow;
+    yield* Session.ClearFocusPreview;
+
+    if (StaticOverlay)
+    {
+        yield* PublishOverlayScreen(BrowserWindows, Session);
+        return yield* Effect.void;
+    }
 
     if (Option.isSome(ActivationTarget))
     {
@@ -1385,7 +1422,6 @@ const ExecuteUi = (
             return Effect.gen(function*()
             {
                 yield* Logging.LogInfo("Overlay", "Activating the command overlay.");
-                yield* Session.Reset;
                 yield* OnActivate(
                     BrowserWindows,
                     Settings,
@@ -1521,6 +1557,19 @@ const ExecuteUi = (
             return pipe(
                 Session.SetResizeMode(Command.Mode),
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
+            );
+        case "SelectTiledStackWindow":
+            return Session.ResolveTiledStackWindow(Command.Index).pipe(
+                Effect.flatMap(Option.match({
+                    onNone: () => Effect.void,
+                    onSome: (Selection: OverlaySession.TiledFocusSelection) =>
+                        ApplyTiledFocusSelection(
+                            BrowserWindows,
+                            Session,
+                            TilingManager,
+                            Selection
+                        )
+                }))
             );
         case "SetTiledInsertCaptureNext":
             return Effect.gen(function*()

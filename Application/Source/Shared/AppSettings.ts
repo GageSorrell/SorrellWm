@@ -34,6 +34,9 @@ export type FloatingWindowSettingsPatch = Partial<FloatingWindowSettingsDto>;
 /** General window-manager behavior exposed to the settings renderer. */
 export interface GeneralSettingsDto
 {
+    /** Ignore the overlay activation keybind while the focused window is fullscreen. */
+    readonly IgnoreActivationKeybindInFullscreen: boolean;
+
     /** Tile existing floating windows when SorrellWm starts. */
     readonly TileExistingWindowsOnStartup: boolean;
 
@@ -61,6 +64,9 @@ export interface OverlaySettingsDto
 {
     /** Opacity percentage of the sampled-color fill in occluded-window Focus previews. */
     readonly FocusPreviewOpacity: number;
+
+    /** Show a stack-window picker when a tiled stack window's minimize button is hovered. */
+    readonly ShowStackPanelMinimizeFlyout: boolean;
 }
 
 /** A partial update to the overlay settings; only the given fields are changed. */
@@ -111,6 +117,9 @@ export/** Determine whether an IPC value is a complete general-settings snapshot
 const IsGeneralSettingsDto = (Value: unknown): Value is GeneralSettingsDto =>
     typeof Value === "object"
     && Value !== null
+    && typeof (
+        Value as Partial<GeneralSettingsDto>
+    ).IgnoreActivationKeybindInFullscreen === "boolean"
     && typeof (Value as Partial<GeneralSettingsDto>).TileExistingWindowsOnStartup === "boolean"
     && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowGap)
     && IsTiledResizeBehavior((Value as Partial<GeneralSettingsDto>).TiledResizeBehavior);
@@ -125,6 +134,9 @@ const IsGeneralSettingsPatch = (Value: unknown): Value is GeneralSettingsPatch =
 
     const Candidate = Value as Partial<GeneralSettingsDto>;
     return (
+        Candidate.IgnoreActivationKeybindInFullscreen === undefined
+        || typeof Candidate.IgnoreActivationKeybindInFullscreen === "boolean"
+    ) && (
         Candidate.TileExistingWindowsOnStartup === undefined
         || typeof Candidate.TileExistingWindowsOnStartup === "boolean"
     ) && (
@@ -232,7 +244,9 @@ const IsOverlaySettingsDto = (Value: unknown): Value is OverlaySettingsDto =>
         return false;
     }
 
-    return IsPercentage((Value as Partial<OverlaySettingsDto>).FocusPreviewOpacity);
+    const Candidate = Value as Partial<OverlaySettingsDto>;
+    return IsPercentage(Candidate.FocusPreviewOpacity)
+        && typeof Candidate.ShowStackPanelMinimizeFlyout === "boolean";
 };
 
 export/** Determine whether an IPC value is a valid overlay-settings patch. */
@@ -243,6 +257,12 @@ const IsOverlaySettingsPatch = (Value: unknown): Value is OverlaySettingsPatch =
         return false;
     }
 
-    const Opacity = (Value as Partial<OverlaySettingsDto>).FocusPreviewOpacity;
-    return Opacity === undefined || IsPercentage(Opacity);
+    const Candidate = Value as Partial<OverlaySettingsDto>;
+    return (
+        Candidate.FocusPreviewOpacity === undefined
+        || IsPercentage(Candidate.FocusPreviewOpacity)
+    ) && (
+        Candidate.ShowStackPanelMinimizeFlyout === undefined
+        || typeof Candidate.ShowStackPanelMinimizeFlyout === "boolean"
+    );
 };

@@ -117,7 +117,8 @@ The other button should be a "cancel" button, which if pressed, destroys the tem
 
 ---
 
-Please implement an overlay window that appears when the minimize button is hovered.  This should be enabled/disabled via an app setting (enabled by default).  This overlay should be like the overlay that appears when hovering over the maximize button, but it only appears when the window belongs to a stack panel.  The overlay should show a list of windows in the stack panel with the compact window buttons used elsewhere in the app, such that clicking one of the buttons focuses the corresponding window and brings it to the top of the stack.
+<!-- Done -->
+<!-- Please implement an overlay window that appears when the minimize button is hovered.  This should be enabled/disabled via an app setting (enabled by default).  This overlay should be like the overlay that appears when hovering over the maximize button, but it only appears when the window belongs to a stack panel.  The overlay should show a list of windows in the stack panel with the compact window buttons used elsewhere in the app, such that clicking one of the buttons focuses the corresponding window and brings it to the top of the stack. -->
 
 ---
 
@@ -125,11 +126,12 @@ Please create a `boolean` app setting which if enabled (disabled by default), ca
 
 ---
 
-Please implement the ability in SorrellWm to accept client connections from applications like the PowerToys Command Palette extension (in `/Package/SorrellWmCommandPalette/`) and NodeJS via the `@sorrell/wm-api` package.  Clients should be able to perform every action that the user can via the overlay windows.  The only app settings that clients should be able to modify are the numeric settings, like the gap size and step sizes.  You will have to decide upon the best way to facilitate this communication, such as a named pipe.
+<!-- Please implement the ability in SorrellWm to accept client connections from applications like the PowerToys Command Palette extension (in `/Package/SorrellWmCommandPalette/`) and NodeJS via the `@sorrell/wm-api` package.  Clients should be able to perform every action that the user can via the overlay windows.  The only app settings that clients should be able to modify are the numeric settings, like the gap size and step sizes.  You will have to decide upon the best way to facilitate this communication, such as a named pipe. -->
 
 ---
 
-Please add the `boolean` app setting "IgnoreActivationKeybindInFullscreen" to `@sorrell/wm`, which is `true` by default.  When `true`, if the current focused window is in fullscreen (for example, if it's a game window or fullscreen video playing from the browser), then the activation keybind to show the overlay window should be ignored.
+<!-- Done -->
+<!-- Please add the `boolean` app setting "IgnoreActivationKeybindInFullscreen" to `@sorrell/wm`, which is `true` by default.  When `true`, if the current focused window is in fullscreen (for example, if it's a game window or fullscreen video playing from the browser), then the activation keybind to show the overlay window should be ignored. -->
 
 ---
 

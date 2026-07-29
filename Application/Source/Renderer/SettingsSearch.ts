@@ -12,14 +12,19 @@
 
 import type { SettingControlEntry } from "@sorrell/settings-ui";
 
-/** The maximum number of results {@link SearchSettingControls} returns. */
-export const MaxSettingSearchResults = 8 as const;
+export/** The maximum number of results {@link SearchSettingControls} returns. */
+const MaxSettingSearchResults = 8 as const;
 
 /** One {@link SearchSettingControls} result. */
 export interface SettingSearchResult
 {
     readonly Entry: SettingControlEntry;
     readonly Id: string;
+}
+
+interface ScoredSettingSearchResult extends SettingSearchResult
+{
+    readonly Score: number;
 }
 
 const WordBoundary = /[^a-z0-9]/iu;
@@ -69,13 +74,13 @@ const FuzzyScore = (Query: string, Target: string): number | null =>
 const AsSearchableString = (Value: unknown): string | undefined =>
     typeof Value === "string" ? Value : undefined;
 
-/**
- * Fuzzy-search `Controls` (as returned by `UseSettingControls`) by `Id`, title, and subtitle,
- * ranking title matches highest, then subtitle, then `Id`. Returns at most
- * {@link MaxSettingSearchResults} results, best match first. Returns every entry, in
- * registration order, when `Query` is blank.
- */
-export const SearchSettingControls = (
+export/**
+       * Fuzzy-search `Controls` (as returned by `UseSettingControls`) by `Id`, title, and
+       * subtitle, ranking title matches highest, then subtitle, then `Id`. Returns at most
+       * {@link MaxSettingSearchResults} results, best match first. Returns every entry, in
+       * registration order, when `Query` is blank.
+       */
+const SearchSettingControls = (
     Query: string,
     Controls: Readonly<Record<string, SettingControlEntry>>
 ): ReadonlyArray<SettingSearchResult> =>
@@ -86,10 +91,10 @@ export const SearchSettingControls = (
     {
         return Object.entries(Controls)
             .slice(0, MaxSettingSearchResults)
-            .map(([ Id, Entry ]) => ({ Entry, Id }));
+            .map(([ Id, Entry ]: [ string, SettingControlEntry ]) => ({ Entry, Id }));
     }
 
-    const Scored: Array<SettingSearchResult & { readonly Score: number }> = [ ];
+    const Scored: Array<ScoredSettingSearchResult> = [ ];
 
     for (const [ Id, Entry ] of Object.entries(Controls))
     {
@@ -110,7 +115,7 @@ export const SearchSettingControls = (
     }
 
     return Scored
-        .sort((Left, Right) => Right.Score - Left.Score)
+        .sort((Left: ScoredSettingSearchResult, Right: ScoredSettingSearchResult) => Right.Score - Left.Score)
         .slice(0, MaxSettingSearchResults)
-        .map(({ Entry, Id }) => ({ Entry, Id }));
+        .map(({ Entry, Id }: ScoredSettingSearchResult) => ({ Entry, Id }));
 };

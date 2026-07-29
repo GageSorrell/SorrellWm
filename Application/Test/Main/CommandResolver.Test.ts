@@ -628,6 +628,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
     ResolveTiledFocusCommit: Effect.succeed(Option.none()),
     ResolveTiledFocusTarget: () => Effect.succeed(Option.none()),
+    ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
     ResolveTiledMoveAction: () => Effect.succeed(Option.none()),
     SelectedTiledInsertWindow: Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,

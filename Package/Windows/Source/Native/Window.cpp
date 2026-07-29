@@ -449,7 +449,14 @@ Napi::Value GetForegroundWindow_Node(const Napi::CallbackInfo& CallbackInfo)
     return Out.Succeed(Napi::BigInt::New(Environment, NumericHandle));
 }
 
-Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
+namespace
+{
+Napi::Value GetHoveredCaptionButton(
+    const Napi::CallbackInfo& CallbackInfo,
+    const LRESULT HitCode,
+    const LONG_PTR RequiredStyle,
+    const std::string& ButtonName
+)
 {
     const Napi::Env Environment = CallbackInfo.Env();
     Result Out(Environment);
@@ -472,15 +479,15 @@ Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
     }
 
     const LONG_PTR Style = GetWindowLongPtrW(WindowHandle, GWL_STYLE);
-    if ((Style & WS_CAPTION) == 0 || (Style & WS_MAXIMIZEBOX) == 0)
+    if ((Style & WS_CAPTION) == 0 || (Style & RequiredStyle) == 0)
     {
-        return Out.Fail("The hovered window does not have a maximize button.");
+        return Out.Fail("The hovered window does not have a " + ButtonName + " button.");
     }
 
     const std::optional<LRESULT> CurrentHit = HitTestWindow(WindowHandle, Cursor);
-    if (!CurrentHit.has_value() || CurrentHit.value() != HTMAXBUTTON)
+    if (!CurrentHit.has_value() || CurrentHit.value() != HitCode)
     {
-        return Out.Fail("The cursor is not over a maximize button.");
+        return Out.Fail("The cursor is not over a " + ButtonName + " button.");
     }
 
     RECT WindowBounds { };
@@ -505,7 +512,7 @@ Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
     {
         Probe.x = ButtonBounds.left - 1;
         const std::optional<LRESULT> Hit = HitTestWindow(WindowHandle, Probe);
-        if (!Hit.has_value() || Hit.value() != HTMAXBUTTON)
+        if (!Hit.has_value() || Hit.value() != HitCode)
         {
             break;
         }
@@ -519,7 +526,7 @@ Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
     {
         Probe.x = ButtonBounds.right;
         const std::optional<LRESULT> Hit = HitTestWindow(WindowHandle, Probe);
-        if (!Hit.has_value() || Hit.value() != HTMAXBUTTON)
+        if (!Hit.has_value() || Hit.value() != HitCode)
         {
             break;
         }
@@ -533,7 +540,7 @@ Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
     {
         Probe.y = ButtonBounds.top - 1;
         const std::optional<LRESULT> Hit = HitTestWindow(WindowHandle, Probe);
-        if (!Hit.has_value() || Hit.value() != HTMAXBUTTON)
+        if (!Hit.has_value() || Hit.value() != HitCode)
         {
             break;
         }
@@ -547,7 +554,7 @@ Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
     {
         Probe.y = ButtonBounds.bottom;
         const std::optional<LRESULT> Hit = HitTestWindow(WindowHandle, Probe);
-        if (!Hit.has_value() || Hit.value() != HTMAXBUTTON)
+        if (!Hit.has_value() || Hit.value() != HitCode)
         {
             break;
         }
@@ -561,6 +568,27 @@ Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
     Hover.Set("Bounds", RectangleToNapi(Environment, ButtonBounds));
     Hover.Set("Window", Napi::BigInt::New(Environment, NumericHandle));
     return Out.Succeed(Hover);
+}
+}
+
+Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo)
+{
+    return GetHoveredCaptionButton(
+        CallbackInfo,
+        HTMAXBUTTON,
+        WS_MAXIMIZEBOX,
+        "maximize"
+    );
+}
+
+Napi::Value GetHoveredMinimizeButton(const Napi::CallbackInfo& CallbackInfo)
+{
+    return GetHoveredCaptionButton(
+        CallbackInfo,
+        HTMINBUTTON,
+        WS_MINIMIZEBOX,
+        "minimize"
+    );
 }
 
 Napi::Value GetManageableTopLevelWindows(const Napi::CallbackInfo& CallbackInfo)

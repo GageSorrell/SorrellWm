@@ -17,6 +17,7 @@ describe("SettingsGeneral", () =>
     beforeEach(() =>
     {
         vi.mocked(window.sorrell.generalSettings.get).mockResolvedValue({
+            IgnoreActivationKeybindInFullscreen: true,
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
             TiledWindowGap: 8
@@ -24,11 +25,32 @@ describe("SettingsGeneral", () =>
         vi.mocked(window.sorrell.generalSettings.set).mockImplementation(async (
             Patch: GeneralSettingsPatch
         ) => ({
+            IgnoreActivationKeybindInFullscreen:
+                Patch.IgnoreActivationKeybindInFullscreen ?? true,
             TileExistingWindowsOnStartup: Patch.TileExistingWindowsOnStartup ?? false,
             TiledResizeBehavior:
                 Patch.TiledResizeBehavior ?? "PreserveRatios",
             TiledWindowGap: Patch.TiledWindowGap ?? 8
         }));
+    });
+
+    it("loads and updates the fullscreen activation preference", async () =>
+    {
+        render(<SettingsGeneral />);
+
+        const Toggle = await screen.findByRole("switch", {
+            name: "Ignore activation keybind in fullscreen"
+        });
+        expect(Toggle).toBeChecked();
+
+        fireEvent.click(Toggle);
+
+        await waitFor(() => expect(
+            window.sorrell.generalSettings.set
+        ).toHaveBeenCalledWith({
+            IgnoreActivationKeybindInFullscreen: false
+        }));
+        expect(Toggle).not.toBeChecked();
     });
 
     it("loads and updates the startup tiling preference", async () =>

@@ -10,13 +10,14 @@
  */
 
 import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
+import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-ui";
 import { Text, Title2, makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
 import { ParseSettingControlId } from "./SettingControlId.js";
-import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-ui";
 import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
 import { SettingsGeneral } from "./SettingsGeneral.js";
+import { SettingsHome } from "./SettingsHome.js";
 import { SettingsOverlay } from "./SettingsOverlay.js";
 import { SettingsPerApp } from "./SettingsPerApp.js";
 import { SettingsSidebar } from "./SettingsSidebar.js";
@@ -217,11 +218,17 @@ const SettingsShell = (): React.JSX.Element =>
                         (SettingOption/SettingToggle rows aren't registrable), so there's nothing
                         for search to lose by unmounting it.
                     */ }
-                    <div className={ SelectedSection === SettingsSectionId.General ? undefined : Styles.Hidden }>
+                    <div
+                        className={
+                            SelectedSection === SettingsSectionId.General ? undefined : Styles.Hidden
+                        }>
                         <SettingsGeneral />
                     </div>
 
-                    <div className={ SelectedSection === SettingsSectionId.Overlay ? undefined : Styles.Hidden }>
+                    <div
+                        className={
+                            SelectedSection === SettingsSectionId.Overlay ? undefined : Styles.Hidden
+                        }>
                         <SettingsOverlay />
                     </div>
 
@@ -234,6 +241,10 @@ const SettingsShell = (): React.JSX.Element =>
 
                     { SelectedSection === SettingsSectionId.PerAppSettings && (
                         <SettingsPerApp />
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.Home && (
+                        <SettingsHome />
                     ) }
                 </main>
             </div>

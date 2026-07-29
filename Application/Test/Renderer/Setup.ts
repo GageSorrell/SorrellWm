@@ -53,16 +53,19 @@ Object.defineProperty(window, "sorrell", {
         generalSettings:
         {
             get: vi.fn(() => Promise.resolve({
+                IgnoreActivationKeybindInFullscreen: true,
                 TileExistingWindowsOnStartup: false,
-                TiledWindowGap: 8,
-                TiledResizeBehavior: "PreserveRatios"
+                TiledResizeBehavior: "PreserveRatios",
+                TiledWindowGap: 8
             })),
             set: vi.fn((Settings: GeneralSettingsPatch) => Promise.resolve({
+                IgnoreActivationKeybindInFullscreen:
+                    Settings.IgnoreActivationKeybindInFullscreen ?? true,
                 TileExistingWindowsOnStartup:
                     Settings.TileExistingWindowsOnStartup ?? false,
-                TiledWindowGap: Settings.TiledWindowGap ?? 8,
                 TiledResizeBehavior:
-                    Settings.TiledResizeBehavior ?? "PreserveRatios"
+                    Settings.TiledResizeBehavior ?? "PreserveRatios",
+                TiledWindowGap: Settings.TiledWindowGap ?? 8
             }))
         },
         insertTarget:
@@ -90,12 +93,20 @@ Object.defineProperty(window, "sorrell", {
             })),
             invoke: vi.fn(() => Promise.resolve()),
             onChanged: vi.fn(() => (): void => undefined),
-            preview: vi.fn(() => Promise.resolve())
+            preview: vi.fn(() => Promise.resolve()),
+            selectStackWindow: vi.fn(() => Promise.resolve())
         },
         overlaySettings:
         {
-            get: vi.fn(() => Promise.resolve({ FocusPreviewOpacity: 75 })),
-            set: vi.fn((Settings: OverlaySettingsPatch) => Promise.resolve(Settings))
+            get: vi.fn(() => Promise.resolve({
+                FocusPreviewOpacity: 75,
+                ShowStackPanelMinimizeFlyout: true
+            })),
+            set: vi.fn((Settings: OverlaySettingsPatch) => Promise.resolve({
+                FocusPreviewOpacity: Settings.FocusPreviewOpacity ?? 75,
+                ShowStackPanelMinimizeFlyout:
+                    Settings.ShowStackPanelMinimizeFlyout ?? true
+            }))
         },
         perAppSettings:
         {
@@ -120,6 +131,16 @@ Object.defineProperty(window, "sorrell", {
         {
             get: vi.fn(() => Promise.resolve({ AccentColor: null, ColorScheme: "Dark" })),
             onChanged: vi.fn(() => (): void => undefined)
+        },
+        update:
+        {
+            downloadAndInstall: vi.fn(() => Promise.resolve({ Success: true })),
+            getStatus: vi.fn(() => Promise.resolve({
+                CurrentVersion: "0.1.0",
+                IsUpdateAvailable: false,
+                LatestVersion: null,
+                ReleaseUrl: null
+            }))
         },
         versions:
         {

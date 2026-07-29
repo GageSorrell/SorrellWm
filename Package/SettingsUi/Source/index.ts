@@ -17,5 +17,5 @@ export * from "./SettingGroup.js";
 export * from "./SettingOption.js";
 export * from "./SettingsHeader.js";
 export * from "./SettingToggle.js";
-export * from "./SuccessMessageBar.js";
 export * from "./UseSettingControls.js";
+export * from "./VersionMessageBar.js";

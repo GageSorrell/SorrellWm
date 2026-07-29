@@ -1,7 +1,7 @@
 /**
- * When enabled, this draws the overlay window beneath the "maximize" button of a window
- * when that button is hovered over.  This is similar to the behavior provided by Windows's
- * snapping feature.
+ * Draws contextual overlay flyouts beneath native maximize and minimize
+ * caption buttons.  The maximize flyout replaces an unavailable Windows Snap
+ * flyout, while the minimize flyout selects windows from a tiled stack panel.
  *
  * @module @sorrell/wm/Main/TitlebarFlyout
  *
@@ -15,10 +15,12 @@ import * as AppSettings from "./AppSettings/AppSettings.ts";
 import * as BrowserWindow from "./BrowserWindow.js";
 import * as Logging from "./Log.ts";
 import * as Overlay from "./Overlay/index.js";
+import * as Tiling from "./Tiling/index.js";
 import { Box, type IntPoint } from "@sorrell/math";
 import { Context, Duration, Effect, Layer, Option, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../Shared/Api.js";
+import { OverlayScreenId } from "../Shared/OverlayCommand.js";
 
 const TypeId = "~sorrell/wm/Main/TitlebarFlyout" as const;
 const FlyoutHeight = 800 as const;
@@ -27,9 +29,23 @@ const PollInterval = Duration.millis(75);
 export/** Hover duration used when Windows cannot report its configured timeout. */
 const DefaultFlyoutHoverDelayMilliseconds = 1_000 as const;
 
+const FlyoutKind = Object.freeze({
+    Maximize: "Maximize",
+    StackMinimize: "StackMinimize"
+} as const);
+
+type FlyoutKind = typeof FlyoutKind[keyof typeof FlyoutKind];
+
+interface CaptionButtonHover
+{
+    readonly Bounds: Box.Box;
+    readonly Window: Handle.HWND;
+}
+
 interface ActiveFlyout
 {
     readonly ButtonBounds: Box.Box;
+    readonly Kind: FlyoutKind;
     readonly OverlayBounds: Box.Box;
     readonly Window: Handle.HWND;
 }
@@ -38,6 +54,7 @@ interface PendingFlyout
 {
     readonly ButtonBounds: Box.Box;
     readonly HoverBeganAtMilliseconds: number;
+    readonly Kind: FlyoutKind;
     readonly Window: Handle.HWND;
 }
 
@@ -77,10 +94,12 @@ const HasHoverDelayElapsed = (
 ): boolean =>
     CurrentTimeMilliseconds - HoverBeganAtMilliseconds >= HoverDelayMilliseconds;
 
-const IsSameMaximizeButton = (
+const IsSameCaptionButton = (
     Pending: PendingFlyout,
-    Hover: Window.HoveredMaximizeButton
+    Hover: CaptionButtonHover,
+    Kind: FlyoutKind
 ): boolean =>
+    Pending.Kind === Kind &&
     Pending.Window === Hover.Window &&
     Pending.ButtonBounds.Bottom === Hover.Bounds.Bottom &&
     Pending.ButtonBounds.Left === Hover.Bounds.Left &&
@@ -100,7 +119,25 @@ const ShouldShow = (
     Option.exists(IsSnapLayoutsOnHoverEnabled, (Value: boolean) => !Value)
 );
 
-export/** Place the overlay directly below or above a maximize button. */
+export/** Determine whether a native window belongs to a stack panel. */
+const IsStackWindow = (
+    State: Tiling.Tree.State,
+    WindowValue: Handle.HWND
+): boolean => Tiling.Tree.StackWindowOrders(State).some(
+    (Order: Tiling.Tree.StackWindowOrder): boolean =>
+        Order.Windows.includes(WindowValue)
+);
+
+const FindStackWindowOrder = (
+    State: Tiling.Tree.State,
+    WindowValue: Handle.HWND
+): Tiling.Tree.StackWindowOrder | undefined =>
+    Tiling.Tree.StackWindowOrders(State).find(
+        (Order: Tiling.Tree.StackWindowOrder): boolean =>
+            Order.Windows.includes(WindowValue)
+    );
+
+export/** Place the overlay directly below or above a caption button. */
 const GetOverlayBounds = (
     ButtonBounds: Box.Box,
     WorkArea: Box.Box
@@ -128,6 +165,7 @@ const Live = Layer.effect(
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
         const Session = yield* Overlay.Session.OverlaySession;
         const Settings = yield* AppSettings.AppSettings;
+        const TilingManager = yield* Tiling.Manager.TilingManager;
         const HoverDelayMilliseconds = ResolveHoverDelayMilliseconds(
             Window.GetMouseHoverTime()
         );
@@ -157,7 +195,8 @@ const Live = Layer.effect(
         };
 
         const Show = (
-            Hover: Window.HoveredMaximizeButton,
+            Hover: CaptionButtonHover,
+            Kind: FlyoutKind,
             OverlayBounds: Box.Box
         ): Effect.Effect<void, BrowserWindow.Error> => Effect.gen(function*()
         {
@@ -168,6 +207,40 @@ const Live = Layer.effect(
 
             yield* Session.Reset;
             yield* Session.SetActivationWindow(Hover.Window);
+            if (Kind === FlyoutKind.StackMinimize)
+            {
+                yield* Session.Navigate(OverlayScreenId.TiledFocus);
+                const Snapshot = yield* TilingManager.Snapshot;
+                const Order = FindStackWindowOrder(Snapshot, Hover.Window);
+                const Workspace = Order === undefined
+                    ? undefined
+                    : Snapshot.Workspaces.find((
+                        Candidate: Tiling.Tree.Workspace
+                    ): boolean => Candidate.Id === Order.WorkspaceId);
+                const Node = Workspace === undefined || Order === undefined
+                    ? undefined
+                    : Tiling.Tree.GetNodeAtPath(Workspace.Root, Order.Path);
+
+                if (
+                    Order === undefined
+                    || Node?._tag !== "Panel"
+                    || Node.Orientation !== Tiling.Tree.Orientation.Stack
+                )
+                {
+                    return;
+                }
+
+                yield* Session.SetTiledFocusSelection({
+                    Node,
+                    Path: Order.Path,
+                    StackActiveIndex: Math.max(
+                        0,
+                        Order.Windows.indexOf(Hover.Window)
+                    ),
+                    StackWindows: Order.Windows,
+                    WorkspaceId: Order.WorkspaceId
+                });
+            }
             yield* BrowserWindows.Send(
                 BrowserWindow.Key.Overlay,
                 AppApiChannel.OverlayScreenChanged,
@@ -180,6 +253,7 @@ const Live = Layer.effect(
             });
             Active = {
                 ButtonBounds: Hover.Bounds,
+                Kind,
                 OverlayBounds,
                 Window: Hover.Window
             };
@@ -188,13 +262,16 @@ const Live = Layer.effect(
         const Poll = Effect.gen(function*()
         {
             const IsEnabled = yield* Settings.GetSetting("ShowTitlebarFlyout");
-            const UseFallback = ShouldShow(
+            const ShowMaximizeFlyout = ShouldShow(
                 IsEnabled,
                 Window.IsSnapWindowsEnabled(),
                 Window.IsSnapLayoutsOnHoverEnabled()
             );
+            const ShowStackMinimizeFlyout = yield* Settings.GetSetting(
+                "ShowStackPanelMinimizeFlyout"
+            );
 
-            if (!UseFallback)
+            if (!ShowMaximizeFlyout && !ShowStackMinimizeFlyout)
             {
                 return yield* Hide();
             }
@@ -202,7 +279,11 @@ const Live = Layer.effect(
             const Cursor = Window.GetCursorPosition();
             if (Active !== undefined)
             {
+                const IsActiveKindEnabled = Active.Kind === FlyoutKind.Maximize
+                    ? ShowMaximizeFlyout
+                    : ShowStackMinimizeFlyout;
                 if (
+                    IsActiveKindEnabled &&
                     Option.isSome(Cursor) &&
                     (
                         ContainsPoint(Active.ButtonBounds, Cursor.value) ||
@@ -216,7 +297,30 @@ const Live = Layer.effect(
                 return yield* Hide();
             }
 
-            const Hover = Window.GetHoveredMaximizeButton();
+            let Hover: Option.Option<CaptionButtonHover> = Option.none();
+            let Kind: FlyoutKind = FlyoutKind.Maximize;
+
+            if (ShowStackMinimizeFlyout)
+            {
+                const MinimizeHover = Window.GetHoveredMinimizeButton();
+                if (Option.isSome(MinimizeHover))
+                {
+                    const Snapshot = yield* TilingManager.Snapshot;
+
+                    if (IsStackWindow(Snapshot, MinimizeHover.value.Window))
+                    {
+                        Hover = MinimizeHover;
+                        Kind = FlyoutKind.StackMinimize;
+                    }
+                }
+            }
+
+            if (Option.isNone(Hover) && ShowMaximizeFlyout)
+            {
+                Hover = Window.GetHoveredMaximizeButton();
+                Kind = FlyoutKind.Maximize;
+            }
+
             if (Option.isNone(Hover))
             {
                 Pending = undefined;
@@ -226,12 +330,13 @@ const Live = Layer.effect(
             const CurrentTimeMilliseconds = performance.now();
             if (
                 Pending === undefined ||
-                !IsSameMaximizeButton(Pending, Hover.value)
+                !IsSameCaptionButton(Pending, Hover.value, Kind)
             )
             {
                 Pending = {
                     ButtonBounds: Hover.value.Bounds,
                     HoverBeganAtMilliseconds: CurrentTimeMilliseconds,
+                    Kind,
                     Window: Hover.value.Window
                 };
                 return;
@@ -255,6 +360,7 @@ const Live = Layer.effect(
             Pending = undefined;
             yield* Show(
                 Hover.value,
+                Kind,
                 GetOverlayBounds(Hover.value.Bounds, WorkArea.value)
             );
         });

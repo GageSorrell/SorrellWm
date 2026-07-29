@@ -124,6 +124,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetHoveredMaximizeButton)
     );
     Window.Set(
+        "GetHoveredMinimizeButton",
+        Napi::Function::New(Environment, GetHoveredMinimizeButton)
+    );
+    Window.Set(
         "GetManageableTopLevelWindows",
         Napi::Function::New(Environment, GetManageableTopLevelWindows)
     );

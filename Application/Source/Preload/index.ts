@@ -46,6 +46,12 @@ import {
     type OverlayScreenDto
 } from "../Shared/OverlayCommand.ts";
 import { IsRendererTheme, type RendererTheme } from "../Shared/Theme.ts";
+import {
+    IsUpdateDownloadResultDto,
+    IsUpdateStatusDto,
+    type UpdateDownloadResultDto,
+    type UpdateStatusDto
+} from "../Shared/Update.ts";
 import type { IpcRendererEvent } from "electron";
 import type { RendererLogEntry } from "../Shared/Logging.ts";
 import electron from "electron";
@@ -184,6 +190,16 @@ const InvokeOverlayCommand = async (Id: OverlayCommandId): Promise<void> =>
     }
 
     await ipcRenderer.invoke(AppApiChannel.OverlayCommandInvoke, Id);
+};
+
+const SelectOverlayStackWindow = async (Index: number): Promise<void> =>
+{
+    if (!Number.isSafeInteger(Index) || Index < 0)
+    {
+        throw new TypeError("The requested stack-window index is invalid.");
+    }
+
+    await ipcRenderer.invoke(AppApiChannel.OverlayStackWindowSelect, Index);
 };
 
 const PreviewOverlayFocus = async (
@@ -429,6 +445,30 @@ const SetPerAppSettings = async (
     return Response;
 };
 
+const GetUpdateStatus = async (): Promise<UpdateStatusDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.UpdateStatusGet);
+
+    if (!IsUpdateStatusDto(Response))
+    {
+        throw new TypeError("The main process returned an invalid update status.");
+    }
+
+    return Response;
+};
+
+const DownloadAndInstallUpdate = async (): Promise<UpdateDownloadResultDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.UpdateDownloadAndInstall);
+
+    if (!IsUpdateDownloadResultDto(Response))
+    {
+        throw new TypeError("The main process returned an invalid update download result.");
+    }
+
+    return Response;
+};
+
 const applicationApi: AppApi = Object.freeze({
     backdrop: Object.freeze({
         onShow: OnBackdropShow
@@ -459,7 +499,8 @@ const applicationApi: AppApi = Object.freeze({
         get: GetOverlayScreen,
         invoke: InvokeOverlayCommand,
         onChanged: OnOverlayScreenChanged,
-        preview: PreviewOverlayFocus
+        preview: PreviewOverlayFocus,
+        selectStackWindow: SelectOverlayStackWindow
     }),
     overlaySettings: Object.freeze({
         get: GetOverlaySettings,
@@ -477,6 +518,10 @@ const applicationApi: AppApi = Object.freeze({
     theme: Object.freeze({
         get: GetRendererTheme,
         onChanged: OnRendererThemeChanged
+    }),
+    update: Object.freeze({
+        downloadAndInstall: DownloadAndInstallUpdate,
+        getStatus: GetUpdateStatus
     }),
     versions:
     {

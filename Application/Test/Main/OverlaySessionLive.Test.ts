@@ -701,6 +701,9 @@ describe("OverlaySession.Live Focus targets", () =>
                 );
                 yield* Session.SetTiledFocusSelection(Stack);
                 const Initial = yield* Session.Snapshot;
+                const Direct = Option.getOrThrow(
+                    yield* Session.ResolveTiledStackWindow(2)
+                );
                 const Down = Option.getOrThrow(
                     yield* Session.ResolveTiledFocusTarget("FocusMoveDown")
                 );
@@ -710,7 +713,7 @@ describe("OverlaySession.Live Focus targets", () =>
                     yield* Session.ResolveTiledFocusTarget("FocusMoveUp")
                 );
 
-                return { Down, Initial, Selected, Stack, Up };
+                return { Direct, Down, Initial, Selected, Stack, Up };
             }),
             Effect.provide(Live),
             Effect.provide(FakeAppSettings),
@@ -733,6 +736,10 @@ describe("OverlaySession.Live Focus targets", () =>
             Node: { Orientation: "Stack", _tag: "Panel" },
             Path: [ ],
             StackActiveIndex: 1
+        });
+        expect(ResultValue.Direct).toMatchObject({
+            StackActiveIndex: 2,
+            StackWindows: [ CurrentWindow, RightWindow, OtherWindow ]
         });
         expect(ResultValue.Selected.StackWindows?.map(
             (WindowValue: OverlayStackWindowDto) => WindowValue.Active
@@ -1187,6 +1194,7 @@ describe("OverlaySession.Live tiled resize behavior", () =>
 
 const CurrentSettings: AppSettings.AppSettings = {
     FocusPreviewOpacity: 75,
+    IgnoreActivationKeybindInFullscreen: true,
     Keybinds: [ ],
     MoveFineSpeed: 16,
     MoveStepPrimary: 20,
@@ -1197,6 +1205,7 @@ const CurrentSettings: AppSettings.AppSettings = {
     OverlayRoundedCorners: true,
     PerAppSettings: { },
     RunAtStartup: true,
+    ShowStackPanelMinimizeFlyout: true,
     ShowTitlebarFlyout: true,
     Theme: "System",
     TileExistingWindowsOnStartup: false,

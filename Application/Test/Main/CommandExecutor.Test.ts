@@ -24,7 +24,11 @@ import {
     UnsupportedCommandError
 } from "../../Source/Main/Command/Executor.ts";
 import { Deferred, Effect, Layer, Option, Queue, Result, Stream, pipe } from "effect";
-import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
+import {
+    type Handle,
+    Screen as WindowsScreen,
+    Window as WindowsWindow
+} from "@sorrell/windows";
 import {
     type OverlayScreenDto,
     OverlayScreenId,
@@ -67,6 +71,10 @@ vi.mock("@sorrell/windows", async () =>
         {
             Start: (): void => undefined,
             Stop: (): void => undefined
+        },
+        Screen:
+        {
+            GetMonitors: vi.fn(() => EffectResult.succeed([ ]))
         },
         VK:
         {
@@ -149,6 +157,7 @@ beforeEach(() =>
     vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.SetForegroundWindow).mockReturnValue(Result.succeed(undefined));
+    vi.mocked(WindowsScreen.GetMonitors).mockReturnValue(Result.succeed([ ]));
 });
 
 describe("CommandExecutor.Execute", () =>
@@ -450,6 +459,92 @@ describe("CommandExecutor.Execute", () =>
             "SetForegroundWindow:42"
         ]);
         expect(WindowsWindow.SetForegroundWindow).toHaveBeenCalledWith(ForegroundWindow);
+    });
+
+    it("ignores overlay activation while the foreground window is fullscreen", async () =>
+    {
+        const ForegroundWindow = 42n as Handle.HWND;
+        const MonitorBounds = Box.Box(0, 1920, 1080, 0);
+        const Operations = new Array<string>();
+        vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(
+            Option.some(ForegroundWindow)
+        );
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(MonitorBounds)
+        );
+        vi.mocked(WindowsScreen.GetMonitors).mockReturnValue(Result.succeed([
+            {
+                DeviceName: "Primary",
+                DisplayId: 1,
+                Flags: 1,
+                Handle: 1n as Handle.HMONITOR,
+                IsPrimary: true,
+                Monitor: MonitorBounds,
+                WorkArea: Box.Box(0, 1920, 1040, 0)
+            }
+        ]));
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.Activate());
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager()),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Operations).toEqual([ ]);
+    });
+
+    it("allows overlay activation in fullscreen when the setting is disabled", async () =>
+    {
+        const ForegroundWindow = 42n as Handle.HWND;
+        const MonitorBounds = Box.Box(0, 1920, 1080, 0);
+        const Operations = new Array<string>();
+        vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(
+            Option.some(ForegroundWindow)
+        );
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(MonitorBounds)
+        );
+        vi.mocked(WindowsScreen.GetMonitors).mockReturnValue(Result.succeed([
+            {
+                DeviceName: "Primary",
+                DisplayId: 1,
+                Flags: 1,
+                Handle: 1n as Handle.HMONITOR,
+                IsPrimary: true,
+                Monitor: MonitorBounds,
+                WorkArea: Box.Box(0, 1920, 1040, 0)
+            }
+        ]));
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.Activate());
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, false)),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager()),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Operations).toEqual([
+            "Send:Overlay:overlay-screen:changed:FloatingHome",
+            "SetBounds:Overlay",
+            "Show:Overlay"
+        ]);
     });
 
     it("focuses the directional target and repaints the still-open overlay over it", async () =>
@@ -925,11 +1020,13 @@ const FakeTilingManager = (
 };
 
 const FakeAppSettings = (
-    OverlayBackdropIntensity: number = 50
+    OverlayBackdropIntensity: number = 50,
+    IgnoreActivationKeybindInFullscreen: boolean = true
 ) =>
 {
     const Current: AppSettings.AppSettings = {
         FocusPreviewOpacity: 75,
+        IgnoreActivationKeybindInFullscreen,
         Keybinds: [ ],
         MoveFineSpeed: 16,
         MoveStepPrimary: 20,
@@ -940,6 +1037,7 @@ const FakeAppSettings = (
         OverlayRoundedCorners: true,
         PerAppSettings: { },
         RunAtStartup: true,
+        ShowStackPanelMinimizeFlyout: true,
         ShowTitlebarFlyout: true,
         Theme: "System",
         TileExistingWindowsOnStartup: false,
@@ -1033,6 +1131,7 @@ const FakeOverlaySession = (
         ResolveFocusTarget: () => Effect.succeed(FocusTarget),
         ResolveTiledFocusCommit: Effect.succeed(TiledFocusCommit),
         ResolveTiledFocusTarget: () => Effect.succeed(TiledFocusTarget),
+        ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
         ResolveTiledMoveAction: () => Effect.succeed(TiledMoveAction),
         SelectedTiledInsertWindow: Effect.succeed(Option.none()),
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>

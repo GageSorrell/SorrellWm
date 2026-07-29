@@ -15,15 +15,20 @@ import {
     DefaultFlyoutHoverDelayMilliseconds,
     GetOverlayBounds,
     HasHoverDelayElapsed,
+    IsStackWindow,
     ResolveHoverDelayMilliseconds,
     ShouldShow
 } from
     "../../Source/Main/TitlebarFlyout.ts";
 import { describe, expect, it } from "vitest";
 import { Option } from "effect";
+import * as Tiling from "../../Source/Main/Tiling/index.ts";
+import type { Handle } from "@sorrell/windows";
 
 describe("TitlebarFlyout", () =>
 {
+    const Hwnd = (Value: number): Handle.HWND => BigInt(Value) as Handle.HWND;
+
     it("uses the fallback only when enabled and a native Snap feature is disabled", () =>
     {
         expect(ShouldShow(true, Option.some(false), Option.some(true))).toBe(true);
@@ -75,5 +80,39 @@ describe("TitlebarFlyout", () =>
 
         expect(Bounds.Top).toBe(50);
         expect(Bounds.Bottom).toBe(850);
+    });
+
+    it("recognizes only windows that belong to stack panels", () =>
+    {
+        const Bounds = Box.Box(0, 1000, 700, 0);
+        const Stack = Tiling.Tree.Panel(
+            Tiling.Tree.Orientation.Stack,
+            Tiling.Tree.Window({ InitialBounds: Bounds, Window: Hwnd(1) }),
+            Tiling.Tree.Window({ InitialBounds: Bounds, Window: Hwnd(2) })
+        );
+        const Horizontal = Tiling.Tree.Panel(
+            Tiling.Tree.Orientation.Horizontal,
+            Tiling.Tree.Window({ InitialBounds: Bounds, Window: Hwnd(3) }),
+            Tiling.Tree.Window({ InitialBounds: Bounds, Window: Hwnd(4) })
+        );
+        const State: Tiling.Tree.State = {
+            Workspaces: [
+                {
+                    Bounds,
+                    Id: "stack",
+                    Root: Stack
+                },
+                {
+                    Bounds,
+                    Id: "horizontal",
+                    Root: Horizontal
+                }
+            ]
+        };
+
+        expect(IsStackWindow(State, Hwnd(1))).toBe(true);
+        expect(IsStackWindow(State, Hwnd(2))).toBe(true);
+        expect(IsStackWindow(State, Hwnd(3))).toBe(false);
+        expect(IsStackWindow(State, Hwnd(5))).toBe(false);
     });
 });

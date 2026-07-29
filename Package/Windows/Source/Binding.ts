@@ -98,6 +98,10 @@ export interface NativeBinding
             readonly Bounds: Box.BoxArg<number>;
             readonly Window: Handle.HWND;
         }>;
+        readonly GetHoveredMinimizeButton?: () => Attempt.NativeAttempt<{
+            readonly Bounds: Box.BoxArg<number>;
+            readonly Window: Handle.HWND;
+        }>;
         readonly GetIcon?: (
             Window: Handle.HWND
         ) => Attempt.NativeAttempt<string>;

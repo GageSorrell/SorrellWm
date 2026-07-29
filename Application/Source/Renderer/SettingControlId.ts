@@ -10,7 +10,7 @@
  * @license   MIT
  */
 
-import { IsSettingsSectionId, SettingsSectionId } from "../Shared/SettingsPath.js";
+import { IsSettingsSectionId, type SettingsSectionId } from "../Shared/SettingsPath.js";
 
 const Separator = "/" as const;
 

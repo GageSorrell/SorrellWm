@@ -486,6 +486,11 @@ export interface OverlaySessionImpl
         Id: OverlayCommandId
     ) => Effect.Effect<Option.Option<TiledFocusSelection>>;
 
+    /** Resolve one window index from the currently focused stack panel. */
+    readonly ResolveTiledStackWindow: (
+        Index: number
+    ) => Effect.Effect<Option.Option<TiledFocusSelection>>;
+
     /** Resolve one tiled-window move without applying it. */
     readonly ResolveTiledMoveAction: (
         Id: OverlayCommandId
@@ -1728,6 +1733,30 @@ const Live = Layer.effect(
             ResolveTiledFocusCommit,
             ResolveTiledFocusTarget,
             ResolveTiledMoveAction,
+            ResolveTiledStackWindow: (Index: number) => Effect.gen(function*()
+            {
+                const CurrentSelection = yield* ResolveCurrentTiledFocusSelection;
+                if (
+                    Option.isNone(CurrentSelection)
+                    || CurrentSelection.value.Node._tag !== "Panel"
+                    || CurrentSelection.value.Node.Orientation
+                        !== Tiling.Tree.Orientation.Stack
+                )
+                {
+                    return Option.none();
+                }
+
+                const StackWindows = CurrentSelection.value.StackWindows ?? [ ];
+                return Index < 0 || Index >= StackWindows.length
+                    ? Option.none()
+                    : Option.some(MakeTiledFocusSelection(
+                        CurrentSelection.value.Node,
+                        CurrentSelection.value.Path,
+                        CurrentSelection.value.WorkspaceId,
+                        StackWindows,
+                        Index
+                    ));
+            }),
             SelectedTiledInsertWindow: Effect.gen(function*()
             {
                 const Candidates = yield* Ref.get(TiledInsertWindowsRef);

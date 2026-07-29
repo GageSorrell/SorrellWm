@@ -55,13 +55,13 @@
       "import": "./Distribution/SettingToggle.js",
       "types": "./Distribution/SettingToggle.d.ts"
     },
-    "./SuccessMessageBar": {
-      "import": "./Distribution/SuccessMessageBar.js",
-      "types": "./Distribution/SuccessMessageBar.d.ts"
-    },
     "./UseSettingControls": {
       "import": "./Distribution/UseSettingControls.js",
       "types": "./Distribution/UseSettingControls.d.ts"
+    },
+    "./VersionMessageBar": {
+      "import": "./Distribution/VersionMessageBar.js",
+      "types": "./Distribution/VersionMessageBar.d.ts"
     },
     "./package.json": "./package.json"
   },

@@ -59,6 +59,10 @@ const SettingsSchema = Schema.Struct({
         ),
         Schema.withDecodingDefaultKey(Effect.succeed(75))
     ),
+    IgnoreActivationKeybindInFullscreen: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(true))
+    ),
     Keybinds: pipe(
         Schema.Array(Hotkey.KeybindSettingSchema),
         Schema.withDecodingDefaultKey(Effect.succeed(Hotkey.DefaultKeybindSettings))
@@ -108,6 +112,10 @@ const SettingsSchema = Schema.Struct({
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(true))
     ),
+    ShowStackPanelMinimizeFlyout: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(true))
+    ),
     ShowTitlebarFlyout: pipe(
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(true))
@@ -150,6 +158,7 @@ const AppSettings = _AppSettings.Make(
         Initial:
         {
             FocusPreviewOpacity: 75,
+            IgnoreActivationKeybindInFullscreen: true,
             Keybinds: Array.from(Hotkey.DefaultKeybindSettings),
             MoveFineSpeed: 16,
             MoveStepPrimary: 20,
@@ -160,6 +169,7 @@ const AppSettings = _AppSettings.Make(
             OverlayRoundedCorners: true,
             PerAppSettings: { },
             RunAtStartup: true,
+            ShowStackPanelMinimizeFlyout: true,
             ShowTitlebarFlyout: true,
             Theme: "System",
             TileExistingWindowsOnStartup: false,

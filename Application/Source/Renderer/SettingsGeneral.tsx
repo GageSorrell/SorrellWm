@@ -103,6 +103,35 @@ const SettingsGeneral = (): React.JSX.Element =>
         <>
             <SettingGroup
                 Icon={ GridRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.General, "OverlayActivation") }
+                Subtitle="Choose when the command overlay can be opened."
+                Title="Overlay Activation">
+                <Setting
+                    Control={
+                        <Switch
+                            aria-label="Ignore activation keybind in fullscreen"
+                            checked={ Settings.IgnoreActivationKeybindInFullscreen }
+                            onChange={ (
+                                _Event: React.ChangeEvent<HTMLInputElement>,
+                                Data: { readonly checked: boolean; }
+                            ) => Commit({
+                                IgnoreActivationKeybindInFullscreen: Data.checked
+                            }) } />
+                    }
+                    Icon={ GridRegular }
+                    Id={ MakeSettingControlId(
+                        SettingsSectionId.General,
+                        "IgnoreActivationKeybindInFullscreen"
+                    ) }
+                    Subtitle={
+                        "Prevent the overlay from opening over fullscreen games, "
+                        + "videos, and other applications."
+                    }
+                    Title="Ignore Activation Keybind in Fullscreen" />
+            </SettingGroup>
+
+            <SettingGroup
+                Icon={ GridRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.General, "Startup") }
                 Subtitle="Choose how SorrellWm initializes the desktop when it starts."
                 Title="Startup">

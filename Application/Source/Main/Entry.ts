@@ -21,6 +21,7 @@ import * as OverlayShared from "../Shared/OverlayCommand.ts";
 import * as Theme from "./Theme.ts";
 import * as Tiling from "./Tiling/index.ts";
 import * as TitlebarFlyout from "./TitlebarFlyout.ts";
+import * as Update from "./Update.ts";
 import { Box, IntPoint } from "@sorrell/math";
 import { Effect, Layer, ManagedRuntime, Option, Schema, Stream, pipe } from "effect";
 import {
@@ -28,6 +29,7 @@ import {
     type Event,
     type IpcMainEvent,
     type IpcMainInvokeEvent,
+    type MessageBoxOptions,
     type OpenDialogOptions,
     app,
     dialog,
@@ -36,6 +38,7 @@ import {
     net,
     protocol,
     screen,
+    shell,
     systemPreferences
 } from "electron";
 import {
@@ -59,6 +62,7 @@ import { DevFeatures } from "./Development/index.ts";
 import type { InsertTargetPresentation } from "../Shared/InsertTarget.ts";
 import { NodeServices } from "@effect/platform-node";
 import type { RendererTheme } from "../Shared/Theme.ts";
+import type { UpdateDownloadResultDto } from "../Shared/Update.ts";
 import { Window } from "@sorrell/windows";
 import { pathToFileURL } from "node:url";
 
@@ -273,6 +277,57 @@ ipcMain.on(AppApiChannel.RendererLogWrite, (
 ipcMain.removeHandler(AppApiChannel.ThemeGet);
 ipcMain.handle(AppApiChannel.ThemeGet, Theme.GetRendererTheme);
 
+ipcMain.removeHandler(AppApiChannel.UpdateStatusGet);
+ipcMain.handle(
+    AppApiChannel.UpdateStatusGet,
+    () => Update.GetUpdateStatus(Update.LiveDependencies)
+);
+
+ipcMain.removeHandler(AppApiChannel.UpdateDownloadAndInstall);
+ipcMain.handle(AppApiChannel.UpdateDownloadAndInstall, async (
+    EventValue: IpcMainInvokeEvent
+): Promise<UpdateDownloadResultDto> =>
+{
+    try
+    {
+        await Update.DownloadAndInstallUpdate(Update.LiveDependencies);
+        app.quit();
+        return { Success: true };
+    }
+    catch (Cause: unknown)
+    {
+        await ApplicationRuntime.runPromise(Logging.LogError(
+            "Update",
+            "Could not download or launch the update installer.",
+            Cause
+        )).catch(() => undefined);
+
+        const Status = await Update.GetUpdateStatus(Update.LiveDependencies);
+        const Parent = ElectronBrowserWindow.fromWebContents(EventValue.sender);
+        const DialogOptions: MessageBoxOptions = {
+            buttons: Status.ReleaseUrl === null
+                ? [ "Close" ]
+                : [ "Open Release Page", "Close" ],
+            cancelId: Status.ReleaseUrl === null ? 0 : 1,
+            defaultId: Status.ReleaseUrl === null ? 0 : 1,
+            detail: Cause instanceof Error ? Cause.message : "An unknown error occurred.",
+            message: "SorrellWm could not download or launch the update installer.",
+            title: "Update Failed",
+            type: "error"
+        };
+        const Result = Parent === null
+            ? await dialog.showMessageBox(DialogOptions)
+            : await dialog.showMessageBox(Parent, DialogOptions);
+
+        if (Status.ReleaseUrl !== null && Result.response === 0)
+        {
+            await shell.openExternal(Status.ReleaseUrl);
+        }
+
+        return { Success: false };
+    }
+});
+
 const ToFloatingWindowSettingsDto = (
     Settings: AppSettings.AppSettings
 ): FloatingWindowSettingsDto => ({
@@ -350,6 +405,8 @@ ipcMain.handle(AppApiChannel.FloatingWindowSettingsSet, (
 const ToGeneralSettingsDto = (
     Settings: AppSettings.AppSettings
 ): GeneralSettingsDto => ({
+    IgnoreActivationKeybindInFullscreen:
+        Settings.IgnoreActivationKeybindInFullscreen,
     TileExistingWindowsOnStartup: Settings.TileExistingWindowsOnStartup,
     TiledResizeBehavior: Settings.TiledResizeBehavior,
     TiledWindowGap: Settings.TiledWindowGap
@@ -379,6 +436,14 @@ ipcMain.handle(AppApiChannel.GeneralSettingsSet, (
     {
         const Settings = yield* AppSettings.AppSettings;
         const TilingManager = yield* Tiling.Manager.TilingManager;
+
+        if (PatchValue.IgnoreActivationKeybindInFullscreen !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "IgnoreActivationKeybindInFullscreen",
+                PatchValue.IgnoreActivationKeybindInFullscreen
+            );
+        }
 
         if (PatchValue.TileExistingWindowsOnStartup !== undefined)
         {
@@ -414,7 +479,8 @@ ipcMain.removeHandler(AppApiChannel.OverlayScreenGet);
 const ToOverlaySettingsDto = (
     Settings: AppSettings.AppSettings
 ): OverlaySettingsDto => ({
-    FocusPreviewOpacity: Settings.FocusPreviewOpacity
+    FocusPreviewOpacity: Settings.FocusPreviewOpacity,
+    ShowStackPanelMinimizeFlyout: Settings.ShowStackPanelMinimizeFlyout
 });
 
 ipcMain.removeHandler(AppApiChannel.OverlaySettingsGet);
@@ -446,6 +512,14 @@ ipcMain.handle(AppApiChannel.OverlaySettingsSet, (
             yield* Settings.SetSetting(
                 "FocusPreviewOpacity",
                 PatchValue.FocusPreviewOpacity
+            );
+        }
+
+        if (PatchValue.ShowStackPanelMinimizeFlyout !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "ShowStackPanelMinimizeFlyout",
+                PatchValue.ShowStackPanelMinimizeFlyout
             );
         }
 
@@ -744,6 +818,29 @@ ipcMain.handle(AppApiChannel.OverlayFocusPreview, (
         {
             const Session = yield* Overlay.Session.OverlaySession;
             yield* Session.PreviewFocusTarget(Id);
+        })));
+});
+
+ipcMain.removeHandler(AppApiChannel.OverlayStackWindowSelect);
+ipcMain.handle(AppApiChannel.OverlayStackWindowSelect, (
+    _Event: IpcMainInvokeEvent,
+    Index: unknown
+) =>
+{
+    if (typeof Index !== "number" || !Number.isSafeInteger(Index) || Index < 0)
+    {
+        throw new TypeError("The requested stack-window index is invalid.");
+    }
+
+    return ReportRejectedOperation("IPC", "Overlay stack-window selection", () =>
+        ApplicationRuntime.runPromise(Effect.gen(function*()
+        {
+            const Executor = yield* Command.Executor.CommandExecutor;
+            yield* Executor.Execute(
+                Command.Ui.UiCommand().SelectTiledStackWindow({
+                    Index
+                })
+            );
         })));
 });
 

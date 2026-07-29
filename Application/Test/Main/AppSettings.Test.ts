@@ -105,6 +105,7 @@ describe("AppSettings schema", () =>
 
         expect(Decoded).toEqual({
             FocusPreviewOpacity: 75,
+            IgnoreActivationKeybindInFullscreen: true,
             Keybinds: [
                 {
                     Id: "Activate",
@@ -243,6 +244,7 @@ describe("AppSettings schema", () =>
             OverlayRoundedCorners: true,
             PerAppSettings: { },
             RunAtStartup: true,
+            ShowStackPanelMinimizeFlyout: true,
             ShowTitlebarFlyout: true,
             Theme: "System",
             TileExistingWindowsOnStartup: false,
@@ -256,6 +258,22 @@ describe("AppSettings schema", () =>
         const Decoded = await DecodeSettings({ ShowTitlebarFlyout: false });
 
         expect(Decoded.ShowTitlebarFlyout).toBe(false);
+    });
+
+    it("shows the stack picker on minimize hover by default", async () =>
+    {
+        const Decoded = await DecodeSettings({ });
+
+        expect(Decoded.ShowStackPanelMinimizeFlyout).toBe(true);
+    });
+
+    it("accepts an explicit stack-picker preference", async () =>
+    {
+        const Decoded = await DecodeSettings({
+            ShowStackPanelMinimizeFlyout: false
+        });
+
+        expect(Decoded.ShowStackPanelMinimizeFlyout).toBe(false);
     });
 
     it.each([ 0, 100 ])("accepts a backdrop intensity of %i", async (Intensity: number) =>
@@ -275,6 +293,13 @@ describe("AppSettings schema", () =>
         const Decoded = await DecodeSettings({ });
 
         expect(Decoded.FocusPreviewOpacity).toBe(75);
+    });
+
+    it("ignores the activation keybind in fullscreen by default", async () =>
+    {
+        const Decoded = await DecodeSettings({ });
+
+        expect(Decoded.IgnoreActivationKeybindInFullscreen).toBe(true);
     });
 
     it("does not tile existing windows on startup by default", async () =>

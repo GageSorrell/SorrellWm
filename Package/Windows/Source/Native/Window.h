@@ -9,6 +9,7 @@ Napi::Value GetApplicationName(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetApplicationNameFromPath(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetForegroundWindow_Node(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetHoveredMaximizeButton(const Napi::CallbackInfo& CallbackInfo);
+Napi::Value GetHoveredMinimizeButton(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetManageableTopLevelWindows(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetMovingWindow(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetMouseHoverTime(const Napi::CallbackInfo& CallbackInfo);

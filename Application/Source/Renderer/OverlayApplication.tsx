@@ -773,21 +773,12 @@ const OverlayApplication = (): React.ReactNode =>
             return;
         }
 
-        const Id = TargetIndex < ActiveStackWindowIndex
-            ? OverlayCommandId.FocusMoveUp
-            : OverlayCommandId.FocusMoveDown;
-        const StepCount = Math.abs(TargetIndex - ActiveStackWindowIndex);
-
-        void (async (): Promise<void> =>
-        {
-            for (let Step = 0; Step < StepCount; Step += 1)
-            {
-                await window.sorrell.overlay.invoke(Id);
-            }
-        })().catch(Logging.ReportRejection(
-            "Overlay",
-            "Could not select a window in the focused stack panel."
-        ));
+        void window.sorrell.overlay.selectStackWindow(TargetIndex).catch(
+            Logging.ReportRejection(
+                "Overlay",
+                "Could not select a window in the focused stack panel."
+            )
+        );
     };
     const SelectInsertWindow = (TargetIndex: number): void =>
     {

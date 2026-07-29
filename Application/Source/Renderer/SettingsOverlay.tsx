@@ -14,13 +14,14 @@ import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import {
     Slider,
     type SliderOnChangeData,
+    Switch,
     makeStyles,
     tokens
 } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { EyeRegular } from "@fluentui/react-icons";
-import type { OverlaySettingsDto } from "../Shared/AppSettings.js";
 import { MakeSettingControlId } from "./SettingControlId.js";
+import type { OverlaySettingsDto } from "../Shared/AppSettings.js";
 import { SettingsSectionId } from "../Shared/SettingsPath.js";
 
 const UseStyles = makeStyles({
@@ -75,12 +76,12 @@ const SettingsOverlay = (): React.JSX.Element =>
         };
     }, [ ]);
 
-    const CommitOpacity = (Value: number): void =>
+    const Commit = (Patch: Partial<OverlaySettingsDto>): void =>
     {
         SetSettings((Current: OverlaySettingsDto | null) =>
-            Current === null ? Current : { ...Current, FocusPreviewOpacity: Value });
+            Current === null ? Current : { ...Current, ...Patch });
 
-        window.sorrell.overlaySettings.set({ FocusPreviewOpacity: Value })
+        window.sorrell.overlaySettings.set(Patch)
             .then((Updated: OverlaySettingsDto) => SetSettings(Updated))
             .catch(Logging.ReportRejection(
                 "Settings",
@@ -94,34 +95,67 @@ const SettingsOverlay = (): React.JSX.Element =>
     }
 
     return (
-        <SettingGroup
-            Icon={ EyeRegular }
-            Id={ MakeSettingControlId(SettingsSectionId.Overlay, "FocusPreviews") }
-            Subtitle="Control how directional Focus targets are presented over obscured floating windows."
-            Title="Focus Previews">
-            <Setting
-                Control={
-                    <div className={ Styles.Control }>
-                        <Slider
-                            aria-label="Focus preview opacity"
-                            className={ Styles.Slider }
-                            max={ 100 }
-                            min={ 0 }
+        <>
+            <SettingGroup
+                Icon={ EyeRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.Overlay, "TitlebarFlyouts") }
+                Subtitle="Control overlays opened from native window caption buttons."
+                Title="Titlebar Flyouts">
+                <Setting
+                    Control={
+                        <Switch
+                            aria-label="Show stack picker on minimize hover"
+                            checked={ Settings.ShowStackPanelMinimizeFlyout }
                             onChange={ (
                                 _Event: React.ChangeEvent<HTMLInputElement>,
-                                Data: SliderOnChangeData
-                            ) => CommitOpacity(Math.round(Data.value)) }
-                            // step={ 1 }
-                            value={ Settings.FocusPreviewOpacity } />
-                        <span className={ Styles.Value }>
-                            { Settings.FocusPreviewOpacity }%
-                        </span>
-                    </div>
-                }
+                                Data: { readonly checked: boolean; }
+                            ) => Commit({
+                                ShowStackPanelMinimizeFlyout: Data.checked
+                            }) } />
+                    }
+                    Icon={ EyeRegular }
+                    Id={ MakeSettingControlId(
+                        SettingsSectionId.Overlay,
+                        "ShowStackPanelMinimizeFlyout"
+                    ) }
+                    Subtitle={
+                        "Show a window picker when the minimize button of a "
+                        + "window in a stack panel is hovered."
+                    }
+                    Title="Stack Picker on Minimize Hover" />
+            </SettingGroup>
+
+            <SettingGroup
                 Icon={ EyeRegular }
-                Id={ MakeSettingControlId(SettingsSectionId.Overlay, "PreviewOpacity") }
-                Subtitle="Opacity of the sampled-color fill shown over a fully obscured floating window."
-                Title="Preview Opacity" />
-        </SettingGroup>
+                Id={ MakeSettingControlId(SettingsSectionId.Overlay, "FocusPreviews") }
+                Subtitle="Control how directional Focus targets are presented over obscured floating windows."
+                Title="Focus Previews">
+                <Setting
+                    Control={
+                        <div className={ Styles.Control }>
+                            <Slider
+                                aria-label="Focus preview opacity"
+                                className={ Styles.Slider }
+                                max={ 100 }
+                                min={ 0 }
+                                onChange={ (
+                                    _Event: React.ChangeEvent<HTMLInputElement>,
+                                    Data: SliderOnChangeData
+                                ) => Commit({
+                                    FocusPreviewOpacity: Math.round(Data.value)
+                                }) }
+                                // step={ 1 }
+                                value={ Settings.FocusPreviewOpacity } />
+                            <span className={ Styles.Value }>
+                                { Settings.FocusPreviewOpacity }%
+                            </span>
+                        </div>
+                    }
+                    Icon={ EyeRegular }
+                    Id={ MakeSettingControlId(SettingsSectionId.Overlay, "PreviewOpacity") }
+                    Subtitle="Opacity of the sampled-color fill shown over a fully obscured floating window."
+                    Title="Preview Opacity" />
+            </SettingGroup>
+        </>
     );
 };

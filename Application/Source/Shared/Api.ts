@@ -20,6 +20,7 @@ import type {
     PerAppSettingsEntryDto
 } from "./AppSettings.js";
 import type { OverlayCommandId, OverlayScreenDto } from "./OverlayCommand.js";
+import type { UpdateDownloadResultDto, UpdateStatusDto } from "./Update.js";
 import type { BackdropPresentation } from "./Backdrop.js";
 import type { FocusPreviewPresentation } from "./FocusPreview.js";
 import type { InsertTargetPresentation } from "./InsertTarget.js";
@@ -111,6 +112,9 @@ export interface AppApi
         /** Execute a current-screen command through the main-process command pipeline. */
         readonly invoke: (Id: OverlayCommandId) => Promise<void>;
 
+        /** Select one window from the stack panel currently shown by tiled Focus. */
+        readonly selectStackWindow: (Index: number) => Promise<void>;
+
         /** Preview a directional Focus command, or clear the preview with `null`. */
         readonly preview: (Id: OverlayCommandId | null) => Promise<void>;
 
@@ -158,6 +162,14 @@ export interface AppApi
         /** Observe changes to Electron's color scheme or the Windows accent color. */
         readonly onChanged: (Listener: (Theme: RendererTheme) => void) => () => void;
     };
+    readonly update:
+    {
+        /** Download the latest release's installer and launch it, quitting the app on success. */
+        readonly downloadAndInstall: () => Promise<UpdateDownloadResultDto>;
+
+        /** Check GitHub Releases for a newer published version. */
+        readonly getStatus: () => Promise<UpdateStatusDto>;
+    };
     readonly versions: AppVersions;
 }
 
@@ -181,11 +193,14 @@ const AppApiChannel = Object.freeze({
     OverlayScreenGet: "overlay-screen:get" as const,
     OverlaySettingsGet: "overlay-settings:get" as const,
     OverlaySettingsSet: "overlay-settings:set" as const,
+    OverlayStackWindowSelect: "overlay-stack-window:select" as const,
     PerAppSettingsAdd: "per-app-settings:add" as const,
     PerAppSettingsGet: "per-app-settings:get" as const,
     PerAppSettingsSet: "per-app-settings:set" as const,
     RendererLogWrite: "renderer-log:write" as const,
     SettingsNavigate: "settings:navigate" as const,
     ThemeChanged: "theme:changed",
-    ThemeGet: "theme:get"
+    ThemeGet: "theme:get",
+    UpdateDownloadAndInstall: "update:download-and-install" as const,
+    UpdateStatusGet: "update-status:get" as const
 } as const);

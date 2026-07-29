@@ -7,7 +7,7 @@
  * @license   MIT
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SettingsOverlay } from "../../Source/Renderer/SettingsOverlay.tsx";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,10 +16,13 @@ describe("SettingsOverlay", () =>
     beforeEach(() =>
     {
         vi.mocked(window.sorrell.overlaySettings.get).mockResolvedValue({
-            FocusPreviewOpacity: 75
+            FocusPreviewOpacity: 75,
+            ShowStackPanelMinimizeFlyout: true
         });
         vi.mocked(window.sorrell.overlaySettings.set).mockImplementation(async (Patch) => ({
-            FocusPreviewOpacity: Patch.FocusPreviewOpacity ?? 75
+            FocusPreviewOpacity: Patch.FocusPreviewOpacity ?? 75,
+            ShowStackPanelMinimizeFlyout:
+                Patch.ShowStackPanelMinimizeFlyout ?? true
         }));
     });
 
@@ -38,5 +41,24 @@ describe("SettingsOverlay", () =>
             FocusPreviewOpacity: 62
         });
         expect(await screen.findByText("62%")).toBeInTheDocument();
+    });
+
+    it("loads and updates the stack-picker preference", async () =>
+    {
+        render(<SettingsOverlay />);
+
+        const Toggle = await screen.findByRole("switch", {
+            name: "Show stack picker on minimize hover"
+        });
+        expect(Toggle).toBeChecked();
+
+        fireEvent.click(Toggle);
+
+        await waitFor(() => expect(
+            window.sorrell.overlaySettings.set
+        ).toHaveBeenCalledWith({
+            ShowStackPanelMinimizeFlyout: false
+        }));
+        expect(Toggle).not.toBeChecked();
     });
 });

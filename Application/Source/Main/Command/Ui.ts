@@ -98,6 +98,12 @@ export type UiCommand = Command.Command.Enum<"Ui", {
         readonly Mode: ResizeMode;
     }
 
+    /** Select one window from the stack panel currently shown by tiled Focus. */
+    readonly SelectTiledStackWindow:
+    {
+        readonly Index: number;
+    };
+
     /** Choose whether the temporary Insert target captures the next new window. */
     readonly SetTiledInsertCaptureNext:
     {

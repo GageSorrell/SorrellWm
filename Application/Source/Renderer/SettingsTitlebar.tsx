@@ -12,7 +12,6 @@
  */
 
 import * as React from "react";
-import { DragRegion, NoDragRegion } from "./AppRegion.js";
 import {
     Combobox,
     Hamburger,
@@ -24,7 +23,8 @@ import {
     mergeClasses,
     tokens
 } from "@fluentui/react-components";
-import { SearchSettingControls } from "./SettingsSearch.js";
+import { DragRegion, NoDragRegion } from "./AppRegion.js";
+import { SearchSettingControls, type SettingSearchResult } from "./SettingsSearch.js";
 import { BoardColor } from "@fluentui/react-icons";
 import type { SettingControlEntry } from "@sorrell/settings-ui";
 import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.js";
@@ -237,7 +237,7 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
                     open={ IsDropdownOpen }
                     placeholder="Search for settings"
                     value={ Query }>
-                    { Results.map(({ Entry, Id }) => (
+                    { Results.map(({ Entry, Id }: SettingSearchResult) => (
                         <Option
                             key={ Id }
                             text={ typeof Entry.Title === "string" ? Entry.Title : Id }

@@ -25,6 +25,16 @@ export interface HoveredMaximizeButton
     readonly Window: Handle.HWND;
 }
 
+/** A top-level window minimize button currently beneath the system cursor. */
+export interface HoveredMinimizeButton
+{
+    /** The minimize-button bounds in physical virtual-screen coordinates. */
+    readonly Bounds: Box.Box;
+
+    /** The top-level window that owns the minimize button. */
+    readonly Window: Handle.HWND;
+}
+
 const MissingTilingApi = <A>(Name: string): Attempt.Attempt<A> =>
     Result.fail(new Attempt.NativeError({
         Message: `The loaded native addon does not export Window.${ Name }.`
@@ -125,6 +135,27 @@ const GetHoveredMaximizeButton = (): Option.Option<HoveredMaximizeButton> =>
                 readonly Bounds: Box.BoxArg<number>;
                 readonly Window: Handle.HWND;
             }): HoveredMaximizeButton => ({
+                Bounds: Box.Box(
+                    Hover.Bounds.Top,
+                    Hover.Bounds.Right,
+                    Hover.Bounds.Bottom,
+                    Hover.Bounds.Left
+                ),
+                Window: Hover.Window
+            }))
+        );
+
+export/** Get the minimize button beneath the cursor, if one is being hovered. */
+const GetHoveredMinimizeButton = (): Option.Option<HoveredMinimizeButton> =>
+    typeof Binding.Window.GetHoveredMinimizeButton !== "function"
+        ? Option.none()
+        : pipe(
+            Binding.Window.GetHoveredMinimizeButton(),
+            Attempt.AsOption,
+            Option.map((Hover: {
+                readonly Bounds: Box.BoxArg<number>;
+                readonly Window: Handle.HWND;
+            }): HoveredMinimizeButton => ({
                 Bounds: Box.Box(
                     Hover.Bounds.Top,
                     Hover.Bounds.Right,

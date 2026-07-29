@@ -605,14 +605,7 @@ describe("OverlayApplication", () =>
             await Promise.resolve();
         });
 
-        expect(window.sorrell.overlay.invoke).toHaveBeenNthCalledWith(
-            1,
-            "FocusMoveDown"
-        );
-        expect(window.sorrell.overlay.invoke).toHaveBeenNthCalledWith(
-            2,
-            "FocusMoveDown"
-        );
+        expect(window.sorrell.overlay.selectStackWindow).toHaveBeenCalledWith(2);
     });
 
     it("renders numbered monitors in a second column beside selection commands", async () =>
