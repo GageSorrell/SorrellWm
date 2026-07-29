@@ -10,6 +10,7 @@
  */
 
 import { BackdropApplication } from "./BackdropApplication.js";
+import { FocusPreviewApplication } from "./FocusPreviewApplication.js";
 import { OverlayApplication } from "./OverlayApplication.js";
 import { SettingsApplication } from "./Settings.js";
 
@@ -26,6 +27,11 @@ export function Application(): React.JSX.Element
     {
         case "Backdrop":
             return <BackdropApplication />;
+        case "FocusPreviewDown":
+        case "FocusPreviewLeft":
+        case "FocusPreviewRight":
+        case "FocusPreviewUp":
+            return <FocusPreviewApplication />;
         case "Overlay":
             return <OverlayApplication />;
         case "Settings":

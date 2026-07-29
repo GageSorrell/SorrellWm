@@ -13,6 +13,8 @@ import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../Sha
 import { Text, Title2, makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
+import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
+import { SettingsOverlay } from "./SettingsOverlay.js";
 import { SettingsSidebar } from "./SettingsSidebar.js";
 import { SettingsTitlebar } from "./SettingsTitlebar.js";
 
@@ -22,6 +24,7 @@ const PinnedSidebarMinWidth = 720 as const;
 const SectionLabel: Readonly<Record<SettingsSectionId, string>> =
     {
         [ SettingsSectionId.Advanced ]: "Advanced" as const,
+        [ SettingsSectionId.FloatingWindows ]: "Floating Windows" as const,
         [ SettingsSectionId.General ]: "General" as const,
         [ SettingsSectionId.Home ]: "Home" as const,
         [ SettingsSectionId.Keybinds ]: "Keybinds" as const,
@@ -30,7 +33,8 @@ const SectionLabel: Readonly<Record<SettingsSectionId, string>> =
     } as const;
 
 const UseStyles = makeStyles({
-    Body: {
+    Body:
+    {
         boxSizing: "border-box",
         display: "flex",
         flex: "1 1 auto",
@@ -38,7 +42,8 @@ const UseStyles = makeStyles({
         position: "relative",
         transform: "translateZ(0)"
     },
-    Content: {
+    Content:
+    {
         boxSizing: "border-box",
         display: "flex",
         flex: "1 1 auto",
@@ -46,12 +51,15 @@ const UseStyles = makeStyles({
         gap: tokens.spacingVerticalM,
         minWidth: 0,
         overflow: "auto",
-        padding: "clamp(1.5rem, 5vw, 3rem)"
+        padding: "clamp(1.5rem, 5vw, 3rem)",
+        userSelect: "none"
     },
-    Description: {
+    Description:
+    {
         color: tokens.colorNeutralForeground2
     },
-    Shell: {
+    Shell:
+    {
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
@@ -135,6 +143,14 @@ const SettingsApplication = (): React.JSX.Element =>
                         <Text className={ Styles.Description }>
                             Configure how SorrellWm manages { ApplicationName }
                         </Text>
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.FloatingWindows && (
+                        <SettingsFloatingWindows />
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.Overlay && (
+                        <SettingsOverlay />
                     ) }
                 </main>
             </div>

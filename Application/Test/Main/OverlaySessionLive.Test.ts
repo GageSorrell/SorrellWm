@@ -9,6 +9,7 @@
 
 import * as AppSettings from "../../Source/Main/AppSettings/AppSettings.ts";
 import * as BrowserWindow from "../../Source/Main/BrowserWindow.ts";
+import * as Tiling from "../../Source/Main/Tiling/index.ts";
 import { Effect, Layer, Option, Result, Stream, pipe } from "effect";
 import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
 import {
@@ -36,13 +37,16 @@ vi.mock("@sorrell/windows", async () =>
             Stop: (): void => undefined
         },
         VK: {
+            CONTROL: 0x11,
             D: 0x44,
             F20: 0x83,
             H: 0x48,
+            MENU: 0x12,
             N: 0x4E,
+            SHIFT: 0x10,
             T: 0x54,
             TAB: 0x09,
-            VK: [ 0x09, 0x44, 0x48, 0x4E, 0x54, 0x83 ]
+            VK: [ 0x09, 0x10, 0x11, 0x12, 0x44, 0x48, 0x4E, 0x54, 0x83 ]
         },
         Window: {
             ClearWindowDimming: vi.fn(() => EffectModule.Result.succeed(undefined)),
@@ -51,6 +55,7 @@ vi.mock("@sorrell/windows", async () =>
             GetIcon: vi.fn(() => EffectModule.Option.none()),
             GetManageableTopLevelWindows: vi.fn(() =>
                 EffectModule.Result.succeed([ ])),
+            IsWindowObscured: vi.fn(() => EffectModule.Result.succeed(false)),
             GetWindowRect: vi.fn(() => EffectModule.Option.none()),
             GetWindowText: vi.fn(() => EffectModule.Option.none())
         }
@@ -61,9 +66,19 @@ const CurrentWindow = 1n as Handle.HWND;
 const LeftWindow = 2n as Handle.HWND;
 const RightWindow = 3n as Handle.HWND;
 const OverlayWindow = 99n as Handle.HWND;
+const EnsureBrowserWindow = vi.fn((Specification: BrowserWindow.Spec) => Effect.succeed({
+    ElectronWindowId: 1,
+    Key: Specification.Key
+}));
+const ForceCloseBrowserWindow = vi.fn(() => Effect.void);
+const SendToBrowserWindow = vi.fn(() => Effect.void);
+const SetBrowserWindowBounds = vi.fn(() => Effect.void);
+const ShowBrowserWindowInactive = vi.fn(() => Effect.void);
+let TilingSnapshot: Tiling.Tree.State = { Workspaces: [ ] };
 
 beforeEach(() =>
 {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
     vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
         Result.succeed([ CurrentWindow, LeftWindow, RightWindow ])
@@ -99,6 +114,22 @@ beforeEach(() =>
     vi.mocked(WindowsWindow.DimWindowsExcept).mockReturnValue(
         Result.succeed(undefined)
     );
+    vi.mocked(WindowsWindow.IsWindowObscured).mockReturnValue(
+        Result.succeed(false)
+    );
+    TilingSnapshot = { Workspaces: [ ] };
+    vi.spyOn(BrowserWindow, "GetFocusPreviewWindowSpec").mockImplementation((
+        Key: BrowserWindow.Key,
+        Bounds: Box.Box
+    ) => ({
+        IgnoreMouseEvents: true,
+        Key,
+        Options: {
+            height: Bounds.Bottom - Bounds.Top,
+            width: Bounds.Right - Bounds.Left
+        },
+        Url: `sorrell://app/index.html?window=${ Key }`
+    }));
 });
 
 describe("OverlaySession.Live Focus targets", () =>
@@ -114,7 +145,8 @@ describe("OverlaySession.Live Focus targets", () =>
             }),
             Effect.provide(Live),
             Effect.provide(FakeAppSettings),
-            Effect.provide(FakeBrowserWindows)
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
         ));
 
         expect(Snapshot.SecondaryCommand).toMatchObject({
@@ -138,10 +170,49 @@ describe("OverlaySession.Live Focus targets", () =>
             }),
             Effect.provide(Live),
             Effect.provide(FakeAppSettings),
-            Effect.provide(FakeBrowserWindows)
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
         ));
 
         expect(Snapshot.SecondaryCommand).not.toHaveProperty("ApplicationName");
+    });
+
+    it("selects the tiled Home catalog for a managed activation window", async () =>
+    {
+        TilingSnapshot = {
+            Workspaces: [
+                {
+                    Bounds: Box.Box(0, 1920, 1080, 0),
+                    Id: "display-1",
+                    Root: Tiling.Tree.Window({
+                        InitialBounds: Box.Box(100, 200, 200, 100),
+                        Window: CurrentWindow
+                    })
+                }
+            ]
+        };
+
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(Snapshot.Id).toBe(OverlayScreenId.TiledHome);
+        expect(Snapshot.Commands.map((Command: OverlayCommandDto) => Command.Id)).toEqual([
+            "Focus",
+            "Insert",
+            "Move",
+            "Resize",
+            "Float"
+        ]);
     });
 
     it("publishes target metadata and previews only the current, overlay, and target windows", async () =>
@@ -151,7 +222,7 @@ describe("OverlaySession.Live Focus targets", () =>
             {
                 const Session = yield* OverlaySession;
                 yield* Session.SetActivationWindow(CurrentWindow);
-                yield* Session.Navigate(OverlayScreenId.Focus);
+                yield* Session.Navigate(OverlayScreenId.FloatingFocus);
                 const Current = yield* Session.Snapshot;
                 yield* Session.PreviewFocusTarget("FocusMoveRight");
                 yield* Session.PreviewFocusTarget(null);
@@ -159,7 +230,8 @@ describe("OverlaySession.Live Focus targets", () =>
             }),
             Effect.provide(Live),
             Effect.provide(FakeAppSettings),
-            Effect.provide(FakeBrowserWindows)
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
         ));
 
         expect(Snapshot.Commands.find((Command: OverlayCommandDto) =>
@@ -185,6 +257,88 @@ describe("OverlaySession.Live Focus targets", () =>
         ]);
         expect(WindowsWindow.ClearWindowDimming).toHaveBeenCalledOnce();
     });
+
+    it("shows a sampled-color Electron proxy for a fully obscured floating target", async () =>
+    {
+        vi.mocked(WindowsWindow.IsWindowObscured).mockImplementation((
+            Window: Handle.HWND
+        ) => Result.succeed(Window === RightWindow));
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                yield* Session.Navigate(OverlayScreenId.FloatingFocus);
+                yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(EnsureBrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+            IgnoreMouseEvents: true,
+            Key: BrowserWindow.Key.FocusPreviewRight
+        }));
+        expect(SetBrowserWindowBounds).toHaveBeenCalledWith(
+            BrowserWindow.Key.FocusPreviewRight,
+            Box.Box(100, 400, 200, 300)
+        );
+        expect(SendToBrowserWindow).toHaveBeenCalledWith(
+            BrowserWindow.Key.FocusPreviewRight,
+            "focus-preview:changed",
+            {
+                Icon: "right-icon",
+                Opacity: 75
+            }
+        );
+        expect(ShowBrowserWindowInactive).toHaveBeenCalledWith(
+            BrowserWindow.Key.FocusPreviewRight
+        );
+        expect(ShowBrowserWindowInactive).toHaveBeenLastCalledWith(
+            BrowserWindow.Key.Overlay
+        );
+    });
+
+    it("does not proxy an obscured target managed by the tiling layout", async () =>
+    {
+        vi.mocked(WindowsWindow.IsWindowObscured).mockReturnValue(Result.succeed(true));
+        TilingSnapshot = {
+            Workspaces: [
+                {
+                    Bounds: Box.Box(0, 1920, 1080, 0),
+                    Id: "display-1",
+                    Root: {
+                        _tag: "Window",
+                        Value: {
+                            InitialBounds: Box.Box(100, 400, 200, 300),
+                            Window: RightWindow
+                        }
+                    }
+                }
+            ]
+        };
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                yield* Session.Navigate(OverlayScreenId.FloatingFocus);
+                yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(EnsureBrowserWindow).not.toHaveBeenCalledWith(expect.objectContaining({
+            Key: BrowserWindow.Key.FocusPreviewRight
+        }));
+    });
 });
 
 describe("OverlaySession.Live DistanceToggle", () =>
@@ -195,13 +349,14 @@ describe("OverlaySession.Live DistanceToggle", () =>
             Effect.gen(function*()
             {
                 const Session = yield* OverlaySession;
-                yield* Session.Navigate(OverlayScreenId.Move);
+                yield* Session.Navigate(OverlayScreenId.FloatingMove);
                 yield* Session.SetPrimaryModifierHeld(true);
                 return yield* Session.Snapshot;
             }),
             Effect.provide(Live),
             Effect.provide(FakeAppSettings),
-            Effect.provide(FakeBrowserWindows)
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
         ));
 
         expect(Snapshot.DistanceToggle).toMatchObject({
@@ -221,7 +376,8 @@ describe("OverlaySession.Live DistanceToggle", () =>
             }),
             Effect.provide(Live),
             Effect.provide(FakeAppSettings),
-            Effect.provide(FakeBrowserWindows)
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
         ));
 
         expect(Snapshot.DistanceToggle).toBeUndefined();
@@ -229,6 +385,7 @@ describe("OverlaySession.Live DistanceToggle", () =>
 });
 
 const CurrentSettings: AppSettings.AppSettings = {
+    FocusPreviewOpacity: 75,
     Keybinds: [ ],
     MoveFineSpeed: 16,
     MoveStepPrimary: 20,
@@ -244,8 +401,8 @@ const CurrentSettings: AppSettings.AppSettings = {
 
 const FakeAppSettings = Layer.succeed(AppSettings.AppSettings, {
     Changes: Stream.empty,
-    FilePath: Effect.succeed(CurrentSettings),
-    Layer: <Key extends keyof AppSettings.AppSettings>(
+    Get: Effect.succeed(CurrentSettings),
+    GetSetting: <Key extends keyof AppSettings.AppSettings>(
         KeyValue: Key
     ) => Effect.succeed(CurrentSettings[KeyValue]),
     Set: () => Effect.void,
@@ -256,6 +413,20 @@ const FakeAppSettings = Layer.succeed(AppSettings.AppSettings, {
 const FakeBrowserWindows = Layer.succeed(
     BrowserWindow.BrowserWindow,
     {
-        GetNativeHandle: () => Effect.succeed(OverlayWindow)
+        Ensure: EnsureBrowserWindow,
+        ForceClose: ForceCloseBrowserWindow,
+        GetNativeHandle: (Key: BrowserWindow.Key) => Key === BrowserWindow.Key.Overlay
+            ? Effect.succeed(OverlayWindow)
+            : Effect.fail(new BrowserWindow.BrowserWindowNotFoundError({ Key })),
+        Send: SendToBrowserWindow,
+        SetBounds: SetBrowserWindowBounds,
+        ShowInactive: ShowBrowserWindowInactive
     } as unknown as BrowserWindow.BrowserWindowImpl
+);
+
+const FakeTilingManager = Layer.succeed(
+    Tiling.Manager.TilingManager,
+    {
+        Snapshot: Effect.sync(() => TilingSnapshot)
+    } as unknown as Tiling.Manager.TilingManagerImpl
 );

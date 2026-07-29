@@ -160,6 +160,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, IsWindowElevated)
     );
     Window.Set(
+        "IsWindowObscured",
+        Napi::Function::New(Environment, IsWindowObscured)
+    );
+    Window.Set(
         "IsCurrentProcessElevated",
         Napi::Function::New(Environment, IsCurrentProcessElevated)
     );

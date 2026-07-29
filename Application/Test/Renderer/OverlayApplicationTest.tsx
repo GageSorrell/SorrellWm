@@ -19,7 +19,7 @@ import { OverlayApplication } from "../../Source/Renderer/OverlayApplication.js"
 const Commands: ReadonlyArray<OverlayCommandDto> =
     [
         Command("Focus", "SelectLeft", "H", 0x48),
-        Command("Insert", "SelectUp", "K", 0x4B),
+        Command("Tile", "SelectUp", "K", 0x4B),
         Command("Move", "SelectDown", "J", 0x4A),
         Command("Resize", "SelectRight", "L", 0x4C)
     ] as const;
@@ -28,7 +28,7 @@ const HomeScreen: OverlayScreenDto =
     {
         CanGoBack: false,
         Commands,
-        Id: "Home",
+        Id: "FloatingHome",
         SecondaryCommand: {
             ApplicationName: "Visual Studio Code",
             Disabled: false,
@@ -74,8 +74,20 @@ const FocusScreen: OverlayScreenDto =
                 { Icon: undefined, Title: "Right App" }
             )
         ],
-        Id: "Focus"
+        Id: "FloatingFocus"
     } as const;
+
+const ResizeScreen = (Mode: "Grow" | "Shrink"): OverlayScreenDto => ({
+    CanGoBack: true,
+    Commands: [
+        Command("ResizeWindowLeft", "SelectLeft", "D", 0x44),
+        Command("ResizeWindowUp", "SelectUp", "H", 0x48),
+        Command("ResizeWindowDown", "SelectDown", "T", 0x54),
+        Command("ResizeWindowRight", "SelectRight", "N", 0x4E)
+    ],
+    Id: "FloatingResize",
+    ResizeMode: Mode
+});
 
 describe("OverlayApplication", () =>
 {
@@ -101,7 +113,7 @@ describe("OverlayApplication", () =>
 
         expect(Buttons.map((Button: HTMLElement) => Button.textContent)).toEqual([
             expect.stringContaining("Focus"),
-            expect.stringContaining("Insert"),
+            expect.stringContaining("Tile"),
             expect.stringContaining("Move"),
             expect.stringContaining("Resize")
         ]);
@@ -119,12 +131,62 @@ describe("OverlayApplication", () =>
         const SecondaryButton = within(SecondaryRegion).getByRole("button", {
             name: /configure how sorrellwm manages visual studio code windows/i
         });
-        expect(SecondaryButton).toHaveTextContent("TAB");
+        expect(SecondaryButton).toHaveTextContent("⭾");
         expect(within(SecondaryButton).queryByTestId("application-icon"))
             .not.toBeInTheDocument();
 
         fireEvent.click(SecondaryButton);
         expect(window.sorrell.overlay.invoke).toHaveBeenLastCalledWith("OpenPerAppSettings");
+    });
+
+    it("renders the five tiled Home actions with Insert and Shift plus SelectUp for Float", async () =>
+    {
+        const FloatCommand = Command("Float", "SelectUp", "K", 0x4B);
+        const TiledHome: OverlayScreenDto = {
+            CanGoBack: false,
+            Commands: [
+                Command("Focus", "SelectLeft", "H", 0x48),
+                Command("Insert", "SelectUp", "K", 0x4B),
+                Command("Move", "SelectDown", "J", 0x4A),
+                Command("Resize", "SelectRight", "L", 0x4C),
+                {
+                    ...FloatCommand,
+                    Shortcut: {
+                        ...FloatCommand.Shortcut,
+                        Modifiers: {
+                            ...FloatCommand.Shortcut.Modifiers,
+                            Shift: true
+                        }
+                    }
+                }
+            ],
+            Id: "TiledHome"
+        };
+
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(TiledHome);
+        render(<OverlayApplication />);
+
+        const CommandsRegion = await screen.findByRole("region", {
+            name: "Available commands"
+        });
+        const Buttons = within(CommandsRegion).getAllByRole("button");
+
+        expect(Buttons).toHaveLength(5);
+        expect(Buttons.map((Button: HTMLElement) => Button.textContent)).toEqual([
+            expect.stringContaining("Focus"),
+            expect.stringContaining("Insert"),
+            expect.stringContaining("Move"),
+            expect.stringContaining("Resize"),
+            expect.stringContaining("Float")
+        ]);
+        expect(Buttons[1]).toHaveAttribute(
+            "title",
+            "Insert a window into the layout."
+        );
+        expect(Buttons[4]).toHaveTextContent("K");
+
+        fireEvent.click(Buttons[4] as HTMLElement);
+        expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("Float");
     });
 
     it("renders Focus targets, icons, disabled directions, previews, and navigation", async () =>
@@ -136,20 +198,21 @@ describe("OverlayApplication", () =>
             .toHaveAttribute("aria-current", "page");
         expect(screen.getByText("Choose a direction to move the focus selection."))
             .toBeInTheDocument();
-        const MoveLeft = screen.getByRole("button", { name: /move left/i });
-        const MoveUp = screen.getByRole("button", { name: /move up/i });
-        const MoveDown = screen.getByRole("button", { name: /move down/i });
+        const FocusButtons = within(screen.getByRole("region", {
+            name: "Focus targets"
+        })).getAllByRole("button", { hidden: true });
+        const MoveUp = FocusButtons[0]!;
+        const MoveDown = FocusButtons[1]!;
+        const MoveLeft = FocusButtons[2]!;
 
         expect(MoveLeft).toHaveTextContent("Left App");
         expect(MoveUp).toHaveTextContent("Upper App");
         expect(MoveDown).toBeDisabled();
-        expect(MoveDown).toHaveTextContent("No window in this direction.");
-        expect(screen.getByRole("button", { name: /move right/i })).toBeInTheDocument();
-        expect(within(MoveLeft).getByTestId("application-icon").querySelector("img"))
+        expect(FocusButtons[3]).toBeInTheDocument();
+        expect(MoveLeft.querySelector("img"))
             .toHaveAttribute("src", "data:image/png;base64,left-icon");
-        expect(within(MoveUp).getByTestId("application-icon").querySelector("svg"))
-            .not.toBeNull();
-        expect(within(MoveDown).queryByTestId("application-icon")).not.toBeInTheDocument();
+        expect(MoveUp.querySelectorAll("svg")).toHaveLength(2);
+        expect(MoveDown.querySelector("img")).not.toBeInTheDocument();
 
         fireEvent.mouseEnter(MoveLeft);
         expect(window.sorrell.overlay.preview).toHaveBeenCalledWith("FocusMoveLeft");
@@ -170,6 +233,45 @@ describe("OverlayApplication", () =>
 
         fireEvent.click(screen.getByRole("button", { name: "SorrellWm" }));
         expect(window.sorrell.overlay.back).toHaveBeenCalledTimes(2);
+    });
+
+    it("shows the single Resize pad and reverses its arrows while Ctrl shrinks", async () =>
+    {
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(ResizeScreen("Grow"));
+        const GrowRender = render(<OverlayApplication />);
+
+        expect(await screen.findByText(
+            "Choose an edge to grow the window. Hold Ctrl to shrink it instead."
+        )).toBeInTheDocument();
+
+        const GrowArrows = Array.from(
+            GrowRender.container.querySelectorAll('button[aria-hidden="true"] svg')
+        ).map((Icon: SVGElement) => Icon.innerHTML);
+
+        const DirectionButtons = GrowRender.container.querySelectorAll(
+            'button[aria-hidden="true"]'
+        );
+        fireEvent.click(DirectionButtons[0] as HTMLButtonElement);
+        expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("ResizeWindowUp");
+
+        GrowRender.unmount();
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(ResizeScreen("Shrink"));
+        const ShrinkRender = render(<OverlayApplication />);
+        await screen.findByText(
+            "Choose an edge to grow the window. Hold Ctrl to shrink it instead."
+        );
+
+        const ShrinkArrows = Array.from(
+            ShrinkRender.container.querySelectorAll('button[aria-hidden="true"] svg')
+        ).map((Icon: SVGElement) => Icon.innerHTML);
+
+        expect(GrowArrows).toHaveLength(4);
+        expect(ShrinkArrows).toEqual([
+            GrowArrows[3],
+            GrowArrows[2],
+            GrowArrows[1],
+            GrowArrows[0]
+        ]);
     });
 });
 

@@ -1,6 +1,7 @@
 
 #include "./Window.h"
 
+#include <algorithm>
 #include <dwmapi.h>
 #include <winternl.h>
 
@@ -268,6 +269,25 @@ namespace
         RECT Bounds { };
         return GetWindowRect(WindowHandle, &Bounds) != FALSE &&
             Bounds.right > Bounds.left && Bounds.bottom > Bounds.top;
+    }
+
+    bool IsCloaked(HWND WindowHandle)
+    {
+        DWORD Cloaked = 0;
+        return SUCCEEDED(DwmGetWindowAttribute(
+            WindowHandle,
+            DWMWA_CLOAKED,
+            &Cloaked,
+            sizeof(Cloaked)
+        )) && Cloaked != 0;
+    }
+
+    bool ContainsWindow(
+        const std::vector<HWND>& Windows,
+        HWND Candidate
+    )
+    {
+        return std::find(Windows.begin(), Windows.end(), Candidate) != Windows.end();
     }
 
     BOOL CALLBACK CollectManageableTopLevelWindow(HWND WindowHandle, LPARAM ContextValue)
@@ -626,6 +646,124 @@ Napi::Value GetWindowRect_Node(const Napi::CallbackInfo& CallbackInfo)
     }
 
     return Out.Succeed(RectangleToNapi(Environment, Rectangle));
+}
+
+Napi::Value IsWindowObscured(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> TargetWindow = GetWindowArgument(CallbackInfo);
+
+    if (!TargetWindow.has_value())
+    {
+        return Out.Fail("Expected a valid target window handle.");
+    }
+
+    if (CallbackInfo.Length() < 2 || !CallbackInfo[1].IsArray())
+    {
+        return Out.Fail("Expected an array of excluded window handles.");
+    }
+
+    const Napi::Array ExcludedValues = CallbackInfo[1].As<Napi::Array>();
+    std::vector<HWND> ExcludedWindows;
+    ExcludedWindows.reserve(ExcludedValues.Length());
+
+    for (std::uint32_t Index = 0; Index < ExcludedValues.Length(); ++Index)
+    {
+        const Napi::Value Value = ExcludedValues.Get(Index);
+        if (!Value.IsBigInt())
+        {
+            return Out.Fail("Excluded windows must be valid window handles.");
+        }
+
+        bool IsLossless = false;
+        const std::uint64_t NumericHandle = Value
+            .As<Napi::BigInt>()
+            .Uint64Value(&IsLossless);
+        const HWND WindowHandle = reinterpret_cast<HWND>(
+            static_cast<std::uintptr_t>(NumericHandle)
+        );
+
+        if (!IsLossless || WindowHandle == nullptr)
+        {
+            return Out.Fail("Excluded windows must be valid window handles.");
+        }
+
+        ExcludedWindows.push_back(WindowHandle);
+    }
+
+    RECT TargetBounds { };
+    if (GetWindowRect(TargetWindow.value(), &TargetBounds) == FALSE)
+    {
+        return Out.Fail("Could not get the target window rectangle.");
+    }
+
+    HRGN VisibleRegion = CreateRectRgnIndirect(&TargetBounds);
+    if (VisibleRegion == nullptr)
+    {
+        return Out.Fail("Could not create the target visibility region.");
+    }
+
+    bool IsObscured = false;
+    bool Failed = false;
+
+    for (
+        HWND Candidate = GetWindow(TargetWindow.value(), GW_HWNDPREV);
+        Candidate != nullptr;
+        Candidate = GetWindow(Candidate, GW_HWNDPREV)
+    )
+    {
+        const LONG_PTR ExtendedStyle = GetWindowLongPtrW(Candidate, GWL_EXSTYLE);
+        if (
+            ContainsWindow(ExcludedWindows, Candidate)
+            || IsWindowVisible(Candidate) == FALSE
+            || IsIconic(Candidate) != FALSE
+            || IsCloaked(Candidate)
+            || (ExtendedStyle & WS_EX_TRANSPARENT) != 0
+        )
+        {
+            continue;
+        }
+
+        RECT CandidateBounds { };
+        if (GetWindowRect(Candidate, &CandidateBounds) == FALSE)
+        {
+            continue;
+        }
+
+        HRGN CandidateRegion = CreateRectRgnIndirect(&CandidateBounds);
+        if (CandidateRegion == nullptr)
+        {
+            Failed = true;
+            break;
+        }
+
+        const int RegionResult = CombineRgn(
+            VisibleRegion,
+            VisibleRegion,
+            CandidateRegion,
+            RGN_DIFF
+        );
+        DeleteObject(CandidateRegion);
+
+        if (RegionResult == ERROR)
+        {
+            Failed = true;
+            break;
+        }
+
+        if (RegionResult == NULLREGION)
+        {
+            IsObscured = true;
+            break;
+        }
+    }
+
+    DeleteObject(VisibleRegion);
+
+    return Failed
+        ? Out.Fail("Could not calculate the target window's visible region.")
+        : Out.Succeed(Napi::Boolean::New(Environment, IsObscured));
 }
 
 Napi::Value GetWindowText_Node(const Napi::CallbackInfo& CallbackInfo)

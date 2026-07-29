@@ -35,6 +35,10 @@
       "import": "./Distribution/SettingOption.js",
       "types": "./Distribution/SettingOption.d.ts"
     },
+    "./SettingsHeader": {
+      "import": "./Distribution/SettingsHeader.js",
+      "types": "./Distribution/SettingsHeader.d.ts"
+    },
     "./SettingToggle": {
       "import": "./Distribution/SettingToggle.js",
       "types": "./Distribution/SettingToggle.d.ts"

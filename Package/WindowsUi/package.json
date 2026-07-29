@@ -23,6 +23,14 @@
       "import": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
     },
+    "./CaptionButtons": {
+      "import": "./Distribution/CaptionButtons.js",
+      "types": "./Distribution/CaptionButtons.d.ts"
+    },
+    "./Link": {
+      "import": "./Distribution/Link.js",
+      "types": "./Distribution/Link.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

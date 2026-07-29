@@ -115,6 +115,10 @@ export interface NativeBinding
         readonly IsSnapLayoutsOnHoverEnabled?: () => Attempt.NativeAttempt<boolean>;
         readonly IsSnapWindowsEnabled?: () => Attempt.NativeAttempt<boolean>;
         readonly IsWindowElevated?: (Window: Handle.HWND) => Attempt.NativeAttempt<boolean>;
+        readonly IsWindowObscured?: (
+            Window: Handle.HWND,
+            ExcludedWindows: ReadonlyArray<Handle.HWND>
+        ) => Attempt.NativeAttempt<boolean>;
         readonly SetForegroundWindow: (Window: Handle.HWND) => Attempt.NativeAttempt<void>;
         readonly SetWindowRect: (
             Window: Handle.HWND,

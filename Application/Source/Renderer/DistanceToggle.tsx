@@ -28,7 +28,8 @@ const UseStyles = makeStyles({
     {
         alignItems: "center",
         display: "inline-flex",
-        gap: tokens.spacingHorizontalS
+        gap: tokens.spacingHorizontalS,
+        userSelect: "none"
     },
     Shortcut:
     {
@@ -75,7 +76,7 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
         <div
             aria-label="Move distance"
             className={ Styles.Root }>
-            <span className={ Styles.Label }>Toggle Distance</span>
+            <span className={ Styles.Label }>Step Size</span>
             <span className={ Styles.Values }>
                 <span
                     aria-pressed={ IsPrimaryActive }

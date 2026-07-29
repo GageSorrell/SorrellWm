@@ -27,7 +27,7 @@ import {
     type Phase as PhaseType
 } from "../../Source/Main/Input/Hotkey.ts";
 import { describe, expect, it, vi } from "vitest";
-import { OverlayScreenId } from "../../Source/Shared/OverlayCommand.ts";
+import { OverlayScreenId, ResizeMode } from "../../Source/Shared/OverlayCommand.ts";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
@@ -101,7 +101,7 @@ describe("CommandResolver.Resolve", () =>
     {
         const Mappings = [
             [ Id.SelectLeft, Windows.VK.D, "Focus" ],
-            [ Id.SelectUp, Windows.VK.H, "Insert" ],
+            [ Id.SelectUp, Windows.VK.H, "Tile" ],
             [ Id.SelectDown, Windows.VK.T, "Move" ],
             [ Id.SelectRight, Windows.VK.N, "Resize" ]
         ] as const;
@@ -115,18 +115,24 @@ describe("CommandResolver.Resolve", () =>
 
         expect(Commands[0]).toMatchObject({
             Category: "Ui",
-            ScreenId: "Focus",
+            ScreenId: "FloatingFocus",
+            _tag: "NavigateOverlayScreen"
+        });
+        expect(Commands[1]).toMatchObject({
+            Category: "Ui",
+            ScreenId: "FloatingTile",
             _tag: "NavigateOverlayScreen"
         });
         expect(Commands[2]).toMatchObject({
             Category: "Ui",
-            ScreenId: "Move",
+            ScreenId: "FloatingMove",
             _tag: "NavigateOverlayScreen"
         });
-        expect([ Commands[1], Commands[3] ]).toMatchObject([
-            { Category: "Ui", Id: "Insert", _tag: "NoOpOverlayCommand" },
-            { Category: "Ui", Id: "Resize", _tag: "NoOpOverlayCommand" }
-        ]);
+        expect(Commands[3]).toMatchObject({
+            Category: "Ui",
+            ScreenId: "FloatingResize",
+            _tag: "NavigateOverlayScreen"
+        });
     });
 
     it("maps the same action keys to the Focus screen's direction commands", () =>
@@ -142,7 +148,7 @@ describe("CommandResolver.Resolve", () =>
             [ HotkeyId, Key ]: typeof Mappings[number]
         ) => Option.getOrThrow(Resolve(
             Activation(HotkeyId, Key, Phase.Pressed),
-            OverlayScreenId.Focus
+            OverlayScreenId.FloatingFocus
         )))).toMatchObject(Mappings.map((
             [ , , CommandId ]: typeof Mappings[number]
         ) => ({
@@ -153,7 +159,7 @@ describe("CommandResolver.Resolve", () =>
 
         expect(Option.getOrThrow(Resolve(
             Activation(Id.Back, Windows.VK.BROWSER_BACK, Phase.Pressed),
-            OverlayScreenId.Focus
+            OverlayScreenId.FloatingFocus
         ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
     });
 
@@ -170,7 +176,7 @@ describe("CommandResolver.Resolve", () =>
             [ HotkeyId, Key ]: typeof Mappings[number]
         ) => Option.getOrThrow(Resolve(
             Activation(HotkeyId, Key, Phase.Pressed),
-            OverlayScreenId.Move
+            OverlayScreenId.FloatingMove
         )))).toMatchObject(Mappings.map((
             [ , , CommandId ]: typeof Mappings[number]
         ) => ({
@@ -181,13 +187,74 @@ describe("CommandResolver.Resolve", () =>
 
         expect(Option.getOrThrow(Resolve(
             Activation(Id.Back, Windows.VK.BROWSER_BACK, Phase.Pressed),
-            OverlayScreenId.Move
+            OverlayScreenId.FloatingMove
         ))).toMatchObject({ Category: "Ui", _tag: "BackOverlayScreen" });
 
         expect(Resolve(
             Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
-            OverlayScreenId.Move
+            OverlayScreenId.FloatingMove
         )).toEqual(Option.none());
+    });
+
+    it("maps the same action keys directly to the Resize screen's edges", () =>
+    {
+        const Mappings = [
+            [ Id.SelectLeft, Windows.VK.D, "ResizeWindowLeft" ],
+            [ Id.SelectUp, Windows.VK.H, "ResizeWindowUp" ],
+            [ Id.SelectDown, Windows.VK.T, "ResizeWindowDown" ],
+            [ Id.SelectRight, Windows.VK.N, "ResizeWindowRight" ]
+        ] as const;
+
+        expect(Mappings.map((
+            [ HotkeyId, Key ]: typeof Mappings[number]
+        ) => Option.getOrThrow(Resolve(
+            Activation(HotkeyId, Key, Phase.Pressed),
+            OverlayScreenId.FloatingResize
+        )))).toMatchObject(Mappings.map((
+            [ , , CommandId ]: typeof Mappings[number]
+        ) => ({
+            Category: "Ui",
+            Id: CommandId,
+            _tag: "NoOpOverlayCommand"
+        })));
+    });
+
+    it("keeps tiled Home actions on Home and gives Shift plus SelectUp to Float", () =>
+    {
+        const Insert = Option.getOrThrow(Resolve(
+            Activation(
+                Id.SelectUp,
+                Windows.VK.H,
+                Phase.Pressed
+            ),
+            OverlayScreenId.TiledHome
+        ));
+        const Float = Option.getOrThrow(Resolve(
+            Activation(
+                Id.SelectUp,
+                Windows.VK.H,
+                Phase.Pressed,
+                [ Windows.VK.LSHIFT, Windows.VK.H ]
+            ),
+            OverlayScreenId.TiledHome
+        ));
+        const Focus = Option.getOrThrow(Resolve(
+            Activation(Id.SelectLeft, Windows.VK.D, Phase.Pressed),
+            OverlayScreenId.TiledHome
+        ));
+
+        expect(Insert).toMatchObject({
+            Id: "Insert",
+            _tag: "NoOpOverlayCommand"
+        });
+        expect(Float).toMatchObject({
+            Id: "Float",
+            _tag: "NoOpOverlayCommand"
+        });
+        expect(Focus).toMatchObject({
+            Id: "Focus",
+            _tag: "NoOpOverlayCommand"
+        });
     });
 
     it("maps the Toggle key to opening the per-app settings section", () =>
@@ -205,7 +272,7 @@ describe("CommandResolver.Resolve", () =>
     {
         const Resolved = Option.getOrThrow(Resolve(
             Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
-            OverlayScreenId.Home,
+            OverlayScreenId.FloatingHome,
             Option.some("Notepad")
         ));
 
@@ -250,6 +317,25 @@ describe("CommandResolver.Resolve", () =>
         expect(Pressed).toMatchObject({ Held: true, _tag: "SetPrimaryModifierHeld" });
         expect(Released).toMatchObject({ Held: false, _tag: "SetPrimaryModifierHeld" });
     });
+
+    it("shrinks while Ctrl is held and returns to growing when it is released", () =>
+    {
+        const Pressed = Option.getOrThrow(Resolve({
+            Keybind: Make(Id.ResizeModifier, Windows.VK.CONTROL),
+            KeyboardEvent: { } as Windows.Keyboard.Event,
+            Phase: Phase.Pressed,
+            PressedKeys: [ Windows.VK.LCONTROL ]
+        }));
+        const Released = Option.getOrThrow(Resolve({
+            Keybind: Make(Id.ResizeModifier, Windows.VK.CONTROL),
+            KeyboardEvent: { } as Windows.Keyboard.Event,
+            Phase: Phase.Released,
+            PressedKeys: [ ]
+        }));
+
+        expect(Pressed).toMatchObject({ Mode: ResizeMode.Shrink, _tag: "SetResizeMode" });
+        expect(Released).toMatchObject({ Mode: ResizeMode.Grow, _tag: "SetResizeMode" });
+    });
 });
 
 describe("CommandResolver.Live", () =>
@@ -285,10 +371,10 @@ describe("CommandResolver.Live", () =>
 
 const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Back: Effect.void,
-    Changes: Stream.succeed(OverlayScreenId.Home),
+    Changes: Stream.succeed(OverlayScreenId.FloatingHome),
     ClearActivationWindow: Effect.void,
     ClearFocusPreview: Effect.void,
-    Current: Effect.succeed(OverlayScreenId.Home),
+    Current: Effect.succeed(OverlayScreenId.FloatingHome),
     FineModifierHeld: Effect.succeed(false),
     FocusFailure: Effect.succeed(Option.none()),
     GetActivationApplicationName: Effect.succeed(Option.none()),
@@ -298,15 +384,26 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     PrimaryModifierHeld: Effect.succeed(false),
     RecordFocusFailure: () => Effect.void,
     Reset: Effect.void,
+    ResizeMode: Effect.succeed(ResizeMode.Grow),
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,
     SetFineModifierHeld: () => Effect.void,
     SetPrimaryModifierHeld: () => Effect.void,
-    Snapshot: Effect.succeed({ CanGoBack: false, Commands: [ ], Id: OverlayScreenId.Home }),
+    SetResizeMode: () => Effect.void,
+    Snapshot: Effect.succeed({
+        CanGoBack: false,
+        Commands: [ ],
+        Id: OverlayScreenId.FloatingHome
+    }),
     TakeActivationWindow: Effect.succeed(Option.none())
 });
 
-const Activation = (InId: Id, Key: Windows.VK.VK, InPhase: PhaseType): Match => ({
+const Activation = (
+    InId: Id,
+    Key: Windows.VK.VK,
+    InPhase: PhaseType,
+    PressedKeys: ReadonlyArray<Windows.VK.VK> = [ Key ]
+): Match => ({
     Keybind: Make(InId, Key),
     KeyboardEvent:
     {
@@ -315,5 +412,5 @@ const Activation = (InId: Id, Key: Windows.VK.VK, InPhase: PhaseType): Match => 
         State: { _tag: InPhase === Phase.Released ? "Up" : "Down" }
     } as Windows.Keyboard.Event,
     Phase: InPhase,
-    PressedKeys: [ Key ]
+    PressedKeys
 });

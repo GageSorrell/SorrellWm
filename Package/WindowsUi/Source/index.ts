@@ -10,4 +10,5 @@
  */
 
 export * from "./CaptionButtons.js";
+export * from "./Link.js";
 

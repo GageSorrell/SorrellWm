@@ -11,7 +11,7 @@
  */
 
 import { Button, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, type ReactNode, useState } from "react";
 import {
     CaretDownFilled,
     CaretLeftFilled,
@@ -29,18 +29,33 @@ export interface DirectionalPadDirection
 {
     readonly Color: Option.Option<string>;
     readonly Disabled: boolean;
+
+    /**
+     * Caption shown immediately below the caret. Absolutely positioned, so its
+     * presence or content never shifts any other part of the pad.
+     */
+    readonly Label?: ReactNode;
+
     readonly OnHoverChange?: ((Hovered: boolean) => void) | undefined;
     readonly OnInvoke: () => void;
     readonly Shortcut: ShortcutDto;
 }
 
-/** Props for {@link DirectionalPad}. */
+/** Props for {@link DirectionalPad}. Any direction left unset is not rendered. */
 export interface DirectionalPadProps
 {
-    readonly Down: DirectionalPadDirection;
-    readonly Left: DirectionalPadDirection;
-    readonly Right: DirectionalPadDirection;
-    readonly Up: DirectionalPadDirection;
+    readonly Down?: DirectionalPadDirection;
+
+    /**
+     * Flip every caret to point toward the pad's center instead of away from
+     * it, e.g. to represent shrinking a window's edges inward rather than
+     * growing them outward. Purely visual; direction assignment is unaffected.
+     */
+    readonly Inward?: boolean;
+
+    readonly Left?: DirectionalPadDirection;
+    readonly Right?: DirectionalPadDirection;
+    readonly Up?: DirectionalPadDirection;
 }
 
 const UseStyles = makeStyles({
@@ -75,7 +90,8 @@ const UseStyles = makeStyles({
     {
         alignItems: "center",
         display: "flex",
-        gap: "0.1rem"
+        gap: "0.1rem",
+        position: "relative"
     },
     DirectionColumn:
     {
@@ -87,6 +103,31 @@ const UseStyles = makeStyles({
         flexDirection: "column-reverse",
         gridColumn: 2,
         gridRow: 3
+    },
+    Label:
+    {
+        color: tokens.colorNeutralForeground3,
+        fontSize: tokens.fontSizeBase200,
+        // Absolutely positioned so its presence, absence, or content length
+        // never changes the size of the flex/grid layout around it, and so
+        // never shifts any other part of the pad.
+        marginTop: "0.25rem",
+        position: "absolute",
+        top: "100%",
+        whiteSpace: "nowrap"
+    },
+    LabelCenter:
+    {
+        left: "50%",
+        transform: "translateX(-50%)"
+    },
+    LabelLeft:
+    {
+        left: 0
+    },
+    LabelRight:
+    {
+        right: 0
     },
     Left:
     {
@@ -189,49 +230,77 @@ const DirectionalPad = (Props: DirectionalPadProps): React.JSX.Element =>
             <div
                 aria-hidden="true"
                 className={ Styles.Root }>
-                <div className={ mergeClasses(Styles.Direction, Styles.DirectionColumn, Styles.Up) }>
-                    <DirectionCaret
-                        Color={ Props.Up.Color }
-                        Disabled={ Props.Up.Disabled }
-                        Icon={ CaretUpFilled }
-                        OnHoverChange={ Props.Up.OnHoverChange }
-                        OnInvoke={ Props.Up.OnInvoke } />
-                    <Keybind Keys={ GetShortcutParts(Props.Up.Shortcut) } />
-                </div>
+                { Props.Up !== undefined && (
+                    <div className={ mergeClasses(Styles.Direction, Styles.DirectionColumn, Styles.Up) }>
+                        <DirectionCaret
+                            Color={ Props.Up.Color }
+                            Disabled={ Props.Up.Disabled }
+                            Icon={ Props.Inward === true ? CaretDownFilled : CaretUpFilled }
+                            OnHoverChange={ Props.Up.OnHoverChange }
+                            OnInvoke={ Props.Up.OnInvoke } />
+                        <Keybind Keys={ GetShortcutParts(Props.Up.Shortcut) } />
+                        { Props.Up.Label !== undefined && (
+                            <span className={ mergeClasses(Styles.Label, Styles.LabelCenter) }>
+                                { Props.Up.Label }
+                            </span>
+                        ) }
+                    </div>
+                ) }
 
-                <div className={ mergeClasses(Styles.Direction, Styles.Left) }>
-                    <DirectionCaret
-                        Color={ Props.Left.Color }
-                        Disabled={ Props.Left.Disabled }
-                        Icon={ CaretLeftFilled }
-                        OnHoverChange={ Props.Left.OnHoverChange }
-                        OnInvoke={ Props.Left.OnInvoke } />
-                    <Keybind Keys={ GetShortcutParts(Props.Left.Shortcut) } />
-                </div>
+                { Props.Left !== undefined && (
+                    <div className={ mergeClasses(Styles.Direction, Styles.Left) }>
+                        <DirectionCaret
+                            Color={ Props.Left.Color }
+                            Disabled={ Props.Left.Disabled }
+                            Icon={ Props.Inward === true ? CaretRightFilled : CaretLeftFilled }
+                            OnHoverChange={ Props.Left.OnHoverChange }
+                            OnInvoke={ Props.Left.OnInvoke } />
+                        <Keybind Keys={ GetShortcutParts(Props.Left.Shortcut) } />
+                        { Props.Left.Label !== undefined && (
+                            <span className={ mergeClasses(Styles.Label, Styles.LabelLeft) }>
+                                { Props.Left.Label }
+                            </span>
+                        ) }
+                    </div>
+                ) }
 
                 <div className={ Styles.Center }>
                     <span className={ Styles.CenterDot } />
                 </div>
 
-                <div className={ mergeClasses(Styles.Direction, Styles.Right) }>
-                    <DirectionCaret
-                        Color={ Props.Right.Color }
-                        Disabled={ Props.Right.Disabled }
-                        Icon={ CaretRightFilled }
-                        OnHoverChange={ Props.Right.OnHoverChange }
-                        OnInvoke={ Props.Right.OnInvoke } />
-                    <Keybind Keys={ GetShortcutParts(Props.Right.Shortcut) } />
-                </div>
+                { Props.Right !== undefined && (
+                    <div className={ mergeClasses(Styles.Direction, Styles.Right) }>
+                        <DirectionCaret
+                            Color={ Props.Right.Color }
+                            Disabled={ Props.Right.Disabled }
+                            Icon={ Props.Inward === true ? CaretLeftFilled : CaretRightFilled }
+                            OnHoverChange={ Props.Right.OnHoverChange }
+                            OnInvoke={ Props.Right.OnInvoke } />
+                        <Keybind Keys={ GetShortcutParts(Props.Right.Shortcut) } />
+                        { Props.Right.Label !== undefined && (
+                            <span className={ mergeClasses(Styles.Label, Styles.LabelRight) }>
+                                { Props.Right.Label }
+                            </span>
+                        ) }
+                    </div>
+                ) }
 
-                <div className={ mergeClasses(Styles.Direction, Styles.DirectionColumn, Styles.Down) }>
-                    <DirectionCaret
-                        Color={ Props.Down.Color }
-                        Disabled={ Props.Down.Disabled }
-                        Icon={ CaretDownFilled }
-                        OnHoverChange={ Props.Down.OnHoverChange }
-                        OnInvoke={ Props.Down.OnInvoke } />
-                    <Keybind Keys={ GetShortcutParts(Props.Down.Shortcut) } />
-                </div>
+                { Props.Down !== undefined && (
+                    <div className={ mergeClasses(Styles.Direction, Styles.DirectionColumn, Styles.Down) }>
+                        <DirectionCaret
+                            Color={ Props.Down.Color }
+                            Disabled={ Props.Down.Disabled }
+                            Icon={ Props.Inward === true ? CaretUpFilled : CaretDownFilled }
+                            OnHoverChange={ Props.Down.OnHoverChange }
+                            OnInvoke={ Props.Down.OnInvoke } />
+                        <Keybind Keys={ GetShortcutParts(Props.Down.Shortcut) } />
+                        { Props.Down.Label !== undefined && (
+                            <span className={ mergeClasses(Styles.Label, Styles.LabelCenter) }>
+                                { Props.Down.Label }
+                            </span>
+                        ) }
+                    </div>
+                ) }
             </div>
         </div>
     );

@@ -1,5 +1,5 @@
 /**
- * Immutable BSP-style tiling trees and their geometric projection.
+ * Immutable multi-child tiling trees and their geometric projection.
  *
  * @module @sorrell/wm/Main/Tiling/Tree
  *
@@ -22,7 +22,7 @@ const Orientation = Object.freeze({
 export type Orientation = typeof Orientation[keyof typeof Orientation];
 
 /** A path from a workspace root to a descendant panel. */
-export type Path = ReadonlyArray<0 | 1>;
+export type Path = ReadonlyArray<number>;
 
 /** A window tracked by the tiling manager. */
 export interface ManagedWindow
@@ -38,16 +38,26 @@ export interface WindowNode
     readonly Value: ManagedWindow;
 }
 
-/** A binary panel that partitions its rectangle between two children. */
+/** A panel that partitions its rectangle between two or more children. */
 export interface PanelNode
 {
     readonly _tag: "Panel";
-    readonly Children: readonly [ Node, Node ];
+    readonly Children: readonly [ Node, Node, ...Array<Node> ];
     readonly Orientation: Orientation;
+
+    /**
+     * The first child's normalized share.
+     *
+     * Retained for compatibility with the original binary-panel API. Use
+     * {@link Ratios} when working with every child.
+     */
     readonly Ratio: number;
+
+    /** One normalized layout share per child, in child order. */
+    readonly Ratios: ReadonlyArray<number>;
 }
 
-/** A node in a BSP tiling tree. */
+/** A node in a recursive tiling tree. */
 export type Node =
     | PanelNode
     | WindowNode;
@@ -86,28 +96,192 @@ const ClampRatio = (Ratio: number): number => Number.isFinite(Ratio)
     ? Math.min(MaximumRatio, Math.max(MinimumRatio, Ratio))
     : 0.5;
 
+const EqualRatios = (Count: number): ReadonlyArray<number> =>
+    Object.freeze(Array.from({ length: Count }, () => 1 / Count));
+
+const NormalizeRatios = (
+    Count: number,
+    Ratios?: ReadonlyArray<number>
+): ReadonlyArray<number> =>
+{
+    if (
+        Ratios === undefined
+        || Ratios.length !== Count
+        || Ratios.some((Ratio: number): boolean => !Number.isFinite(Ratio) || Ratio <= 0)
+    )
+    {
+        return EqualRatios(Count);
+    }
+
+    const Total = Ratios.reduce((Sum: number, Ratio: number): number => Sum + Ratio, 0);
+    return Object.freeze(Ratios.map((Ratio: number): number => Ratio / Total));
+};
+
 const SplitBounds = (
+    Bounds: Box.Box,
+    Direction: Orientation,
+    Ratios: ReadonlyArray<number>
+): ReadonlyArray<Box.Box> =>
+{
+    const Normalized = NormalizeRatios(Ratios.length, Ratios);
+    const Length = Direction === Orientation.Horizontal
+        ? Box.Width(Bounds)
+        : Box.Height(Bounds);
+    const Start = Direction === Orientation.Horizontal
+        ? Bounds.Left
+        : Bounds.Top;
+    let Cursor: number = Start;
+    let CumulativeRatio = 0;
+
+    return Object.freeze(Normalized.map((Ratio: number, Index: number): Box.Box =>
+    {
+        CumulativeRatio += Ratio;
+        const End = Index === Normalized.length - 1
+            ? Start + Length
+            : Start + Math.floor(Length * CumulativeRatio);
+
+        const ChildBounds = Direction === Orientation.Horizontal
+            ? Box.Box(Bounds.Top, End, Bounds.Bottom, Cursor)
+            : Box.Box(Cursor, Bounds.Right, End, Bounds.Left);
+
+        Cursor = End;
+        return ChildBounds;
+    }));
+};
+
+const SetRatioAt = (
+    Ratios: ReadonlyArray<number>,
+    ChildIndex: number,
+    Ratio: number
+): ReadonlyArray<number> =>
+{
+    if (
+        !Number.isInteger(ChildIndex)
+        || ChildIndex < 0
+        || ChildIndex >= Ratios.length
+    )
+    {
+        return Ratios;
+    }
+
+    const Minimum = Math.min(MinimumRatio, 0.5 / Ratios.length);
+    const Maximum = 1 - (Minimum * (Ratios.length - 1));
+    const Desired = Number.isFinite(Ratio)
+        ? Math.min(Maximum, Math.max(Minimum, Ratio))
+        : 1 / Ratios.length;
+    const OtherTotal = Ratios.reduce(
+        (Sum: number, Value: number, Index: number): number =>
+            Index === ChildIndex ? Sum : Sum + Value,
+        0
+    );
+    const OtherShare = 1 - Desired;
+
+    return Object.freeze(Ratios.map((Value: number, Index: number): number =>
+        Index === ChildIndex
+            ? Desired
+            : OtherTotal === 0
+                ? OtherShare / (Ratios.length - 1)
+                : (Value / OtherTotal) * OtherShare));
+};
+
+const SplitChildRatio = (
+    Ratios: ReadonlyArray<number>,
+    ChildIndex: number,
+    Ratio: number
+): ReadonlyArray<number> =>
+{
+    const Existing = Ratios[ChildIndex]!;
+    const FirstShare = Existing * ClampRatio(Ratio);
+
+    return Object.freeze([
+        ...Ratios.slice(0, ChildIndex),
+        FirstShare,
+        Existing - FirstShare,
+        ...Ratios.slice(ChildIndex + 1)
+    ]);
+};
+
+const PanelFromChildren = (
+    Direction: Orientation,
+    Children: ReadonlyArray<Node>,
+    Ratios?: ReadonlyArray<number>
+): PanelNode =>
+{
+    if (Children.length < 2)
+    {
+        throw new RangeError("A tiling panel must contain at least two children.");
+    }
+
+    const NormalizedRatios = NormalizeRatios(Children.length, Ratios);
+
+    return Object.freeze({
+        Children: Object.freeze([ ...Children ]) as [ Node, Node, ...Array<Node> ],
+        Orientation: Direction,
+        Ratio: NormalizedRatios[0]!,
+        Ratios: NormalizedRatios,
+        _tag: "Panel" as const
+    });
+};
+
+/**
+ * Construct a frozen panel from an arbitrary child collection and optional
+ * per-child ratios.
+ */
+export function Panel(
+    Direction: Orientation,
+    Children: readonly [ Node, Node, ...Array<Node> ],
+    Ratios?: ReadonlyArray<number>
+): PanelNode;
+
+/**
+ * Construct a frozen two-child panel using the original split-ratio API.
+ */
+export function Panel(
+    Direction: Orientation,
+    First: Node,
+    Second: Node,
+    Ratio?: number
+): PanelNode;
+
+export function Panel(
+    Direction: Orientation,
+    FirstOrChildren: Node | readonly [ Node, Node, ...Array<Node> ],
+    SecondOrRatios?: Node | ReadonlyArray<number>,
+    Ratio: number = 0.5
+): PanelNode
+{
+    if (Array.isArray(FirstOrChildren))
+    {
+        return PanelFromChildren(
+            Direction,
+            FirstOrChildren,
+            Array.isArray(SecondOrRatios) ? SecondOrRatios : undefined
+        );
+    }
+
+    return PanelFromChildren(
+        Direction,
+        [ FirstOrChildren as Node, SecondOrRatios as Node ],
+        [ ClampRatio(Ratio), 1 - ClampRatio(Ratio) ]
+    );
+}
+
+const SplitBoundsBinary = (
     Bounds: Box.Box,
     Direction: Orientation,
     Ratio: number
 ): readonly [ Box.Box, Box.Box ] =>
 {
-    if (Direction === Orientation.Horizontal)
-    {
-        const Split = Bounds.Left + Math.floor(Box.Width(Bounds) * ClampRatio(Ratio));
-        return [
-            Box.Box(Bounds.Top, Split, Bounds.Bottom, Bounds.Left),
-            Box.Box(Bounds.Top, Bounds.Right, Bounds.Bottom, Split)
-        ];
-    }
+    const Parts = SplitBounds(Bounds, Direction, [ ClampRatio(Ratio), 1 - ClampRatio(Ratio) ]);
 
-    const Split = Bounds.Top + Math.floor(Box.Height(Bounds) * ClampRatio(Ratio));
-    return [
-        Box.Box(Bounds.Top, Bounds.Right, Split, Bounds.Left),
-        Box.Box(Split, Bounds.Right, Bounds.Bottom, Bounds.Left)
-    ];
+    return [ Parts[0]!, Parts[1]! ];
 };
 
+/*
+ * Balanced construction still uses recursive two-way splits so startup
+ * adoption preserves its existing spatial ordering. Runtime insertion can
+ * widen any matching panel beyond two children.
+ */
 const DirectionForBounds = (Bounds: Box.Box): Orientation =>
     Box.Width(Bounds) >= Box.Height(Bounds)
         ? Orientation.Horizontal
@@ -141,24 +315,11 @@ const Window = (Value: ManagedWindow): WindowNode => Object.freeze({
     _tag: "Window" as const
 });
 
-export/** Construct a frozen binary panel with a normalized split ratio. */
-const Panel = (
-    Direction: Orientation,
-    First: Node,
-    Second: Node,
-    Ratio: number = 0.5
-): PanelNode => Object.freeze({
-    Children: Object.freeze([ First, Second ]) as readonly [ Node, Node ],
-    Orientation: Direction,
-    Ratio: ClampRatio(Ratio),
-    _tag: "Panel" as const
-});
-
 export/** Derive a stable workspace identity from virtual-screen work-area coordinates. */
 const WorkspaceId = (Bounds: Box.Box): string =>
     `${ Bounds.Left },${ Bounds.Top },${ Bounds.Right },${ Bounds.Bottom }`;
 
-export/** Build a balanced BSP tree ordered by the windows' existing screen positions. */
+export/** Build a balanced tree ordered by the windows' existing screen positions. */
 const BuildBalanced = (
     Windows: ReadonlyArray<ManagedWindow>,
     Bounds: Box.Box
@@ -177,7 +338,7 @@ const BuildBalanced = (
     const Direction = DirectionForBounds(Bounds);
     const Ordered = SortWindows(Windows, Direction);
     const Middle = Math.floor(Ordered.length / 2);
-    const [ FirstBounds, SecondBounds ] = SplitBounds(Bounds, Direction, 0.5);
+    const [ FirstBounds, SecondBounds ] = SplitBoundsBinary(Bounds, Direction, 0.5);
     const First = BuildBalanced(Ordered.slice(0, Middle), FirstBounds);
     const Second = BuildBalanced(Ordered.slice(Middle), SecondBounds);
 
@@ -231,14 +392,14 @@ const LayoutNode = (
         return;
     }
 
-    const [ FirstBounds, SecondBounds ] = SplitBounds(
+    const ChildBounds = SplitBounds(
         Bounds,
         Current.Orientation,
-        Current.Ratio
+        NormalizeRatios(Current.Children.length, Current.Ratios)
     );
 
-    LayoutNode(Current.Children[0], FirstBounds, Out);
-    LayoutNode(Current.Children[1], SecondBounds, Out);
+    Current.Children.forEach((Child: Node, Index: number): void =>
+        LayoutNode(Child, ChildBounds[Index]!, Out));
 };
 
 export/** Project every window leaf in a state to its assigned screen rectangle. */
@@ -267,7 +428,7 @@ const Windows = (Root: Node | null): ReadonlyArray<ManagedWindow> =>
 
     return Root._tag === "Window"
         ? [ Root.Value ]
-        : [ ...Windows(Root.Children[0]), ...Windows(Root.Children[1]) ];
+        : Root.Children.flatMap(Windows);
 };
 
 export/** Determine whether a tree contains a native window handle. */
@@ -289,30 +450,47 @@ const InsertAtWindow = (
             : [ Root, false ];
     }
 
-    const [ First, InsertedFirst ] = InsertAtWindow(
-        Root.Children[0],
-        Target,
-        Value,
-        Direction,
-        Ratio
-    );
+    const DirectTargetIndex = Root.Children.findIndex((Child: Node): boolean =>
+        Child._tag === "Window" && Child.Value.Window === Target);
 
-    if (InsertedFirst)
+    if (DirectTargetIndex >= 0 && Root.Orientation === Direction)
     {
-        return [ Panel(Root.Orientation, First, Root.Children[1], Root.Ratio), true ];
+        const Children = [
+            ...Root.Children.slice(0, DirectTargetIndex + 1),
+            Window(Value),
+            ...Root.Children.slice(DirectTargetIndex + 1)
+        ] as [ Node, Node, ...Array<Node> ];
+        const Ratios = SplitChildRatio(Root.Ratios, DirectTargetIndex, Ratio);
+
+        return [ Panel(Root.Orientation, Children, Ratios), true ];
     }
 
-    const [ Second, InsertedSecond ] = InsertAtWindow(
-        Root.Children[1],
-        Target,
-        Value,
-        Direction,
-        Ratio
-    );
+    for (let ChildIndex = 0; ChildIndex < Root.Children.length; ChildIndex += 1)
+    {
+        const [ Child, Inserted ] = InsertAtWindow(
+            Root.Children[ChildIndex]!,
+            Target,
+            Value,
+            Direction,
+            Ratio
+        );
 
-    return InsertedSecond
-        ? [ Panel(Root.Orientation, Root.Children[0], Second, Root.Ratio), true ]
-        : [ Root, false ];
+        if (Inserted)
+        {
+            const Children = [ ...Root.Children ];
+            Children[ChildIndex] = Child;
+            return [
+                Panel(
+                    Root.Orientation,
+                    Children as [ Node, Node, ...Array<Node> ],
+                    Root.Ratios
+                ),
+                true
+            ];
+        }
+    }
+
+    return [ Root, false ];
 };
 
 export/** Insert a window beside a target leaf, or beside the last leaf when omitted. */
@@ -359,28 +537,51 @@ const RemoveWindow = (Root: Node | null, HandleValue: Handle.HWND): Node | null 
         return Root.Value.Window === HandleValue ? null : Root;
     }
 
-    const First = RemoveWindow(Root.Children[0], HandleValue);
-    const Second = RemoveWindow(Root.Children[1], HandleValue);
+    const RemainingChildren = new Array<Node>();
+    const RemainingRatios = new Array<number>();
+    let Changed = false;
 
-    if (First === null)
+    Root.Children.forEach((Child: Node, Index: number): void =>
     {
-        return Second;
+        const Remaining = RemoveWindow(Child, HandleValue);
+
+        if (Remaining === null)
+        {
+            Changed = true;
+            return;
+        }
+
+        Changed ||= Remaining !== Child;
+        RemainingChildren.push(Remaining);
+        RemainingRatios.push(Root.Ratios[Index]!);
+    });
+
+    if (!Changed)
+    {
+        return Root;
     }
 
-    if (Second === null)
+    if (RemainingChildren.length === 0)
     {
-        return First;
+        return null;
     }
 
-    return First === Root.Children[0] && Second === Root.Children[1]
-        ? Root
-        : Panel(Root.Orientation, First, Second, Root.Ratio);
+    if (RemainingChildren.length === 1)
+    {
+        return RemainingChildren[0]!;
+    }
+
+    return Panel(
+        Root.Orientation,
+        RemainingChildren as [ Node, Node, ...Array<Node> ],
+        RemainingRatios
+    );
 };
 
 const UpdatePanel = (
     Root: Node,
     PathValue: Path,
-    Transform: (PanelValue: PanelNode) => PanelNode,
+    Transform: (PanelValue: PanelNode) => readonly [ PanelNode, boolean ],
     Depth: number = 0
 ): readonly [ Node, boolean ] =>
 {
@@ -391,17 +592,22 @@ const UpdatePanel = (
 
     if (Depth === PathValue.length)
     {
-        return [ Transform(Root), true ];
+        return Transform(Root);
     }
 
     const ChildIndex = PathValue[Depth];
-    if (ChildIndex === undefined)
+    if (
+        ChildIndex === undefined
+        || !Number.isInteger(ChildIndex)
+        || ChildIndex < 0
+        || ChildIndex >= Root.Children.length
+    )
     {
         return [ Root, false ];
     }
 
     const [ Child, Updated ] = UpdatePanel(
-        Root.Children[ChildIndex],
+        Root.Children[ChildIndex]!,
         PathValue,
         Transform,
         Depth + 1
@@ -411,29 +617,49 @@ const UpdatePanel = (
         ? [
             Panel(
                 Root.Orientation,
-                ChildIndex === 0 ? Child : Root.Children[0],
-                ChildIndex === 1 ? Child : Root.Children[1],
-                Root.Ratio
+                Root.Children.map((Current: Node, Index: number): Node =>
+                    Index === ChildIndex ? Child : Current
+                ) as [ Node, Node, ...Array<Node> ],
+                Root.Ratios
             ),
             true
         ]
         : [ Root, false ];
 };
 
-export/** Change a panel's normalized split ratio and report whether the path existed. */
+export/**
+       * Change one child's normalized panel ratio and report whether the panel
+       * path and child index existed. The first child remains the default for
+       * compatibility with the original binary-panel API.
+       */
 const SetPanelRatio = (
     Root: Node,
     PathValue: Path,
-    Ratio: number
+    Ratio: number,
+    ChildIndex: number = 0
 ): readonly [ Node, boolean ] => UpdatePanel(
     Root,
     PathValue,
-    (PanelValue: PanelNode) => Panel(
-        PanelValue.Orientation,
-        PanelValue.Children[0],
-        PanelValue.Children[1],
-        Ratio
-    )
+    (PanelValue: PanelNode): readonly [ PanelNode, boolean ] =>
+    {
+        if (
+            !Number.isInteger(ChildIndex)
+            || ChildIndex < 0
+            || ChildIndex >= PanelValue.Children.length
+        )
+        {
+            return [ PanelValue, false ];
+        }
+
+        return [
+            Panel(
+                PanelValue.Orientation,
+                PanelValue.Children,
+                SetRatioAt(PanelValue.Ratios, ChildIndex, Ratio)
+            ),
+            true
+        ];
+    }
 );
 
 export/** Change a panel's child arrangement and report whether the path existed. */
@@ -444,10 +670,12 @@ const SetPanelOrientation = (
 ): readonly [ Node, boolean ] => UpdatePanel(
     Root,
     PathValue,
-    (PanelValue: PanelNode) => Panel(
-        Direction,
-        PanelValue.Children[0],
-        PanelValue.Children[1],
-        PanelValue.Ratio
-    )
+    (PanelValue: PanelNode) => [
+        Panel(
+            Direction,
+            PanelValue.Children,
+            PanelValue.Ratios
+        ),
+        true
+    ]
 );

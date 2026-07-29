@@ -22,7 +22,9 @@ import {
     BoardRegular,
     CursorClickRegular,
     type FluentIcon,
+    GridRegular,
     ResizeLargeRegular,
+    WindowArrowUpRegular,
     WindowSettingsRegular
 } from "@fluentui/react-icons";
 import {
@@ -119,6 +121,12 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ArrowUpRegular,
             Label: "Focus Up"
         },
+        [ OverlayCommandId.Float ]:
+        {
+            Description: "Remove this window from the tiled layout.",
+            Icon: WindowArrowUpRegular,
+            Label: "Float"
+        },
         [ OverlayCommandId.MoveWindowDown ]:
         {
             Description: "Move the window down.",
@@ -167,6 +175,36 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ResizeLargeRegular,
             Label: "Resize"
         },
+        [ OverlayCommandId.ResizeWindowDown ]:
+        {
+            Description: "Move this window's bottom edge.",
+            Icon: ArrowDownRegular,
+            Label: "Resize Down"
+        },
+        [ OverlayCommandId.ResizeWindowLeft ]:
+        {
+            Description: "Move this window's left edge.",
+            Icon: ArrowLeftRegular,
+            Label: "Resize Left"
+        },
+        [ OverlayCommandId.ResizeWindowRight ]:
+        {
+            Description: "Move this window's right edge.",
+            Icon: ArrowRightRegular,
+            Label: "Resize Right"
+        },
+        [ OverlayCommandId.ResizeWindowUp ]:
+        {
+            Description: "Move this window's top edge.",
+            Icon: ArrowUpRegular,
+            Label: "Resize Up"
+        },
+        [ OverlayCommandId.Tile ]:
+        {
+            Description: () => "Add this window to the tiled layout.",
+            Icon: GridRegular,
+            Label: "Tile"
+        },
         [ OverlayCommandId.OpenPerAppSettings ]:
         {
             Description: (Context: PresentationContext) => Option.match(
@@ -183,20 +221,35 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
 
 const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
     {
-        [ OverlayScreenId.Focus ]:
+        [ OverlayScreenId.FloatingFocus ]:
         {
             Description: "Choose a direction to move the focus selection.",
             Label: "Focus"
         },
-        [ OverlayScreenId.Home ]:
+        [ OverlayScreenId.FloatingHome ]:
         {
             Description: "Choose the type of action to perform.",
             Label: "SorrellWm"
         },
-        [ OverlayScreenId.Move ]:
+        [ OverlayScreenId.FloatingMove ]:
         {
             Description: "Choose a direction to move the window.",
             Label: "Move"
+        },
+        [ OverlayScreenId.FloatingResize ]:
+        {
+            Description: "Choose an edge to grow the window. Hold Ctrl to shrink it instead.",
+            Label: "Resize"
+        },
+        [ OverlayScreenId.FloatingTile ]:
+        {
+            Description: "Add this window to the tiled layout.",
+            Label: "Tile"
+        },
+        [ OverlayScreenId.TiledHome ]:
+        {
+            Description: "Choose the type of action to perform.",
+            Label: "SorrellWm"
         }
     } as const;
 
@@ -292,6 +345,17 @@ const UseStyles = makeStyles({
         gap: "clamp(0.75rem, 2.5vh, 1.5rem)",
         marginTop: "clamp(0.75rem, 2.5vh, 1.5rem)"
     },
+    Placeholder:
+    {
+        alignItems: "center",
+        color: tokens.colorNeutralForeground3,
+        display: "flex",
+        flex: "1 1 auto",
+        justifyContent: "center",
+        marginTop: "clamp(0.75rem, 2.5vh, 1.5rem)",
+        minHeight: "8rem",
+        textAlign: "center"
+    },
     Shell:
     {
         backgroundColor: "transparent",
@@ -336,7 +400,7 @@ const OverlayApplication = (): React.ReactNode =>
     const Preview: { (Id: OverlayCommandIdType | null): void; } = window.sorrell.overlay.preview;
 
     const CurrentPresentation = CurrentScreen === undefined
-        ? ScreenPresentation[OverlayScreenId.Home]
+        ? ScreenPresentation[OverlayScreenId.FloatingHome]
         : ScreenPresentation[CurrentScreen.Id];
 
     const CanGoBack = CurrentScreen?.CanGoBack === true;
@@ -346,8 +410,15 @@ const OverlayApplication = (): React.ReactNode =>
         : Presentation[SecondaryCommand.Id].Icon;
     const DistanceToggleDto = CurrentScreen?.DistanceToggle;
     const HasFooter = SecondaryCommand !== undefined || DistanceToggleDto !== undefined;
-    const IsFocusScreen = CurrentScreen?.Id === OverlayScreenId.Focus;
-    const IsMoveScreen = CurrentScreen?.Id === OverlayScreenId.Move;
+    const IsTiledHome = CurrentScreen?.Id === OverlayScreenId.TiledHome;
+    const PresentationContextValue: PresentationContext = {
+        ...DefaultPresentationContext,
+        IsTiled: IsTiledHome
+    };
+    const IsFocusScreen = CurrentScreen?.Id === OverlayScreenId.FloatingFocus;
+    const IsMoveScreen = CurrentScreen?.Id === OverlayScreenId.FloatingMove;
+    const IsResizeScreen = CurrentScreen?.Id === OverlayScreenId.FloatingResize;
+    const IsTileScreen = CurrentScreen?.Id === OverlayScreenId.FloatingTile;
 
     const FindCommand = (Id: OverlayCommandIdType): OverlayCommandDto | undefined =>
         CurrentScreen?.Commands.find((Candidate: OverlayCommandDto) => Candidate.Id === Id);
@@ -399,7 +470,7 @@ const OverlayApplication = (): React.ReactNode =>
         };
     };
 
-    const ToMovePadDirection = (Id: OverlayCommandIdType): DirectionalPadDirection =>
+    const ToPlainPadDirection = (Id: OverlayCommandIdType): DirectionalPadDirection =>
         ToPadDirection(Id, Option.none());
 
     return (
@@ -429,7 +500,7 @@ const OverlayApplication = (): React.ReactNode =>
                                 disabled={ !CanGoBack }
                                 icon={ CanGoBack ? <BoardRegular /> : <BoardFilled /> }
                                 onClick={ CanGoBack ? Back : undefined }>
-                                { ScreenPresentation[OverlayScreenId.Home].Label }
+                                { ScreenPresentation[OverlayScreenId.FloatingHome].Label }
                             </BreadcrumbButton>
                         </BreadcrumbItem>
 
@@ -452,7 +523,7 @@ const OverlayApplication = (): React.ReactNode =>
                 HasFooter ? Styles.ContentWithFooter : undefined
             ) }>
                 <p className={ Styles.Description }>
-                    { ResolveDescription(CurrentPresentation, DefaultPresentationContext) }
+                    { ResolveDescription(CurrentPresentation, PresentationContextValue) }
                 </p>
 
                 { ErrorMessage !== undefined && (
@@ -507,7 +578,8 @@ const OverlayApplication = (): React.ReactNode =>
                                                 Hovered ? Command.Id : null
                                             ) }
                                         OnInvoke={ () => Invoke(Command.Id) }
-                                        key={ Command.Id } />
+                                        key={ Command.Id }
+                                    />
                                 );
                             }) }
                         </section>
@@ -515,11 +587,24 @@ const OverlayApplication = (): React.ReactNode =>
                 ) : IsMoveScreen ? (
                     <div className={ Styles.PadLayout }>
                         <DirectionalPad
-                            Down={ ToMovePadDirection(OverlayCommandId.MoveWindowDown) }
-                            Left={ ToMovePadDirection(OverlayCommandId.MoveWindowLeft) }
-                            Right={ ToMovePadDirection(OverlayCommandId.MoveWindowRight) }
-                            Up={ ToMovePadDirection(OverlayCommandId.MoveWindowUp) } />
+                            Down={ ToPlainPadDirection(OverlayCommandId.MoveWindowDown) }
+                            Left={ ToPlainPadDirection(OverlayCommandId.MoveWindowLeft) }
+                            Right={ ToPlainPadDirection(OverlayCommandId.MoveWindowRight) }
+                            Up={ ToPlainPadDirection(OverlayCommandId.MoveWindowUp) } />
                     </div>
+                ) : IsResizeScreen ? (
+                    <div className={ Styles.PadLayout }>
+                        <DirectionalPad
+                            Down={ ToPlainPadDirection(OverlayCommandId.ResizeWindowDown) }
+                            Inward={ CurrentScreen?.ResizeMode === "Shrink" }
+                            Left={ ToPlainPadDirection(OverlayCommandId.ResizeWindowLeft) }
+                            Right={ ToPlainPadDirection(OverlayCommandId.ResizeWindowRight) }
+                            Up={ ToPlainPadDirection(OverlayCommandId.ResizeWindowUp) } />
+                    </div>
+                ) : IsTileScreen ? (
+                    <p className={ Styles.Placeholder }>
+                        Tiling isn&apos;t implemented yet.
+                    </p>
                 ) : (
                     <section
                         aria-label="Available commands"
@@ -541,7 +626,7 @@ const OverlayApplication = (): React.ReactNode =>
                                     : ResolveDescription(
                                         CommandPresentation,
                                         {
-                                            ...DefaultPresentationContext,
+                                            ...PresentationContextValue,
                                             WindowTitle: Option.fromNullishOr(Command.Target?.Title)
                                         })
                                 );
@@ -584,7 +669,7 @@ const OverlayApplication = (): React.ReactNode =>
                             Disabled={ SecondaryCommand.Disabled }
                             Icon={ <SecondaryIcon /> }
                             Label={ ResolveDescription(Presentation[SecondaryCommand.Id], {
-                                ...DefaultPresentationContext,
+                                ...PresentationContextValue,
                                 ApplicationName: Option.fromNullishOr(SecondaryCommand.ApplicationName)
                             }) }
                             OnInvoke={ () => Invoke(SecondaryCommand.Id) }

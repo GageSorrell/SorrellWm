@@ -118,6 +118,7 @@ const DefaultKeybindValues: ReadonlyArray<Keybind> = Object.freeze([
     Make(Id.Cancel, VK.ESCAPE),
     Make(Id.FineModifier, VK.MENU),
     Make(Id.PrimaryModifier, VK.SHIFT),
+    Make(Id.ResizeModifier, VK.CONTROL),
     Make(Id.SelectLeft, VK.D),
     Make(Id.SelectUp, VK.H),
     Make(Id.SelectDown, VK.T),
@@ -247,11 +248,14 @@ const IsKeybindPressed = (
     PressedKeys: ReadonlyArray<VK.VK>
 ): boolean => GetKeyFamily(Keybind.Key).some((Key: VK.VK) => PressedKeys.includes(Key));
 
-// Both the distance-toggle modifier (PrimaryModifier, e.g. Shift) and the
-// fine-step modifier (FineModifier, e.g. Alt) represent application-level
-// toggles rather than traditional chord modifiers, so holding either must not
-// block a keybind that doesn't itself require it.
-const SoftModifierIds: ReadonlyArray<Id> = [ Id.PrimaryModifier, Id.FineModifier ];
+// The distance-toggle, fine-step, and resize-mode modifiers represent
+// application-level toggles rather than traditional chord modifiers, so
+// holding one must not block a keybind that doesn't itself require it.
+const SoftModifierIds: ReadonlyArray<Id> = [
+    Id.PrimaryModifier,
+    Id.FineModifier,
+    Id.ResizeModifier
+];
 
 /** The physical keys of whichever keybinds are currently bound to a soft modifier. */
 const GetSoftModifierKeys = (Keybinds: KeybindSet): ReadonlySet<VK.VK> =>

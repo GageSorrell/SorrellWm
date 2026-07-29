@@ -15,6 +15,18 @@ import {
     IsBackdropPresentation
 } from "../Shared/Backdrop.ts";
 import {
+    type FloatingWindowSettingsDto,
+    type FloatingWindowSettingsPatch,
+    IsFloatingWindowSettingsDto,
+    IsOverlaySettingsDto,
+    type OverlaySettingsDto,
+    type OverlaySettingsPatch
+} from "../Shared/AppSettings.ts";
+import {
+    type FocusPreviewPresentation,
+    IsFocusPreviewPresentation
+} from "../Shared/FocusPreview.ts";
+import {
     IsOverlayCommandId,
     IsOverlayScreenDto,
     type OverlayCommandId,
@@ -56,6 +68,43 @@ const OnBackdropShow = (
     }
 
     return () => void BackdropListeners.delete(Listener);
+};
+
+const FocusPreviewListeners = new Set<(
+    Presentation: FocusPreviewPresentation
+) => void>();
+let LatestFocusPreviewPresentation: FocusPreviewPresentation | undefined;
+
+ipcRenderer.on(AppApiChannel.FocusPreviewChanged, (
+    _Event: IpcRendererEvent,
+    Value: unknown
+): void =>
+{
+    if (!IsFocusPreviewPresentation(Value))
+    {
+        return;
+    }
+
+    LatestFocusPreviewPresentation = Value;
+    for (const Listener of FocusPreviewListeners)
+    {
+        Listener(Value);
+    }
+});
+
+const OnFocusPreviewChanged = (
+    Listener: (Presentation: FocusPreviewPresentation) => void
+): (() => void) =>
+{
+    FocusPreviewListeners.add(Listener);
+
+    if (LatestFocusPreviewPresentation !== undefined)
+    {
+        const Presentation = LatestFocusPreviewPresentation;
+        queueMicrotask((): void => Listener(Presentation));
+    }
+
+    return () => void FocusPreviewListeners.delete(Listener);
 };
 
 const SettingsNavigateListeners = new Set<(Path: string | null) => void>();
@@ -180,9 +229,68 @@ const OnRendererThemeChanged = (
     };
 };
 
+const GetFloatingWindowSettings = async (): Promise<FloatingWindowSettingsDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.FloatingWindowSettingsGet);
+
+    if (!IsFloatingWindowSettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid floating-window settings.");
+    }
+
+    return Response;
+};
+
+const SetFloatingWindowSettings = async (
+    Patch: FloatingWindowSettingsPatch
+): Promise<FloatingWindowSettingsDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.FloatingWindowSettingsSet, Patch);
+
+    if (!IsFloatingWindowSettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid floating-window settings.");
+    }
+
+    return Response;
+};
+
+const GetOverlaySettings = async (): Promise<OverlaySettingsDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.OverlaySettingsGet);
+
+    if (!IsOverlaySettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid overlay settings.");
+    }
+
+    return Response;
+};
+
+const SetOverlaySettings = async (
+    Patch: OverlaySettingsPatch
+): Promise<OverlaySettingsDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.OverlaySettingsSet, Patch);
+
+    if (!IsOverlaySettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid overlay settings.");
+    }
+
+    return Response;
+};
+
 const applicationApi: AppApi = Object.freeze({
     backdrop: Object.freeze({
         onShow: OnBackdropShow
+    }),
+    floatingWindowSettings: Object.freeze({
+        get: GetFloatingWindowSettings,
+        set: SetFloatingWindowSettings
+    }),
+    focusPreview: Object.freeze({
+        onChanged: OnFocusPreviewChanged
     }),
     overlay: Object.freeze({
         back: BackOverlayScreen,
@@ -190,6 +298,10 @@ const applicationApi: AppApi = Object.freeze({
         invoke: InvokeOverlayCommand,
         onChanged: OnOverlayScreenChanged,
         preview: PreviewOverlayFocus
+    }),
+    overlaySettings: Object.freeze({
+        get: GetOverlaySettings,
+        set: SetOverlaySettings
     }),
     platform: process.platform,
     settings: Object.freeze({

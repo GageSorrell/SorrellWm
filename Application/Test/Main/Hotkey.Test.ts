@@ -72,7 +72,7 @@ vi.mock("@sorrell/windows", () => ({
         RSHIFT: 0xA1,
         RWIN: 0x5C,
         SHIFT: 0x10,
-        VK: [ 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x83, 0xA6 ]
+        VK: [ 0x11, 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x83, 0xA6 ]
     }
 }));
 
@@ -83,6 +83,21 @@ describe("Hotkey.IsMatch", () =>
         expect(DefaultKeybindSettings).toContainEqual({
             Id: Id.Back,
             Key: Windows.VK.BROWSER_BACK,
+            Modifiers:
+            {
+                Alt: false,
+                Control: false,
+                Shift: false,
+                Super: false
+            }
+        });
+    });
+
+    it("binds the resize-mode modifier to Ctrl by default", () =>
+    {
+        expect(DefaultKeybindSettings).toContainEqual({
+            Id: Id.ResizeModifier,
+            Key: Windows.VK.CONTROL,
             Modifiers:
             {
                 Alt: false,

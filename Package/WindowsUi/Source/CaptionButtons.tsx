@@ -9,27 +9,24 @@
  * @license   MIT
  */
 
-import * as React from "react";
+import type * as React from "react";
 
 export interface CaptionButtonsProps
 {
     // @TODO
 }
 
-
- /**
-  * The minimize, maximize, and close buttons.
-  *
-  * @see {@link \@sorrell/windows-ui/Titlebar} For a full titlebar, with customizable slots.
-  *
-  * @category Component
-  * @since 1.0.0
-  */
-export const CaptionButtons = (Props: CaptionButtonsProps): React.ReactNode =>
+/**
+ * The minimize, maximize, and close buttons.
+ *
+ * @see {@link \@sorrell/windows-ui/Titlebar} For a full titlebar, with customizable slots.
+ *
+ * @category Component
+ * @since 1.0.0
+ */
+export const CaptionButtons = (_Props: CaptionButtonsProps): React.ReactNode =>
 {
     // @TODO
 
-    return (
-
-    );
+    return null;
 };

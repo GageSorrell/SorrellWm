@@ -55,7 +55,8 @@ const FromKeybindSettings = (
     PrimaryModifierHeld: boolean = false,
     FineModifierHeld: boolean = false,
     PrimaryDistance: number = OverlayCommand.MoveDistance.Primary,
-    SecondaryDistance: number = OverlayCommand.MoveDistance.Secondary
+    SecondaryDistance: number = OverlayCommand.MoveDistance.Secondary,
+    CurrentResizeMode: OverlayCommand.ResizeMode = OverlayCommand.ResizeMode.Grow
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
@@ -71,12 +72,17 @@ const FromKeybindSettings = (
             const Target = FocusTargetValues[Definition.Id];
 
             Commands.push(Object.freeze({
-                ...Definition,
-                Disabled: ScreenId === OverlayCommand.OverlayScreenId.Focus && Target === undefined,
+                Disabled: ScreenId === OverlayCommand.OverlayScreenId.FloatingFocus
+                    && Target === undefined,
+                HotkeyId: Definition.HotkeyId,
+                Id: Definition.Id,
                 Shortcut: Object.freeze({
                     KeyCode: Keybind.Key,
                     KeyLabel: GetKeyLabel(Keybind.Key),
-                    Modifiers: Object.freeze({ ...Keybind.Modifiers })
+                    Modifiers: Object.freeze({
+                        ...Keybind.Modifiers,
+                        ...Definition.RequiredModifiers
+                    })
                 }),
                 ...(Target === undefined ? { } : { Target: Object.freeze(Target) })
             }));
@@ -103,10 +109,15 @@ const FromKeybindSettings = (
             ...(ApplicationTarget?.Name === undefined ? { } : { ApplicationName: ApplicationTarget.Name })
         });
 
-    const ModifierKeybind = ScreenId === OverlayCommand.OverlayScreenId.Move
+    // The Resize screen reuses the Move screen's step-size functionality
+    // exactly (same settings, same modifiers), so the same live indicator
+    // applies to both.
+    const UsesMoveDistances = ScreenId === OverlayCommand.OverlayScreenId.FloatingMove
+        || ScreenId === OverlayCommand.OverlayScreenId.FloatingResize;
+    const ModifierKeybind = UsesMoveDistances
         ? Keybinds.find((Value: Hotkey.KeybindSetting) => Value.Id === Hotkey.Id.PrimaryModifier)
         : undefined;
-    const FineModifierKeybind = ScreenId === OverlayCommand.OverlayScreenId.Move
+    const FineModifierKeybind = UsesMoveDistances
         ? Keybinds.find((Value: Hotkey.KeybindSetting) => Value.Id === Hotkey.Id.FineModifier)
         : undefined;
     const DistanceToggle = ModifierKeybind === undefined || FineModifierKeybind === undefined
@@ -130,10 +141,16 @@ const FromKeybindSettings = (
         });
 
     return Object.freeze({
-        CanGoBack: ScreenId !== OverlayCommand.OverlayScreenId.Home,
+        CanGoBack: ScreenId !== OverlayCommand.OverlayScreenId.FloatingHome
+            && ScreenId !== OverlayCommand.OverlayScreenId.TiledHome,
         Commands: Object.freeze(Commands),
         Id: ScreenId,
         ...(DistanceToggle === undefined ? { } : { DistanceToggle }),
+        ...(
+            ScreenId === OverlayCommand.OverlayScreenId.FloatingResize
+                ? { ResizeMode: CurrentResizeMode }
+                : { }
+        ),
         ...(SecondaryCommand === undefined ? { } : { SecondaryCommand })
     });
 };

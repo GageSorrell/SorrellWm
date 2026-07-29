@@ -22,6 +22,7 @@ import {
     ListBarColor,
     MegaphoneRegular,
     SettingsRegular,
+    WindowAppsRegular,
     WrenchColor
 } from "@fluentui/react-icons";
 import { IsSettingsSectionId, SettingsSectionId } from "../Shared/SettingsPath.js";
@@ -103,6 +104,11 @@ const WindowingLeaves: ReadonlyArray<NavLeafDefinition> =
             Icon: ArrowSquareColor,
             Label: "Keybinds",
             Section: SettingsSectionId.Keybinds
+        },
+        {
+            Icon: WindowAppsRegular,
+            Label: "Floating Windows",
+            Section: SettingsSectionId.FloatingWindows
         }
     ] as const;
 

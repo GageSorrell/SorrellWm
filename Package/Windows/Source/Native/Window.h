@@ -19,5 +19,6 @@ Napi::Value IsCurrentProcessElevated(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsSnapLayoutsOnHoverEnabled(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsSnapWindowsEnabled(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsWindowElevated(const Napi::CallbackInfo& CallbackInfo);
+Napi::Value IsWindowObscured(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value SetForegroundWindow_Node(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value SetWindowRect(const Napi::CallbackInfo& CallbackInfo);

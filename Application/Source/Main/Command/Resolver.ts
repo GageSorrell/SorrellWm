@@ -21,8 +21,10 @@ import {
     type OverlayCommandDefinition,
     OverlayCommandId,
     type OverlayScreenId,
+    ResizeMode,
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.ts";
+import { VK } from "@sorrell/windows";
 
 export/** The service identifier for command resolution. */
 const TypeId = "~sorrell/wm/Main/Command/Resolver" as const;
@@ -33,6 +35,32 @@ export type Resolved =
     | Wm.WmCommand;
 
 const UiCommands = Ui.UiCommand();
+
+const IsHomeScreen = (Screen: OverlayScreenId): boolean =>
+    Screen === ScreenId.FloatingHome || Screen === ScreenId.TiledHome;
+
+const ModifierKeys = Object.freeze({
+    Alt: [ VK.MENU, VK.LMENU, VK.RMENU ],
+    Control: [ VK.CONTROL, VK.LCONTROL, VK.RCONTROL ],
+    Shift: [ VK.SHIFT, VK.LSHIFT, VK.RSHIFT ],
+    Super: [ VK.LWIN, VK.RWIN ]
+} as const);
+
+const MatchesRequiredModifiers = (
+    Definition: OverlayCommandDefinition,
+    PressedKeys: ReadonlyArray<VK.VK>
+): boolean => Object.entries(Definition.RequiredModifiers ?? { }).every((
+    [ Name, Required ]: [ string, boolean ]
+): boolean =>
+{
+    const Keys = ModifierKeys[Name as keyof typeof ModifierKeys];
+    const Held = Keys.some((Key: VK.VK): boolean => PressedKeys.includes(Key));
+    return Required ? Held : !Held;
+});
+
+const ModifierSpecificity = (Definition: OverlayCommandDefinition): number =>
+    Object.values(Definition.RequiredModifiers ?? { })
+        .filter((Required: boolean): boolean => Required).length;
 
 export/** Resolve an available screen command without retaining renderer details. */
 const ResolveOverlayCommand = (
@@ -52,14 +80,32 @@ const ResolveOverlayCommand = (
         return Option.none();
     }
 
-    if (Screen === ScreenId.Home && Id === "Focus")
+    if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.Focus)
     {
-        return Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Focus }));
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.FloatingFocus
+        }));
     }
 
-    if (Screen === ScreenId.Home && Id === "Move")
+    if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.Move)
     {
-        return Option.some(UiCommands.NavigateOverlayScreen({ ScreenId: ScreenId.Move }));
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.FloatingMove
+        }));
+    }
+
+    if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.Tile)
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.FloatingTile
+        }));
+    }
+
+    if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.Resize)
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.FloatingResize
+        }));
     }
 
     if (Id === OverlayCommandId.OpenPerAppSettings)
@@ -81,7 +127,7 @@ const ResolveOverlayCommand = (
 export/** Resolve one hotkey activation for an overlay screen. */
 const Resolve = (
     Activation: Hotkey.Match,
-    Screen: OverlayScreenId = ScreenId.Home,
+    Screen: OverlayScreenId = ScreenId.FloatingHome,
     ApplicationName: Option.Option<string> = Option.none()
 ): Option.Option<Resolved> =>
 {
@@ -106,13 +152,13 @@ const Resolve = (
                 return Option.none();
             }
 
-            return Screen === ScreenId.Home
+            return IsHomeScreen(Screen)
                 ? Option.some(UiCommands.Deactivate())
                 : Option.some(UiCommands.BackOverlayScreen());
 
         case Hotkey.Id.Back:
             return Activation.Phase === Hotkey.Phase.Pressed
-                && Screen !== ScreenId.Home
+                && !IsHomeScreen(Screen)
                 ? Option.some(UiCommands.BackOverlayScreen())
                 : Option.none();
 
@@ -136,6 +182,18 @@ const Resolve = (
                 Held: Hotkey.IsKeybindPressed(Activation.Keybind, Activation.PressedKeys)
             }));
 
+        case Hotkey.Id.ResizeModifier:
+            if (Activation.Phase === Hotkey.Phase.Repeated)
+            {
+                return Option.none();
+            }
+
+            return Option.some(UiCommands.SetResizeMode({
+                Mode: Hotkey.IsKeybindPressed(Activation.Keybind, Activation.PressedKeys)
+                    ? ResizeMode.Shrink
+                    : ResizeMode.Grow
+            }));
+
         default:
         {
             if (Activation.Phase !== Hotkey.Phase.Pressed)
@@ -146,10 +204,15 @@ const Resolve = (
             const Definition = [
                 ...GetOverlayCommandDefinitions(Screen),
                 GetOverlaySecondaryCommandDefinition(Screen)
-            ].find((
+            ].filter((
                 Candidate: OverlayCommandDefinition | undefined
-            ) =>
-                Candidate?.HotkeyId === Activation.Keybind.Id);
+            ): Candidate is OverlayCommandDefinition =>
+                Candidate?.HotkeyId === Activation.Keybind.Id
+                && MatchesRequiredModifiers(Candidate, Activation.PressedKeys)
+            ).sort((
+                Left: OverlayCommandDefinition,
+                Right: OverlayCommandDefinition
+            ): number => ModifierSpecificity(Right) - ModifierSpecificity(Left))[0];
 
             return Definition === undefined
                 ? Option.none()

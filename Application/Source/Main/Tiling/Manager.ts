@@ -1,5 +1,5 @@
 /**
- * Runtime ownership and native reconciliation of BSP-style tiling state.
+ * Runtime ownership and native reconciliation of multi-child tiling state.
  *
  * @module @sorrell/wm/Main/Tiling/Manager
  *
@@ -123,11 +123,12 @@ export interface TilingManagerImpl
         RestoreInitialBounds?: boolean
     ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
 
-    /** Change a panel's split ratio and immediately reconcile its workspace. */
+    /** Change one panel child's ratio and immediately reconcile its workspace. */
     readonly SetPanelRatio: (
         WorkspaceId: string,
         Path: TilingTree.Path,
-        Ratio: number
+        Ratio: number,
+        ChildIndex?: number
     ) => Effect.Effect<
         void,
         PanelNotFoundError | WindowLayoutError | WorkspaceNotFoundError
@@ -524,11 +525,17 @@ const MakeLive = (
         const SetPanelRatio: TilingManagerImpl["SetPanelRatio"] = (
             WorkspaceId: string,
             Path: TilingTree.Path,
-            RatioValue: number
+            RatioValue: number,
+            ChildIndex: number = 0
         ) => Commit((Current: TilingTree.State) => UpdateWorkspace(
             Current,
             WorkspaceId,
-            (Root: TilingTree.Node) => TilingTree.SetPanelRatio(Root, Path, RatioValue),
+            (Root: TilingTree.Node) => TilingTree.SetPanelRatio(
+                Root,
+                Path,
+                RatioValue,
+                ChildIndex
+            ),
             Path
         ));
 

@@ -218,6 +218,18 @@ const IsWindowElevated = (Window: Handle.HWND): Option.Option<boolean> =>
         : Option.none();
 
 export/**
+       * Determine whether higher z-order windows completely cover a top-level
+       * window, ignoring any explicitly excluded windows.
+       */
+const IsWindowObscured = (
+    Window: Handle.HWND,
+    ExcludedWindows: ReadonlyArray<Handle.HWND> = [ ]
+): Attempt.Attempt<boolean> =>
+    typeof Binding.Window.IsWindowObscured === "function"
+        ? Attempt.AsResult(Binding.Window.IsWindowObscured(Window, ExcludedWindows))
+        : MissingTilingApi("IsWindowObscured");
+
+export/**
        * Determine whether the current process is running elevated (as
        * Administrator), or return `None` when Windows cannot be queried.
        */

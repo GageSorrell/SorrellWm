@@ -38,7 +38,8 @@ import {
     type OverlayCommandDefinition,
     type OverlayCommandId,
     type OverlayScreenDto,
-    OverlayScreenId
+    OverlayScreenId,
+    ResizeMode
 } from "../../Shared/OverlayCommand.ts";
 import { type Handle, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../../Shared/Api.ts";
@@ -397,6 +398,128 @@ const MoveWindowDirection = (
     );
 });
 
+/** One edge of a floating window, adjustable independently by the Resize screen. */
+type ResizeEdge = "Bottom" | "Left" | "Right" | "Top";
+
+const ResizeDirectionEdges: Readonly<Record<
+    "ResizeWindowDown" | "ResizeWindowLeft" | "ResizeWindowRight" | "ResizeWindowUp",
+    ResizeEdge
+>> = {
+    ResizeWindowDown: "Bottom",
+    ResizeWindowLeft: "Left",
+    ResizeWindowRight: "Right",
+    ResizeWindowUp: "Top"
+};
+
+// The sign an edge's coordinate must change by for that edge to move outward
+// (away from the window's own center), i.e. for the window to grow.
+const EdgeOutwardSign: Readonly<Record<ResizeEdge, number>> = {
+    Bottom: 1,
+    Left: -1,
+    Right: 1,
+    Top: -1
+};
+
+// Guards against a held/settling resize inverting or degenerating the window's bounds.
+const MinimumWindowSize = 40;
+
+const ResizeWindowByEdge = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    ActivationWindow: Handle.HWND,
+    Edge: ResizeEdge,
+    DeltaPixels: number
+) => Effect.gen(function*()
+{
+    if (DeltaPixels === 0)
+    {
+        return;
+    }
+
+    // Only floating windows resize directly; tiled windows are resized by the
+    // tiling manager instead.
+    const Snapshot = yield* TilingManager.Snapshot;
+
+    if (IsWindowTiled(Snapshot, ActivationWindow))
+    {
+        return;
+    }
+
+    const CurrentBounds = Window.GetWindowRect(ActivationWindow);
+
+    if (Option.isNone(CurrentBounds))
+    {
+        return;
+    }
+
+    const Current = CurrentBounds.value;
+    const NewBounds = Box.Box(
+        Edge === "Top" ? Current.Top + DeltaPixels : Current.Top,
+        Edge === "Right" ? Current.Right + DeltaPixels : Current.Right,
+        Edge === "Bottom" ? Current.Bottom + DeltaPixels : Current.Bottom,
+        Edge === "Left" ? Current.Left + DeltaPixels : Current.Left
+    );
+
+    if (Box.Width(NewBounds) < MinimumWindowSize || Box.Height(NewBounds) < MinimumWindowSize)
+    {
+        return;
+    }
+
+    const ResizeResult = Window.SetWindowRect(ActivationWindow, NewBounds);
+
+    if (Result.isFailure(ResizeResult))
+    {
+        return;
+    }
+
+    // Center the overlay on the bounds we just resized the window to, rather
+    // than re-querying the OS: `SetWindowRect` posts the resize asynchronously,
+    // so an immediate `GetWindowRect` can still race and return stale bounds.
+    yield* BrowserWindows.SetBounds(
+        BrowserWindow.Key.Overlay,
+        GetOverlayBoundsFor(NewBounds)
+    );
+
+    yield* PublishOverlayScreen(BrowserWindows, Session);
+});
+
+// Grow always moves an edge outward; Shrink always moves it inward. The sign
+// is fixed for the whole gesture (a single press or a full hold-to-settle
+// animation), since it depends only on which edge and which mode are active.
+const GetResizeSign = (Edge: ResizeEdge, Mode: ResizeMode): number =>
+    Mode === ResizeMode.Grow ? EdgeOutwardSign[Edge] : -EdgeOutwardSign[Edge];
+
+const ResizeWindowDirection = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Id: OverlayCommandId
+) => Effect.gen(function*()
+{
+    const EdgesByCommandId = ResizeDirectionEdges as Readonly<Partial<Record<string, ResizeEdge>>>;
+    const Edge = EdgesByCommandId[Id];
+    const ActivationWindow = yield* Session.GetActivationWindow;
+    const Mode = yield* Session.ResizeMode;
+
+    if (Edge === undefined || Option.isNone(ActivationWindow))
+    {
+        return;
+    }
+
+    const Distance = yield* GetActiveMoveDistance(Settings, Session);
+
+    yield* ResizeWindowByEdge(
+        BrowserWindows,
+        Session,
+        TilingManager,
+        ActivationWindow.value,
+        Edge,
+        GetResizeSign(Edge, Mode) * Distance
+    );
+});
+
 // Mirrors conventional Windows key-repeat behavior: an initial pause before
 // holding a direction key starts moving the window continuously.
 const MoveAnimationInitialDelayMillis = 500;
@@ -427,24 +550,41 @@ const GetActiveMovePixelsPerSecond = (
             * (yield* Settings.GetSetting("MoveStepPrimarySpeedFactor"));
 });
 
-const AnimateMoveWindow = (
-    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+/** A mutable flag shared between a directional animation fiber and the watcher that started it. */
+interface MoveAnimationHeldBox
+{
+    Held: boolean;
+}
+
+/**
+ * Drive a held direction key's continuous animation: an initial delay, then
+ * per-frame steps at the configured speed, applied via `ApplyDelta`. Releasing
+ * the key (`HeldBox.Held` flips to `false`) doesn't stop the animation
+ * outright — it keeps running until the accumulated signed distance passed to
+ * `ApplyDelta` settles on the nearest multiple of the active step size,
+ * continuing in the *opposite* direction first if it already overshot one.
+ * Shared verbatim by window movement and window resizing: both are just a
+ * single scalar quantity animated over time, differing only in what
+ * `ApplyDelta` does with each frame's delta.
+ */
+const AnimateDirectionalHold = (
     Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
-    TilingManager: Tiling.Manager.TilingManagerImpl,
-    Id: OverlayCommandId
+    HeldBox: MoveAnimationHeldBox,
+    ApplyDelta: (
+        ActivationWindow: Handle.HWND,
+        DeltaPixels: number
+    ) => Effect.Effect<void, BrowserWindow.Error>
 ) => Effect.gen(function*()
 {
-    const UnitsByCommandId = MoveDirectionUnits as
-        Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
-    const Unit = UnitsByCommandId[Id];
+    yield* Effect.sleep(Duration.millis(MoveAnimationInitialDelayMillis));
 
-    if (Unit === undefined)
+    // Released again during the initial delay, before any continuous movement
+    // ever started: nothing traveled yet, so there is nothing to settle.
+    if (!HeldBox.Held)
     {
         return;
     }
-
-    yield* Effect.sleep(Duration.millis(MoveAnimationInitialDelayMillis));
 
     const ActivationWindow = yield* Session.GetActivationWindow;
 
@@ -462,42 +602,143 @@ const AnimateMoveWindow = (
     // Sub-pixel travel per frame is common at high refresh rates or low
     // speeds; carrying the fractional remainder forward keeps the average
     // speed correct instead of stalling until a whole pixel accumulates.
-    let CarryPixelsX = 0;
-    let CarryPixelsY = 0;
+    let CarryPixels = 0;
 
-    yield* pipe(
-        Effect.gen(function*()
+    // The signed distance passed to ApplyDelta so far, in pixels. Once the
+    // key is released, animation continues (possibly in the *opposite*
+    // direction) until this reaches the nearest multiple of the active step size.
+    let TotalMoved = 0;
+
+    // Set once, the first frame after release, to the nearest multiple of the
+    // step size in effect at that moment. `null` while still held, or once
+    // released with the fine (1px) step active, which needs no correction.
+    let SettleTarget: number | null = null;
+
+    while (true)
+    {
+        if (!HeldBox.Held && SettleTarget === null)
         {
-            const PixelsPerSecond = yield* GetActiveMovePixelsPerSecond(Settings, Session);
-            const PixelsPerFrame = PixelsPerSecond * (FrameIntervalMillis / 1000);
+            const FineHeld = yield* Session.FineModifierHeld;
 
-            CarryPixelsX += Unit.X * PixelsPerFrame;
-            CarryPixelsY += Unit.Y * PixelsPerFrame;
-
-            const StepX = Math.trunc(CarryPixelsX);
-            const StepY = Math.trunc(CarryPixelsY);
-
-            CarryPixelsX -= StepX;
-            CarryPixelsY -= StepY;
-
-            const CurrentActivationWindow = yield* Session.GetActivationWindow;
-
-            if (Option.isNone(CurrentActivationWindow))
+            if (!FineHeld)
             {
-                return;
+                const SecondaryHeld = yield* Session.PrimaryModifierHeld;
+                const StepSize = yield* Settings.GetSetting(
+                    SecondaryHeld ? "MoveStepSecondary" : "MoveStepPrimary"
+                );
+
+                if (StepSize > 0)
+                {
+                    SettleTarget = Math.round(TotalMoved / StepSize) * StepSize;
+                }
             }
 
-            yield* MoveWindowByOffset(
-                BrowserWindows,
-                Session,
-                TilingManager,
-                CurrentActivationWindow.value,
-                StepX,
-                StepY
-            );
-        }),
-        Effect.andThen(Effect.sleep(Duration.millis(FrameIntervalMillis))),
-        Effect.forever
+            if (SettleTarget === null || SettleTarget === TotalMoved)
+            {
+                break;
+            }
+        }
+
+        const PixelsPerSecond = yield* GetActiveMovePixelsPerSecond(Settings, Session);
+        const MaxPixelsThisFrame = PixelsPerSecond * (FrameIntervalMillis / 1000);
+        const RemainingDistance = SettleTarget === null ? undefined : SettleTarget - TotalMoved;
+        const Direction = RemainingDistance === undefined ? 1 : Math.sign(RemainingDistance);
+        const FrameBudget = RemainingDistance === undefined
+            ? MaxPixelsThisFrame
+            : Math.min(MaxPixelsThisFrame, Math.abs(RemainingDistance));
+
+        CarryPixels += Direction * FrameBudget;
+
+        const Step = Math.trunc(CarryPixels);
+
+        CarryPixels -= Step;
+
+        if (Step !== 0)
+        {
+            const CurrentActivationWindow = yield* Session.GetActivationWindow;
+
+            if (Option.isSome(CurrentActivationWindow))
+            {
+                yield* ApplyDelta(CurrentActivationWindow.value, Step);
+            }
+
+            TotalMoved += Step;
+        }
+
+        if (SettleTarget !== null && TotalMoved === SettleTarget)
+        {
+            break;
+        }
+
+        yield* Effect.sleep(Duration.millis(FrameIntervalMillis));
+    }
+});
+
+const AnimateMoveWindow = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Id: OverlayCommandId,
+    HeldBox: MoveAnimationHeldBox
+) => Effect.gen(function*()
+{
+    const UnitsByCommandId = MoveDirectionUnits as
+        Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
+    const Unit = UnitsByCommandId[Id];
+
+    if (Unit === undefined)
+    {
+        return;
+    }
+
+    yield* AnimateDirectionalHold(
+        Settings,
+        Session,
+        HeldBox,
+        (ActivationWindow: Handle.HWND, DeltaPixels: number) => MoveWindowByOffset(
+            BrowserWindows,
+            Session,
+            TilingManager,
+            ActivationWindow,
+            Unit.X * DeltaPixels,
+            Unit.Y * DeltaPixels
+        )
+    );
+});
+
+const AnimateResizeWindow = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Id: OverlayCommandId,
+    HeldBox: MoveAnimationHeldBox
+) => Effect.gen(function*()
+{
+    const EdgesByCommandId = ResizeDirectionEdges as Readonly<Partial<Record<string, ResizeEdge>>>;
+    const Edge = EdgesByCommandId[Id];
+    const Mode = yield* Session.ResizeMode;
+
+    if (Edge === undefined)
+    {
+        return;
+    }
+
+    const Sign = GetResizeSign(Edge, Mode);
+
+    yield* AnimateDirectionalHold(
+        Settings,
+        Session,
+        HeldBox,
+        (ActivationWindow: Handle.HWND, DeltaPixels: number) => ResizeWindowByEdge(
+            BrowserWindows,
+            Session,
+            TilingManager,
+            ActivationWindow,
+            Edge,
+            Sign * DeltaPixels
+        )
     );
 });
 
@@ -577,6 +818,11 @@ const ExecuteUi = (
                 Session.SetFineModifierHeld(Command.Held),
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
+        case "SetResizeMode":
+            return pipe(
+                Session.SetResizeMode(Command.Mode),
+                Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
+            );
         case "NoOpOverlayCommand":
             if (Command.Id.startsWith("FocusMove"))
             {
@@ -586,6 +832,11 @@ const ExecuteUi = (
             if (Command.Id.startsWith("MoveWindow"))
             {
                 return MoveWindowDirection(BrowserWindows, Settings, Session, TilingManager, Command.Id);
+            }
+
+            if (Command.Id.startsWith("ResizeWindow"))
+            {
+                return ResizeWindowDirection(BrowserWindows, Settings, Session, TilingManager, Command.Id);
             }
 
             return Effect.void;
@@ -655,24 +906,31 @@ const Live = Layer.effect(
             Effect.forkScoped({ startImmediately: true })
         );
 
-        // Smoothly animate a held Move-direction key instead of relying on the
-        // resolved single-press commands above, which only fire once per
-        // physical key-down.
+        // Smoothly animate a held Move- or Resize-direction key instead of
+        // relying on the resolved single-press commands above, which only
+        // fire once per physical key-down. Releasing the key doesn't
+        // interrupt the fiber outright: it flips `Held` to false, and the
+        // animation itself keeps running until it settles on the nearest
+        // step-size multiple (see AnimateDirectionalHold) before exiting on
+        // its own.
         const AnimationScope = yield* Effect.scope;
-        const ActiveMoveAnimations = new Map<Hotkey.Id, Fiber.Fiber<void, Error>>();
+        const ActiveDirectionalAnimations = new Map<Hotkey.Id, {
+            readonly Fiber: Fiber.Fiber<void, Error>;
+            readonly HeldBox: MoveAnimationHeldBox;
+        }>();
 
-        const StopMoveAnimation = (KeybindId: Hotkey.Id): Effect.Effect<void> =>
+        const ForceStopDirectionalAnimation = (KeybindId: Hotkey.Id): Effect.Effect<void> =>
             Effect.suspend(() =>
             {
-                const ExistingFiber = ActiveMoveAnimations.get(KeybindId);
+                const Existing = ActiveDirectionalAnimations.get(KeybindId);
 
-                if (ExistingFiber === undefined)
+                if (Existing === undefined)
                 {
                     return Effect.void;
                 }
 
-                ActiveMoveAnimations.delete(KeybindId);
-                return Fiber.interrupt(ExistingFiber);
+                ActiveDirectionalAnimations.delete(KeybindId);
+                return Fiber.interrupt(Existing.Fiber);
             });
 
         yield* pipe(
@@ -681,7 +939,13 @@ const Live = Layer.effect(
             {
                 if (Activation.Phase === Hotkey.Phase.Released)
                 {
-                    yield* StopMoveAnimation(Activation.Keybind.Id);
+                    const Existing = ActiveDirectionalAnimations.get(Activation.Keybind.Id);
+
+                    if (Existing !== undefined)
+                    {
+                        Existing.HeldBox.Held = false;
+                    }
+
                     return;
                 }
 
@@ -692,12 +956,15 @@ const Live = Layer.effect(
 
                 const Screen = yield* Session.Current;
 
-                if (Screen !== OverlayScreenId.Move)
+                if (
+                    Screen !== OverlayScreenId.FloatingMove
+                    && Screen !== OverlayScreenId.FloatingResize
+                )
                 {
                     return;
                 }
 
-                const Definition = GetOverlayCommandDefinitions(OverlayScreenId.Move).find(
+                const Definition = GetOverlayCommandDefinitions(Screen).find(
                     (Candidate: OverlayCommandDefinition) =>
                         Candidate.HotkeyId === Activation.Keybind.Id
                 );
@@ -707,13 +974,44 @@ const Live = Layer.effect(
                     return;
                 }
 
-                yield* StopMoveAnimation(Activation.Keybind.Id);
+                // A fresh press supersedes any still-settling animation for the
+                // same physical key outright, rather than letting it finish.
+                yield* ForceStopDirectionalAnimation(Activation.Keybind.Id);
+
+                const HeldBox: MoveAnimationHeldBox = { Held: true };
+                const CleanupIfCurrent = Effect.sync(() =>
+                {
+                    const Current = ActiveDirectionalAnimations.get(Activation.Keybind.Id);
+
+                    if (Current !== undefined && Current.HeldBox === HeldBox)
+                    {
+                        ActiveDirectionalAnimations.delete(Activation.Keybind.Id);
+                    }
+                });
+
+                const Animation = Screen === OverlayScreenId.FloatingMove
+                    ? AnimateMoveWindow(
+                        BrowserWindows,
+                        Settings,
+                        Session,
+                        TilingManager,
+                        Definition.Id,
+                        HeldBox
+                    )
+                    : AnimateResizeWindow(
+                        BrowserWindows,
+                        Settings,
+                        Session,
+                        TilingManager,
+                        Definition.Id,
+                        HeldBox
+                    );
 
                 const AnimationFiber = yield* Effect.forkIn(
-                    AnimateMoveWindow(BrowserWindows, Settings, Session, TilingManager, Definition.Id),
+                    Effect.ensuring(Animation, CleanupIfCurrent),
                     AnimationScope
                 );
-                ActiveMoveAnimations.set(Activation.Keybind.Id, AnimationFiber);
+                ActiveDirectionalAnimations.set(Activation.Keybind.Id, { Fiber: AnimationFiber, HeldBox });
             })),
             Effect.forkScoped({ startImmediately: true })
         );

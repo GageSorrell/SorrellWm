@@ -40,6 +40,10 @@ const TypeId = "~sorrell/wm/Main/BrowserWindow" as const;
 export/** The logical identities understood by the BrowserWindow service. */
 const Key = Object.freeze({
     Backdrop: "Backdrop",
+    FocusPreviewDown: "FocusPreviewDown",
+    FocusPreviewLeft: "FocusPreviewLeft",
+    FocusPreviewRight: "FocusPreviewRight",
+    FocusPreviewUp: "FocusPreviewUp",
     Inspector: "Inspector",
     Main: "Main",
     Overlay: "Overlay",
@@ -771,6 +775,51 @@ const GetBackdropWindowSpec = (): Spec =>
         Options: Struct.assign(BaseOptions, BackdropOptions),
         ShowWhenReady: false,
         Url: WithWindowKey(Url, Key.Backdrop)
+    } as const;
+};
+
+export/** Construct a click-through proxy over one fully obscured floating Focus target. */
+const GetFocusPreviewWindowSpec = (
+    PreviewKey:
+        | typeof Key.FocusPreviewDown
+        | typeof Key.FocusPreviewLeft
+        | typeof Key.FocusPreviewRight
+        | typeof Key.FocusPreviewUp,
+    Bounds: Box.Box
+): Spec =>
+{
+    const { Options: BaseOptions, Url } = GetSpecBase();
+    const Rectangle = BoxToRectangle(Bounds);
+    const PreviewOptions: BrowserWindowConstructorOptions =
+        {
+            alwaysOnTop: true,
+            backgroundColor: "#00000000",
+            backgroundMaterial: "none",
+            focusable: false,
+            frame: false,
+            hasShadow: false,
+            maximizable: false,
+            minimizable: false,
+            resizable: false,
+            roundedCorners: false,
+            show: false,
+            skipTaskbar: true,
+            transparent: true,
+            type: "toolbar",
+            ...Rectangle,
+            webPreferences:
+        {
+            ...BaseOptions.webPreferences,
+            backgroundThrottling: false
+        }
+        } as const;
+
+    return {
+        IgnoreMouseEvents: true,
+        Key: PreviewKey,
+        Options: Struct.assign(BaseOptions, PreviewOptions),
+        ShowWhenReady: false,
+        Url: WithWindowKey(Url, PreviewKey)
     } as const;
 };
 

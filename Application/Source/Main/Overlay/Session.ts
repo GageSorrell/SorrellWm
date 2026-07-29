@@ -11,6 +11,7 @@
 
 import * as BoxUtility from "../Utility/Math/Box.js";
 import * as OverlayCommandCatalog from "./CommandCatalog.ts";
+import * as Tiling from "../Tiling/index.ts";
 import { AppSettings, BrowserWindow } from "../index.ts";
 import {
     OverlayCommandId as CommandId,
@@ -18,11 +19,15 @@ import {
     type OverlayCommandTargetDto,
     type OverlayScreenDto,
     type OverlayScreenId,
+    ResizeMode,
+    type ResizeMode as ResizeModeType,
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.js";
 import { Context, Effect, Layer, Option, Ref, Result, Stream, Struct, SubscriptionRef, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
+import { AppApiChannel } from "../../Shared/Api.ts";
 import type { Box } from "@sorrell/math";
+import type { FocusPreviewPresentation } from "../../Shared/FocusPreview.ts";
 
 const TypeId = "~sorrell/wm/Main/Overlay/Session" as const;
 
@@ -56,8 +61,31 @@ const FocusCommandIds = Object.freeze([
     CommandId.FocusMoveRight
 ] as const satisfies ReadonlyArray<FocusCommandId>);
 
+type FocusPreviewKey =
+    | typeof BrowserWindow.Key.FocusPreviewDown
+    | typeof BrowserWindow.Key.FocusPreviewLeft
+    | typeof BrowserWindow.Key.FocusPreviewRight
+    | typeof BrowserWindow.Key.FocusPreviewUp;
+
+const FocusPreviewKeyByCommandId: Readonly<Record<FocusCommandId, FocusPreviewKey>> = {
+    [ CommandId.FocusMoveDown ]: BrowserWindow.Key.FocusPreviewDown,
+    [ CommandId.FocusMoveLeft ]: BrowserWindow.Key.FocusPreviewLeft,
+    [ CommandId.FocusMoveRight ]: BrowserWindow.Key.FocusPreviewRight,
+    [ CommandId.FocusMoveUp ]: BrowserWindow.Key.FocusPreviewUp
+};
+
+const FocusPreviewKeys = Object.freeze(
+    Object.values(FocusPreviewKeyByCommandId)
+);
+
 const IsFocusCommandId = (Id: OverlayCommandId): Id is FocusCommandId =>
     (FocusCommandIds as ReadonlyArray<OverlayCommandId>).includes(Id);
+
+const IsWindowTiled = (
+    Snapshot: Tiling.Tree.State,
+    WindowValue: Handle.HWND
+): boolean => Snapshot.Workspaces.some((Workspace: Tiling.Tree.Workspace) =>
+    Tiling.Tree.HasWindow(Workspace.Root, WindowValue));
 
 // A candidate is assigned to whichever axis its offset is dominated by, so a
 // window can never qualify for two directions at once (e.g. one both left of
@@ -180,6 +208,12 @@ export interface OverlaySessionImpl
     /** Update whether the fine-step modifier is currently held. */
     readonly SetFineModifierHeld: (Held: boolean) => Effect.Effect<void>;
 
+    /** Whether the Resize screen is growing or shrinking the window. */
+    readonly ResizeMode: Effect.Effect<ResizeModeType>;
+
+    /** Choose whether the Resize screen grows or shrinks the window. */
+    readonly SetResizeMode: (Mode: ResizeModeType) => Effect.Effect<void>;
+
     /** The most recent Focus-direction failure still being shown, if any. */
     readonly FocusFailure: Effect.Effect<Option.Option<FocusFailure>>;
 
@@ -206,7 +240,7 @@ export class OverlaySession extends
     Context.Service<OverlaySession, OverlaySessionImpl>()(TypeId) { }
 
 const GetCurrent = (Stack: ReadonlyArray<OverlayScreenId>): OverlayScreenId =>
-    Stack.at(-1) ?? ScreenId.Home;
+    Stack.at(-1) ?? ScreenId.FloatingHome;
 
 const GetWindowCandidates = (
     CurrentWindow: Handle.HWND,
@@ -289,18 +323,153 @@ const Live = Layer.effect(
     {
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
         const Settings = yield* AppSettings.AppSettings;
+        const TilingManager = yield* Tiling.Manager.TilingManager;
         const ActivationWindow = yield* Ref.make(Option.none<Handle.HWND>());
         const PrimaryModifierHeldRef = yield* Ref.make(false);
         const FineModifierHeldRef = yield* Ref.make(false);
+        const ResizeModeRef = yield* Ref.make<ResizeModeType>(ResizeMode.Grow);
         const ExcludedFocusWindows = yield* Ref.make<ReadonlySet<Handle.HWND>>(new Set());
         const FocusFailureRef = yield* Ref.make(Option.none<FocusFailure>());
         const Stack = yield* SubscriptionRef.make<ReadonlyArray<OverlayScreenId>>(
-            Object.freeze([ ScreenId.Home ])
+            Object.freeze([ ScreenId.FloatingHome ])
         );
         const Current = pipe(SubscriptionRef.get(Stack), Effect.map(GetCurrent));
+        const ResolveHomeScreen = (
+            WindowValue: Option.Option<Handle.HWND>
+        ): Effect.Effect<OverlayScreenId> => TilingManager.Snapshot.pipe(
+            Effect.map((Snapshot: Tiling.Tree.State): OverlayScreenId =>
+                Option.isSome(WindowValue) && IsWindowTiled(Snapshot, WindowValue.value)
+                    ? ScreenId.TiledHome
+                    : ScreenId.FloatingHome)
+        );
+        const UpdateHomeScreen = (
+            WindowValue: Option.Option<Handle.HWND>
+        ): Effect.Effect<void> => ResolveHomeScreen(WindowValue).pipe(
+            Effect.flatMap((Home: OverlayScreenId) => SubscriptionRef.update(
+                Stack,
+                (Value: ReadonlyArray<OverlayScreenId>) => Object.freeze([
+                    Home,
+                    ...Value.slice(1)
+                ])
+            ))
+        );
         const ClearFocusPreview = Effect.sync(() =>
         {
             Window.ClearWindowDimming();
+        });
+        const ClearFocusProxyWindows = Effect.forEach(
+            FocusPreviewKeys,
+            (Key: FocusPreviewKey) => BrowserWindows.ForceClose(Key).pipe(
+                Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+                Effect.ignore
+            ),
+            { concurrency: "unbounded", discard: true }
+        );
+        const GetFocusProxyNativeHandles = Effect.forEach(
+            FocusPreviewKeys,
+            (Key: FocusPreviewKey) => BrowserWindows.GetNativeHandle(Key).pipe(
+                Effect.match({
+                    onFailure: () => Option.none<Handle.HWND>(),
+                    onSuccess: Option.some
+                })
+            ),
+            { concurrency: "unbounded" }
+        ).pipe(Effect.map((
+            Handles: ReadonlyArray<Option.Option<Handle.HWND>>
+        ): ReadonlyArray<Handle.HWND> => Handles.flatMap((
+            HandleOption: Option.Option<Handle.HWND>
+        ) => Option.isSome(HandleOption) ? [ HandleOption.value ] : [ ])));
+        const SyncFocusProxyWindows = (
+            CurrentWindow: Option.Option<Handle.HWND>,
+            Excluded: ReadonlySet<Handle.HWND>,
+            CurrentSettings: AppSettings.AppSettings
+        ): Effect.Effect<void> => Effect.gen(function*()
+        {
+            const TilingSnapshot = yield* TilingManager.Snapshot;
+            const OverlayHandle = yield* BrowserWindows.GetNativeHandle(
+                BrowserWindow.Key.Overlay
+            ).pipe(
+                Effect.match({
+                    onFailure: () => Option.none<Handle.HWND>(),
+                    onSuccess: Option.some
+                })
+            );
+            const ExistingProxyHandles = yield* GetFocusProxyNativeHandles;
+            const OcclusionExclusions: Array<Handle.HWND> = [
+                ...ExistingProxyHandles,
+                ...(Option.isSome(OverlayHandle) ? [ OverlayHandle.value ] : [ ])
+            ];
+            let AnyProxyVisible = false;
+
+            for (const Id of FocusCommandIds)
+            {
+                const Key = FocusPreviewKeyByCommandId[Id];
+                const Target = ResolveTarget(CurrentWindow, Id, Excluded);
+                const Close = BrowserWindows.ForceClose(Key).pipe(
+                    Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+                    Effect.ignore
+                );
+
+                if (
+                    Option.isNone(Target)
+                    || IsWindowTiled(TilingSnapshot, Target.value.Window)
+                )
+                {
+                    yield* Close;
+                    continue;
+                }
+
+                const Obscured = Window.IsWindowObscured(
+                    Target.value.Window,
+                    OcclusionExclusions
+                );
+
+                if (Result.isFailure(Obscured) || !Obscured.success)
+                {
+                    yield* Close;
+                    continue;
+                }
+
+                const TargetIcon = Window.GetIcon(Target.value.Window);
+                const Presentation: FocusPreviewPresentation = {
+                    Opacity: CurrentSettings.FocusPreviewOpacity,
+                    ...(Option.isSome(TargetIcon) ? { Icon: TargetIcon.value } : { })
+                };
+
+                yield* BrowserWindows.Ensure(
+                    BrowserWindow.GetFocusPreviewWindowSpec(Key, Target.value.Bounds)
+                ).pipe(Effect.ignore);
+                yield* BrowserWindows.SetBounds(Key, Target.value.Bounds).pipe(Effect.ignore);
+                yield* BrowserWindows.Send(
+                    Key,
+                    AppApiChannel.FocusPreviewChanged,
+                    Presentation
+                ).pipe(Effect.ignore);
+                yield* BrowserWindows.ShowInactive(Key).pipe(Effect.ignore);
+                const PreviewHandle = yield* BrowserWindows.GetNativeHandle(Key).pipe(
+                    Effect.match({
+                        onFailure: () => Option.none<Handle.HWND>(),
+                        onSuccess: Option.some
+                    })
+                );
+
+                if (
+                    Option.isSome(PreviewHandle)
+                    && !OcclusionExclusions.includes(PreviewHandle.value)
+                )
+                {
+                    OcclusionExclusions.push(PreviewHandle.value);
+                }
+
+                AnyProxyVisible = true;
+            }
+
+            if (AnyProxyVisible)
+            {
+                // Both surfaces are always-on-top. Raising the command overlay
+                // last guarantees every proxy remains directly beneath it.
+                yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Overlay).pipe(Effect.ignore);
+            }
         });
         const ClearFocusFailure = Ref.set(FocusFailureRef, Option.none());
         const ResolveCurrentFocusTarget = (
@@ -321,10 +490,14 @@ const Live = Layer.effect(
                             ? Object.freeze(Value.slice(0, -1))
                             : Value
                 ),
+                Effect.andThen(ClearFocusProxyWindows),
                 Effect.andThen(ClearFocusFailure)
             ),
             Changes: pipe(SubscriptionRef.changes(Stack), Stream.map(GetCurrent)),
-            ClearActivationWindow: Ref.set(ActivationWindow, Option.none()),
+            ClearActivationWindow: pipe(
+                Ref.set(ActivationWindow, Option.none()),
+                Effect.andThen(ClearFocusProxyWindows)
+            ),
             ClearFocusPreview,
             Current,
             FineModifierHeld: Ref.get(FineModifierHeldRef),
@@ -340,6 +513,9 @@ const Live = Layer.effect(
                     (Value: ReadonlyArray<OverlayScreenId>) => GetCurrent(Value) === Screen
                         ? Value
                         : Object.freeze([ ...Value, Screen ])
+                ),
+                Effect.andThen(
+                    Screen === ScreenId.FloatingFocus ? Effect.void : ClearFocusProxyWindows
                 ),
                 Effect.andThen(ClearFocusFailure)
             ),
@@ -362,10 +538,12 @@ const Live = Layer.effect(
                 const OverlayWindow = yield* BrowserWindows.GetNativeHandle(
                     BrowserWindow.Key.Overlay
                 );
+                const FocusProxyWindows = yield* GetFocusProxyNativeHandles;
                 const ResultValue = Window.DimWindowsExcept([
                     CurrentWindow.value,
                     OverlayWindow,
-                    Target.value.Window
+                    Target.value.Window,
+                    ...FocusProxyWindows
                 ]);
 
                 if (Result.isFailure(ResultValue))
@@ -381,18 +559,28 @@ const Live = Layer.effect(
                 ),
                 Effect.andThen(Ref.set(FocusFailureRef, Option.some(Failure)))
             ),
-            Reset: pipe(
-                SubscriptionRef.set(Stack, Object.freeze([ ScreenId.Home ])),
-                Effect.andThen(Ref.set(ExcludedFocusWindows, new Set())),
-                Effect.andThen(ClearFocusFailure)
-            ),
+            Reset: Effect.gen(function*()
+            {
+                const CurrentWindow = yield* Ref.get(ActivationWindow);
+                const Home = yield* ResolveHomeScreen(CurrentWindow);
+
+                yield* SubscriptionRef.set(Stack, Object.freeze([ Home ]));
+                yield* Ref.set(ExcludedFocusWindows, new Set());
+                yield* ClearFocusProxyWindows;
+                yield* ClearFocusFailure;
+            }),
+            ResizeMode: Ref.get(ResizeModeRef),
             ResolveFocusTarget: ResolveCurrentFocusTarget,
-            SetActivationWindow: (WindowHandle: Handle.HWND) =>
+            SetActivationWindow: (WindowHandle: Handle.HWND) => pipe(
                 Ref.set(ActivationWindow, Option.some(WindowHandle)),
+                Effect.andThen(UpdateHomeScreen(Option.some(WindowHandle)))
+            ),
             SetFineModifierHeld: (Held: boolean) =>
                 Ref.set(FineModifierHeldRef, Held),
             SetPrimaryModifierHeld: (Held: boolean) =>
                 Ref.set(PrimaryModifierHeldRef, Held),
+            SetResizeMode: (Mode: ResizeModeType) =>
+                Ref.set(ResizeModeRef, Mode),
             Snapshot: Effect.gen(function*()
             {
                 const CurrentScreen = yield* Current;
@@ -400,13 +588,14 @@ const Live = Layer.effect(
                 const CurrentWindowOpt = yield* Ref.get(ActivationWindow);
                 const Held = yield* Ref.get(PrimaryModifierHeldRef);
                 const FineHeld = yield* Ref.get(FineModifierHeldRef);
+                const CurrentResizeMode = yield* Ref.get(ResizeModeRef);
                 const Excluded = yield* Ref.get(ExcludedFocusWindows);
                 const FocusTargets: Partial<Record<
                     OverlayCommandId,
                     OverlayCommandTargetDto
                 >> = { };
 
-                if (CurrentScreen === ScreenId.Focus)
+                if (CurrentScreen === ScreenId.FloatingFocus)
                 {
                     for (const Id of FocusCommandIds)
                     {
@@ -417,6 +606,12 @@ const Live = Layer.effect(
                             FocusTargets[Id] = GetTargetPresentation(Target.value);
                         }
                     }
+
+                    yield* SyncFocusProxyWindows(
+                        CurrentWindowOpt,
+                        Excluded,
+                        CurrentSettings
+                    );
                 }
 
                 const ApplicationTarget = Option.map(
@@ -436,10 +631,12 @@ const Live = Layer.effect(
                     Held,
                     FineHeld,
                     CurrentSettings.MoveStepPrimary,
-                    CurrentSettings.MoveStepSecondary
+                    CurrentSettings.MoveStepSecondary,
+                    CurrentResizeMode
                 );
 
-                return CurrentScreen === ScreenId.Focus && Option.isSome(CurrentFocusFailure)
+                return CurrentScreen === ScreenId.FloatingFocus
+                    && Option.isSome(CurrentFocusFailure)
                     ? {
                         ...Screen,
                         FocusFailure: { WindowTitle: CurrentFocusFailure.value.WindowTitle }

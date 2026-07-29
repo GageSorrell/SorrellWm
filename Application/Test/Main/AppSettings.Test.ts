@@ -31,16 +31,35 @@ vi.mock("@sorrell/windows", () => ({
     VK:
     {
         BROWSER_BACK: 0xA6,
+        CONTROL: 0x11,
         D: 0x44,
+        ESCAPE: 0x1B,
         F20: 0x83,
         H: 0x48,
         J: 0x4A,
         K: 0x4B,
         L: 0x4C,
+        MENU: 0x12,
         N: 0x4E,
+        SHIFT: 0x10,
         T: 0x54,
         TAB: 0x09,
-        VK: [ 0x09, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x4E, 0x54, 0x83, 0xA6 ]
+        VK: [
+            0x09,
+            0x10,
+            0x11,
+            0x12,
+            0x1B,
+            0x44,
+            0x48,
+            0x4A,
+            0x4B,
+            0x4C,
+            0x4E,
+            0x54,
+            0x83,
+            0xA6
+        ]
     }
 }));
 
@@ -57,10 +76,11 @@ describe("AppSettings schema", () =>
             }
         };
         const Decoded = await Effect.runPromise(
-            Schema.decodeUnknownEffect(AppSettings.AppSettings.schema)(LegacySettings)
+            Schema.decodeUnknownEffect(AppSettings.AppSettings.Schema)(LegacySettings)
         );
 
         expect(Decoded).toEqual({
+            FocusPreviewOpacity: 75,
             Keybinds: [
                 {
                     Id: "Activate",
@@ -136,8 +156,27 @@ describe("AppSettings schema", () =>
     {
         await expect(DecodeSettings({ OverlayBackdropIntensity: Intensity })).rejects.toBeDefined();
     });
+
+    it("defaults Focus preview opacity to 75%", async () =>
+    {
+        const Decoded = await DecodeSettings({ });
+
+        expect(Decoded.FocusPreviewOpacity).toBe(75);
+    });
+
+    it.each([ 0, 100 ])("accepts a Focus preview opacity of %i", async (Opacity: number) =>
+    {
+        const Decoded = await DecodeSettings({ FocusPreviewOpacity: Opacity });
+
+        expect(Decoded.FocusPreviewOpacity).toBe(Opacity);
+    });
+
+    it.each([ -1, 74.5, 101 ])("rejects a Focus preview opacity of %s", async (Opacity: number) =>
+    {
+        await expect(DecodeSettings({ FocusPreviewOpacity: Opacity })).rejects.toBeDefined();
+    });
 });
 
 /** Decode one partial persisted settings value through the application codec. */
 const DecodeSettings = (Settings: Record<string, unknown>): Promise<AppSettings.AppSettings> =>
-    Effect.runPromise(Schema.decodeUnknownEffect(AppSettings.AppSettings.schema)(Settings));
+    Effect.runPromise(Schema.decodeUnknownEffect(AppSettings.AppSettings.Schema)(Settings));

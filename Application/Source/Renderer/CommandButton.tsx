@@ -18,7 +18,6 @@ import {
 } from "@fluentui/react-components";
 import { Key, Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
-import { Effect } from "effect";
 
 /** Presentation properties for a primary overlay command. */
 export interface CommandButtonProps
@@ -115,16 +114,18 @@ export/** Render a shortcut's modifier and key labels in display order. */
 const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode> =>
 {
     const Parts = new Array<React.ReactNode>();
+    const TriggerLabel = Shortcut.KeyLabel.toLocaleLowerCase();
+    const IsAltTrigger = /^(?:l|r)?menu$/u.test(TriggerLabel);
 
     if (Shortcut.Modifiers.Control)
     {
         Parts.push("Ctrl");
     }
-    if (Shortcut.Modifiers.Shift || Shortcut.KeyLabel.toLocaleLowerCase().includes("shift"))
+    if (Shortcut.Modifiers.Shift || TriggerLabel.includes("shift"))
     {
         Parts.push(<Key.Shift />);
     }
-    if (Shortcut.Modifiers.Alt)
+    if (Shortcut.Modifiers.Alt || IsAltTrigger)
     {
         Parts.push("Alt");
     }
@@ -133,20 +134,13 @@ const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode>
         Parts.push(<Key.Super />);
     }
 
-    if (Shortcut.KeyLabel.toLowerCase() === "tab")
+    if (TriggerLabel === "tab")
     {
         Parts.push("⭾");
     }
-    else if (!Shortcut.KeyLabel.toLowerCase().includes("shift"))
+    else if (!TriggerLabel.includes("shift") && !IsAltTrigger)
     {
         Parts.push(Shortcut.KeyLabel);
-    }
-
-    // console.dir(Shortcut);
-
-    if (Shortcut.Modifiers.Shift)
-    {
-        console.log("SHIFT", Shortcut.KeyLabel);
     }
 
     return Parts;

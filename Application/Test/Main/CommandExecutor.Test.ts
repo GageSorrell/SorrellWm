@@ -25,7 +25,12 @@ import {
 } from "../../Source/Main/Command/Executor.ts";
 import { Deferred, Effect, Layer, Option, Queue, Result, Stream, pipe } from "effect";
 import { type Handle, Window as WindowsWindow } from "@sorrell/windows";
-import { type OverlayScreenDto, OverlayScreenId } from "../../Source/Shared/OverlayCommand.ts";
+import {
+    type OverlayScreenDto,
+    OverlayScreenId,
+    ResizeMode,
+    type ResizeMode as ResizeModeType
+} from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@sorrell/windows", async () =>
@@ -97,7 +102,7 @@ describe("CommandExecutor.Execute", () =>
 
                 yield* Executor.Execute(UiCommands.Activate());
                 yield* Executor.Execute(UiCommands.NavigateOverlayScreen({
-                    ScreenId: OverlayScreenId.Focus
+                    ScreenId: OverlayScreenId.FloatingFocus
                 }));
                 yield* Executor.Execute(UiCommands.NoOpOverlayCommand({ Id: "FocusMoveLeft" }));
                 yield* Executor.Execute(UiCommands.BackOverlayScreen());
@@ -118,9 +123,9 @@ describe("CommandExecutor.Execute", () =>
         ));
 
         expect(Operations).toEqual([
-            "Send:Overlay:overlay-screen:changed:Home",
-            "Send:Overlay:overlay-screen:changed:Focus",
-            "Send:Overlay:overlay-screen:changed:Home",
+            "Send:Overlay:overlay-screen:changed:FloatingHome",
+            "Send:Overlay:overlay-screen:changed:FloatingFocus",
+            "Send:Overlay:overlay-screen:changed:FloatingHome",
             "Hide:Overlay"
         ]);
         expect(WindowsWindow.SetForegroundWindow).not.toHaveBeenCalled();
@@ -169,7 +174,7 @@ describe("CommandExecutor.Execute", () =>
         ));
 
         expect(Operations).toEqual([
-            "Send:Overlay:overlay-screen:changed:Home",
+            "Send:Overlay:overlay-screen:changed:FloatingHome",
             "SetBounds:Overlay",
             "Show:Overlay",
             "Hide:Overlay",
@@ -213,7 +218,7 @@ describe("CommandExecutor.Execute", () =>
         expect(Operations).toEqual([
             "SetForegroundWindow:84",
             "SetBounds:Overlay",
-            "Send:Overlay:overlay-screen:changed:Home"
+            "Send:Overlay:overlay-screen:changed:FloatingHome"
         ]);
     });
 
@@ -256,7 +261,7 @@ describe("CommandExecutor.Execute", () =>
         expect(Operations).toEqual([
             "SetWindowRect:84:0,1220,800,20",
             "SetBounds:Overlay",
-            "Send:Overlay:overlay-screen:changed:Home"
+            "Send:Overlay:overlay-screen:changed:FloatingHome"
         ]);
         // The overlay must be centered on the bounds we just moved the window to,
         // not on a second, racy `GetWindowRect` re-query (`SetWindowRect` posts the
@@ -302,10 +307,10 @@ describe("CommandExecutor.Execute", () =>
         ));
 
         expect(Operations).toEqual([
-            "Send:Overlay:overlay-screen:changed:Home",
+            "Send:Overlay:overlay-screen:changed:FloatingHome",
             "SetWindowRect:84:0,1250,800,50",
             "SetBounds:Overlay",
-            "Send:Overlay:overlay-screen:changed:Home"
+            "Send:Overlay:overlay-screen:changed:FloatingHome"
         ]);
     });
 
@@ -378,7 +383,7 @@ describe("CommandExecutor.Live", () =>
         }));
 
         expect(Completed).toEqual([
-            "Send:Overlay:overlay-screen:changed:Home",
+            "Send:Overlay:overlay-screen:changed:FloatingHome",
             "Hide:Overlay"
         ]);
     });
@@ -431,6 +436,7 @@ const FakeAppSettings = (
 ) =>
 {
     const Current: AppSettings.AppSettings = {
+        FocusPreviewOpacity: 75,
         Keybinds: [ ],
         MoveFineSpeed: 16,
         MoveStepPrimary: 20,
@@ -445,8 +451,8 @@ const FakeAppSettings = (
     };
     const Service: AppSettings.Service = {
         Changes: Stream.empty,
-        FilePath: Effect.succeed(Current),
-        Layer: <Key extends keyof AppSettings.AppSettings>(
+        Get: Effect.succeed(Current),
+        GetSetting: <Key extends keyof AppSettings.AppSettings>(
             KeyValue: Key
         ): Effect.Effect<AppSettings.AppSettings[Key]> => Effect.succeed(Current[KeyValue]),
         Set: () => Effect.void,
@@ -462,12 +468,13 @@ const FakeOverlaySession = (
     InitialActivationWindow: Option.Option<Handle.HWND> = Option.none()
 ) => Layer.suspend(() =>
 {
-    let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.Home ];
+    let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.FloatingHome ];
     let ActivationWindow = InitialActivationWindow;
     let PrimaryModifierHeld = false;
     let FineModifierHeld = false;
+    let CurrentResizeMode: ResizeModeType = ResizeMode.Grow;
     let CurrentFocusFailure: Option.Option<OverlaySession.FocusFailure> = Option.none();
-    const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.Home;
+    const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.FloatingHome;
 
     return Layer.succeed(OverlaySession.OverlaySession, {
         Back: Effect.sync((): void =>
@@ -497,8 +504,9 @@ const FakeOverlaySession = (
         }),
         Reset: Effect.sync((): void =>
         {
-            Stack = [ OverlayScreenId.Home ];
+            Stack = [ OverlayScreenId.FloatingHome ];
         }),
+        ResizeMode: Effect.sync(() => CurrentResizeMode),
         ResolveFocusTarget: () => Effect.succeed(FocusTarget),
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
         {
@@ -511,6 +519,10 @@ const FakeOverlaySession = (
         SetPrimaryModifierHeld: (Held: boolean) => Effect.sync((): void =>
         {
             PrimaryModifierHeld = Held;
+        }),
+        SetResizeMode: (Mode: ResizeModeType) => Effect.sync((): void =>
+        {
+            CurrentResizeMode = Mode;
         }),
         Snapshot: Effect.sync((): OverlayScreenDto => ({
             CanGoBack: Stack.length > 1,

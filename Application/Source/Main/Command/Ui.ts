@@ -10,7 +10,7 @@
  */
 
 import * as Command from "./Command.js";
-import type { OverlayCommandId, OverlayScreenId } from "../../Shared/OverlayCommand.js";
+import type { OverlayCommandId, OverlayScreenId, ResizeMode } from "../../Shared/OverlayCommand.js";
 import type { Option } from "effect";
 
 /** Commands that control the application's user interface. */
@@ -72,6 +72,15 @@ export type UiCommand = Command.Command.Enum<"Ui", {
     readonly SetFineModifierHeld:
     {
         readonly Held: boolean;
+    }
+
+    /**
+     * Update whether the Resize screen grows or shrinks the window.
+     * @since 0.1.0
+     */
+    readonly SetResizeMode:
+    {
+        readonly Mode: ResizeMode;
     }
 }>;
 

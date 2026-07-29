@@ -163,6 +163,57 @@ describe("TilingManager", () =>
         ]);
     });
 
+    it("adds same-orientation windows as siblings in a multi-child panel", async () =>
+    {
+        const WorkArea = Bounds(0, 1200, 600, 0);
+        const Handles = [ Hwnd(1), Hwnd(2), Hwnd(3), Hwnd(4) ];
+        const Dependencies = FakeDependencies(
+            [ ],
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            [ ]
+        );
+
+        const State = await Effect.runPromise(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+
+            for (const WindowValue of Handles)
+            {
+                yield* Manager.Tile(
+                    WindowValue,
+                    undefined,
+                    TilingTree.Orientation.Horizontal
+                );
+            }
+
+            yield* Manager.SetPanelRatio(
+                TilingTree.WorkspaceId(WorkArea),
+                [ ],
+                0.5,
+                3
+            );
+
+            return yield* Manager.Snapshot;
+        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        const Root = State.Workspaces[0]?.Root;
+        expect(Root?._tag).toBe("Panel");
+        expect(Root?._tag === "Panel" ? Root.Children : [ ]).toHaveLength(4);
+        expect(Root?._tag === "Panel" ? Root.Ratios : [ ]).toEqual([
+            2 / 7,
+            1 / 7,
+            1 / 14,
+            0.5
+        ]);
+    });
+
     it("reparents managed windows across monitor workspaces", async () =>
     {
         const Primary = Bounds(0, 1000, 800, 0);

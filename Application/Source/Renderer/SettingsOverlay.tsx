@@ -1,0 +1,115 @@
+/**
+ * The Settings window's Overlay section.
+ *
+ * @module @sorrell/wm/Renderer/SettingsOverlay
+ *
+ * @file      SettingsOverlay.tsx
+ * @author    Gage Sorrell <gage@sorrell.sh>
+ * @copyright (c) 2026 Gage Sorrell
+ * @license   MIT
+ */
+
+import { Setting, SettingGroup } from "@sorrell/settings-ui";
+import {
+    Slider,
+    type SliderOnChangeData,
+    makeStyles,
+    tokens
+} from "@fluentui/react-components";
+import { useEffect, useState } from "react";
+import { EyeRegular } from "@fluentui/react-icons";
+import type { OverlaySettingsDto } from "../Shared/AppSettings.js";
+
+const UseStyles = makeStyles({
+    Control:
+    {
+        alignItems: "center",
+        display: "flex",
+        gap: tokens.spacingHorizontalS,
+        width: "13rem"
+    },
+    Loading:
+    {
+        color: tokens.colorNeutralForeground3
+    },
+    Slider:
+    {
+        flex: "1 1 auto"
+    },
+    Value:
+    {
+        minWidth: "3rem",
+        textAlign: "right"
+    }
+});
+
+export/** Render settings for the command overlay and directional Focus previews. */
+const SettingsOverlay = (): React.JSX.Element =>
+{
+    const Styles = UseStyles();
+    const [ Settings, SetSettings ] = useState<OverlaySettingsDto | null>(null);
+
+    useEffect(() =>
+    {
+        let IsCancelled = false;
+
+        window.sorrell.overlaySettings.get()
+            .then((Loaded: OverlaySettingsDto) =>
+            {
+                if (!IsCancelled)
+                {
+                    SetSettings(Loaded);
+                }
+            })
+            .catch(() => undefined);
+
+        return (): void =>
+        {
+            IsCancelled = true;
+        };
+    }, [ ]);
+
+    const CommitOpacity = (Value: number): void =>
+    {
+        SetSettings((Current: OverlaySettingsDto | null) =>
+            Current === null ? Current : { ...Current, FocusPreviewOpacity: Value });
+
+        window.sorrell.overlaySettings.set({ FocusPreviewOpacity: Value })
+            .then((Updated: OverlaySettingsDto) => SetSettings(Updated))
+            .catch(() => undefined);
+    };
+
+    if (Settings === null)
+    {
+        return <p className={ Styles.Loading }>Loading…</p>;
+    }
+
+    return (
+        <SettingGroup
+            Subtitle="Control how directional Focus targets are presented over obscured floating windows."
+            Title="Focus Previews">
+            <Setting
+                Control={
+                    <div className={ Styles.Control }>
+                        <Slider
+                            aria-label="Focus preview opacity"
+                            className={ Styles.Slider }
+                            max={ 100 }
+                            min={ 0 }
+                            onChange={ (
+                                _Event: React.ChangeEvent<HTMLInputElement>,
+                                Data: SliderOnChangeData
+                            ) => CommitOpacity(Math.round(Data.value)) }
+                            // step={ 1 }
+                            value={ Settings.FocusPreviewOpacity } />
+                        <span className={ Styles.Value }>
+                            { Settings.FocusPreviewOpacity }%
+                        </span>
+                    </div>
+                }
+                Icon={ EyeRegular }
+                Subtitle="Opacity of the sampled-color fill shown over a fully obscured floating window."
+                Title="Preview Opacity" />
+        </SettingGroup>
+    );
+};

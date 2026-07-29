@@ -21,6 +21,14 @@ const TypeId = "~sorrell/wm/Main/AppSettings/AppSettings" as const;
 export type TypeId = typeof TypeId;
 
 const SettingsSchema = Schema.Struct({
+    FocusPreviewOpacity: pipe(
+        Schema.Int,
+        Schema.check(
+            Schema.isGreaterThanOrEqualTo(0),
+            Schema.isLessThanOrEqualTo(100)
+        ),
+        Schema.withDecodingDefaultKey(Effect.succeed(75))
+    ),
     Keybinds: pipe(
         Schema.Array(Hotkey.KeybindSettingSchema),
         Schema.withDecodingDefaultKey(Effect.succeed(Hotkey.DefaultKeybindSettings))
@@ -94,6 +102,7 @@ const AppSettings = _AppSettings.Make(
         ApplicationName: "SorrellWm",
         Initial:
         {
+            FocusPreviewOpacity: 75,
             Keybinds: Array.from(Hotkey.DefaultKeybindSettings),
             MoveFineSpeed: 16,
             MoveStepPrimary: 20,

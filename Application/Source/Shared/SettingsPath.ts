@@ -12,6 +12,7 @@
 export/** Stable identifiers for the settings window's navigable sections. */
 const SettingsSectionId = Object.freeze({
     Advanced: "Advanced" as const,
+    FloatingWindows: "FloatingWindows" as const,
     General: "General" as const,
     Home: "Home" as const,
     Keybinds: "Keybinds" as const,

@@ -26,7 +26,7 @@ const Seed = (
 
 describe("TilingTree", () =>
 {
-    it("adopts existing windows into balanced, monitor-local BSP trees", () =>
+    it("adopts existing windows into balanced, monitor-local tiling trees", () =>
     {
         const Primary = Bounds(0, 1200, 800, 0);
         const Secondary = Bounds(0, 2200, 800, 1200);
@@ -75,6 +75,74 @@ describe("TilingTree", () =>
         );
     });
 
+    it("lays out any number of panel children using normalized child ratios", () =>
+    {
+        const WorkArea = Bounds(0, 1000, 400, 0);
+        const Children = [ 1, 2, 3, 4 ].map((Value: number) =>
+            TilingTree.Window({
+                InitialBounds: WorkArea,
+                Window: Hwnd(Value)
+            })) as [
+                TilingTree.Node,
+                TilingTree.Node,
+                ...Array<TilingTree.Node>
+            ];
+        const Root = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            Children,
+            [ 1, 2, 1, 4 ]
+        );
+        const State: TilingTree.State = {
+            Workspaces: [ { Bounds: WorkArea, Id: "primary", Root } ]
+        };
+
+        expect(Root.Children).toHaveLength(4);
+        expect(Root.Ratios).toEqual([ 0.125, 0.25, 0.125, 0.5 ]);
+        expect(TilingTree.Layout(State).map((Placement: TilingTree.Placement) => ({
+            Bounds: Box.Tupled(Placement.Bounds),
+            Window: Placement.Window
+        }))).toEqual([
+            { Bounds: [ 0, 125, 400, 0 ], Window: Hwnd(1) },
+            { Bounds: [ 0, 375, 400, 125 ], Window: Hwnd(2) },
+            { Bounds: [ 0, 500, 400, 375 ], Window: Hwnd(3) },
+            { Bounds: [ 0, 1000, 400, 500 ], Window: Hwnd(4) }
+        ]);
+    });
+
+    it("widens matching panels during insertion and preserves remaining siblings on removal", () =>
+    {
+        const WorkArea = Bounds(0, 1000, 400, 0);
+        let Root: TilingTree.Node = TilingTree.Window({
+            InitialBounds: WorkArea,
+            Window: Hwnd(1)
+        });
+
+        for (const Value of [ 2, 3, 4 ])
+        {
+            Root = TilingTree.InsertWindow(
+                Root,
+                { InitialBounds: WorkArea, Window: Hwnd(Value) },
+                TilingTree.Orientation.Horizontal
+            );
+        }
+
+        expect(Root._tag).toBe("Panel");
+        expect(Root._tag === "Panel" ? Root.Children : [ ]).toHaveLength(4);
+        expect(Root._tag === "Panel" ? Root.Ratios : [ ]).toEqual([
+            0.5,
+            0.25,
+            0.125,
+            0.125
+        ]);
+
+        const Removed = TilingTree.RemoveWindow(Root, Hwnd(2));
+        expect(Removed?._tag).toBe("Panel");
+        expect(Removed?._tag === "Panel" ? Removed.Children : [ ]).toHaveLength(3);
+        expect(TilingTree.Windows(Removed).map(
+            (Value: TilingTree.ManagedWindow) => Value.Window
+        )).toEqual([ Hwnd(1), Hwnd(3), Hwnd(4) ]);
+    });
+
     it("mutates panel orientation and ratio through immutable paths", () =>
     {
         const Root = TilingTree.Panel(
@@ -98,5 +166,47 @@ describe("TilingTree", () =>
         });
         expect(Root).toMatchObject({ Orientation: "Horizontal", Ratio: 0.5 });
         expect(Object.isFrozen(WithOrientation)).toBe(true);
+    });
+
+    it("addresses arbitrary child indices and resizes any panel child", () =>
+    {
+        const WindowNode = (Value: number): TilingTree.WindowNode =>
+            TilingTree.Window({
+                InitialBounds: Bounds(0, 100, 100, 0),
+                Window: Hwnd(Value)
+            });
+        const Nested = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ WindowNode(3), WindowNode(4), WindowNode(5) ]
+        );
+        const Root = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ WindowNode(1), WindowNode(2), Nested ]
+        );
+        const [ WithOrientation, OrientationChanged ] = TilingTree.SetPanelOrientation(
+            Root,
+            [ 2 ],
+            TilingTree.Orientation.Vertical
+        );
+        const [ WithRatio, RatioChanged ] = TilingTree.SetPanelRatio(
+            WithOrientation,
+            [ ],
+            0.5,
+            2
+        );
+
+        expect(OrientationChanged).toBe(true);
+        expect(RatioChanged).toBe(true);
+        expect(WithOrientation._tag === "Panel"
+            ? WithOrientation.Children[2]
+            : undefined).toMatchObject({
+            Orientation: "Vertical",
+            _tag: "Panel"
+        });
+        expect(WithRatio._tag === "Panel" ? WithRatio.Ratios : [ ]).toEqual([
+            0.25,
+            0.25,
+            0.5
+        ]);
     });
 });

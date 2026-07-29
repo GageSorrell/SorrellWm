@@ -9,13 +9,21 @@
  * @license   MIT
  */
 
-import { HotkeyId, IsHotkeyId, type ShortcutDto } from "./Hotkey.js";
+import {
+    HotkeyId,
+    IsHotkeyId,
+    type ShortcutDto,
+    type ShortcutModifiersDto
+} from "./Hotkey.js";
 
 export/** Stable identifiers for the overlay's navigable screens. */
 const OverlayScreenId = Object.freeze({
-    Focus: "Focus" as const,
-    Home: "Home" as const,
-    Move: "Move" as const
+    FloatingFocus: "FloatingFocus" as const,
+    FloatingHome: "FloatingHome" as const,
+    FloatingMove: "FloatingMove" as const,
+    FloatingResize: "FloatingResize" as const,
+    FloatingTile: "FloatingTile" as const,
+    TiledHome: "TiledHome" as const
 } as const);
 
 /** One of the overlay's navigable screens. */
@@ -23,6 +31,7 @@ export type OverlayScreenId = typeof OverlayScreenId[keyof typeof OverlayScreenI
 
 export/** Stable identifiers for the overlay's primary commands. */
 const OverlayCommandId = Object.freeze({
+    Float: "Float" as const,
     Focus: "Focus" as const,
     FocusMoveDown: "FocusMoveDown" as const,
     FocusMoveLeft: "FocusMoveLeft" as const,
@@ -35,7 +44,12 @@ const OverlayCommandId = Object.freeze({
     MoveWindowRight: "MoveWindowRight" as const,
     MoveWindowUp: "MoveWindowUp" as const,
     OpenPerAppSettings: "OpenPerAppSettings" as const,
-    Resize: "Resize" as const
+    Resize: "Resize" as const,
+    ResizeWindowDown: "ResizeWindowDown" as const,
+    ResizeWindowLeft: "ResizeWindowLeft" as const,
+    ResizeWindowRight: "ResizeWindowRight" as const,
+    ResizeWindowUp: "ResizeWindowUp" as const,
+    Tile: "Tile" as const
 } as const);
 
 /** One of the overlay's primary commands. */
@@ -48,32 +62,67 @@ const MoveDistance = Object.freeze({
     Secondary: 50 as const
 });
 
+export/** Whether the Resize screen is growing or shrinking the floating window. */
+const ResizeMode = Object.freeze({
+    Grow: "Grow" as const,
+    Shrink: "Shrink" as const
+} as const);
+
+/** The Resize screen's current behavior. */
+export type ResizeMode = typeof ResizeMode[keyof typeof ResizeMode];
+
 /** The hotkey action that selects a primary overlay command. */
 export interface OverlayCommandDefinition
 {
     readonly HotkeyId: HotkeyId;
     readonly Id: OverlayCommandId;
+
+    /** Additional physical modifiers required beyond the configured hotkey. */
+    readonly RequiredModifiers?: Partial<ShortcutModifiersDto>;
 }
 
-const HomeCommandDefinitions = Object.freeze([
+const FloatingHomeCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.Focus },
-    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.Insert },
+    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.Tile },
     { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.Move },
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.Resize }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
-const FocusCommandDefinitions = Object.freeze([
+const TiledHomeCommandDefinitions = Object.freeze([
+    { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.Focus },
+    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.Insert },
+    { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.Move },
+    { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.Resize },
+    {
+        HotkeyId: HotkeyId.SelectUp,
+        Id: OverlayCommandId.Float,
+        RequiredModifiers: { Shift: true }
+    }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
+const FloatingFocusCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.FocusMoveLeft },
     { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.FocusMoveUp },
     { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.FocusMoveDown },
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.FocusMoveRight }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
-const MoveCommandDefinitions = Object.freeze([
+const FloatingMoveCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.MoveWindowLeft },
     { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.MoveWindowUp },
     { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.MoveWindowDown },
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.MoveWindowRight }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
+const FloatingTileCommandDefinitions = Object.freeze(
+    [ ] as const satisfies ReadonlyArray<OverlayCommandDefinition>
+);
+
+const FloatingResizeCommandDefinitions = Object.freeze([
+    { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.ResizeWindowLeft },
+    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.ResizeWindowUp },
+    { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.ResizeWindowDown },
+    { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.ResizeWindowRight }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
 const HomeSecondaryCommandDefinition = Object.freeze({
@@ -88,22 +137,29 @@ const GetOverlayCommandDefinitions = (
 {
     switch (ScreenId)
     {
-        case OverlayScreenId.Focus:
-            return FocusCommandDefinitions;
-        case OverlayScreenId.Move:
-            return MoveCommandDefinitions;
-        case OverlayScreenId.Home:
+        case OverlayScreenId.FloatingFocus:
+            return FloatingFocusCommandDefinitions;
+        case OverlayScreenId.FloatingMove:
+            return FloatingMoveCommandDefinitions;
+        case OverlayScreenId.FloatingResize:
+            return FloatingResizeCommandDefinitions;
+        case OverlayScreenId.FloatingTile:
+            return FloatingTileCommandDefinitions;
+        case OverlayScreenId.TiledHome:
+            return TiledHomeCommandDefinitions;
+        case OverlayScreenId.FloatingHome:
         default:
-            return HomeCommandDefinitions;
+            return FloatingHomeCommandDefinitions;
     }
 };
 
 export/** Get the secondary command definition available on an overlay screen, if any. */
 const GetOverlaySecondaryCommandDefinition = (
     ScreenId: OverlayScreenId
-): OverlayCommandDefinition | undefined => ScreenId === OverlayScreenId.Home
-    ? HomeSecondaryCommandDefinition
-    : undefined;
+): OverlayCommandDefinition | undefined =>
+    ScreenId === OverlayScreenId.FloatingHome || ScreenId === OverlayScreenId.TiledHome
+        ? HomeSecondaryCommandDefinition
+        : undefined;
 
 /** A primary overlay command prepared for the renderer. */
 export interface OverlayCommandTargetDto
@@ -120,7 +176,10 @@ const OverlayCommandTargetDto = (Args: Partial<OverlayCommandTargetDto>): Overla
     ({ Icon: Args.Icon, Title: Args.Title ?? "Untitled window" });
 
 /** A primary overlay command prepared for the renderer. */
-export interface OverlayCommandDto extends OverlayCommandDefinition
+export interface OverlayCommandDto extends Omit<
+    OverlayCommandDefinition,
+    "RequiredModifiers"
+>
 {
     readonly Disabled: boolean;
     readonly Shortcut: ShortcutDto;
@@ -179,6 +238,10 @@ export interface OverlayScreenDto
     readonly DistanceToggle?: OverlayDistanceToggleDto;
     readonly FocusFailure?: OverlayFocusFailureDto;
     readonly Id: OverlayScreenId;
+
+    /** Whether the Resize screen is currently growing or shrinking the window. */
+    readonly ResizeMode?: ResizeMode;
+
     readonly SecondaryCommand?: OverlaySecondaryCommandDto;
 }
 
@@ -193,6 +256,9 @@ const IsOverlayScreenId = (Value: unknown): Value is OverlayScreenId =>
     && (Object.values(OverlayScreenId) as ReadonlyArray<string>).includes(Value);
 
 const IsBoolean = (Value: unknown): Value is boolean => typeof Value === "boolean";
+
+const IsResizeMode = (Value: unknown): Value is ResizeMode =>
+    Value === ResizeMode.Grow || Value === ResizeMode.Shrink;
 
 const IsOverlayCommandTargetDto = (Value: unknown): Value is OverlayCommandTargetDto =>
 {
@@ -312,5 +378,9 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
         && (
             Candidate.FocusFailure === undefined
             || IsOverlayFocusFailureDto(Candidate.FocusFailure)
+        )
+        && (
+            Candidate.ResizeMode === undefined
+            || IsResizeMode(Candidate.ResizeMode)
         );
 };

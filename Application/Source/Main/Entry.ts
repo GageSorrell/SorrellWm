@@ -34,6 +34,12 @@ import {
     screen,
     systemPreferences
 } from "electron";
+import {
+    type FloatingWindowSettingsDto,
+    IsFloatingWindowSettingsPatch,
+    IsOverlaySettingsPatch,
+    type OverlaySettingsDto
+} from "../Shared/AppSettings.ts";
 import { isAbsolute, join, relative } from "node:path";
 import { AppApiChannel } from "../Shared/Api.ts";
 import { DevFeatures } from "./Development/index.ts";
@@ -61,7 +67,8 @@ const OverlaySessionLive = pipe(
     Overlay.Session.Live,
     Layer.provideMerge(Layer.mergeAll(
         AppSettingsLive,
-        BrowserWindow.Live
+        BrowserWindow.Live,
+        Tiling.Manager.Live
     ))
 );
 
@@ -171,7 +178,121 @@ const registerRendererProtocol = (): void =>
 ipcMain.removeHandler(AppApiChannel.ThemeGet);
 ipcMain.handle(AppApiChannel.ThemeGet, Theme.GetRendererTheme);
 
+const ToFloatingWindowSettingsDto = (
+    Settings: AppSettings.AppSettings
+): FloatingWindowSettingsDto => ({
+    MoveFineSpeed: Settings.MoveFineSpeed,
+    MoveStepPrimary: Settings.MoveStepPrimary,
+    MoveStepPrimarySpeedFactor: Settings.MoveStepPrimarySpeedFactor,
+    MoveStepSecondary: Settings.MoveStepSecondary,
+    MoveStepSecondarySpeedFactor: Settings.MoveStepSecondarySpeedFactor
+});
+
+ipcMain.removeHandler(AppApiChannel.FloatingWindowSettingsGet);
+ipcMain.handle(AppApiChannel.FloatingWindowSettingsGet, () => ApplicationRuntime.runPromise(
+    Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        const Current = yield* Settings.Get;
+        return ToFloatingWindowSettingsDto(Current);
+    })
+));
+
+ipcMain.removeHandler(AppApiChannel.FloatingWindowSettingsSet);
+ipcMain.handle(AppApiChannel.FloatingWindowSettingsSet, (
+    _Event: IpcMainInvokeEvent,
+    PatchValue: unknown
+) =>
+{
+    if (!IsFloatingWindowSettingsPatch(PatchValue))
+    {
+        throw new TypeError("The requested floating-window settings patch is invalid.");
+    }
+
+    return ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+
+        if (PatchValue.MoveFineSpeed !== undefined)
+        {
+            yield* Settings.SetSetting("MoveFineSpeed", PatchValue.MoveFineSpeed);
+        }
+
+        if (PatchValue.MoveStepPrimary !== undefined)
+        {
+            yield* Settings.SetSetting("MoveStepPrimary", PatchValue.MoveStepPrimary);
+        }
+
+        if (PatchValue.MoveStepPrimarySpeedFactor !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "MoveStepPrimarySpeedFactor",
+                PatchValue.MoveStepPrimarySpeedFactor
+            );
+        }
+
+        if (PatchValue.MoveStepSecondary !== undefined)
+        {
+            yield* Settings.SetSetting("MoveStepSecondary", PatchValue.MoveStepSecondary);
+        }
+
+        if (PatchValue.MoveStepSecondarySpeedFactor !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "MoveStepSecondarySpeedFactor",
+                PatchValue.MoveStepSecondarySpeedFactor
+            );
+        }
+
+        const Current = yield* Settings.Get;
+        return ToFloatingWindowSettingsDto(Current);
+    }));
+});
+
 ipcMain.removeHandler(AppApiChannel.OverlayScreenGet);
+
+const ToOverlaySettingsDto = (
+    Settings: AppSettings.AppSettings
+): OverlaySettingsDto => ({
+    FocusPreviewOpacity: Settings.FocusPreviewOpacity
+});
+
+ipcMain.removeHandler(AppApiChannel.OverlaySettingsGet);
+ipcMain.handle(AppApiChannel.OverlaySettingsGet, () => ApplicationRuntime.runPromise(
+    Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        return ToOverlaySettingsDto(yield* Settings.Get);
+    })
+));
+
+ipcMain.removeHandler(AppApiChannel.OverlaySettingsSet);
+ipcMain.handle(AppApiChannel.OverlaySettingsSet, (
+    _Event: IpcMainInvokeEvent,
+    PatchValue: unknown
+) =>
+{
+    if (!IsOverlaySettingsPatch(PatchValue))
+    {
+        throw new TypeError("The requested overlay-settings patch is invalid.");
+    }
+
+    return ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+
+        if (PatchValue.FocusPreviewOpacity !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "FocusPreviewOpacity",
+                PatchValue.FocusPreviewOpacity
+            );
+        }
+
+        return ToOverlaySettingsDto(yield* Settings.Get);
+    }));
+});
+
 ipcMain.handle(AppApiChannel.OverlayScreenGet, () => ApplicationRuntime.runPromise(
     Effect.gen(function*()
     {
