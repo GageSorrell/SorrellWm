@@ -840,16 +840,6 @@ const InsertAtWindow = (
         ] as [ Node, Node, ...Array<Node> ];
         const Ratios = SplitChildRatio(Root.Ratios, DirectTargetIndex, Ratio);
 
-        if (InsertBefore)
-        {
-            const FirstRatio = Ratios[DirectTargetIndex]!;
-            const SecondRatio = Ratios[DirectTargetIndex + 1]!;
-            const MutableRatios = [ ...Ratios ];
-            MutableRatios[DirectTargetIndex] = SecondRatio;
-            MutableRatios[DirectTargetIndex + 1] = FirstRatio;
-            return [ Panel(Root.Orientation, Children, MutableRatios), true ];
-        }
-
         return [ Panel(Root.Orientation, Children, Ratios), true ];
     }
 

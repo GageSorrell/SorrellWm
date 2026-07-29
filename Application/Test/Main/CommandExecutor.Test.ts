@@ -17,7 +17,7 @@ import * as OverlaySession from "../../Source/Main/Overlay/Session.ts";
 import * as Tiling from "../../Source/Main/Tiling/index.ts";
 import * as Ui from "../../Source/Main/Command/Ui.ts";
 import * as Wm from "../../Source/Main/Command/Wm.ts";
-import { Box, type Box as MathBox } from "@sorrell/math";
+import { Box, IntPoint, type Box as MathBox } from "@sorrell/math";
 import {
     CommandExecutor,
     Live,
@@ -32,6 +32,26 @@ import {
     type ResizeMode as ResizeModeType
 } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("electron", () =>
+{
+    const Electron = {
+        BrowserWindow: class { },
+        app: { isPackaged: true },
+        screen: {
+            screenToDipRect: (
+                _Window: null,
+                Rectangle: Electron.Rectangle
+            ): Electron.Rectangle => Rectangle
+        },
+        shell: { openExternal: (): void => undefined }
+    };
+
+    return {
+        ...Electron,
+        default: Electron
+    };
+});
 
 vi.mock("@sorrell/windows", async () =>
 {
@@ -102,7 +122,11 @@ vi.mock("@sorrell/windows", async () =>
         },
         Window:
         {
+            GetCursorPosition: vi.fn(() => EffectOption.none()),
             GetForegroundWindow: vi.fn(() => EffectOption.none()),
+            GetManageableTopLevelWindows: vi.fn(() =>
+                EffectResult.succeed([ ])),
+            GetMovingWindow: vi.fn(() => EffectOption.none()),
             GetWindowRect: vi.fn(() => EffectOption.none()),
             SetForegroundWindow: vi.fn(() => EffectResult.succeed(undefined)),
             SetWindowRect: vi.fn(() => EffectResult.succeed(undefined))
@@ -117,7 +141,12 @@ const TileExistingWindows = vi.fn();
 beforeEach(() =>
 {
     vi.clearAllMocks();
+    vi.mocked(WindowsWindow.GetCursorPosition).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(Option.none());
+    vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
+        Result.succeed([ ])
+    );
+    vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.SetForegroundWindow).mockReturnValue(Result.succeed(undefined));
 });
@@ -248,6 +277,136 @@ describe("CommandExecutor.Execute", () =>
             "SetBounds:Overlay",
             "Send:Overlay:overlay-screen:changed:TiledInsertWindow"
         ]);
+    });
+
+    it("tiles a floating window released inside the temporary Insert target", async () =>
+    {
+        const TiledWindow = 1n as Handle.HWND;
+        const FloatingWindow = 2n as Handle.HWND;
+        const Operations = new Array<string>();
+        const Insert = vi.fn(() => Effect.void);
+        vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
+            Result.succeed([ FloatingWindow ])
+        );
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(FloatingWindow))
+            .mockReturnValue(Option.none());
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(100, 500, 400, 100))
+        );
+        vi.mocked(WindowsWindow.GetCursorPosition).mockReturnValue(
+            Option.some(IntPoint.IntPoint(400, 300))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ChooseInsertRight"
+                }));
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "OpenInsertTarget"
+                }));
+                yield* Effect.sleep("180 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(
+                Operations,
+                Effect.void,
+                () => undefined,
+                true
+            )),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(TiledWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledInsertDirection
+            )),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                {
+                    Insert,
+                    PreviewInsert: () => Effect.succeed(
+                        Box.Box(0, 960, 1080, 0)
+                    )
+                }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Insert).toHaveBeenCalledWith(
+            FloatingWindow,
+            TiledWindow,
+            Tiling.Tree.FocusDirection.Right
+        );
+        expect(Operations).toContain("ForceClose:InsertTarget");
+        expect(WindowsWindow.SetForegroundWindow)
+            .toHaveBeenCalledWith(FloatingWindow);
+    });
+
+    it("captures the next eligible window when the Insert target opens with Ctrl Tab", async () =>
+    {
+        const TiledWindow = 1n as Handle.HWND;
+        const ExistingFloatingWindow = 2n as Handle.HWND;
+        const NewWindow = 3n as Handle.HWND;
+        const Insert = vi.fn(() => Effect.void);
+        vi.mocked(WindowsWindow.GetManageableTopLevelWindows)
+            .mockReturnValueOnce(Result.succeed([ ExistingFloatingWindow ]))
+            .mockReturnValueOnce(Result.succeed([ ExistingFloatingWindow ]))
+            .mockReturnValue(Result.succeed([
+                ExistingFloatingWindow,
+                NewWindow
+            ]));
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ChooseInsertDown"
+                }));
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "OpenInsertTargetForNextWindow"
+                }));
+                yield* Effect.sleep("180 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(
+                [ ],
+                Effect.void,
+                () => undefined,
+                true
+            )),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(TiledWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledInsertDirection
+            )),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                {
+                    Insert,
+                    PreviewInsert: () => Effect.succeed(
+                        Box.Box(540, 1920, 1080, 0)
+                    )
+                }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Insert).toHaveBeenCalledWith(
+            NewWindow,
+            TiledWindow,
+            Tiling.Tree.FocusDirection.Down
+        );
     });
 
     it("restores foreground focus without displaying a backdrop", async () =>
@@ -940,7 +1099,8 @@ const FakeOverlaySession = (
 const FakeBrowserWindow = (
     Operations: Array<string>,
     OnHide: Effect.Effect<void> = Effect.void,
-    OnSetBounds: (Bounds: MathBox.Box) => void = () => undefined
+    OnSetBounds: (Bounds: MathBox.Box) => void = () => undefined,
+    IsVisible: boolean = false
 ): Layer.Layer<BrowserWindow.BrowserWindow> =>
 {
     const Record = (Operation: string): Effect.Effect<void> => Effect.sync(() =>
@@ -957,7 +1117,7 @@ const FakeBrowserWindow = (
         ForceClose: (Key: BrowserWindow.Key) => Record(`ForceClose:${ Key }`),
         GetNativeHandle: () => Effect.succeed(99n as Handle.HWND),
         Hide: (Key: BrowserWindow.Key) => pipe(Record(`Hide:${ Key }`), Effect.andThen(OnHide)),
-        IsVisible: (_Key: BrowserWindow.Key) => Effect.succeed(false),
+        IsVisible: (_Key: BrowserWindow.Key) => Effect.succeed(IsVisible),
         Open: (Specification: BrowserWindow.Spec) => pipe(
             Record(`Open:${ Specification.Key }`),
             Effect.as({

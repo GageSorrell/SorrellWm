@@ -26,6 +26,8 @@ import {
 } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import type { FloatingWindowSettingsDto } from "../Shared/AppSettings.js";
+import { MakeSettingControlId } from "./SettingControlId.js";
+import { SettingsSectionId } from "../Shared/SettingsPath.js";
 
 const UseStyles = makeStyles({
     Loading:
@@ -126,6 +128,8 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
 
     return (
         <SettingGroup
+            Icon={ ArrowMoveRegular }
+            Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "MoveStepSizes") }
             Subtitle="Control how far, and how fast, a floating window moves on the Move overlay screen."
             Title="Move Step Sizes">
             <Setting
@@ -134,6 +138,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                     OnCommit={ (Value: number) => Commit("MoveStepPrimary", Value) }
                     Value={ Settings.MoveStepPrimary } /> }
                 Icon={ ArrowMoveRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "PrimaryStepSize") }
                 Subtitle="Pixels moved per press of a direction key."
                 Title="Primary Step Size" />
 
@@ -144,6 +149,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                     Step={ 0.1 }
                     Value={ Settings.MoveStepPrimarySpeedFactor } /> }
                 Icon={ TopSpeedRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "PrimaryHoldSpeed") }
                 Subtitle="Press-and-hold speed, as a multiple of the primary step size per second."
                 Title="Primary Hold Speed" />
 
@@ -153,6 +159,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                     OnCommit={ (Value: number) => Commit("MoveStepSecondary", Value) }
                     Value={ Settings.MoveStepSecondary } /> }
                 Icon={ ArrowMaximizeRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "SecondaryStepSize") }
                 Subtitle="Pixels moved per press of a direction key while the distance modifier is held."
                 Title="Secondary Step Size" />
 
@@ -163,6 +170,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                     Step={ 0.1 }
                     Value={ Settings.MoveStepSecondarySpeedFactor } /> }
                 Icon={ TopSpeedRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "SecondaryHoldSpeed") }
                 Subtitle="Press-and-hold speed, as a multiple of the secondary step size per second."
                 Title="Secondary Hold Speed" />
 
@@ -172,6 +180,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                     OnCommit={ (Value: number) => Commit("MoveFineSpeed", Value) }
                     Value={ Settings.MoveFineSpeed } /> }
                 Icon={ TopSpeedRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "FineStepHoldSpeed") }
                 Subtitle="Fixed press-and-hold speed, in pixels/second, while the fine-step modifier is held."
                 Title="Fine Step Hold Speed" />
         </SettingGroup>

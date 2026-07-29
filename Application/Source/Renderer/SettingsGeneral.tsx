@@ -34,6 +34,8 @@ import {
 import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import { useEffect, useState } from "react";
 import { GridRegular } from "@fluentui/react-icons";
+import { MakeSettingControlId } from "./SettingControlId.js";
+import { SettingsSectionId } from "../Shared/SettingsPath.js";
 
 const TiledResizeBehaviorLabel: Readonly<Record<TiledResizeBehavior, string>> = {
     AdjacentOnly: "Adjacent Window Only",
@@ -100,6 +102,8 @@ const SettingsGeneral = (): React.JSX.Element =>
     return (
         <>
             <SettingGroup
+                Icon={ GridRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.General, "Startup") }
                 Subtitle="Choose how SorrellWm initializes the desktop when it starts."
                 Title="Startup">
                 <Setting
@@ -115,11 +119,14 @@ const SettingsGeneral = (): React.JSX.Element =>
                             }) } />
                     }
                     Icon={ GridRegular }
+                    Id={ MakeSettingControlId(SettingsSectionId.General, "TileExistingWindowsOnStartup") }
                     Subtitle="Add every existing floating window to the root panel of its current monitor."
                     Title="Tile Existing Windows on Startup" />
             </SettingGroup>
 
             <SettingGroup
+                Icon={ GridRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.General, "Tiling") }
                 Subtitle="Control spacing around and between tiled windows."
                 Title="Tiling">
                 <Setting
@@ -148,6 +155,7 @@ const SettingsGeneral = (): React.JSX.Element =>
                             value={ Settings.TiledWindowGap } />
                     }
                     Icon={ GridRegular }
+                    Id={ MakeSettingControlId(SettingsSectionId.General, "TiledWindowGap") }
                     Subtitle="Pixels between adjacent tiled windows and between tiles and monitor edges."
                     Title="Tiled Window Gap" />
 
@@ -185,6 +193,7 @@ const SettingsGeneral = (): React.JSX.Element =>
                         </Dropdown>
                     }
                     Icon={ GridRegular }
+                    Id={ MakeSettingControlId(SettingsSectionId.General, "InitialResizeBehavior") }
                     Subtitle={
                         "Choose whether tiled resizing preserves every other ratio "
                         + "or transfers space only to the adjacent window."

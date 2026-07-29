@@ -1280,7 +1280,9 @@ const PollTiledInsertTarget = (
     const Snapshot = yield* TilingManager.Snapshot;
     const MovingWindow = Window.GetMovingWindow().pipe(
         Option.filter((WindowValue: Handle.HWND): boolean =>
-            !IsWindowTiled(Snapshot, WindowValue))
+            !IsWindowTiled(Snapshot, WindowValue)),
+        Option.filter((WindowValue: Handle.HWND): boolean =>
+            GetManageableWindowSet().has(WindowValue))
     );
 
     if (Option.isSome(MovingWindow))

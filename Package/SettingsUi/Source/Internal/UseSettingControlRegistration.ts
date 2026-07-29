@@ -19,12 +19,14 @@ import
     useLayoutEffect,
     useRef
 } from "react";
+import type { FluentIcon } from "@fluentui/react-icons";
 import type { MotionImperativeRef } from "@fluentui/react-motion";
 import { SettingControlsContext } from "../SettingControlsContext.js";
 
 /** Options for {@link UseSettingControlRegistration}. */
 export interface UseSettingControlRegistrationOptions
 {
+    readonly Icon?: FluentIcon | undefined;
     readonly Id?: string | undefined;
     readonly Subtitle?: ReactNode;
     readonly Title: ReactNode;
@@ -46,7 +48,7 @@ export interface UseSettingControlRegistrationResult<TargetElement extends HTMLE
  * `ScrollToAndPulse` call - never the mount itself - plays it. A no-op otherwise.
  */
 export function UseSettingControlRegistration<TargetElement extends HTMLElement>(
-    { Id, Subtitle, Title }: UseSettingControlRegistrationOptions
+    { Icon, Id, Subtitle, Title }: UseSettingControlRegistrationOptions
 ): UseSettingControlRegistrationResult<TargetElement>
 {
     const NodeRef = useRef<TargetElement>(null);
@@ -67,8 +69,8 @@ export function UseSettingControlRegistration<TargetElement extends HTMLElement>
             return undefined;
         }
 
-        return Context.Register(Id, { Subtitle, Title }, NodeRef.current);
-    }, [ Context, Id, Title, Subtitle ]);
+        return Context.Register(Id, { Icon, Subtitle, Title }, NodeRef.current);
+    }, [ Context, Id, Title, Subtitle, Icon ]);
 
     useEffect(() =>
     {

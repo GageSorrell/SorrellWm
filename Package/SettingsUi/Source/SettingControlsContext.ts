@@ -10,11 +10,15 @@
  */
 
 import { createContext } from "react";
+import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 
-/** The title and subtitle recorded for one addressable {@link Setting} or {@link SettingGroup}. */
+/** The icon, title, and subtitle recorded for one addressable {@link Setting} or {@link SettingGroup}. */
 export interface SettingControlEntry
 {
+    /** `Setting` always has one; `SettingGroup`'s is optional. */
+    readonly Icon?: FluentIcon | undefined;
+
     readonly Subtitle?: ReactNode;
     readonly Title: ReactNode;
 }

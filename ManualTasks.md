@@ -129,8 +129,12 @@ Please implement the ability in SorrellWm to accept client connections from appl
 
 ---
 
-Please add the `boolean` app setting "IgnoreActivationKeybindInFullscreen", which is `true` by default.  When `true`, if the current focused window is in fullscreen (for example, if it's a game window or fullscreen video playing from the browser), then the activation keybind to show the overlay window should be ignored.
+Please add the `boolean` app setting "IgnoreActivationKeybindInFullscreen" to `@sorrell/wm`, which is `true` by default.  When `true`, if the current focused window is in fullscreen (for example, if it's a game window or fullscreen video playing from the browser), then the activation keybind to show the overlay window should be ignored.
 
 ---
 
 @TODO Implement "Allow breakthrough with rapid shortcut presses" setting from the Command Palette
+
+---
+
+Please handle tiled window minimizing and maximizing by remembering where the window was before it was minimized.  When restored, the window should be put back where it was originally, unless the panel to which it belongs has changed state.  If the tiling tree state does not allow for a straightforward restoration, then the window should be placed in the tree at the position that most closely resembles where it was on the screen before it was minimized or maximized.

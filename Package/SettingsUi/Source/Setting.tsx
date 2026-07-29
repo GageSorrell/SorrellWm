@@ -138,7 +138,7 @@ const Setting = (
     const [ IsOpen, SetIsOpen ] = useState<boolean>(false);
     const HasChildren = children !== undefined;
     const { NodeRef, PulseHandleRef } =
-        UseSettingControlRegistration<HTMLDivElement>({ Id, Subtitle, Title });
+        UseSettingControlRegistration<HTMLDivElement>({ Icon, Id, Subtitle, Title });
 
     return (
         <PulseMotion RestingColor={ tokens.colorNeutralBackground1 }

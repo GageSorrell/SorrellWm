@@ -9,16 +9,17 @@
 
 import {
     GetFocusPreviewWindowSpec,
+    GetInsertTargetWindowSpec,
     Key
 } from "../../Source/Main/BrowserWindow.ts";
-import { Box } from "@sorrell/math";
 import { describe, expect, it, vi } from "vitest";
+import { Box } from "@sorrell/math";
 
 vi.mock("electron", () =>
 {
     const Electron = {
-        app: { isPackaged: true },
         BrowserWindow: class { },
+        app: { isPackaged: true },
         screen: {
             screenToDipRect: (
                 _Window: null,
@@ -87,6 +88,31 @@ describe("BrowserWindow Focus preview specification", () =>
                 y: 20
             },
             ShowWhenReady: false
+        });
+    });
+
+    it("creates a taskbar-free acrylic Insert target at the selected tile", () =>
+    {
+        const Spec = GetInsertTargetWindowSpec(
+            Box.Box(40, 720, 440, 120)
+        );
+
+        expect(Spec).toMatchObject({
+            Key: "InsertTarget",
+            Options: {
+                alwaysOnTop: true,
+                backgroundMaterial: "acrylic",
+                frame: false,
+                height: 400,
+                resizable: false,
+                roundedCorners: false,
+                skipTaskbar: true,
+                type: "toolbar",
+                width: 600,
+                x: 120,
+                y: 40
+            },
+            ShowWhenReady: true
         });
     });
 });

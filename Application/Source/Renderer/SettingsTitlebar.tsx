@@ -1,6 +1,7 @@
 /**
- * The settings window's custom titlebar: branding/navigation toggle, a centered search
- * box, and space reserved for the native window-control overlay.
+ * The settings window's custom titlebar: branding/navigation toggle, a centered fuzzy-search
+ * combobox over every registered setting, and space reserved for the native window-control
+ * overlay.
  *
  * @module @sorrell/wm/Renderer/SettingsTitlebar
  *
@@ -12,8 +13,20 @@
 
 import * as React from "react";
 import { DragRegion, NoDragRegion } from "./AppRegion.js";
-import { Hamburger, SearchBox, Text, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import {
+    Combobox,
+    Hamburger,
+    Option,
+    type OptionOnSelectData,
+    type SelectionEvents,
+    Text,
+    makeStyles,
+    mergeClasses,
+    tokens
+} from "@fluentui/react-components";
+import { SearchSettingControls } from "./SettingsSearch.js";
 import { BoardColor } from "@fluentui/react-icons";
+import type { SettingControlEntry } from "@sorrell/settings-ui";
 import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.js";
 
 /** The native window-control overlay's approximate reserved width, in pixels. */
@@ -67,6 +80,34 @@ const UseStyles = makeStyles({
         gap: tokens.spacingHorizontalS,
         minWidth: 0
     },
+    OptionIcon:
+    {
+        color: tokens.colorNeutralForeground2,
+        flexShrink: 0,
+        fontSize: "1.25rem"
+    },
+    OptionRow:
+    {
+        alignItems: "center",
+        display: "flex",
+        gap: tokens.spacingHorizontalM
+    },
+    OptionSubtitle:
+    {
+        color: tokens.colorNeutralForeground3,
+        fontSize: tokens.fontSizeBase200
+    },
+    OptionText:
+    {
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalXXS,
+        minWidth: 0
+    },
+    OptionTitle:
+    {
+        color: tokens.colorNeutralForeground1
+    },
     Right:
     {
         flex: "1 1 0",
@@ -93,8 +134,15 @@ const UseStyles = makeStyles({
 /** Props for {@link SettingsTitlebar}. */
 export interface SettingsTitlebarProps
 {
+    /** Every registered `Setting`/`SettingGroup`, from `UseSettingControls`, to search over. */
+    readonly Controls: Readonly<Record<string, SettingControlEntry>>;
+
     readonly IsSidebarOpen: boolean;
     readonly IsSidebarPinned: boolean;
+
+    /** Called with a search result's `Id` when it's selected from the dropdown. */
+    readonly OnSelectResult: (Id: string) => void;
+
     readonly OnToggleSidebar: () => void;
 }
 
@@ -104,8 +152,10 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
     const Styles = UseStyles();
 
     const {
+        Controls,
         IsSidebarOpen,
         IsSidebarPinned,
+        OnSelectResult,
         OnToggleSidebar
     }: SettingsTitlebarProps = Props;
 
@@ -123,6 +173,26 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
             window.removeEventListener("blur", SetBlurred);
         };
     }, [ ]);
+
+    const [ Query, SetQuery ] = React.useState<string>("");
+    const [ IsSearchFocused, SetIsSearchFocused ] = React.useState<boolean>(false);
+    const Results = React.useMemo(
+        () => SearchSettingControls(Query, Controls),
+        [ Query, Controls ]
+    );
+    const IsDropdownOpen = IsSearchFocused && Query.trim().length > 0 && Results.length > 0;
+
+    const OnSelectOption = (_Event: SelectionEvents, Data: OptionOnSelectData): void =>
+    {
+        if (Data.optionValue === undefined)
+        {
+            return;
+        }
+
+        OnSelectResult(Data.optionValue);
+        SetQuery("");
+        SetIsSearchFocused(false);
+    };
 
     const BrandTitleStyle = IsWindowFocused
         ? mergeClasses(Styles.BrandTitleBase, Styles.BrandTitleFocused)
@@ -153,9 +223,39 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
             </div>
 
             <div className={ Styles.Center }>
-                <SearchBox
+                <Combobox
                     className={ Styles.SearchBox }
-                    placeholder="Search for settings" />
+                    freeform
+                    onBlur={ () => SetIsSearchFocused(false) }
+                    onChange={ (Event: React.ChangeEvent<HTMLInputElement>) =>
+                    {
+                        SetQuery(Event.target.value);
+                        SetIsSearchFocused(true);
+                    } }
+                    onFocus={ () => SetIsSearchFocused(true) }
+                    onOptionSelect={ OnSelectOption }
+                    open={ IsDropdownOpen }
+                    placeholder="Search for settings"
+                    value={ Query }>
+                    { Results.map(({ Entry, Id }) => (
+                        <Option
+                            key={ Id }
+                            text={ typeof Entry.Title === "string" ? Entry.Title : Id }
+                            value={ Id }>
+                            <div className={ Styles.OptionRow }>
+                                { Entry.Icon !== undefined && <Entry.Icon className={ Styles.OptionIcon } /> }
+
+                                <div className={ Styles.OptionText }>
+                                    <span className={ Styles.OptionTitle }>{ Entry.Title }</span>
+
+                                    { Entry.Subtitle !== undefined && (
+                                        <span className={ Styles.OptionSubtitle }>{ Entry.Subtitle }</span>
+                                    ) }
+                                </div>
+                            </div>
+                        </Option>
+                    )) }
+                </Combobox>
             </div>
             <div className={ Styles.Right } />
         </header>

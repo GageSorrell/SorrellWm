@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { PulseMotion } from "./Internal/PulseMotion.js";
@@ -20,6 +21,12 @@ const UseStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalXXS
+    },
+    Icon:
+    {
+        color: tokens.colorNeutralForeground1,
+        flexShrink: 0,
+        fontSize: tokens.fontSizeBase400
     },
     Root:
     {
@@ -41,9 +48,12 @@ const UseStyles = makeStyles({
     },
     Title:
     {
+        alignItems: "center",
         color: tokens.colorNeutralForeground1,
+        display: "flex",
         fontSize: tokens.fontSizeBase400,
         fontWeight: tokens.fontWeightSemibold,
+        gap: tokens.spacingHorizontalS,
         margin: 0
     }
 });
@@ -53,6 +63,9 @@ export interface SettingGroupProps
 {
     /** {@link Setting} rows shown under this category, spaced with a small gap. */
     readonly children: ReactNode;
+
+    /** Shown before the title, when present. */
+    readonly Icon?: FluentIcon;
 
     /**
      * An identifier making this group addressable through `UseSettingControls`, which can
@@ -65,10 +78,11 @@ export interface SettingGroupProps
 }
 
 export/** A titled category of settings, e.g. "Find My Mouse". */
-const SettingGroup = ({ children, Id, Subtitle, Title }: SettingGroupProps): React.JSX.Element =>
+const SettingGroup = ({ children, Icon, Id, Subtitle, Title }: SettingGroupProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
-    const { NodeRef, PulseHandleRef } = UseSettingControlRegistration<HTMLElement>({ Id, Subtitle, Title });
+    const { NodeRef, PulseHandleRef } =
+        UseSettingControlRegistration<HTMLElement>({ Icon, Id, Subtitle, Title });
 
     return (
         <PulseMotion RestingColor="transparent"
@@ -76,7 +90,10 @@ const SettingGroup = ({ children, Id, Subtitle, Title }: SettingGroupProps): Rea
             <section className={ Styles.Root }
                 ref={ NodeRef }>
                 <div className={ Styles.Header }>
-                    <h2 className={ Styles.Title }>{ Title }</h2>
+                    <h2 className={ Styles.Title }>
+                        { Icon !== undefined && <Icon className={ Styles.Icon } /> }
+                        { Title }
+                    </h2>
 
                     { Subtitle !== undefined && (
                         <p className={ Styles.Subtitle }>{ Subtitle }</p>

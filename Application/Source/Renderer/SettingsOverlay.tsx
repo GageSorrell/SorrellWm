@@ -20,6 +20,8 @@ import {
 import { useEffect, useState } from "react";
 import { EyeRegular } from "@fluentui/react-icons";
 import type { OverlaySettingsDto } from "../Shared/AppSettings.js";
+import { MakeSettingControlId } from "./SettingControlId.js";
+import { SettingsSectionId } from "../Shared/SettingsPath.js";
 
 const UseStyles = makeStyles({
     Control:
@@ -93,6 +95,8 @@ const SettingsOverlay = (): React.JSX.Element =>
 
     return (
         <SettingGroup
+            Icon={ EyeRegular }
+            Id={ MakeSettingControlId(SettingsSectionId.Overlay, "FocusPreviews") }
             Subtitle="Control how directional Focus targets are presented over obscured floating windows."
             Title="Focus Previews">
             <Setting
@@ -115,6 +119,7 @@ const SettingsOverlay = (): React.JSX.Element =>
                     </div>
                 }
                 Icon={ EyeRegular }
+                Id={ MakeSettingControlId(SettingsSectionId.Overlay, "PreviewOpacity") }
                 Subtitle="Opacity of the sampled-color fill shown over a fully obscured floating window."
                 Title="Preview Opacity" />
         </SettingGroup>

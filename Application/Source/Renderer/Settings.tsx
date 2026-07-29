@@ -13,6 +13,8 @@ import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../Sha
 import { Text, Title2, makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
+import { ParseSettingControlId } from "./SettingControlId.js";
+import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-ui";
 import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
 import { SettingsGeneral } from "./SettingsGeneral.js";
 import { SettingsOverlay } from "./SettingsOverlay.js";
@@ -60,6 +62,10 @@ const UseStyles = makeStyles({
     {
         color: tokens.colorNeutralForeground2
     },
+    Hidden:
+    {
+        display: "none"
+    },
     Shell:
     {
         boxSizing: "border-box",
@@ -91,13 +97,25 @@ const UseIsSidebarPinned = (): boolean =>
 };
 
 export/** Render the settings window's titlebar, navigation sidebar, and content area. */
-const SettingsApplication = (): React.JSX.Element =>
+const SettingsApplication = (): React.JSX.Element => (
+    <SettingControlsProvider>
+        <SettingsShell />
+    </SettingControlsProvider>
+);
+
+/**
+ * The actual settings window content, split out from {@link SettingsApplication} so it can
+ * sit beneath the `SettingControlsProvider` and call `UseSettingControls`.
+ */
+const SettingsShell = (): React.JSX.Element =>
 {
     const Styles = UseStyles();
     const IsSidebarPinned = UseIsSidebarPinned();
     const [ IsSidebarOpen, SetIsSidebarOpen ] = useState<boolean>(false);
     const [ Path, SetPath ] = useState<SettingsPath | null>(null);
     const [ BodyNode, SetBodyNode ] = useState<HTMLDivElement | null>(null);
+    const [ PendingScrollId, SetPendingScrollId ] = useState<string | null>(null);
+    const { Controls, ScrollToAndPulse } = UseSettingControls();
 
     useEffect(
         () => window.sorrell.settings.onNavigate((Value: string | null) =>
@@ -118,11 +136,55 @@ const SettingsApplication = (): React.JSX.Element =>
     const SelectedSection = Path?.Section ?? SettingsSectionId.Home;
     const ApplicationName = Path?.Params.Name;
 
+    // Wait one frame for the just-selected section's "display: none" to lift and its layout
+    // to settle, so `scrollIntoView` has real geometry to scroll to.
+    useEffect(() =>
+    {
+        if (PendingScrollId === null)
+        {
+            return undefined;
+        }
+
+        const Parsed = ParseSettingControlId(PendingScrollId);
+
+        if (Parsed === null || Parsed.Section !== SelectedSection)
+        {
+            return undefined;
+        }
+
+        const Frame = requestAnimationFrame(() =>
+        {
+            ScrollToAndPulse(PendingScrollId);
+            SetPendingScrollId(null);
+        });
+
+        return (): void => cancelAnimationFrame(Frame);
+    }, [ PendingScrollId, SelectedSection, ScrollToAndPulse ]);
+
     const OnToggleSidebar = () => SetIsSidebarOpen(Boolean.not);
+
+    const OnSelectSearchResult = (Id: string): void =>
+    {
+        const Parsed = ParseSettingControlId(Id);
+
+        if (Parsed === null)
+        {
+            return;
+        }
+
+        SetIsSidebarOpen(false);
+        SetPath({ Params: { }, Section: Parsed.Section });
+        SetPendingScrollId(Id);
+    };
 
     return (
         <div className={ Styles.Shell }>
-            <SettingsTitlebar { ...{ IsSidebarOpen, IsSidebarPinned, OnToggleSidebar } } />
+            <SettingsTitlebar
+                Controls={ Controls }
+                IsSidebarOpen={ IsSidebarOpen }
+                IsSidebarPinned={ IsSidebarPinned }
+                OnSelectResult={ OnSelectSearchResult }
+                OnToggleSidebar={ OnToggleSidebar } />
             <div
                 className={ Styles.Body }
                 ref={ SetBodyNode }>
@@ -147,17 +209,28 @@ const SettingsApplication = (): React.JSX.Element =>
                         </Text>
                     ) }
 
-                    { SelectedSection === SettingsSectionId.FloatingWindows && (
-                        <SettingsFloatingWindows />
-                    ) }
-
-                    { SelectedSection === SettingsSectionId.General && (
+                    { /*
+                        General, Overlay, and Floating Windows stay mounted (just hidden) rather
+                        than swapping in and out, so their Setting/SettingGroup Ids stay
+                        registered for search no matter which section is on screen. Per-App
+                        Settings is left conditionally mounted: it has no addressable Ids
+                        (SettingOption/SettingToggle rows aren't registrable), so there's nothing
+                        for search to lose by unmounting it.
+                    */ }
+                    <div className={ SelectedSection === SettingsSectionId.General ? undefined : Styles.Hidden }>
                         <SettingsGeneral />
-                    ) }
+                    </div>
 
-                    { SelectedSection === SettingsSectionId.Overlay && (
+                    <div className={ SelectedSection === SettingsSectionId.Overlay ? undefined : Styles.Hidden }>
                         <SettingsOverlay />
-                    ) }
+                    </div>
+
+                    <div
+                        className={
+                            SelectedSection === SettingsSectionId.FloatingWindows ? undefined : Styles.Hidden
+                        }>
+                        <SettingsFloatingWindows />
+                    </div>
 
                     { SelectedSection === SettingsSectionId.PerAppSettings && (
                         <SettingsPerApp />
