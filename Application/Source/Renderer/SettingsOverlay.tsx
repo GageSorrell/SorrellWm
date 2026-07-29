@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as Logging from "./Logging.js";
 import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import {
     Slider,
@@ -61,7 +62,10 @@ const SettingsOverlay = (): React.JSX.Element =>
                     SetSettings(Loaded);
                 }
             })
-            .catch(() => undefined);
+            .catch(Logging.ReportRejection(
+                "Settings",
+                "Could not load overlay settings."
+            ));
 
         return (): void =>
         {
@@ -76,7 +80,10 @@ const SettingsOverlay = (): React.JSX.Element =>
 
         window.sorrell.overlaySettings.set({ FocusPreviewOpacity: Value })
             .then((Updated: OverlaySettingsDto) => SetSettings(Updated))
-            .catch(() => undefined);
+            .catch(Logging.ReportRejection(
+                "Settings",
+                "Could not update overlay settings."
+            ));
     };
 
     if (Settings === null)

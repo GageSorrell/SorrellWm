@@ -48,6 +48,7 @@
         "@sorrell/keyboard-ui": "1.0.0",
         "@sorrell/log": "1.0.0",
         "@sorrell/math": "1.0.0",
+        "@sorrell/react": "1.0.0",
         "@sorrell/settings-ui": "1.0.0",
         "@sorrell/utility": "1.0.0",
         "@sorrell/windows": "1.0.0",

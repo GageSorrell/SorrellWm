@@ -14,7 +14,9 @@ import { Text, Title2, makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
 import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
+import { SettingsGeneral } from "./SettingsGeneral.js";
 import { SettingsOverlay } from "./SettingsOverlay.js";
+import { SettingsPerApp } from "./SettingsPerApp.js";
 import { SettingsSidebar } from "./SettingsSidebar.js";
 import { SettingsTitlebar } from "./SettingsTitlebar.js";
 
@@ -149,8 +151,16 @@ const SettingsApplication = (): React.JSX.Element =>
                         <SettingsFloatingWindows />
                     ) }
 
+                    { SelectedSection === SettingsSectionId.General && (
+                        <SettingsGeneral />
+                    ) }
+
                     { SelectedSection === SettingsSectionId.Overlay && (
                         <SettingsOverlay />
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.PerAppSettings && (
+                        <SettingsPerApp />
                     ) }
                 </main>
             </div>

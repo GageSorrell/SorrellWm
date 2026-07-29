@@ -10,12 +10,12 @@
  */
 
 import * as TilingTree from "./Tree.ts";
-import { Context, Data, Effect, Layer, Option, SubscriptionRef } from "effect";
+import { Context, Data, Effect, Layer, Option, Ref, SubscriptionRef } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import type { Result, Stream } from "effect";
 import { Box } from "@sorrell/math";
-import { DevFeatures } from "../Development/DevFeatures.ts";
 import type { SimpleError } from "../Utility/Error.ts";
+import { WithCategory } from "@sorrell/log/Effect";
 
 export/** The type identifier of this module. */
 const TypeId = "~sorrell/wm/Main/Tiling/Manager" as const;
@@ -94,11 +94,26 @@ export interface TilingManagerImpl
     /** Read the current immutable tiling state. */
     readonly Snapshot: Effect.Effect<TilingTree.State>;
 
+    /** Read the gap currently applied to tiled-window layout. */
+    readonly Gap: Effect.Effect<number>;
+
     /** Reapply the current tree's calculated rectangles to native windows. */
     readonly Reconcile: Effect.Effect<void, WindowLayoutError>;
 
+    /** Change the tiled-window gap and immediately reconcile native windows. */
+    readonly SetGap: (Gap: number) => Effect.Effect<void, WindowLayoutError>;
+
     /** Discover current native windows and merge them into the managed state. */
     readonly Refresh: Effect.Effect<
+        void,
+        WindowEnumerationError | WindowLayoutError
+    >;
+
+    /**
+     * Adopt every discoverable floating window into its monitor's root panel.
+     * This is a no-op while any monitor root already contains tiled content.
+     */
+    readonly TileExistingWindows: Effect.Effect<
         void,
         WindowEnumerationError | WindowLayoutError
     >;
@@ -115,6 +130,23 @@ export interface TilingManagerImpl
         WindowValue: Handle.HWND,
         Target: Handle.HWND,
         Orientation?: TilingTree.Orientation
+    ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
+
+    /** Move a managed window into an adjacent sibling panel as child zero. */
+    readonly MoveIntoPanel: (
+        WindowValue: Handle.HWND,
+        TargetPanelPath: TilingTree.Path
+    ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
+
+    /** Move a managed window to a child index in its current panel. */
+    readonly MoveToIndex: (
+        WindowValue: Handle.HWND,
+        TargetIndex: number
+    ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
+
+    /** Promote a managed window one panel level. */
+    readonly MoveToContainingPanel: (
+        WindowValue: Handle.HWND
     ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
 
     /** Remove one native window, optionally restoring its pre-management bounds. */
@@ -152,6 +184,22 @@ export class TilingManager extends
 const EmptyState: TilingTree.State = Object.freeze({
     Workspaces: Object.freeze(new Array<TilingTree.Workspace>())
 });
+
+const LogTilingDebug = (
+    Message: string,
+    Annotations: Readonly<Record<string, unknown>> = { }
+): Effect.Effect<void> => Effect.logDebug(Message).pipe(
+    Effect.annotateLogs(Annotations),
+    WithCategory("Tiling")
+);
+
+const LogTilingInfo = (
+    Message: string,
+    Annotations: Readonly<Record<string, unknown>> = { }
+): Effect.Effect<void> => Effect.logInfo(Message).pipe(
+    Effect.annotateLogs(Annotations),
+    WithCategory("Tiling")
+);
 
 const DirectionForBounds = (Bounds: Box.Box): TilingTree.Orientation =>
     Box.Width(Bounds) >= Box.Height(Bounds)
@@ -334,6 +382,39 @@ const UpdateWorkspace = (
     return Effect.succeed(FreezeState(Workspaces));
 };
 
+const UpdateManagedWindowWorkspace = (
+    Current: TilingTree.State,
+    WindowValue: Handle.HWND,
+    Transform: (Root: TilingTree.Node) => readonly [ TilingTree.Node, boolean ]
+): Effect.Effect<TilingTree.State, WindowNotManagedError> =>
+{
+    const WorkspaceIndex = Current.Workspaces.findIndex(
+        (Workspace: TilingTree.Workspace): boolean =>
+            TilingTree.HasWindow(Workspace.Root, WindowValue)
+    );
+
+    if (WorkspaceIndex < 0)
+    {
+        return Effect.fail(new WindowNotManagedError({ Window: WindowValue }));
+    }
+
+    const Workspace = Current.Workspaces[WorkspaceIndex]!;
+    if (Workspace.Root === null)
+    {
+        return Effect.fail(new WindowNotManagedError({ Window: WindowValue }));
+    }
+
+    const [ Root, Updated ] = Transform(Workspace.Root);
+    if (!Updated)
+    {
+        return Effect.succeed(Current);
+    }
+
+    const Workspaces = [ ...Current.Workspaces ];
+    Workspaces[WorkspaceIndex] = FreezeWorkspace(Workspace, Root);
+    return Effect.succeed(FreezeState(Workspaces));
+};
+
 export/** Construct a tiling-manager layer using injectable native-window operations. */
 const MakeLive = (
     DependenciesValue: Dependencies
@@ -342,23 +423,37 @@ const MakeLive = (
     Effect.gen(function*()
     {
         const StateRef = yield* SubscriptionRef.make<TilingTree.State>(EmptyState);
+        const GapRef = yield* Ref.make(0);
 
         const Apply = (
             State: TilingTree.State
-        ): Effect.Effect<void, WindowLayoutError> => Effect.forEach(
-            TilingTree.Layout(State),
-            (Placement: TilingTree.Placement) => Effect.sync(() =>
-                DependenciesValue.SetWindowRect(Placement.Window, Placement.Bounds)
-            ).pipe(
-                Effect.flatMap(Effect.fromResult),
-                Effect.mapError((Failure: SimpleError) => new WindowLayoutError({
-                    Bounds: Placement.Bounds,
-                    Message: Failure.Message,
-                    Window: Placement.Window
-                }))
-            ),
-            { discard: true }
-        );
+        ): Effect.Effect<void, WindowLayoutError> => Effect.gen(function*()
+        {
+            const Gap = yield* Ref.get(GapRef);
+            const Placements = TilingTree.Layout(State, Gap);
+            yield* LogTilingDebug("Reconciling tiled-window geometry.", {
+                Gap,
+                WindowCount: Placements.length,
+                WorkspaceCount: State.Workspaces.length
+            });
+            yield* Effect.forEach(
+                Placements,
+                (Placement: TilingTree.Placement) => Effect.sync(() =>
+                    DependenciesValue.SetWindowRect(Placement.Window, Placement.Bounds)
+                ).pipe(
+                    Effect.flatMap(Effect.fromResult),
+                    Effect.mapError((Failure: SimpleError) => new WindowLayoutError({
+                        Bounds: Placement.Bounds,
+                        Message: Failure.Message,
+                        Window: Placement.Window
+                    }))
+                ),
+                { discard: true }
+            );
+            yield* LogTilingDebug("Tiled-window geometry reconciled.", {
+                WindowCount: Placements.length
+            });
+        });
 
         const Commit = <ErrorType>(
             Transform: (
@@ -377,13 +472,29 @@ const MakeLive = (
             Effect.mapError((Failure: SimpleError) => new WindowEnumerationError({
                 Message: Failure.Message
             })),
-            Effect.map((Handles: ReadonlyArray<Handle.HWND>) => Handles.flatMap(
-                (WindowValue: Handle.HWND): ReadonlyArray<TilingTree.WindowSeed> =>
+            Effect.flatMap((Handles: ReadonlyArray<Handle.HWND>) => Effect.forEach(
+                Handles,
+                (WindowValue: Handle.HWND) => Effect.gen(function*()
                 {
                     const Seed = ReadWindowSeed(DependenciesValue, WindowValue);
-                    return Option.isSome(Seed) ? [ Seed.value ] : [ ];
-                }
-            ))
+                    if (Option.isNone(Seed))
+                    {
+                        yield* LogTilingDebug(
+                            "Skipped a native window whose tiling metadata was unavailable.",
+                            { Window: WindowValue }
+                        );
+                    }
+
+                    return Seed;
+                })
+            ).pipe(Effect.map((
+                Seeds: ReadonlyArray<Option.Option<TilingTree.WindowSeed>>
+            ) => Seeds.flatMap(
+                (Seed: Option.Option<TilingTree.WindowSeed>): ReadonlyArray<
+                    TilingTree.WindowSeed
+                > =>
+                    Option.isSome(Seed) ? [ Seed.value ] : [ ]
+            ))))
         );
 
         const Refresh = Effect.flatMap(
@@ -395,6 +506,32 @@ const MakeLive = (
                         : MergeDiscoveredWindows(Current, Seeds)
                 )
             )
+        ).pipe(Effect.tap(() => LogTilingInfo(
+            "Refreshed the tiling state from native windows."
+        )));
+
+        const TileExistingWindows = SubscriptionRef.get(StateRef).pipe(
+            Effect.flatMap((Current: TilingTree.State) =>
+                TilingTree.AreRootPanelsEmpty(Current)
+                    ? Discover.pipe(
+                        Effect.flatMap((
+                            Seeds: ReadonlyArray<TilingTree.WindowSeed>
+                        ) => Seeds.length === 0
+                            ? LogTilingDebug(
+                                "No discoverable floating windows were available to tile."
+                            )
+                            : Commit((Latest: TilingTree.State) => Effect.succeed(
+                                TilingTree.AreRootPanelsEmpty(Latest)
+                                    ? TilingTree.FromWindowSeedsAtRootPanels(Seeds)
+                                    : Latest
+                            )).pipe(Effect.tap(() => LogTilingInfo(
+                                "Tiled existing floating windows.",
+                                { WindowCount: Seeds.length }
+                            ))))
+                    )
+                    : LogTilingDebug(
+                        "Skipped tiling existing windows because a root panel is not empty."
+                    ))
         );
 
         const Tile = (
@@ -445,7 +582,11 @@ const MakeLive = (
                 }
 
                 return Effect.succeed(FreezeState(Workspaces));
-            });
+            }).pipe(Effect.tap(() => LogTilingInfo("Tiled a native window.", {
+                Orientation: Orientation ?? "Automatic",
+                Target: Target ?? "None",
+                Window: WindowValue
+            })));
         };
 
         const Float = (
@@ -477,6 +618,11 @@ const MakeLive = (
                     }))
                 );
             }
+
+            yield* LogTilingInfo("Floated a tiled window.", {
+                RestoreInitialBounds,
+                Window: WindowValue
+            });
         });
 
         const Move: TilingManagerImpl["Move"] = (
@@ -520,7 +666,57 @@ const MakeLive = (
             );
 
             return Effect.succeed(FreezeState(Workspaces));
-        });
+        }).pipe(Effect.tap(() => LogTilingInfo("Moved a tiled window beside another window.", {
+            Orientation: Orientation ?? "Automatic",
+            Target,
+            Window: WindowValue
+        })));
+
+        const MoveIntoPanel: TilingManagerImpl["MoveIntoPanel"] = (
+            WindowValue: Handle.HWND,
+            TargetPanelPath: TilingTree.Path
+        ) => Commit((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
+            Current,
+            WindowValue,
+            (Root: TilingTree.Node) => TilingTree.MoveWindowIntoPanel(
+                Root,
+                WindowValue,
+                TargetPanelPath
+            )
+        )).pipe(Effect.tap(() => LogTilingInfo("Moved a tiled window into a panel.", {
+            TargetPanelPath,
+            Window: WindowValue
+        })));
+
+        const MoveToContainingPanel: TilingManagerImpl["MoveToContainingPanel"] = (
+            WindowValue: Handle.HWND
+        ) => Commit((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
+            Current,
+            WindowValue,
+            (Root: TilingTree.Node) => TilingTree.MoveWindowToContainingPanel(
+                Root,
+                WindowValue
+            )
+        )).pipe(Effect.tap(() => LogTilingInfo(
+            "Moved a tiled window to its containing panel.",
+            { Window: WindowValue }
+        )));
+
+        const MoveToIndex: TilingManagerImpl["MoveToIndex"] = (
+            WindowValue: Handle.HWND,
+            TargetIndex: number
+        ) => Commit((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
+            Current,
+            WindowValue,
+            (Root: TilingTree.Node) => TilingTree.MoveWindowToIndex(
+                Root,
+                WindowValue,
+                TargetIndex
+            )
+        )).pipe(Effect.tap(() => LogTilingInfo("Reordered a tiled window.", {
+            TargetIndex,
+            Window: WindowValue
+        })));
 
         const SetPanelRatio: TilingManagerImpl["SetPanelRatio"] = (
             WorkspaceId: string,
@@ -537,7 +733,12 @@ const MakeLive = (
                 ChildIndex
             ),
             Path
-        ));
+        )).pipe(Effect.tap(() => LogTilingInfo("Changed a panel ratio.", {
+            ChildIndex,
+            Path,
+            Ratio: RatioValue,
+            WorkspaceId
+        })));
 
         const SetPanelOrientation: TilingManagerImpl["SetPanelOrientation"] = (
             WorkspaceId: string,
@@ -552,32 +753,43 @@ const MakeLive = (
                 OrientationValue
             ),
             Path
-        ));
-
-        if ((yield* DevFeatures).TileOnStart)
-        {
-            yield* Refresh.pipe(Effect.catch((ErrorValue: TilingManagerError) =>
-                Effect.logWarning(
-                    "Could not adopt existing windows; tiling will start with an empty state.",
-                    ErrorValue
-                )
-            ));
-        }
+        )).pipe(Effect.tap(() => LogTilingInfo("Changed a panel orientation.", {
+            Orientation: OrientationValue,
+            Path,
+            WorkspaceId
+        })));
 
         const Changes = SubscriptionRef.changes(StateRef);
+        const Gap = Ref.get(GapRef);
         const Reconcile = SubscriptionRef.get(StateRef).pipe(Effect.flatMap(Apply));
+        const SetGap: TilingManagerImpl["SetGap"] = (Value: number) =>
+            Ref.set(
+                GapRef,
+                Number.isFinite(Value) ? Math.max(0, Math.floor(Value)) : 0
+            ).pipe(
+                Effect.andThen(Reconcile),
+                Effect.tap(() => LogTilingInfo("Changed the tiled-window gap.", {
+                    Gap: Value
+                }))
+            );
         const Snapshot = SubscriptionRef.get(StateRef);
 
         return {
             Changes,
             Float,
+            Gap,
             Move,
+            MoveIntoPanel,
+            MoveToContainingPanel,
+            MoveToIndex,
             Reconcile,
             Refresh,
+            SetGap,
             SetPanelOrientation,
             SetPanelRatio,
             Snapshot,
-            Tile
+            Tile,
+            TileExistingWindows
         } as const;
     })
 );

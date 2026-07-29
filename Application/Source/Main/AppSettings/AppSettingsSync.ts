@@ -11,6 +11,7 @@
 
 import * as AppSettings from "./AppSettings.ts";
 import * as BrowserWindow from "../BrowserWindow.ts";
+import * as Logging from "../Log.ts";
 import * as OverlaySession from "../Overlay/Session.ts";
 import * as _AppSettings from "@sorrell/app-settings";
 import { Effect, Layer, pipe } from "effect";
@@ -31,6 +32,9 @@ namespace Sync
         function* (Theme: AppSettings.AppSettings["Theme"])
         {
             nativeTheme.themeSource = Theme.toLowerCase() as "dark" | "light" | "system";
+            yield* Logging.LogDebug("Settings.Sync", "Synchronized the Electron theme.", {
+                Theme
+            });
         });
 
     export const OverlayRoundedCorners = Traced("OverlayRoundedCorners")(
@@ -42,6 +46,10 @@ namespace Sync
                 Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
             );
             yield* BrowserWindows.Ensure(yield* BrowserWindow.OverlayWindowSpec);
+            yield* Logging.LogDebug(
+                "Settings.Sync",
+                "Recreated the overlay window for a settings change."
+            );
         });
 
     export const Keybinds = Fn("Keybinds")(
@@ -57,6 +65,10 @@ namespace Sync
                 Screen
             ).pipe(
                 Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
+            );
+            yield* Logging.LogDebug(
+                "Settings.Sync",
+                "Published updated keybind presentation to the overlay."
             );
         });
 

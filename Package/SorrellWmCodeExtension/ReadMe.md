@@ -2,6 +2,22 @@
 
 This workspace extension applies SorrellWm source conventions while developers work in VS Code.
 
+## React components
+
+Run **SorrellWm: Create React Component** from the Command Palette or choose
+**Create React Component** from an Explorer item's context menu. The extension
+prompts for a PascalCase TypeScript identifier and creates a component directory
+containing the component, state hook, style hook, render function, types, and
+barrel modules.  When the Explorer command is used on a file, the component is
+created beside that file; when it is used on a directory, the component is
+created inside that directory.  Command Palette invocations first show a fuzzy
+directory picker whose workspace-relative and absolute paths are searchable.
+
+The same generator is available to VS Code agents as the
+`#createReactComponent` language model tool.  The tool accepts a component name
+and the absolute path of an existing workspace directory, asks for confirmation,
+and returns the absolute path of the created component directory.
+
 ## Source module headers
 
 When a supported TypeScript or C++ file is created anywhere in the open workspace, the extension inserts the project's JSDoc-compatible header at the beginning of the file and saves it. It does not replace a header that it previously generated.

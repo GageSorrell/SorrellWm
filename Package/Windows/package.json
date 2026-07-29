@@ -105,6 +105,7 @@
     "typecheck": "tsc --noEmit -p ./tsconfig.json"
   },
   "devDependencies": {
+    "@sorrell/tsconfig": "1.0.0",
     "@types/node": "26.1.1",
     "cross-env": "10.1.0",
     "typescript": "6.0.2"

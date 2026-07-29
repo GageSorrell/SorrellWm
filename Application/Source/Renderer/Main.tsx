@@ -9,11 +9,14 @@
  * @license   MIT
  */
 
+import * as Logging from "./Logging.js";
 import { Root } from "./Root.js";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 const RootElement: HTMLElement | null = document.querySelector("#root");
+Logging.InstallGlobalHandlers();
+Logging.Info("Application", "Renderer process started.");
 
 if (RootElement === null)
 {

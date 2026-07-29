@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as Logging from "./Logging.js";
 import {
     FluentProvider,
     type Theme,
@@ -19,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Application } from "./Application.js";
 import { ColorScheme } from "../Shared/Theme.js";
 import { CreateFluentTheme } from "./Theme.js";
+import { RendererErrorBoundary } from "./RendererErrorBoundary.js";
 import type { RendererTheme } from "../Shared/Theme.js";
 
 const GetInitialRendererTheme = (): RendererTheme => ({
@@ -80,7 +82,10 @@ const Root = (): React.JSX.Element =>
             {
                 SetRendererTheme(Value);
             }
-        }).catch((): void => undefined);
+        }).catch(Logging.ReportRejection(
+            "Theme",
+            "Could not retrieve the initial renderer theme."
+        ));
 
         return (): void =>
         {
@@ -95,10 +100,12 @@ const Root = (): React.JSX.Element =>
     );
 
     return (
-        <FluentProvider
-            className={ Styles.Provider }
-            theme={ FluentTheme }>
-            <Application />
-        </FluentProvider>
+        <RendererErrorBoundary>
+            <FluentProvider
+                className={ Styles.Provider }
+                theme={ FluentTheme }>
+                <Application />
+            </FluentProvider>
+        </RendererErrorBoundary>
     );
 };

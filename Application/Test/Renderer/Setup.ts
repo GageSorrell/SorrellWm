@@ -11,6 +11,12 @@
 
 import "@testing-library/jest-dom/vitest";
 
+import type {
+    FloatingWindowSettingsPatch,
+    GeneralSettingsPatch,
+    OverlaySettingsPatch,
+    PerAppSettingPatch
+} from "../../Source/Shared/AppSettings.ts";
 import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
@@ -38,11 +44,27 @@ Object.defineProperty(window, "sorrell", {
                 MoveStepSecondary: 50,
                 MoveStepSecondarySpeedFactor: 4
             })),
-            set: vi.fn((Settings) => Promise.resolve(Settings))
+            set: vi.fn((Settings: FloatingWindowSettingsPatch) => Promise.resolve(Settings))
         },
         focusPreview:
         {
             onChanged: vi.fn(() => (): void => undefined)
+        },
+        generalSettings:
+        {
+            get: vi.fn(() => Promise.resolve({
+                TileExistingWindowsOnStartup: false,
+                TiledWindowGap: 8
+            })),
+            set: vi.fn((Settings: GeneralSettingsPatch) => Promise.resolve({
+                TileExistingWindowsOnStartup:
+                    Settings.TileExistingWindowsOnStartup ?? false,
+                TiledWindowGap: Settings.TiledWindowGap ?? 8
+            }))
+        },
+        log:
+        {
+            write: vi.fn()
         },
         overlay:
         {
@@ -59,7 +81,21 @@ Object.defineProperty(window, "sorrell", {
         overlaySettings:
         {
             get: vi.fn(() => Promise.resolve({ FocusPreviewOpacity: 75 })),
-            set: vi.fn((Settings) => Promise.resolve(Settings))
+            set: vi.fn((Settings: OverlaySettingsPatch) => Promise.resolve(Settings))
+        },
+        perAppSettings:
+        {
+            add: vi.fn(() => Promise.resolve(null)),
+            get: vi.fn(() => Promise.resolve([ ])),
+            set: vi.fn((
+                ExecutablePath: string,
+                Settings: PerAppSettingPatch
+            ) => Promise.resolve({
+                ExecutablePath,
+                FriendlyName: "Test Application",
+                IgnoreModal: Settings.IgnoreModal ?? true,
+                NewWindowBehavior: Settings.NewWindowBehavior ?? "FloatCenter"
+            }))
         },
         platform: "win32",
         settings:

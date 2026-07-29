@@ -64,4 +64,29 @@ describe("BrowserWindow Focus preview specification", () =>
             ShowWhenReady: false
         });
     });
+
+    it("uses the same non-activating surface for a tiled panel highlight", () =>
+    {
+        const Spec = GetFocusPreviewWindowSpec(
+            Key.TiledFocusPanelPreview,
+            Box.Box(20, 620, 420, 120)
+        );
+
+        expect(Spec).toMatchObject({
+            IgnoreMouseEvents: true,
+            Key: "TiledFocusPanelPreview",
+            Options: {
+                alwaysOnTop: true,
+                focusable: false,
+                frame: false,
+                height: 400,
+                skipTaskbar: true,
+                transparent: true,
+                width: 500,
+                x: 120,
+                y: 20
+            },
+            ShowWhenReady: false
+        });
+    });
 });

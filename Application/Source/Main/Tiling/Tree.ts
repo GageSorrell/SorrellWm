@@ -21,8 +21,19 @@ const Orientation = Object.freeze({
 /** A panel arrangement direction. */
 export type Orientation = typeof Orientation[keyof typeof Orientation];
 
-/** A path from a workspace root to a descendant panel. */
+/** A path from a workspace root to a descendant node. */
 export type Path = ReadonlyArray<number>;
+
+export/** Directions used to move logical focus between panel children. */
+const FocusDirection = Object.freeze({
+    Down: "Down",
+    Left: "Left",
+    Right: "Right",
+    Up: "Up"
+} as const);
+
+/** One logical panel-focus movement direction. */
+export type FocusDirection = typeof FocusDirection[keyof typeof FocusDirection];
 
 /** A window tracked by the tiling manager. */
 export interface ManagedWindow
@@ -117,19 +128,48 @@ const NormalizeRatios = (
     return Object.freeze(Ratios.map((Ratio: number): number => Ratio / Total));
 };
 
+const NormalizeGap = (Gap: number): number =>
+    Number.isFinite(Gap) ? Math.max(0, Math.floor(Gap)) : 0;
+
+const InsetBounds = (Bounds: Box.Box, Gap: number): Box.Box =>
+{
+    const NormalizedGap = NormalizeGap(Gap);
+    const HorizontalInset = Math.min(
+        NormalizedGap,
+        Math.floor(Math.max(0, Box.Width(Bounds)) / 2)
+    );
+    const VerticalInset = Math.min(
+        NormalizedGap,
+        Math.floor(Math.max(0, Box.Height(Bounds)) / 2)
+    );
+
+    return Box.Box(
+        Bounds.Top + VerticalInset,
+        Bounds.Right - HorizontalInset,
+        Bounds.Bottom - VerticalInset,
+        Bounds.Left + HorizontalInset
+    );
+};
+
 const SplitBounds = (
     Bounds: Box.Box,
     Direction: Orientation,
-    Ratios: ReadonlyArray<number>
+    Ratios: ReadonlyArray<number>,
+    Gap: number = 0
 ): ReadonlyArray<Box.Box> =>
 {
     const Normalized = NormalizeRatios(Ratios.length, Ratios);
-    const Length = Direction === Orientation.Horizontal
+    const Length = Math.max(0, Direction === Orientation.Horizontal
         ? Box.Width(Bounds)
-        : Box.Height(Bounds);
+        : Box.Height(Bounds));
     const Start = Direction === Orientation.Horizontal
         ? Bounds.Left
         : Bounds.Top;
+    const GapCount = Math.max(0, Normalized.length - 1);
+    const AppliedGap = GapCount === 0
+        ? 0
+        : Math.min(NormalizeGap(Gap), Math.floor(Length / GapCount));
+    const ContentLength = Length - (AppliedGap * GapCount);
     let Cursor: number = Start;
     let CumulativeRatio = 0;
 
@@ -138,13 +178,15 @@ const SplitBounds = (
         CumulativeRatio += Ratio;
         const End = Index === Normalized.length - 1
             ? Start + Length
-            : Start + Math.floor(Length * CumulativeRatio);
+            : Start
+                + Math.floor(ContentLength * CumulativeRatio)
+                + (AppliedGap * Index);
 
         const ChildBounds = Direction === Orientation.Horizontal
             ? Box.Box(Bounds.Top, End, Bounds.Bottom, Cursor)
             : Box.Box(Cursor, Bounds.Right, End, Bounds.Left);
 
-        Cursor = End;
+        Cursor = End + AppliedGap;
         return ChildBounds;
     }));
 };
@@ -380,9 +422,56 @@ const FromWindowSeeds = (Seeds: ReadonlyArray<WindowSeed>): State =>
     return Object.freeze({ Workspaces: Object.freeze(Workspaces) });
 };
 
+export/**
+       * Group existing windows by monitor and place every monitor's windows
+       * directly in its root panel.
+       */
+const FromWindowSeedsAtRootPanels = (Seeds: ReadonlyArray<WindowSeed>): State =>
+{
+    const Groups = new Map<string, { Bounds: Box.Box; Windows: Array<ManagedWindow>; }>();
+
+    for (const Seed of Seeds)
+    {
+        const Id = WorkspaceId(Seed.WorkArea);
+        const Group = Groups.get(Id) ?? {
+            Bounds: Seed.WorkArea,
+            Windows: new Array<ManagedWindow>()
+        };
+
+        Group.Windows.push({ InitialBounds: Seed.InitialBounds, Window: Seed.Window });
+        Groups.set(Id, Group);
+    }
+
+    const Workspaces = [ ...Groups.entries() ].map((
+        [ Id, Group ]: [ string, { Bounds: Box.Box; Windows: Array<ManagedWindow>; } ]
+    ): Workspace =>
+    {
+        const Direction = DirectionForBounds(Group.Bounds);
+        const Ordered = SortWindows(Group.Windows, Direction);
+        const Root = Ordered.length === 0
+            ? null
+            : Ordered.length === 1
+                ? Window(Ordered[0]!)
+                : Panel(
+                    Direction,
+                    Ordered.map(Window) as [ Node, Node, ...Array<Node> ]
+                );
+
+        return Object.freeze({ Bounds: Group.Bounds, Id, Root });
+    }).sort((Left: Workspace, Right: Workspace): number =>
+        Left.Bounds.Top - Right.Bounds.Top || Left.Bounds.Left - Right.Bounds.Left);
+
+    return Object.freeze({ Workspaces: Object.freeze(Workspaces) });
+};
+
+export/** Determine whether every monitor root in a tiling state is empty. */
+const AreRootPanelsEmpty = (StateValue: State): boolean =>
+    StateValue.Workspaces.every((Workspace: Workspace): boolean => Workspace.Root === null);
+
 const LayoutNode = (
     Current: Node,
     Bounds: Box.Box,
+    Gap: number,
     Out: Array<Placement>
 ): void =>
 {
@@ -395,15 +484,16 @@ const LayoutNode = (
     const ChildBounds = SplitBounds(
         Bounds,
         Current.Orientation,
-        NormalizeRatios(Current.Children.length, Current.Ratios)
+        NormalizeRatios(Current.Children.length, Current.Ratios),
+        Gap
     );
 
     Current.Children.forEach((Child: Node, Index: number): void =>
-        LayoutNode(Child, ChildBounds[Index]!, Out));
+        LayoutNode(Child, ChildBounds[Index]!, Gap, Out));
 };
 
 export/** Project every window leaf in a state to its assigned screen rectangle. */
-const Layout = (Self: State): ReadonlyArray<Placement> =>
+const Layout = (Self: State, Gap: number = 0): ReadonlyArray<Placement> =>
 {
     const Out = new Array<Placement>();
 
@@ -411,7 +501,12 @@ const Layout = (Self: State): ReadonlyArray<Placement> =>
     {
         if (WorkspaceValue.Root !== null)
         {
-            LayoutNode(WorkspaceValue.Root, WorkspaceValue.Bounds, Out);
+            LayoutNode(
+                WorkspaceValue.Root,
+                InsetBounds(WorkspaceValue.Bounds, Gap),
+                Gap,
+                Out
+            );
         }
     }
 
@@ -434,6 +529,214 @@ const Windows = (Root: Node | null): ReadonlyArray<ManagedWindow> =>
 export/** Determine whether a tree contains a native window handle. */
 const HasWindow = (Root: Node | null, HandleValue: Handle.HWND): boolean =>
     Windows(Root).some((Value: ManagedWindow): boolean => Value.Window === HandleValue);
+
+export/** Resolve a node by its child-index path from the workspace root. */
+const GetNodeAtPath = (
+    Root: Node | null,
+    PathValue: Path
+): Node | undefined =>
+{
+    let Current = Root ?? undefined;
+
+    for (const ChildIndex of PathValue)
+    {
+        if (
+            Current?._tag !== "Panel"
+            || !Number.isInteger(ChildIndex)
+            || ChildIndex < 0
+            || ChildIndex >= Current.Children.length
+        )
+        {
+            return undefined;
+        }
+
+        Current = Current.Children[ChildIndex];
+    }
+
+    return Current;
+};
+
+export/** Resolve the layout rectangle allocated to a node path. */
+const GetNodeBoundsAtPath = (
+    Root: Node | null,
+    RootBounds: Box.Box,
+    PathValue: Path,
+    Gap: number = 0
+): Box.Box | undefined =>
+{
+    let Bounds = InsetBounds(RootBounds, Gap);
+    let Current = Root ?? undefined;
+
+    for (const ChildIndex of PathValue)
+    {
+        if (
+            Current?._tag !== "Panel"
+            || !Number.isInteger(ChildIndex)
+            || ChildIndex < 0
+            || ChildIndex >= Current.Children.length
+        )
+        {
+            return undefined;
+        }
+
+        Bounds = SplitBounds(
+            Bounds,
+            Current.Orientation,
+            Current.Ratios,
+            Gap
+        )[ChildIndex]!;
+        Current = Current.Children[ChildIndex];
+    }
+
+    return Current === undefined ? undefined : Bounds;
+};
+
+export/** Find the path of a native window leaf, if it belongs to the tree. */
+const FindWindowPath = (
+    Root: Node | null,
+    WindowValue: Handle.HWND,
+    ParentPath: Path = [ ]
+): Path | undefined =>
+{
+    if (Root === null)
+    {
+        return undefined;
+    }
+
+    if (Root._tag === "Window")
+    {
+        return Root.Value.Window === WindowValue ? ParentPath : undefined;
+    }
+
+    for (let ChildIndex = 0; ChildIndex < Root.Children.length; ChildIndex += 1)
+    {
+        const Found = FindWindowPath(
+            Root.Children[ChildIndex]!,
+            WindowValue,
+            [ ...ParentPath, ChildIndex ]
+        );
+
+        if (Found !== undefined)
+        {
+            return Found;
+        }
+    }
+
+    return undefined;
+};
+
+export/** Select an adjacent sibling when its panel orientation matches the direction. */
+const MoveFocus = (
+    Root: Node | null,
+    CurrentPath: Path,
+    Direction: FocusDirection
+): Path | undefined =>
+{
+    if (CurrentPath.length === 0)
+    {
+        return undefined;
+    }
+
+    const ParentPath = CurrentPath.slice(0, -1);
+    const Parent = GetNodeAtPath(Root, ParentPath);
+    const CurrentIndex = CurrentPath.at(-1)!;
+    const IsHorizontal = Direction === FocusDirection.Left
+        || Direction === FocusDirection.Right;
+    const RequiredOrientation = IsHorizontal
+        ? Orientation.Horizontal
+        : Orientation.Vertical;
+
+    if (Parent?._tag !== "Panel" || Parent.Orientation !== RequiredOrientation)
+    {
+        return undefined;
+    }
+
+    const Offset = Direction === FocusDirection.Left || Direction === FocusDirection.Up
+        ? -1
+        : 1;
+    const TargetIndex = CurrentIndex + Offset;
+
+    return TargetIndex < 0 || TargetIndex >= Parent.Children.length
+        ? undefined
+        : Object.freeze([ ...ParentPath, TargetIndex ]);
+};
+
+export/** Select child zero when logical focus currently rests on a panel. */
+const CommitFocus = (
+    Root: Node | null,
+    CurrentPath: Path
+): Path | undefined =>
+    GetNodeAtPath(Root, CurrentPath)?._tag === "Panel"
+        ? Object.freeze([ ...CurrentPath, 0 ])
+        : undefined;
+
+const FocusPanelBoundary = (
+    Root: Node | null,
+    CurrentPath: Path,
+    Boundary: "First" | "Last"
+): Path | undefined =>
+{
+    if (CurrentPath.length === 0)
+    {
+        return undefined;
+    }
+
+    const ParentPath = CurrentPath.slice(0, -1);
+    const Parent = GetNodeAtPath(Root, ParentPath);
+    if (Parent?._tag !== "Panel")
+    {
+        return undefined;
+    }
+
+    const TargetIndex = Boundary === "First"
+        ? 0
+        : Parent.Children.length - 1;
+
+    return CurrentPath.at(-1) === TargetIndex
+        ? undefined
+        : Object.freeze([ ...ParentPath, TargetIndex ]);
+};
+
+export/** Select the first child of the panel containing logical focus. */
+const FocusFirstChild = (
+    Root: Node | null,
+    CurrentPath: Path
+): Path | undefined => FocusPanelBoundary(Root, CurrentPath, "First");
+
+export/** Select the last child of the panel containing logical focus. */
+const FocusLastChild = (
+    Root: Node | null,
+    CurrentPath: Path
+): Path | undefined => FocusPanelBoundary(Root, CurrentPath, "Last");
+
+export/** Select the root panel of the workspace containing logical focus. */
+const FocusRootPanel = (
+    Root: Node | null,
+    CurrentPath: Path
+): Path | undefined =>
+    CurrentPath.length > 0 && Root?._tag === "Panel"
+        ? Object.freeze([ ])
+        : undefined;
+
+export/**
+       * Select the panel containing the current node, including the monitor
+       * root panel.
+       */
+const FocusContainingPanel = (
+    Root: Node | null,
+    CurrentPath: Path
+): Path | undefined =>
+{
+    if (CurrentPath.length === 0)
+    {
+        return undefined;
+    }
+
+    const PanelPath = CurrentPath.slice(0, -1);
+    return GetNodeAtPath(Root, PanelPath)?._tag === "Panel"
+        ? Object.freeze(PanelPath)
+        : undefined;
+};
 
 const InsertAtWindow = (
     Root: Node,
@@ -578,21 +881,21 @@ const RemoveWindow = (Root: Node | null, HandleValue: Handle.HWND): Node | null 
     );
 };
 
-const UpdatePanel = (
+const UpdateNodeAtPath = (
     Root: Node,
     PathValue: Path,
-    Transform: (PanelValue: PanelNode) => readonly [ PanelNode, boolean ],
+    Transform: (NodeValue: Node) => readonly [ Node, boolean ],
     Depth: number = 0
 ): readonly [ Node, boolean ] =>
 {
-    if (Root._tag === "Window")
-    {
-        return [ Root, false ];
-    }
-
     if (Depth === PathValue.length)
     {
         return Transform(Root);
+    }
+
+    if (Root._tag === "Window")
+    {
+        return [ Root, false ];
     }
 
     const ChildIndex = PathValue[Depth];
@@ -606,7 +909,7 @@ const UpdatePanel = (
         return [ Root, false ];
     }
 
-    const [ Child, Updated ] = UpdatePanel(
+    const [ Child, Updated ] = UpdateNodeAtPath(
         Root.Children[ChildIndex]!,
         PathValue,
         Transform,
@@ -625,6 +928,237 @@ const UpdatePanel = (
             true
         ]
         : [ Root, false ];
+};
+
+const UpdatePanel = (
+    Root: Node,
+    PathValue: Path,
+    Transform: (PanelValue: PanelNode) => readonly [ PanelNode, boolean ]
+): readonly [ Node, boolean ] => UpdateNodeAtPath(
+    Root,
+    PathValue,
+    (NodeValue: Node): readonly [ Node, boolean ] =>
+        NodeValue._tag === "Panel"
+            ? Transform(NodeValue)
+            : [ NodeValue, false ]
+);
+
+export/**
+       * Move a managed window to a child index in its current panel.
+       *
+       * @category mutations
+       * @since 0.1.0
+       */
+const MoveWindowToIndex = (
+    Root: Node,
+    WindowValue: Handle.HWND,
+    TargetIndex: number
+): readonly [ Node, boolean ] =>
+{
+    const CurrentPath = FindWindowPath(Root, WindowValue);
+    if (CurrentPath === undefined || CurrentPath.length === 0)
+    {
+        return [ Root, false ];
+    }
+
+    const ParentPath = CurrentPath.slice(0, -1);
+    const CurrentIndex = CurrentPath.at(-1)!;
+
+    return UpdatePanel(
+        Root,
+        ParentPath,
+        (PanelValue: PanelNode): readonly [ PanelNode, boolean ] =>
+        {
+            if (
+                !Number.isInteger(TargetIndex)
+                || TargetIndex < 0
+                || TargetIndex >= PanelValue.Children.length
+                || TargetIndex === CurrentIndex
+                || PanelValue.Children[CurrentIndex]?._tag !== "Window"
+                || PanelValue.Children[CurrentIndex].Value.Window !== WindowValue
+            )
+            {
+                return [ PanelValue, false ];
+            }
+
+            const Children = [ ...PanelValue.Children ];
+            const [ WindowNodeValue ] = Children.splice(CurrentIndex, 1);
+            Children.splice(TargetIndex, 0, WindowNodeValue!);
+
+            return [
+                Panel(
+                    PanelValue.Orientation,
+                    Children as [ Node, Node, ...Array<Node> ],
+                    PanelValue.Ratios
+                ),
+                true
+            ];
+        }
+    );
+};
+
+export/**
+       * Promote a managed window into the panel containing its current panel.
+       *
+       * The promoted window is inserted immediately after its former owning
+       * panel.  The former panel collapses when only one child remains.
+       *
+       * @category mutations
+       * @since 0.1.0
+       */
+const MoveWindowToContainingPanel = (
+    Root: Node,
+    WindowValue: Handle.HWND
+): readonly [ Node, boolean ] =>
+{
+    const CurrentPath = FindWindowPath(Root, WindowValue);
+    if (CurrentPath === undefined || CurrentPath.length < 2)
+    {
+        return [ Root, false ];
+    }
+
+    const GrandparentPath = CurrentPath.slice(0, -2);
+    const OwningPanelIndex = CurrentPath.at(-2)!;
+    const WindowIndex = CurrentPath.at(-1)!;
+
+    return UpdatePanel(
+        Root,
+        GrandparentPath,
+        (Grandparent: PanelNode): readonly [ PanelNode, boolean ] =>
+        {
+            const OwningPanel = Grandparent.Children[OwningPanelIndex];
+            const WindowNodeValue = OwningPanel?._tag === "Panel"
+                ? OwningPanel.Children[WindowIndex]
+                : undefined;
+
+            if (
+                OwningPanel?._tag !== "Panel"
+                || WindowNodeValue?._tag !== "Window"
+                || WindowNodeValue.Value.Window !== WindowValue
+            )
+            {
+                return [ Grandparent, false ];
+            }
+
+            const RemainingChildren = OwningPanel.Children.filter(
+                (_Child: Node, Index: number): boolean => Index !== WindowIndex
+            );
+            const RemainingRatios = OwningPanel.Ratios.filter(
+                (_Ratio: number, Index: number): boolean => Index !== WindowIndex
+            );
+            const RemainingOwner = RemainingChildren.length === 1
+                ? RemainingChildren[0]!
+                : Panel(
+                    OwningPanel.Orientation,
+                    RemainingChildren as [ Node, Node, ...Array<Node> ],
+                    RemainingRatios
+                );
+            const Children = [ ...Grandparent.Children ];
+            Children[OwningPanelIndex] = RemainingOwner;
+            Children.splice(OwningPanelIndex + 1, 0, WindowNodeValue);
+
+            return [
+                Panel(
+                    Grandparent.Orientation,
+                    Children as [ Node, Node, ...Array<Node> ],
+                    SplitChildRatio(Grandparent.Ratios, OwningPanelIndex, 0.5)
+                ),
+                true
+            ];
+        }
+    );
+};
+
+export/**
+       * Move a managed window into an adjacent sibling panel as child zero.
+       *
+       * The source panel collapses when the target panel is its only remaining
+       * child.
+       *
+       * @category mutations
+       * @since 0.1.0
+       */
+const MoveWindowIntoPanel = (
+    Root: Node,
+    WindowValue: Handle.HWND,
+    TargetPanelPath: Path
+): readonly [ Node, boolean ] =>
+{
+    const CurrentPath = FindWindowPath(Root, WindowValue);
+    if (
+        CurrentPath === undefined
+        || CurrentPath.length === 0
+        || TargetPanelPath.length !== CurrentPath.length
+    )
+    {
+        return [ Root, false ];
+    }
+
+    const ParentPath = CurrentPath.slice(0, -1);
+    const TargetParentPath = TargetPanelPath.slice(0, -1);
+    const IsSameParent = ParentPath.length === TargetParentPath.length
+        && ParentPath.every((Index: number, Depth: number): boolean =>
+            Index === TargetParentPath[Depth]);
+    const CurrentIndex = CurrentPath.at(-1)!;
+    const TargetIndex = TargetPanelPath.at(-1)!;
+
+    if (!IsSameParent || Math.abs(CurrentIndex - TargetIndex) !== 1)
+    {
+        return [ Root, false ];
+    }
+
+    return UpdateNodeAtPath(
+        Root,
+        ParentPath,
+        (ParentNode: Node): readonly [ Node, boolean ] =>
+        {
+            if (ParentNode._tag !== "Panel")
+            {
+                return [ ParentNode, false ];
+            }
+
+            const WindowNodeValue = ParentNode.Children[CurrentIndex];
+            const TargetPanel = ParentNode.Children[TargetIndex];
+            if (
+                WindowNodeValue?._tag !== "Window"
+                || WindowNodeValue.Value.Window !== WindowValue
+                || TargetPanel?._tag !== "Panel"
+            )
+            {
+                return [ ParentNode, false ];
+            }
+
+            const UpdatedTarget = Panel(
+                TargetPanel.Orientation,
+                [
+                    WindowNodeValue,
+                    ...TargetPanel.Children
+                ] as [ Node, Node, ...Array<Node> ],
+                SplitChildRatio(TargetPanel.Ratios, 0, 0.5)
+            );
+            const RemainingChildren = ParentNode.Children.flatMap((
+                Child: Node,
+                Index: number
+            ): ReadonlyArray<Node> =>
+                Index === CurrentIndex
+                    ? [ ]
+                    : [ Index === TargetIndex ? UpdatedTarget : Child ]);
+            const RemainingRatios = ParentNode.Ratios.filter(
+                (_Ratio: number, Index: number): boolean => Index !== CurrentIndex
+            );
+
+            return RemainingChildren.length === 1
+                ? [ RemainingChildren[0]!, true ]
+                : [
+                    Panel(
+                        ParentNode.Orientation,
+                        RemainingChildren as [ Node, Node, ...Array<Node> ],
+                        RemainingRatios
+                    ),
+                    true
+                ];
+        }
+    );
 };
 
 export/**

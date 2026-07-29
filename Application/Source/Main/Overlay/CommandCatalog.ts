@@ -46,6 +46,19 @@ export interface OverlayApplicationTarget
     readonly Name?: string;
 }
 
+/** Renderer metadata and availability for one physical monitor shortcut. */
+export interface MonitorCommandState
+{
+    readonly Disabled: boolean;
+    readonly Target: OverlayCommand.OverlayCommandTargetDto;
+}
+
+/** Monitor command state indexed by its stable numeric-focus command ID. */
+export type MonitorCommandStates = Readonly<Partial<Record<
+    OverlayCommand.OverlayCommandId,
+    MonitorCommandState
+>>>;
+
 export/** Create a complete overlay-screen snapshot from the current settings. */
 const FromKeybindSettings = (
     ScreenId: OverlayCommand.OverlayScreenId,
@@ -56,24 +69,49 @@ const FromKeybindSettings = (
     FineModifierHeld: boolean = false,
     PrimaryDistance: number = OverlayCommand.MoveDistance.Primary,
     SecondaryDistance: number = OverlayCommand.MoveDistance.Secondary,
-    CurrentResizeMode: OverlayCommand.ResizeMode = OverlayCommand.ResizeMode.Grow
+    CurrentResizeMode: OverlayCommand.ResizeMode = OverlayCommand.ResizeMode.Grow,
+    IsRootPanelFocused: boolean = false,
+    MonitorStates: MonitorCommandStates = { },
+    CanTileAll: boolean = false,
+    DisabledCommandIds: ReadonlySet<OverlayCommand.OverlayCommandId> = new Set(),
+    IsTiledMovePanelTargeted: boolean = false
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
     const Commands = new Array<OverlayCommand.OverlayCommandDto>();
+    const MonitorCommands = new Array<OverlayCommand.OverlayCommandDto>();
 
     for (const Definition of OverlayCommand.GetOverlayCommandDefinitions(ScreenId))
     {
+        if (Definition.Id === OverlayCommand.OverlayCommandId.TileAll && !CanTileAll)
+        {
+            continue;
+        }
+
+        const IsMonitorCommand = OverlayCommand.IsFocusMonitorCommandId(Definition.Id);
+        const MonitorState = MonitorStates[Definition.Id];
+        if (IsMonitorCommand && MonitorState === undefined)
+        {
+            continue;
+        }
+
         const Keybind = Keybinds.find((Value: Hotkey.KeybindSetting) =>
             Value.Id === Definition.HotkeyId);
 
         if (Keybind !== undefined)
         {
             const Target = FocusTargetValues[Definition.Id];
-
-            Commands.push(Object.freeze({
-                Disabled: ScreenId === OverlayCommand.OverlayScreenId.FloatingFocus
-                    && Target === undefined,
+            const CommandTarget = MonitorState?.Target ?? Target;
+            const Command = Object.freeze({
+                Disabled: DisabledCommandIds.has(Definition.Id)
+                    || (
+                        MonitorState?.Disabled ?? (
+                            (
+                                ScreenId === OverlayCommand.OverlayScreenId.FloatingFocus
+                                || ScreenId === OverlayCommand.OverlayScreenId.TiledFocus
+                            ) && CommandTarget === undefined
+                        )
+                    ),
                 HotkeyId: Definition.HotkeyId,
                 Id: Definition.Id,
                 Shortcut: Object.freeze({
@@ -84,8 +122,12 @@ const FromKeybindSettings = (
                         ...Definition.RequiredModifiers
                     })
                 }),
-                ...(Target === undefined ? { } : { Target: Object.freeze(Target) })
-            }));
+                ...(CommandTarget === undefined
+                    ? { }
+                    : { Target: Object.freeze(CommandTarget) })
+            });
+
+            (IsMonitorCommand ? MonitorCommands : Commands).push(Command);
         }
     }
 
@@ -145,6 +187,11 @@ const FromKeybindSettings = (
             && ScreenId !== OverlayCommand.OverlayScreenId.TiledHome,
         Commands: Object.freeze(Commands),
         Id: ScreenId,
+        ...(IsRootPanelFocused ? { IsRootPanelFocused: true } : { }),
+        ...(IsTiledMovePanelTargeted ? { IsTiledMovePanelTargeted: true } : { }),
+        ...(MonitorCommands.length === 0
+            ? { }
+            : { MonitorCommands: Object.freeze(MonitorCommands) }),
         ...(DistanceToggle === undefined ? { } : { DistanceToggle }),
         ...(
             ScreenId === OverlayCommand.OverlayScreenId.FloatingResize

@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as Logging from "./Log.ts";
 import { Context, Data, Effect, Layer, pipe } from "effect";
 import { type Thread, MessageLoop as WindowsMessageLoop  } from "@sorrell/windows";
 import type { SimpleError } from "./Utility/Error.ts";
@@ -46,13 +47,22 @@ const MakeLoopError = (Operation: Op) => ({ Message }: SimpleError) =>
 const Start = pipe(
     Effect.sync(WindowsMessageLoop.Start),
     Effect.flatMap(Effect.fromResult),
-    Effect.mapError(MakeLoopError("Start"))
+    Effect.mapError(MakeLoopError("Start")),
+    Effect.tap((ThreadId: Thread.ThreadId) => Logging.LogInfo(
+        "Native.MessageLoop",
+        "Started the dedicated Win32 message loop.",
+        { ThreadId }
+    ))
 );
 
 const Stop = pipe(
     Effect.sync(WindowsMessageLoop.Stop),
     Effect.flatMap(Effect.fromResult),
     Effect.mapError(MakeLoopError("Stop")),
+    Effect.tap(() => Logging.LogInfo(
+        "Native.MessageLoop",
+        "Stopped the dedicated Win32 message loop."
+    )),
     Effect.ignore({
         log: "Error",
         message: "Could not stop the dedicated Win32 message loop."

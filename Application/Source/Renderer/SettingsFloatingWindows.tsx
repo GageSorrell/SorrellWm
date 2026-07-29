@@ -10,6 +10,7 @@
  * @license   MIT
  */
 
+import * as Logging from "./Logging.js";
 import {
     ArrowMaximizeRegular,
     ArrowMoveRegular,
@@ -94,7 +95,10 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                     SetSettings(Loaded);
                 }
             })
-            .catch(() => undefined);
+            .catch(Logging.ReportRejection(
+                "Settings",
+                "Could not load floating-window settings."
+            ));
 
         return (): void =>
         {
@@ -109,7 +113,10 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
 
         window.sorrell.floatingWindowSettings.set({ [Key]: Value })
             .then((Updated: FloatingWindowSettingsDto) => SetSettings(Updated))
-            .catch(() => undefined);
+            .catch(Logging.ReportRejection(
+                "Settings",
+                "Could not update floating-window settings."
+            ));
     };
 
     if (Settings === null)

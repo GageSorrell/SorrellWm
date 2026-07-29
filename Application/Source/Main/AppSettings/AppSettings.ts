@@ -12,6 +12,8 @@
 import * as Hotkey from "../Input/Hotkey.ts";
 import * as _AppSettings from "@sorrell/app-settings";
 import { Effect, Schema, pipe } from "effect";
+import type { NewWindowBehavior } from "../../Shared/AppSettings.js";
+import { NewWindowBehaviors } from "../../Shared/AppSettings.js";
 // import { L10n } from "../../Shared/index.ts";
 
 export/** The type identifier for this module. */
@@ -19,6 +21,26 @@ const TypeId = "~sorrell/wm/Main/AppSettings/AppSettings" as const;
 
 /** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
+
+const NewWindowBehaviorSchema = Schema.Literals(NewWindowBehaviors);
+
+/** The behavior applied when an application creates a new window. */
+export type { NewWindowBehavior };
+
+export/** Settings that override window-manager behavior for one executable. */
+const PerAppSettings = Schema.Struct({
+    IgnoreModal: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(true))
+    ),
+    NewWindowBehavior: pipe(
+        NewWindowBehaviorSchema,
+        Schema.withDecodingDefaultKey(Effect.succeed("FloatCenter" as const))
+    )
+});
+
+/** Validated settings that override window-manager behavior for one executable. */
+export type PerAppSettings = typeof PerAppSettings.Type;
 
 const SettingsSchema = Schema.Struct({
     FocusPreviewOpacity: pipe(
@@ -70,6 +92,10 @@ const SettingsSchema = Schema.Struct({
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(true))
     ),
+    PerAppSettings: pipe(
+        Schema.Record(Schema.String, PerAppSettings),
+        Schema.withDecodingDefaultKey(Effect.succeed({ }))
+    ),
     RunAtStartup: pipe(
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(true))
@@ -81,6 +107,15 @@ const SettingsSchema = Schema.Struct({
     Theme: pipe(
         Schema.Literals([ "Dark", "Light", "System" ]),
         Schema.withDecodingDefaultKey(Effect.succeed("System" as const))
+    ),
+    TileExistingWindowsOnStartup: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+    TiledWindowGap: pipe(
+        Schema.Int,
+        Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(8))
     )
 });
 
@@ -111,9 +146,12 @@ const AppSettings = _AppSettings.Make(
             MoveStepSecondarySpeedFactor: 4,
             OverlayBackdropIntensity: 2,
             OverlayRoundedCorners: true,
+            PerAppSettings: { },
             RunAtStartup: true,
             ShowTitlebarFlyout: true,
-            Theme: "System"
+            Theme: "System",
+            TileExistingWindowsOnStartup: false,
+            TiledWindowGap: 8
         }
     }
 );

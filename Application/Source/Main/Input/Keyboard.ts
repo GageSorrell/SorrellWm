@@ -10,6 +10,7 @@
  * @license   MIT
  */
 
+import * as Logging from "../Log.ts";
 import { Context, Data, Effect, Layer, Queue, type Scope, Stream, pipe } from "effect";
 import { Keyboard as NativeKeyboard, type Subscription } from "@sorrell/windows";
 import { MessageLoop } from "../MessageLoop.ts";
@@ -64,7 +65,12 @@ const Events = (): Effect.Effect<
                 }
             )),
             Effect.flatMap(Effect.fromResult),
-            Effect.mapError((NativeError: SimpleError) => new KeyboardSubscriptionError(NativeError))
+            Effect.mapError((NativeError: SimpleError) => new KeyboardSubscriptionError(NativeError)),
+            Effect.tap((Id: Subscription.Id) => Logging.LogDebug(
+                "Input.Keyboard",
+                "Created a native global keyboard subscription.",
+                { Subscription: Id }
+            ))
         ),
         (Id: Subscription.Id) => Effect.gen(function*()
         {
@@ -75,6 +81,11 @@ const Events = (): Effect.Effect<
                     log: "Error",
                     message: "Could not remove a native global keyboard subscription"
                 })
+            );
+            yield* Logging.LogDebug(
+                "Input.Keyboard",
+                "Removed a native global keyboard subscription.",
+                { Subscription: Id }
             );
             yield* Queue.shutdown(EventQueue);
         })

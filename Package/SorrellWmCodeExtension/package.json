@@ -50,6 +50,55 @@
             "description": "The extension edits newly created TypeScript and C++ files."
         }
     },
+    "contributes": {
+        "commands": [
+            {
+                "category": "SorrellWm",
+                "command": "sorrellWmCodeExtension.createReactComponent",
+                "title": "Create React Component"
+            }
+        ],
+        "languageModelTools": [
+            {
+                "canBeReferencedInPrompt": true,
+                "displayName": "Create React Component",
+                "icon": "$(symbol-class)",
+                "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "componentName": {
+                            "description": "The valid PascalCase TypeScript identifier to use for the React component and its directory.",
+                            "minLength": 1,
+                            "type": "string"
+                        },
+                        "directoryPath": {
+                            "description": "The absolute path of an existing directory inside an open workspace folder. The new component directory will be created beneath this directory.",
+                            "minLength": 1,
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "componentName",
+                        "directoryPath"
+                    ],
+                    "type": "object"
+                },
+                "modelDescription": "Creates a React component directory with the six standard SorrellWm component files and returns the absolute path of the created directory. Use this tool when the user asks to scaffold a new React component. The component name must be a valid PascalCase TypeScript identifier, and directoryPath must be an absolute path to an existing directory inside the open workspace. The tool fails rather than overwriting an existing file or directory.",
+                "name": "sorrellWm_createReactComponent",
+                "toolReferenceName": "createReactComponent",
+                "userDescription": "Create a standard SorrellWm React component directory and its six source files.",
+                "when": "workspaceFolderCount != 0"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "sorrellWmCodeExtension.createReactComponent",
+                    "group": "2_workspace@1"
+                }
+            ]
+        }
+    },
     "scripts": {
         "build": "npm run typecheck && esbuild Source/Extension.ts --bundle --external:vscode --format=cjs --platform=node --target=node20 --outfile=Distribution/extension.cjs --sourcemap",
         "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts Source Test",

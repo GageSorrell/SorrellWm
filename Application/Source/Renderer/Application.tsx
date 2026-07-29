@@ -30,6 +30,8 @@ export function Application(): React.JSX.Element
         case "FocusPreviewDown":
         case "FocusPreviewLeft":
         case "FocusPreviewRight":
+        case "TiledFocusPanelPreview":
+        case "TiledMovePanelPreview":
         case "FocusPreviewUp":
             return <FocusPreviewApplication />;
         case "Overlay":

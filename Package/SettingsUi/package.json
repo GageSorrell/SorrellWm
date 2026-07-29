@@ -23,6 +23,10 @@
       "import": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
     },
+    "./OptionalSetting": {
+      "import": "./Distribution/OptionalSetting.js",
+      "types": "./Distribution/OptionalSetting.d.ts"
+    },
     "./Setting": {
       "import": "./Distribution/Setting.js",
       "types": "./Distribution/Setting.d.ts"

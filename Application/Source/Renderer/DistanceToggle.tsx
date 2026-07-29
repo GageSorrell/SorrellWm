@@ -13,16 +13,33 @@ import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { GetShortcutParts } from "./CommandButton.js";
 import { Keybind } from "@sorrell/keyboard-ui";
 import type { OverlayDistanceToggleDto } from "../Shared/OverlayCommand.js";
+import { RulerRegular } from "@fluentui/react-icons";
 
 /** Presentation properties for the Move screen's distance toggle. */
 export interface DistanceToggleProps extends OverlayDistanceToggleDto { }
 
 const UseStyles = makeStyles({
+    Icon:
+    {
+        color: tokens.colorNeutralForeground3,
+        fontSize: "1rem"
+    },
+    KeybindPlaceholder:
+    {
+        display: "inline-flex",
+        visibility: "hidden"
+    },
     Label:
     {
         color: tokens.colorNeutralForeground2,
         fontSize: tokens.fontSizeBase200,
         fontWeight: 600
+    },
+    Pair:
+    {
+        alignItems: "center",
+        display: "inline-flex",
+        gap: "0.3rem"
     },
     Root:
     {
@@ -30,14 +47,6 @@ const UseStyles = makeStyles({
         display: "inline-flex",
         gap: tokens.spacingHorizontalS,
         userSelect: "none"
-    },
-    Shortcut:
-    {
-        alignItems: "center",
-        color: tokens.colorNeutralForeground3,
-        display: "inline-flex",
-        fontSize: tokens.fontSizeBase200,
-        gap: "0.2rem"
     },
     Value:
     {
@@ -56,8 +65,9 @@ const UseStyles = makeStyles({
     },
     Values:
     {
+        alignItems: "center",
         display: "inline-flex",
-        gap: "0.35rem"
+        gap: "1rem"
     }
 });
 
@@ -76,36 +86,48 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
         <div
             aria-label="Move distance"
             className={ Styles.Root }>
+            <RulerRegular className={ Styles.Icon } />
             <span className={ Styles.Label }>Step Size</span>
             <span className={ Styles.Values }>
-                <span
-                    aria-pressed={ IsPrimaryActive }
-                    className={ mergeClasses(
-                        Styles.Value,
-                        IsPrimaryActive && Styles.ValueActive
-                    ) }>
-                    { Props.PrimaryDistance }
+                <span className={ Styles.Pair }>
+                    { /* The default step has no modifier of its own, but still reserves
+                         the same width a keybind would take up, so all three values align. */ }
+                    <span className={ Styles.KeybindPlaceholder }>
+                        <Keybind Keys={ GetShortcutParts(Props.Shortcut) } />
+                    </span>
+                    <span
+                        aria-pressed={ IsPrimaryActive }
+                        className={ mergeClasses(
+                            Styles.Value,
+                            IsPrimaryActive && Styles.ValueActive
+                        ) }>
+                        { Props.PrimaryDistance }
+                    </span>
                 </span>
-                <span
-                    aria-pressed={ IsSecondaryActive }
-                    className={ mergeClasses(
-                        Styles.Value,
-                        IsSecondaryActive && Styles.ValueActive
-                    ) }>
-                    { Props.SecondaryDistance }
+
+                <span className={ Styles.Pair }>
+                    <Keybind Keys={ GetShortcutParts(Props.Shortcut) } />
+                    <span
+                        aria-pressed={ IsSecondaryActive }
+                        className={ mergeClasses(
+                            Styles.Value,
+                            IsSecondaryActive && Styles.ValueActive
+                        ) }>
+                        { Props.SecondaryDistance }
+                    </span>
                 </span>
-                <span
-                    aria-pressed={ IsFineActive }
-                    className={ mergeClasses(
-                        Styles.Value,
-                        IsFineActive && Styles.ValueActive
-                    ) }>
-                    { Props.FineDistance }
+
+                <span className={ Styles.Pair }>
+                    <Keybind Keys={ GetShortcutParts(Props.FineShortcut) } />
+                    <span
+                        aria-pressed={ IsFineActive }
+                        className={ mergeClasses(
+                            Styles.Value,
+                            IsFineActive && Styles.ValueActive
+                        ) }>
+                        { Props.FineDistance }
+                    </span>
                 </span>
-            </span>
-            <span className={ Styles.Shortcut }>
-                <Keybind Keys={ GetShortcutParts(Props.Shortcut) } />
-                <Keybind Keys={ GetShortcutParts(Props.FineShortcut) } />
             </span>
         </div>
     );

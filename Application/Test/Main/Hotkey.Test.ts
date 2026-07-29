@@ -20,6 +20,7 @@ import {
     type Keybind,
     KeybindSet,
     type KeybindSet as KeybindSetType,
+    type KeybindSetting,
     Live,
     Make,
     Phase,
@@ -57,8 +58,19 @@ vi.mock("@sorrell/windows", () => ({
         BROWSER_BACK: 0xA6,
         CONTROL: 0x11,
         D: 0x44,
+        D1: 0x31,
+        D2: 0x32,
+        D3: 0x33,
+        D4: 0x34,
+        D5: 0x35,
+        D6: 0x36,
+        D7: 0x37,
+        D8: 0x38,
+        D9: 0x39,
+        END: 0x23,
         F20: 0x83,
         H: 0x48,
+        HOME: 0x24,
         J: 0x4A,
         K: 0x4B,
         L: 0x4C,
@@ -68,11 +80,34 @@ vi.mock("@sorrell/windows", () => ({
         LWIN: 0x5B,
         MENU: 0x12,
         RCONTROL: 0xA3,
+        RETURN: 0x0D,
         RMENU: 0xA5,
         RSHIFT: 0xA1,
         RWIN: 0x5C,
         SHIFT: 0x10,
-        VK: [ 0x11, 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x83, 0xA6 ]
+        VK: [
+            0x0D,
+            0x11,
+            0x23,
+            0x24,
+            0x31,
+            0x32,
+            0x33,
+            0x34,
+            0x35,
+            0x36,
+            0x37,
+            0x38,
+            0x39,
+            0x41,
+            0x44,
+            0x48,
+            0x4A,
+            0x4B,
+            0x4C,
+            0x83,
+            0xA6
+        ]
     }
 }));
 
@@ -106,6 +141,67 @@ describe("Hotkey.IsMatch", () =>
                 Super: false
             }
         });
+    });
+
+    it("binds the Commit action to Enter by default", () =>
+    {
+        expect(DefaultKeybindSettings).toContainEqual({
+            Id: Id.Commit,
+            Key: Windows.VK.RETURN,
+            Modifiers:
+            {
+                Alt: false,
+                Control: false,
+                Shift: false,
+                Super: false
+            }
+        });
+    });
+
+    it("binds first and last selection to Home and End", () =>
+    {
+        expect(DefaultKeybindSettings).toContainEqual({
+            Id: Id.SelectFirst,
+            Key: Windows.VK.HOME,
+            Modifiers:
+            {
+                Alt: false,
+                Control: false,
+                Shift: false,
+                Super: false
+            }
+        });
+        expect(DefaultKeybindSettings).toContainEqual({
+            Id: Id.SelectLast,
+            Key: Windows.VK.END,
+            Modifiers:
+            {
+                Alt: false,
+                Control: false,
+                Shift: false,
+                Super: false
+            }
+        });
+    });
+
+    it("binds monitor selection to the matching number-row digits", () =>
+    {
+        expect(DefaultKeybindSettings.filter((Setting: KeybindSetting) =>
+            Setting.Id.startsWith("SelectMonitor")
+        ).map((Setting: KeybindSetting) => ({
+            Id: Setting.Id,
+            Key: Setting.Key
+        }))).toEqual([
+            { Id: Id.SelectMonitor1, Key: Windows.VK.D1 },
+            { Id: Id.SelectMonitor2, Key: Windows.VK.D2 },
+            { Id: Id.SelectMonitor3, Key: Windows.VK.D3 },
+            { Id: Id.SelectMonitor4, Key: Windows.VK.D4 },
+            { Id: Id.SelectMonitor5, Key: Windows.VK.D5 },
+            { Id: Id.SelectMonitor6, Key: Windows.VK.D6 },
+            { Id: Id.SelectMonitor7, Key: Windows.VK.D7 },
+            { Id: Id.SelectMonitor8, Key: Windows.VK.D8 },
+            { Id: Id.SelectMonitor9, Key: Windows.VK.D9 }
+        ]);
     });
 
     it("matches either side of each requested modifier", () =>
@@ -389,6 +485,47 @@ describe("Hotkey.Live", () =>
             Id.PrimaryModifier,
             Id.SelectLeft
         ]);
+    });
+
+    it("still emits SelectUp while the Ctrl resize modifier is held", async () =>
+    {
+        const ResizeModifier = Make(Id.ResizeModifier, Windows.VK.CONTROL);
+        const SelectUp = Make(Id.SelectUp, Windows.VK.H);
+        const Matches = await Effect.runPromise(Effect.scoped(Effect.gen(function*()
+        {
+            const EventQueue = yield* Queue.unbounded<Windows.Keyboard.Event>();
+            const KeyboardLive = Layer.succeed(Keyboard, {
+                Events: () => Effect.succeed(Stream.fromQueue(EventQueue))
+            });
+            const Program = Effect.gen(function*()
+            {
+                const Service = yield* Hotkey;
+                const Collected = yield* pipe(
+                    Service.Matches,
+                    Stream.take(2),
+                    Stream.runCollect,
+                    Effect.forkChild
+                );
+
+                yield* Effect.yieldNow;
+                yield* Queue.offer(EventQueue, KeyboardEvent(Windows.VK.LCONTROL));
+                yield* Queue.offer(EventQueue, KeyboardEvent(Windows.VK.H));
+
+                return Array.from(yield* Fiber.join(Collected));
+            });
+
+            return yield* pipe(
+                Program,
+                Effect.provide(Live(KeybindSet(ResizeModifier, SelectUp))),
+                Effect.provide(KeyboardLive)
+            );
+        })));
+
+        expect(Matches.map((Match: HotkeyMatch) => Match.Keybind.Id)).toEqual([
+            Id.ResizeModifier,
+            Id.SelectUp
+        ]);
+        expect(Matches[1]?.PressedKeys).toContain(Windows.VK.LCONTROL);
     });
 });
 

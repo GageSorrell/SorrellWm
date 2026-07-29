@@ -22,11 +22,15 @@ import * as Theme from "./Theme.ts";
 import * as Tiling from "./Tiling/index.ts";
 import * as TitlebarFlyout from "./TitlebarFlyout.ts";
 import { Box, IntPoint } from "@sorrell/math";
-import { Effect, Layer, ManagedRuntime, Option, Stream, pipe } from "effect";
+import { Effect, Layer, ManagedRuntime, Option, Schema, Stream, pipe } from "effect";
 import {
+    BrowserWindow as ElectronBrowserWindow,
     type Event,
+    type IpcMainEvent,
     type IpcMainInvokeEvent,
+    type OpenDialogOptions,
     app,
+    dialog,
     ipcMain,
     nativeTheme,
     net,
@@ -36,15 +40,25 @@ import {
 } from "electron";
 import {
     type FloatingWindowSettingsDto,
+    type GeneralSettingsDto,
     IsFloatingWindowSettingsPatch,
+    IsGeneralSettingsPatch,
     IsOverlaySettingsPatch,
-    type OverlaySettingsDto
+    IsPerAppSettingPatch,
+    type OverlaySettingsDto,
+    type PerAppSettingDto,
+    type PerAppSettingsEntryDto
 } from "../Shared/AppSettings.ts";
-import { isAbsolute, join, relative } from "node:path";
+import {
+    type RendererLogEntry,
+    RendererLogEntry as RendererLogEntrySchema
+} from "../Shared/Logging.ts";
+import { basename, extname, isAbsolute, join, relative } from "node:path";
 import { AppApiChannel } from "../Shared/Api.ts";
 import { DevFeatures } from "./Development/index.ts";
 import { NodeServices } from "@effect/platform-node";
 import type { RendererTheme } from "../Shared/Theme.ts";
+import { Window } from "@sorrell/windows";
 import { pathToFileURL } from "node:url";
 
 const RendererProtocolScheme: string = "sorrell";
@@ -142,6 +156,28 @@ const ApplicationRuntime = ManagedRuntime.make(ApplicationServicesLive);
 let IsApplicationRuntimeStarted: boolean = false;
 let IsApplicationRuntimeDisposing: boolean = false;
 
+const ReportRejectedOperation = async <Value>(
+    Category: string,
+    Operation: string,
+    Action: () => Promise<Value>
+): Promise<Value> =>
+{
+    try
+    {
+        return await Action();
+    }
+    catch (Cause: unknown)
+    {
+        await ApplicationRuntime.runPromise(Logging.LogError(
+            Category,
+            `${ Operation } failed.`,
+            Cause,
+            { Operation }
+        )).catch(() => undefined);
+        throw Cause;
+    }
+};
+
 protocol.registerSchemesAsPrivileged([
     {
         privileges:
@@ -174,6 +210,64 @@ const registerRendererProtocol = (): void =>
         return net.fetch(pathToFileURL(rendererPath).toString());
     });
 };
+
+const GetRendererWindowName = (EventValue: IpcMainEvent): string =>
+{
+    try
+    {
+        return new URL(EventValue.sender.getURL()).searchParams.get("window") ?? "Unknown";
+    }
+    catch
+    {
+        return "Unknown";
+    }
+};
+
+const WriteRendererLog = (
+    Entry: RendererLogEntry,
+    RendererWindow: string
+): Effect.Effect<void> =>
+{
+    const Category = `Renderer.${ Entry.Category }`;
+    const Annotations = {
+        RendererWindow,
+        ...(Entry.Details === undefined ? { } : { Details: Entry.Details })
+    };
+
+    switch (Entry.Level)
+    {
+        case "Debug":
+            return Logging.LogDebug(Category, Entry.Message, Annotations);
+        case "Error":
+            return Logging.LogError(Category, Entry.Message, undefined, Annotations);
+        case "Info":
+            return Logging.LogInfo(Category, Entry.Message, Annotations);
+        case "Warning":
+            return Logging.LogWarning(Category, Entry.Message, undefined, Annotations);
+    }
+};
+
+ipcMain.removeAllListeners(AppApiChannel.RendererLogWrite);
+ipcMain.on(AppApiChannel.RendererLogWrite, (
+    EventValue: IpcMainEvent,
+    Value: unknown
+): void =>
+{
+    const RendererWindow = GetRendererWindowName(EventValue);
+
+    void ApplicationRuntime.runPromise(
+        Schema.decodeUnknownEffect(RendererLogEntrySchema)(Value).pipe(
+            Effect.flatMap((Entry: RendererLogEntry) =>
+                WriteRendererLog(Entry, RendererWindow)),
+            Effect.catch((Cause: unknown) => Logging.LogWarning(
+                "Renderer",
+                "Rejected an invalid renderer log event.",
+                Cause,
+                { RendererWindow }
+            ))
+        )
+    ).catch(() => undefined);
+});
 
 ipcMain.removeHandler(AppApiChannel.ThemeGet);
 ipcMain.handle(AppApiChannel.ThemeGet, Theme.GetRendererTheme);
@@ -244,8 +338,64 @@ ipcMain.handle(AppApiChannel.FloatingWindowSettingsSet, (
             );
         }
 
+        yield* Logging.LogInfo("Settings", "Floating-window settings updated.", {
+            Settings: Object.keys(PatchValue)
+        });
         const Current = yield* Settings.Get;
         return ToFloatingWindowSettingsDto(Current);
+    }));
+});
+
+const ToGeneralSettingsDto = (
+    Settings: AppSettings.AppSettings
+): GeneralSettingsDto => ({
+    TileExistingWindowsOnStartup: Settings.TileExistingWindowsOnStartup,
+    TiledWindowGap: Settings.TiledWindowGap
+});
+
+ipcMain.removeHandler(AppApiChannel.GeneralSettingsGet);
+ipcMain.handle(AppApiChannel.GeneralSettingsGet, () => ApplicationRuntime.runPromise(
+    Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        return ToGeneralSettingsDto(yield* Settings.Get);
+    })
+));
+
+ipcMain.removeHandler(AppApiChannel.GeneralSettingsSet);
+ipcMain.handle(AppApiChannel.GeneralSettingsSet, (
+    _Event: IpcMainInvokeEvent,
+    PatchValue: unknown
+) =>
+{
+    if (!IsGeneralSettingsPatch(PatchValue))
+    {
+        throw new TypeError("The requested general-settings patch is invalid.");
+    }
+
+    return ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        const TilingManager = yield* Tiling.Manager.TilingManager;
+
+        if (PatchValue.TileExistingWindowsOnStartup !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "TileExistingWindowsOnStartup",
+                PatchValue.TileExistingWindowsOnStartup
+            );
+        }
+
+        if (PatchValue.TiledWindowGap !== undefined)
+        {
+            yield* Settings.SetSetting("TiledWindowGap", PatchValue.TiledWindowGap);
+            yield* TilingManager.SetGap(PatchValue.TiledWindowGap);
+        }
+
+        yield* Logging.LogInfo("Settings", "General settings updated.", {
+            Settings: Object.keys(PatchValue)
+        });
+        return ToGeneralSettingsDto(yield* Settings.Get);
     }));
 });
 
@@ -289,8 +439,182 @@ ipcMain.handle(AppApiChannel.OverlaySettingsSet, (
             );
         }
 
+        yield* Logging.LogInfo("Settings", "Overlay settings updated.", {
+            Settings: Object.keys(PatchValue)
+        });
         return ToOverlaySettingsDto(yield* Settings.Get);
     }));
+});
+
+const GetExecutableFriendlyName = (ExecutablePath: string): string => Option.getOrElse(
+    Window.GetApplicationNameFromPath(ExecutablePath),
+    () => basename(ExecutablePath, extname(ExecutablePath))
+);
+
+const GetExecutableIcon = async (
+    ExecutablePath: string
+): Promise<string | undefined> =>
+{
+    try
+    {
+        const Icon = await app.getFileIcon(ExecutablePath, { size: "large" });
+        const Png = Icon.toPNG();
+        return Png.length === 0 ? undefined : Png.toString("base64");
+    }
+    catch
+    {
+        await ApplicationRuntime.runPromise(Logging.LogDebug(
+            "Settings",
+            "Could not retrieve an application icon for per-application settings."
+        )).catch(() => undefined);
+        return undefined;
+    }
+};
+
+const ToPerAppSettingsEntryDto = async (
+    ExecutablePath: string,
+    Settings: PerAppSettingDto
+): Promise<PerAppSettingsEntryDto> =>
+{
+    const Icon = await GetExecutableIcon(ExecutablePath);
+
+    return {
+        ExecutablePath,
+        FriendlyName: GetExecutableFriendlyName(ExecutablePath),
+        IgnoreModal: Settings.IgnoreModal,
+        NewWindowBehavior: Settings.NewWindowBehavior,
+        ...(Icon === undefined ? { } : { Icon })
+    };
+};
+
+const GetPerAppSettingsEntries = async (): Promise<
+    ReadonlyArray<PerAppSettingsEntryDto>
+> =>
+{
+    const Current = await ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        return (yield* Settings.Get).PerAppSettings;
+    }));
+
+    const Entries = await Promise.all(Object.entries(Current).map(([
+        ExecutablePath,
+        Settings
+    ]: [ string, PerAppSettingDto ]) =>
+        ToPerAppSettingsEntryDto(ExecutablePath, Settings)));
+
+    return Entries.sort((
+        Left: PerAppSettingsEntryDto,
+        Right: PerAppSettingsEntryDto
+    ) => Left.FriendlyName.localeCompare(Right.FriendlyName));
+};
+
+ipcMain.removeHandler(AppApiChannel.PerAppSettingsGet);
+ipcMain.handle(AppApiChannel.PerAppSettingsGet, GetPerAppSettingsEntries);
+
+ipcMain.removeHandler(AppApiChannel.PerAppSettingsAdd);
+ipcMain.handle(AppApiChannel.PerAppSettingsAdd, async (
+    EventValue: IpcMainInvokeEvent
+): Promise<PerAppSettingsEntryDto | null> =>
+{
+    const Options: OpenDialogOptions = {
+        filters: [
+            {
+                extensions: [ "exe" ],
+                name: "Applications"
+            }
+        ],
+        properties: [ "openFile" ],
+        title: "Add Application"
+    };
+    const Parent = ElectronBrowserWindow.fromWebContents(EventValue.sender);
+    const Selection = Parent === null
+        ? await dialog.showOpenDialog(Options)
+        : await dialog.showOpenDialog(Parent, Options);
+    const ExecutablePath = Selection.filePaths[0];
+
+    if (Selection.canceled || ExecutablePath === undefined)
+    {
+        return null;
+    }
+
+    const PerExecutableSettings = await ApplicationRuntime.runPromise(
+        Effect.gen(function*()
+        {
+            const Settings = yield* AppSettings.AppSettings;
+            const Current = yield* Settings.Get;
+            const Existing = Current.PerAppSettings[ExecutablePath];
+
+            if (Existing !== undefined)
+            {
+                yield* Logging.LogDebug(
+                    "Settings",
+                    "Per-application settings already existed for the selected application."
+                );
+                return Existing;
+            }
+
+            const Defaults = yield* Schema.decodeUnknownEffect(
+                AppSettings.PerAppSettings
+            )({ });
+            yield* Settings.SetSetting("PerAppSettings", {
+                ...Current.PerAppSettings,
+                [ ExecutablePath ]: Defaults
+            });
+            yield* Logging.LogInfo(
+                "Settings",
+                "Added per-application settings for a selected application."
+            );
+            return Defaults;
+        })
+    );
+
+    return ToPerAppSettingsEntryDto(ExecutablePath, PerExecutableSettings);
+});
+
+ipcMain.removeHandler(AppApiChannel.PerAppSettingsSet);
+ipcMain.handle(AppApiChannel.PerAppSettingsSet, async (
+    _Event: IpcMainInvokeEvent,
+    ExecutablePathValue: unknown,
+    PatchValue: unknown
+): Promise<PerAppSettingsEntryDto> =>
+{
+    if (
+        typeof ExecutablePathValue !== "string"
+        || ExecutablePathValue.trim().length === 0
+        || !IsPerAppSettingPatch(PatchValue)
+    )
+    {
+        throw new TypeError("The requested per-application settings patch is invalid.");
+    }
+
+    const ExecutablePath = ExecutablePathValue;
+    const Updated = await ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        const Current = yield* Settings.Get;
+        const Existing = Current.PerAppSettings[ExecutablePath];
+
+        if (Existing === undefined)
+        {
+            throw new TypeError("The executable has no per-application settings.");
+        }
+
+        const Next: AppSettings.PerAppSettings = {
+            ...Existing,
+            ...PatchValue
+        };
+        yield* Settings.SetSetting("PerAppSettings", {
+            ...Current.PerAppSettings,
+            [ ExecutablePath ]: Next
+        });
+        yield* Logging.LogInfo("Settings", "Per-application settings updated.", {
+            Settings: Object.keys(PatchValue)
+        });
+        return Next;
+    }));
+
+    return ToPerAppSettingsEntryDto(ExecutablePath, Updated);
 });
 
 ipcMain.handle(AppApiChannel.OverlayScreenGet, () => ApplicationRuntime.runPromise(
@@ -314,19 +638,24 @@ ipcMain.handle(AppApiChannel.OverlayCommandInvoke, (
 
     const Id: OverlayShared.OverlayCommandId = IdValue;
 
-    return ApplicationRuntime.runPromise(Effect.gen(function*()
-    {
-        const Executor = yield* Command.Executor.CommandExecutor;
-        const Resolver = yield* Command.Resolver.CommandResolver;
-        const ThisCommand = yield* Resolver.ResolveOverlayCommand(Id);
-
-        if (Option.isNone(ThisCommand))
+    return ReportRejectedOperation("IPC", "Overlay command invocation", () =>
+        ApplicationRuntime.runPromise(Effect.gen(function*()
         {
-            throw new TypeError("The requested command is not available on the current screen.");
-        }
+            const Executor = yield* Command.Executor.CommandExecutor;
+            const Resolver = yield* Command.Resolver.CommandResolver;
+            const ThisCommand = yield* Resolver.ResolveOverlayCommand(Id);
 
-        yield* Executor.Execute(ThisCommand.value);
-    }));
+            if (Option.isNone(ThisCommand))
+            {
+                throw new TypeError("The requested command is not available on the current screen.");
+            }
+
+            yield* Executor.Execute(ThisCommand.value);
+            yield* Logging.LogDebug("Command", "IPC application command completed.", {
+                Category: ThisCommand.value.Category,
+                Command: ThisCommand.value._tag
+            });
+        })));
 });
 
 ipcMain.removeHandler(AppApiChannel.OverlayFocusPreview);
@@ -342,20 +671,23 @@ ipcMain.handle(AppApiChannel.OverlayFocusPreview, (
 
     const Id: OverlayShared.OverlayCommandId | null = IdValue;
 
-    return ApplicationRuntime.runPromise(Effect.gen(function*()
-    {
-        const Session = yield* Overlay.Session.OverlaySession;
-        yield* Session.PreviewFocusTarget(Id);
-    }));
+    return ReportRejectedOperation("IPC", "Overlay Focus preview", () =>
+        ApplicationRuntime.runPromise(Effect.gen(function*()
+        {
+            const Session = yield* Overlay.Session.OverlaySession;
+            yield* Session.PreviewFocusTarget(Id);
+        })));
 });
 
 ipcMain.removeHandler(AppApiChannel.OverlayBack);
-ipcMain.handle(AppApiChannel.OverlayBack, () => ApplicationRuntime.runPromise(
-    Effect.gen(function*()
+ipcMain.handle(AppApiChannel.OverlayBack, () => ReportRejectedOperation(
+    "IPC",
+    "Overlay back navigation",
+    () => ApplicationRuntime.runPromise(Effect.gen(function*()
     {
         const Executor = yield* Command.Executor.CommandExecutor;
         yield* Executor.Execute(Command.Ui.UiCommand().BackOverlayScreen());
-    })
+    }))
 ));
 
 const PublishRendererTheme = (): void =>
@@ -367,32 +699,38 @@ const PublishRendererTheme = (): void =>
 
     const CurrentTheme: RendererTheme = Theme.GetRendererTheme();
 
-    void ApplicationRuntime.runPromise(Effect.gen(function*()
-    {
-        const CatchWindowNotFound =
-            Effect.catchTag<any, any, any, any, any>("BrowserWindowNotFoundError", () => Effect.void);
+    void ReportRejectedOperation("Theme", "Renderer theme publication", () =>
+        ApplicationRuntime.runPromise(Effect.gen(function*()
+        {
+            const CatchWindowNotFound =
+                Effect.catchTag<any, any, any, any, any>(
+                    "BrowserWindowNotFoundError",
+                    () => Effect.void
+                );
 
-        const BrowserWindows = yield* BrowserWindow.BrowserWindow;
+            const BrowserWindows = yield* BrowserWindow.BrowserWindow;
 
-        yield* Effect.all([
-            pipe(
-                BrowserWindows.Send(
-                    BrowserWindow.Key.Main,
-                    AppApiChannel.ThemeChanged,
-                    CurrentTheme
+            yield* Effect.all([
+                pipe(
+                    BrowserWindows.Send(
+                        BrowserWindow.Key.Main,
+                        AppApiChannel.ThemeChanged,
+                        CurrentTheme
+                    ),
+                    CatchWindowNotFound
                 ),
-                CatchWindowNotFound
-            ),
-            pipe(
-                BrowserWindows.Send(
-                    BrowserWindow.Key.Overlay,
-                    AppApiChannel.ThemeChanged,
-                    CurrentTheme
-                ),
-                CatchWindowNotFound
-            )
-        ], { discard: true });
-    }));
+                pipe(
+                    BrowserWindows.Send(
+                        BrowserWindow.Key.Overlay,
+                        AppApiChannel.ThemeChanged,
+                        CurrentTheme
+                    ),
+                    CatchWindowNotFound
+                )
+            ], { discard: true });
+            yield* Logging.LogDebug("Theme", "Published the renderer theme.");
+        }))
+    );
 };
 
 const HandleOnStartDevFeatures = (
@@ -436,16 +774,40 @@ const StartApplication = Effect.gen(function*()
         new Date()
     );
     const TilingManager = yield* Tiling.Manager.TilingManager;
-    yield* Logging.LogTilingState(yield* TilingManager.Snapshot);
     yield* TitlebarFlyout.TitlebarFlyout;
     const BrowserWindows = yield* BrowserWindow.BrowserWindow;
     const Settings = yield* AppSettings.AppSettings;
     const InitialSettings = yield* Settings.Get;
     const CompleteKeybinds = Input.Hotkey.WithDefaultKeybindSettings(InitialSettings.Keybinds);
+    const DevelopmentFeatures = yield* DevFeatures;
+
+    yield* TilingManager.SetGap(InitialSettings.TiledWindowGap);
+
+    if (
+        InitialSettings.TileExistingWindowsOnStartup
+        || DevelopmentFeatures.TileOnStart
+    )
+    {
+        yield* TilingManager.TileExistingWindows.pipe(
+            Effect.catch((ErrorValue: Tiling.Manager.TilingManagerError) =>
+                Effect.logWarning(
+                    "Could not tile existing windows; tiling will start with an empty state.",
+                    ErrorValue
+                )
+            )
+        );
+    }
+
+    yield* Logging.LogTilingState(yield* TilingManager.Snapshot);
 
     if (CompleteKeybinds !== InitialSettings.Keybinds)
     {
         yield* Settings.SetSetting("Keybinds", CompleteKeybinds);
+        yield* Logging.LogInfo(
+            "Settings",
+            "Restored missing default keybind settings.",
+            { KeybindCount: CompleteKeybinds.length }
+        );
     }
 
     yield* Command.Executor.CommandExecutor;
@@ -512,15 +874,18 @@ app.on("before-quit", (event: Event): void =>
     );
 });
 
-app.on("activate", () => void ApplicationRuntime.runPromise(
-    Effect.gen(function*()
+app.on("activate", () => void ReportRejectedOperation(
+    "Lifecycle",
+    "Application activation",
+    () => ApplicationRuntime.runPromise(Effect.gen(function*()
     {
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
         yield* BrowserWindows.Ensure(yield* BrowserWindow.MainWindowSpec);
         yield* BrowserWindows.Show(BrowserWindow.Key.Main);
         yield* BrowserWindows.Focus(BrowserWindow.Key.Main);
+        yield* Logging.LogDebug("Lifecycle", "Handled application activation.");
     }))
-);
+));
 
 app.on("window-all-closed", () =>
 {

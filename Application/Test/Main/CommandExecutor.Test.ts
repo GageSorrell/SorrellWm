@@ -52,8 +52,19 @@ vi.mock("@sorrell/windows", async () =>
         {
             A: 0x41,
             CONTROL: 0x11,
+            D1: 0x31,
+            D2: 0x32,
+            D3: 0x33,
+            D4: 0x34,
+            D5: 0x35,
+            D6: 0x36,
+            D7: 0x37,
+            D8: 0x38,
+            D9: 0x39,
+            END: 0x23,
             F20: 0x83,
             H: 0x48,
+            HOME: 0x24,
             J: 0x4A,
             K: 0x4B,
             L: 0x4C,
@@ -63,11 +74,31 @@ vi.mock("@sorrell/windows", async () =>
             LWIN: 0x5B,
             MENU: 0x12,
             RCONTROL: 0xA3,
+            RETURN: 0x0D,
             RMENU: 0xA5,
             RSHIFT: 0xA1,
             RWIN: 0x5C,
             SHIFT: 0x10,
-            VK: [ 0x41, 0x48, 0x4A, 0x4B, 0x4C, 0x83 ]
+            VK: [
+                0x0D,
+                0x23,
+                0x24,
+                0x31,
+                0x32,
+                0x33,
+                0x34,
+                0x35,
+                0x36,
+                0x37,
+                0x38,
+                0x39,
+                0x41,
+                0x48,
+                0x4A,
+                0x4B,
+                0x4C,
+                0x83
+            ]
         },
         Window:
         {
@@ -81,6 +112,7 @@ vi.mock("@sorrell/windows", async () =>
 
 const UiCommands = Ui.UiCommand();
 const WmCommands = Wm.WmCommand();
+const TileExistingWindows = vi.fn();
 
 beforeEach(() =>
 {
@@ -138,6 +170,31 @@ describe("CommandExecutor.Execute", () =>
                 expect(Unsupported.failure.Command._tag).toBe("Isolate");
             }
         }
+    });
+
+    it("tiles all existing windows and republishes the resulting Home screen", async () =>
+    {
+        const Operations = new Array<string>();
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.TileAll());
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager()),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(TileExistingWindows).toHaveBeenCalledOnce();
+        expect(Operations).toEqual([
+            "Send:Overlay:overlay-screen:changed:FloatingHome"
+        ]);
     });
 
     it("restores foreground focus without displaying a backdrop", async () =>
@@ -219,6 +276,72 @@ describe("CommandExecutor.Execute", () =>
             "SetForegroundWindow:84",
             "SetBounds:Overlay",
             "Send:Overlay:overlay-screen:changed:FloatingHome"
+        ]);
+    });
+
+    it("selects a tiled panel without changing native window focus", async () =>
+    {
+        const Operations = new Array<string>();
+        const OverlayBounds = new Array<MathBox.Box>();
+        const Selected = new Array<OverlaySession.TiledFocusSelection>();
+        const Panel = Tiling.Tree.Panel(
+            Tiling.Tree.Orientation.Horizontal,
+            [
+                Tiling.Tree.Window({
+                    InitialBounds: Box.Box(0, 100, 100, 0),
+                    Window: 1n as Handle.HWND
+                }),
+                Tiling.Tree.Window({
+                    InitialBounds: Box.Box(0, 200, 100, 100),
+                    Window: 2n as Handle.HWND
+                })
+            ]
+        );
+        const Selection: OverlaySession.TiledFocusSelection = {
+            Node: Panel,
+            Path: [ ],
+            WorkspaceId: "Fake"
+        };
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "FocusMoveParent"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(
+                Operations,
+                Effect.void,
+                (Bounds: MathBox.Box) => OverlayBounds.push(Bounds)
+            )),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.none(),
+                Option.some(Selection),
+                Option.none(),
+                OverlayScreenId.TiledFocus,
+                (Value: OverlaySession.TiledFocusSelection) => Selected.push(Value)
+            )),
+            Effect.provide(FakeTilingManager([
+                1n as Handle.HWND,
+                2n as Handle.HWND
+            ])),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Selected).toEqual([ Selection ]);
+        expect(WindowsWindow.SetForegroundWindow).not.toHaveBeenCalled();
+        expect(Operations).toEqual([
+            "SetBounds:Overlay",
+            "Send:Overlay:overlay-screen:changed:TiledFocus"
+        ]);
+        expect(OverlayBounds.map(Box.Tupled)).toEqual([
+            [ 28, 1360, 1052, 560 ]
         ]);
     });
 
@@ -342,6 +465,101 @@ describe("CommandExecutor.Execute", () =>
         expect(Operations).toEqual([ ]);
         expect(WindowsWindow.SetWindowRect).not.toHaveBeenCalled();
     });
+
+    it("targets a sibling panel without moving or recentering the tiled window", async () =>
+    {
+        const ActivationWindow = 84n as Handle.HWND;
+        const Operations = new Array<string>();
+        const Selected = new Array<OverlaySession.TiledMovePanelTarget>();
+        const Action: OverlaySession.TiledMovePanelTarget = {
+            DirectionId: "MoveWindowRight",
+            TargetPanelPath: [ 1 ],
+            WorkspaceId: "Fake",
+            _tag: "SelectPanel"
+        };
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "MoveWindowRight"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(ActivationWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledMove,
+                () => undefined,
+                Option.some(Action),
+                (Target: OverlaySession.TiledMovePanelTarget) => Selected.push(Target)
+            )),
+            Effect.provide(FakeTilingManager([
+                ActivationWindow,
+                85n as Handle.HWND
+            ])),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Selected).toEqual([ Action ]);
+        expect(Operations).toEqual([
+            "Send:Overlay:overlay-screen:changed:TiledMove"
+        ]);
+    });
+
+    it("commits a tiled window into the targeted panel and recenters the overlay", async () =>
+    {
+        const ActivationWindow = 84n as Handle.HWND;
+        const Operations = new Array<string>();
+        const MoveIntoPanel = vi.fn(() => Effect.void);
+        const ClearTarget = vi.fn();
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "MoveWindowIntoPanel"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(ActivationWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledMove,
+                () => undefined,
+                Option.some({
+                    TargetPanelPath: [ 1 ],
+                    _tag: "MoveIntoPanel"
+                }),
+                () => undefined,
+                ClearTarget
+            )),
+            Effect.provide(FakeTilingManager(
+                [ ActivationWindow, 85n as Handle.HWND ],
+                { MoveIntoPanel }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(MoveIntoPanel).toHaveBeenCalledWith(ActivationWindow, [ 1 ]);
+        expect(ClearTarget).toHaveBeenCalledOnce();
+        expect(Operations).toEqual([
+            "SetBounds:Overlay",
+            "Send:Overlay:overlay-screen:changed:TiledMove"
+        ]);
+    });
 });
 
 describe("CommandExecutor.Live", () =>
@@ -401,7 +619,8 @@ const FakeHotkey = (): Layer.Layer<Hotkey.Hotkey> => Layer.succeed(Hotkey.Hotkey
 });
 
 const FakeTilingManager = (
-    TiledWindows: ReadonlyArray<Handle.HWND> = []
+    TiledWindows: ReadonlyArray<Handle.HWND> = [],
+    Overrides: Partial<Tiling.Manager.TilingManagerImpl> = { }
 ): Layer.Layer<Tiling.Manager.TilingManager> =>
 {
     const Root = TiledWindows.reduce<Tiling.Tree.Node | null>(
@@ -420,12 +639,19 @@ const FakeTilingManager = (
         Changes: Stream.empty,
         Float: () => Effect.void,
         Move: () => Effect.void,
+        MoveIntoPanel: () => Effect.void,
+        MoveToContainingPanel: () => Effect.void,
+        MoveToIndex: () => Effect.void,
         Reconcile: Effect.void,
         Refresh: Effect.void,
         SetPanelOrientation: () => Effect.void,
         SetPanelRatio: () => Effect.void,
         Snapshot: Effect.succeed(Snapshot),
-        Tile: () => Effect.void
+        Tile: () => Effect.void,
+        TileExistingWindows: Effect.sync(TileExistingWindows),
+        ...Overrides,
+        Gap: Overrides.Gap ?? Effect.succeed(0),
+        SetGap: Overrides.SetGap ?? (() => Effect.void)
     };
 
     return Layer.succeed(Tiling.Manager.TilingManager, Service);
@@ -445,9 +671,12 @@ const FakeAppSettings = (
         MoveStepSecondarySpeedFactor: 4,
         OverlayBackdropIntensity,
         OverlayRoundedCorners: true,
+        PerAppSettings: { },
         RunAtStartup: true,
         ShowTitlebarFlyout: true,
-        Theme: "System"
+        Theme: "System",
+        TileExistingWindowsOnStartup: false,
+        TiledWindowGap: 8
     };
     const Service: AppSettings.Service = {
         Changes: Stream.empty,
@@ -465,10 +694,21 @@ const FakeAppSettings = (
 
 const FakeOverlaySession = (
     FocusTarget: Option.Option<Handle.HWND> = Option.none(),
-    InitialActivationWindow: Option.Option<Handle.HWND> = Option.none()
+    InitialActivationWindow: Option.Option<Handle.HWND> = Option.none(),
+    TiledFocusTarget: Option.Option<OverlaySession.TiledFocusSelection> = Option.none(),
+    TiledFocusCommit: Option.Option<OverlaySession.TiledFocusSelection> = Option.none(),
+    InitialScreen: OverlayScreenId = OverlayScreenId.FloatingHome,
+    OnSetTiledFocusSelection: (
+        Selection: OverlaySession.TiledFocusSelection
+    ) => void = () => undefined,
+    TiledMoveAction: Option.Option<OverlaySession.TiledMoveAction> = Option.none(),
+    OnSetTiledMovePanelTarget: (
+        Target: OverlaySession.TiledMovePanelTarget
+    ) => void = () => undefined,
+    OnClearTiledMovePanelTarget: () => void = () => undefined
 ) => Layer.suspend(() =>
 {
-    let Stack: ReadonlyArray<OverlayScreenId> = [ OverlayScreenId.FloatingHome ];
+    let Stack: ReadonlyArray<OverlayScreenId> = [ InitialScreen ];
     let ActivationWindow = InitialActivationWindow;
     let PrimaryModifierHeld = false;
     let FineModifierHeld = false;
@@ -487,6 +727,7 @@ const FakeOverlaySession = (
             ActivationWindow = Option.none();
         }),
         ClearFocusPreview: Effect.void,
+        ClearTiledMovePanelTarget: Effect.sync(OnClearTiledMovePanelTarget),
         Current: Effect.sync(Current),
         FineModifierHeld: Effect.sync(() => FineModifierHeld),
         FocusFailure: Effect.sync(() => CurrentFocusFailure),
@@ -508,6 +749,9 @@ const FakeOverlaySession = (
         }),
         ResizeMode: Effect.sync(() => CurrentResizeMode),
         ResolveFocusTarget: () => Effect.succeed(FocusTarget),
+        ResolveTiledFocusCommit: Effect.succeed(TiledFocusCommit),
+        ResolveTiledFocusTarget: () => Effect.succeed(TiledFocusTarget),
+        ResolveTiledMoveAction: () => Effect.succeed(TiledMoveAction),
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
         {
             ActivationWindow = Option.some(WindowHandle);
@@ -524,6 +768,12 @@ const FakeOverlaySession = (
         {
             CurrentResizeMode = Mode;
         }),
+        SetTiledFocusSelection: (
+            Selection: OverlaySession.TiledFocusSelection
+        ) => Effect.sync(() => OnSetTiledFocusSelection(Selection)),
+        SetTiledMovePanelTarget: (
+            Target: OverlaySession.TiledMovePanelTarget
+        ) => Effect.sync(() => OnSetTiledMovePanelTarget(Target)),
         Snapshot: Effect.sync((): OverlayScreenDto => ({
             CanGoBack: Stack.length > 1,
             Commands: [ ],
@@ -540,7 +790,8 @@ const FakeOverlaySession = (
 
 const FakeBrowserWindow = (
     Operations: Array<string>,
-    OnHide: Effect.Effect<void> = Effect.void
+    OnHide: Effect.Effect<void> = Effect.void,
+    OnSetBounds: (Bounds: MathBox.Box) => void = () => undefined
 ): Layer.Layer<BrowserWindow.BrowserWindow> =>
 {
     const Record = (Operation: string): Effect.Effect<void> => Effect.sync(() =>
@@ -568,8 +819,11 @@ const FakeBrowserWindow = (
         RequestClose: (_Key: BrowserWindow.Key) => Effect.void,
         Send: (Key: BrowserWindow.Key, Channel: string, Payload: unknown) =>
             Record(`Send:${ Key }:${ Channel }:${ GetPayloadDescription(Payload) }`),
-        SetBounds: (Key: BrowserWindow.Key, _Bounds: MathBox.Box) =>
-            Record(`SetBounds:${ Key }`),
+        SetBounds: (Key: BrowserWindow.Key, Bounds: MathBox.Box) => Effect.sync(() =>
+        {
+            Operations.push(`SetBounds:${ Key }`);
+            OnSetBounds(Bounds);
+        }),
         Show: (Key: BrowserWindow.Key) => Record(`Show:${ Key }`),
         ShowInactive: (Key: BrowserWindow.Key) => Record(`ShowInactive:${ Key }`)
     };

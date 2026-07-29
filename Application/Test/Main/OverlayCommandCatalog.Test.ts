@@ -32,21 +32,45 @@ vi.mock("@sorrell/windows", () => ({
         BROWSER_BACK: 0xA6,
         CONTROL: 0x11,
         D: 0x44,
+        D1: 0x31,
+        D2: 0x32,
+        D3: 0x33,
+        D4: 0x34,
+        D5: 0x35,
+        D6: 0x36,
+        D7: 0x37,
+        D8: 0x38,
+        D9: 0x39,
+        END: 0x23,
         F20: 0x83,
         H: 0x48,
+        HOME: 0x24,
         J: 0x4A,
         K: 0x4B,
         L: 0x4C,
-        N: 0x4E,
         MENU: 0x12,
+        N: 0x4E,
+        RETURN: 0x0D,
         SHIFT: 0x10,
         T: 0x54,
         TAB: 0x09,
         VK: [
             0x09,
+            0x0D,
             0x10,
             0x11,
             0x12,
+            0x23,
+            0x24,
+            0x31,
+            0x32,
+            0x33,
+            0x34,
+            0x35,
+            0x36,
+            0x37,
+            0x38,
+            0x39,
             0x44,
             0x48,
             0x4A,
@@ -78,6 +102,36 @@ describe("OverlayCommandCatalog", () =>
             { HotkeyId: "SelectDown", Id: "Move", KeyLabel: "T" },
             { HotkeyId: "SelectRight", Id: "Resize", KeyLabel: "N" }
         ]);
+    });
+
+    it("appends Tile All with Commit only when it is available", () =>
+    {
+        const Hidden = FromKeybindSettings(
+            OverlayScreenId.FloatingHome,
+            Hotkey.DefaultKeybindSettings
+        );
+        const Visible = FromKeybindSettings(
+            OverlayScreenId.FloatingHome,
+            Hotkey.DefaultKeybindSettings,
+            { },
+            undefined,
+            false,
+            false,
+            20,
+            50,
+            ResizeMode.Grow,
+            false,
+            { },
+            true
+        );
+
+        expect(Hidden.Commands.some((Command: OverlayCommandDto) =>
+            Command.Id === "TileAll")).toBe(false);
+        expect(Visible.Commands.at(-1)).toMatchObject({
+            HotkeyId: "Commit",
+            Id: "TileAll",
+            Shortcut: { KeyLabel: "RETURN" }
+        });
     });
 
     it("projects the tiled Home actions with Float on Shift plus SelectUp", () =>
@@ -175,6 +229,167 @@ describe("OverlayCommandCatalog", () =>
         expect(Screen.Commands.slice(1).every(
             (Command: OverlayCommandDto) => Command.Disabled
         )).toBe(true);
+    });
+
+    it("adds the Ctrl plus SelectUp parent-panel command to tiled Focus", () =>
+    {
+        const Screen = FromKeybindSettings(
+            OverlayScreenId.TiledFocus,
+            Hotkey.DefaultKeybindSettings,
+            {
+                FocusMoveFirst: {
+                    Icon: undefined,
+                    Title: "First App"
+                },
+                FocusMoveLast: {
+                    Icon: undefined,
+                    Title: "Last App"
+                },
+                FocusMoveParent: {
+                    Icon: undefined,
+                    Title: "Vertical panel"
+                },
+                FocusMoveRoot: {
+                    Icon: undefined,
+                    Title: "Horizontal panel"
+                }
+            }
+        );
+
+        expect(Screen.Commands.map((Command: OverlayCommandDto) => Command.Id)).toEqual([
+            "FocusMoveLeft",
+            "FocusMoveUp",
+            "FocusMoveDown",
+            "FocusMoveRight",
+            "FocusMoveParent",
+            "FocusMoveFirst",
+            "FocusMoveLast",
+            "FocusMoveRoot"
+        ]);
+        expect(Screen.Commands[4]).toMatchObject({
+            Disabled: false,
+            Shortcut: {
+                KeyLabel: "H",
+                Modifiers: { Control: true }
+            },
+            Target: { Title: "Vertical panel" }
+        });
+        expect(Screen.Commands[5]).toMatchObject({
+            Disabled: false,
+            Shortcut: {
+                KeyLabel: "HOME",
+                Modifiers: { Control: false }
+            },
+            Target: { Title: "First App" }
+        });
+        expect(Screen.Commands[6]).toMatchObject({
+            Disabled: false,
+            Shortcut: { KeyLabel: "END" },
+            Target: { Title: "Last App" }
+        });
+        expect(Screen.Commands[7]).toMatchObject({
+            Disabled: false,
+            Shortcut: {
+                KeyLabel: "HOME",
+                Modifiers: { Control: true }
+            },
+            Target: { Title: "Horizontal panel" }
+        });
+    });
+
+    it("projects tiled Move commands, availability, and panel-entry state", () =>
+    {
+        const Screen = FromKeybindSettings(
+            OverlayScreenId.TiledMove,
+            Hotkey.DefaultKeybindSettings,
+            { },
+            undefined,
+            false,
+            false,
+            20,
+            50,
+            ResizeMode.Grow,
+            false,
+            { },
+            false,
+            new Set([ "MoveWindowLeft", "MoveWindowIntoPanel" ]),
+            true
+        );
+
+        expect(Screen.IsTiledMovePanelTargeted).toBe(true);
+        expect(Screen.Commands.map((Command: OverlayCommandDto) => Command.Id)).toEqual([
+            "MoveWindowLeft",
+            "MoveWindowUp",
+            "MoveWindowDown",
+            "MoveWindowRight",
+            "MoveWindowParent",
+            "MoveWindowFirst",
+            "MoveWindowLast",
+            "MoveWindowIntoPanel"
+        ]);
+        expect(Screen.Commands[0]).toMatchObject({ Disabled: true });
+        expect(Screen.Commands[4]).toMatchObject({
+            Shortcut: {
+                KeyLabel: "H",
+                Modifiers: { Control: true }
+            }
+        });
+        expect(Screen.Commands[5]?.Shortcut.KeyLabel).toBe("HOME");
+        expect(Screen.Commands[6]?.Shortcut.KeyLabel).toBe("END");
+        expect(Screen.Commands[7]).toMatchObject({
+            Disabled: true,
+            Shortcut: { KeyLabel: "RETURN" }
+        });
+    });
+
+    it("projects only discovered monitor commands with their numeric shortcuts", () =>
+    {
+        const Screen = FromKeybindSettings(
+            OverlayScreenId.TiledFocus,
+            Hotkey.DefaultKeybindSettings,
+            { },
+            undefined,
+            false,
+            false,
+            20,
+            50,
+            ResizeMode.Grow,
+            true,
+            {
+                FocusMonitor2: {
+                    Disabled: true,
+                    Target: {
+                        Icon: undefined,
+                        Title: "Display 2: Projector"
+                    }
+                },
+                FocusMonitor3: {
+                    Disabled: false,
+                    Target: {
+                        Icon: undefined,
+                        Title: "Display 3: Desk"
+                    }
+                }
+            }
+        );
+
+        expect(Screen.IsRootPanelFocused).toBe(true);
+        expect(Screen.Commands.some((Command: OverlayCommandDto) =>
+            Command.Id.startsWith("FocusMonitor"))).toBe(false);
+        expect(Screen.MonitorCommands).toMatchObject([
+            {
+                Disabled: true,
+                Id: "FocusMonitor2",
+                Shortcut: { KeyLabel: "2" },
+                Target: { Title: "Display 2: Projector" }
+            },
+            {
+                Disabled: false,
+                Id: "FocusMonitor3",
+                Shortcut: { KeyLabel: "3" },
+                Target: { Title: "Display 3: Desk" }
+            }
+        ]);
     });
 
     it("projects the Resize screen's edge commands and current Ctrl mode", () =>

@@ -10,11 +10,8 @@
  */
 
 import * as Logging from "../../Source/Main/Logging.ts";
+import * as SorrellLogging from "@sorrell/log/Effect";
 import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
-import {
-    LogRuntime,
-    Make as MakeLogRuntime
-} from "@sorrell/log/Effect";
 import { describe, expect, it } from "vitest";
 import { Box } from "@sorrell/math";
 import { Effect } from "effect";
@@ -30,6 +27,40 @@ const ManagedWindow = (Value: number): TilingTree.WindowNode =>
 
 describe("Logging", () =>
 {
+    it("emits categorized structured application events", async () =>
+    {
+        const Sink = InMemorySink.Make();
+        const LoggingLayer = SorrellLogging.Layer({
+            DefaultCategory: "Application",
+            MinimumLevel: "Debug",
+            Sinks: [ Sink ]
+        });
+
+        await Effect.runPromise(Logging.LogWarning(
+            "Overlay.Preview",
+            "Preview operation failed.",
+            new Error("test failure"),
+            {
+                Operation: "Ensure",
+                Window: "FocusPreviewLeft"
+            }
+        ).pipe(Effect.provide(LoggingLayer)));
+
+        expect(Sink.Records).toHaveLength(1);
+        expect(Sink.Records[0]).toMatchObject({
+            Annotations: {
+                Operation: "Ensure",
+                Window: "FocusPreviewLeft"
+            },
+            Category: "Application.Overlay.Preview",
+            Level: "Warn",
+            Message: [
+                "Preview operation failed.",
+                expect.objectContaining({ _tag: "Error" })
+            ]
+        });
+    });
+
     it("resolves the default and configured log-client ports", () =>
     {
         expect(Logging.ResolveLogClientPort({ })).toBe(Logging.DefaultLogClientPort);
@@ -68,7 +99,7 @@ describe("Logging", () =>
     it("emits current tiling counts as global log records", async () =>
     {
         const Sink = InMemorySink.Make();
-        const Runtime = MakeLogRuntime({
+        const Runtime = SorrellLogging.Make({
             Now: () => new Date("2026-07-24T12:00:00.000Z"),
             Sinks: [ Sink ]
         });
@@ -84,7 +115,7 @@ describe("Logging", () =>
 
         await Effect.runPromise(
             Logging.LogTilingState(State).pipe(
-                Effect.provideService(LogRuntime, Runtime)
+                Effect.provideService(SorrellLogging.LogRuntime, Runtime)
             )
         );
         await Effect.runPromise(Runtime.Flush);

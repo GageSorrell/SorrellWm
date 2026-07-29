@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+export * from "./OptionalSetting.js";
 export * from "./Setting.js";
 export * from "./SettingGroup.js";
 export * from "./SettingOption.js";

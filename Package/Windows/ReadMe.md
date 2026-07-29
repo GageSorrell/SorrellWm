@@ -54,7 +54,8 @@ the owning executable's Shell icon. It returns `None` when none can be read.
 `Screen.GetMonitors()` returns an Effect `Result` containing one
 `HMONITORINFOEX` value per enumerated display. Each value contains the monitor
 handle, its virtual-screen and work-area `Box` values, the friendly device name,
-raw flags, and a derived `IsPrimary` value. `Screen.GetMonitorBrand(Monitor)`
+the positive `DisplayId` shown in Windows Display Settings, raw flags, and a
+derived `IsPrimary` value. `Screen.GetMonitorBrand(Monitor)`
 returns the manufacturer reported by the monitor's Windows device metadata, or
 `None` when no meaningful manufacturer is available.
 

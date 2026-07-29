@@ -10,11 +10,14 @@
  */
 
 import * as BoxUtility from "../Utility/Math/Box.js";
+import * as Logging from "../Log.ts";
 import * as OverlayCommandCatalog from "./CommandCatalog.ts";
 import * as Tiling from "../Tiling/index.ts";
 import { AppSettings, BrowserWindow } from "../index.ts";
 import {
     OverlayCommandId as CommandId,
+    FocusMonitorCommandIds,
+    IsFocusMonitorCommandId,
     type OverlayCommandId,
     type OverlayCommandTargetDto,
     type OverlayScreenDto,
@@ -24,10 +27,13 @@ import {
     OverlayScreenId as ScreenId
 } from "../../Shared/OverlayCommand.js";
 import { Context, Effect, Layer, Option, Ref, Result, Stream, Struct, SubscriptionRef, pipe } from "effect";
-import { type Handle, Window } from "@sorrell/windows";
+import type {
+    FocusPreviewExcludedRegion,
+    FocusPreviewPresentation
+} from "../../Shared/FocusPreview.ts";
+import { type Handle, Screen, Theme, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../../Shared/Api.ts";
 import type { Box } from "@sorrell/math";
-import type { FocusPreviewPresentation } from "../../Shared/FocusPreview.ts";
 
 const TypeId = "~sorrell/wm/Main/Overlay/Session" as const;
 
@@ -36,6 +42,63 @@ export interface FocusWindowCandidate
 {
     readonly Bounds: Box.Box;
     readonly Window: Handle.HWND;
+}
+
+/** One logically selected node in a tiled workspace. */
+export interface TiledFocusSelection
+{
+    readonly Node: Tiling.Tree.Node;
+    readonly Path: Tiling.Tree.Path;
+    readonly WorkspaceId: string;
+}
+
+interface TiledMoveIntoPanelAction
+{
+    readonly _tag: "MoveIntoPanel";
+    readonly TargetPanelPath: Tiling.Tree.Path;
+}
+
+interface TiledMoveToContainingPanelAction
+{
+    readonly _tag: "MoveToContainingPanel";
+}
+
+interface TiledMoveToIndexAction
+{
+    readonly _tag: "MoveToIndex";
+    readonly TargetIndex: number;
+}
+
+/**
+ * Sibling panel selected as the possible destination of a tiled window.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export interface TiledMovePanelTarget
+{
+    readonly _tag: "SelectPanel";
+    readonly DirectionId: TiledMoveDirectionCommandId;
+    readonly TargetPanelPath: Tiling.Tree.Path;
+    readonly WorkspaceId: string;
+}
+
+/**
+ * Resolved state transition for one command on the tiled Move screen.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export type TiledMoveAction =
+    | TiledMoveIntoPanelAction
+    | TiledMovePanelTarget
+    | TiledMoveToContainingPanelAction
+    | TiledMoveToIndexAction;
+
+interface TiledFocusLocation
+{
+    readonly Path: Tiling.Tree.Path;
+    readonly WorkspaceId: string;
 }
 
 /**
@@ -61,6 +124,31 @@ const FocusCommandIds = Object.freeze([
     CommandId.FocusMoveRight
 ] as const satisfies ReadonlyArray<FocusCommandId>);
 
+const TiledFocusCommandIds = Object.freeze([
+    ...FocusCommandIds,
+    CommandId.FocusMoveParent,
+    CommandId.FocusMoveFirst,
+    CommandId.FocusMoveLast,
+    CommandId.FocusMoveRoot
+] as const);
+
+type TiledMoveDirectionCommandId =
+    | typeof CommandId.MoveWindowDown
+    | typeof CommandId.MoveWindowLeft
+    | typeof CommandId.MoveWindowRight
+    | typeof CommandId.MoveWindowUp;
+
+const TiledMoveCommandIds = Object.freeze([
+    CommandId.MoveWindowLeft,
+    CommandId.MoveWindowUp,
+    CommandId.MoveWindowDown,
+    CommandId.MoveWindowRight,
+    CommandId.MoveWindowParent,
+    CommandId.MoveWindowFirst,
+    CommandId.MoveWindowLast,
+    CommandId.MoveWindowIntoPanel
+] as const);
+
 type FocusPreviewKey =
     | typeof BrowserWindow.Key.FocusPreviewDown
     | typeof BrowserWindow.Key.FocusPreviewLeft
@@ -78,14 +166,129 @@ const FocusPreviewKeys = Object.freeze(
     Object.values(FocusPreviewKeyByCommandId)
 );
 
+const TiledPanelPreviewOpacityScale = 0.5;
+
 const IsFocusCommandId = (Id: OverlayCommandId): Id is FocusCommandId =>
     (FocusCommandIds as ReadonlyArray<OverlayCommandId>).includes(Id);
+
+const TiledFocusDirectionByCommandId: Readonly<Partial<Record<
+    OverlayCommandId,
+    Tiling.Tree.FocusDirection
+>>> = {
+    [ CommandId.FocusMoveDown ]: Tiling.Tree.FocusDirection.Down,
+    [ CommandId.FocusMoveLeft ]: Tiling.Tree.FocusDirection.Left,
+    [ CommandId.FocusMoveRight ]: Tiling.Tree.FocusDirection.Right,
+    [ CommandId.FocusMoveUp ]: Tiling.Tree.FocusDirection.Up
+};
+
+const TiledMoveDirectionByCommandId: Readonly<Partial<Record<
+    OverlayCommandId,
+    Tiling.Tree.FocusDirection
+>>> = {
+    [ CommandId.MoveWindowDown ]: Tiling.Tree.FocusDirection.Down,
+    [ CommandId.MoveWindowLeft ]: Tiling.Tree.FocusDirection.Left,
+    [ CommandId.MoveWindowRight ]: Tiling.Tree.FocusDirection.Right,
+    [ CommandId.MoveWindowUp ]: Tiling.Tree.FocusDirection.Up
+};
+
+const OppositeTiledMoveCommand: Readonly<Record<
+    TiledMoveDirectionCommandId,
+    TiledMoveDirectionCommandId
+>> = {
+    [ CommandId.MoveWindowDown ]: CommandId.MoveWindowUp,
+    [ CommandId.MoveWindowLeft ]: CommandId.MoveWindowRight,
+    [ CommandId.MoveWindowRight ]: CommandId.MoveWindowLeft,
+    [ CommandId.MoveWindowUp ]: CommandId.MoveWindowDown
+};
+
+const IsTiledMoveDirectionCommandId = (
+    Id: OverlayCommandId
+): Id is TiledMoveDirectionCommandId =>
+    Id === CommandId.MoveWindowDown
+    || Id === CommandId.MoveWindowLeft
+    || Id === CommandId.MoveWindowRight
+    || Id === CommandId.MoveWindowUp;
+
+const ResolveTiledFocusPath = (
+    Root: Tiling.Tree.Node | null,
+    CurrentPath: Tiling.Tree.Path,
+    Id: OverlayCommandId
+): Tiling.Tree.Path | undefined =>
+{
+    switch (Id)
+    {
+        case CommandId.FocusMoveFirst:
+            return Tiling.Tree.FocusFirstChild(Root, CurrentPath);
+        case CommandId.FocusMoveLast:
+            return Tiling.Tree.FocusLastChild(Root, CurrentPath);
+        case CommandId.FocusMoveParent:
+            return Tiling.Tree.FocusContainingPanel(Root, CurrentPath);
+        case CommandId.FocusMoveRoot:
+            return Tiling.Tree.FocusRootPanel(Root, CurrentPath);
+        default:
+        {
+            const Direction = TiledFocusDirectionByCommandId[Id];
+            return Direction === undefined
+                ? undefined
+                : Tiling.Tree.MoveFocus(Root, CurrentPath, Direction);
+        }
+    }
+};
+
+const GetMonitorDisplayId = (Id: OverlayCommandId): number | undefined =>
+{
+    const Index = (FocusMonitorCommandIds as ReadonlyArray<OverlayCommandId>)
+        .indexOf(Id);
+    return Index < 0 ? undefined : Index + 1;
+};
 
 const IsWindowTiled = (
     Snapshot: Tiling.Tree.State,
     WindowValue: Handle.HWND
 ): boolean => Snapshot.Workspaces.some((Workspace: Tiling.Tree.Workspace) =>
     Tiling.Tree.HasWindow(Workspace.Root, WindowValue));
+
+const FindTiledFocusSelection = (
+    Snapshot: Tiling.Tree.State,
+    WindowValue: Handle.HWND
+): Option.Option<TiledFocusSelection> =>
+{
+    for (const Workspace of Snapshot.Workspaces)
+    {
+        const Path = Tiling.Tree.FindWindowPath(Workspace.Root, WindowValue);
+        const Node = Path === undefined
+            ? undefined
+            : Tiling.Tree.GetNodeAtPath(Workspace.Root, Path);
+
+        if (Path !== undefined && Node !== undefined)
+        {
+            return Option.some({
+                Node,
+                Path,
+                WorkspaceId: Workspace.Id
+            });
+        }
+    }
+
+    return Option.none();
+};
+
+const GetTiledFocusSelection = (
+    Snapshot: Tiling.Tree.State,
+    Location: TiledFocusLocation
+): Option.Option<TiledFocusSelection> =>
+{
+    const Workspace = Snapshot.Workspaces.find((
+        Candidate: Tiling.Tree.Workspace
+    ) => Candidate.Id === Location.WorkspaceId);
+    const Node = Workspace === undefined
+        ? undefined
+        : Tiling.Tree.GetNodeAtPath(Workspace.Root, Location.Path);
+
+    return Workspace === undefined || Node === undefined
+        ? Option.none()
+        : Option.some({ ...Location, Node });
+};
 
 // A candidate is assigned to whichever axis its offset is dominated by, so a
 // window can never qualify for two directions at once (e.g. one both left of
@@ -112,15 +315,14 @@ const IsInDirection = (
     }
 };
 
-export/** Select the nearest candidate whose center is in the requested direction. */
-const SelectDirectionalWindow = (
+const SelectDirectionalCandidate = <Candidate extends { readonly Bounds: Box.Box; }>(
     CurrentBounds: Box.Box,
-    Candidates: ReadonlyArray<FocusWindowCandidate>,
+    Candidates: ReadonlyArray<Candidate>,
     Id: FocusCommandId
-): Option.Option<FocusWindowCandidate> =>
+): Option.Option<Candidate> =>
 {
     const CurrentCenter = BoxUtility.CenterPoint(CurrentBounds);
-    let Selected: FocusWindowCandidate | undefined;
+    let Selected: Candidate | undefined;
     let SelectedDistanceSquared = Number.POSITIVE_INFINITY;
     let SelectedCrossAxisDistance = Number.POSITIVE_INFINITY;
 
@@ -158,6 +360,14 @@ const SelectDirectionalWindow = (
     return Option.fromNullishOr(Selected);
 };
 
+export/** Select the nearest candidate whose center is in the requested direction. */
+const SelectDirectionalWindow = (
+    CurrentBounds: Box.Box,
+    Candidates: ReadonlyArray<FocusWindowCandidate>,
+    Id: FocusCommandId
+): Option.Option<FocusWindowCandidate> =>
+    SelectDirectionalCandidate(CurrentBounds, Candidates, Id);
+
 /** Operations exposed by the main-owned overlay navigation session. */
 export interface OverlaySessionImpl
 {
@@ -192,6 +402,32 @@ export interface OverlaySessionImpl
     readonly ResolveFocusTarget: (
         Id: OverlayCommandId
     ) => Effect.Effect<Option.Option<Handle.HWND>>;
+
+    /** Resolve the first child of the currently focused tiled panel. */
+    readonly ResolveTiledFocusCommit: Effect.Effect<Option.Option<TiledFocusSelection>>;
+
+    /** Resolve one logical tiled focus movement without applying it. */
+    readonly ResolveTiledFocusTarget: (
+        Id: OverlayCommandId
+    ) => Effect.Effect<Option.Option<TiledFocusSelection>>;
+
+    /** Resolve one tiled-window move without applying it. */
+    readonly ResolveTiledMoveAction: (
+        Id: OverlayCommandId
+    ) => Effect.Effect<Option.Option<TiledMoveAction>>;
+
+    /** Remember the sibling panel awaiting a Commit move. */
+    readonly SetTiledMovePanelTarget: (
+        Target: TiledMovePanelTarget
+    ) => Effect.Effect<void>;
+
+    /** Clear the sibling panel awaiting a Commit move. */
+    readonly ClearTiledMovePanelTarget: Effect.Effect<void>;
+
+    /** Make a resolved tiled node the session's logical focus. */
+    readonly SetTiledFocusSelection: (
+        Selection: TiledFocusSelection
+    ) => Effect.Effect<void>;
 
     /** Set the window from which the overlay was activated. */
     readonly SetActivationWindow: (Window: Handle.HWND) => Effect.Effect<void>;
@@ -298,6 +534,26 @@ const GetApplicationName = (WindowHandle: Handle.HWND): Option.Option<string> =>
     Option.map((Value: string) => Value.trim())
 );
 
+const GetFocusPreviewIntersection = (
+    Bounds: Box.Box,
+    OtherBounds: Box.Box
+): Option.Option<FocusPreviewExcludedRegion> =>
+{
+    const Bottom = Math.min(Bounds.Bottom, OtherBounds.Bottom);
+    const Left = Math.max(Bounds.Left, OtherBounds.Left);
+    const Right = Math.min(Bounds.Right, OtherBounds.Right);
+    const Top = Math.max(Bounds.Top, OtherBounds.Top);
+
+    return Bottom > Top && Right > Left
+        ? Option.some({
+            Bottom: Bottom - Bounds.Top,
+            Left: Left - Bounds.Left,
+            Right: Right - Bounds.Left,
+            Top: Top - Bounds.Top
+        })
+        : Option.none();
+};
+
 const GetTargetPresentation = (Target: FocusWindowCandidate): OverlayCommandTargetDto =>
 {
     const Title = Option.getOrElse(
@@ -316,6 +572,68 @@ const GetTargetPresentation = (Target: FocusWindowCandidate): OverlayCommandTarg
     } as const;
 };
 
+const GetTiledFocusPresentation = (
+    Selection: TiledFocusSelection,
+    Monitors: ReadonlyArray<Screen.MonitorInfo> = [ ]
+): OverlayCommandTargetDto => Selection.Node._tag === "Window"
+    ? GetTargetPresentation({
+        Bounds: Selection.Node.Value.InitialBounds,
+        Window: Selection.Node.Value.Window
+    })
+    : (() =>
+    {
+        const Monitor = Selection.Path.length === 0
+            ? Monitors.find((Candidate: Screen.MonitorInfo) =>
+                Tiling.Tree.WorkspaceId(Candidate.WorkArea) === Selection.WorkspaceId)
+            : undefined;
+
+        return {
+            Icon: undefined,
+            Title: Monitor === undefined
+                ? `${ Selection.Node.Orientation } panel`
+                : `Display ${ Monitor.DisplayId }: ${ Monitor.DeviceName }`
+        };
+    })();
+
+const GetMonitorCommandStates = (
+    Snapshot: Tiling.Tree.State,
+    Monitors: ReadonlyArray<Screen.MonitorInfo>
+): OverlayCommandCatalog.MonitorCommandStates =>
+{
+    const States: Partial<Record<
+        OverlayCommandId,
+        OverlayCommandCatalog.MonitorCommandState
+    >> = { };
+
+    for (const Monitor of Monitors)
+    {
+        if (Monitor.DisplayId < 1 || Monitor.DisplayId > 9)
+        {
+            continue;
+        }
+
+        const Id = FocusMonitorCommandIds[Monitor.DisplayId - 1];
+        if (Id === undefined)
+        {
+            continue;
+        }
+
+        const Workspace = Snapshot.Workspaces.find((
+            Candidate: Tiling.Tree.Workspace
+        ) => Candidate.Id === Tiling.Tree.WorkspaceId(Monitor.WorkArea));
+
+        States[Id] = {
+            Disabled: Workspace?.Root?._tag !== "Panel",
+            Target: {
+                Icon: undefined,
+                Title: `Display ${ Monitor.DisplayId }: ${ Monitor.DeviceName }`
+            }
+        };
+    }
+
+    return States;
+};
+
 export/** Live overlay navigation state scoped to the application runtime. */
 const Live = Layer.effect(
     OverlaySession,
@@ -324,12 +642,30 @@ const Live = Layer.effect(
         const BrowserWindows = yield* BrowserWindow.BrowserWindow;
         const Settings = yield* AppSettings.AppSettings;
         const TilingManager = yield* Tiling.Manager.TilingManager;
+        const RecoverPreviewOperation = (
+            Operation: string,
+            KeyValue: BrowserWindow.Key
+        ) => Effect.catch((Cause: unknown) => Logging.LogWarning(
+            "Overlay.Preview",
+            "A Focus or panel preview operation failed.",
+            Cause,
+            {
+                Operation,
+                Window: KeyValue
+            }
+        ));
         const ActivationWindow = yield* Ref.make(Option.none<Handle.HWND>());
         const PrimaryModifierHeldRef = yield* Ref.make(false);
         const FineModifierHeldRef = yield* Ref.make(false);
         const ResizeModeRef = yield* Ref.make<ResizeModeType>(ResizeMode.Grow);
         const ExcludedFocusWindows = yield* Ref.make<ReadonlySet<Handle.HWND>>(new Set());
         const FocusFailureRef = yield* Ref.make(Option.none<FocusFailure>());
+        const TiledFocusLocationRef = yield* Ref.make(
+            Option.none<TiledFocusLocation>()
+        );
+        const TiledMovePanelTargetRef = yield* Ref.make(
+            Option.none<TiledMovePanelTarget>()
+        );
         const Stack = yield* SubscriptionRef.make<ReadonlyArray<OverlayScreenId>>(
             Object.freeze([ ScreenId.FloatingHome ])
         );
@@ -364,6 +700,18 @@ const Live = Layer.effect(
                 Effect.ignore
             ),
             { concurrency: "unbounded", discard: true }
+        );
+        const ClearTiledFocusPanelPreview = BrowserWindows.ForceClose(
+            BrowserWindow.Key.TiledFocusPanelPreview
+        ).pipe(
+            Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+            Effect.ignore
+        );
+        const ClearTiledMovePanelPreview = BrowserWindows.ForceClose(
+            BrowserWindow.Key.TiledMovePanelPreview
+        ).pipe(
+            Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+            Effect.ignore
         );
         const GetFocusProxyNativeHandles = Effect.forEach(
             FocusPreviewKeys,
@@ -400,6 +748,10 @@ const Live = Layer.effect(
                 ...(Option.isSome(OverlayHandle) ? [ OverlayHandle.value ] : [ ])
             ];
             let AnyProxyVisible = false;
+            const VisiblePreviews: Array<{
+                readonly ApplicationName: string;
+                readonly Bounds: Box.Box;
+            }> = [ ];
 
             for (const Id of FocusCommandIds)
             {
@@ -426,26 +778,62 @@ const Live = Layer.effect(
 
                 if (Result.isFailure(Obscured) || !Obscured.success)
                 {
+                    if (Result.isFailure(Obscured))
+                    {
+                        yield* Logging.LogWarning(
+                            "Overlay.Preview",
+                            "Could not determine whether a Focus target was obscured.",
+                            Obscured.failure,
+                            { Window: Target.value.Window }
+                        );
+                    }
                     yield* Close;
                     continue;
                 }
 
                 const TargetIcon = Window.GetIcon(Target.value.Window);
+                const TargetApplicationName = GetApplicationName(Target.value.Window);
+                const ExcludedRegions = Option.isNone(TargetApplicationName)
+                    ? [ ]
+                    : VisiblePreviews.flatMap((Preview: {
+                        readonly ApplicationName: string;
+                        readonly Bounds: Box.Box;
+                    }) =>
+                        Preview.ApplicationName === TargetApplicationName.value
+                            ? Option.match(
+                                GetFocusPreviewIntersection(
+                                    Target.value.Bounds,
+                                    Preview.Bounds
+                                ),
+                                {
+                                    onNone: () => [ ],
+                                    onSome: (
+                                        Region: FocusPreviewExcludedRegion
+                                    ) => [ Region ]
+                                }
+                            )
+                            : [ ]);
                 const Presentation: FocusPreviewPresentation = {
+                    ExcludedRegions,
                     Opacity: CurrentSettings.FocusPreviewOpacity,
                     ...(Option.isSome(TargetIcon) ? { Icon: TargetIcon.value } : { })
                 };
 
                 yield* BrowserWindows.Ensure(
                     BrowserWindow.GetFocusPreviewWindowSpec(Key, Target.value.Bounds)
-                ).pipe(Effect.ignore);
-                yield* BrowserWindows.SetBounds(Key, Target.value.Bounds).pipe(Effect.ignore);
+                ).pipe(RecoverPreviewOperation("Ensure", Key));
+                yield* BrowserWindows.SetBounds(
+                    Key,
+                    Target.value.Bounds
+                ).pipe(RecoverPreviewOperation("SetBounds", Key));
                 yield* BrowserWindows.Send(
                     Key,
                     AppApiChannel.FocusPreviewChanged,
                     Presentation
-                ).pipe(Effect.ignore);
-                yield* BrowserWindows.ShowInactive(Key).pipe(Effect.ignore);
+                ).pipe(RecoverPreviewOperation("Send", Key));
+                yield* BrowserWindows.ShowInactive(
+                    Key
+                ).pipe(RecoverPreviewOperation("ShowInactive", Key));
                 const PreviewHandle = yield* BrowserWindows.GetNativeHandle(Key).pipe(
                     Effect.match({
                         onFailure: () => Option.none<Handle.HWND>(),
@@ -461,6 +849,14 @@ const Live = Layer.effect(
                     OcclusionExclusions.push(PreviewHandle.value);
                 }
 
+                if (Option.isSome(TargetApplicationName))
+                {
+                    VisiblePreviews.push({
+                        ApplicationName: TargetApplicationName.value,
+                        Bounds: Target.value.Bounds
+                    });
+                }
+
                 AnyProxyVisible = true;
             }
 
@@ -471,6 +867,155 @@ const Live = Layer.effect(
                 yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Overlay).pipe(Effect.ignore);
             }
         });
+        const SyncTiledFocusPanelPreview = (
+            Selection: Option.Option<TiledFocusSelection>,
+            CurrentSettings: AppSettings.AppSettings
+        ): Effect.Effect<void> => Effect.gen(function*()
+        {
+            if (
+                Option.isNone(Selection)
+                || Selection.value.Node._tag !== "Panel"
+            )
+            {
+                return yield* ClearTiledFocusPanelPreview;
+            }
+
+            const Snapshot = yield* TilingManager.Snapshot;
+            const Workspace = Snapshot.Workspaces.find(
+                (Candidate: Tiling.Tree.Workspace): boolean =>
+                    Candidate.Id === Selection.value.WorkspaceId
+            );
+            const AccentColor = Theme.GetAccentColor();
+            const Gap = yield* TilingManager.Gap;
+            const Bounds = Workspace === undefined
+                ? undefined
+                : Tiling.Tree.GetNodeBoundsAtPath(
+                    Workspace.Root,
+                    Workspace.Bounds,
+                    Selection.value.Path,
+                    Gap
+                );
+
+            if (
+                Workspace === undefined
+                || Bounds === undefined
+                || Option.isNone(AccentColor)
+            )
+            {
+                return yield* ClearTiledFocusPanelPreview;
+            }
+
+            const Key = BrowserWindow.Key.TiledFocusPanelPreview;
+            const Presentation: FocusPreviewPresentation = {
+                Color: AccentColor.value,
+                ExcludedRegions: [ ],
+                Opacity: Math.round(
+                    CurrentSettings.FocusPreviewOpacity
+                    * TiledPanelPreviewOpacityScale
+                ),
+                ShowIcon: false
+            };
+
+            yield* BrowserWindows.Ensure(
+                BrowserWindow.GetFocusPreviewWindowSpec(Key, Bounds)
+            ).pipe(RecoverPreviewOperation("Ensure", Key));
+            yield* BrowserWindows.SetBounds(
+                Key,
+                Bounds
+            ).pipe(RecoverPreviewOperation("SetBounds", Key));
+            yield* BrowserWindows.Send(
+                Key,
+                AppApiChannel.FocusPreviewChanged,
+                Presentation
+            ).pipe(RecoverPreviewOperation("Send", Key));
+            yield* BrowserWindows.ShowInactive(
+                Key
+            ).pipe(RecoverPreviewOperation("ShowInactive", Key));
+
+            // The panel highlight and overlay are both always-on-top. Raising
+            // the overlay last keeps the highlight directly beneath it.
+            yield* BrowserWindows.ShowInactive(
+                BrowserWindow.Key.Overlay
+            ).pipe(RecoverPreviewOperation(
+                "RaiseOverlay",
+                BrowserWindow.Key.Overlay
+            ));
+        });
+        const SyncTiledMovePanelPreview = (
+            Target: Option.Option<TiledMovePanelTarget>,
+            CurrentSettings: AppSettings.AppSettings
+        ): Effect.Effect<void> => Effect.gen(function*()
+        {
+            if (Option.isNone(Target))
+            {
+                return yield* ClearTiledMovePanelPreview;
+            }
+
+            const Snapshot = yield* TilingManager.Snapshot;
+            const Workspace = Snapshot.Workspaces.find(
+                (Candidate: Tiling.Tree.Workspace): boolean =>
+                    Candidate.Id === Target.value.WorkspaceId
+            );
+            const TargetNode = Workspace === undefined
+                ? undefined
+                : Tiling.Tree.GetNodeAtPath(
+                    Workspace.Root,
+                    Target.value.TargetPanelPath
+                );
+            const AccentColor = Theme.GetAccentColor();
+            const Gap = yield* TilingManager.Gap;
+            const Bounds = Workspace === undefined || TargetNode?._tag !== "Panel"
+                ? undefined
+                : Tiling.Tree.GetNodeBoundsAtPath(
+                    Workspace.Root,
+                    Workspace.Bounds,
+                    Target.value.TargetPanelPath,
+                    Gap
+                );
+
+            if (
+                Workspace === undefined
+                || TargetNode?._tag !== "Panel"
+                || Bounds === undefined
+                || Option.isNone(AccentColor)
+            )
+            {
+                return yield* ClearTiledMovePanelPreview;
+            }
+
+            const Key = BrowserWindow.Key.TiledMovePanelPreview;
+            const Presentation: FocusPreviewPresentation = {
+                Color: AccentColor.value,
+                ExcludedRegions: [ ],
+                Opacity: Math.round(
+                    CurrentSettings.FocusPreviewOpacity
+                    * TiledPanelPreviewOpacityScale
+                ),
+                ShowIcon: false
+            };
+
+            yield* BrowserWindows.Ensure(
+                BrowserWindow.GetFocusPreviewWindowSpec(Key, Bounds)
+            ).pipe(RecoverPreviewOperation("Ensure", Key));
+            yield* BrowserWindows.SetBounds(
+                Key,
+                Bounds
+            ).pipe(RecoverPreviewOperation("SetBounds", Key));
+            yield* BrowserWindows.Send(
+                Key,
+                AppApiChannel.FocusPreviewChanged,
+                Presentation
+            ).pipe(RecoverPreviewOperation("Send", Key));
+            yield* BrowserWindows.ShowInactive(
+                Key
+            ).pipe(RecoverPreviewOperation("ShowInactive", Key));
+            yield* BrowserWindows.ShowInactive(
+                BrowserWindow.Key.Overlay
+            ).pipe(RecoverPreviewOperation(
+                "RaiseOverlay",
+                BrowserWindow.Key.Overlay
+            ));
+        });
         const ClearFocusFailure = Ref.set(FocusFailureRef, Option.none());
         const ResolveCurrentFocusTarget = (
             Id: OverlayCommandId
@@ -480,25 +1025,348 @@ const Live = Layer.effect(
             const Excluded = yield* Ref.get(ExcludedFocusWindows);
             return Option.map(ResolveTarget(CurrentWindow, Id, Excluded), Struct.get("Window"));
         });
+        const InitializeTiledFocus = Effect.gen(function*()
+        {
+            const CurrentWindow = yield* Ref.get(ActivationWindow);
+
+            if (Option.isNone(CurrentWindow))
+            {
+                return yield* Ref.set(TiledFocusLocationRef, Option.none());
+            }
+
+            const Snapshot = yield* TilingManager.Snapshot;
+            const Selection = FindTiledFocusSelection(
+                Snapshot,
+                CurrentWindow.value
+            );
+
+            return yield* Ref.set(
+                TiledFocusLocationRef,
+                Option.map(Selection, (Value: TiledFocusSelection) => ({
+                    Path: Value.Path,
+                    WorkspaceId: Value.WorkspaceId
+                }))
+            );
+        });
+        const ResolveCurrentTiledFocusSelection = Effect.gen(function*()
+        {
+            const Location = yield* Ref.get(TiledFocusLocationRef);
+            if (Option.isNone(Location))
+            {
+                return Option.none<TiledFocusSelection>();
+            }
+
+            return GetTiledFocusSelection(
+                yield* TilingManager.Snapshot,
+                Location.value
+            );
+        });
+        const ResolveTiledFocusTarget = (
+            Id: OverlayCommandId
+        ): Effect.Effect<Option.Option<TiledFocusSelection>> => Effect.gen(function*()
+        {
+            const CurrentSelection = yield* ResolveCurrentTiledFocusSelection;
+            if (Option.isNone(CurrentSelection))
+            {
+                return Option.none();
+            }
+
+            const Snapshot = yield* TilingManager.Snapshot;
+            const Workspace = Snapshot.Workspaces.find((
+                Candidate: Tiling.Tree.Workspace
+            ) => Candidate.Id === CurrentSelection.value.WorkspaceId);
+            if (Workspace === undefined)
+            {
+                return Option.none();
+            }
+
+            if (IsFocusMonitorCommandId(Id))
+            {
+                if (
+                    CurrentSelection.value.Path.length !== 0
+                    || CurrentSelection.value.Node._tag !== "Panel"
+                )
+                {
+                    return Option.none();
+                }
+
+                const DisplayId = GetMonitorDisplayId(Id);
+                const MonitorsResult = Screen.GetMonitors();
+                const Monitor = DisplayId === undefined || Result.isFailure(MonitorsResult)
+                    ? undefined
+                    : MonitorsResult.success.find((
+                        Candidate: Screen.MonitorInfo
+                    ) => Candidate.DisplayId === DisplayId);
+                const TargetWorkspace = Monitor === undefined
+                    ? undefined
+                    : Snapshot.Workspaces.find((
+                        Candidate: Tiling.Tree.Workspace
+                    ) => Candidate.Id === Tiling.Tree.WorkspaceId(Monitor.WorkArea));
+
+                return TargetWorkspace?.Root?._tag === "Panel"
+                    ? Option.some({
+                        Node: TargetWorkspace.Root,
+                        Path: Object.freeze([ ]),
+                        WorkspaceId: TargetWorkspace.Id
+                    })
+                    : Option.none();
+            }
+
+            if (
+                CurrentSelection.value.Path.length === 0
+                && CurrentSelection.value.Node._tag === "Panel"
+                && IsFocusCommandId(Id)
+            )
+            {
+                const Candidate = SelectDirectionalCandidate(
+                    Workspace.Bounds,
+                    Snapshot.Workspaces.flatMap((
+                        CandidateWorkspace: Tiling.Tree.Workspace
+                    ) => CandidateWorkspace.Id === Workspace.Id
+                        || CandidateWorkspace.Root?._tag !== "Panel"
+                        ? [ ]
+                        : [ {
+                            Bounds: CandidateWorkspace.Bounds,
+                            Node: CandidateWorkspace.Root,
+                            Workspace: CandidateWorkspace
+                        } ]),
+                    Id
+                );
+
+                return Option.map(Candidate, (Value: {
+                    readonly Bounds: Box.Box;
+                    readonly Node: Tiling.Tree.PanelNode;
+                    readonly Workspace: Tiling.Tree.Workspace;
+                }): TiledFocusSelection => ({
+                    Node: Value.Node,
+                    Path: Object.freeze([ ]),
+                    WorkspaceId: Value.Workspace.Id
+                }));
+            }
+
+            const TargetPath = ResolveTiledFocusPath(
+                Workspace.Root,
+                CurrentSelection.value.Path,
+                Id
+            );
+            const TargetNode = TargetPath === undefined
+                ? undefined
+                : Tiling.Tree.GetNodeAtPath(Workspace.Root, TargetPath);
+
+            return TargetPath === undefined || TargetNode === undefined
+                ? Option.none()
+                : Option.some({
+                    Node: TargetNode,
+                    Path: TargetPath,
+                    WorkspaceId: Workspace.Id
+                });
+        });
+        const ResolveTiledFocusCommit = Effect.gen(function*()
+        {
+            const CurrentSelection = yield* ResolveCurrentTiledFocusSelection;
+            if (Option.isNone(CurrentSelection))
+            {
+                return Option.none<TiledFocusSelection>();
+            }
+
+            const Snapshot = yield* TilingManager.Snapshot;
+            const Workspace = Snapshot.Workspaces.find((
+                Candidate: Tiling.Tree.Workspace
+            ) => Candidate.Id === CurrentSelection.value.WorkspaceId);
+            const TargetPath = Workspace === undefined
+                ? undefined
+                : Tiling.Tree.CommitFocus(
+                    Workspace.Root,
+                    CurrentSelection.value.Path
+                );
+            const TargetNode = Workspace === undefined || TargetPath === undefined
+                ? undefined
+                : Tiling.Tree.GetNodeAtPath(Workspace.Root, TargetPath);
+
+            return Workspace === undefined
+                || TargetPath === undefined
+                || TargetNode === undefined
+                ? Option.none()
+                : Option.some({
+                    Node: TargetNode,
+                    Path: TargetPath,
+                    WorkspaceId: Workspace.Id
+                });
+        });
+        const ResolveCurrentTiledMoveSelection = Effect.gen(function*()
+        {
+            const CurrentWindow = yield* Ref.get(ActivationWindow);
+            return Option.isNone(CurrentWindow)
+                ? Option.none<TiledFocusSelection>()
+                : FindTiledFocusSelection(
+                    yield* TilingManager.Snapshot,
+                    CurrentWindow.value
+                );
+        });
+        const ResolveTiledMoveAction = (
+            Id: OverlayCommandId
+        ): Effect.Effect<Option.Option<TiledMoveAction>> => Effect.gen(function*()
+        {
+            const CurrentSelection = yield* ResolveCurrentTiledMoveSelection;
+            if (
+                Option.isNone(CurrentSelection)
+                || CurrentSelection.value.Node._tag !== "Window"
+                || CurrentSelection.value.Path.length === 0
+            )
+            {
+                return Option.none();
+            }
+
+            const Snapshot = yield* TilingManager.Snapshot;
+            const Workspace = Snapshot.Workspaces.find(((
+                Candidate: Tiling.Tree.Workspace
+            ): boolean => Candidate.Id === CurrentSelection.value.WorkspaceId));
+            if (Workspace === undefined)
+            {
+                return Option.none();
+            }
+
+            const PendingTarget = yield* Ref.get(TiledMovePanelTargetRef);
+            if (Option.isSome(PendingTarget))
+            {
+                if (Id === CommandId.MoveWindowIntoPanel)
+                {
+                    const TargetNode = PendingTarget.value.WorkspaceId === Workspace.Id
+                        ? Tiling.Tree.GetNodeAtPath(
+                            Workspace.Root,
+                            PendingTarget.value.TargetPanelPath
+                        )
+                        : undefined;
+
+                    return TargetNode?._tag === "Panel"
+                        ? Option.some({
+                            TargetPanelPath: PendingTarget.value.TargetPanelPath,
+                            _tag: "MoveIntoPanel"
+                        } as const)
+                        : Option.none();
+                }
+
+                const OppositeId = OppositeTiledMoveCommand[
+                    PendingTarget.value.DirectionId
+                ];
+                if (Id !== OppositeId)
+                {
+                    return Option.none();
+                }
+
+                const Direction = TiledMoveDirectionByCommandId[Id];
+                const TargetPath = Direction === undefined
+                    ? undefined
+                    : Tiling.Tree.MoveFocus(
+                        Workspace.Root,
+                        CurrentSelection.value.Path,
+                        Direction
+                    );
+                const TargetNode = TargetPath === undefined
+                    ? undefined
+                    : Tiling.Tree.GetNodeAtPath(Workspace.Root, TargetPath);
+
+                return TargetPath !== undefined && TargetNode?._tag === "Window"
+                    ? Option.some({
+                        TargetIndex: TargetPath.at(-1)!,
+                        _tag: "MoveToIndex"
+                    } as const)
+                    : Option.none();
+            }
+
+            if (Id === CommandId.MoveWindowParent)
+            {
+                return CurrentSelection.value.Path.length >= 2
+                    ? Option.some({ _tag: "MoveToContainingPanel" } as const)
+                    : Option.none();
+            }
+
+            if (
+                Id === CommandId.MoveWindowFirst
+                || Id === CommandId.MoveWindowLast
+            )
+            {
+                const TargetPath = Id === CommandId.MoveWindowFirst
+                    ? Tiling.Tree.FocusFirstChild(
+                        Workspace.Root,
+                        CurrentSelection.value.Path
+                    )
+                    : Tiling.Tree.FocusLastChild(
+                        Workspace.Root,
+                        CurrentSelection.value.Path
+                    );
+
+                return TargetPath === undefined
+                    ? Option.none()
+                    : Option.some({
+                        TargetIndex: TargetPath.at(-1)!,
+                        _tag: "MoveToIndex"
+                    } as const);
+            }
+
+            if (!IsTiledMoveDirectionCommandId(Id))
+            {
+                return Option.none();
+            }
+
+            const TargetPath = Tiling.Tree.MoveFocus(
+                Workspace.Root,
+                CurrentSelection.value.Path,
+                TiledMoveDirectionByCommandId[Id]!
+            );
+            const TargetNode = TargetPath === undefined
+                ? undefined
+                : Tiling.Tree.GetNodeAtPath(Workspace.Root, TargetPath);
+
+            if (TargetPath === undefined || TargetNode === undefined)
+            {
+                return Option.none();
+            }
+
+            return TargetNode._tag === "Panel"
+                ? Option.some({
+                    DirectionId: Id,
+                    TargetPanelPath: TargetPath,
+                    WorkspaceId: Workspace.Id,
+                    _tag: "SelectPanel"
+                } as const)
+                : Option.some({
+                    TargetIndex: TargetPath.at(-1)!,
+                    _tag: "MoveToIndex"
+                } as const);
+        });
 
         return {
             Back: pipe(
-                SubscriptionRef.update(
+                Logging.LogDebug("Overlay", "Moving to the preceding overlay screen."),
+                Effect.andThen(SubscriptionRef.update(
                     Stack,
                     (Value: ReadonlyArray<OverlayScreenId>) =>
                         Value.length > 1
                             ? Object.freeze(Value.slice(0, -1))
                             : Value
-                ),
+                )),
                 Effect.andThen(ClearFocusProxyWindows),
-                Effect.andThen(ClearFocusFailure)
+                Effect.andThen(ClearTiledFocusPanelPreview),
+                Effect.andThen(ClearTiledMovePanelPreview),
+                Effect.andThen(ClearFocusFailure),
+                Effect.andThen(Ref.set(TiledFocusLocationRef, Option.none())),
+                Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none()))
             ),
             Changes: pipe(SubscriptionRef.changes(Stack), Stream.map(GetCurrent)),
             ClearActivationWindow: pipe(
                 Ref.set(ActivationWindow, Option.none()),
-                Effect.andThen(ClearFocusProxyWindows)
+                Effect.andThen(ClearFocusProxyWindows),
+                Effect.andThen(ClearTiledFocusPanelPreview),
+                Effect.andThen(ClearTiledMovePanelPreview),
+                Effect.andThen(Ref.set(TiledFocusLocationRef, Option.none())),
+                Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none()))
             ),
             ClearFocusPreview,
+            ClearTiledMovePanelTarget: Ref.set(
+                TiledMovePanelTargetRef,
+                Option.none()
+            ),
             Current,
             FineModifierHeld: Ref.get(FineModifierHeldRef),
             FocusFailure: Ref.get(FocusFailureRef),
@@ -508,20 +1376,44 @@ const Live = Layer.effect(
             ),
             GetActivationWindow: Ref.get(ActivationWindow),
             Navigate: (Screen: OverlayScreenId) => pipe(
-                SubscriptionRef.update(
+                Logging.LogDebug("Overlay", "Navigating to an overlay screen.", {
+                    Screen
+                }),
+                Effect.andThen(SubscriptionRef.update(
                     Stack,
                     (Value: ReadonlyArray<OverlayScreenId>) => GetCurrent(Value) === Screen
                         ? Value
                         : Object.freeze([ ...Value, Screen ])
-                ),
+                )),
                 Effect.andThen(
                     Screen === ScreenId.FloatingFocus ? Effect.void : ClearFocusProxyWindows
                 ),
+                Effect.andThen(
+                    Screen === ScreenId.TiledFocus
+                        ? Effect.void
+                        : ClearTiledFocusPanelPreview
+                ),
+                Effect.andThen(
+                    Screen === ScreenId.TiledMove
+                        ? Effect.void
+                        : ClearTiledMovePanelPreview
+                ),
+                Effect.andThen(
+                    Screen === ScreenId.TiledFocus
+                        ? InitializeTiledFocus
+                        : Effect.void
+                ),
+                Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none())),
                 Effect.andThen(ClearFocusFailure)
             ),
             PreviewFocusTarget: (Id: OverlayCommandId | null) => Effect.gen(function*()
             {
                 if (Id === null)
+                {
+                    return yield* ClearFocusPreview;
+                }
+
+                if ((yield* Current) === ScreenId.TiledFocus)
                 {
                     return yield* ClearFocusPreview;
                 }
@@ -553,10 +1445,16 @@ const Live = Layer.effect(
             }),
             PrimaryModifierHeld: Ref.get(PrimaryModifierHeldRef),
             RecordFocusFailure: (Failure: FocusFailure) => pipe(
-                Ref.update(
+                Logging.LogWarning(
+                    "Overlay.Focus",
+                    "A focus target was excluded after Windows rejected focus.",
+                    undefined,
+                    { Window: Failure.Window }
+                ),
+                Effect.andThen(Ref.update(
                     ExcludedFocusWindows,
                     (Current: ReadonlySet<Handle.HWND>) => new Set([ ...Current, Failure.Window ])
-                ),
+                )),
                 Effect.andThen(Ref.set(FocusFailureRef, Option.some(Failure)))
             ),
             Reset: Effect.gen(function*()
@@ -564,15 +1462,28 @@ const Live = Layer.effect(
                 const CurrentWindow = yield* Ref.get(ActivationWindow);
                 const Home = yield* ResolveHomeScreen(CurrentWindow);
 
+                yield* Logging.LogDebug("Overlay", "Resetting the overlay session.", {
+                    Home
+                });
                 yield* SubscriptionRef.set(Stack, Object.freeze([ Home ]));
                 yield* Ref.set(ExcludedFocusWindows, new Set());
+                yield* Ref.set(TiledFocusLocationRef, Option.none());
+                yield* Ref.set(TiledMovePanelTargetRef, Option.none());
                 yield* ClearFocusProxyWindows;
+                yield* ClearTiledFocusPanelPreview;
+                yield* ClearTiledMovePanelPreview;
                 yield* ClearFocusFailure;
             }),
             ResizeMode: Ref.get(ResizeModeRef),
             ResolveFocusTarget: ResolveCurrentFocusTarget,
+            ResolveTiledFocusCommit,
+            ResolveTiledFocusTarget,
+            ResolveTiledMoveAction,
             SetActivationWindow: (WindowHandle: Handle.HWND) => pipe(
-                Ref.set(ActivationWindow, Option.some(WindowHandle)),
+                Logging.LogDebug("Overlay", "Set the overlay activation window.", {
+                    Window: WindowHandle
+                }),
+                Effect.andThen(Ref.set(ActivationWindow, Option.some(WindowHandle))),
                 Effect.andThen(UpdateHomeScreen(Option.some(WindowHandle)))
             ),
             SetFineModifierHeld: (Held: boolean) =>
@@ -581,6 +1492,21 @@ const Live = Layer.effect(
                 Ref.set(PrimaryModifierHeldRef, Held),
             SetResizeMode: (Mode: ResizeModeType) =>
                 Ref.set(ResizeModeRef, Mode),
+            SetTiledFocusSelection: (Selection: TiledFocusSelection) =>
+                Logging.LogDebug("Overlay.Focus", "Changed the tiled focus selection.", {
+                    Path: Selection.Path,
+                    WorkspaceId: Selection.WorkspaceId
+                }).pipe(Effect.andThen(Ref.set(TiledFocusLocationRef, Option.some({
+                    Path: Selection.Path,
+                    WorkspaceId: Selection.WorkspaceId
+                })))),
+            SetTiledMovePanelTarget: (Target: TiledMovePanelTarget) =>
+                Logging.LogDebug("Overlay.Move", "Selected a tiled move target panel.", {
+                    Path: Target.TargetPanelPath,
+                    WorkspaceId: Target.WorkspaceId
+                }).pipe(Effect.andThen(
+                    Ref.set(TiledMovePanelTargetRef, Option.some(Target))
+                )),
             Snapshot: Effect.gen(function*()
             {
                 const CurrentScreen = yield* Current;
@@ -590,13 +1516,45 @@ const Live = Layer.effect(
                 const FineHeld = yield* Ref.get(FineModifierHeldRef);
                 const CurrentResizeMode = yield* Ref.get(ResizeModeRef);
                 const Excluded = yield* Ref.get(ExcludedFocusWindows);
+                const TilingSnapshot = yield* TilingManager.Snapshot;
+                const CanTileAll = CurrentScreen === ScreenId.FloatingHome
+                    && Tiling.Tree.AreRootPanelsEmpty(TilingSnapshot);
                 const FocusTargets: Partial<Record<
                     OverlayCommandId,
                     OverlayCommandTargetDto
                 >> = { };
+                const MonitorsResult = CurrentScreen === ScreenId.TiledFocus
+                    ? Screen.GetMonitors()
+                    : Result.succeed([ ] as ReadonlyArray<Screen.MonitorInfo>);
+                if (Result.isFailure(MonitorsResult))
+                {
+                    yield* Logging.LogWarning(
+                        "Overlay.Focus",
+                        "Could not enumerate monitors for tiled focus.",
+                        MonitorsResult.failure
+                    );
+                }
+                const Monitors = Result.isSuccess(MonitorsResult)
+                    ? MonitorsResult.success
+                    : [ ];
+                const DisabledCommandIds = new Set<OverlayCommandId>();
+                let IsRootPanelFocused = false;
+                let IsTiledMovePanelTargeted = false;
 
                 if (CurrentScreen === ScreenId.FloatingFocus)
                 {
+                    const WindowsResult = Window.GetManageableTopLevelWindows();
+                    if (Result.isFailure(WindowsResult))
+                    {
+                        yield* Logging.LogWarning(
+                            "Overlay.Focus",
+                            "Could not enumerate focusable windows.",
+                            WindowsResult.failure
+                        );
+                    }
+                    yield* ClearTiledFocusPanelPreview;
+                    yield* ClearTiledMovePanelPreview;
+
                     for (const Id of FocusCommandIds)
                     {
                         const Target = ResolveTarget(CurrentWindowOpt, Id, Excluded);
@@ -613,6 +1571,54 @@ const Live = Layer.effect(
                         CurrentSettings
                     );
                 }
+                else if (CurrentScreen === ScreenId.TiledFocus)
+                {
+                    yield* ClearTiledMovePanelPreview;
+                    const CurrentSelection = yield* ResolveCurrentTiledFocusSelection;
+                    yield* SyncTiledFocusPanelPreview(
+                        CurrentSelection,
+                        CurrentSettings
+                    );
+                    IsRootPanelFocused = Option.isSome(CurrentSelection)
+                        && CurrentSelection.value.Path.length === 0
+                        && CurrentSelection.value.Node._tag === "Panel";
+
+                    for (const Id of TiledFocusCommandIds)
+                    {
+                        const Target = yield* ResolveTiledFocusTarget(Id);
+
+                        if (Option.isSome(Target))
+                        {
+                            FocusTargets[Id] = GetTiledFocusPresentation(
+                                Target.value,
+                                Monitors
+                            );
+                        }
+                    }
+                }
+                else if (CurrentScreen === ScreenId.TiledMove)
+                {
+                    yield* ClearTiledFocusPanelPreview;
+                    const PanelTarget = yield* Ref.get(TiledMovePanelTargetRef);
+                    IsTiledMovePanelTargeted = Option.isSome(PanelTarget);
+                    yield* SyncTiledMovePanelPreview(
+                        PanelTarget,
+                        CurrentSettings
+                    );
+
+                    for (const Id of TiledMoveCommandIds)
+                    {
+                        if (Option.isNone(yield* ResolveTiledMoveAction(Id)))
+                        {
+                            DisabledCommandIds.add(Id);
+                        }
+                    }
+                }
+                else
+                {
+                    yield* ClearTiledFocusPanelPreview;
+                    yield* ClearTiledMovePanelPreview;
+                }
 
                 const ApplicationTarget = Option.map(
                     CurrentWindowOpt,
@@ -623,7 +1629,7 @@ const Live = Layer.effect(
                     }
                 );
                 const CurrentFocusFailure = yield* Ref.get(FocusFailureRef);
-                const Screen = OverlayCommandCatalog.FromKeybindSettings(
+                const ScreenDto = OverlayCommandCatalog.FromKeybindSettings(
                     CurrentScreen,
                     CurrentSettings.Keybinds,
                     FocusTargets,
@@ -632,16 +1638,26 @@ const Live = Layer.effect(
                     FineHeld,
                     CurrentSettings.MoveStepPrimary,
                     CurrentSettings.MoveStepSecondary,
-                    CurrentResizeMode
+                    CurrentResizeMode,
+                    IsRootPanelFocused,
+                    IsRootPanelFocused
+                        ? GetMonitorCommandStates(TilingSnapshot, Monitors)
+                        : { },
+                    CanTileAll,
+                    DisabledCommandIds,
+                    IsTiledMovePanelTargeted
                 );
 
-                return CurrentScreen === ScreenId.FloatingFocus
+                return (
+                    CurrentScreen === ScreenId.FloatingFocus
+                    || CurrentScreen === ScreenId.TiledFocus
+                )
                     && Option.isSome(CurrentFocusFailure)
                     ? {
-                        ...Screen,
+                        ...ScreenDto,
                         FocusFailure: { WindowTitle: CurrentFocusFailure.value.WindowTitle }
                     }
-                    : Screen;
+                    : ScreenDto;
             }),
             TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none())
         } as const;

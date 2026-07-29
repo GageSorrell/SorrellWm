@@ -101,7 +101,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link Setting}. */
+/** {@inheritDoc Setting} */
 export interface SettingProps
 {
     /**

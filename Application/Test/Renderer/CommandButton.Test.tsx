@@ -31,4 +31,12 @@ describe("CommandButton.GetShortcutParts", () =>
             expect(GetShortcutParts(Shortcut(KeyLabel))).toEqual([ "Alt" ]);
         }
     );
+
+    it.each([ "RETURN", "Enter" ])(
+        "presents the %s key as the return symbol",
+        (KeyLabel: string) =>
+        {
+            expect(GetShortcutParts(Shortcut(KeyLabel))).toEqual([ "⏎" ]);
+        }
+    );
 });

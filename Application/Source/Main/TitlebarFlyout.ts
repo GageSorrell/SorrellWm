@@ -13,9 +13,10 @@
 
 import * as AppSettings from "./AppSettings/AppSettings.ts";
 import * as BrowserWindow from "./BrowserWindow.js";
+import * as Logging from "./Log.ts";
 import * as Overlay from "./Overlay/index.js";
 import { Box, type IntPoint } from "@sorrell/math";
-import { Console, Context, Duration, Effect, Layer, Option, pipe } from "effect";
+import { Context, Duration, Effect, Layer, Option, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../Shared/Api.js";
 
@@ -143,7 +144,10 @@ const Live = Layer.effect(
 
             Active = undefined;
             return pipe(
-                BrowserWindows.Hide(BrowserWindow.Key.Overlay),
+                Logging.LogDebug("TitlebarFlyout", "Hiding the titlebar flyout."),
+                Effect.andThen(
+                    BrowserWindows.Hide(BrowserWindow.Key.Overlay)
+                ),
                 Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
                 Effect.andThen(Session.Reset),
                 Effect.andThen(Session.ClearActivationWindow),
@@ -171,6 +175,9 @@ const Live = Layer.effect(
             );
             yield* BrowserWindows.SetBounds(BrowserWindow.Key.Overlay, OverlayBounds);
             yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Overlay);
+            yield* Logging.LogDebug("TitlebarFlyout", "Displayed the titlebar flyout.", {
+                Window: Hover.Window
+            });
             Active = {
                 ButtonBounds: Hover.Bounds,
                 OverlayBounds,
@@ -254,7 +261,8 @@ const Live = Layer.effect(
 
         yield* pipe(
             Poll,
-            Effect.catch((Cause: unknown) => Console.error(
+            Effect.catch((Cause: unknown) => Logging.LogWarning(
+                "TitlebarFlyout",
                 "Could not update the titlebar flyout.",
                 Cause
             )),

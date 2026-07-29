@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as Logging from "./Log.ts";
 import type {
     BrowserWindowConstructorOptions,
     BrowserWindow as ElectronBrowserWindow,
@@ -37,6 +38,13 @@ import { join } from "path";
 
 const TypeId = "~sorrell/wm/Main/BrowserWindow" as const;
 
+interface Diagnostic
+{
+    readonly Cause: unknown;
+    readonly Message: string;
+    readonly Operation: string;
+}
+
 export/** The logical identities understood by the BrowserWindow service. */
 const Key = Object.freeze({
     Backdrop: "Backdrop",
@@ -47,7 +55,9 @@ const Key = Object.freeze({
     Inspector: "Inspector",
     Main: "Main",
     Overlay: "Overlay",
-    Settings: "Settings"
+    Settings: "Settings",
+    TiledFocusPanelPreview: "TiledFocusPanelPreview",
+    TiledMovePanelPreview: "TiledMovePanelPreview"
 } as const);
 
 /** The logical identity of an application-owned browser window. */
@@ -290,6 +300,10 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
             PubSub.unbounded<Event>(),
             PubSub.shutdown
         );
+        const DiagnosticPubSub = yield* Effect.acquireRelease(
+            PubSub.unbounded<Diagnostic>(),
+            PubSub.shutdown
+        );
 
         const Publish = (EventValue: Event): void =>
         {
@@ -318,6 +332,7 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
             Ready: Deferred.Deferred<Handle, Error>
         ): Effect.Effect<void, Error> => Effect.scoped(Effect.gen(function*()
         {
+            const OpenStartedAt = performance.now();
             const Window = yield* Effect.acquireRelease(
                 Effect.try({
                     catch: (Cause: unknown) => new BrowserWindowConstructionError({
@@ -406,11 +421,22 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
                     try
                     {
                         void Promise.resolve(DependenciesValue.OpenExternal(Details.url))
-                            .catch((): void => undefined);
+                            .catch((Cause: unknown): void =>
+                            {
+                                PubSub.publishUnsafe(DiagnosticPubSub, {
+                                    Cause,
+                                    Message: "Could not open an external link.",
+                                    Operation: "OpenExternal"
+                                });
+                            });
                     }
-                    catch
+                    catch (Cause: unknown)
                     {
-                        // Opening an external link must never escape into the renderer.
+                        PubSub.publishUnsafe(DiagnosticPubSub, {
+                            Cause,
+                            Message: "Could not open an external link.",
+                            Operation: "OpenExternal"
+                        });
                     }
                 }
 
@@ -490,6 +516,10 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
             }
 
             Publish({ Handle: HandleValue, _tag: "Opened" });
+            yield* Logging.LogDebug("BrowserWindow", "Electron window opened.", {
+                DurationMilliseconds: Math.max(0, performance.now() - OpenStartedAt),
+                Window: SpecificationValue.Key
+            });
             yield* Deferred.succeed(Ready, HandleValue);
             yield* Deferred.await(Closed);
             Publish({ Key: SpecificationValue.Key, _tag: "Closed" });
@@ -500,8 +530,13 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
             Ready: Deferred.Deferred<Handle, Error>
         ): Effect.Effect<void> => pipe(
             RunLifecycle(SpecificationValue, Ready),
-            Effect.catch((ErrorValue: Error) => pipe(
-                Deferred.fail(Ready, ErrorValue),
+            Effect.catch((ErrorValue: Error) => Logging.LogError(
+                "BrowserWindow",
+                "An Electron window lifecycle failed.",
+                ErrorValue,
+                { Window: SpecificationValue.Key }
+            ).pipe(
+                Effect.andThen(Deferred.fail(Ready, ErrorValue)),
                 Effect.asVoid
             )),
             Effect.ensuring(Effect.gen(function*()
@@ -614,6 +649,45 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
                 OperationValue,
                 () => OperationEffect(Managed.Window)
             ))
+        );
+
+        yield* pipe(
+            Stream.fromPubSub(EventPubSub),
+            Stream.runForEach((EventValue: Event) =>
+            {
+                const KeyValue = EventValue._tag === "Opened"
+                    ? EventValue.Handle.Key
+                    : EventValue.Key;
+                const Annotations = {
+                    Event: EventValue._tag,
+                    Window: KeyValue
+                };
+
+                return EventValue._tag === "Unresponsive"
+                    ? Logging.LogWarning(
+                        "BrowserWindow",
+                        "An Electron window became unresponsive.",
+                        undefined,
+                        Annotations
+                    )
+                    : Logging.LogDebug(
+                        "BrowserWindow",
+                        "Electron window lifecycle event.",
+                        Annotations
+                    );
+            }),
+            Effect.forkScoped({ startImmediately: true })
+        );
+
+        yield* pipe(
+            Stream.fromPubSub(DiagnosticPubSub),
+            Stream.runForEach((DiagnosticValue: Diagnostic) => Logging.LogWarning(
+                "BrowserWindow",
+                DiagnosticValue.Message,
+                DiagnosticValue.Cause,
+                { Operation: DiagnosticValue.Operation }
+            )),
+            Effect.forkScoped({ startImmediately: true })
         );
 
         return {
@@ -778,13 +852,15 @@ const GetBackdropWindowSpec = (): Spec =>
     } as const;
 };
 
-export/** Construct a click-through proxy over one fully obscured floating Focus target. */
+export/** Construct a click-through visualization surface at the requested Focus bounds. */
 const GetFocusPreviewWindowSpec = (
     PreviewKey:
         | typeof Key.FocusPreviewDown
         | typeof Key.FocusPreviewLeft
         | typeof Key.FocusPreviewRight
-        | typeof Key.FocusPreviewUp,
+        | typeof Key.FocusPreviewUp
+        | typeof Key.TiledFocusPanelPreview
+        | typeof Key.TiledMovePanelPreview,
     Bounds: Box.Box
 ): Spec =>
 {

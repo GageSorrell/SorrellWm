@@ -1,0 +1,13 @@
+{
+    "extends": "@sorrell/tsconfig",
+    "compilerOptions": {
+        "noEmit": false,
+        "outDir": "./Distribution",
+        "rootDir": "./Source",
+        "tsBuildInfoFile": "./Intermediate/TypeScript/tsconfig.tsbuildinfo",
+        "types": [ "node" ]
+    },
+    "include": [
+        "Source"
+    ]
+}

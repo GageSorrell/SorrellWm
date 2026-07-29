@@ -29,6 +29,9 @@ export interface MonitorInfo
     /** The monitor's friendly device name, such as `DELL U2723QE`. */
     readonly DeviceName: string;
 
+    /** The positive display number shown for this monitor in Windows Settings. */
+    readonly DisplayId: number;
+
     /** The raw `MONITORINFOEXW.dwFlags` value. */
     readonly Flags: number;
 

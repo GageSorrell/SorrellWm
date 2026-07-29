@@ -30,6 +30,7 @@ const UseStyles = makeStyles({
         maxHeight: "1.25rem",
         minHeight: "1.25rem",
         minWidth: "1.25rem",
+        paddingInline: tokens.spacingHorizontalXS,
         userSelect: "none"
     }
 });

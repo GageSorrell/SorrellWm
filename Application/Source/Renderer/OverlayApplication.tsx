@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as Logging from "./Logging.js";
 import {
     AddSquareRegular,
     AppGenericRegular,
@@ -21,6 +22,7 @@ import {
     BoardFilled,
     BoardRegular,
     CursorClickRegular,
+    DesktopRegular,
     type FluentIcon,
     GridRegular,
     ResizeLargeRegular,
@@ -47,6 +49,7 @@ import {
     type OverlayCommandDto,
     OverlayCommandId,
     type OverlayCommandId as OverlayCommandIdType,
+    type OverlayFocusFailureDto,
     type OverlayScreenDto,
     OverlayScreenId
 } from "../Shared/OverlayCommand.js";
@@ -84,6 +87,8 @@ const DefaultPresentationContext: PresentationContext = Object.freeze({
     WindowTitle: Option.none()
 });
 
+const FocusFailureDismissalDelay = 5_000;
+
 const ResolveDescription = (
     { Description }: Presentation,
     Context: PresentationContext
@@ -97,11 +102,77 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: CursorClickRegular,
             Label: "Focus"
         },
+        [ OverlayCommandId.FocusMonitor1 ]:
+        {
+            Description: "Focus display 1.",
+            Icon: DesktopRegular,
+            Label: "Display 1"
+        },
+        [ OverlayCommandId.FocusMonitor2 ]:
+        {
+            Description: "Focus display 2.",
+            Icon: DesktopRegular,
+            Label: "Display 2"
+        },
+        [ OverlayCommandId.FocusMonitor3 ]:
+        {
+            Description: "Focus display 3.",
+            Icon: DesktopRegular,
+            Label: "Display 3"
+        },
+        [ OverlayCommandId.FocusMonitor4 ]:
+        {
+            Description: "Focus display 4.",
+            Icon: DesktopRegular,
+            Label: "Display 4"
+        },
+        [ OverlayCommandId.FocusMonitor5 ]:
+        {
+            Description: "Focus display 5.",
+            Icon: DesktopRegular,
+            Label: "Display 5"
+        },
+        [ OverlayCommandId.FocusMonitor6 ]:
+        {
+            Description: "Focus display 6.",
+            Icon: DesktopRegular,
+            Label: "Display 6"
+        },
+        [ OverlayCommandId.FocusMonitor7 ]:
+        {
+            Description: "Focus display 7.",
+            Icon: DesktopRegular,
+            Label: "Display 7"
+        },
+        [ OverlayCommandId.FocusMonitor8 ]:
+        {
+            Description: "Focus display 8.",
+            Icon: DesktopRegular,
+            Label: "Display 8"
+        },
+        [ OverlayCommandId.FocusMonitor9 ]:
+        {
+            Description: "Focus display 9.",
+            Icon: DesktopRegular,
+            Label: "Display 9"
+        },
         [ OverlayCommandId.FocusMoveDown ]:
         {
             Description: "Move the focus selection down.",
             Icon: ArrowDownRegular,
             Label: "Focus Down"
+        },
+        [ OverlayCommandId.FocusMoveFirst ]:
+        {
+            Description: "Move focus to the first child.",
+            Icon: ArrowLeftRegular,
+            Label: "Focus First"
+        },
+        [ OverlayCommandId.FocusMoveLast ]:
+        {
+            Description: "Move focus to the last child.",
+            Icon: ArrowRightRegular,
+            Label: "Focus Last"
         },
         [ OverlayCommandId.FocusMoveLeft ]:
         {
@@ -109,11 +180,23 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ArrowLeftRegular,
             Label: "Focus Left"
         },
+        [ OverlayCommandId.FocusMoveParent ]:
+        {
+            Description: "Move the focus selection to its containing panel.",
+            Icon: ArrowUpRegular,
+            Label: "Focus Parent Panel"
+        },
         [ OverlayCommandId.FocusMoveRight ]:
         {
             Description: "Move the focus selection right.",
             Icon: ArrowRightRegular,
             Label: "Focus Right"
+        },
+        [ OverlayCommandId.FocusMoveRoot ]:
+        {
+            Description: "Move focus to the monitor's root panel.",
+            Icon: ArrowUpRegular,
+            Label: "Focus Root Panel"
         },
         [ OverlayCommandId.FocusMoveUp ]:
         {
@@ -133,11 +216,35 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ArrowDownRegular,
             Label: "Move Down"
         },
+        [ OverlayCommandId.MoveWindowFirst ]:
+        {
+            Description: "Move the window to the first position in its panel.",
+            Icon: ArrowLeftRegular,
+            Label: "Move First"
+        },
+        [ OverlayCommandId.MoveWindowIntoPanel ]:
+        {
+            Description: "Move the window into the highlighted panel.",
+            Icon: AddSquareRegular,
+            Label: "Move Into Panel"
+        },
+        [ OverlayCommandId.MoveWindowLast ]:
+        {
+            Description: "Move the window to the last position in its panel.",
+            Icon: ArrowRightRegular,
+            Label: "Move Last"
+        },
         [ OverlayCommandId.MoveWindowLeft ]:
         {
             Description: "Move the window left.",
             Icon: ArrowLeftRegular,
             Label: "Move Left"
+        },
+        [ OverlayCommandId.MoveWindowParent ]:
+        {
+            Description: "Move the window after its current panel.",
+            Icon: ArrowUpRegular,
+            Label: "Move After Parent Panel"
         },
         [ OverlayCommandId.MoveWindowRight ]:
         {
@@ -205,6 +312,12 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: GridRegular,
             Label: "Tile"
         },
+        [ OverlayCommandId.TileAll ]:
+        {
+            Description: "Add every floating window to its monitor's tiled layout.",
+            Icon: GridRegular,
+            Label: "Tile All"
+        },
         [ OverlayCommandId.OpenPerAppSettings ]:
         {
             Description: (Context: PresentationContext) => Option.match(
@@ -250,6 +363,16 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
         {
             Description: "Choose the type of action to perform.",
             Label: "SorrellWm"
+        },
+        [ OverlayScreenId.TiledFocus ]:
+        {
+            Description: "Choose a direction to move the focus selection.",
+            Label: "Focus"
+        },
+        [ OverlayScreenId.TiledMove ]:
+        {
+            Description: "Choose where to move the tiled window.",
+            Label: "Move"
         }
     } as const;
 
@@ -321,8 +444,17 @@ const UseStyles = makeStyles({
     FocusButtons:
     {
         display: "grid",
-        gap: "0.5rem",
+        gap: "0.5rem"
+    },
+    FocusCommandGroups:
+    {
+        display: "grid",
+        gap: "clamp(0.75rem, 2.5vh, 1.5rem)",
         marginTop: "-0.5rem"
+    },
+    FocusCommandGroupsWithMonitors:
+    {
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))"
     },
     Footer:
     {
@@ -338,6 +470,11 @@ const UseStyles = makeStyles({
         padding: `0 ${ tokens.spacingHorizontalM }`,
         position: "absolute",
         width: "100%"
+    },
+    MonitorButtons:
+    {
+        display: "grid",
+        gap: "0.5rem"
     },
     PadLayout:
     {
@@ -371,33 +508,80 @@ const OverlayApplication = (): React.ReactNode =>
     const Styles = UseStyles();
     const [ CurrentScreen, SetCurrentScreen ] = useState<OverlayScreenDto | undefined>();
     const [ ErrorMessage /* , SetErrorMessage */ ] = useState<string | undefined>();
+    const [ VisibleFocusFailure, SetVisibleFocusFailure ] =
+        useState<OverlayFocusFailureDto | undefined>();
 
     useEffect(() =>
     {
         let IsMounted = true;
         const StopScreenUpdates = window.sorrell.overlay.onChanged(SetCurrentScreen);
 
-        window.sorrell.overlay.get().then((Current: OverlayScreenDto) =>
-        {
-            if (IsMounted)
+        window.sorrell.overlay.get()
+            .then((Current: OverlayScreenDto) =>
             {
-                SetCurrentScreen(Current);
-            }
-        });
+                if (IsMounted)
+                {
+                    SetCurrentScreen(Current);
+                }
+            })
+            .catch(Logging.ReportRejection(
+                "Overlay",
+                "Could not load the current overlay screen."
+            ));
 
         return () =>
         {
             IsMounted = false;
             StopScreenUpdates();
-            window.sorrell.overlay.preview(null);
+            void window.sorrell.overlay.preview(null).catch(Logging.ReportRejection(
+                "Overlay",
+                "Could not clear the Focus preview while unmounting."
+            ));
         };
     }, [ ]);
 
-    const Invoke: { (Id: OverlayCommandIdType): void; } = window.sorrell.overlay.invoke;
+    useEffect(() =>
+    {
+        const FocusFailure = CurrentScreen?.FocusFailure;
 
-    const Back = window.sorrell.overlay.back;
+        SetVisibleFocusFailure(FocusFailure);
 
-    const Preview: { (Id: OverlayCommandIdType | null): void; } = window.sorrell.overlay.preview;
+        if (FocusFailure === undefined)
+        {
+            return;
+        }
+
+        const Timeout = window.setTimeout(
+            () => SetVisibleFocusFailure(undefined),
+            FocusFailureDismissalDelay
+        );
+
+        return () => window.clearTimeout(Timeout);
+    }, [ CurrentScreen ]);
+
+    const Invoke = (Id: OverlayCommandIdType): void =>
+    {
+        void window.sorrell.overlay.invoke(Id).catch(Logging.ReportRejection(
+            "Overlay",
+            "Could not invoke an overlay command."
+        ));
+    };
+
+    const Back = (): void =>
+    {
+        void window.sorrell.overlay.back().catch(Logging.ReportRejection(
+            "Overlay",
+            "Could not navigate back from the current overlay screen."
+        ));
+    };
+
+    const Preview = (Id: OverlayCommandIdType | null): void =>
+    {
+        void window.sorrell.overlay.preview(Id).catch(Logging.ReportRejection(
+            "Overlay",
+            "Could not update the Focus preview."
+        ));
+    };
 
     const CurrentPresentation = CurrentScreen === undefined
         ? ScreenPresentation[OverlayScreenId.FloatingHome]
@@ -409,14 +593,22 @@ const OverlayApplication = (): React.ReactNode =>
         ? undefined
         : Presentation[SecondaryCommand.Id].Icon;
     const DistanceToggleDto = CurrentScreen?.DistanceToggle;
+    const MonitorCommands = CurrentScreen?.MonitorCommands ?? [ ];
     const HasFooter = SecondaryCommand !== undefined || DistanceToggleDto !== undefined;
-    const IsTiledHome = CurrentScreen?.Id === OverlayScreenId.TiledHome;
+    const IsTiledScreen = CurrentScreen?.Id === OverlayScreenId.TiledHome
+        || CurrentScreen?.Id === OverlayScreenId.TiledFocus
+        || CurrentScreen?.Id === OverlayScreenId.TiledMove;
     const PresentationContextValue: PresentationContext = {
         ...DefaultPresentationContext,
-        IsTiled: IsTiledHome
+        IsTiled: IsTiledScreen
     };
-    const IsFocusScreen = CurrentScreen?.Id === OverlayScreenId.FloatingFocus;
-    const IsMoveScreen = CurrentScreen?.Id === OverlayScreenId.FloatingMove;
+    const IsFocusScreen = CurrentScreen?.Id === OverlayScreenId.FloatingFocus
+        || CurrentScreen?.Id === OverlayScreenId.TiledFocus;
+    const IsTiledFocusScreen = CurrentScreen?.Id === OverlayScreenId.TiledFocus;
+    const IsRootPanelFocused = CurrentScreen?.IsRootPanelFocused === true;
+    const IsFloatingMoveScreen = CurrentScreen?.Id === OverlayScreenId.FloatingMove;
+    const IsTiledMoveScreen = CurrentScreen?.Id === OverlayScreenId.TiledMove;
+    const IsTiledMovePanelTargeted = CurrentScreen?.IsTiledMovePanelTargeted === true;
     const IsResizeScreen = CurrentScreen?.Id === OverlayScreenId.FloatingResize;
     const IsTileScreen = CurrentScreen?.Id === OverlayScreenId.FloatingTile;
 
@@ -472,6 +664,16 @@ const OverlayApplication = (): React.ReactNode =>
 
     const ToPlainPadDirection = (Id: OverlayCommandIdType): DirectionalPadDirection =>
         ToPadDirection(Id, Option.none());
+    const ParentFocusCommand = IsTiledFocusScreen
+        ? FindCommand(OverlayCommandId.FocusMoveParent)
+        : undefined;
+    const HasMonitorColumn = IsRootPanelFocused && MonitorCommands.length > 0;
+    const TiledMoveCommands = IsTiledMoveScreen
+        ? CurrentScreen.Commands.filter((Command: OverlayCommandDto): boolean =>
+            IsTiledMovePanelTargeted
+                ? !Command.Disabled
+                : Command.Id !== OverlayCommandId.MoveWindowIntoPanel)
+        : [ ];
 
     return (
         <main className={ Styles.Shell }>
@@ -536,7 +738,7 @@ const OverlayApplication = (): React.ReactNode =>
 
                 { IsFocusScreen ? (
                     <div className={ Styles.PadLayout }>
-                        { CurrentScreen?.FocusFailure !== undefined && (
+                        { VisibleFocusFailure !== undefined && (
                             <MessageBar
                                 intent="warning"
                                 layout="multiline">
@@ -544,7 +746,7 @@ const OverlayApplication = (): React.ReactNode =>
                                     <MessageBarTitle>
                                         Could not move focus
                                     </MessageBarTitle>
-                                    { CurrentScreen.FocusFailure.WindowTitle } could not be focused.
+                                    { VisibleFocusFailure.WindowTitle } could not be focused.
                                 </MessageBarBody>
                             </MessageBar>
                         ) }
@@ -556,35 +758,131 @@ const OverlayApplication = (): React.ReactNode =>
                             Up={ ToPadDirection(OverlayCommandId.FocusMoveUp, FocusMoveUpColor) }
                         />
 
+                        <div
+                            aria-label="Focus command groups"
+                            className={ mergeClasses(
+                                Styles.FocusCommandGroups,
+                                HasMonitorColumn
+                                    ? Styles.FocusCommandGroupsWithMonitors
+                                    : undefined
+                            ) }
+                            role="group">
+                            <section
+                                aria-label="Focus targets"
+                                className={ Styles.FocusButtons }>
+                                { [
+                                    OverlayCommandId.FocusMoveUp,
+                                    OverlayCommandId.FocusMoveDown,
+                                    OverlayCommandId.FocusMoveLeft,
+                                    OverlayCommandId.FocusMoveRight
+                                ].map((Id: OverlayCommandIdType) =>
+                                {
+                                    const Command = GetCommand(Id);
+                                    const DirectionIcon = Presentation[Command.Id].Icon;
+
+                                    return IsRootPanelFocused ? (
+                                        <CompactCommandButton
+                                            Active={ false }
+                                            Disabled={ Command.Disabled }
+                                            Icon={ <DirectionIcon /> }
+                                            Label={ Command.Target?.Title
+                                                ?? Presentation[Command.Id].Label }
+                                            OnInvoke={ () => Invoke(Command.Id) }
+                                            Shortcut={ Command.Shortcut }
+                                            key={ Command.Id }
+                                        />
+                                    ) : (
+                                        <FocusDirectionButton
+                                            Command={ Command }
+                                            Icon={ DirectionIcon }
+                                            OnHoverChange={ Command.Target === undefined
+                                                ? undefined
+                                                : (Hovered: boolean) => Preview(
+                                                    Hovered ? Command.Id : null
+                                                ) }
+                                            OnInvoke={ () => Invoke(Command.Id) }
+                                            key={ Command.Id }
+                                        />
+                                    );
+                                }) }
+
+                                { ParentFocusCommand !== undefined && (
+                                    <CompactCommandButton
+                                        Active={ false }
+                                        Disabled={ ParentFocusCommand.Disabled }
+                                        Icon={ <ArrowUpRegular /> }
+                                        Label={ ParentFocusCommand.Target?.Title
+                                            ?? Presentation[ParentFocusCommand.Id].Label }
+                                        OnInvoke={ () => Invoke(ParentFocusCommand.Id) }
+                                        Shortcut={ ParentFocusCommand.Shortcut }
+                                    />
+                                ) }
+                            </section>
+
+                            { HasMonitorColumn && (
+                                <section
+                                    aria-label="Monitors"
+                                    className={ Styles.MonitorButtons }>
+                                    { MonitorCommands.map((Command: OverlayCommandDto) => (
+                                        <CompactCommandButton
+                                            Active={ false }
+                                            Disabled={ Command.Disabled }
+                                            Icon={ <DesktopRegular /> }
+                                            Label={ Command.Target?.Title
+                                                ?? Presentation[Command.Id].Label }
+                                            OnInvoke={ () => Invoke(Command.Id) }
+                                            Shortcut={ Command.Shortcut }
+                                            key={ Command.Id }
+                                        />
+                                    )) }
+                                </section>
+                            ) }
+                        </div>
+                    </div>
+                ) : IsTiledMoveScreen ? (
+                    <div className={ Styles.PadLayout }>
+                        { IsTiledMovePanelTargeted && (
+                            <MessageBar
+                                intent="info"
+                                layout="multiline">
+                                <MessageBarBody>
+                                    <MessageBarTitle>
+                                        Move into the highlighted panel
+                                    </MessageBarTitle>
+                                    Move away from the panel, or commit to insert the
+                                    window as its first child.
+                                </MessageBarBody>
+                            </MessageBar>
+                        ) }
+
+                        <DirectionalPad
+                            Down={ ToPlainPadDirection(OverlayCommandId.MoveWindowDown) }
+                            Left={ ToPlainPadDirection(OverlayCommandId.MoveWindowLeft) }
+                            Right={ ToPlainPadDirection(OverlayCommandId.MoveWindowRight) }
+                            Up={ ToPlainPadDirection(OverlayCommandId.MoveWindowUp) } />
+
                         <section
-                            aria-label="Focus targets"
+                            aria-label="Move targets"
                             className={ Styles.FocusButtons }>
-                            { [
-                                OverlayCommandId.FocusMoveUp,
-                                OverlayCommandId.FocusMoveDown,
-                                OverlayCommandId.FocusMoveLeft,
-                                OverlayCommandId.FocusMoveRight
-                            ].map((Id: OverlayCommandIdType) =>
+                            { TiledMoveCommands.map((Command: OverlayCommandDto) =>
                             {
-                                const Command = GetCommand(Id);
+                                const Icon = Presentation[Command.Id].Icon;
 
                                 return (
-                                    <FocusDirectionButton
-                                        Command={ Command }
-                                        Icon={ Presentation[Command.Id].Icon }
-                                        OnHoverChange={ Command.Target === undefined
-                                            ? undefined
-                                            : (Hovered: boolean) => Preview(
-                                                Hovered ? Command.Id : null
-                                            ) }
+                                    <CompactCommandButton
+                                        Active={ false }
+                                        Disabled={ Command.Disabled }
+                                        Icon={ <Icon /> }
+                                        Label={ Presentation[Command.Id].Label }
                                         OnInvoke={ () => Invoke(Command.Id) }
+                                        Shortcut={ Command.Shortcut }
                                         key={ Command.Id }
                                     />
                                 );
                             }) }
                         </section>
                     </div>
-                ) : IsMoveScreen ? (
+                ) : IsFloatingMoveScreen ? (
                     <div className={ Styles.PadLayout }>
                         <DirectionalPad
                             Down={ ToPlainPadDirection(OverlayCommandId.MoveWindowDown) }

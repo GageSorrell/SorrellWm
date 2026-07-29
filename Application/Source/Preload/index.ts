@@ -17,10 +17,19 @@ import {
 import {
     type FloatingWindowSettingsDto,
     type FloatingWindowSettingsPatch,
+    type GeneralSettingsDto,
+    type GeneralSettingsPatch,
     IsFloatingWindowSettingsDto,
+    IsGeneralSettingsDto,
+    IsGeneralSettingsPatch,
     IsOverlaySettingsDto,
+    IsPerAppSettingPatch,
+    IsPerAppSettingsEntriesDto,
+    IsPerAppSettingsEntryDto,
     type OverlaySettingsDto,
-    type OverlaySettingsPatch
+    type OverlaySettingsPatch,
+    type PerAppSettingPatch,
+    type PerAppSettingsEntryDto
 } from "../Shared/AppSettings.ts";
 import {
     type FocusPreviewPresentation,
@@ -34,9 +43,15 @@ import {
 } from "../Shared/OverlayCommand.ts";
 import { IsRendererTheme, type RendererTheme } from "../Shared/Theme.ts";
 import type { IpcRendererEvent } from "electron";
+import type { RendererLogEntry } from "../Shared/Logging.ts";
 import electron from "electron";
 
 const { contextBridge, ipcRenderer } = electron;
+
+const WriteRendererLog = (Entry: RendererLogEntry): void =>
+{
+    ipcRenderer.send(AppApiChannel.RendererLogWrite, Entry);
+};
 
 const BackdropListeners = new Set<(Presentation: BackdropPresentation) => void>();
 let LatestBackdropPresentation: BackdropPresentation | undefined;
@@ -241,6 +256,40 @@ const GetFloatingWindowSettings = async (): Promise<FloatingWindowSettingsDto> =
     return Response;
 };
 
+const GetGeneralSettings = async (): Promise<GeneralSettingsDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.GeneralSettingsGet);
+
+    if (!IsGeneralSettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid general settings.");
+    }
+
+    return Response;
+};
+
+const SetGeneralSettings = async (
+    Patch: GeneralSettingsPatch
+): Promise<GeneralSettingsDto> =>
+{
+    if (!IsGeneralSettingsPatch(Patch))
+    {
+        throw new TypeError("The requested general-settings patch is invalid.");
+    }
+
+    const Response: unknown = await ipcRenderer.invoke(
+        AppApiChannel.GeneralSettingsSet,
+        Patch
+    );
+
+    if (!IsGeneralSettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid general settings.");
+    }
+
+    return Response;
+};
+
 const SetFloatingWindowSettings = async (
     Patch: FloatingWindowSettingsPatch
 ): Promise<FloatingWindowSettingsDto> =>
@@ -281,6 +330,54 @@ const SetOverlaySettings = async (
     return Response;
 };
 
+const GetPerAppSettings = async (): Promise<ReadonlyArray<PerAppSettingsEntryDto>> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.PerAppSettingsGet);
+
+    if (!IsPerAppSettingsEntriesDto(Response))
+    {
+        throw new TypeError("The main process returned invalid per-application settings.");
+    }
+
+    return Response;
+};
+
+const AddPerAppSettings = async (): Promise<PerAppSettingsEntryDto | null> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.PerAppSettingsAdd);
+
+    if (Response !== null && !IsPerAppSettingsEntryDto(Response))
+    {
+        throw new TypeError("The main process returned invalid per-application settings.");
+    }
+
+    return Response;
+};
+
+const SetPerAppSettings = async (
+    ExecutablePath: string,
+    Patch: PerAppSettingPatch
+): Promise<PerAppSettingsEntryDto> =>
+{
+    if (ExecutablePath.trim().length === 0 || !IsPerAppSettingPatch(Patch))
+    {
+        throw new TypeError("The requested per-application settings patch is invalid.");
+    }
+
+    const Response: unknown = await ipcRenderer.invoke(
+        AppApiChannel.PerAppSettingsSet,
+        ExecutablePath,
+        Patch
+    );
+
+    if (!IsPerAppSettingsEntryDto(Response))
+    {
+        throw new TypeError("The main process returned invalid per-application settings.");
+    }
+
+    return Response;
+};
+
 const applicationApi: AppApi = Object.freeze({
     backdrop: Object.freeze({
         onShow: OnBackdropShow
@@ -292,6 +389,13 @@ const applicationApi: AppApi = Object.freeze({
     focusPreview: Object.freeze({
         onChanged: OnFocusPreviewChanged
     }),
+    generalSettings: Object.freeze({
+        get: GetGeneralSettings,
+        set: SetGeneralSettings
+    }),
+    log: Object.freeze({
+        write: WriteRendererLog
+    }),
     overlay: Object.freeze({
         back: BackOverlayScreen,
         get: GetOverlayScreen,
@@ -302,6 +406,11 @@ const applicationApi: AppApi = Object.freeze({
     overlaySettings: Object.freeze({
         get: GetOverlaySettings,
         set: SetOverlaySettings
+    }),
+    perAppSettings: Object.freeze({
+        add: AddPerAppSettings,
+        get: GetPerAppSettings,
+        set: SetPerAppSettings
     }),
     platform: process.platform,
     settings: Object.freeze({

@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import * as Logging from "../Log.ts";
 import { Context, Effect, HashSet, Layer, PubSub, Schema, Stream, pipe } from "effect";
 import { Keyboard as NativeKeyboard, VK } from "@sorrell/windows";
 import { HotkeyId } from "../../Shared/Hotkey.ts";
@@ -116,10 +117,22 @@ const DefaultKeybindValues: ReadonlyArray<Keybind> = Object.freeze([
     Make(Id.Activate, VK.F20),
     Make(Id.Back, VK.BROWSER_BACK),
     Make(Id.Cancel, VK.ESCAPE),
+    Make(Id.Commit, VK.RETURN),
     Make(Id.FineModifier, VK.MENU),
     Make(Id.PrimaryModifier, VK.SHIFT),
     Make(Id.ResizeModifier, VK.CONTROL),
+    Make(Id.SelectFirst, VK.HOME),
+    Make(Id.SelectLast, VK.END),
     Make(Id.SelectLeft, VK.D),
+    Make(Id.SelectMonitor1, VK.D1),
+    Make(Id.SelectMonitor2, VK.D2),
+    Make(Id.SelectMonitor3, VK.D3),
+    Make(Id.SelectMonitor4, VK.D4),
+    Make(Id.SelectMonitor5, VK.D5),
+    Make(Id.SelectMonitor6, VK.D6),
+    Make(Id.SelectMonitor7, VK.D7),
+    Make(Id.SelectMonitor8, VK.D8),
+    Make(Id.SelectMonitor9, VK.D9),
     Make(Id.SelectUp, VK.H),
     Make(Id.SelectDown, VK.T),
     Make(Id.SelectRight, VK.N),
@@ -446,6 +459,11 @@ const Live = (Source: KeybindSet | Stream.Stream<KeybindSet>) =>
 
             yield* pipe(
                 Keybinds,
+                Stream.tap((CurrentKeybinds: KeybindSet) => Logging.LogDebug(
+                    "Input.Hotkey",
+                    "Reloaded the active keybind configuration.",
+                    { KeybindCount: HashSet.size(CurrentKeybinds) }
+                )),
                 Stream.switchMap((CurrentKeybinds: KeybindSet) =>
                 {
                     LatestKeybinds = CurrentKeybinds;
@@ -471,10 +489,20 @@ const Live = (Source: KeybindSet | Stream.Stream<KeybindSet>) =>
 
             return {
                 Matches: Stream.fromPubSub(MatchPubSub),
-                SetOverlayActive: (Active: boolean) => Effect.sync(() =>
+                SetOverlayActive: (Active: boolean) => Effect.gen(function*()
                 {
+                    if (IsOverlayActive === Active)
+                    {
+                        return;
+                    }
+
                     IsOverlayActive = Active;
                     SyncSuppressedKeys();
+                    yield* Logging.LogDebug(
+                        "Input.Hotkey",
+                        "Changed global hotkey suppression mode.",
+                        { OverlayActive: Active }
+                    );
                 })
             } as const;
         })

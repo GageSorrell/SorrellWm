@@ -12,12 +12,17 @@
 import type {
     FloatingWindowSettingsDto,
     FloatingWindowSettingsPatch,
+    GeneralSettingsDto,
+    GeneralSettingsPatch,
     OverlaySettingsDto,
-    OverlaySettingsPatch
+    OverlaySettingsPatch,
+    PerAppSettingPatch,
+    PerAppSettingsEntryDto
 } from "./AppSettings.js";
 import type { OverlayCommandId, OverlayScreenDto } from "./OverlayCommand.js";
 import type { BackdropPresentation } from "./Backdrop.js";
 import type { FocusPreviewPresentation } from "./FocusPreview.js";
+import type { RendererLogEntry } from "./Logging.js";
 import type { RendererTheme } from "./Theme.js";
 import type { Thunk } from "@sorrell/utility/Function";
 
@@ -36,22 +41,22 @@ export interface AppVersions
  */
 export interface AppApi
 {
-    readonly Backdrop:
+    readonly backdrop:
     {
         /** Observe a request to animate the transient backdrop into view. */
-        readonly OnShow: (Listener: (Presentation: BackdropPresentation) => void) => Thunk;
+        readonly onShow: (Listener: (Presentation: BackdropPresentation) => void) => Thunk;
     };
 
-    readonly FloatingWindowSettings:
+    readonly floatingWindowSettings:
     {
         /** Retrieve the Move overlay screen's current step sizes and hold speeds. */
-        readonly Get: () => Promise<FloatingWindowSettingsDto>;
+        readonly get: () => Promise<FloatingWindowSettingsDto>;
 
         /** Persist a partial update to the Move overlay screen's settings. */
-        readonly Set: (Patch: FloatingWindowSettingsPatch) => Promise<FloatingWindowSettingsDto>;
+        readonly set: (Patch: FloatingWindowSettingsPatch) => Promise<FloatingWindowSettingsDto>;
     };
 
-    readonly FocusPreview:
+    readonly focusPreview:
     {
         /** Observe presentation changes for this occluded-window Focus proxy. */
         readonly onChanged: (
@@ -59,7 +64,22 @@ export interface AppApi
         ) => () => void;
     };
 
-    readonly Overlay:
+    readonly generalSettings:
+    {
+        /** Retrieve general window-manager behavior settings. */
+        readonly get: () => Promise<GeneralSettingsDto>;
+
+        /** Persist a partial update to general window-manager behavior. */
+        readonly set: (Patch: GeneralSettingsPatch) => Promise<GeneralSettingsDto>;
+    };
+
+    readonly log:
+    {
+        /** Forward a validated structured renderer log event to the main process. */
+        readonly write: (Entry: RendererLogEntry) => void;
+    };
+
+    readonly overlay:
     {
         /** Return to the preceding overlay screen. */
         readonly back: () => Promise<void>;
@@ -79,13 +99,28 @@ export interface AppApi
         ) => () => void;
     };
 
-    readonly OverlaySettings:
+    readonly overlaySettings:
     {
         /** Retrieve settings that control the command overlay and Focus previews. */
         readonly get: () => Promise<OverlaySettingsDto>;
 
         /** Persist a partial update to the overlay settings. */
         readonly set: (Patch: OverlaySettingsPatch) => Promise<OverlaySettingsDto>;
+    };
+
+    readonly perAppSettings:
+    {
+        /** Choose an executable and append its default per-application settings. */
+        readonly add: () => Promise<PerAppSettingsEntryDto | null>;
+
+        /** Retrieve every configured executable and its presentation metadata. */
+        readonly get: () => Promise<ReadonlyArray<PerAppSettingsEntryDto>>;
+
+        /** Persist a partial behavior update for one configured executable. */
+        readonly set: (
+            ExecutablePath: string,
+            Patch: PerAppSettingPatch
+        ) => Promise<PerAppSettingsEntryDto>;
     };
 
     readonly platform: string;
@@ -111,6 +146,8 @@ const AppApiChannel = Object.freeze({
     FloatingWindowSettingsGet: "floating-window-settings:get" as const,
     FloatingWindowSettingsSet: "floating-window-settings:set" as const,
     FocusPreviewChanged: "focus-preview:changed" as const,
+    GeneralSettingsGet: "general-settings:get" as const,
+    GeneralSettingsSet: "general-settings:set" as const,
     OverlayBack: "overlay:back" as const,
     OverlayCommandInvoke: "overlay-command:invoke" as const,
     OverlayFocusPreview: "overlay-focus:preview" as const,
@@ -118,6 +155,10 @@ const AppApiChannel = Object.freeze({
     OverlayScreenGet: "overlay-screen:get" as const,
     OverlaySettingsGet: "overlay-settings:get" as const,
     OverlaySettingsSet: "overlay-settings:set" as const,
+    PerAppSettingsAdd: "per-app-settings:add" as const,
+    PerAppSettingsGet: "per-app-settings:get" as const,
+    PerAppSettingsSet: "per-app-settings:set" as const,
+    RendererLogWrite: "renderer-log:write" as const,
     SettingsNavigate: "settings:navigate" as const,
     ThemeChanged: "theme:changed",
     ThemeGet: "theme:get"

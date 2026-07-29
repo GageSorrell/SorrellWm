@@ -106,6 +106,14 @@ const GetApplicationName = (Window: Handle.HWND): Option.Option<string> =>
         ? Attempt.AsOption(Binding.Window.GetApplicationName(Window))
         : Option.none();
 
+export/** Get the display name stored in an executable's Windows version resources. */
+const GetApplicationNameFromPath = (
+    ExecutablePath: string
+): Option.Option<string> =>
+    typeof Binding.Window.GetApplicationNameFromPath === "function"
+        ? Attempt.AsOption(Binding.Window.GetApplicationNameFromPath(ExecutablePath))
+        : Option.none();
+
 export/** Get the maximize button beneath the cursor, if one is being hovered. */
 const GetHoveredMaximizeButton = (): Option.Option<HoveredMaximizeButton> =>
     typeof Binding.Window.GetHoveredMaximizeButton !== "function"

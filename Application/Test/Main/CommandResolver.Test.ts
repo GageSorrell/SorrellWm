@@ -26,8 +26,8 @@ import {
     Phase,
     type Phase as PhaseType
 } from "../../Source/Main/Input/Hotkey.ts";
-import { describe, expect, it, vi } from "vitest";
 import { OverlayScreenId, ResizeMode } from "../../Source/Shared/OverlayCommand.ts";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@sorrell/windows", () => ({
     Keyboard:
@@ -46,8 +46,19 @@ vi.mock("@sorrell/windows", () => ({
         BROWSER_BACK: 0xA6,
         CONTROL: 0x11,
         D: 0x44,
+        D1: 0x31,
+        D2: 0x32,
+        D3: 0x33,
+        D4: 0x34,
+        D5: 0x35,
+        D6: 0x36,
+        D7: 0x37,
+        D8: 0x38,
+        D9: 0x39,
+        END: 0x23,
         F20: 0x83,
         H: 0x48,
+        HOME: 0x24,
         J: 0x4A,
         K: 0x4B,
         L: 0x4C,
@@ -58,13 +69,38 @@ vi.mock("@sorrell/windows", () => ({
         MENU: 0x12,
         N: 0x4E,
         RCONTROL: 0xA3,
+        RETURN: 0x0D,
         RMENU: 0xA5,
         RSHIFT: 0xA1,
         RWIN: 0x5C,
         SHIFT: 0x10,
         T: 0x54,
         TAB: 0x09,
-        VK: [ 0x09, 0x41, 0x44, 0x48, 0x4A, 0x4B, 0x4C, 0x4E, 0x54, 0x83, 0xA6 ]
+        VK: [
+            0x09,
+            0x0D,
+            0x23,
+            0x24,
+            0x31,
+            0x32,
+            0x33,
+            0x34,
+            0x35,
+            0x36,
+            0x37,
+            0x38,
+            0x39,
+            0x41,
+            0x44,
+            0x48,
+            0x4A,
+            0x4B,
+            0x4C,
+            0x4E,
+            0x54,
+            0x83,
+            0xA6
+        ]
     },
     Window:
     {
@@ -219,7 +255,7 @@ describe("CommandResolver.Resolve", () =>
         })));
     });
 
-    it("keeps tiled Home actions on Home and gives Shift plus SelectUp to Float", () =>
+    it("opens tiled Focus and gives Shift plus SelectUp to Float", () =>
     {
         const Insert = Option.getOrThrow(Resolve(
             Activation(
@@ -242,6 +278,10 @@ describe("CommandResolver.Resolve", () =>
             Activation(Id.SelectLeft, Windows.VK.D, Phase.Pressed),
             OverlayScreenId.TiledHome
         ));
+        const Move = Option.getOrThrow(Resolve(
+            Activation(Id.SelectDown, Windows.VK.T, Phase.Pressed),
+            OverlayScreenId.TiledHome
+        ));
 
         expect(Insert).toMatchObject({
             Id: "Insert",
@@ -252,7 +292,135 @@ describe("CommandResolver.Resolve", () =>
             _tag: "NoOpOverlayCommand"
         });
         expect(Focus).toMatchObject({
-            Id: "Focus",
+            ScreenId: "TiledFocus",
+            _tag: "NavigateOverlayScreen"
+        });
+        expect(Move).toMatchObject({
+            ScreenId: "TiledMove",
+            _tag: "NavigateOverlayScreen"
+        });
+    });
+
+    it("maps directional, boundary, parent, and Commit keys on tiled Move", () =>
+    {
+        const MoveRight = Option.getOrThrow(Resolve(
+            Activation(Id.SelectRight, Windows.VK.N, Phase.Pressed),
+            OverlayScreenId.TiledMove
+        ));
+        const MoveParent = Option.getOrThrow(Resolve(
+            Activation(
+                Id.SelectUp,
+                Windows.VK.H,
+                Phase.Pressed,
+                [ Windows.VK.LCONTROL, Windows.VK.H ]
+            ),
+            OverlayScreenId.TiledMove
+        ));
+        const MoveFirst = Option.getOrThrow(Resolve(
+            Activation(Id.SelectFirst, Windows.VK.HOME, Phase.Pressed),
+            OverlayScreenId.TiledMove
+        ));
+        const MoveLast = Option.getOrThrow(Resolve(
+            Activation(Id.SelectLast, Windows.VK.END, Phase.Pressed),
+            OverlayScreenId.TiledMove
+        ));
+        const MoveIntoPanel = Option.getOrThrow(Resolve(
+            Activation(Id.Commit, Windows.VK.RETURN, Phase.Pressed),
+            OverlayScreenId.TiledMove
+        ));
+
+        expect([
+            MoveRight,
+            MoveParent,
+            MoveFirst,
+            MoveLast,
+            MoveIntoPanel
+        ]).toMatchObject([
+            { Id: "MoveWindowRight", _tag: "NoOpOverlayCommand" },
+            { Id: "MoveWindowParent", _tag: "NoOpOverlayCommand" },
+            { Id: "MoveWindowFirst", _tag: "NoOpOverlayCommand" },
+            { Id: "MoveWindowLast", _tag: "NoOpOverlayCommand" },
+            { Id: "MoveWindowIntoPanel", _tag: "NoOpOverlayCommand" }
+        ]);
+    });
+
+    it("moves tiled focus to a parent panel with Ctrl plus SelectUp and commits child zero", () =>
+    {
+        const MoveUp = Option.getOrThrow(Resolve(
+            Activation(Id.SelectUp, Windows.VK.H, Phase.Pressed),
+            OverlayScreenId.TiledFocus
+        ));
+        const MoveParent = Option.getOrThrow(Resolve(
+            Activation(
+                Id.SelectUp,
+                Windows.VK.H,
+                Phase.Pressed,
+                [ Windows.VK.LCONTROL, Windows.VK.H ]
+            ),
+            OverlayScreenId.TiledFocus
+        ));
+        const Commit = Option.getOrThrow(Resolve(
+            Activation(Id.Commit, Windows.VK.A, Phase.Pressed),
+            OverlayScreenId.TiledFocus
+        ));
+
+        expect(MoveUp).toMatchObject({
+            Id: "FocusMoveUp",
+            _tag: "NoOpOverlayCommand"
+        });
+        expect(MoveParent).toMatchObject({
+            Id: "FocusMoveParent",
+            _tag: "NoOpOverlayCommand"
+        });
+        expect(Commit).toMatchObject({
+            Category: "Ui",
+            _tag: "CommitTiledFocus"
+        });
+    });
+
+    it("maps Home, End, and Ctrl plus Home to tiled panel focus commands", () =>
+    {
+        const First = Option.getOrThrow(Resolve(
+            Activation(Id.SelectFirst, Windows.VK.HOME, Phase.Pressed),
+            OverlayScreenId.TiledFocus
+        ));
+        const Last = Option.getOrThrow(Resolve(
+            Activation(Id.SelectLast, Windows.VK.END, Phase.Pressed),
+            OverlayScreenId.TiledFocus
+        ));
+        const Root = Option.getOrThrow(Resolve(
+            Activation(
+                Id.SelectFirst,
+                Windows.VK.HOME,
+                Phase.Pressed,
+                [ Windows.VK.LCONTROL, Windows.VK.HOME ]
+            ),
+            OverlayScreenId.TiledFocus
+        ));
+
+        expect(First).toMatchObject({
+            Id: "FocusMoveFirst",
+            _tag: "NoOpOverlayCommand"
+        });
+        expect(Last).toMatchObject({
+            Id: "FocusMoveLast",
+            _tag: "NoOpOverlayCommand"
+        });
+        expect(Root).toMatchObject({
+            Id: "FocusMoveRoot",
+            _tag: "NoOpOverlayCommand"
+        });
+    });
+
+    it("maps number-row monitor shortcuts to their matching display commands", () =>
+    {
+        const Monitor3 = Option.getOrThrow(Resolve(
+            Activation(Id.SelectMonitor3, Windows.VK.D3, Phase.Pressed),
+            OverlayScreenId.TiledFocus
+        ));
+
+        expect(Monitor3).toMatchObject({
+            Id: "FocusMonitor3",
             _tag: "NoOpOverlayCommand"
         });
     });
@@ -282,11 +450,11 @@ describe("CommandResolver.Resolve", () =>
 
     it("does not invent commands for actions without command semantics", () =>
     {
-        expect(Option.isNone(Resolve(Activation(
+        expect(Option.getOrThrow(Resolve(Activation(
             Id.Commit,
             Windows.VK.A,
             Phase.Pressed
-        )))).toBe(true);
+        )))).toMatchObject({ _tag: "TileAll" });
         expect(Option.isNone(Resolve(Activation(
             Id.Back,
             Windows.VK.BROWSER_BACK,
@@ -365,7 +533,13 @@ describe("CommandResolver.Live", () =>
         ));
 
         expect(Commands.map((Command: Resolved) => Command._tag))
-            .toEqual([ "Activate", "Deactivate", "NavigateOverlayScreen", "Deactivate" ]);
+            .toEqual([
+                "Activate",
+                "Deactivate",
+                "TileAll",
+                "NavigateOverlayScreen",
+                "Deactivate"
+            ]);
     });
 });
 
@@ -374,6 +548,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Changes: Stream.succeed(OverlayScreenId.FloatingHome),
     ClearActivationWindow: Effect.void,
     ClearFocusPreview: Effect.void,
+    ClearTiledMovePanelTarget: Effect.void,
     Current: Effect.succeed(OverlayScreenId.FloatingHome),
     FineModifierHeld: Effect.succeed(false),
     FocusFailure: Effect.succeed(Option.none()),
@@ -386,10 +561,15 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Reset: Effect.void,
     ResizeMode: Effect.succeed(ResizeMode.Grow),
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
+    ResolveTiledFocusCommit: Effect.succeed(Option.none()),
+    ResolveTiledFocusTarget: () => Effect.succeed(Option.none()),
+    ResolveTiledMoveAction: () => Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,
     SetFineModifierHeld: () => Effect.void,
     SetPrimaryModifierHeld: () => Effect.void,
     SetResizeMode: () => Effect.void,
+    SetTiledFocusSelection: () => Effect.void,
+    SetTiledMovePanelTarget: () => Effect.void,
     Snapshot: Effect.succeed({
         CanGoBack: false,
         Commands: [ ],

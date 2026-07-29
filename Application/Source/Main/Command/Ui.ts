@@ -33,6 +33,12 @@ export type UiCommand = Command.Command.Enum<"Ui", {
      */
     readonly BackOverlayScreen: { };
 
+    /** Descend logical tiled focus from a panel to its first child. */
+    readonly CommitTiledFocus: { };
+
+    /** Tile every existing floating window into its monitor's root panel. */
+    readonly TileAll: { };
+
     /**
      * Navigate to another overlay screen.
      * @since 0.1.0

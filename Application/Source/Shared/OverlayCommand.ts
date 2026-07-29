@@ -23,7 +23,9 @@ const OverlayScreenId = Object.freeze({
     FloatingMove: "FloatingMove" as const,
     FloatingResize: "FloatingResize" as const,
     FloatingTile: "FloatingTile" as const,
-    TiledHome: "TiledHome" as const
+    TiledFocus: "TiledFocus" as const,
+    TiledHome: "TiledHome" as const,
+    TiledMove: "TiledMove" as const
 } as const);
 
 /** One of the overlay's navigable screens. */
@@ -33,14 +35,31 @@ export/** Stable identifiers for the overlay's primary commands. */
 const OverlayCommandId = Object.freeze({
     Float: "Float" as const,
     Focus: "Focus" as const,
+    FocusMonitor1: "FocusMonitor1" as const,
+    FocusMonitor2: "FocusMonitor2" as const,
+    FocusMonitor3: "FocusMonitor3" as const,
+    FocusMonitor4: "FocusMonitor4" as const,
+    FocusMonitor5: "FocusMonitor5" as const,
+    FocusMonitor6: "FocusMonitor6" as const,
+    FocusMonitor7: "FocusMonitor7" as const,
+    FocusMonitor8: "FocusMonitor8" as const,
+    FocusMonitor9: "FocusMonitor9" as const,
     FocusMoveDown: "FocusMoveDown" as const,
+    FocusMoveFirst: "FocusMoveFirst" as const,
+    FocusMoveLast: "FocusMoveLast" as const,
     FocusMoveLeft: "FocusMoveLeft" as const,
+    FocusMoveParent: "FocusMoveParent" as const,
     FocusMoveRight: "FocusMoveRight" as const,
+    FocusMoveRoot: "FocusMoveRoot" as const,
     FocusMoveUp: "FocusMoveUp" as const,
     Insert: "Insert" as const,
     Move: "Move" as const,
     MoveWindowDown: "MoveWindowDown" as const,
+    MoveWindowFirst: "MoveWindowFirst" as const,
+    MoveWindowIntoPanel: "MoveWindowIntoPanel" as const,
+    MoveWindowLast: "MoveWindowLast" as const,
     MoveWindowLeft: "MoveWindowLeft" as const,
+    MoveWindowParent: "MoveWindowParent" as const,
     MoveWindowRight: "MoveWindowRight" as const,
     MoveWindowUp: "MoveWindowUp" as const,
     OpenPerAppSettings: "OpenPerAppSettings" as const,
@@ -49,11 +68,30 @@ const OverlayCommandId = Object.freeze({
     ResizeWindowLeft: "ResizeWindowLeft" as const,
     ResizeWindowRight: "ResizeWindowRight" as const,
     ResizeWindowUp: "ResizeWindowUp" as const,
-    Tile: "Tile" as const
+    Tile: "Tile" as const,
+    TileAll: "TileAll" as const
 } as const);
 
 /** One of the overlay's primary commands. */
 export type OverlayCommandId = typeof OverlayCommandId[keyof typeof OverlayCommandId];
+
+export/** Numeric monitor-selection commands, ordered by Windows display ID. */
+const FocusMonitorCommandIds = Object.freeze([
+    OverlayCommandId.FocusMonitor1,
+    OverlayCommandId.FocusMonitor2,
+    OverlayCommandId.FocusMonitor3,
+    OverlayCommandId.FocusMonitor4,
+    OverlayCommandId.FocusMonitor5,
+    OverlayCommandId.FocusMonitor6,
+    OverlayCommandId.FocusMonitor7,
+    OverlayCommandId.FocusMonitor8,
+    OverlayCommandId.FocusMonitor9
+] as const);
+
+export/** Determine whether a command directly selects a monitor root panel. */
+const IsFocusMonitorCommandId = (
+    Id: OverlayCommandId
+): boolean => (FocusMonitorCommandIds as ReadonlyArray<OverlayCommandId>).includes(Id);
 
 export/** The distance, in pixels, a floating window moves per direction command. */
 const MoveDistance = Object.freeze({
@@ -85,7 +123,8 @@ const FloatingHomeCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.Focus },
     { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.Tile },
     { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.Move },
-    { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.Resize }
+    { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.Resize },
+    { HotkeyId: HotkeyId.Commit, Id: OverlayCommandId.TileAll }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
 const TiledHomeCommandDefinitions = Object.freeze([
@@ -107,11 +146,54 @@ const FloatingFocusCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.FocusMoveRight }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
+const TiledFocusCommandDefinitions = Object.freeze([
+    ...FloatingFocusCommandDefinitions,
+    {
+        HotkeyId: HotkeyId.SelectUp,
+        Id: OverlayCommandId.FocusMoveParent,
+        RequiredModifiers: { Control: true }
+    },
+    {
+        HotkeyId: HotkeyId.SelectFirst,
+        Id: OverlayCommandId.FocusMoveFirst
+    },
+    {
+        HotkeyId: HotkeyId.SelectLast,
+        Id: OverlayCommandId.FocusMoveLast
+    },
+    {
+        HotkeyId: HotkeyId.SelectFirst,
+        Id: OverlayCommandId.FocusMoveRoot,
+        RequiredModifiers: { Control: true }
+    },
+    { HotkeyId: HotkeyId.SelectMonitor1, Id: OverlayCommandId.FocusMonitor1 },
+    { HotkeyId: HotkeyId.SelectMonitor2, Id: OverlayCommandId.FocusMonitor2 },
+    { HotkeyId: HotkeyId.SelectMonitor3, Id: OverlayCommandId.FocusMonitor3 },
+    { HotkeyId: HotkeyId.SelectMonitor4, Id: OverlayCommandId.FocusMonitor4 },
+    { HotkeyId: HotkeyId.SelectMonitor5, Id: OverlayCommandId.FocusMonitor5 },
+    { HotkeyId: HotkeyId.SelectMonitor6, Id: OverlayCommandId.FocusMonitor6 },
+    { HotkeyId: HotkeyId.SelectMonitor7, Id: OverlayCommandId.FocusMonitor7 },
+    { HotkeyId: HotkeyId.SelectMonitor8, Id: OverlayCommandId.FocusMonitor8 },
+    { HotkeyId: HotkeyId.SelectMonitor9, Id: OverlayCommandId.FocusMonitor9 }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
 const FloatingMoveCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.MoveWindowLeft },
     { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.MoveWindowUp },
     { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.MoveWindowDown },
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.MoveWindowRight }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
+const TiledMoveCommandDefinitions = Object.freeze([
+    ...FloatingMoveCommandDefinitions,
+    {
+        HotkeyId: HotkeyId.SelectUp,
+        Id: OverlayCommandId.MoveWindowParent,
+        RequiredModifiers: { Control: true }
+    },
+    { HotkeyId: HotkeyId.SelectFirst, Id: OverlayCommandId.MoveWindowFirst },
+    { HotkeyId: HotkeyId.SelectLast, Id: OverlayCommandId.MoveWindowLast },
+    { HotkeyId: HotkeyId.Commit, Id: OverlayCommandId.MoveWindowIntoPanel }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
 const FloatingTileCommandDefinitions = Object.freeze(
@@ -145,8 +227,12 @@ const GetOverlayCommandDefinitions = (
             return FloatingResizeCommandDefinitions;
         case OverlayScreenId.FloatingTile:
             return FloatingTileCommandDefinitions;
+        case OverlayScreenId.TiledFocus:
+            return TiledFocusCommandDefinitions;
         case OverlayScreenId.TiledHome:
             return TiledHomeCommandDefinitions;
+        case OverlayScreenId.TiledMove:
+            return TiledMoveCommandDefinitions;
         case OverlayScreenId.FloatingHome:
         default:
             return FloatingHomeCommandDefinitions;
@@ -238,6 +324,9 @@ export interface OverlayScreenDto
     readonly DistanceToggle?: OverlayDistanceToggleDto;
     readonly FocusFailure?: OverlayFocusFailureDto;
     readonly Id: OverlayScreenId;
+    readonly IsRootPanelFocused?: boolean;
+    readonly IsTiledMovePanelTargeted?: boolean;
+    readonly MonitorCommands?: ReadonlyArray<OverlayCommandDto>;
 
     /** Whether the Resize screen is currently growing or shrinking the window. */
     readonly ResizeMode?: ResizeMode;
@@ -367,6 +456,21 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
         && Array.isArray(Candidate.Commands)
         && Candidate.Commands.every(IsOverlayCommandDto)
         && IsOverlayScreenId(Candidate.Id)
+        && (
+            Candidate.IsRootPanelFocused === undefined
+            || IsBoolean(Candidate.IsRootPanelFocused)
+        )
+        && (
+            Candidate.IsTiledMovePanelTargeted === undefined
+            || IsBoolean(Candidate.IsTiledMovePanelTargeted)
+        )
+        && (
+            Candidate.MonitorCommands === undefined
+            || (
+                Array.isArray(Candidate.MonitorCommands)
+                && Candidate.MonitorCommands.every(IsOverlayCommandDto)
+            )
+        )
         && (
             Candidate.SecondaryCommand === undefined
             || IsOverlaySecondaryCommandDto(Candidate.SecondaryCommand)

@@ -32,6 +32,7 @@ export interface NativeBinding
         ) => Attempt.NativeAttempt<string>;
         readonly GetMonitors?: () => Attempt.NativeAttempt<ReadonlyArray<{
             readonly DeviceName: string;
+            readonly DisplayId: number;
             readonly Flags: number;
             readonly Handle: Handle.HMONITOR;
             readonly IsPrimary: boolean;
@@ -71,6 +72,9 @@ export interface NativeBinding
     {
         readonly GetApplicationName?: (
             Window: Handle.HWND
+        ) => Attempt.NativeAttempt<string>;
+        readonly GetApplicationNameFromPath?: (
+            ExecutablePath: string
         ) => Attempt.NativeAttempt<string>;
         readonly Capture?: (
             Window: Handle.HWND

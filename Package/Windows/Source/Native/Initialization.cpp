@@ -80,6 +80,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetApplicationName)
     );
     Window.Set(
+        "GetApplicationNameFromPath",
+        Napi::Function::New(Environment, GetApplicationNameFromPath)
+    );
+    Window.Set(
         "Capture",
         Napi::Function::New(Environment, CaptureWindow)
     );

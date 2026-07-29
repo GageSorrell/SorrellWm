@@ -51,6 +51,7 @@
     },
     "devDependencies": {
         "@effect/platform-node": "^4.0.0-beta",
+        "@sorrell/tsconfig": "1.0.0",
         "@types/node": "26.1.1",
         "cross-env": "^10.1.0",
         "effect": "^4.0.0-beta",

@@ -13,6 +13,7 @@
 
 #include <initguid.h>
 #include <devpkey.h>
+#include <limits>
 #include <setupapi.h>
 
 namespace
@@ -85,6 +86,40 @@ namespace
             reinterpret_cast<const char16_t*>(Value.data()),
             Value.size()
         );
+    }
+
+    std::uint32_t GetDisplayId(const wchar_t* GdiName)
+    {
+        constexpr wchar_t Prefix[] = L"\\\\.\\DISPLAY";
+        constexpr std::size_t PrefixLength = (sizeof(Prefix) / sizeof(wchar_t)) - 1;
+        if (_wcsnicmp(GdiName, Prefix, PrefixLength) != 0)
+        {
+            return 0;
+        }
+
+        std::uint64_t Value = 0;
+        const wchar_t* Cursor = GdiName + PrefixLength;
+        if (*Cursor == L'\0')
+        {
+            return 0;
+        }
+
+        while (*Cursor != L'\0')
+        {
+            if (*Cursor < L'0' || *Cursor > L'9')
+            {
+                return 0;
+            }
+
+            Value = (Value * 10) + static_cast<std::uint64_t>(*Cursor - L'0');
+            if (Value > std::numeric_limits<std::uint32_t>::max())
+            {
+                return 0;
+            }
+            ++Cursor;
+        }
+
+        return static_cast<std::uint32_t>(Value);
     }
 
     BOOL CALLBACK CollectMonitorInformation(
@@ -439,6 +474,13 @@ Napi::Value GetMonitors(const Napi::CallbackInfo& CallbackInfo)
             WideStringToNapi(
                 Environment,
                 GetFriendlyName(Monitor, Identities)
+            )
+        );
+        Information.Set(
+            "DisplayId",
+            Napi::Number::New(
+                Environment,
+                GetDisplayId(Monitor.Information.szDevice)
             )
         );
         Information.Set("Flags", Monitor.Information.dwFlags);

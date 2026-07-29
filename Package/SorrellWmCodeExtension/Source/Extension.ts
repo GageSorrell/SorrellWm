@@ -10,6 +10,35 @@
  */
 
 import {
+    CancellationError,
+    type CancellationToken,
+    EndOfLine,
+    type ExtensionContext,
+    type FileStat,
+    type FileSystemWatcher,
+    FileType,
+    LanguageModelTextPart,
+    type LanguageModelTool,
+    type LanguageModelToolInvocationOptions,
+    type LanguageModelToolInvocationPrepareOptions,
+    LanguageModelToolResult,
+    type OutputChannel,
+    Position,
+    type PreparedToolInvocation,
+    type QuickPickItem,
+    Selection,
+    type TextDocument,
+    type TextDocumentChangeEvent,
+    ThemeIcon,
+    Uri,
+    WorkspaceEdit,
+    type WorkspaceFolder,
+    commands,
+    lm,
+    window,
+    workspace
+} from "vscode";
+import {
     CreateHeader,
     DeriveModuleName,
     HasGeneratedHeader,
@@ -21,23 +50,11 @@ import {
     type JsDocExpansion
 } from "./JsDoc.js";
 import {
-    EndOfLine,
-    Position,
-    Selection,
-    WorkspaceEdit,
-    window,
-    workspace
-} from "vscode";
-import type {
-    ExtensionContext,
-    FileSystemWatcher,
-    OutputChannel,
-    TextDocument,
-    TextDocumentChangeEvent,
-    Uri,
-    WorkspaceFolder
-} from "vscode";
-import { posix } from "node:path";
+    CreateReactComponentFiles,
+    type ReactComponentFile,
+    ValidateReactComponentName
+} from "./ReactComponent.js";
+import { isAbsolute, posix, relative, resolve } from "node:path";
 
 interface PackageContext
 {
@@ -58,8 +75,93 @@ interface PackageManifestMetadata
     readonly Version: string | undefined;
 }
 
+/** A workspace directory presented by the component directory picker. */
+interface DirectoryQuickPickItem extends QuickPickItem
+{
+    readonly DirectoryUri: Uri;
+}
+
+/** Input accepted by the React component language model tool. */
+interface CreateReactComponentToolInput
+{
+    readonly componentName: string;
+    readonly directoryPath: string;
+}
+
+const IgnoredDirectoryNames: ReadonlySet<string> = new Set([
+    ".git",
+    "node_modules"
+]);
 const PendingFiles: Map<string, Promise<void>> = new Map();
+const CreateReactComponentCommand: string =
+    "sorrellWmCodeExtension.createReactComponent";
+const CreateReactComponentToolName: string =
+    "sorrellWm_createReactComponent";
 let Output: OutputChannel | undefined;
+
+/**
+ * Language model tool that creates a React component directory.
+ *
+ * @category tools
+ * @since 0.1.0
+ */
+const CreateReactComponentTool: LanguageModelTool<CreateReactComponentToolInput> = {
+    invoke: async (
+        Options: LanguageModelToolInvocationOptions<
+            CreateReactComponentToolInput
+        >,
+        Token: CancellationToken
+    ): Promise<LanguageModelToolResult> =>
+    {
+        if (Token.isCancellationRequested)
+        {
+            throw new CancellationError();
+        }
+
+        const ParentDirectory: Uri = await ResolveToolParentDirectory(
+            Options.input.directoryPath
+        );
+
+        if (Token.isCancellationRequested)
+        {
+            throw new CancellationError();
+        }
+
+        const ComponentDirectory: Uri =
+            await CreateReactComponentInDirectory(
+                ParentDirectory,
+                Options.input.componentName
+            );
+        const ResultMessage: string =
+            `Created React component "${ Options.input.componentName }" at `
+            + `"${ ComponentDirectory.fsPath }" with its six standard source files.`;
+
+        Output?.appendLine(ResultMessage);
+
+        return new LanguageModelToolResult([
+            new LanguageModelTextPart(ResultMessage)
+        ]);
+    },
+    prepareInvocation: (
+        Options: LanguageModelToolInvocationPrepareOptions<
+            CreateReactComponentToolInput
+        >,
+        _Token: CancellationToken
+    ): PreparedToolInvocation =>
+    {
+        return {
+            confirmationMessages: {
+                message:
+                    `Create "${ Options.input.componentName }" beneath `
+                    + `"${ Options.input.directoryPath }"?  `
+                    + "This operation creates a directory containing six source files.",
+                title: "Create React Component"
+            },
+            invocationMessage:
+                `Creating React component ${ Options.input.componentName }`
+        };
+    }
+};
 
 /**
  * Start watching the workspace for newly created TypeScript and C++ files.
@@ -81,10 +183,414 @@ export function activate(Context: ExtensionContext): void
     Context.subscriptions.push(
         Output,
         Watcher,
+        commands.registerCommand(
+            CreateReactComponentCommand,
+            CreateReactComponent
+        ),
+        lm.registerTool(
+            CreateReactComponentToolName,
+            CreateReactComponentTool
+        ),
         workspace.onDidChangeTextDocument(QueueJsDocExpansion),
         Watcher.onDidCreate(QueueHeaderInsertion)
     );
 }
+
+/**
+ * Prompt for and create a React component beneath the selected directory.
+ *
+ * @param Resource - The resource selected in the Explorer context menu.
+ * @returns {Promise<void>} A promise that settles after creation is attempted.
+ *
+ * @category commands
+ * @since 0.1.0
+ */
+const CreateReactComponent = async (Resource?: Uri): Promise<void> =>
+{
+    try
+    {
+        if (
+            Resource === undefined
+            && (workspace.workspaceFolders === undefined
+                || workspace.workspaceFolders.length === 0)
+        )
+        {
+            void window.showErrorMessage(
+                "Open a workspace before creating a React component."
+            );
+            return;
+        }
+
+        const ParentDirectory: Uri | undefined =
+            await ResolveComponentParentDirectory(Resource);
+
+        if (ParentDirectory === undefined)
+        {
+            return;
+        }
+
+        const ComponentName: string | undefined = await window.showInputBox({
+            ignoreFocusOut: true,
+            placeHolder: "MyComponent",
+            prompt: "Enter a PascalCase name for the React component.",
+            title: "Create React Component",
+            validateInput: ValidateReactComponentName
+        });
+
+        if (ComponentName === undefined)
+        {
+            return;
+        }
+
+        await CreateReactComponentInDirectory(
+            ParentDirectory,
+            ComponentName
+        );
+
+        Output?.appendLine(
+            `Created React component ${ ComponentName } in ${ ParentDirectory.fsPath }.`
+        );
+    }
+    catch (Error: unknown)
+    {
+        const Message: string =
+            `Could not create the React component: ${ FormatError(Error) }`;
+
+        Output?.appendLine(Message);
+        void window.showErrorMessage(Message);
+    }
+};
+
+/**
+ * Create a React component directory and its six standard source files.
+ *
+ * @param ParentDirectory - The directory that will contain the component.
+ * @param ComponentName - The PascalCase component name.
+ * @returns {Promise<Uri>} The URI of the created component directory.
+ * @throws {Error} When the name is invalid, the target exists, or creation fails.
+ *
+ * @category constructors
+ * @since 0.1.0
+ */
+const CreateReactComponentInDirectory = async (
+    ParentDirectory: Uri,
+    ComponentName: string
+): Promise<Uri> =>
+{
+    const ValidationMessage: string | undefined =
+        ValidateReactComponentName(ComponentName);
+
+    if (ValidationMessage !== undefined)
+    {
+        throw new Error(ValidationMessage);
+    }
+
+    const ComponentDirectory: Uri = Uri.joinPath(
+        ParentDirectory,
+        ComponentName
+    );
+
+    if (await ResourceExists(ComponentDirectory))
+    {
+        throw new Error(
+            `A file or directory named "${ ComponentName }" already exists.`
+        );
+    }
+
+    await workspace.fs.createDirectory(ComponentDirectory);
+
+    const Edit = new WorkspaceEdit();
+    const Files: ReadonlyArray<ReactComponentFile> =
+        CreateReactComponentFiles(ComponentName);
+
+    for (const File of Files)
+    {
+        Edit.createFile(
+            Uri.joinPath(ComponentDirectory, File.Name),
+            { contents: new TextEncoder().encode(File.Content) }
+        );
+    }
+
+    const WasApplied: boolean = await workspace.applyEdit(Edit);
+
+    if (!WasApplied)
+    {
+        throw new Error("VS Code rejected the component workspace edit.");
+    }
+
+    return ComponentDirectory;
+};
+
+/**
+ * Resolve and validate the absolute workspace directory supplied to the tool.
+ *
+ * @param DirectoryPath - The absolute file-system path supplied by the model.
+ * @returns {Promise<Uri>} The corresponding readable workspace directory URI.
+ * @throws {Error} When the path is relative, outside the workspace, or not a directory.
+ *
+ * @category validation
+ * @since 0.1.0
+ */
+const ResolveToolParentDirectory = async (
+    DirectoryPath: string
+): Promise<Uri> =>
+{
+    if (!isAbsolute(DirectoryPath))
+    {
+        throw new Error(
+            `The directoryPath must be absolute, but received "${ DirectoryPath }".`
+        );
+    }
+
+    const NormalizedPath: string = resolve(DirectoryPath);
+    const Folders: ReadonlyArray<WorkspaceFolder> =
+        workspace.workspaceFolders ?? [];
+
+    for (const Folder of Folders)
+    {
+        const RelativePath: string = relative(
+            Folder.uri.fsPath,
+            NormalizedPath
+        );
+        const IsInsideFolder: boolean =
+            RelativePath === ""
+            || (
+                RelativePath !== ".."
+                && !RelativePath.startsWith("../")
+                && !RelativePath.startsWith("..\\")
+                && !isAbsolute(RelativePath)
+            );
+
+        if (!IsInsideFolder)
+        {
+            continue;
+        }
+
+        const DirectoryUri: Uri = RelativePath.length === 0
+            ? Folder.uri
+            : Uri.joinPath(
+                Folder.uri,
+                ...RelativePath.split(/[\\/]/u)
+            );
+
+        let Status: FileStat;
+
+        try
+        {
+            Status = await workspace.fs.stat(DirectoryUri);
+        }
+        catch
+        {
+            throw new Error(
+                "The directoryPath does not exist or cannot be read: "
+                + `"${ NormalizedPath }".`
+            );
+        }
+
+        if ((Status.type & FileType.Directory) === 0)
+        {
+            throw new Error(
+                "The directoryPath does not identify a directory: "
+                + `"${ NormalizedPath }".`
+            );
+        }
+
+        return DirectoryUri;
+    }
+
+    throw new Error(
+        "The directoryPath must be inside an open workspace folder: "
+        + `"${ NormalizedPath }".`
+    );
+};
+
+/**
+ * Resolve the directory beneath which a component should be created.
+ *
+ * @param Resource - The Explorer resource supplied to the command.
+ * @returns {Promise<Uri | undefined>} The selected or interactively chosen directory.
+ *
+ * @category commands
+ * @since 0.1.0
+ */
+const ResolveComponentParentDirectory = async (
+    Resource?: Uri
+): Promise<Uri | undefined> =>
+{
+    if (Resource === undefined)
+    {
+        return PromptForComponentParentDirectory();
+    }
+
+    const Status = await workspace.fs.stat(Resource);
+
+    return (Status.type & FileType.Directory) !== 0
+        ? Resource
+        : Uri.joinPath(Resource, "..");
+};
+
+/**
+ * Prompt for a workspace directory with VS Code's fuzzy Quick Pick.
+ *
+ * @returns {Promise<Uri | undefined>} The chosen directory, or `undefined` when cancelled.
+ *
+ * @category commands
+ * @since 0.1.0
+ */
+const PromptForComponentParentDirectory = async (): Promise<Uri | undefined> =>
+{
+    const SelectedDirectory: DirectoryQuickPickItem | undefined =
+        await window.showQuickPick(
+            CreateDirectoryQuickPickItems(),
+            {
+                ignoreFocusOut: true,
+                matchOnDescription: true,
+                matchOnDetail: true,
+                placeHolder: "Type part of a workspace-relative or absolute path",
+                prompt: "Choose the directory that will contain the component directory.",
+                title: "Create React Component: Select Directory"
+            }
+        );
+
+    return SelectedDirectory?.DirectoryUri;
+};
+
+/**
+ * Create searchable Quick Pick items for every workspace directory.
+ *
+ * @returns {Promise<ReadonlyArray<DirectoryQuickPickItem>>} The searchable directory items.
+ *
+ * @category constructors
+ * @since 0.1.0
+ */
+const CreateDirectoryQuickPickItems = async (): Promise<
+    ReadonlyArray<DirectoryQuickPickItem>
+> =>
+{
+    const Folders: ReadonlyArray<WorkspaceFolder> =
+        workspace.workspaceFolders ?? [];
+    const DirectoryGroups: ReadonlyArray<ReadonlyArray<Uri>> =
+        await Promise.all(
+            Folders.map(
+                (Folder: WorkspaceFolder): Promise<ReadonlyArray<Uri>> =>
+                    FindDescendantDirectories(Folder.uri)
+            )
+        );
+    const Items: Array<DirectoryQuickPickItem> = [];
+
+    for (let FolderIndex = 0; FolderIndex < Folders.length; FolderIndex += 1)
+    {
+        const Folder: WorkspaceFolder | undefined = Folders[FolderIndex];
+        const Directories: ReadonlyArray<Uri> | undefined =
+            DirectoryGroups[FolderIndex];
+
+        if (Folder === undefined || Directories === undefined)
+        {
+            continue;
+        }
+
+        for (const Directory of Directories)
+        {
+            const RelativePath: string = posix.relative(
+                Folder.uri.path,
+                Directory.path
+            );
+
+            Items.push({
+                DirectoryUri: Directory,
+                description: Folder.name,
+                detail: Directory.fsPath,
+                iconPath: ThemeIcon.Folder,
+                label: RelativePath.length === 0 ? Folder.name : RelativePath,
+                resourceUri: Directory
+            });
+        }
+    }
+
+    return Items.sort(
+        (
+            Left: DirectoryQuickPickItem,
+            Right: DirectoryQuickPickItem
+        ): number =>
+        {
+            const LabelComparison: number =
+                Left.label.localeCompare(Right.label);
+
+            return LabelComparison !== 0
+                ? LabelComparison
+                : (Left.description ?? "").localeCompare(
+                    Right.description ?? ""
+                );
+        }
+    );
+};
+
+/**
+ * Recursively find directories beneath one workspace resource.
+ *
+ * @param Directory - The directory whose descendants should be found.
+ * @returns {Promise<ReadonlyArray<Uri>>} The directory and readable descendants.
+ *
+ * @category utilities
+ * @since 0.1.0
+ */
+const FindDescendantDirectories = async (
+    Directory: Uri
+): Promise<ReadonlyArray<Uri>> =>
+{
+    let Entries: ReadonlyArray<[string, FileType]>;
+
+    try
+    {
+        Entries = await workspace.fs.readDirectory(Directory);
+    }
+    catch (Error: unknown)
+    {
+        Output?.appendLine(
+            `Could not inspect ${ Directory.fsPath }: ${ FormatError(Error) }`
+        );
+        return [ Directory ];
+    }
+
+    const ChildDirectories: Array<Uri> = Entries
+        .filter(([ Name, Type ]: [string, FileType]): boolean =>
+            !IgnoredDirectoryNames.has(Name)
+            && (Type & FileType.Directory) !== 0
+            && (Type & FileType.SymbolicLink) === 0)
+        .map(([ Name ]: [string, FileType]): Uri =>
+            Uri.joinPath(Directory, Name));
+    const DescendantGroups: ReadonlyArray<ReadonlyArray<Uri>> =
+        await Promise.all(
+            ChildDirectories.map(
+                (ChildDirectory: Uri): Promise<ReadonlyArray<Uri>> =>
+                    FindDescendantDirectories(ChildDirectory)
+            )
+        );
+
+    return [ Directory, ...DescendantGroups.flat() ];
+};
+
+/**
+ * Determine whether a workspace resource already exists.
+ *
+ * @param Resource - The resource whose existence should be tested.
+ * @returns {Promise<boolean>} Whether the resource exists.
+ *
+ * @category validation
+ * @since 0.1.0
+ */
+const ResourceExists = async (Resource: Uri): Promise<boolean> =>
+{
+    try
+    {
+        await workspace.fs.stat(Resource);
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
+};
 
 /**
  * Expand a newly auto-closed JSDoc block when its source file has an owning package.

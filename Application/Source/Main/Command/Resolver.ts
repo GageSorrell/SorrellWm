@@ -87,10 +87,24 @@ const ResolveOverlayCommand = (
         }));
     }
 
+    if (Screen === ScreenId.TiledHome && Id === OverlayCommandId.Focus)
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.TiledFocus
+        }));
+    }
+
     if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.Move)
     {
         return Option.some(UiCommands.NavigateOverlayScreen({
             ScreenId: ScreenId.FloatingMove
+        }));
+    }
+
+    if (Screen === ScreenId.TiledHome && Id === OverlayCommandId.Move)
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.TiledMove
         }));
     }
 
@@ -106,6 +120,11 @@ const ResolveOverlayCommand = (
         return Option.some(UiCommands.NavigateOverlayScreen({
             ScreenId: ScreenId.FloatingResize
         }));
+    }
+
+    if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.TileAll)
+    {
+        return Option.some(UiCommands.TileAll());
     }
 
     if (Id === OverlayCommandId.OpenPerAppSettings)
@@ -155,6 +174,30 @@ const Resolve = (
             return IsHomeScreen(Screen)
                 ? Option.some(UiCommands.Deactivate())
                 : Option.some(UiCommands.BackOverlayScreen());
+
+        case Hotkey.Id.Commit:
+            if (Activation.Phase !== Hotkey.Phase.Pressed)
+            {
+                return Option.none();
+            }
+
+            if (Screen === ScreenId.TiledFocus)
+            {
+                return Option.some(UiCommands.CommitTiledFocus());
+            }
+
+            if (Screen === ScreenId.TiledMove)
+            {
+                return ResolveOverlayCommand(
+                    Screen,
+                    OverlayCommandId.MoveWindowIntoPanel,
+                    ApplicationName
+                );
+            }
+
+            return Screen === ScreenId.FloatingHome
+                ? Option.some(UiCommands.TileAll())
+                : Option.none();
 
         case Hotkey.Id.Back:
             return Activation.Phase === Hotkey.Phase.Pressed

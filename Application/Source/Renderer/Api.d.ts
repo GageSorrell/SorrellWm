@@ -9,6 +9,8 @@
  * @license   MIT
  */
 
+import type { AppApi } from "../Shared/Api.js";
+
 declare global
 {
     /* The interface name is fixed by the DOM global being augmented. */

@@ -49,6 +49,7 @@
     "color-convert": "2.0.1"
   },
   "devDependencies": {
+    "@sorrell/tsconfig": "1.0.0",
     "@types/color-convert": "2.0.4",
     "effect": "^4.0.0-beta"
   }

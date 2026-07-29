@@ -52,23 +52,48 @@ const FakeDependencies = (
 
 describe("TilingManager", () =>
 {
-    it("adopts and tiles existing windows when its scoped layer starts", async () =>
+    it("reconciles tiled windows with the configured gap", async () =>
+    {
+        const WorkArea = Bounds(0, 1000, 600, 0);
+        const Applied = new Array<AppliedBounds>();
+        const Dependencies = FakeDependencies(
+            [ Hwnd(1) ],
+            new Map([ [ Hwnd(1), WorkArea ] ]),
+            new Map([ [ Hwnd(1), WorkArea ] ]),
+            Applied
+        );
+
+        await Effect.runPromise(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.SetGap(8);
+            yield* Manager.TileExistingWindows;
+        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        expect(Applied).toEqual([
+            { Bounds: Bounds(8, 992, 592, 8), Window: Hwnd(1) }
+        ]);
+    });
+
+    it("adopts existing windows directly into each monitor's root panel", async () =>
     {
         const Primary = Bounds(0, 1200, 800, 0);
         const Secondary = Bounds(0, 2200, 800, 1200);
-        const Handles = [ Hwnd(1), Hwnd(2), Hwnd(3) ];
+        const Handles = [ Hwnd(1), Hwnd(2), Hwnd(3), Hwnd(4) ];
         const Applied = new Array<AppliedBounds>();
         const Dependencies = FakeDependencies(
             Handles,
             new Map([
                 [ Hwnd(1), Bounds(0, 600, 800, 0) ],
                 [ Hwnd(2), Bounds(0, 1200, 800, 600) ],
-                [ Hwnd(3), Secondary ]
+                [ Hwnd(3), Bounds(0, 900, 800, 300) ],
+                [ Hwnd(4), Secondary ]
             ]),
             new Map([
                 [ Hwnd(1), Primary ],
                 [ Hwnd(2), Primary ],
-                [ Hwnd(3), Secondary ]
+                [ Hwnd(3), Primary ],
+                [ Hwnd(4), Secondary ]
             ]),
             Applied
         );
@@ -76,18 +101,48 @@ describe("TilingManager", () =>
         const State = await Effect.runPromise(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
+            expect((yield* Manager.Snapshot).Workspaces).toEqual([ ]);
+            yield* Manager.TileExistingWindows;
             return yield* Manager.Snapshot;
         }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(State.Workspaces).toHaveLength(2);
+        expect(State.Workspaces[0]?.Root?._tag).toBe("Panel");
+        expect(State.Workspaces[0]?.Root?._tag === "Panel"
+            ? State.Workspaces[0].Root.Children
+            : [ ]).toHaveLength(3);
         expect(Applied.map((Placement: AppliedBounds) => ({
             Bounds: Box.Tupled(Placement.Bounds),
             Window: Placement.Window
         }))).toEqual([
-            { Bounds: [ 0, 600, 800, 0 ], Window: Hwnd(1) },
-            { Bounds: [ 0, 1200, 800, 600 ], Window: Hwnd(2) },
-            { Bounds: [ 0, 2200, 800, 1200 ], Window: Hwnd(3) }
+            { Bounds: [ 0, 400, 800, 0 ], Window: Hwnd(1) },
+            { Bounds: [ 0, 800, 800, 400 ], Window: Hwnd(3) },
+            { Bounds: [ 0, 1200, 800, 800 ], Window: Hwnd(2) },
+            { Bounds: [ 0, 2200, 800, 1200 ], Window: Hwnd(4) }
         ]);
+    });
+
+    it("does not adopt floating windows while a root already has tiled content", async () =>
+    {
+        const WorkArea = Bounds(0, 1200, 800, 0);
+        const Handles = [ Hwnd(1), Hwnd(2) ];
+        const Dependencies = FakeDependencies(
+            Handles,
+            new Map(Handles.map((WindowValue: Handle.HWND) => [ WindowValue, WorkArea ])),
+            new Map(Handles.map((WindowValue: Handle.HWND) => [ WindowValue, WorkArea ])),
+            [ ]
+        );
+
+        const Managed = await Effect.runPromise(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.Tile(Hwnd(1));
+            yield* Manager.TileExistingWindows;
+            return TilingTree.Windows((yield* Manager.Snapshot).Workspaces[0]!.Root);
+        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        expect(Managed.map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(1) ]);
     });
 
     it("starts with an empty state when native startup discovery is unavailable", async () =>
@@ -128,6 +183,7 @@ describe("TilingManager", () =>
         const ResultValue = await Effect.runPromise(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.TileExistingWindows;
             yield* Manager.Tile(
                 Hwnd(2),
                 Hwnd(1),
@@ -235,6 +291,7 @@ describe("TilingManager", () =>
         const State = await Effect.runPromise(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.TileExistingWindows;
             yield* Manager.Move(Hwnd(1), Hwnd(2), TilingTree.Orientation.Vertical);
             return yield* Manager.Snapshot;
         }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
@@ -247,6 +304,63 @@ describe("TilingManager", () =>
             { Bounds: [ 0, 1800, 400, 1000 ], Window: Hwnd(2) },
             { Bounds: [ 400, 1800, 800, 1000 ], Window: Hwnd(1) }
         ]);
+    });
+
+    it("reorders, nests, and promotes windows within a tiled workspace", async () =>
+    {
+        const WorkArea = Bounds(0, 1200, 600, 0);
+        const Handles = [ Hwnd(1), Hwnd(2), Hwnd(3), Hwnd(4) ];
+        const Applied = new Array<AppliedBounds>();
+        const Dependencies = FakeDependencies(
+            [ ],
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            Applied
+        );
+
+        const ResultValue = await Effect.runPromise(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.Tile(Hwnd(1), undefined, TilingTree.Orientation.Horizontal);
+            yield* Manager.Tile(Hwnd(2), undefined, TilingTree.Orientation.Horizontal);
+            yield* Manager.Tile(Hwnd(3), undefined, TilingTree.Orientation.Horizontal);
+            yield* Manager.MoveToIndex(Hwnd(3), 0);
+            yield* Manager.Tile(
+                Hwnd(4),
+                Hwnd(2),
+                TilingTree.Orientation.Vertical
+            );
+            yield* Manager.MoveIntoPanel(Hwnd(1), [ 2 ]);
+            const Nested = yield* Manager.Snapshot;
+            yield* Manager.MoveToContainingPanel(Hwnd(2));
+
+            return {
+                Nested,
+                Promoted: yield* Manager.Snapshot
+            };
+        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        expect(TilingTree.Windows(ResultValue.Nested.Workspaces[0]!.Root)
+            .map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(3), Hwnd(1), Hwnd(2), Hwnd(4) ]);
+        expect(TilingTree.FindWindowPath(
+            ResultValue.Nested.Workspaces[0]!.Root,
+            Hwnd(1)
+        )).toEqual([ 1, 0 ]);
+        expect(TilingTree.Windows(ResultValue.Promoted.Workspaces[0]!.Root)
+            .map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(3), Hwnd(1), Hwnd(4), Hwnd(2) ]);
+        expect(TilingTree.FindWindowPath(
+            ResultValue.Promoted.Workspaces[0]!.Root,
+            Hwnd(2)
+        )).toEqual([ 2 ]);
+        expect(Applied.length).toBeGreaterThan(0);
     });
 
     it("preserves original bounds when refresh discovers a monitor change", async () =>
@@ -272,6 +386,7 @@ describe("TilingManager", () =>
         const Managed = await Effect.runPromise(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.TileExistingWindows;
             InitialBounds.set(Hwnd(1), Bounds(0, 1400, 400, 1000));
             WorkAreas.set(Hwnd(1), Secondary);
             yield* Manager.Refresh;

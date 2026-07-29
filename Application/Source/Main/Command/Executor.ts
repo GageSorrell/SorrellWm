@@ -14,12 +14,12 @@ import * as BoxUtility from "../Utility/Math/Box.ts";
 import * as BrowserWindow from "../BrowserWindow.ts";
 import * as CommandResolver from "./Resolver.ts";
 import * as Hotkey from "../Input/Hotkey.ts";
+import * as Logging from "../Log.ts";
 import * as OverlaySession from "../Overlay/Session.ts";
 import * as Tiling from "../Tiling/index.ts";
 import type * as Ui from "./Ui.ts";
 import { Box, IntPoint } from "@sorrell/math";
 import {
-    Console,
     Context,
     Data,
     Duration,
@@ -34,6 +34,7 @@ import {
 } from "effect";
 import {
     GetOverlayCommandDefinitions,
+    IsFocusMonitorCommandId,
     MoveDistance,
     type OverlayCommandDefinition,
     type OverlayCommandId,
@@ -78,6 +79,9 @@ export class WindowFocusRestorationError extends
 /** Any expected failure produced while executing a command directly. */
 export type Error =
     | BrowserWindow.Error
+    | Tiling.Manager.WindowEnumerationError
+    | Tiling.Manager.WindowLayoutError
+    | Tiling.Manager.WindowNotManagedError
     | UnsupportedCommandError
     | WindowFocusRestorationError;
 
@@ -179,7 +183,9 @@ const OnActivate = (
     {
         yield* Session.SetActivationWindow(ActivationTarget.value.Window);
         yield* PublishOverlayScreen(BrowserWindows, Session);
-        yield* Console.log("Overlay activated successfully.");
+        yield* Logging.LogInfo("Overlay", "Command overlay activated.", {
+            Window: ActivationTarget.value.Window
+        });
         yield* BrowserWindows.SetBounds(
             BrowserWindow.Key.Overlay,
             ActivationTarget.value.OverlayBounds
@@ -201,8 +207,9 @@ const OnActivate = (
     else
     {
         yield* PublishOverlayScreen(BrowserWindows, Session);
-        yield* Console.log(
-            "Overlay activation was attempted, but there was no foreground window to overlay."
+        yield* Logging.LogWarning(
+            "Overlay",
+            "Could not activate the command overlay because no foreground window was available."
         );
         return yield* Effect.void;
     }
@@ -227,12 +234,110 @@ const RestoreActivationWindowFocus = (
     }))
 );
 
+const ApplyTiledFocusSelection = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    Selection: OverlaySession.TiledFocusSelection
+) => Effect.gen(function*()
+{
+    if (Selection.Node._tag === "Panel")
+    {
+        yield* Session.SetTiledFocusSelection(Selection);
+        yield* Session.ClearFocusPreview;
+        const Snapshot = yield* TilingManager.Snapshot;
+        const Workspace = Snapshot.Workspaces.find(
+            (Candidate: Tiling.Tree.Workspace): boolean =>
+                Candidate.Id === Selection.WorkspaceId
+        );
+        const Gap = yield* TilingManager.Gap;
+        const PanelBounds = Workspace === undefined
+            ? undefined
+            : Tiling.Tree.GetNodeBoundsAtPath(
+                Workspace.Root,
+                Workspace.Bounds,
+                Selection.Path,
+                Gap
+            );
+
+        if (PanelBounds !== undefined)
+        {
+            yield* BrowserWindows.SetBounds(
+                BrowserWindow.Key.Overlay,
+                GetOverlayBoundsFor(PanelBounds)
+            );
+        }
+
+        yield* PublishOverlayScreen(BrowserWindows, Session);
+        return;
+    }
+
+    const TargetWindow = Selection.Node.Value.Window;
+    const FocusResult = Window.SetForegroundWindow(TargetWindow);
+
+    if (Result.isFailure(FocusResult))
+    {
+        yield* Logging.LogWarning(
+            "Command.Focus",
+            "Windows rejected a tiled-window focus request.",
+            FocusResult.failure,
+            { Window: TargetWindow }
+        );
+
+        const WindowTitle = Option.getOrElse(
+            Option.filter(
+                Window.GetWindowText(TargetWindow),
+                (Value: string) => Value.trim().length > 0
+            ),
+            () => "Untitled window"
+        );
+
+        yield* Session.RecordFocusFailure({ Window: TargetWindow, WindowTitle });
+        yield* Session.ClearFocusPreview;
+        yield* PublishOverlayScreen(BrowserWindows, Session);
+        return;
+    }
+
+    yield* Session.SetTiledFocusSelection(Selection);
+    yield* Session.ClearFocusPreview;
+    yield* Session.SetActivationWindow(TargetWindow);
+
+    const ActivationTarget = GetActivationTarget(TargetWindow);
+
+    if (Option.isSome(ActivationTarget))
+    {
+        yield* BrowserWindows.SetBounds(
+            BrowserWindow.Key.Overlay,
+            ActivationTarget.value.OverlayBounds
+        );
+    }
+
+    yield* PublishOverlayScreen(BrowserWindows, Session);
+});
+
 const FocusDirection = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
     Id: OverlayCommandId
 ) => Effect.gen(function*()
 {
+    if ((yield* Session.Current) === OverlayScreenId.TiledFocus)
+    {
+        const Selection = yield* Session.ResolveTiledFocusTarget(Id);
+        if (Option.isSome(Selection))
+        {
+            yield* ApplyTiledFocusSelection(
+                BrowserWindows,
+                Session,
+                TilingManager,
+                Selection.value
+            );
+        }
+
+        return;
+    }
+
     const Target = yield* Session.ResolveFocusTarget(Id);
 
     if (Option.isNone(Target))
@@ -243,8 +348,12 @@ const FocusDirection = (
     const FocusResult = Window.SetForegroundWindow(Target.value);
     if (Result.isFailure(FocusResult))
     {
-        yield* Effect.log(FocusResult.failure.Message);
-        yield* Effect.log(Target.value);
+        yield* Logging.LogWarning(
+            "Command.Focus",
+            "Windows rejected a floating-window focus request.",
+            FocusResult.failure,
+            { Window: Target.value }
+        );
 
         const WindowTitle = Option.getOrElse(
             Option.filter(
@@ -334,6 +443,12 @@ const MoveWindowByOffset = (
 
     if (Result.isFailure(MoveResult))
     {
+        yield* Logging.LogWarning(
+            "Command.Move",
+            "Windows rejected a floating-window move request.",
+            MoveResult.failure,
+            { Window: ActivationWindow }
+        );
         return;
     }
 
@@ -368,6 +483,74 @@ const GetActiveMoveDistance = (
         : yield* Settings.GetSetting("MoveStepPrimary");
 });
 
+const CenterOverlayOnTiledWindow = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    WindowValue: Handle.HWND
+) => Effect.gen(function*()
+{
+    const Gap = yield* TilingManager.Gap;
+    const Placement = Tiling.Tree.Layout(
+        yield* TilingManager.Snapshot,
+        Gap
+    ).find((Candidate: Tiling.Tree.Placement): boolean =>
+        Candidate.Window === WindowValue);
+
+    if (Placement !== undefined)
+    {
+        yield* BrowserWindows.SetBounds(
+            BrowserWindow.Key.Overlay,
+            GetOverlayBoundsFor(Placement.Bounds)
+        );
+    }
+});
+
+const MoveTiledWindow = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Session: OverlaySession.OverlaySessionImpl,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    ActivationWindow: Handle.HWND,
+    Id: OverlayCommandId
+) => Effect.gen(function*()
+{
+    const Action = yield* Session.ResolveTiledMoveAction(Id);
+    if (Option.isNone(Action))
+    {
+        return;
+    }
+
+    switch (Action.value._tag)
+    {
+        case "SelectPanel":
+            yield* Session.SetTiledMovePanelTarget(Action.value);
+            yield* PublishOverlayScreen(BrowserWindows, Session);
+            return;
+        case "MoveIntoPanel":
+            yield* TilingManager.MoveIntoPanel(
+                ActivationWindow,
+                Action.value.TargetPanelPath
+            );
+            break;
+        case "MoveToContainingPanel":
+            yield* TilingManager.MoveToContainingPanel(ActivationWindow);
+            break;
+        case "MoveToIndex":
+            yield* TilingManager.MoveToIndex(
+                ActivationWindow,
+                Action.value.TargetIndex
+            );
+            break;
+    }
+
+    yield* Session.ClearTiledMovePanelTarget;
+    yield* CenterOverlayOnTiledWindow(
+        BrowserWindows,
+        TilingManager,
+        ActivationWindow
+    );
+    yield* PublishOverlayScreen(BrowserWindows, Session);
+});
+
 const MoveWindowDirection = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
@@ -376,10 +559,28 @@ const MoveWindowDirection = (
     Id: OverlayCommandId
 ) => Effect.gen(function*()
 {
+    const CurrentScreen = yield* Session.Current;
+    const ActivationWindow = yield* Session.GetActivationWindow;
+
+    if (CurrentScreen === OverlayScreenId.TiledMove)
+    {
+        if (Option.isSome(ActivationWindow))
+        {
+            yield* MoveTiledWindow(
+                BrowserWindows,
+                Session,
+                TilingManager,
+                ActivationWindow.value,
+                Id
+            );
+        }
+
+        return;
+    }
+
     const UnitsByCommandId = MoveDirectionUnits as
         Readonly<Partial<Record<string, { readonly X: number; readonly Y: number; }>>>;
     const Unit = UnitsByCommandId[Id];
-    const ActivationWindow = yield* Session.GetActivationWindow;
 
     if (Unit === undefined || Option.isNone(ActivationWindow))
     {
@@ -470,6 +671,12 @@ const ResizeWindowByEdge = (
 
     if (Result.isFailure(ResizeResult))
     {
+        yield* Logging.LogWarning(
+            "Command.Resize",
+            "Windows rejected a floating-window resize request.",
+            ResizeResult.failure,
+            { Window: ActivationWindow }
+        );
         return;
     }
 
@@ -767,11 +974,14 @@ const ExecuteUi = (
         case "Activate":
             return Effect.gen(function*()
             {
+                yield* Logging.LogInfo("Overlay", "Activating the command overlay.");
                 yield* Session.Reset;
                 yield* OnActivate(BrowserWindows, Settings, Session);
             });
         case "Deactivate":
-            return pipe(Session.ClearFocusPreview,
+            return pipe(
+                Logging.LogInfo("Overlay", "Deactivating the command overlay."),
+                Effect.andThen(Session.ClearFocusPreview),
                 Effect.andThen(Session.Reset),
                 Effect.andThen(IsBackdropEnabled
                     ? Effect.all([
@@ -785,7 +995,30 @@ const ExecuteUi = (
             return pipe(
                 Session.ClearFocusPreview,
                 Effect.andThen(Session.Back),
-                Effect.andThen(Console.log("BackOverlayScreen")),
+                Effect.andThen(Logging.LogDebug(
+                    "Overlay",
+                    "Navigated back one overlay screen."
+                )),
+                Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
+            );
+        case "CommitTiledFocus":
+            return Effect.gen(function*()
+            {
+                const Selection = yield* Session.ResolveTiledFocusCommit;
+                if (Option.isSome(Selection))
+                {
+                    yield* ApplyTiledFocusSelection(
+                        BrowserWindows,
+                        Session,
+                        TilingManager,
+                        Selection.value
+                    );
+                }
+            });
+        case "TileAll":
+            return pipe(
+                TilingManager.TileExistingWindows,
+                Effect.andThen(Session.Reset),
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
         case "NavigateOverlayScreen":
@@ -824,9 +1057,17 @@ const ExecuteUi = (
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
         case "NoOpOverlayCommand":
-            if (Command.Id.startsWith("FocusMove"))
+            if (
+                Command.Id.startsWith("FocusMove")
+                || IsFocusMonitorCommandId(Command.Id)
+            )
             {
-                return FocusDirection(BrowserWindows, Session, Command.Id);
+                return FocusDirection(
+                    BrowserWindows,
+                    Session,
+                    TilingManager,
+                    Command.Id
+                );
             }
 
             if (Command.Id.startsWith("MoveWindow"))
@@ -851,6 +1092,12 @@ const MakeExecute = (
 ): CommandExecutorImpl["Execute"] => Effect.fn("CommandExecutor.Execute")(
     function* (Command: CommandResolver.Resolved)
     {
+        const Annotations = {
+            Category: Command.Category,
+            Command: Command._tag
+        };
+        yield* Logging.LogDebug("Command", "Executing application command.", Annotations);
+
         switch (Command.Category)
         {
             case "Ui":
@@ -861,10 +1108,19 @@ const MakeExecute = (
                     TilingManager,
                     Command
                 );
-
             case "Wm":
-                return yield* new UnsupportedCommandError({ Command });
+            {
+                const Cause = new UnsupportedCommandError({ Command });
+                yield* Logging.LogError(
+                    "Command",
+                    "Application command execution failed.",
+                    Cause,
+                    Annotations
+                );
+                return yield* Cause;
+            }
         }
+
     }
 );
 
@@ -1038,6 +1294,14 @@ const Live = Layer.effect(
             Resolver.Commands,
             Stream.runForEach((Command: CommandResolver.Resolved) => pipe(
                 Execute(Command),
+                Effect.tap(() => Logging.LogDebug(
+                    "Command",
+                    "Application command completed.",
+                    {
+                        Category: Command.Category,
+                        Command: Command._tag
+                    }
+                )),
                 Effect.ignore({
                     log: "Error",
                     message: `Could not execute ${ Command.Category }.${ Command._tag }.`

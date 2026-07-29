@@ -29,6 +29,13 @@ import {
     pipe
 } from "effect";
 import { NodeMetadata } from "@sorrell/log/Node";
+export {
+    type EventAnnotations,
+    LogDebug,
+    LogError,
+    LogInfo,
+    LogWarning
+} from "./Log.ts";
 
 export/** Environment variable that overrides the default local log-client pipe port. */
 const LogClientPortEnvironmentVariable = "SORRELL_WM_LOG_PORT";

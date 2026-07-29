@@ -138,6 +138,10 @@ const GetShortcutParts = (Shortcut: ShortcutDto): ReadonlyArray<React.ReactNode>
     {
         Parts.push("⭾");
     }
+    else if (TriggerLabel === "return" || TriggerLabel === "enter")
+    {
+        Parts.push("⏎");
+    }
     else if (!TriggerLabel.includes("shift") && !IsAltTrigger)
     {
         Parts.push(Shortcut.KeyLabel);

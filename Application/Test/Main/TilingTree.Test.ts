@@ -83,10 +83,10 @@ describe("TilingTree", () =>
                 InitialBounds: WorkArea,
                 Window: Hwnd(Value)
             })) as [
-                TilingTree.Node,
-                TilingTree.Node,
-                ...Array<TilingTree.Node>
-            ];
+            TilingTree.Node,
+            TilingTree.Node,
+            ...Array<TilingTree.Node>
+        ];
         const Root = TilingTree.Panel(
             TilingTree.Orientation.Horizontal,
             Children,
@@ -107,6 +107,43 @@ describe("TilingTree", () =>
             { Bounds: [ 0, 500, 400, 375 ], Window: Hwnd(3) },
             { Bounds: [ 0, 1000, 400, 500 ], Window: Hwnd(4) }
         ]);
+    });
+
+    it("pads monitors and applies one gap at each panel split", () =>
+    {
+        const WorkArea = Bounds(0, 1000, 600, 0);
+        const WindowNode = (Value: number): TilingTree.WindowNode =>
+            TilingTree.Window({
+                InitialBounds: WorkArea,
+                Window: Hwnd(Value)
+            });
+        const Nested = TilingTree.Panel(
+            TilingTree.Orientation.Vertical,
+            [ WindowNode(2), WindowNode(3) ]
+        );
+        const Root = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ WindowNode(1), Nested ]
+        );
+        const State: TilingTree.State = {
+            Workspaces: [ { Bounds: WorkArea, Id: "primary", Root } ]
+        };
+
+        expect(TilingTree.Layout(State, 8).map((Placement: TilingTree.Placement) => ({
+            Bounds: Box.Tupled(Placement.Bounds),
+            Window: Placement.Window
+        }))).toEqual([
+            { Bounds: [ 8, 496, 592, 8 ], Window: Hwnd(1) },
+            { Bounds: [ 8, 992, 296, 504 ], Window: Hwnd(2) },
+            { Bounds: [ 304, 992, 592, 504 ], Window: Hwnd(3) }
+        ]);
+
+        expect(TilingTree.GetNodeBoundsAtPath(
+            Root,
+            WorkArea,
+            [ 1 ],
+            8
+        )).toEqual(Bounds(8, 992, 592, 504));
     });
 
     it("widens matching panels during insertion and preserves remaining siblings on removal", () =>
@@ -208,5 +245,142 @@ describe("TilingTree", () =>
             0.25,
             0.5
         ]);
+    });
+
+    it("moves logical focus through nested panels according to their orientation", () =>
+    {
+        const WindowNode = (Value: number): TilingTree.WindowNode =>
+            TilingTree.Window({
+                InitialBounds: Bounds(0, 100, 100, 0),
+                Window: Hwnd(Value)
+            });
+        const NestedHorizontal = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ WindowNode(3), WindowNode(4) ]
+        );
+        const NestedVertical = TilingTree.Panel(
+            TilingTree.Orientation.Vertical,
+            [ WindowNode(2), NestedHorizontal ]
+        );
+        const Root = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ WindowNode(1), NestedVertical, WindowNode(5) ]
+        );
+
+        expect(TilingTree.FindWindowPath(Root, Hwnd(2))).toEqual([ 1, 0 ]);
+        expect(TilingTree.MoveFocus(
+            Root,
+            [ 1, 0 ],
+            TilingTree.FocusDirection.Down
+        )).toEqual([ 1, 1 ]);
+        expect(TilingTree.MoveFocus(
+            Root,
+            [ 1, 0 ],
+            TilingTree.FocusDirection.Right
+        )).toBeUndefined();
+        expect(TilingTree.CommitFocus(Root, [ 1, 1 ])).toEqual([ 1, 1, 0 ]);
+        expect(TilingTree.MoveFocus(
+            Root,
+            [ 1, 1, 0 ],
+            TilingTree.FocusDirection.Right
+        )).toEqual([ 1, 1, 1 ]);
+        expect(TilingTree.FocusContainingPanel(Root, [ 1, 1, 0 ]))
+            .toEqual([ 1, 1 ]);
+        expect(TilingTree.FocusContainingPanel(Root, [ 1, 0 ]))
+            .toEqual([ 1 ]);
+        expect(TilingTree.FocusContainingPanel(Root, [ 1 ])).toEqual([ ]);
+        expect(TilingTree.FocusContainingPanel(Root, [ 0 ])).toEqual([ ]);
+        expect(TilingTree.FocusContainingPanel(Root, [ ])).toBeUndefined();
+        expect(TilingTree.FocusFirstChild(Root, [ 1, 1, 1 ]))
+            .toEqual([ 1, 1, 0 ]);
+        expect(TilingTree.FocusFirstChild(Root, [ 1, 1, 0 ]))
+            .toBeUndefined();
+        expect(TilingTree.FocusLastChild(Root, [ 1, 1, 0 ]))
+            .toEqual([ 1, 1, 1 ]);
+        expect(TilingTree.FocusLastChild(Root, [ 1, 1, 1 ]))
+            .toBeUndefined();
+        expect(TilingTree.FocusRootPanel(Root, [ 1, 1, 1 ])).toEqual([ ]);
+        expect(TilingTree.FocusRootPanel(Root, [ ])).toBeUndefined();
+        expect(TilingTree.GetNodeAtPath(Root, [ 1, 1 ])).toBe(NestedHorizontal);
+        expect(TilingTree.GetNodeBoundsAtPath(
+            Root,
+            Bounds(0, 900, 600, 0),
+            [ 1 ]
+        )).toEqual(Bounds(0, 600, 600, 300));
+        expect(TilingTree.GetNodeBoundsAtPath(
+            Root,
+            Bounds(0, 900, 600, 0),
+            [ 1, 1 ]
+        )).toEqual(Bounds(300, 600, 600, 300));
+        expect(TilingTree.GetNodeBoundsAtPath(
+            Root,
+            Bounds(0, 900, 600, 0),
+            [ 4 ]
+        )).toBeUndefined();
+    });
+
+    it("reorders, promotes, and inserts tiled windows through panel paths", () =>
+    {
+        const WindowNode = (Value: number): TilingTree.WindowNode =>
+            TilingTree.Window({
+                InitialBounds: Bounds(0, 100, 100, 0),
+                Window: Hwnd(Value)
+            });
+        const Nested = TilingTree.Panel(
+            TilingTree.Orientation.Vertical,
+            [ WindowNode(2), WindowNode(3), WindowNode(4) ]
+        );
+        const Root = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ WindowNode(1), Nested, WindowNode(5) ]
+        );
+
+        const [ Reordered, DidReorder ] = TilingTree.MoveWindowToIndex(
+            Root,
+            Hwnd(4),
+            0
+        );
+        expect(DidReorder).toBe(true);
+        expect(TilingTree.Windows(TilingTree.GetNodeAtPath(Reordered, [ 1 ]) ?? null)
+            .map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(4), Hwnd(2), Hwnd(3) ]);
+
+        const [ Promoted, DidPromote ] = TilingTree.MoveWindowToContainingPanel(
+            Root,
+            Hwnd(2)
+        );
+        expect(DidPromote).toBe(true);
+        expect(TilingTree.Windows(Promoted)
+            .map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(1), Hwnd(3), Hwnd(4), Hwnd(2), Hwnd(5) ]);
+        expect(TilingTree.FindWindowPath(Promoted, Hwnd(2))).toEqual([ 2 ]);
+
+        const [ Inserted, DidInsert ] = TilingTree.MoveWindowIntoPanel(
+            Root,
+            Hwnd(1),
+            [ 1 ]
+        );
+        expect(DidInsert).toBe(true);
+        expect(TilingTree.Windows(Inserted)
+            .map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(1), Hwnd(2), Hwnd(3), Hwnd(4), Hwnd(5) ]);
+        expect(TilingTree.FindWindowPath(Inserted, Hwnd(1))).toEqual([ 0, 0 ]);
+
+        const TwoChildRoot = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            WindowNode(1),
+            Nested
+        );
+        const [ Collapsed, DidCollapse ] = TilingTree.MoveWindowIntoPanel(
+            TwoChildRoot,
+            Hwnd(1),
+            [ 1 ]
+        );
+        expect(DidCollapse).toBe(true);
+        expect(Collapsed).toMatchObject({
+            Orientation: TilingTree.Orientation.Vertical,
+            _tag: "Panel"
+        });
+        expect(TilingTree.FindWindowPath(Collapsed, Hwnd(1))).toEqual([ 0 ]);
     });
 });
