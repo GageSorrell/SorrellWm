@@ -11,6 +11,7 @@
 
 import { BackdropApplication } from "./BackdropApplication.js";
 import { FocusPreviewApplication } from "./FocusPreviewApplication.js";
+import { InsertTargetApplication } from "./InsertTargetApplication.js";
 import { OverlayApplication } from "./OverlayApplication.js";
 import { SettingsApplication } from "./Settings.js";
 
@@ -34,6 +35,8 @@ export function Application(): React.JSX.Element
         case "TiledMovePanelPreview":
         case "FocusPreviewUp":
             return <FocusPreviewApplication />;
+        case "InsertTarget":
+            return <InsertTargetApplication />;
         case "Overlay":
             return <OverlayApplication />;
         case "Settings":

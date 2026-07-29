@@ -40,3 +40,10 @@ Noodle
 /bit/
 .tmp
 pi-terminal-math
+
+# .NET build output (Package/SorrellWmCommandPalette)
+Package/SorrellWmCommandPalette/**/bin/
+Package/SorrellWmCommandPalette/**/obj/
+Package/SorrellWmCommandPalette/**/.vs/
+Package/SorrellWmCommandPalette/**/AppPackages/
+Package/SorrellWmCommandPalette/**/BundleArtifacts/

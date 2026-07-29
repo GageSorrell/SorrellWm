@@ -31,6 +31,14 @@
       "import": "./Distribution/Setting.js",
       "types": "./Distribution/Setting.d.ts"
     },
+    "./SettingControlsContext": {
+      "import": "./Distribution/SettingControlsContext.js",
+      "types": "./Distribution/SettingControlsContext.d.ts"
+    },
+    "./SettingControlsProvider": {
+      "import": "./Distribution/SettingControlsProvider.js",
+      "types": "./Distribution/SettingControlsProvider.d.ts"
+    },
     "./SettingGroup": {
       "import": "./Distribution/SettingGroup.js",
       "types": "./Distribution/SettingGroup.d.ts"
@@ -51,6 +59,10 @@
       "import": "./Distribution/SuccessMessageBar.js",
       "types": "./Distribution/SuccessMessageBar.d.ts"
     },
+    "./UseSettingControls": {
+      "import": "./Distribution/UseSettingControls.js",
+      "types": "./Distribution/UseSettingControls.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -69,12 +81,14 @@
   "peerDependencies": {
     "@fluentui/react-components": "^9.0.0",
     "@fluentui/react-icons": "^2.0.0",
+    "@fluentui/react-motion": "^9.0.0",
     "react": ">=19.2.0 <20",
     "react-dom": ">=19.2.0 <20"
   },
   "devDependencies": {
     "@fluentui/react-components": "9.74.4",
     "@fluentui/react-icons": "2.0.333",
+    "@fluentui/react-motion": "9.16.1",
     "@sorrell/tsconfig": "1.0.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",

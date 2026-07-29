@@ -13,6 +13,8 @@
 import { ChevronDownRegular, type FluentIcon } from "@fluentui/react-icons";
 import { type ReactNode, useState } from "react";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import { PulseMotion } from "./Internal/PulseMotion.js";
+import { UseSettingControlRegistration } from "./Internal/UseSettingControlRegistration.js";
 
 const UseStyles = makeStyles({
     Caret:
@@ -115,60 +117,75 @@ export interface SettingProps
 
     /** Gray out and disable the entire row, including its control and any children. */
     readonly Disabled?: boolean;
+
+    /**
+     * An identifier making this setting addressable through `UseSettingControls`, which can
+     * scroll to it and pulse its background. Omit for settings that never need to be jumped to.
+     */
+    readonly Id?: string;
+
     readonly Icon: FluentIcon;
     readonly Subtitle?: ReactNode;
     readonly Title: ReactNode;
 }
 
 export/** A single, card-styled setting row, optionally expandable into an accordion. */
-const Setting = ({ children, Control, Disabled, Icon, Subtitle, Title }: SettingProps): React.JSX.Element =>
+const Setting = (
+    { children, Control, Disabled, Icon, Id, Subtitle, Title }: SettingProps
+): React.JSX.Element =>
 {
     const Styles = UseStyles();
     const [ IsOpen, SetIsOpen ] = useState<boolean>(false);
     const HasChildren = children !== undefined;
+    const { NodeRef, PulseHandleRef } =
+        UseSettingControlRegistration<HTMLDivElement>({ Id, Subtitle, Title });
 
     return (
-        <div
-            aria-disabled={ Disabled }
-            className={ mergeClasses(Styles.Root, Disabled === true ? Styles.RootDisabled : undefined) }>
-            <div className={ Styles.Header }>
-                <Icon className={ Styles.Icon } />
+        <PulseMotion RestingColor={ tokens.colorNeutralBackground1 }
+            imperativeRef={ PulseHandleRef }>
+            <div
+                aria-disabled={ Disabled }
+                className={ mergeClasses(Styles.Root, Disabled === true ? Styles.RootDisabled : undefined) }
+                ref={ NodeRef }>
+                <div className={ Styles.Header }>
+                    <Icon className={ Styles.Icon } />
 
-                <div className={ Styles.TextGroup }>
-                    <span className={ Styles.Title }>{ Title }</span>
+                    <div className={ Styles.TextGroup }>
+                        <span className={ Styles.Title }>{ Title }</span>
 
-                    { Subtitle !== undefined && (
-                        <span className={ Styles.Subtitle }>{ Subtitle }</span>
+                        { Subtitle !== undefined && (
+                            <span className={ Styles.Subtitle }>{ Subtitle }</span>
+                        ) }
+                    </div>
+
+                    { Control !== undefined && (
+                        <div className={ Styles.Control }>
+                            { Control }
+                        </div>
+                    ) }
+
+                    { HasChildren && (
+                        <button
+                            aria-expanded={ IsOpen }
+                            className={ Styles.Caret }
+                            disabled={ Disabled }
+                            onClick={ () => SetIsOpen((Value: boolean) => !Value) }
+                            type="button">
+                            <ChevronDownRegular
+                                className={ mergeClasses(
+                                    Styles.CaretIcon,
+                                    IsOpen ? Styles.CaretIconOpen : undefined
+                                ) } />
+                        </button>
                     ) }
                 </div>
 
-                { Control !== undefined && (
-                    <div className={ Styles.Control }>
-                        { Control }
+                { HasChildren && IsOpen && (
+                    <div className={ Styles.Children }>
+                        { children }
                     </div>
                 ) }
-
-                { HasChildren && (
-                    <button
-                        aria-expanded={ IsOpen }
-                        className={ Styles.Caret }
-                        disabled={ Disabled }
-                        onClick={ () => SetIsOpen((Value: boolean) => !Value) }
-                        type="button">
-                        <ChevronDownRegular
-                            className={ mergeClasses(
-                                Styles.CaretIcon,
-                                IsOpen ? Styles.CaretIconOpen : undefined
-                            ) } />
-                    </button>
-                ) }
             </div>
-
-            { HasChildren && IsOpen && (
-                <div className={ Styles.Children }>
-                    { children }
-                </div>
-            ) }
-        </div>
+        </PulseMotion>
     );
 };

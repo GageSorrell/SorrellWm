@@ -103,6 +103,7 @@ export interface NativeBinding
         ) => Attempt.NativeAttempt<string>;
         readonly GetManageableTopLevelWindows: () =>
         Attempt.NativeAttempt<ReadonlyArray<Handle.HWND>>;
+        readonly GetMovingWindow?: () => Attempt.NativeAttempt<Handle.HWND>;
         readonly GetMouseHoverTime?: () => Attempt.NativeAttempt<number>;
         readonly GetRefreshRate?: (
             Window: Handle.HWND
@@ -124,6 +125,10 @@ export interface NativeBinding
             ExcludedWindows: ReadonlyArray<Handle.HWND>
         ) => Attempt.NativeAttempt<boolean>;
         readonly SetForegroundWindow: (Window: Handle.HWND) => Attempt.NativeAttempt<void>;
+        readonly SetWindowZOrderAfter?: (
+            Window: Handle.HWND,
+            PrecedingWindow: Handle.HWND
+        ) => Attempt.NativeAttempt<void>;
         readonly SetWindowRect: (
             Window: Handle.HWND,
             Bounds: Box.BoxArg<number>

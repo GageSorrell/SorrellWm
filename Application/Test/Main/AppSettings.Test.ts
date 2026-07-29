@@ -246,6 +246,7 @@ describe("AppSettings schema", () =>
             ShowTitlebarFlyout: true,
             Theme: "System",
             TileExistingWindowsOnStartup: false,
+            TiledResizeBehavior: "PreserveRatios",
             TiledWindowGap: 8
         });
     });
@@ -300,6 +301,32 @@ describe("AppSettings schema", () =>
     it.each([ -1, 8.5 ])("rejects a tiled-window gap of %s pixels", async (Gap: number) =>
     {
         await expect(DecodeSettings({ TiledWindowGap: Gap })).rejects.toBeDefined();
+    });
+
+    it("defaults tiled resizing to preserving the other window ratios", async () =>
+    {
+        const Decoded = await DecodeSettings({ });
+
+        expect(Decoded.TiledResizeBehavior).toBe("PreserveRatios");
+    });
+
+    it.each([
+        "PreserveRatios",
+        "AdjacentOnly"
+    ] as const)("accepts the %s tiled resize behavior", async (
+        Behavior: AppSettings.TiledResizeBehavior
+    ) =>
+    {
+        const Decoded = await DecodeSettings({ TiledResizeBehavior: Behavior });
+
+        expect(Decoded.TiledResizeBehavior).toBe(Behavior);
+    });
+
+    it("rejects an unknown tiled resize behavior", async () =>
+    {
+        await expect(DecodeSettings({
+            TiledResizeBehavior: "Unknown"
+        })).rejects.toBeDefined();
     });
 
     it("defaults the per-application settings record to empty", async () =>

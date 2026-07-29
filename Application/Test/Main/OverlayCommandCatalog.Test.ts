@@ -155,6 +155,76 @@ describe("OverlayCommandCatalog", () =>
         ]);
     });
 
+    it("projects tiled Insert directions and floating-window selection", () =>
+    {
+        const Direction = FromKeybindSettings(
+            OverlayScreenId.TiledInsertDirection,
+            Hotkey.DefaultKeybindSettings
+        );
+        const Picker = FromKeybindSettings(
+            OverlayScreenId.TiledInsertWindow,
+            Hotkey.DefaultKeybindSettings,
+            { },
+            undefined,
+            false,
+            false,
+            20,
+            50,
+            ResizeMode.Grow,
+            false,
+            { },
+            false,
+            new Set(),
+            false,
+            [ ],
+            "PreserveRatios",
+            [
+                {
+                    Active: true,
+                    Target: { Icon: "first-icon", Title: "First App" }
+                },
+                {
+                    Active: false,
+                    Target: { Icon: undefined, Title: "Second App" }
+                }
+            ]
+        );
+
+        expect(Direction.Commands.map(
+            (Command: OverlayCommandDto) => Command.Id
+        )).toEqual([
+            "ChooseInsertLeft",
+            "ChooseInsertUp",
+            "ChooseInsertDown",
+            "ChooseInsertRight"
+        ]);
+        expect(Picker.Commands.map((Command: OverlayCommandDto) => ({
+            Control: Command.Shortcut.Modifiers.Control,
+            Id: Command.Id,
+            KeyLabel: Command.Shortcut.KeyLabel
+        }))).toEqual([
+            { Control: false, Id: "SelectInsertWindowUp", KeyLabel: "H" },
+            { Control: false, Id: "SelectInsertWindowDown", KeyLabel: "T" },
+            { Control: false, Id: "CommitInsertWindow", KeyLabel: "RETURN" },
+            { Control: false, Id: "OpenInsertTarget", KeyLabel: "TAB" },
+            {
+                Control: true,
+                Id: "OpenInsertTargetForNextWindow",
+                KeyLabel: "TAB"
+            }
+        ]);
+        expect(Picker.InsertWindows).toEqual([
+            {
+                Active: true,
+                Target: { Icon: "first-icon", Title: "First App" }
+            },
+            {
+                Active: false,
+                Target: { Icon: undefined, Title: "Second App" }
+            }
+        ]);
+    });
+
     it("projects the Home secondary command with its application name and shortcut", () =>
     {
         const Screen = FromKeybindSettings(
@@ -416,6 +486,28 @@ describe("OverlayCommandCatalog", () =>
             CanGoBack: true,
             Id: "FloatingResize",
             ResizeMode: "Shrink"
+        });
+        expect(Screen.DistanceToggle).toBeDefined();
+    });
+
+    it("projects the tiled Resize behavior toggle and its initial mode", () =>
+    {
+        const Screen = FromKeybindSettings(
+            OverlayScreenId.TiledResize,
+            Hotkey.DefaultKeybindSettings
+        );
+
+        expect(Screen.Commands.map((Command: OverlayCommandDto) => Command.Id)).toEqual([
+            "ResizeWindowLeft",
+            "ResizeWindowUp",
+            "ResizeWindowDown",
+            "ResizeWindowRight",
+            "ToggleTiledResizeBehavior"
+        ]);
+        expect(Screen).toMatchObject({
+            Id: "TiledResize",
+            ResizeMode: "Grow",
+            TiledResizeBehavior: "PreserveRatios"
         });
         expect(Screen.DistanceToggle).toBeDefined();
     });

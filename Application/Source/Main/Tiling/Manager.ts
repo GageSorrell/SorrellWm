@@ -15,6 +15,7 @@ import { type Handle, Window } from "@sorrell/windows";
 import type { Result, Stream } from "effect";
 import { Box } from "@sorrell/math";
 import type { SimpleError } from "../Utility/Error.ts";
+import type { TiledResizeBehavior } from "../../Shared/AppSettings.ts";
 import { WithCategory } from "@sorrell/log/Effect";
 
 export/** The type identifier of this module. */
@@ -39,6 +40,12 @@ export interface Dependencies
     readonly SetWindowRect: (
         WindowValue: Handle.HWND,
         Bounds: Box.Box
+    ) => Result.Result<void, SimpleError>;
+
+    /** Place one window immediately behind another without activating it. */
+    readonly SetWindowZOrderAfter?: (
+        WindowValue: Handle.HWND,
+        PrecedingWindow: Handle.HWND
     ) => Result.Result<void, SimpleError>;
 }
 
@@ -100,6 +107,19 @@ export interface TilingManagerImpl
     /** Reapply the current tree's calculated rectangles to native windows. */
     readonly Reconcile: Effect.Effect<void, WindowLayoutError>;
 
+    /** Bring a managed window to the front of every stack panel that contains it. */
+    readonly BringStackWindowToFront: (
+        WindowValue: Handle.HWND
+    ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
+
+    /** Resize a managed window or containing branch along one panel axis. */
+    readonly Resize: (
+        WindowValue: Handle.HWND,
+        Direction: TilingTree.FocusDirection,
+        DeltaPixels: number,
+        Behavior: TiledResizeBehavior
+    ) => Effect.Effect<void, WindowLayoutError | WindowNotManagedError>;
+
     /** Change the tiled-window gap and immediately reconcile native windows. */
     readonly SetGap: (Gap: number) => Effect.Effect<void, WindowLayoutError>;
 
@@ -124,6 +144,22 @@ export interface TilingManagerImpl
         Target?: Handle.HWND,
         Orientation?: TilingTree.Orientation
     ) => Effect.Effect<void, WindowLayoutError | WindowMetadataUnavailableError>;
+
+    /** Preview the layout produced by inserting beside a tiled window. */
+    readonly PreviewInsert: (
+        Target: Handle.HWND,
+        Direction: TilingTree.FocusDirection
+    ) => Effect.Effect<Box.Box, WindowLayoutError | WindowNotManagedError>;
+
+    /** Insert one floating window into a directional half of a tiled window. */
+    readonly Insert: (
+        WindowValue: Handle.HWND,
+        Target: Handle.HWND,
+        Direction: TilingTree.FocusDirection
+    ) => Effect.Effect<
+        void,
+        WindowLayoutError | WindowMetadataUnavailableError | WindowNotManagedError
+    >;
 
     /** Reparent a managed window beside another leaf, including across workspaces. */
     readonly Move: (
@@ -166,7 +202,7 @@ export interface TilingManagerImpl
         PanelNotFoundError | WindowLayoutError | WorkspaceNotFoundError
     >;
 
-    /** Change a panel's split direction and immediately reconcile its workspace. */
+    /** Change a panel's child arrangement and immediately reconcile its workspace. */
     readonly SetPanelOrientation: (
         WorkspaceId: string,
         Path: TilingTree.Path,
@@ -184,6 +220,8 @@ export class TilingManager extends
 const EmptyState: TilingTree.State = Object.freeze({
     Workspaces: Object.freeze(new Array<TilingTree.Workspace>())
 });
+
+const InsertPreviewWindow = 0n as Handle.HWND;
 
 const LogTilingDebug = (
     Message: string,
@@ -426,11 +464,15 @@ const MakeLive = (
         const GapRef = yield* Ref.make(0);
 
         const Apply = (
-            State: TilingTree.State
+            State: TilingTree.State,
+            IgnoredWindow?: Handle.HWND
         ): Effect.Effect<void, WindowLayoutError> => Effect.gen(function*()
         {
             const Gap = yield* Ref.get(GapRef);
-            const Placements = TilingTree.Layout(State, Gap);
+            const Placements = TilingTree.Layout(State, Gap).filter(
+                (Placement: TilingTree.Placement): boolean =>
+                    Placement.Window !== IgnoredWindow
+            );
             yield* LogTilingDebug("Reconciling tiled-window geometry.", {
                 Gap,
                 WindowCount: Placements.length,
@@ -450,6 +492,50 @@ const MakeLive = (
                 ),
                 { discard: true }
             );
+
+            if (DependenciesValue.SetWindowZOrderAfter !== undefined)
+            {
+                const BoundsByWindow = new Map(
+                    Placements.map((Placement: TilingTree.Placement) =>
+                        [ Placement.Window, Placement.Bounds ] as const)
+                );
+
+                yield* Effect.forEach(
+                    TilingTree.StackWindowOrders(State),
+                    (Order: TilingTree.StackWindowOrder) =>
+                    {
+                        const Windows = Order.Windows.filter(
+                            (WindowValue: Handle.HWND): boolean =>
+                                WindowValue !== IgnoredWindow
+                        );
+
+                        return Effect.forEach(
+                            Windows.slice(1),
+                            (
+                                WindowValue: Handle.HWND,
+                                Index: number
+                            ) => Effect.sync(() =>
+                                DependenciesValue.SetWindowZOrderAfter!(
+                                    WindowValue,
+                                    Windows[Index]!
+                                )
+                            ).pipe(
+                                Effect.flatMap(Effect.fromResult),
+                                Effect.mapError((Failure: SimpleError) =>
+                                    new WindowLayoutError({
+                                        Bounds: BoundsByWindow.get(WindowValue)
+                                        ?? Box.Box(0, 0, 0, 0),
+                                        Message: Failure.Message,
+                                        Window: WindowValue
+                                    }))
+                            ),
+                            { discard: true }
+                        );
+                    },
+                    { discard: true }
+                );
+            }
+
             yield* LogTilingDebug("Tiled-window geometry reconciled.", {
                 WindowCount: Placements.length
             });
@@ -589,6 +675,107 @@ const MakeLive = (
             })));
         };
 
+        const PreviewInsert: TilingManagerImpl["PreviewInsert"] = (
+            Target: Handle.HWND,
+            Direction: TilingTree.FocusDirection
+        ) => Effect.gen(function*()
+        {
+            const Current = yield* SubscriptionRef.get(StateRef);
+            const WorkspaceIndex = Current.Workspaces.findIndex(
+                (Workspace: TilingTree.Workspace): boolean =>
+                    TilingTree.HasWindow(Workspace.Root, Target)
+            );
+
+            if (WorkspaceIndex < 0)
+            {
+                return yield* new WindowNotManagedError({ Window: Target });
+            }
+
+            const Workspace = Current.Workspaces[WorkspaceIndex]!;
+            const Managed = FindManagedWindow(Current, Target);
+            if (Workspace.Root === null || Managed === undefined)
+            {
+                return yield* new WindowNotManagedError({ Window: Target });
+            }
+
+            const [ Root, Inserted ] = TilingTree.InsertWindowInDirection(
+                Workspace.Root,
+                {
+                    InitialBounds: Managed.InitialBounds,
+                    Window: InsertPreviewWindow
+                },
+                Target,
+                Direction
+            );
+
+            if (!Inserted)
+            {
+                return yield* new WindowNotManagedError({ Window: Target });
+            }
+
+            const Workspaces = [ ...Current.Workspaces ];
+            Workspaces[WorkspaceIndex] = FreezeWorkspace(Workspace, Root);
+            const PreviewState = FreezeState(Workspaces);
+            const Gap = yield* Ref.get(GapRef);
+            const TargetPlacement = TilingTree.Layout(PreviewState, Gap).find(
+                (Placement: TilingTree.Placement): boolean =>
+                    Placement.Window === InsertPreviewWindow
+            );
+
+            if (TargetPlacement === undefined)
+            {
+                return yield* new WindowNotManagedError({ Window: Target });
+            }
+
+            yield* Apply(PreviewState, InsertPreviewWindow);
+            yield* LogTilingInfo("Previewed a directional tiled insertion.", {
+                Direction,
+                Target
+            });
+            return TargetPlacement.Bounds;
+        });
+
+        const Insert: TilingManagerImpl["Insert"] = (
+            WindowValue: Handle.HWND,
+            Target: Handle.HWND,
+            Direction: TilingTree.FocusDirection
+        ) =>
+        {
+            const Seed = ReadWindowSeed(DependenciesValue, WindowValue);
+            if (Option.isNone(Seed))
+            {
+                return Effect.fail(new WindowMetadataUnavailableError({
+                    Window: WindowValue
+                }));
+            }
+
+            return Commit((Current: TilingTree.State) =>
+            {
+                if (FindManagedWindow(Current, WindowValue) !== undefined)
+                {
+                    return Effect.succeed(Current);
+                }
+
+                return UpdateManagedWindowWorkspace(
+                    Current,
+                    Target,
+                    (Root: TilingTree.Node) => TilingTree.InsertWindowInDirection(
+                        Root,
+                        Seed.value,
+                        Target,
+                        Direction
+                    )
+                );
+            }).pipe(Effect.tap(() => LogTilingInfo(
+                "Inserted a floating window into a directional tile.",
+                {
+                    Direction,
+                    Target,
+                    Window: WindowValue
+                }
+            )));
+        };
+
         const Float = (
             WindowValue: Handle.HWND,
             RestoreInitialBounds: boolean = false
@@ -718,6 +905,60 @@ const MakeLive = (
             Window: WindowValue
         })));
 
+        const BringStackWindowToFront: TilingManagerImpl[
+            "BringStackWindowToFront"
+        ] = (WindowValue: Handle.HWND) => Commit((
+            Current: TilingTree.State
+        ) => UpdateManagedWindowWorkspace(
+            Current,
+            WindowValue,
+            (Root: TilingTree.Node) => TilingTree.BringStackWindowToFront(
+                Root,
+                WindowValue
+            )
+        )).pipe(Effect.tap(() => LogTilingInfo(
+            "Brought a tiled window to the front of its stack.",
+            { Window: WindowValue }
+        )));
+
+        const Resize: TilingManagerImpl["Resize"] = (
+            WindowValue: Handle.HWND,
+            Direction: TilingTree.FocusDirection,
+            DeltaPixels: number,
+            Behavior: TiledResizeBehavior
+        ) => Effect.gen(function*()
+        {
+            const Gap = yield* Ref.get(GapRef);
+            yield* Commit((Current: TilingTree.State) =>
+                UpdateManagedWindowWorkspace(
+                    Current,
+                    WindowValue,
+                    (Root: TilingTree.Node) =>
+                    {
+                        const Workspace = Current.Workspaces.find(
+                            (Candidate: TilingTree.Workspace): boolean =>
+                                TilingTree.HasWindow(Candidate.Root, WindowValue)
+                        )!;
+
+                        return TilingTree.ResizeWindow(
+                            Root,
+                            Workspace.Bounds,
+                            WindowValue,
+                            Direction,
+                            DeltaPixels,
+                            Behavior,
+                            Gap
+                        );
+                    }
+                ));
+            yield* LogTilingInfo("Resized a tiled window branch.", {
+                Behavior,
+                DeltaPixels,
+                Direction,
+                Window: WindowValue
+            });
+        });
+
         const SetPanelRatio: TilingManagerImpl["SetPanelRatio"] = (
             WorkspaceId: string,
             Path: TilingTree.Path,
@@ -775,15 +1016,19 @@ const MakeLive = (
         const Snapshot = SubscriptionRef.get(StateRef);
 
         return {
+            BringStackWindowToFront,
             Changes,
             Float,
             Gap,
+            Insert,
             Move,
             MoveIntoPanel,
             MoveToContainingPanel,
             MoveToIndex,
+            PreviewInsert,
             Reconcile,
             Refresh,
+            Resize,
             SetGap,
             SetPanelOrientation,
             SetPanelRatio,
@@ -799,5 +1044,6 @@ const Live = MakeLive({
     Enumerate: Window.GetManageableTopLevelWindows,
     GetWindowRect: Window.GetWindowRect,
     GetWindowWorkArea: Window.GetWindowWorkArea,
-    SetWindowRect: Window.SetWindowRect
+    SetWindowRect: Window.SetWindowRect,
+    SetWindowZOrderAfter: Window.SetWindowZOrderAfter
 });

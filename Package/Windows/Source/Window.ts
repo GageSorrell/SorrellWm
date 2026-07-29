@@ -142,6 +142,12 @@ const GetManageableTopLevelWindows = (): Attempt.Attempt<
     ? Attempt.AsResult(Binding.Window.GetManageableTopLevelWindows())
     : MissingTilingApi("GetManageableTopLevelWindows");
 
+export/** Get the top-level native window in the foreground move/size loop. */
+const GetMovingWindow = (): Option.Option<Handle.HWND> =>
+    typeof Binding.Window.GetMovingWindow === "function"
+        ? Attempt.AsOption(Binding.Window.GetMovingWindow())
+        : Option.none();
+
 export/** Get the configured Windows mouse-hover time in milliseconds. */
 const GetMouseHoverTime = (): Option.Option<number> =>
     typeof Binding.Window.GetMouseHoverTime === "function"
@@ -252,6 +258,14 @@ const SetForegroundWindow = (
 ): Attempt.Attempt<void> => Attempt.AsResult(
     Binding.Window.SetForegroundWindow(Window)
 );
+
+export/** Place a window immediately behind another window without activating it. */
+const SetWindowZOrderAfter = (
+    Window: Handle.HWND,
+    PrecedingWindow: Handle.HWND
+): Attempt.Attempt<void> => typeof Binding.Window.SetWindowZOrderAfter === "function"
+    ? Attempt.AsResult(Binding.Window.SetWindowZOrderAfter(Window, PrecedingWindow))
+    : MissingTilingApi("SetWindowZOrderAfter");
 
 export/** Move and resize a top-level window to the given virtual-screen rectangle. */
 const SetWindowRect = (

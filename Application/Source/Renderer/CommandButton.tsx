@@ -196,13 +196,22 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
  * @category Interaction
  * @since 0.1.0
  */
-export interface CompactCommandButtonProps extends Omit<CommandButtonProps, "Description"> { }
+export interface CompactCommandButtonProps extends Omit<
+    CommandButtonProps,
+    "Description" | "Icon" | "Shortcut"
+>
+{
+    readonly Icon?: NonNullable<ButtonProps["icon"]>;
+    readonly Shortcut?: ShortcutDto;
+}
 
 export/** Render a primary overlay command with renderer-specific presentation. */
 const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode =>
 {
     const Styles = UseStyles();
-    const ShortcutParts = GetShortcutParts(Props.Shortcut);
+    const ShortcutParts = Props.Shortcut === undefined
+        ? [ ]
+        : GetShortcutParts(Props.Shortcut);
 
     return (
         <Button
@@ -210,7 +219,7 @@ const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode
             aria-pressed={ Props.Active }
             className={ Styles.CompactButton }
             disabled={ Props.Disabled === true }
-            icon={ Props.Icon }
+            { ...(Props.Icon === undefined ? { } : { icon: Props.Icon }) }
             onClick={ Props.OnInvoke }
             onMouseEnter={ () => Props.OnHoverChange?.(true) }
             onMouseLeave={ () => Props.OnHoverChange?.(false) }
@@ -228,7 +237,7 @@ const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode
                         { Props.ApplicationIcon }
                     </span>
                 ) }
-                <Keybind Keys={ ShortcutParts } />
+                { ShortcutParts.length > 0 && <Keybind Keys={ ShortcutParts } /> }
             </span>
         </Button>
     );

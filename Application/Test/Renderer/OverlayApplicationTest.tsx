@@ -194,6 +194,116 @@ describe("OverlayApplication", () =>
         expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("Float");
     });
 
+    it("renders tiled Insert directions and a floating-window picker without arrows", async () =>
+    {
+        const DirectionScreen: OverlayScreenDto = {
+            CanGoBack: true,
+            Commands: [
+                Command("ChooseInsertLeft", "SelectLeft", "H", 0x48),
+                Command("ChooseInsertUp", "SelectUp", "K", 0x4B),
+                Command("ChooseInsertDown", "SelectDown", "J", 0x4A),
+                Command("ChooseInsertRight", "SelectRight", "L", 0x4C)
+            ],
+            Id: "TiledInsertDirection"
+        };
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(DirectionScreen);
+        const DirectionRender = render(<OverlayApplication />);
+
+        expect(await screen.findByText(
+            "Choose the half of this window where the new window will go."
+        )).toBeInTheDocument();
+        const DirectionButtons = DirectionRender.container.querySelectorAll(
+            "button[aria-hidden=\"true\"]"
+        );
+        expect(DirectionButtons).toHaveLength(4);
+        fireEvent.click(DirectionButtons[0] as HTMLButtonElement);
+        expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("ChooseInsertUp");
+
+        DirectionRender.unmount();
+        vi.clearAllMocks();
+        const CaptureNext = Command(
+            "OpenInsertTargetForNextWindow",
+            "Toggle",
+            "TAB",
+            0x09
+        );
+        const PickerScreen: OverlayScreenDto = {
+            CanGoBack: true,
+            Commands: [
+                Command("SelectInsertWindowUp", "SelectUp", "K", 0x4B),
+                Command("SelectInsertWindowDown", "SelectDown", "J", 0x4A),
+                Command("CommitInsertWindow", "Commit", "RETURN", 0x0D),
+                Command("OpenInsertTarget", "Toggle", "TAB", 0x09),
+                {
+                    ...CaptureNext,
+                    Shortcut: {
+                        ...CaptureNext.Shortcut,
+                        Modifiers: {
+                            ...CaptureNext.Shortcut.Modifiers,
+                            Control: true
+                        }
+                    }
+                }
+            ],
+            Id: "TiledInsertWindow",
+            InsertWindows: [
+                {
+                    Active: true,
+                    Target: { Icon: "first-icon", Title: "First App" }
+                },
+                {
+                    Active: false,
+                    Target: { Icon: undefined, Title: "Second App" }
+                },
+                {
+                    Active: false,
+                    Target: { Icon: "third-icon", Title: "Third App" }
+                }
+            ]
+        };
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(PickerScreen);
+        render(<OverlayApplication />);
+
+        const FloatingButtons = within(await screen.findByRole("region", {
+            name: "Floating windows"
+        })).getAllByRole("button");
+        expect(FloatingButtons).toHaveLength(3);
+        expect(FloatingButtons[0]).toHaveAttribute("aria-pressed", "true");
+        expect(FloatingButtons[0]).toHaveTextContent("First App");
+        expect(FloatingButtons[0]).toHaveTextContent("⏎");
+        expect(FloatingButtons[1]).toHaveTextContent("Second App");
+        expect(FloatingButtons[1]).toHaveTextContent("J");
+        expect(FloatingButtons[1]?.querySelectorAll("svg")).toHaveLength(1);
+
+        const OtherMethods = within(screen.getByRole("region", {
+            name: "Other Insert methods"
+        })).getAllByRole("button");
+        expect(OtherMethods[0]).toHaveTextContent("Drag a window here");
+        expect(OtherMethods[0]).toHaveTextContent("⭾");
+        expect(OtherMethods[1]).toHaveTextContent("Tile the next window here");
+        expect(OtherMethods[1]).toHaveTextContent("Ctrl");
+
+        await act(async () =>
+        {
+            fireEvent.click(FloatingButtons[2]!);
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+        expect(window.sorrell.overlay.invoke).toHaveBeenNthCalledWith(
+            1,
+            "SelectInsertWindowDown"
+        );
+        expect(window.sorrell.overlay.invoke).toHaveBeenNthCalledWith(
+            2,
+            "SelectInsertWindowDown"
+        );
+
+        fireEvent.click(OtherMethods[1]!);
+        expect(window.sorrell.overlay.invoke).toHaveBeenLastCalledWith(
+            "OpenInsertTargetForNextWindow"
+        );
+    });
+
     it("renders tiled Move directions, boundaries, and parent promotion", async () =>
     {
         const Parent = Command("MoveWindowParent", "SelectUp", "K", 0x4B);
@@ -446,6 +556,65 @@ describe("OverlayApplication", () =>
         expect(window.sorrell.overlay.invoke).toHaveBeenCalledWith("FocusMoveParent");
     });
 
+    it("renders stack windows as compact focus choices without direction icons", async () =>
+    {
+        const StackFocus: OverlayScreenDto = {
+            ...FocusScreen,
+            Id: "TiledFocus",
+            StackWindows: [
+                {
+                    Active: true,
+                    Target: { Icon: "first-icon", Title: "First App" }
+                },
+                {
+                    Active: false,
+                    Target: { Icon: undefined, Title: "Second App" }
+                },
+                {
+                    Active: false,
+                    Target: { Icon: "third-icon", Title: "Third App" }
+                }
+            ]
+        };
+
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(StackFocus);
+        render(<OverlayApplication />);
+
+        const StackButtons = within(await screen.findByRole("region", {
+            name: "Windows in stack"
+        })).getAllByRole("button");
+
+        expect(StackButtons).toHaveLength(3);
+        expect(StackButtons[0]).toHaveAttribute("aria-pressed", "true");
+        expect(StackButtons[0]).toHaveTextContent("First App");
+        expect(StackButtons[0]?.querySelector("img")).toHaveAttribute(
+            "src",
+            "data:image/png;base64,first-icon"
+        );
+        expect(StackButtons[1]).toHaveTextContent("Second App");
+        expect(StackButtons[1]).toHaveTextContent("J");
+        expect(StackButtons[1]?.querySelectorAll("svg")).toHaveLength(1);
+        expect(StackButtons[2]).toHaveTextContent("Third App");
+        expect(screen.queryByRole("region", { name: "Focus targets" }))
+            .not.toBeInTheDocument();
+
+        await act(async () =>
+        {
+            fireEvent.click(StackButtons[2]!);
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+
+        expect(window.sorrell.overlay.invoke).toHaveBeenNthCalledWith(
+            1,
+            "FocusMoveDown"
+        );
+        expect(window.sorrell.overlay.invoke).toHaveBeenNthCalledWith(
+            2,
+            "FocusMoveDown"
+        );
+    });
+
     it("renders numbered monitors in a second column beside selection commands", async () =>
     {
         const RootFocus: OverlayScreenDto = {
@@ -554,6 +723,41 @@ describe("OverlayApplication", () =>
             GrowArrows[1],
             GrowArrows[0]
         ]);
+    });
+
+    it("shows and invokes the tiled resize redistribution behavior", async () =>
+    {
+        const TiledResize: OverlayScreenDto = {
+            ...ResizeScreen("Grow"),
+            Commands: [
+                ...ResizeScreen("Grow").Commands,
+                Command(
+                    "ToggleTiledResizeBehavior",
+                    "Toggle",
+                    "TAB",
+                    0x09
+                )
+            ],
+            Id: "TiledResize",
+            TiledResizeBehavior: "PreserveRatios"
+        };
+
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(TiledResize);
+        render(<OverlayApplication />);
+
+        expect(await screen.findByText(
+            "Choose an edge to grow the tiled window. Hold Ctrl to shrink it. "
+            + "Press Tab to change how surrounding windows respond."
+        )).toBeInTheDocument();
+        const Behavior = screen.getByRole("button", {
+            name: "Preserve other window ratios"
+        });
+        expect(Behavior).toHaveTextContent("⭾");
+        expect(Behavior).toHaveAttribute("aria-pressed", "false");
+
+        fireEvent.click(Behavior);
+        expect(window.sorrell.overlay.invoke)
+            .toHaveBeenCalledWith("ToggleTiledResizeBehavior");
     });
 });
 

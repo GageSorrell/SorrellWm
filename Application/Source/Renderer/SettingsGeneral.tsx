@@ -10,12 +10,11 @@
  */
 
 import * as Logging from "./Logging.js";
-import type {
-    GeneralSettingsDto,
-    GeneralSettingsPatch
-} from "../Shared/AppSettings.js";
-import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import {
+    Dropdown,
+    Option,
+    type OptionOnSelectData,
+    type SelectionEvents,
     SpinButton,
     type SpinButtonChangeEvent,
     type SpinButtonOnChangeData,
@@ -23,8 +22,23 @@ import {
     makeStyles,
     tokens
 } from "@fluentui/react-components";
+import type {
+    GeneralSettingsDto,
+    GeneralSettingsPatch,
+    TiledResizeBehavior
+} from "../Shared/AppSettings.js";
+import {
+    IsTiledResizeBehavior,
+    TiledResizeBehaviors
+} from "../Shared/AppSettings.js";
+import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import { useEffect, useState } from "react";
 import { GridRegular } from "@fluentui/react-icons";
+
+const TiledResizeBehaviorLabel: Readonly<Record<TiledResizeBehavior, string>> = {
+    AdjacentOnly: "Adjacent Window Only",
+    PreserveRatios: "Preserve Other Ratios"
+};
 
 const UseStyles = makeStyles({
     Loading:
@@ -136,6 +150,46 @@ const SettingsGeneral = (): React.JSX.Element =>
                     Icon={ GridRegular }
                     Subtitle="Pixels between adjacent tiled windows and between tiles and monitor edges."
                     Title="Tiled Window Gap" />
+
+                <Setting
+                    Control={
+                        <Dropdown
+                            aria-label="Initial tiled resize behavior"
+                            onOptionSelect={ (
+                                _Event: SelectionEvents,
+                                Data: OptionOnSelectData
+                            ) =>
+                            {
+                                if (IsTiledResizeBehavior(Data.optionValue))
+                                {
+                                    Commit({
+                                        TiledResizeBehavior: Data.optionValue
+                                    });
+                                }
+                            } }
+                            selectedOptions={ [ Settings.TiledResizeBehavior ] }
+                            value={
+                                TiledResizeBehaviorLabel[
+                                    Settings.TiledResizeBehavior
+                                ]
+                            }>
+                            { TiledResizeBehaviors.map((
+                                Behavior: TiledResizeBehavior
+                            ) => (
+                                <Option
+                                    key={ Behavior }
+                                    value={ Behavior }>
+                                    { TiledResizeBehaviorLabel[Behavior] }
+                                </Option>
+                            )) }
+                        </Dropdown>
+                    }
+                    Icon={ GridRegular }
+                    Subtitle={
+                        "Choose whether tiled resizing preserves every other ratio "
+                        + "or transfers space only to the adjacent window."
+                    }
+                    Title="Initial Resize Behavior" />
             </SettingGroup>
         </>
     );

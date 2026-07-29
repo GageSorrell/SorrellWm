@@ -30,11 +30,18 @@ interface AppliedBounds
     readonly Window: Handle.HWND;
 }
 
+interface AppliedZOrder
+{
+    readonly PrecedingWindow: Handle.HWND;
+    readonly Window: Handle.HWND;
+}
+
 const FakeDependencies = (
     Handles: ReadonlyArray<Handle.HWND>,
     InitialBounds: ReadonlyMap<Handle.HWND, Box.Box>,
     WorkAreas: ReadonlyMap<Handle.HWND, Box.Box>,
-    Applied: Array<AppliedBounds>
+    Applied: Array<AppliedBounds>,
+    AppliedZOrders?: Array<AppliedZOrder>
 ): TilingManager.Dependencies => ({
     Enumerate: () => Result.succeed(Handles),
     GetWindowRect: (WindowValue: Handle.HWND) => Option.fromUndefinedOr(
@@ -47,7 +54,19 @@ const FakeDependencies = (
     {
         Applied.push({ Bounds: Rectangle, Window: WindowValue });
         return Result.succeed(undefined);
-    }
+    },
+    ...(AppliedZOrders === undefined
+        ? { }
+        : {
+            SetWindowZOrderAfter: (
+                WindowValue: Handle.HWND,
+                PrecedingWindow: Handle.HWND
+            ) =>
+            {
+                AppliedZOrders.push({ PrecedingWindow, Window: WindowValue });
+                return Result.succeed(undefined);
+            }
+        })
 });
 
 describe("TilingManager", () =>
@@ -267,6 +286,140 @@ describe("TilingManager", () =>
             1 / 7,
             1 / 14,
             0.5
+        ]);
+    });
+
+    it("previews and commits a directional insertion without persisting the preview", async () =>
+    {
+        const WorkArea = Bounds(0, 1000, 600, 0);
+        const Applied = new Array<AppliedBounds>();
+        const Handles = [ Hwnd(1), Hwnd(2), Hwnd(3) ];
+        const Dependencies = FakeDependencies(
+            [ ],
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            Applied
+        );
+
+        const ResultValue = await Effect.runPromise(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.Tile(
+                Hwnd(1),
+                undefined,
+                TilingTree.Orientation.Horizontal
+            );
+            yield* Manager.Tile(
+                Hwnd(2),
+                Hwnd(1),
+                TilingTree.Orientation.Horizontal
+            );
+            Applied.length = 0;
+
+            const PreviewBounds = yield* Manager.PreviewInsert(
+                Hwnd(1),
+                TilingTree.FocusDirection.Up
+            );
+            const PreviewSnapshot = yield* Manager.Snapshot;
+            yield* Manager.Insert(
+                Hwnd(3),
+                Hwnd(1),
+                TilingTree.FocusDirection.Up
+            );
+
+            return {
+                FinalSnapshot: yield* Manager.Snapshot,
+                PreviewBounds,
+                PreviewSnapshot
+            };
+        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        expect(ResultValue.PreviewBounds).toEqual(Bounds(0, 500, 300, 0));
+        expect(TilingTree.Windows(ResultValue.PreviewSnapshot.Workspaces[0]!.Root)
+            .map((Value: TilingTree.ManagedWindow) => Value.Window))
+            .toEqual([ Hwnd(1), Hwnd(2) ]);
+        expect(TilingTree.Layout(ResultValue.FinalSnapshot).map(
+            (Placement: TilingTree.Placement) => ({
+                Bounds: Box.Tupled(Placement.Bounds),
+                Window: Placement.Window
+            })
+        )).toEqual([
+            { Bounds: [ 0, 500, 300, 0 ], Window: Hwnd(3) },
+            { Bounds: [ 300, 500, 600, 0 ], Window: Hwnd(1) },
+            { Bounds: [ 0, 1000, 600, 500 ], Window: Hwnd(2) }
+        ]);
+        expect(Applied).toContainEqual({
+            Bounds: Bounds(300, 500, 600, 0),
+            Window: Hwnd(1)
+        });
+    });
+
+    it("reconciles stack panels in their persisted top-to-bottom order", async () =>
+    {
+        const WorkArea = Bounds(0, 1200, 600, 0);
+        const Handles = [ Hwnd(1), Hwnd(2), Hwnd(3) ];
+        const Applied = new Array<AppliedBounds>();
+        const AppliedZOrders = new Array<AppliedZOrder>();
+        const Dependencies = FakeDependencies(
+            [ ],
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            new Map(Handles.map((WindowValue: Handle.HWND) => [
+                WindowValue,
+                WorkArea
+            ])),
+            Applied,
+            AppliedZOrders
+        );
+
+        const State = await Effect.runPromise(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+
+            for (const WindowValue of Handles)
+            {
+                yield* Manager.Tile(
+                    WindowValue,
+                    undefined,
+                    TilingTree.Orientation.Horizontal
+                );
+            }
+
+            yield* Manager.SetPanelOrientation(
+                TilingTree.WorkspaceId(WorkArea),
+                [ ],
+                TilingTree.Orientation.Stack
+            );
+            AppliedZOrders.length = 0;
+            yield* Manager.BringStackWindowToFront(Hwnd(3));
+            return yield* Manager.Snapshot;
+        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        const Root = State.Workspaces[0]?.Root;
+        expect(Root?._tag === "Panel"
+            ? TilingTree.Windows(Root).map(
+                (Value: TilingTree.ManagedWindow) => Value.Window
+            )
+            : [ ]).toEqual([ Hwnd(3), Hwnd(1), Hwnd(2) ]);
+        expect(TilingTree.Layout(State).map((Placement: TilingTree.Placement) => ({
+            Bounds: Box.Tupled(Placement.Bounds),
+            Window: Placement.Window
+        }))).toEqual([
+            { Bounds: [ 0, 1200, 600, 0 ], Window: Hwnd(3) },
+            { Bounds: [ 0, 1200, 600, 0 ], Window: Hwnd(1) },
+            { Bounds: [ 0, 1200, 600, 0 ], Window: Hwnd(2) }
+        ]);
+        expect(AppliedZOrders).toEqual([
+            { PrecedingWindow: Hwnd(3), Window: Hwnd(1) },
+            { PrecedingWindow: Hwnd(1), Window: Hwnd(2) }
         ]);
     });
 

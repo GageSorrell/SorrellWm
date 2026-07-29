@@ -39,10 +39,22 @@ export interface GeneralSettingsDto
 
     /** Pixels between tiled windows and between tiles and their monitor edges. */
     readonly TiledWindowGap: number;
+
+    /** The redistribution behavior selected when the tiled Resize screen opens. */
+    readonly TiledResizeBehavior: TiledResizeBehavior;
 }
 
 /** A partial update to the general window-manager settings. */
 export type GeneralSettingsPatch = Partial<GeneralSettingsDto>;
+
+export/** Every supported redistribution behavior for tiled resizing. */
+const TiledResizeBehaviors = Object.freeze([
+    "PreserveRatios",
+    "AdjacentOnly"
+] as const);
+
+/** How neighboring tiled windows respond to resizing. */
+export type TiledResizeBehavior = typeof TiledResizeBehaviors[number];
 
 /** Settings that control the transient command overlay and its Focus previews. */
 export interface OverlaySettingsDto
@@ -90,12 +102,18 @@ const IsFiniteNumber = (Value: unknown): Value is number =>
 const IsNonNegativeInteger = (Value: unknown): Value is number =>
     Number.isInteger(Value) && (Value as number) >= 0;
 
+export/** Determine whether a value is a supported tiled-resize behavior. */
+const IsTiledResizeBehavior = (Value: unknown): Value is TiledResizeBehavior =>
+    typeof Value === "string"
+    && (TiledResizeBehaviors as ReadonlyArray<string>).includes(Value);
+
 export/** Determine whether an IPC value is a complete general-settings snapshot. */
 const IsGeneralSettingsDto = (Value: unknown): Value is GeneralSettingsDto =>
     typeof Value === "object"
     && Value !== null
     && typeof (Value as Partial<GeneralSettingsDto>).TileExistingWindowsOnStartup === "boolean"
-    && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowGap);
+    && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowGap)
+    && IsTiledResizeBehavior((Value as Partial<GeneralSettingsDto>).TiledResizeBehavior);
 
 export/** Determine whether an IPC value is a valid general-settings patch. */
 const IsGeneralSettingsPatch = (Value: unknown): Value is GeneralSettingsPatch =>
@@ -112,6 +130,9 @@ const IsGeneralSettingsPatch = (Value: unknown): Value is GeneralSettingsPatch =
     ) && (
         Candidate.TiledWindowGap === undefined
         || IsNonNegativeInteger(Candidate.TiledWindowGap)
+    ) && (
+        Candidate.TiledResizeBehavior === undefined
+        || IsTiledResizeBehavior(Candidate.TiledResizeBehavior)
     );
 };
 

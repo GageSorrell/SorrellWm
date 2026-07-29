@@ -11,6 +11,8 @@
 
 import type { ReactNode } from "react";
 import { makeStyles, tokens } from "@fluentui/react-components";
+import { PulseMotion } from "./Internal/PulseMotion.js";
+import { UseSettingControlRegistration } from "./Internal/UseSettingControlRegistration.js";
 
 const UseStyles = makeStyles({
     Header:
@@ -52,28 +54,39 @@ export interface SettingGroupProps
     /** {@link Setting} rows shown under this category, spaced with a small gap. */
     readonly children: ReactNode;
 
+    /**
+     * An identifier making this group addressable through `UseSettingControls`, which can
+     * scroll to it and pulse its background. Omit for groups that never need to be jumped to.
+     */
+    readonly Id?: string;
+
     readonly Subtitle?: ReactNode;
     readonly Title: ReactNode;
 }
 
 export/** A titled category of settings, e.g. "Find My Mouse". */
-const SettingGroup = ({ children, Subtitle, Title }: SettingGroupProps): React.JSX.Element =>
+const SettingGroup = ({ children, Id, Subtitle, Title }: SettingGroupProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
+    const { NodeRef, PulseHandleRef } = UseSettingControlRegistration<HTMLElement>({ Id, Subtitle, Title });
 
     return (
-        <section className={ Styles.Root }>
-            <div className={ Styles.Header }>
-                <h2 className={ Styles.Title }>{ Title }</h2>
+        <PulseMotion RestingColor="transparent"
+            imperativeRef={ PulseHandleRef }>
+            <section className={ Styles.Root }
+                ref={ NodeRef }>
+                <div className={ Styles.Header }>
+                    <h2 className={ Styles.Title }>{ Title }</h2>
 
-                { Subtitle !== undefined && (
-                    <p className={ Styles.Subtitle }>{ Subtitle }</p>
-                ) }
-            </div>
+                    { Subtitle !== undefined && (
+                        <p className={ Styles.Subtitle }>{ Subtitle }</p>
+                    ) }
+                </div>
 
-            <div className={ Styles.Settings }>
-                { children }
-            </div>
-        </section>
+                <div className={ Styles.Settings }>
+                    { children }
+                </div>
+            </section>
+        </PulseMotion>
     );
 };

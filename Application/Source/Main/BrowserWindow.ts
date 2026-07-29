@@ -52,6 +52,7 @@ const Key = Object.freeze({
     FocusPreviewLeft: "FocusPreviewLeft",
     FocusPreviewRight: "FocusPreviewRight",
     FocusPreviewUp: "FocusPreviewUp",
+    InsertTarget: "InsertTarget",
     Inspector: "Inspector",
     Main: "Main",
     Overlay: "Overlay",
@@ -926,6 +927,39 @@ const OverlayWindowSpec = Effect.gen(function* ()
         Url: WithWindowKey(Url, Key.Overlay)
     } as const;
 });
+
+export/**
+       * Constructs the temporary acrylic target for a tiled Insert operation.
+       *
+       * @category constructors
+       * @since 0.1.0
+       */
+const GetInsertTargetWindowSpec = (Bounds: Box.Box): Spec =>
+{
+    const { Options: BaseOptions, Url } = GetSpecBase();
+    const Rectangle = BoxToRectangle(Bounds);
+    const InsertTargetOptions: BrowserWindowConstructorOptions =
+        {
+            alwaysOnTop: true,
+            frame: false,
+            maximizable: false,
+            minimizable: false,
+            resizable: false,
+            roundedCorners: false,
+            show: false,
+            skipTaskbar: true,
+            title: "SorrellWm Insert Target",
+            type: "toolbar",
+            ...Rectangle
+        } as const;
+
+    return {
+        Key: Key.InsertTarget,
+        Options: Struct.assign(BaseOptions, InsertTargetOptions),
+        ShowWhenReady: true,
+        Url: WithWindowKey(Url, Key.InsertTarget)
+    } as const;
+};
 
 export/** Construct the main application-window specification. */
 const MainWindowSpec = Effect.gen(function*()

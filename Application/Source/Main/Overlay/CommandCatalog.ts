@@ -11,6 +11,7 @@
 
 import * as Hotkey from "../Input/Hotkey.ts";
 import * as OverlayCommand from "../../Shared/OverlayCommand.js";
+import type { TiledResizeBehavior } from "../../Shared/AppSettings.ts";
 import { VK } from "@sorrell/windows";
 
 const VirtualKeyNames = new Map<number, string>();
@@ -74,7 +75,10 @@ const FromKeybindSettings = (
     MonitorStates: MonitorCommandStates = { },
     CanTileAll: boolean = false,
     DisabledCommandIds: ReadonlySet<OverlayCommand.OverlayCommandId> = new Set(),
-    IsTiledMovePanelTargeted: boolean = false
+    IsTiledMovePanelTargeted: boolean = false,
+    StackWindows: ReadonlyArray<OverlayCommand.OverlayStackWindowDto> = [ ],
+    CurrentTiledResizeBehavior: TiledResizeBehavior = "PreserveRatios",
+    InsertWindows: ReadonlyArray<OverlayCommand.OverlayInsertWindowDto> = [ ]
 ): OverlayCommand.OverlayScreenDto =>
 {
     const Keybinds = Hotkey.WithDefaultKeybindSettings(Values);
@@ -155,7 +159,8 @@ const FromKeybindSettings = (
     // exactly (same settings, same modifiers), so the same live indicator
     // applies to both.
     const UsesMoveDistances = ScreenId === OverlayCommand.OverlayScreenId.FloatingMove
-        || ScreenId === OverlayCommand.OverlayScreenId.FloatingResize;
+        || ScreenId === OverlayCommand.OverlayScreenId.FloatingResize
+        || ScreenId === OverlayCommand.OverlayScreenId.TiledResize;
     const ModifierKeybind = UsesMoveDistances
         ? Keybinds.find((Value: Hotkey.KeybindSetting) => Value.Id === Hotkey.Id.PrimaryModifier)
         : undefined;
@@ -187,6 +192,9 @@ const FromKeybindSettings = (
             && ScreenId !== OverlayCommand.OverlayScreenId.TiledHome,
         Commands: Object.freeze(Commands),
         Id: ScreenId,
+        ...(InsertWindows.length === 0
+            ? { }
+            : { InsertWindows: Object.freeze([ ...InsertWindows ]) }),
         ...(IsRootPanelFocused ? { IsRootPanelFocused: true } : { }),
         ...(IsTiledMovePanelTargeted ? { IsTiledMovePanelTargeted: true } : { }),
         ...(MonitorCommands.length === 0
@@ -195,9 +203,16 @@ const FromKeybindSettings = (
         ...(DistanceToggle === undefined ? { } : { DistanceToggle }),
         ...(
             ScreenId === OverlayCommand.OverlayScreenId.FloatingResize
+                || ScreenId === OverlayCommand.OverlayScreenId.TiledResize
                 ? { ResizeMode: CurrentResizeMode }
                 : { }
         ),
-        ...(SecondaryCommand === undefined ? { } : { SecondaryCommand })
+        ...(SecondaryCommand === undefined ? { } : { SecondaryCommand }),
+        ...(StackWindows.length === 0
+            ? { }
+            : { StackWindows: Object.freeze([ ...StackWindows ]) }),
+        ...(ScreenId === OverlayCommand.OverlayScreenId.TiledResize
+            ? { TiledResizeBehavior: CurrentTiledResizeBehavior }
+            : { })
     });
 };

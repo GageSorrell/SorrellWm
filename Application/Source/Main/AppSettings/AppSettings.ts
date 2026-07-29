@@ -12,8 +12,14 @@
 import * as Hotkey from "../Input/Hotkey.ts";
 import * as _AppSettings from "@sorrell/app-settings";
 import { Effect, Schema, pipe } from "effect";
-import type { NewWindowBehavior } from "../../Shared/AppSettings.js";
-import { NewWindowBehaviors } from "../../Shared/AppSettings.js";
+import type {
+    NewWindowBehavior,
+    TiledResizeBehavior
+} from "../../Shared/AppSettings.js";
+import {
+    NewWindowBehaviors,
+    TiledResizeBehaviors
+} from "../../Shared/AppSettings.js";
 // import { L10n } from "../../Shared/index.ts";
 
 export/** The type identifier for this module. */
@@ -23,9 +29,11 @@ const TypeId = "~sorrell/wm/Main/AppSettings/AppSettings" as const;
 export type TypeId = typeof TypeId;
 
 const NewWindowBehaviorSchema = Schema.Literals(NewWindowBehaviors);
+const TiledResizeBehaviorSchema = Schema.Literals(TiledResizeBehaviors);
 
 /** The behavior applied when an application creates a new window. */
 export type { NewWindowBehavior };
+export type { TiledResizeBehavior };
 
 export/** Settings that override window-manager behavior for one executable. */
 const PerAppSettings = Schema.Struct({
@@ -112,6 +120,10 @@ const SettingsSchema = Schema.Struct({
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(false))
     ),
+    TiledResizeBehavior: pipe(
+        TiledResizeBehaviorSchema,
+        Schema.withDecodingDefaultKey(Effect.succeed("PreserveRatios" as const))
+    ),
     TiledWindowGap: pipe(
         Schema.Int,
         Schema.check(Schema.isGreaterThanOrEqualTo(0)),
@@ -151,6 +163,7 @@ const AppSettings = _AppSettings.Make(
             ShowTitlebarFlyout: true,
             Theme: "System",
             TileExistingWindowsOnStartup: false,
+            TiledResizeBehavior: "PreserveRatios",
             TiledWindowGap: 8
         }
     }

@@ -33,11 +33,17 @@ export type UiCommand = Command.Command.Enum<"Ui", {
      */
     readonly BackOverlayScreen: { };
 
+    /** Cancel the current tiled Insert flow and restore the committed layout. */
+    readonly CancelTiledInsert: { };
+
     /** Descend logical tiled focus from a panel to its first child. */
     readonly CommitTiledFocus: { };
 
     /** Tile every existing floating window into its monitor's root panel. */
     readonly TileAll: { };
+
+    /** Cycle how tiled Resize redistributes space to neighboring windows. */
+    readonly ToggleTiledResizeBehavior: { };
 
     /**
      * Navigate to another overlay screen.
@@ -61,6 +67,9 @@ export type UiCommand = Command.Command.Enum<"Ui", {
     {
         readonly Path: Option.Option<string>;
     }
+
+    /** Return from the temporary Insert target to the floating-window picker. */
+    readonly ReturnToTiledInsertList: { };
 
     /**
      * Update whether the primary modifier (e.g. Shift) is currently held.
@@ -88,6 +97,12 @@ export type UiCommand = Command.Command.Enum<"Ui", {
     {
         readonly Mode: ResizeMode;
     }
+
+    /** Choose whether the temporary Insert target captures the next new window. */
+    readonly SetTiledInsertCaptureNext:
+    {
+        readonly Enabled: boolean;
+    };
 }>;
 
 export/** Construct immutable user-interface commands. */

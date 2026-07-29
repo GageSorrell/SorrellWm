@@ -16,6 +16,7 @@ const RendererLogCategory = Schema.Literals([
     "Application",
     "Backdrop",
     "FocusPreview",
+    "InsertTarget",
     "Overlay",
     "Settings",
     "Theme"

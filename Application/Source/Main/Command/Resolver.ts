@@ -108,6 +108,13 @@ const ResolveOverlayCommand = (
         }));
     }
 
+    if (Screen === ScreenId.TiledHome && Id === OverlayCommandId.Insert)
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.TiledInsertDirection
+        }));
+    }
+
     if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.Tile)
     {
         return Option.some(UiCommands.NavigateOverlayScreen({
@@ -120,6 +127,21 @@ const ResolveOverlayCommand = (
         return Option.some(UiCommands.NavigateOverlayScreen({
             ScreenId: ScreenId.FloatingResize
         }));
+    }
+
+    if (Screen === ScreenId.TiledHome && Id === OverlayCommandId.Resize)
+    {
+        return Option.some(UiCommands.NavigateOverlayScreen({
+            ScreenId: ScreenId.TiledResize
+        }));
+    }
+
+    if (
+        Screen === ScreenId.TiledResize
+        && Id === OverlayCommandId.ToggleTiledResizeBehavior
+    )
+    {
+        return Option.some(UiCommands.ToggleTiledResizeBehavior());
     }
 
     if (Screen === ScreenId.FloatingHome && Id === OverlayCommandId.TileAll)
@@ -191,6 +213,15 @@ const Resolve = (
                 return ResolveOverlayCommand(
                     Screen,
                     OverlayCommandId.MoveWindowIntoPanel,
+                    ApplicationName
+                );
+            }
+
+            if (Screen === ScreenId.TiledInsertWindow)
+            {
+                return ResolveOverlayCommand(
+                    Screen,
+                    OverlayCommandId.CommitInsertWindow,
                     ApplicationName
                 );
             }

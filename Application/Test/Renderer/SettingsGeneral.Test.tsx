@@ -18,12 +18,15 @@ describe("SettingsGeneral", () =>
     {
         vi.mocked(window.sorrell.generalSettings.get).mockResolvedValue({
             TileExistingWindowsOnStartup: false,
+            TiledResizeBehavior: "PreserveRatios",
             TiledWindowGap: 8
         });
         vi.mocked(window.sorrell.generalSettings.set).mockImplementation(async (
             Patch: GeneralSettingsPatch
         ) => ({
             TileExistingWindowsOnStartup: Patch.TileExistingWindowsOnStartup ?? false,
+            TiledResizeBehavior:
+                Patch.TiledResizeBehavior ?? "PreserveRatios",
             TiledWindowGap: Patch.TiledWindowGap ?? 8
         }));
     });
@@ -59,6 +62,25 @@ describe("SettingsGeneral", () =>
 
         await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
             TiledWindowGap: 9
+        }));
+    });
+
+    it("loads and updates the initial tiled resize behavior", async () =>
+    {
+        render(<SettingsGeneral />);
+
+        const Behavior = await screen.findByRole("combobox", {
+            name: "Initial tiled resize behavior"
+        });
+        expect(Behavior).toHaveTextContent("Preserve Other Ratios");
+
+        fireEvent.click(Behavior);
+        fireEvent.click(await screen.findByRole("option", {
+            name: "Adjacent Window Only"
+        }));
+
+        await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
+            TiledResizeBehavior: "AdjacentOnly"
         }));
     });
 });

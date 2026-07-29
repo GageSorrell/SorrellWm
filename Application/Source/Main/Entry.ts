@@ -56,6 +56,7 @@ import {
 import { basename, extname, isAbsolute, join, relative } from "node:path";
 import { AppApiChannel } from "../Shared/Api.ts";
 import { DevFeatures } from "./Development/index.ts";
+import type { InsertTargetPresentation } from "../Shared/InsertTarget.ts";
 import { NodeServices } from "@effect/platform-node";
 import type { RendererTheme } from "../Shared/Theme.ts";
 import { Window } from "@sorrell/windows";
@@ -350,6 +351,7 @@ const ToGeneralSettingsDto = (
     Settings: AppSettings.AppSettings
 ): GeneralSettingsDto => ({
     TileExistingWindowsOnStartup: Settings.TileExistingWindowsOnStartup,
+    TiledResizeBehavior: Settings.TiledResizeBehavior,
     TiledWindowGap: Settings.TiledWindowGap
 });
 
@@ -390,6 +392,14 @@ ipcMain.handle(AppApiChannel.GeneralSettingsSet, (
         {
             yield* Settings.SetSetting("TiledWindowGap", PatchValue.TiledWindowGap);
             yield* TilingManager.SetGap(PatchValue.TiledWindowGap);
+        }
+
+        if (PatchValue.TiledResizeBehavior !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "TiledResizeBehavior",
+                PatchValue.TiledResizeBehavior
+            );
         }
 
         yield* Logging.LogInfo("Settings", "General settings updated.", {
@@ -624,6 +634,64 @@ ipcMain.handle(AppApiChannel.OverlayScreenGet, () => ApplicationRuntime.runPromi
         return yield* Session.Snapshot;
     })
 ));
+
+ipcMain.removeHandler(AppApiChannel.InsertTargetGet);
+ipcMain.handle(AppApiChannel.InsertTargetGet, () => ApplicationRuntime.runPromise(
+    Effect.gen(function*()
+    {
+        const Session = yield* Overlay.Session.OverlaySession;
+        return {
+            CaptureNextWindow: yield* Session.TiledInsertCaptureNext,
+            DragActive: yield* Session.TiledInsertDragActive
+        } satisfies InsertTargetPresentation;
+    })
+));
+
+ipcMain.removeHandler(AppApiChannel.InsertTargetCancel);
+ipcMain.handle(AppApiChannel.InsertTargetCancel, () => ReportRejectedOperation(
+    "IPC",
+    "Tiled Insert cancellation",
+    () => ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Executor = yield* Command.Executor.CommandExecutor;
+        yield* Executor.Execute(Command.Ui.UiCommand().CancelTiledInsert());
+    }))
+));
+
+ipcMain.removeHandler(AppApiChannel.InsertTargetChooseWindow);
+ipcMain.handle(AppApiChannel.InsertTargetChooseWindow, () => ReportRejectedOperation(
+    "IPC",
+    "Tiled Insert window-list return",
+    () => ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Executor = yield* Command.Executor.CommandExecutor;
+        yield* Executor.Execute(Command.Ui.UiCommand().ReturnToTiledInsertList());
+    }))
+));
+
+ipcMain.removeHandler(AppApiChannel.InsertTargetSetCaptureNext);
+ipcMain.handle(AppApiChannel.InsertTargetSetCaptureNext, (
+    _Event: IpcMainInvokeEvent,
+    Enabled: unknown
+) =>
+{
+    if (typeof Enabled !== "boolean")
+    {
+        throw new TypeError("The Insert target capture setting must be a boolean.");
+    }
+
+    return ReportRejectedOperation(
+        "IPC",
+        "Tiled Insert next-window capture",
+        () => ApplicationRuntime.runPromise(Effect.gen(function*()
+        {
+            const Executor = yield* Command.Executor.CommandExecutor;
+            yield* Executor.Execute(
+                Command.Ui.UiCommand().SetTiledInsertCaptureNext({ Enabled })
+            );
+        }))
+    );
+});
 
 ipcMain.removeHandler(AppApiChannel.OverlayCommandInvoke);
 ipcMain.handle(AppApiChannel.OverlayCommandInvoke, (

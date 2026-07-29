@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "SorrellWmCommandPalette (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    },
+    "SorrellWmCommandPalette (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

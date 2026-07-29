@@ -128,6 +128,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetManageableTopLevelWindows)
     );
     Window.Set(
+        "GetMovingWindow",
+        Napi::Function::New(Environment, GetMovingWindow)
+    );
+    Window.Set(
         "GetMouseHoverTime",
         Napi::Function::New(Environment, GetMouseHoverTime)
     );
@@ -174,6 +178,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
     Window.Set(
         "SetForegroundWindow",
         Napi::Function::New(Environment, SetForegroundWindow_Node)
+    );
+    Window.Set(
+        "SetWindowZOrderAfter",
+        Napi::Function::New(Environment, SetWindowZOrderAfter)
     );
     Window.Set(
         "SetWindowRect",

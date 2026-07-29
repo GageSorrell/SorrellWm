@@ -11,14 +11,16 @@
 
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";
+import type { TiledResizeBehavior } from "../../Shared/AppSettings.ts";
 
-export/** The directions in which a panel can arrange its children. */
+export/** The arrangements a panel can apply to its children. */
 const Orientation = Object.freeze({
     Horizontal: "Horizontal",
+    Stack: "Stack",
     Vertical: "Vertical"
 } as const);
 
-/** A panel arrangement direction. */
+/** A panel child arrangement. */
 export type Orientation = typeof Orientation[keyof typeof Orientation];
 
 /** A path from a workspace root to a descendant node. */
@@ -49,7 +51,7 @@ export interface WindowNode
     readonly Value: ManagedWindow;
 }
 
-/** A panel that partitions its rectangle between two or more children. */
+/** A panel that arranges two or more children within its rectangle. */
 export interface PanelNode
 {
     readonly _tag: "Panel";
@@ -158,6 +160,11 @@ const SplitBounds = (
     Gap: number = 0
 ): ReadonlyArray<Box.Box> =>
 {
+    if (Direction === Orientation.Stack)
+    {
+        return Object.freeze(Ratios.map((): Box.Box => Bounds));
+    }
+
     const Normalized = NormalizeRatios(Ratios.length, Ratios);
     const Length = Math.max(0, Direction === Orientation.Horizontal
         ? Box.Width(Bounds)
@@ -526,6 +533,67 @@ const Windows = (Root: Node | null): ReadonlyArray<ManagedWindow> =>
         : Root.Children.flatMap(Windows);
 };
 
+/** One stack panel's native windows in top-to-bottom order. */
+export interface StackWindowOrder
+{
+    readonly Path: Path;
+    readonly Windows: ReadonlyArray<Handle.HWND>;
+    readonly WorkspaceId: string;
+}
+
+const CollectStackWindowOrders = (
+    Current: Node,
+    WorkspaceIdValue: string,
+    CurrentPath: Path,
+    Out: Array<StackWindowOrder>
+): void =>
+{
+    if (Current._tag === "Window")
+    {
+        return;
+    }
+
+    if (Current.Orientation === Orientation.Stack)
+    {
+        Out.push(Object.freeze({
+            Path: Object.freeze([ ...CurrentPath ]),
+            Windows: Object.freeze(
+                Windows(Current).map((Value: ManagedWindow) => Value.Window)
+            ),
+            WorkspaceId: WorkspaceIdValue
+        }));
+    }
+
+    Current.Children.forEach((Child: Node, Index: number): void =>
+        CollectStackWindowOrders(
+            Child,
+            WorkspaceIdValue,
+            [ ...CurrentPath, Index ],
+            Out
+        ));
+};
+
+export/** Return every stack panel's native windows in top-to-bottom order. */
+const StackWindowOrders = (Self: State): ReadonlyArray<StackWindowOrder> =>
+{
+    const Out = new Array<StackWindowOrder>();
+
+    for (const WorkspaceValue of Self.Workspaces)
+    {
+        if (WorkspaceValue.Root !== null)
+        {
+            CollectStackWindowOrders(
+                WorkspaceValue.Root,
+                WorkspaceValue.Id,
+                [ ],
+                Out
+            );
+        }
+    }
+
+    return Object.freeze(Out);
+};
+
 export/** Determine whether a tree contains a native window handle. */
 const HasWindow = (Root: Node | null, HandleValue: Handle.HWND): boolean =>
     Windows(Root).some((Value: ManagedWindow): boolean => Value.Window === HandleValue);
@@ -743,13 +811,19 @@ const InsertAtWindow = (
     Target: Handle.HWND,
     Value: ManagedWindow,
     Direction: Orientation,
-    Ratio: number
+    Ratio: number,
+    InsertBefore: boolean = false
 ): readonly [ Node, boolean ] =>
 {
     if (Root._tag === "Window")
     {
         return Root.Value.Window === Target
-            ? [ Panel(Direction, Root, Window(Value), Ratio), true ]
+            ? [
+                InsertBefore
+                    ? Panel(Direction, Window(Value), Root, Ratio)
+                    : Panel(Direction, Root, Window(Value), Ratio),
+                true
+            ]
             : [ Root, false ];
     }
 
@@ -758,12 +832,23 @@ const InsertAtWindow = (
 
     if (DirectTargetIndex >= 0 && Root.Orientation === Direction)
     {
+        const InsertIndex = DirectTargetIndex + (InsertBefore ? 0 : 1);
         const Children = [
-            ...Root.Children.slice(0, DirectTargetIndex + 1),
+            ...Root.Children.slice(0, InsertIndex),
             Window(Value),
-            ...Root.Children.slice(DirectTargetIndex + 1)
+            ...Root.Children.slice(InsertIndex)
         ] as [ Node, Node, ...Array<Node> ];
         const Ratios = SplitChildRatio(Root.Ratios, DirectTargetIndex, Ratio);
+
+        if (InsertBefore)
+        {
+            const FirstRatio = Ratios[DirectTargetIndex]!;
+            const SecondRatio = Ratios[DirectTargetIndex + 1]!;
+            const MutableRatios = [ ...Ratios ];
+            MutableRatios[DirectTargetIndex] = SecondRatio;
+            MutableRatios[DirectTargetIndex + 1] = FirstRatio;
+            return [ Panel(Root.Orientation, Children, MutableRatios), true ];
+        }
 
         return [ Panel(Root.Orientation, Children, Ratios), true ];
     }
@@ -775,7 +860,8 @@ const InsertAtWindow = (
             Target,
             Value,
             Direction,
-            Ratio
+            Ratio,
+            InsertBefore
         );
 
         if (Inserted)
@@ -825,6 +911,48 @@ const InsertWindow = (
     );
 
     return Inserted ? Next : Panel(Direction, Root, Window(Value), Ratio);
+};
+
+export/**
+       * Inserts a window into the half of a target leaf selected by a
+       * direction.
+       *
+       * # Details
+       *
+       * A direction parallel to the target's owning panel inserts a sibling
+       * into that panel.  A perpendicular direction replaces the target leaf
+       * with a two-child panel whose orientation matches the requested axis.
+       *
+       * @category mutations
+       * @since 0.1.0
+       */
+const InsertWindowInDirection = (
+    Root: Node,
+    Value: ManagedWindow,
+    Target: Handle.HWND,
+    Direction: FocusDirection
+): readonly [ Node, boolean ] =>
+{
+    if (HasWindow(Root, Value.Window))
+    {
+        return [ Root, false ];
+    }
+
+    const OrientationValue =
+        Direction === FocusDirection.Left || Direction === FocusDirection.Right
+            ? Orientation.Horizontal
+            : Orientation.Vertical;
+    const InsertBefore =
+        Direction === FocusDirection.Left || Direction === FocusDirection.Up;
+
+    return InsertAtWindow(
+        Root,
+        Target,
+        Value,
+        OrientationValue,
+        0.5,
+        InsertBefore
+    );
 };
 
 export/** Remove a window leaf and collapse any panel left with one child. */
@@ -879,6 +1007,60 @@ const RemoveWindow = (Root: Node | null, HandleValue: Handle.HWND): Node | null 
         RemainingChildren as [ Node, Node, ...Array<Node> ],
         RemainingRatios
     );
+};
+
+export/**
+       * Move the branch containing a window to the top of each enclosing stack.
+       *
+       * Every other branch retains its relative z-order.
+       *
+       * @category mutations
+       * @since 0.1.0
+       */
+const BringStackWindowToFront = (
+    Root: Node,
+    WindowValue: Handle.HWND
+): readonly [ Node, boolean ] =>
+{
+    if (Root._tag === "Window")
+    {
+        return [ Root, false ];
+    }
+
+    let Changed = false;
+    const Children = Root.Children.map((Child: Node): Node =>
+    {
+        const [ Next, ChildChanged ] = BringStackWindowToFront(Child, WindowValue);
+        Changed ||= ChildChanged;
+        return Next;
+    });
+    const Ratios = [ ...Root.Ratios ];
+
+    if (Root.Orientation === Orientation.Stack)
+    {
+        const TargetIndex = Children.findIndex((Child: Node): boolean =>
+            HasWindow(Child, WindowValue));
+
+        if (TargetIndex > 0)
+        {
+            const [ Target ] = Children.splice(TargetIndex, 1);
+            const [ TargetRatio ] = Ratios.splice(TargetIndex, 1);
+            Children.unshift(Target!);
+            Ratios.unshift(TargetRatio!);
+            Changed = true;
+        }
+    }
+
+    return Changed
+        ? [
+            Panel(
+                Root.Orientation,
+                Children as [ Node, Node, ...Array<Node> ],
+                Ratios
+            ),
+            true
+        ]
+        : [ Root, false ];
 };
 
 const UpdateNodeAtPath = (
@@ -1195,6 +1377,179 @@ const SetPanelRatio = (
         ];
     }
 );
+
+const TransferPanelRatio = (
+    Ratios: ReadonlyArray<number>,
+    TargetIndex: number,
+    AdjacentIndex: number,
+    DeltaRatio: number
+): ReadonlyArray<number> =>
+{
+    const Normalized = NormalizeRatios(Ratios.length, Ratios);
+    const TargetRatio = Normalized[TargetIndex];
+    const AdjacentRatio = Normalized[AdjacentIndex];
+
+    if (
+        TargetRatio === undefined
+        || AdjacentRatio === undefined
+        || !Number.isFinite(DeltaRatio)
+    )
+    {
+        return Ratios;
+    }
+
+    const Minimum = Math.min(MinimumRatio, 0.5 / Ratios.length);
+    const AppliedDelta = Math.max(
+        Minimum - TargetRatio,
+        Math.min(AdjacentRatio - Minimum, DeltaRatio)
+    );
+
+    if (AppliedDelta === 0)
+    {
+        return Ratios;
+    }
+
+    return Object.freeze(Normalized.map((RatioValue: number, Index: number): number =>
+        Index === TargetIndex
+            ? RatioValue + AppliedDelta
+            : Index === AdjacentIndex
+                ? RatioValue - AppliedDelta
+                : RatioValue));
+};
+
+export/**
+       * Resize the nearest tiled branch whose panel arrangement matches a
+       * direction.
+       *
+       * # Details
+       *
+       * Parallel directions resize the window within its owning panel.
+       * Perpendicular directions climb to the nearest matching ancestor and
+       * therefore resize the entire intervening branch.
+       *
+       * @category mutations
+       * @since 0.1.0
+       */
+const ResizeWindow = (
+    Root: Node,
+    RootBounds: Box.Box,
+    WindowValue: Handle.HWND,
+    Direction: FocusDirection,
+    DeltaPixels: number,
+    Behavior: TiledResizeBehavior,
+    Gap: number = 0
+): readonly [ Node, boolean ] =>
+{
+    const WindowPath = FindWindowPath(Root, WindowValue);
+    if (WindowPath === undefined || WindowPath.length === 0 || DeltaPixels === 0)
+    {
+        return [ Root, false ];
+    }
+
+    const RequiredOrientation =
+        Direction === FocusDirection.Left || Direction === FocusDirection.Right
+            ? Orientation.Horizontal
+            : Orientation.Vertical;
+    let PanelPath: Path | undefined;
+    let TargetIndex: number | undefined;
+
+    for (let Depth = WindowPath.length - 1; Depth >= 0; Depth -= 1)
+    {
+        const CandidatePath = WindowPath.slice(0, Depth);
+        const Candidate = GetNodeAtPath(Root, CandidatePath);
+
+        if (Candidate?._tag === "Panel" && Candidate.Orientation === RequiredOrientation)
+        {
+            PanelPath = CandidatePath;
+            TargetIndex = WindowPath[Depth];
+            break;
+        }
+    }
+
+    if (PanelPath === undefined || TargetIndex === undefined)
+    {
+        return [ Root, false ];
+    }
+
+    const PanelBounds = GetNodeBoundsAtPath(Root, RootBounds, PanelPath, Gap);
+    if (PanelBounds === undefined)
+    {
+        return [ Root, false ];
+    }
+
+    return UpdatePanel(
+        Root,
+        PanelPath,
+        (PanelValue: PanelNode): readonly [ PanelNode, boolean ] =>
+        {
+            const ChildBounds = SplitBounds(
+                PanelBounds,
+                PanelValue.Orientation,
+                PanelValue.Ratios,
+                Gap
+            );
+            const ContentLength = ChildBounds.reduce(
+                (Total: number, BoundsValue: Box.Box): number =>
+                    Total + (
+                        RequiredOrientation === Orientation.Horizontal
+                            ? Box.Width(BoundsValue)
+                            : Box.Height(BoundsValue)
+                    ),
+                0
+            );
+
+            if (ContentLength <= 0)
+            {
+                return [ PanelValue, false ];
+            }
+
+            const DeltaRatio = DeltaPixels / ContentLength;
+            let Ratios: ReadonlyArray<number>;
+
+            if (Behavior === "AdjacentOnly")
+            {
+                const AdjacentIndex = TargetIndex!
+                    + (
+                        Direction === FocusDirection.Left
+                        || Direction === FocusDirection.Up
+                            ? -1
+                            : 1
+                    );
+
+                if (AdjacentIndex < 0 || AdjacentIndex >= PanelValue.Children.length)
+                {
+                    return [ PanelValue, false ];
+                }
+
+                Ratios = TransferPanelRatio(
+                    PanelValue.Ratios,
+                    TargetIndex!,
+                    AdjacentIndex,
+                    DeltaRatio
+                );
+            }
+            else
+            {
+                Ratios = SetRatioAt(
+                    PanelValue.Ratios,
+                    TargetIndex!,
+                    PanelValue.Ratios[TargetIndex!]! + DeltaRatio
+                );
+            }
+
+            return Ratios === PanelValue.Ratios
+                ? [ PanelValue, false ]
+                : [
+                    Panel(
+                        PanelValue.Orientation,
+                        PanelValue.Children,
+                        Ratios
+                    ),
+                    true
+                ];
+        }
+    );
+};
 
 export/** Change a panel's child arrangement and report whether the path existed. */
 const SetPanelOrientation = (

@@ -22,6 +22,7 @@ import type {
 import type { OverlayCommandId, OverlayScreenDto } from "./OverlayCommand.js";
 import type { BackdropPresentation } from "./Backdrop.js";
 import type { FocusPreviewPresentation } from "./FocusPreview.js";
+import type { InsertTargetPresentation } from "./InsertTarget.js";
 import type { RendererLogEntry } from "./Logging.js";
 import type { RendererTheme } from "./Theme.js";
 import type { Thunk } from "@sorrell/utility/Function";
@@ -71,6 +72,26 @@ export interface AppApi
 
         /** Persist a partial update to general window-manager behavior. */
         readonly set: (Patch: GeneralSettingsPatch) => Promise<GeneralSettingsDto>;
+    };
+
+    readonly insertTarget:
+    {
+        /** Cancel the tiled Insert flow and close the temporary target. */
+        readonly cancel: () => Promise<void>;
+
+        /** Return to the floating-window list in the overlay. */
+        readonly chooseWindow: () => Promise<void>;
+
+        /** Retrieve the current temporary Insert target state. */
+        readonly get: () => Promise<InsertTargetPresentation>;
+
+        /** Observe native drag and next-window-capture state changes. */
+        readonly onChanged: (
+            Listener: (Presentation: InsertTargetPresentation) => void
+        ) => () => void;
+
+        /** Choose whether the next eligible new window should be inserted. */
+        readonly setCaptureNext: (Enabled: boolean) => Promise<void>;
     };
 
     readonly log:
@@ -148,6 +169,11 @@ const AppApiChannel = Object.freeze({
     FocusPreviewChanged: "focus-preview:changed" as const,
     GeneralSettingsGet: "general-settings:get" as const,
     GeneralSettingsSet: "general-settings:set" as const,
+    InsertTargetCancel: "insert-target:cancel" as const,
+    InsertTargetChanged: "insert-target:changed" as const,
+    InsertTargetChooseWindow: "insert-target:choose-window" as const,
+    InsertTargetGet: "insert-target:get" as const,
+    InsertTargetSetCaptureNext: "insert-target:set-capture-next" as const,
     OverlayBack: "overlay:back" as const,
     OverlayCommandInvoke: "overlay-command:invoke" as const,
     OverlayFocusPreview: "overlay-focus:preview" as const,

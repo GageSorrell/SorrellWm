@@ -593,6 +593,33 @@ Napi::Value GetManageableTopLevelWindows(const Napi::CallbackInfo& CallbackInfo)
     return Out.Succeed(Handles);
 }
 
+Napi::Value GetMovingWindow(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    GUITHREADINFO Information { };
+    Information.cbSize = sizeof(GUITHREADINFO);
+
+    if (GetGUIThreadInfo(0, &Information) == FALSE)
+    {
+        return Out.Fail("Could not inspect the foreground GUI thread.");
+    }
+
+    if (
+        (Information.flags & GUI_INMOVESIZE) == 0
+        || Information.hwndMoveSize == nullptr
+        || IsWindow(Information.hwndMoveSize) == FALSE
+    )
+    {
+        return Out.Fail("No top-level window is being moved or resized.");
+    }
+
+    const auto NumericHandle = static_cast<std::uint64_t>(
+        reinterpret_cast<std::uintptr_t>(Information.hwndMoveSize)
+    );
+    return Out.Succeed(Napi::BigInt::New(Environment, NumericHandle));
+}
+
 Napi::Value GetApplicationName(const Napi::CallbackInfo& CallbackInfo)
 {
     const Napi::Env Environment = CallbackInfo.Env();
@@ -1089,6 +1116,37 @@ Napi::Value SetForegroundWindow_Node(const Napi::CallbackInfo& CallbackInfo)
     if (SetForegroundWindow(WindowHandle.value()) == FALSE)
     {
         return Out.Fail("Windows did not allow the window to become foreground.");
+    }
+
+    return Out.Succeed(Environment.Undefined());
+}
+
+Napi::Value SetWindowZOrderAfter(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> WindowHandle = GetWindowArgument(CallbackInfo);
+    const std::optional<HWND> PrecedingWindow = GetWindowArgument(CallbackInfo, 1);
+
+    if (!WindowHandle.has_value() || !PrecedingWindow.has_value())
+    {
+        return Out.Fail("Expected two valid window handles.");
+    }
+
+    const UINT Flags = SWP_NOMOVE | SWP_NOACTIVATE |
+        SWP_NOOWNERZORDER | SWP_NOSIZE;
+
+    if (SetWindowPos(
+        WindowHandle.value(),
+        PrecedingWindow.value(),
+        0,
+        0,
+        0,
+        0,
+        Flags
+    ) == FALSE)
+    {
+        return Out.Fail("Could not set the window z-order.");
     }
 
     return Out.Succeed(Environment.Undefined());

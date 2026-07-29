@@ -253,6 +253,14 @@ describe("CommandResolver.Resolve", () =>
             Id: CommandId,
             _tag: "NoOpOverlayCommand"
         })));
+
+        expect(Option.getOrThrow(Resolve(
+            Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
+            OverlayScreenId.TiledResize
+        ))).toMatchObject({
+            Category: "Ui",
+            _tag: "ToggleTiledResizeBehavior"
+        });
     });
 
     it("opens tiled Focus and gives Shift plus SelectUp to Float", () =>
@@ -284,8 +292,8 @@ describe("CommandResolver.Resolve", () =>
         ));
 
         expect(Insert).toMatchObject({
-            Id: "Insert",
-            _tag: "NoOpOverlayCommand"
+            ScreenId: "TiledInsertDirection",
+            _tag: "NavigateOverlayScreen"
         });
         expect(Float).toMatchObject({
             Id: "Float",
@@ -299,6 +307,52 @@ describe("CommandResolver.Resolve", () =>
             ScreenId: "TiledMove",
             _tag: "NavigateOverlayScreen"
         });
+    });
+
+    it("maps both tiled Insert screens, including Ctrl plus Tab capture", () =>
+    {
+        const ChooseUp = Option.getOrThrow(Resolve(
+            Activation(Id.SelectUp, Windows.VK.H, Phase.Pressed),
+            OverlayScreenId.TiledInsertDirection
+        ));
+        const Previous = Option.getOrThrow(Resolve(
+            Activation(Id.SelectUp, Windows.VK.H, Phase.Pressed),
+            OverlayScreenId.TiledInsertWindow
+        ));
+        const Commit = Option.getOrThrow(Resolve(
+            Activation(Id.Commit, Windows.VK.RETURN, Phase.Pressed),
+            OverlayScreenId.TiledInsertWindow
+        ));
+        const Target = Option.getOrThrow(Resolve(
+            Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
+            OverlayScreenId.TiledInsertWindow
+        ));
+        const CaptureNext = Option.getOrThrow(Resolve(
+            Activation(
+                Id.Toggle,
+                Windows.VK.TAB,
+                Phase.Pressed,
+                [ Windows.VK.LCONTROL, Windows.VK.TAB ]
+            ),
+            OverlayScreenId.TiledInsertWindow
+        ));
+
+        expect([
+            ChooseUp,
+            Previous,
+            Commit,
+            Target,
+            CaptureNext
+        ]).toMatchObject([
+            { Id: "ChooseInsertUp", _tag: "NoOpOverlayCommand" },
+            { Id: "SelectInsertWindowUp", _tag: "NoOpOverlayCommand" },
+            { Id: "CommitInsertWindow", _tag: "NoOpOverlayCommand" },
+            { Id: "OpenInsertTarget", _tag: "NoOpOverlayCommand" },
+            {
+                Id: "OpenInsertTargetForNextWindow",
+                _tag: "NoOpOverlayCommand"
+            }
+        ]);
     });
 
     it("maps directional, boundary, parent, and Commit keys on tiled Move", () =>
@@ -409,6 +463,14 @@ describe("CommandResolver.Resolve", () =>
         expect(Root).toMatchObject({
             Id: "FocusMoveRoot",
             _tag: "NoOpOverlayCommand"
+        });
+
+        expect(Option.getOrThrow(Resolve(
+            Activation(Id.SelectRight, Windows.VK.N, Phase.Pressed),
+            OverlayScreenId.TiledHome
+        ))).toMatchObject({
+            ScreenId: "TiledResize",
+            _tag: "NavigateOverlayScreen"
         });
     });
 
@@ -548,34 +610,46 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Changes: Stream.succeed(OverlayScreenId.FloatingHome),
     ClearActivationWindow: Effect.void,
     ClearFocusPreview: Effect.void,
+    ClearTiledInsert: Effect.void,
     ClearTiledMovePanelTarget: Effect.void,
     Current: Effect.succeed(OverlayScreenId.FloatingHome),
     FineModifierHeld: Effect.succeed(false),
     FocusFailure: Effect.succeed(Option.none()),
     GetActivationApplicationName: Effect.succeed(Option.none()),
     GetActivationWindow: Effect.succeed(Option.none()),
+    MoveTiledInsertSelection: () => Effect.void,
     Navigate: () => Effect.void,
     PreviewFocusTarget: () => Effect.void,
     PrimaryModifierHeld: Effect.succeed(false),
     RecordFocusFailure: () => Effect.void,
+    RefreshTiledInsertWindows: Effect.void,
     Reset: Effect.void,
     ResizeMode: Effect.succeed(ResizeMode.Grow),
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
     ResolveTiledFocusCommit: Effect.succeed(Option.none()),
     ResolveTiledFocusTarget: () => Effect.succeed(Option.none()),
     ResolveTiledMoveAction: () => Effect.succeed(Option.none()),
+    SelectedTiledInsertWindow: Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,
     SetFineModifierHeld: () => Effect.void,
     SetPrimaryModifierHeld: () => Effect.void,
     SetResizeMode: () => Effect.void,
     SetTiledFocusSelection: () => Effect.void,
+    SetTiledInsertCaptureNext: () => Effect.void,
+    SetTiledInsertDragActive: () => Effect.void,
+    SetTiledInsertTarget: () => Effect.void,
     SetTiledMovePanelTarget: () => Effect.void,
     Snapshot: Effect.succeed({
         CanGoBack: false,
         Commands: [ ],
         Id: OverlayScreenId.FloatingHome
     }),
-    TakeActivationWindow: Effect.succeed(Option.none())
+    TakeActivationWindow: Effect.succeed(Option.none()),
+    TiledInsertCaptureNext: Effect.succeed(false),
+    TiledInsertDragActive: Effect.succeed(false),
+    TiledInsertTarget: Effect.succeed(Option.none()),
+    TiledResizeBehavior: Effect.succeed("PreserveRatios" as const),
+    ToggleTiledResizeBehavior: Effect.void
 });
 
 const Activation = (

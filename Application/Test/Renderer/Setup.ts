@@ -54,13 +54,27 @@ Object.defineProperty(window, "sorrell", {
         {
             get: vi.fn(() => Promise.resolve({
                 TileExistingWindowsOnStartup: false,
-                TiledWindowGap: 8
+                TiledWindowGap: 8,
+                TiledResizeBehavior: "PreserveRatios"
             })),
             set: vi.fn((Settings: GeneralSettingsPatch) => Promise.resolve({
                 TileExistingWindowsOnStartup:
                     Settings.TileExistingWindowsOnStartup ?? false,
-                TiledWindowGap: Settings.TiledWindowGap ?? 8
+                TiledWindowGap: Settings.TiledWindowGap ?? 8,
+                TiledResizeBehavior:
+                    Settings.TiledResizeBehavior ?? "PreserveRatios"
             }))
+        },
+        insertTarget:
+        {
+            cancel: vi.fn(() => Promise.resolve()),
+            chooseWindow: vi.fn(() => Promise.resolve()),
+            get: vi.fn(() => Promise.resolve({
+                CaptureNextWindow: false,
+                DragActive: false
+            })),
+            onChanged: vi.fn(() => (): void => undefined),
+            setCaptureNext: vi.fn(() => Promise.resolve())
         },
         log:
         {

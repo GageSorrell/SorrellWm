@@ -36,6 +36,10 @@ import {
     IsFocusPreviewPresentation
 } from "../Shared/FocusPreview.ts";
 import {
+    type InsertTargetPresentation,
+    IsInsertTargetPresentation
+} from "../Shared/InsertTarget.ts";
+import {
     IsOverlayCommandId,
     IsOverlayScreenDto,
     type OverlayCommandId,
@@ -211,6 +215,53 @@ const OnOverlayScreenChanged = (
     {
         ipcRenderer.removeListener(AppApiChannel.OverlayScreenChanged, OnChanged);
     };
+};
+
+const CancelInsertTarget = async (): Promise<void> =>
+    void await ipcRenderer.invoke(AppApiChannel.InsertTargetCancel);
+
+const ChooseInsertTargetWindow = async (): Promise<void> =>
+    void await ipcRenderer.invoke(AppApiChannel.InsertTargetChooseWindow);
+
+const GetInsertTarget = async (): Promise<InsertTargetPresentation> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.InsertTargetGet);
+
+    if (!IsInsertTargetPresentation(Response))
+    {
+        throw new TypeError("The main process returned an invalid Insert target.");
+    }
+
+    return Response;
+};
+
+const OnInsertTargetChanged = (
+    Listener: (Presentation: InsertTargetPresentation) => void
+): (() => void) =>
+{
+    const OnChanged = (_Event: IpcRendererEvent, Value: unknown): void =>
+    {
+        if (IsInsertTargetPresentation(Value))
+        {
+            Listener(Value);
+        }
+    };
+
+    ipcRenderer.on(AppApiChannel.InsertTargetChanged, OnChanged);
+    return (): void =>
+    {
+        ipcRenderer.removeListener(AppApiChannel.InsertTargetChanged, OnChanged);
+    };
+};
+
+const SetInsertTargetCaptureNext = async (Enabled: boolean): Promise<void> =>
+{
+    if (typeof Enabled !== "boolean")
+    {
+        throw new TypeError("The Insert target capture setting must be a boolean.");
+    }
+
+    void await ipcRenderer.invoke(AppApiChannel.InsertTargetSetCaptureNext, Enabled);
 };
 
 const GetRendererTheme = async (): Promise<RendererTheme> =>
@@ -392,6 +443,13 @@ const applicationApi: AppApi = Object.freeze({
     generalSettings: Object.freeze({
         get: GetGeneralSettings,
         set: SetGeneralSettings
+    }),
+    insertTarget: Object.freeze({
+        cancel: CancelInsertTarget,
+        chooseWindow: ChooseInsertTargetWindow,
+        get: GetInsertTarget,
+        onChanged: OnInsertTargetChanged,
+        setCaptureNext: SetInsertTargetCaptureNext
     }),
     log: Object.freeze({
         write: WriteRendererLog

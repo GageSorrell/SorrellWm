@@ -22,7 +22,8 @@ import {
 } from "../../Source/Main/Overlay/Session.ts";
 import {
     type OverlayCommandDto,
-    OverlayScreenId
+    OverlayScreenId,
+    type OverlayStackWindowDto
 } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
@@ -306,6 +307,62 @@ describe("OverlaySession.Live Focus targets", () =>
             "Resize",
             "Float"
         ]);
+    });
+
+    it("lists only floating Insert candidates and cycles the active window", async () =>
+    {
+        const WorkArea = Box.Box(0, 1920, 1080, 0);
+        TilingSnapshot = {
+            Workspaces: [
+                {
+                    Bounds: WorkArea,
+                    Id: Tiling.Tree.WorkspaceId(WorkArea),
+                    Root: Tiling.Tree.Window({
+                        InitialBounds: Box.Box(100, 200, 200, 100),
+                        Window: CurrentWindow
+                    })
+                }
+            ]
+        };
+
+        const ResultValue = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                yield* Session.Navigate(OverlayScreenId.TiledInsertDirection);
+                yield* Session.Navigate(OverlayScreenId.TiledInsertWindow);
+                yield* Session.RefreshTiledInsertWindows;
+                const Initial = yield* Session.Snapshot;
+                const InitialWindow = yield* Session.SelectedTiledInsertWindow;
+                yield* Session.MoveTiledInsertSelection(1);
+                const Next = yield* Session.Snapshot;
+                const NextWindow = yield* Session.SelectedTiledInsertWindow;
+
+                return { Initial, InitialWindow, Next, NextWindow };
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(ResultValue.Initial.InsertWindows).toEqual([
+            {
+                Active: true,
+                Target: { Icon: undefined, Title: "Left App" }
+            },
+            {
+                Active: false,
+                Target: { Icon: "right-icon", Title: "Right App" }
+            }
+        ]);
+        expect(ResultValue.InitialWindow).toEqual(Option.some(LeftWindow));
+        expect(ResultValue.Next.InsertWindows).toMatchObject([
+            { Active: false },
+            { Active: true }
+        ]);
+        expect(ResultValue.NextWindow).toEqual(Option.some(RightWindow));
     });
 
     it("tracks tiled panel focus without changing native focus", async () =>
@@ -595,6 +652,92 @@ describe("OverlaySession.Live Focus targets", () =>
             Target: { Title: "Display 3: Desk" }
         });
         expect(WindowsWindow.DimWindowsExcept).not.toHaveBeenCalled();
+    });
+
+    it("keeps stack focus on the panel while Up and Down select its windows", async () =>
+    {
+        vi.mocked(WindowsWindow.GetWindowText).mockImplementation((
+            Window: Handle.HWND
+        ) => Option.some(
+            Window === CurrentWindow
+                ? "First App"
+                : Window === RightWindow
+                    ? "Second App"
+                    : "Third App"
+        ));
+        const WorkArea = Box.Box(0, 1920, 1080, 0);
+        TilingSnapshot = {
+            Workspaces: [ {
+                Bounds: WorkArea,
+                Id: Tiling.Tree.WorkspaceId(WorkArea),
+                Root: Tiling.Tree.Panel(
+                    Tiling.Tree.Orientation.Stack,
+                    [
+                        Tiling.Tree.Window({
+                            InitialBounds: WorkArea,
+                            Window: CurrentWindow
+                        }),
+                        Tiling.Tree.Window({
+                            InitialBounds: WorkArea,
+                            Window: RightWindow
+                        }),
+                        Tiling.Tree.Window({
+                            InitialBounds: WorkArea,
+                            Window: OtherWindow
+                        })
+                    ]
+                )
+            } ]
+        };
+
+        const ResultValue = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                yield* Session.Navigate(OverlayScreenId.TiledFocus);
+                const Stack = Option.getOrThrow(
+                    yield* Session.ResolveTiledFocusTarget("FocusMoveParent")
+                );
+                yield* Session.SetTiledFocusSelection(Stack);
+                const Initial = yield* Session.Snapshot;
+                const Down = Option.getOrThrow(
+                    yield* Session.ResolveTiledFocusTarget("FocusMoveDown")
+                );
+                yield* Session.SetTiledFocusSelection(Down);
+                const Selected = yield* Session.Snapshot;
+                const Up = Option.getOrThrow(
+                    yield* Session.ResolveTiledFocusTarget("FocusMoveUp")
+                );
+
+                return { Down, Initial, Selected, Stack, Up };
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(ResultValue.Stack).toMatchObject({
+            Node: { Orientation: "Stack", _tag: "Panel" },
+            Path: [ ],
+            StackActiveIndex: 0,
+            StackWindows: [ CurrentWindow, RightWindow, OtherWindow ]
+        });
+        expect(ResultValue.Initial.StackWindows).toEqual([
+            { Active: true, Target: { Icon: undefined, Title: "First App" } },
+            { Active: false, Target: { Icon: "right-icon", Title: "Second App" } },
+            { Active: false, Target: { Icon: undefined, Title: "Third App" } }
+        ]);
+        expect(ResultValue.Down).toMatchObject({
+            Node: { Orientation: "Stack", _tag: "Panel" },
+            Path: [ ],
+            StackActiveIndex: 1
+        });
+        expect(ResultValue.Selected.StackWindows?.map(
+            (WindowValue: OverlayStackWindowDto) => WindowValue.Active
+        )).toEqual([ false, true, false ]);
+        expect(ResultValue.Up.StackActiveIndex).toBe(0);
     });
 
     it("resolves tiled moves and highlights an adjacent target panel", async () =>
@@ -1017,6 +1160,31 @@ describe("OverlaySession.Live DistanceToggle", () =>
     });
 });
 
+describe("OverlaySession.Live tiled resize behavior", () =>
+{
+    it("loads the configured behavior and toggles it for the current session", async () =>
+    {
+        const [ Initial, Toggled ] = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.Navigate(OverlayScreenId.TiledResize);
+                const InitialSnapshot = yield* Session.Snapshot;
+                yield* Session.ToggleTiledResizeBehavior;
+                const ToggledSnapshot = yield* Session.Snapshot;
+                return [ InitialSnapshot, ToggledSnapshot ] as const;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(Initial.TiledResizeBehavior).toBe("PreserveRatios");
+        expect(Toggled.TiledResizeBehavior).toBe("AdjacentOnly");
+    });
+});
+
 const CurrentSettings: AppSettings.AppSettings = {
     FocusPreviewOpacity: 75,
     Keybinds: [ ],
@@ -1032,6 +1200,7 @@ const CurrentSettings: AppSettings.AppSettings = {
     ShowTitlebarFlyout: true,
     Theme: "System",
     TileExistingWindowsOnStartup: false,
+    TiledResizeBehavior: "PreserveRatios",
     TiledWindowGap: 8
 };
 

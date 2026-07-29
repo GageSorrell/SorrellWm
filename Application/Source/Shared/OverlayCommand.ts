@@ -15,6 +15,10 @@ import {
     type ShortcutDto,
     type ShortcutModifiersDto
 } from "./Hotkey.js";
+import {
+    IsTiledResizeBehavior,
+    type TiledResizeBehavior
+} from "./AppSettings.js";
 
 export/** Stable identifiers for the overlay's navigable screens. */
 const OverlayScreenId = Object.freeze({
@@ -25,7 +29,10 @@ const OverlayScreenId = Object.freeze({
     FloatingTile: "FloatingTile" as const,
     TiledFocus: "TiledFocus" as const,
     TiledHome: "TiledHome" as const,
-    TiledMove: "TiledMove" as const
+    TiledInsertDirection: "TiledInsertDirection" as const,
+    TiledInsertWindow: "TiledInsertWindow" as const,
+    TiledMove: "TiledMove" as const,
+    TiledResize: "TiledResize" as const
 } as const);
 
 /** One of the overlay's navigable screens. */
@@ -33,6 +40,11 @@ export type OverlayScreenId = typeof OverlayScreenId[keyof typeof OverlayScreenI
 
 export/** Stable identifiers for the overlay's primary commands. */
 const OverlayCommandId = Object.freeze({
+    ChooseInsertDown: "ChooseInsertDown" as const,
+    ChooseInsertLeft: "ChooseInsertLeft" as const,
+    ChooseInsertRight: "ChooseInsertRight" as const,
+    ChooseInsertUp: "ChooseInsertUp" as const,
+    CommitInsertWindow: "CommitInsertWindow" as const,
     Float: "Float" as const,
     Focus: "Focus" as const,
     FocusMonitor1: "FocusMonitor1" as const,
@@ -62,14 +74,19 @@ const OverlayCommandId = Object.freeze({
     MoveWindowParent: "MoveWindowParent" as const,
     MoveWindowRight: "MoveWindowRight" as const,
     MoveWindowUp: "MoveWindowUp" as const,
+    OpenInsertTarget: "OpenInsertTarget" as const,
+    OpenInsertTargetForNextWindow: "OpenInsertTargetForNextWindow" as const,
     OpenPerAppSettings: "OpenPerAppSettings" as const,
     Resize: "Resize" as const,
     ResizeWindowDown: "ResizeWindowDown" as const,
     ResizeWindowLeft: "ResizeWindowLeft" as const,
     ResizeWindowRight: "ResizeWindowRight" as const,
     ResizeWindowUp: "ResizeWindowUp" as const,
+    SelectInsertWindowDown: "SelectInsertWindowDown" as const,
+    SelectInsertWindowUp: "SelectInsertWindowUp" as const,
     Tile: "Tile" as const,
-    TileAll: "TileAll" as const
+    TileAll: "TileAll" as const,
+    ToggleTiledResizeBehavior: "ToggleTiledResizeBehavior" as const
 } as const);
 
 /** One of the overlay's primary commands. */
@@ -184,6 +201,25 @@ const FloatingMoveCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.MoveWindowRight }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
+const TiledInsertDirectionCommandDefinitions = Object.freeze([
+    { HotkeyId: HotkeyId.SelectLeft, Id: OverlayCommandId.ChooseInsertLeft },
+    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.ChooseInsertUp },
+    { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.ChooseInsertDown },
+    { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.ChooseInsertRight }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
+const TiledInsertWindowCommandDefinitions = Object.freeze([
+    { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.SelectInsertWindowUp },
+    { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.SelectInsertWindowDown },
+    { HotkeyId: HotkeyId.Commit, Id: OverlayCommandId.CommitInsertWindow },
+    { HotkeyId: HotkeyId.Toggle, Id: OverlayCommandId.OpenInsertTarget },
+    {
+        HotkeyId: HotkeyId.Toggle,
+        Id: OverlayCommandId.OpenInsertTargetForNextWindow,
+        RequiredModifiers: { Control: true }
+    }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
 const TiledMoveCommandDefinitions = Object.freeze([
     ...FloatingMoveCommandDefinitions,
     {
@@ -205,6 +241,14 @@ const FloatingResizeCommandDefinitions = Object.freeze([
     { HotkeyId: HotkeyId.SelectUp, Id: OverlayCommandId.ResizeWindowUp },
     { HotkeyId: HotkeyId.SelectDown, Id: OverlayCommandId.ResizeWindowDown },
     { HotkeyId: HotkeyId.SelectRight, Id: OverlayCommandId.ResizeWindowRight }
+] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
+
+const TiledResizeCommandDefinitions = Object.freeze([
+    ...FloatingResizeCommandDefinitions,
+    {
+        HotkeyId: HotkeyId.Toggle,
+        Id: OverlayCommandId.ToggleTiledResizeBehavior
+    }
 ] as const satisfies ReadonlyArray<OverlayCommandDefinition>);
 
 const HomeSecondaryCommandDefinition = Object.freeze({
@@ -231,8 +275,14 @@ const GetOverlayCommandDefinitions = (
             return TiledFocusCommandDefinitions;
         case OverlayScreenId.TiledHome:
             return TiledHomeCommandDefinitions;
+        case OverlayScreenId.TiledInsertDirection:
+            return TiledInsertDirectionCommandDefinitions;
+        case OverlayScreenId.TiledInsertWindow:
+            return TiledInsertWindowCommandDefinitions;
         case OverlayScreenId.TiledMove:
             return TiledMoveCommandDefinitions;
+        case OverlayScreenId.TiledResize:
+            return TiledResizeCommandDefinitions;
         case OverlayScreenId.FloatingHome:
         default:
             return FloatingHomeCommandDefinitions;
@@ -316,6 +366,26 @@ export interface OverlayFocusFailureDto
     readonly WindowTitle: string;
 }
 
+/** One window displayed while a stack panel has logical focus. */
+export interface OverlayStackWindowDto
+{
+    /** Whether this window is the current stack selection. */
+    readonly Active: boolean;
+
+    /** Renderer-safe title and icon for the window. */
+    readonly Target: OverlayCommandTargetDto;
+}
+
+/** One floating window displayed by the tiled Insert window picker. */
+export interface OverlayInsertWindowDto
+{
+    /** Whether this window is the current Insert selection. */
+    readonly Active: boolean;
+
+    /** Renderer-safe title and icon for the window. */
+    readonly Target: OverlayCommandTargetDto;
+}
+
 /** A complete renderer-safe snapshot of the current overlay screen. */
 export interface OverlayScreenDto
 {
@@ -324,6 +394,7 @@ export interface OverlayScreenDto
     readonly DistanceToggle?: OverlayDistanceToggleDto;
     readonly FocusFailure?: OverlayFocusFailureDto;
     readonly Id: OverlayScreenId;
+    readonly InsertWindows?: ReadonlyArray<OverlayInsertWindowDto>;
     readonly IsRootPanelFocused?: boolean;
     readonly IsTiledMovePanelTargeted?: boolean;
     readonly MonitorCommands?: ReadonlyArray<OverlayCommandDto>;
@@ -332,6 +403,10 @@ export interface OverlayScreenDto
     readonly ResizeMode?: ResizeMode;
 
     readonly SecondaryCommand?: OverlaySecondaryCommandDto;
+    readonly StackWindows?: ReadonlyArray<OverlayStackWindowDto>;
+
+    /** The redistribution behavior currently used by tiled resizing. */
+    readonly TiledResizeBehavior?: TiledResizeBehavior;
 }
 
 export/** Determine whether an IPC value names a primary overlay command. */
@@ -429,6 +504,32 @@ const IsOverlayFocusFailureDto = (Value: unknown): Value is OverlayFocusFailureD
     return typeof Candidate.WindowTitle === "string";
 };
 
+const IsOverlayStackWindowDto = (Value: unknown): Value is OverlayStackWindowDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<OverlayStackWindowDto>;
+
+    return IsBoolean(Candidate.Active)
+        && IsOverlayCommandTargetDto(Candidate.Target);
+};
+
+const IsOverlayInsertWindowDto = (Value: unknown): Value is OverlayInsertWindowDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<OverlayInsertWindowDto>;
+
+    return IsBoolean(Candidate.Active)
+        && IsOverlayCommandTargetDto(Candidate.Target);
+};
+
 const IsOverlaySecondaryCommandDto = (Value: unknown): Value is OverlaySecondaryCommandDto =>
 {
     if (!IsOverlayCommandDto(Value))
@@ -461,6 +562,13 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
             || IsBoolean(Candidate.IsRootPanelFocused)
         )
         && (
+            Candidate.InsertWindows === undefined
+            || (
+                Array.isArray(Candidate.InsertWindows)
+                && Candidate.InsertWindows.every(IsOverlayInsertWindowDto)
+            )
+        )
+        && (
             Candidate.IsTiledMovePanelTargeted === undefined
             || IsBoolean(Candidate.IsTiledMovePanelTargeted)
         )
@@ -486,5 +594,16 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
         && (
             Candidate.ResizeMode === undefined
             || IsResizeMode(Candidate.ResizeMode)
+        )
+        && (
+            Candidate.StackWindows === undefined
+            || (
+                Array.isArray(Candidate.StackWindows)
+                && Candidate.StackWindows.every(IsOverlayStackWindowDto)
+            )
+        )
+        && (
+            Candidate.TiledResizeBehavior === undefined
+            || IsTiledResizeBehavior(Candidate.TiledResizeBehavior)
         );
 };

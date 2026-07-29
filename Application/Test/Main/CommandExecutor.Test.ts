@@ -197,6 +197,59 @@ describe("CommandExecutor.Execute", () =>
         ]);
     });
 
+    it("previews a tiled Insert direction and moves the picker over the target half", async () =>
+    {
+        const Operations = new Array<string>();
+        const PreviewBounds = Box.Box(0, 960, 540, 0);
+        const PreviewInsert = vi.fn(() => Effect.succeed(PreviewBounds));
+        const ResultValue = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                const Session = yield* OverlaySession.OverlaySession;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ChooseInsertUp"
+                }));
+
+                return {
+                    Current: yield* Session.Current,
+                    Target: yield* Session.TiledInsertTarget
+                };
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(1n as Handle.HWND),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledInsertDirection
+            )),
+            Effect.provide(FakeTilingManager(
+                [ 1n as Handle.HWND ],
+                { PreviewInsert }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(PreviewInsert).toHaveBeenCalledWith(
+            1n,
+            Tiling.Tree.FocusDirection.Up
+        );
+        expect(ResultValue.Current).toBe(OverlayScreenId.TiledInsertWindow);
+        expect(ResultValue.Target).toEqual(Option.some({
+            Bounds: PreviewBounds,
+            Direction: Tiling.Tree.FocusDirection.Up,
+            TargetWindow: 1n
+        }));
+        expect(Operations).toEqual([
+            "SetBounds:Overlay",
+            "Send:Overlay:overlay-screen:changed:TiledInsertWindow"
+        ]);
+    });
+
     it("restores foreground focus without displaying a backdrop", async () =>
     {
         const ForegroundWindow = 42n as Handle.HWND;
@@ -466,6 +519,57 @@ describe("CommandExecutor.Execute", () =>
         expect(WindowsWindow.SetWindowRect).not.toHaveBeenCalled();
     });
 
+    it("resizes tiled windows with the active redistribution behavior", async () =>
+    {
+        const ActivationWindow = 84n as Handle.HWND;
+        const Resize = vi.fn(() => Effect.void);
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ResizeWindowRight"
+                }));
+                yield* Executor.Execute(UiCommands.ToggleTiledResizeBehavior());
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ResizeWindowLeft"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(ActivationWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledResize
+            )),
+            Effect.provide(FakeTilingManager(
+                [ ActivationWindow ],
+                { Resize }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Resize).toHaveBeenNthCalledWith(
+            1,
+            ActivationWindow,
+            Tiling.Tree.FocusDirection.Right,
+            20,
+            "PreserveRatios"
+        );
+        expect(Resize).toHaveBeenNthCalledWith(
+            2,
+            ActivationWindow,
+            Tiling.Tree.FocusDirection.Left,
+            20,
+            "AdjacentOnly"
+        );
+    });
+
     it("targets a sibling panel without moving or recentering the tiled window", async () =>
     {
         const ActivationWindow = 84n as Handle.HWND;
@@ -636,14 +740,18 @@ const FakeTilingManager = (
         Workspaces: Root === null ? [ ] : [ { Bounds: Box.Box(0, 1920, 1080, 0), Id: "Fake", Root } ]
     };
     const Service: Tiling.Manager.TilingManagerImpl = {
+        BringStackWindowToFront: () => Effect.void,
         Changes: Stream.empty,
         Float: () => Effect.void,
+        Insert: () => Effect.void,
         Move: () => Effect.void,
         MoveIntoPanel: () => Effect.void,
         MoveToContainingPanel: () => Effect.void,
         MoveToIndex: () => Effect.void,
+        PreviewInsert: () => Effect.succeed(Box.Box(0, 960, 1080, 0)),
         Reconcile: Effect.void,
         Refresh: Effect.void,
+        Resize: () => Effect.void,
         SetPanelOrientation: () => Effect.void,
         SetPanelRatio: () => Effect.void,
         Snapshot: Effect.succeed(Snapshot),
@@ -676,6 +784,7 @@ const FakeAppSettings = (
         ShowTitlebarFlyout: true,
         Theme: "System",
         TileExistingWindowsOnStartup: false,
+        TiledResizeBehavior: "PreserveRatios",
         TiledWindowGap: 8
     };
     const Service: AppSettings.Service = {
@@ -713,7 +822,13 @@ const FakeOverlaySession = (
     let PrimaryModifierHeld = false;
     let FineModifierHeld = false;
     let CurrentResizeMode: ResizeModeType = ResizeMode.Grow;
+    let CurrentTiledResizeBehavior: "AdjacentOnly" | "PreserveRatios" =
+        "PreserveRatios";
     let CurrentFocusFailure: Option.Option<OverlaySession.FocusFailure> = Option.none();
+    let CurrentTiledInsertCaptureNext = false;
+    let CurrentTiledInsertDragActive = false;
+    let CurrentTiledInsertTarget =
+        Option.none<OverlaySession.TiledInsertTarget>();
     const Current = (): OverlayScreenId => Stack.at(-1) ?? OverlayScreenId.FloatingHome;
 
     return Layer.succeed(OverlaySession.OverlaySession, {
@@ -727,12 +842,19 @@ const FakeOverlaySession = (
             ActivationWindow = Option.none();
         }),
         ClearFocusPreview: Effect.void,
+        ClearTiledInsert: Effect.sync((): void =>
+        {
+            CurrentTiledInsertCaptureNext = false;
+            CurrentTiledInsertDragActive = false;
+            CurrentTiledInsertTarget = Option.none();
+        }),
         ClearTiledMovePanelTarget: Effect.sync(OnClearTiledMovePanelTarget),
         Current: Effect.sync(Current),
         FineModifierHeld: Effect.sync(() => FineModifierHeld),
         FocusFailure: Effect.sync(() => CurrentFocusFailure),
         GetActivationApplicationName: Effect.succeed(Option.none<string>()),
         GetActivationWindow: Effect.sync(() => ActivationWindow),
+        MoveTiledInsertSelection: () => Effect.void,
         Navigate: (Screen: OverlayScreenId) => Effect.sync((): void =>
         {
             Stack = [ ...Stack, Screen ];
@@ -743,6 +865,7 @@ const FakeOverlaySession = (
         {
             CurrentFocusFailure = Option.some(Failure);
         }),
+        RefreshTiledInsertWindows: Effect.void,
         Reset: Effect.sync((): void =>
         {
             Stack = [ OverlayScreenId.FloatingHome ];
@@ -752,6 +875,7 @@ const FakeOverlaySession = (
         ResolveTiledFocusCommit: Effect.succeed(TiledFocusCommit),
         ResolveTiledFocusTarget: () => Effect.succeed(TiledFocusTarget),
         ResolveTiledMoveAction: () => Effect.succeed(TiledMoveAction),
+        SelectedTiledInsertWindow: Effect.succeed(Option.none()),
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
         {
             ActivationWindow = Option.some(WindowHandle);
@@ -771,6 +895,20 @@ const FakeOverlaySession = (
         SetTiledFocusSelection: (
             Selection: OverlaySession.TiledFocusSelection
         ) => Effect.sync(() => OnSetTiledFocusSelection(Selection)),
+        SetTiledInsertCaptureNext: (Enabled: boolean) => Effect.sync((): void =>
+        {
+            CurrentTiledInsertCaptureNext = Enabled;
+        }),
+        SetTiledInsertDragActive: (Active: boolean) => Effect.sync((): void =>
+        {
+            CurrentTiledInsertDragActive = Active;
+        }),
+        SetTiledInsertTarget: (
+            Target: OverlaySession.TiledInsertTarget
+        ) => Effect.sync((): void =>
+        {
+            CurrentTiledInsertTarget = Option.some(Target);
+        }),
         SetTiledMovePanelTarget: (
             Target: OverlaySession.TiledMovePanelTarget
         ) => Effect.sync(() => OnSetTiledMovePanelTarget(Target)),
@@ -784,6 +922,17 @@ const FakeOverlaySession = (
             const CurrentActivationWindow = ActivationWindow;
             ActivationWindow = Option.none();
             return CurrentActivationWindow;
+        }),
+        TiledInsertCaptureNext: Effect.sync(() => CurrentTiledInsertCaptureNext),
+        TiledInsertDragActive: Effect.sync(() => CurrentTiledInsertDragActive),
+        TiledInsertTarget: Effect.sync(() => CurrentTiledInsertTarget),
+        TiledResizeBehavior: Effect.sync(() => CurrentTiledResizeBehavior),
+        ToggleTiledResizeBehavior: Effect.sync((): void =>
+        {
+            CurrentTiledResizeBehavior =
+                CurrentTiledResizeBehavior === "PreserveRatios"
+                    ? "AdjacentOnly"
+                    : "PreserveRatios";
         })
     });
 });

@@ -1,0 +1,13 @@
+@keyframes sorrell-insert-target-pulse {
+    0%, 100% {
+        opacity: 0.35;
+    }
+
+    50% {
+        opacity: 0.95;
+    }
+}
+
+.sorrell-insert-target-drop-outline {
+    animation: sorrell-insert-target-pulse 1.8s ease-in-out infinite;
+}

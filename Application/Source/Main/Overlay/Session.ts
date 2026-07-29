@@ -20,8 +20,10 @@ import {
     IsFocusMonitorCommandId,
     type OverlayCommandId,
     type OverlayCommandTargetDto,
+    type OverlayInsertWindowDto,
     type OverlayScreenDto,
     type OverlayScreenId,
+    type OverlayStackWindowDto,
     ResizeMode,
     type ResizeMode as ResizeModeType,
     OverlayScreenId as ScreenId
@@ -33,7 +35,8 @@ import type {
 } from "../../Shared/FocusPreview.ts";
 import { type Handle, Screen, Theme, Window } from "@sorrell/windows";
 import { AppApiChannel } from "../../Shared/Api.ts";
-import type { Box } from "@sorrell/math";
+import { Box } from "@sorrell/math";
+import type { TiledResizeBehavior } from "../../Shared/AppSettings.ts";
 
 const TypeId = "~sorrell/wm/Main/Overlay/Session" as const;
 
@@ -49,6 +52,8 @@ export interface TiledFocusSelection
 {
     readonly Node: Tiling.Tree.Node;
     readonly Path: Tiling.Tree.Path;
+    readonly StackActiveIndex?: number;
+    readonly StackWindows?: ReadonlyArray<Handle.HWND>;
     readonly WorkspaceId: string;
 }
 
@@ -83,6 +88,20 @@ export interface TiledMovePanelTarget
     readonly WorkspaceId: string;
 }
 
+/** The reserved directional region for one in-progress tiled insertion. */
+export interface TiledInsertTarget
+{
+    readonly Bounds: Box.Box;
+    readonly Direction: Tiling.Tree.FocusDirection;
+    readonly TargetWindow: Handle.HWND;
+}
+
+interface TiledInsertWindowCandidate
+{
+    readonly Target: OverlayCommandTargetDto;
+    readonly Window: Handle.HWND;
+}
+
 /**
  * Resolved state transition for one command on the tiled Move screen.
  *
@@ -98,6 +117,8 @@ export type TiledMoveAction =
 interface TiledFocusLocation
 {
     readonly Path: Tiling.Tree.Path;
+    readonly StackActiveIndex?: number;
+    readonly StackWindows?: ReadonlyArray<Handle.HWND>;
     readonly WorkspaceId: string;
 }
 
@@ -273,6 +294,54 @@ const FindTiledFocusSelection = (
     return Option.none();
 };
 
+const MakeTiledFocusSelection = (
+    Node: Tiling.Tree.Node,
+    PathValue: Tiling.Tree.Path,
+    WorkspaceIdValue: string,
+    StackWindows?: ReadonlyArray<Handle.HWND>,
+    StackActiveIndex: number = 0
+): TiledFocusSelection =>
+{
+    if (
+        Node._tag !== "Panel"
+        || Node.Orientation !== Tiling.Tree.Orientation.Stack
+    )
+    {
+        return {
+            Node,
+            Path: PathValue,
+            WorkspaceId: WorkspaceIdValue
+        };
+    }
+
+    const CurrentWindows = Tiling.Tree.Windows(Node).map(
+        (Value: Tiling.Tree.ManagedWindow): Handle.HWND => Value.Window
+    );
+    const CurrentWindowSet = new Set(CurrentWindows);
+    const PreservedWindows = StackWindows?.filter(
+        (WindowValue: Handle.HWND): boolean => CurrentWindowSet.has(WindowValue)
+    ) ?? [ ];
+    const PreservedSet = new Set(PreservedWindows);
+    const OrderedWindows = Object.freeze([
+        ...PreservedWindows,
+        ...CurrentWindows.filter(
+            (WindowValue: Handle.HWND): boolean => !PreservedSet.has(WindowValue)
+        )
+    ]);
+    const ActiveIndex = Math.max(
+        0,
+        Math.min(StackActiveIndex, OrderedWindows.length - 1)
+    );
+
+    return {
+        Node,
+        Path: PathValue,
+        StackActiveIndex: ActiveIndex,
+        StackWindows: OrderedWindows,
+        WorkspaceId: WorkspaceIdValue
+    };
+};
+
 const GetTiledFocusSelection = (
     Snapshot: Tiling.Tree.State,
     Location: TiledFocusLocation
@@ -287,7 +356,13 @@ const GetTiledFocusSelection = (
 
     return Workspace === undefined || Node === undefined
         ? Option.none()
-        : Option.some({ ...Location, Node });
+        : Option.some(MakeTiledFocusSelection(
+            Node,
+            Location.Path,
+            Location.WorkspaceId,
+            Location.StackWindows,
+            Location.StackActiveIndex
+        ));
 };
 
 // A candidate is assigned to whichever axis its offset is dominated by, so a
@@ -450,6 +525,44 @@ export interface OverlaySessionImpl
     /** Choose whether the Resize screen grows or shrinks the window. */
     readonly SetResizeMode: (Mode: ResizeModeType) => Effect.Effect<void>;
 
+    /** The redistribution behavior currently used by tiled resizing. */
+    readonly TiledResizeBehavior: Effect.Effect<TiledResizeBehavior>;
+
+    /** Cycle the tiled Resize screen's redistribution behavior. */
+    readonly ToggleTiledResizeBehavior: Effect.Effect<void>;
+
+    /** Clear the reserved tiled Insert region and its window selection. */
+    readonly ClearTiledInsert: Effect.Effect<void>;
+
+    /** Whether the temporary Insert target is waiting for the next new window. */
+    readonly TiledInsertCaptureNext: Effect.Effect<boolean>;
+
+    /** Whether a floating native window is being dragged over the Insert target. */
+    readonly TiledInsertDragActive: Effect.Effect<boolean>;
+
+    /** The reserved directional region for the current tiled Insert flow. */
+    readonly TiledInsertTarget: Effect.Effect<Option.Option<TiledInsertTarget>>;
+
+    /** Refresh the floating windows available to the tiled Insert picker. */
+    readonly RefreshTiledInsertWindows: Effect.Effect<void>;
+
+    /** Cycle the selected floating window in the tiled Insert picker. */
+    readonly MoveTiledInsertSelection: (Delta: number) => Effect.Effect<void>;
+
+    /** Return the currently selected floating window, when one remains eligible. */
+    readonly SelectedTiledInsertWindow: Effect.Effect<Option.Option<Handle.HWND>>;
+
+    /** Set whether the temporary Insert target should capture the next new window. */
+    readonly SetTiledInsertCaptureNext: (Enabled: boolean) => Effect.Effect<void>;
+
+    /** Set whether a native window is currently being dragged over the target. */
+    readonly SetTiledInsertDragActive: (Active: boolean) => Effect.Effect<void>;
+
+    /** Reserve a directional tiled Insert region. */
+    readonly SetTiledInsertTarget: (
+        Target: TiledInsertTarget
+    ) => Effect.Effect<void>;
+
     /** The most recent Focus-direction failure still being shown, if any. */
     readonly FocusFailure: Effect.Effect<Option.Option<FocusFailure>>;
 
@@ -595,6 +708,28 @@ const GetTiledFocusPresentation = (
         };
     })();
 
+const GetStackWindowPresentations = (
+    Selection: TiledFocusSelection
+): ReadonlyArray<OverlayStackWindowDto> =>
+{
+    const ManagedByWindow = new Map(
+        Tiling.Tree.Windows(Selection.Node).map(
+            (Value: Tiling.Tree.ManagedWindow) => [ Value.Window, Value ] as const
+        )
+    );
+
+    return Selection.StackWindows?.map((
+        WindowValue: Handle.HWND,
+        Index: number
+    ): OverlayStackWindowDto => ({
+        Active: Index === Selection.StackActiveIndex,
+        Target: GetTargetPresentation({
+            Bounds: ManagedByWindow.get(WindowValue)!.InitialBounds,
+            Window: WindowValue
+        })
+    })) ?? [ ];
+};
+
 const GetMonitorCommandStates = (
     Snapshot: Tiling.Tree.State,
     Monitors: ReadonlyArray<Screen.MonitorInfo>
@@ -658,6 +793,9 @@ const Live = Layer.effect(
         const PrimaryModifierHeldRef = yield* Ref.make(false);
         const FineModifierHeldRef = yield* Ref.make(false);
         const ResizeModeRef = yield* Ref.make<ResizeModeType>(ResizeMode.Grow);
+        const TiledResizeBehaviorRef = yield* Ref.make<TiledResizeBehavior>(
+            "PreserveRatios"
+        );
         const ExcludedFocusWindows = yield* Ref.make<ReadonlySet<Handle.HWND>>(new Set());
         const FocusFailureRef = yield* Ref.make(Option.none<FocusFailure>());
         const TiledFocusLocationRef = yield* Ref.make(
@@ -666,6 +804,15 @@ const Live = Layer.effect(
         const TiledMovePanelTargetRef = yield* Ref.make(
             Option.none<TiledMovePanelTarget>()
         );
+        const TiledInsertCaptureNextRef = yield* Ref.make(false);
+        const TiledInsertDragActiveRef = yield* Ref.make(false);
+        const TiledInsertSelectionRef = yield* Ref.make(0);
+        const TiledInsertTargetRef = yield* Ref.make(
+            Option.none<TiledInsertTarget>()
+        );
+        const TiledInsertWindowsRef = yield* Ref.make<
+            ReadonlyArray<TiledInsertWindowCandidate>
+        >([ ]);
         const Stack = yield* SubscriptionRef.make<ReadonlyArray<OverlayScreenId>>(
             Object.freeze([ ScreenId.FloatingHome ])
         );
@@ -713,6 +860,53 @@ const Live = Layer.effect(
             Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
             Effect.ignore
         );
+        const ClearTiledInsert = Effect.all([
+            Ref.set(TiledInsertCaptureNextRef, false),
+            Ref.set(TiledInsertDragActiveRef, false),
+            Ref.set(TiledInsertSelectionRef, 0),
+            Ref.set(TiledInsertTargetRef, Option.none()),
+            Ref.set(TiledInsertWindowsRef, [ ])
+        ], { discard: true });
+        const RefreshTiledInsertWindows = Effect.gen(function*()
+        {
+            const WindowsResult = Window.GetManageableTopLevelWindows();
+            const TilingSnapshot = yield* TilingManager.Snapshot;
+
+            if (Result.isFailure(WindowsResult))
+            {
+                yield* Logging.LogWarning(
+                    "Overlay.Insert",
+                    "Could not enumerate floating windows for tiled insertion.",
+                    WindowsResult.failure
+                );
+                yield* Ref.set(TiledInsertWindowsRef, [ ]);
+                yield* Ref.set(TiledInsertSelectionRef, 0);
+                return;
+            }
+
+            const Candidates = WindowsResult.success.flatMap(
+                (WindowHandle: Handle.HWND): ReadonlyArray<
+                    TiledInsertWindowCandidate
+                > => IsWindowTiled(TilingSnapshot, WindowHandle)
+                    ? [ ]
+                    : [ {
+                        Target: GetTargetPresentation({
+                            Bounds: Window.GetWindowRect(WindowHandle)
+                                .pipe(Option.getOrElse(() => Box.Box(0, 0, 0, 0))),
+                            Window: WindowHandle
+                        }),
+                        Window: WindowHandle
+                    } ]
+            );
+
+            yield* Ref.set(TiledInsertWindowsRef, Object.freeze(Candidates));
+            yield* Ref.set(TiledInsertSelectionRef, 0);
+            yield* Logging.LogDebug(
+                "Overlay.Insert",
+                "Refreshed tiled Insert window candidates.",
+                { WindowCount: Candidates.length }
+            );
+        });
         const GetFocusProxyNativeHandles = Effect.forEach(
             FocusPreviewKeys,
             (Key: FocusPreviewKey) => BrowserWindows.GetNativeHandle(Key).pipe(
@@ -1080,6 +1274,32 @@ const Live = Layer.effect(
                 return Option.none();
             }
 
+            if (
+                CurrentSelection.value.Node._tag === "Panel"
+                && CurrentSelection.value.Node.Orientation
+                    === Tiling.Tree.Orientation.Stack
+                && (
+                    Id === CommandId.FocusMoveUp
+                    || Id === CommandId.FocusMoveDown
+                )
+            )
+            {
+                const StackWindows = CurrentSelection.value.StackWindows ?? [ ];
+                const CurrentIndex = CurrentSelection.value.StackActiveIndex ?? 0;
+                const TargetIndex = CurrentIndex
+                    + (Id === CommandId.FocusMoveUp ? -1 : 1);
+
+                return TargetIndex < 0 || TargetIndex >= StackWindows.length
+                    ? Option.none()
+                    : Option.some(MakeTiledFocusSelection(
+                        CurrentSelection.value.Node,
+                        CurrentSelection.value.Path,
+                        CurrentSelection.value.WorkspaceId,
+                        StackWindows,
+                        TargetIndex
+                    ));
+            }
+
             if (IsFocusMonitorCommandId(Id))
             {
                 if (
@@ -1104,11 +1324,11 @@ const Live = Layer.effect(
                     ) => Candidate.Id === Tiling.Tree.WorkspaceId(Monitor.WorkArea));
 
                 return TargetWorkspace?.Root?._tag === "Panel"
-                    ? Option.some({
-                        Node: TargetWorkspace.Root,
-                        Path: Object.freeze([ ]),
-                        WorkspaceId: TargetWorkspace.Id
-                    })
+                    ? Option.some(MakeTiledFocusSelection(
+                        TargetWorkspace.Root,
+                        Object.freeze([ ]),
+                        TargetWorkspace.Id
+                    ))
                     : Option.none();
             }
 
@@ -1137,11 +1357,11 @@ const Live = Layer.effect(
                     readonly Bounds: Box.Box;
                     readonly Node: Tiling.Tree.PanelNode;
                     readonly Workspace: Tiling.Tree.Workspace;
-                }): TiledFocusSelection => ({
-                    Node: Value.Node,
-                    Path: Object.freeze([ ]),
-                    WorkspaceId: Value.Workspace.Id
-                }));
+                }): TiledFocusSelection => MakeTiledFocusSelection(
+                    Value.Node,
+                    Object.freeze([ ]),
+                    Value.Workspace.Id
+                ));
             }
 
             const TargetPath = ResolveTiledFocusPath(
@@ -1155,11 +1375,11 @@ const Live = Layer.effect(
 
             return TargetPath === undefined || TargetNode === undefined
                 ? Option.none()
-                : Option.some({
-                    Node: TargetNode,
-                    Path: TargetPath,
-                    WorkspaceId: Workspace.Id
-                });
+                : Option.some(MakeTiledFocusSelection(
+                    TargetNode,
+                    TargetPath,
+                    Workspace.Id
+                ));
         });
         const ResolveTiledFocusCommit = Effect.gen(function*()
         {
@@ -1187,11 +1407,11 @@ const Live = Layer.effect(
                 || TargetPath === undefined
                 || TargetNode === undefined
                 ? Option.none()
-                : Option.some({
-                    Node: TargetNode,
-                    Path: TargetPath,
-                    WorkspaceId: Workspace.Id
-                });
+                : Option.some(MakeTiledFocusSelection(
+                    TargetNode,
+                    TargetPath,
+                    Workspace.Id
+                ));
         });
         const ResolveCurrentTiledMoveSelection = Effect.gen(function*()
         {
@@ -1363,6 +1583,7 @@ const Live = Layer.effect(
                 Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none()))
             ),
             ClearFocusPreview,
+            ClearTiledInsert,
             ClearTiledMovePanelTarget: Ref.set(
                 TiledMovePanelTargetRef,
                 Option.none()
@@ -1375,6 +1596,24 @@ const Live = Layer.effect(
                 Effect.map(Option.flatMap(GetApplicationName))
             ),
             GetActivationWindow: Ref.get(ActivationWindow),
+            MoveTiledInsertSelection: (Delta: number) => Effect.gen(function*()
+            {
+                const Candidates = yield* Ref.get(TiledInsertWindowsRef);
+                if (Candidates.length === 0)
+                {
+                    return;
+                }
+
+                yield* Ref.update(
+                    TiledInsertSelectionRef,
+                    (CurrentIndex: number): number =>
+                        (
+                            CurrentIndex
+                            + Math.sign(Delta)
+                            + Candidates.length
+                        ) % Candidates.length
+                );
+            }),
             Navigate: (Screen: OverlayScreenId) => pipe(
                 Logging.LogDebug("Overlay", "Navigating to an overlay screen.", {
                     Screen
@@ -1401,6 +1640,14 @@ const Live = Layer.effect(
                 Effect.andThen(
                     Screen === ScreenId.TiledFocus
                         ? InitializeTiledFocus
+                        : Effect.void
+                ),
+                Effect.andThen(
+                    Screen === ScreenId.TiledResize
+                        ? Settings.GetSetting("TiledResizeBehavior").pipe(
+                            Effect.flatMap((Behavior: TiledResizeBehavior) =>
+                                Ref.set(TiledResizeBehaviorRef, Behavior))
+                        )
                         : Effect.void
                 ),
                 Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none())),
@@ -1457,6 +1704,7 @@ const Live = Layer.effect(
                 )),
                 Effect.andThen(Ref.set(FocusFailureRef, Option.some(Failure)))
             ),
+            RefreshTiledInsertWindows,
             Reset: Effect.gen(function*()
             {
                 const CurrentWindow = yield* Ref.get(ActivationWindow);
@@ -1469,6 +1717,7 @@ const Live = Layer.effect(
                 yield* Ref.set(ExcludedFocusWindows, new Set());
                 yield* Ref.set(TiledFocusLocationRef, Option.none());
                 yield* Ref.set(TiledMovePanelTargetRef, Option.none());
+                yield* ClearTiledInsert;
                 yield* ClearFocusProxyWindows;
                 yield* ClearTiledFocusPanelPreview;
                 yield* ClearTiledMovePanelPreview;
@@ -1479,6 +1728,12 @@ const Live = Layer.effect(
             ResolveTiledFocusCommit,
             ResolveTiledFocusTarget,
             ResolveTiledMoveAction,
+            SelectedTiledInsertWindow: Effect.gen(function*()
+            {
+                const Candidates = yield* Ref.get(TiledInsertWindowsRef);
+                const Selection = yield* Ref.get(TiledInsertSelectionRef);
+                return Option.fromNullishOr(Candidates[Selection]?.Window);
+            }),
             SetActivationWindow: (WindowHandle: Handle.HWND) => pipe(
                 Logging.LogDebug("Overlay", "Set the overlay activation window.", {
                     Window: WindowHandle
@@ -1498,8 +1753,23 @@ const Live = Layer.effect(
                     WorkspaceId: Selection.WorkspaceId
                 }).pipe(Effect.andThen(Ref.set(TiledFocusLocationRef, Option.some({
                     Path: Selection.Path,
+                    ...(Selection.StackActiveIndex === undefined
+                        ? { }
+                        : { StackActiveIndex: Selection.StackActiveIndex }),
+                    ...(Selection.StackWindows === undefined
+                        ? { }
+                        : { StackWindows: Selection.StackWindows }),
                     WorkspaceId: Selection.WorkspaceId
                 })))),
+            SetTiledInsertCaptureNext: (
+                Enabled: boolean
+            ) => Ref.set(TiledInsertCaptureNextRef, Enabled),
+            SetTiledInsertDragActive: (
+                Active: boolean
+            ) => Ref.set(TiledInsertDragActiveRef, Active),
+            SetTiledInsertTarget: (
+                Target: TiledInsertTarget
+            ) => Ref.set(TiledInsertTargetRef, Option.some(Object.freeze(Target))),
             SetTiledMovePanelTarget: (Target: TiledMovePanelTarget) =>
                 Logging.LogDebug("Overlay.Move", "Selected a tiled move target panel.", {
                     Path: Target.TargetPanelPath,
@@ -1515,6 +1785,9 @@ const Live = Layer.effect(
                 const Held = yield* Ref.get(PrimaryModifierHeldRef);
                 const FineHeld = yield* Ref.get(FineModifierHeldRef);
                 const CurrentResizeMode = yield* Ref.get(ResizeModeRef);
+                const CurrentTiledResizeBehavior = yield* Ref.get(
+                    TiledResizeBehaviorRef
+                );
                 const Excluded = yield* Ref.get(ExcludedFocusWindows);
                 const TilingSnapshot = yield* TilingManager.Snapshot;
                 const CanTileAll = CurrentScreen === ScreenId.FloatingHome
@@ -1540,6 +1813,8 @@ const Live = Layer.effect(
                 const DisabledCommandIds = new Set<OverlayCommandId>();
                 let IsRootPanelFocused = false;
                 let IsTiledMovePanelTargeted = false;
+                let InsertWindows: ReadonlyArray<OverlayInsertWindowDto> = [ ];
+                let StackWindows: ReadonlyArray<OverlayStackWindowDto> = [ ];
 
                 if (CurrentScreen === ScreenId.FloatingFocus)
                 {
@@ -1582,6 +1857,9 @@ const Live = Layer.effect(
                     IsRootPanelFocused = Option.isSome(CurrentSelection)
                         && CurrentSelection.value.Path.length === 0
                         && CurrentSelection.value.Node._tag === "Panel";
+                    StackWindows = Option.isSome(CurrentSelection)
+                        ? GetStackWindowPresentations(CurrentSelection.value)
+                        : [ ];
 
                     for (const Id of TiledFocusCommandIds)
                     {
@@ -1612,6 +1890,23 @@ const Live = Layer.effect(
                         {
                             DisabledCommandIds.add(Id);
                         }
+                    }
+                }
+                else if (CurrentScreen === ScreenId.TiledInsertWindow)
+                {
+                    const Candidates = yield* Ref.get(TiledInsertWindowsRef);
+                    const Selection = yield* Ref.get(TiledInsertSelectionRef);
+                    InsertWindows = Candidates.map((
+                        Candidate: TiledInsertWindowCandidate,
+                        Index: number
+                    ): OverlayInsertWindowDto => ({
+                        Active: Index === Selection,
+                        Target: Candidate.Target
+                    }));
+
+                    if (Candidates.length === 0)
+                    {
+                        DisabledCommandIds.add(CommandId.CommitInsertWindow);
                     }
                 }
                 else
@@ -1645,7 +1940,10 @@ const Live = Layer.effect(
                         : { },
                     CanTileAll,
                     DisabledCommandIds,
-                    IsTiledMovePanelTargeted
+                    IsTiledMovePanelTargeted,
+                    StackWindows,
+                    CurrentTiledResizeBehavior,
+                    InsertWindows
                 );
 
                 return (
@@ -1659,7 +1957,18 @@ const Live = Layer.effect(
                     }
                     : ScreenDto;
             }),
-            TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none())
+            TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none()),
+            TiledInsertCaptureNext: Ref.get(TiledInsertCaptureNextRef),
+            TiledInsertDragActive: Ref.get(TiledInsertDragActiveRef),
+            TiledInsertTarget: Ref.get(TiledInsertTargetRef),
+            TiledResizeBehavior: Ref.get(TiledResizeBehaviorRef),
+            ToggleTiledResizeBehavior: Ref.update(
+                TiledResizeBehaviorRef,
+                (Current: TiledResizeBehavior): TiledResizeBehavior =>
+                    Current === "PreserveRatios"
+                        ? "AdjacentOnly"
+                        : "PreserveRatios"
+            )
         } as const;
     })
 );

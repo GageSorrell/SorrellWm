@@ -50,8 +50,10 @@ import {
     OverlayCommandId,
     type OverlayCommandId as OverlayCommandIdType,
     type OverlayFocusFailureDto,
+    type OverlayInsertWindowDto,
     type OverlayScreenDto,
-    OverlayScreenId
+    OverlayScreenId,
+    type OverlayStackWindowDto
 } from "../Shared/OverlayCommand.js";
 import { type SampledColor, ToCssColor, UseDominantColor } from "./UseDominantColor.js";
 import { useEffect, useState } from "react";
@@ -96,6 +98,36 @@ const ResolveDescription = (
 
 const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> =
     {
+        [ OverlayCommandId.ChooseInsertDown ]:
+        {
+            Description: "Insert into the bottom half of this window.",
+            Icon: ArrowDownRegular,
+            Label: "Insert Down"
+        },
+        [ OverlayCommandId.ChooseInsertLeft ]:
+        {
+            Description: "Insert into the left half of this window.",
+            Icon: ArrowLeftRegular,
+            Label: "Insert Left"
+        },
+        [ OverlayCommandId.ChooseInsertRight ]:
+        {
+            Description: "Insert into the right half of this window.",
+            Icon: ArrowRightRegular,
+            Label: "Insert Right"
+        },
+        [ OverlayCommandId.ChooseInsertUp ]:
+        {
+            Description: "Insert into the top half of this window.",
+            Icon: ArrowUpRegular,
+            Label: "Insert Up"
+        },
+        [ OverlayCommandId.CommitInsertWindow ]:
+        {
+            Description: "Insert the selected floating window.",
+            Icon: AddSquareRegular,
+            Label: "Insert Selected Window"
+        },
         [ OverlayCommandId.Focus ]:
         {
             Description: "Choose a window to focus.",
@@ -258,6 +290,18 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ArrowUpRegular,
             Label: "Move Up"
         },
+        [ OverlayCommandId.OpenInsertTarget ]:
+        {
+            Description: "Create a target where a floating window can be dropped.",
+            Icon: CursorClickRegular,
+            Label: "Drag a Window Here"
+        },
+        [ OverlayCommandId.OpenInsertTargetForNextWindow ]:
+        {
+            Description: "Create a target that captures the next eligible window.",
+            Icon: AddSquareRegular,
+            Label: "Tile the Next Window Here"
+        },
         [ OverlayCommandId.Insert ]:
         {
             Description: (Context: PresentationContext) =>
@@ -306,6 +350,18 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Icon: ArrowUpRegular,
             Label: "Resize Up"
         },
+        [ OverlayCommandId.SelectInsertWindowDown ]:
+        {
+            Description: "Select the next floating window.",
+            Icon: AppGenericRegular,
+            Label: "Select Next Window"
+        },
+        [ OverlayCommandId.SelectInsertWindowUp ]:
+        {
+            Description: "Select the previous floating window.",
+            Icon: AppGenericRegular,
+            Label: "Select Previous Window"
+        },
         [ OverlayCommandId.Tile ]:
         {
             Description: () => "Add this window to the tiled layout.",
@@ -317,6 +373,12 @@ const Presentation: Readonly<Record<OverlayCommandIdType, CommandPresentation>> 
             Description: "Add every floating window to its monitor's tiled layout.",
             Icon: GridRegular,
             Label: "Tile All"
+        },
+        [ OverlayCommandId.ToggleTiledResizeBehavior ]:
+        {
+            Description: "Change how surrounding tiled windows are resized.",
+            Icon: ResizeLargeRegular,
+            Label: "Resize Behavior"
         },
         [ OverlayCommandId.OpenPerAppSettings ]:
         {
@@ -364,6 +426,17 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
             Description: "Choose the type of action to perform.",
             Label: "SorrellWm"
         },
+        [ OverlayScreenId.TiledInsertDirection ]:
+        {
+            Description: "Choose the half of this window where the new window will go.",
+            Label: "Insert"
+        },
+        [ OverlayScreenId.TiledInsertWindow ]:
+        {
+            Description:
+                "Choose a floating window, or press Tab to create a drag target.",
+            Label: "Insert"
+        },
         [ OverlayScreenId.TiledFocus ]:
         {
             Description: "Choose a direction to move the focus selection.",
@@ -373,6 +446,13 @@ const ScreenPresentation: Record<OverlayScreenDto["Id"], ScreenPresentation> =
         {
             Description: "Choose where to move the tiled window.",
             Label: "Move"
+        },
+        [ OverlayScreenId.TiledResize ]:
+        {
+            Description:
+                "Choose an edge to grow the tiled window. Hold Ctrl to shrink it. "
+                + "Press Tab to change how surrounding windows respond.",
+            Label: "Resize"
         }
     } as const;
 
@@ -597,7 +677,10 @@ const OverlayApplication = (): React.ReactNode =>
     const HasFooter = SecondaryCommand !== undefined || DistanceToggleDto !== undefined;
     const IsTiledScreen = CurrentScreen?.Id === OverlayScreenId.TiledHome
         || CurrentScreen?.Id === OverlayScreenId.TiledFocus
-        || CurrentScreen?.Id === OverlayScreenId.TiledMove;
+        || CurrentScreen?.Id === OverlayScreenId.TiledInsertDirection
+        || CurrentScreen?.Id === OverlayScreenId.TiledInsertWindow
+        || CurrentScreen?.Id === OverlayScreenId.TiledMove
+        || CurrentScreen?.Id === OverlayScreenId.TiledResize;
     const PresentationContextValue: PresentationContext = {
         ...DefaultPresentationContext,
         IsTiled: IsTiledScreen
@@ -606,10 +689,19 @@ const OverlayApplication = (): React.ReactNode =>
         || CurrentScreen?.Id === OverlayScreenId.TiledFocus;
     const IsTiledFocusScreen = CurrentScreen?.Id === OverlayScreenId.TiledFocus;
     const IsRootPanelFocused = CurrentScreen?.IsRootPanelFocused === true;
+    const StackWindows = CurrentScreen?.StackWindows ?? [ ];
+    const InsertWindows = CurrentScreen?.InsertWindows ?? [ ];
+    const IsStackPanelFocused = IsTiledFocusScreen && StackWindows.length > 0;
+    const IsTiledInsertDirectionScreen =
+        CurrentScreen?.Id === OverlayScreenId.TiledInsertDirection;
+    const IsTiledInsertWindowScreen =
+        CurrentScreen?.Id === OverlayScreenId.TiledInsertWindow;
     const IsFloatingMoveScreen = CurrentScreen?.Id === OverlayScreenId.FloatingMove;
     const IsTiledMoveScreen = CurrentScreen?.Id === OverlayScreenId.TiledMove;
     const IsTiledMovePanelTargeted = CurrentScreen?.IsTiledMovePanelTargeted === true;
-    const IsResizeScreen = CurrentScreen?.Id === OverlayScreenId.FloatingResize;
+    const IsResizeScreen = CurrentScreen?.Id === OverlayScreenId.FloatingResize
+        || CurrentScreen?.Id === OverlayScreenId.TiledResize;
+    const IsTiledResizeScreen = CurrentScreen?.Id === OverlayScreenId.TiledResize;
     const IsTileScreen = CurrentScreen?.Id === OverlayScreenId.FloatingTile;
 
     const FindCommand = (Id: OverlayCommandIdType): OverlayCommandDto | undefined =>
@@ -668,12 +760,73 @@ const OverlayApplication = (): React.ReactNode =>
         ? FindCommand(OverlayCommandId.FocusMoveParent)
         : undefined;
     const HasMonitorColumn = IsRootPanelFocused && MonitorCommands.length > 0;
+    const ActiveStackWindowIndex = StackWindows.findIndex(
+        (WindowValue: OverlayStackWindowDto): boolean => WindowValue.Active
+    );
+    const ActiveInsertWindowIndex = InsertWindows.findIndex(
+        (WindowValue: OverlayInsertWindowDto): boolean => WindowValue.Active
+    );
+    const SelectStackWindow = (TargetIndex: number): void =>
+    {
+        if (TargetIndex === ActiveStackWindowIndex || ActiveStackWindowIndex < 0)
+        {
+            return;
+        }
+
+        const Id = TargetIndex < ActiveStackWindowIndex
+            ? OverlayCommandId.FocusMoveUp
+            : OverlayCommandId.FocusMoveDown;
+        const StepCount = Math.abs(TargetIndex - ActiveStackWindowIndex);
+
+        void (async (): Promise<void> =>
+        {
+            for (let Step = 0; Step < StepCount; Step += 1)
+            {
+                await window.sorrell.overlay.invoke(Id);
+            }
+        })().catch(Logging.ReportRejection(
+            "Overlay",
+            "Could not select a window in the focused stack panel."
+        ));
+    };
+    const SelectInsertWindow = (TargetIndex: number): void =>
+    {
+        if (TargetIndex === ActiveInsertWindowIndex || ActiveInsertWindowIndex < 0)
+        {
+            return;
+        }
+
+        const Id = TargetIndex < ActiveInsertWindowIndex
+            ? OverlayCommandId.SelectInsertWindowUp
+            : OverlayCommandId.SelectInsertWindowDown;
+        const StepCount = Math.abs(TargetIndex - ActiveInsertWindowIndex);
+
+        void (async (): Promise<void> =>
+        {
+            for (let Step = 0; Step < StepCount; Step += 1)
+            {
+                await window.sorrell.overlay.invoke(Id);
+            }
+        })().catch(Logging.ReportRejection(
+            "Overlay",
+            "Could not select a floating window for tiled insertion."
+        ));
+    };
     const TiledMoveCommands = IsTiledMoveScreen
         ? CurrentScreen.Commands.filter((Command: OverlayCommandDto): boolean =>
             IsTiledMovePanelTargeted
                 ? !Command.Disabled
                 : Command.Id !== OverlayCommandId.MoveWindowIntoPanel)
         : [ ];
+    const TiledResizeBehaviorCommand = IsTiledResizeScreen
+        ? FindCommand(OverlayCommandId.ToggleTiledResizeBehavior)
+        : undefined;
+    const OpenInsertTargetCommand = IsTiledInsertWindowScreen
+        ? FindCommand(OverlayCommandId.OpenInsertTarget)
+        : undefined;
+    const OpenInsertTargetForNextWindowCommand = IsTiledInsertWindowScreen
+        ? FindCommand(OverlayCommandId.OpenInsertTargetForNextWindow)
+        : undefined;
 
     return (
         <main className={ Styles.Shell }>
@@ -751,93 +904,316 @@ const OverlayApplication = (): React.ReactNode =>
                             </MessageBar>
                         ) }
 
-                        <DirectionalPad
-                            Down={ ToPadDirection(OverlayCommandId.FocusMoveDown, FocusMoveDownColor) }
-                            Left={ ToPadDirection(OverlayCommandId.FocusMoveLeft, FocusMoveLeftColor) }
-                            Right={ ToPadDirection(OverlayCommandId.FocusMoveRight, FocusMoveRightColor) }
-                            Up={ ToPadDirection(OverlayCommandId.FocusMoveUp, FocusMoveUpColor) }
-                        />
-
-                        <div
-                            aria-label="Focus command groups"
-                            className={ mergeClasses(
-                                Styles.FocusCommandGroups,
-                                HasMonitorColumn
-                                    ? Styles.FocusCommandGroupsWithMonitors
-                                    : undefined
-                            ) }
-                            role="group">
-                            <section
-                                aria-label="Focus targets"
-                                className={ Styles.FocusButtons }>
-                                { [
-                                    OverlayCommandId.FocusMoveUp,
-                                    OverlayCommandId.FocusMoveDown,
-                                    OverlayCommandId.FocusMoveLeft,
-                                    OverlayCommandId.FocusMoveRight
-                                ].map((Id: OverlayCommandIdType) =>
-                                {
-                                    const Command = GetCommand(Id);
-                                    const DirectionIcon = Presentation[Command.Id].Icon;
-
-                                    return IsRootPanelFocused ? (
-                                        <CompactCommandButton
-                                            Active={ false }
-                                            Disabled={ Command.Disabled }
-                                            Icon={ <DirectionIcon /> }
-                                            Label={ Command.Target?.Title
-                                                ?? Presentation[Command.Id].Label }
-                                            OnInvoke={ () => Invoke(Command.Id) }
-                                            Shortcut={ Command.Shortcut }
-                                            key={ Command.Id }
-                                        />
-                                    ) : (
-                                        <FocusDirectionButton
-                                            Command={ Command }
-                                            Icon={ DirectionIcon }
-                                            OnHoverChange={ Command.Target === undefined
-                                                ? undefined
-                                                : (Hovered: boolean) => Preview(
-                                                    Hovered ? Command.Id : null
-                                                ) }
-                                            OnInvoke={ () => Invoke(Command.Id) }
-                                            key={ Command.Id }
-                                        />
-                                    );
-                                }) }
-
-                                { ParentFocusCommand !== undefined && (
-                                    <CompactCommandButton
-                                        Active={ false }
-                                        Disabled={ ParentFocusCommand.Disabled }
-                                        Icon={ <ArrowUpRegular /> }
-                                        Label={ ParentFocusCommand.Target?.Title
-                                            ?? Presentation[ParentFocusCommand.Id].Label }
-                                        OnInvoke={ () => Invoke(ParentFocusCommand.Id) }
-                                        Shortcut={ ParentFocusCommand.Shortcut }
-                                    />
+                        { IsStackPanelFocused ? (
+                            <div
+                                aria-label="Focus command groups"
+                                className={ mergeClasses(
+                                    Styles.FocusCommandGroups,
+                                    HasMonitorColumn
+                                        ? Styles.FocusCommandGroupsWithMonitors
+                                        : undefined
                                 ) }
-                            </section>
-
-                            { HasMonitorColumn && (
+                                role="group">
                                 <section
-                                    aria-label="Monitors"
-                                    className={ Styles.MonitorButtons }>
-                                    { MonitorCommands.map((Command: OverlayCommandDto) => (
+                                    aria-label="Windows in stack"
+                                    className={ Styles.FocusButtons }>
+                                    { StackWindows.map((
+                                        StackWindow: OverlayStackWindowDto,
+                                        Index: number
+                                    ) => (
                                         <CompactCommandButton
-                                            Active={ false }
-                                            Disabled={ Command.Disabled }
-                                            Icon={ <DesktopRegular /> }
-                                            Label={ Command.Target?.Title
-                                                ?? Presentation[Command.Id].Label }
-                                            OnInvoke={ () => Invoke(Command.Id) }
-                                            Shortcut={ Command.Shortcut }
-                                            key={ Command.Id }
+                                            Active={ StackWindow.Active }
+                                            Icon={ StackWindow.Target.Icon === undefined
+                                                ? <AppGenericRegular />
+                                                : (
+                                                    <img
+                                                        alt=""
+                                                        className={
+                                                            Styles.ApplicationIconImage
+                                                        }
+                                                        src={
+                                                            "data:image/png;base64,"
+                                                            + StackWindow.Target.Icon
+                                                        } />
+                                                ) }
+                                            Label={ StackWindow.Target.Title }
+                                            OnInvoke={ () => SelectStackWindow(Index) }
+                                            { ...(Index
+                                                === ActiveStackWindowIndex - 1
+                                                ? {
+                                                    Shortcut: GetCommand(
+                                                        OverlayCommandId.FocusMoveUp
+                                                    ).Shortcut
+                                                }
+                                                : Index
+                                                    === ActiveStackWindowIndex + 1
+                                                    ? {
+                                                        Shortcut: GetCommand(
+                                                            OverlayCommandId.FocusMoveDown
+                                                        ).Shortcut
+                                                    }
+                                                    : { }) }
+                                            key={ `${ StackWindow.Target.Title }-${ Index }` }
                                         />
                                     )) }
+
+                                    { ParentFocusCommand !== undefined && (
+                                        <CompactCommandButton
+                                            Active={ false }
+                                            Disabled={ ParentFocusCommand.Disabled }
+                                            Icon={ <ArrowUpRegular /> }
+                                            Label={ ParentFocusCommand.Target?.Title
+                                                ?? Presentation[ParentFocusCommand.Id].Label }
+                                            OnInvoke={ () => Invoke(ParentFocusCommand.Id) }
+                                            Shortcut={ ParentFocusCommand.Shortcut }
+                                        />
+                                    ) }
                                 </section>
+
+                                { HasMonitorColumn && (
+                                    <section
+                                        aria-label="Monitors"
+                                        className={ Styles.MonitorButtons }>
+                                        { MonitorCommands.map((
+                                            Command: OverlayCommandDto
+                                        ) => (
+                                            <CompactCommandButton
+                                                Active={ false }
+                                                Disabled={ Command.Disabled }
+                                                Icon={ <DesktopRegular /> }
+                                                Label={ Command.Target?.Title
+                                                    ?? Presentation[Command.Id].Label }
+                                                OnInvoke={ () => Invoke(Command.Id) }
+                                                Shortcut={ Command.Shortcut }
+                                                key={ Command.Id }
+                                            />
+                                        )) }
+                                    </section>
+                                ) }
+                            </div>
+                        ) : (
+                            <>
+                                <DirectionalPad
+                                    Down={ ToPadDirection(
+                                        OverlayCommandId.FocusMoveDown,
+                                        FocusMoveDownColor
+                                    ) }
+                                    Left={ ToPadDirection(
+                                        OverlayCommandId.FocusMoveLeft,
+                                        FocusMoveLeftColor
+                                    ) }
+                                    Right={ ToPadDirection(
+                                        OverlayCommandId.FocusMoveRight,
+                                        FocusMoveRightColor
+                                    ) }
+                                    Up={ ToPadDirection(
+                                        OverlayCommandId.FocusMoveUp,
+                                        FocusMoveUpColor
+                                    ) }
+                                />
+
+                                <div
+                                    aria-label="Focus command groups"
+                                    className={ mergeClasses(
+                                        Styles.FocusCommandGroups,
+                                        HasMonitorColumn
+                                            ? Styles.FocusCommandGroupsWithMonitors
+                                            : undefined
+                                    ) }
+                                    role="group">
+                                    <section
+                                        aria-label="Focus targets"
+                                        className={ Styles.FocusButtons }>
+                                        { [
+                                            OverlayCommandId.FocusMoveUp,
+                                            OverlayCommandId.FocusMoveDown,
+                                            OverlayCommandId.FocusMoveLeft,
+                                            OverlayCommandId.FocusMoveRight
+                                        ].map((Id: OverlayCommandIdType) =>
+                                        {
+                                            const Command = GetCommand(Id);
+                                            const DirectionIcon =
+                                                Presentation[Command.Id].Icon;
+
+                                            return IsRootPanelFocused ? (
+                                                <CompactCommandButton
+                                                    Active={ false }
+                                                    Disabled={ Command.Disabled }
+                                                    Icon={ <DirectionIcon /> }
+                                                    Label={ Command.Target?.Title
+                                                        ?? Presentation[Command.Id].Label }
+                                                    OnInvoke={ () => Invoke(Command.Id) }
+                                                    Shortcut={ Command.Shortcut }
+                                                    key={ Command.Id }
+                                                />
+                                            ) : (
+                                                <FocusDirectionButton
+                                                    Command={ Command }
+                                                    Icon={ DirectionIcon }
+                                                    OnHoverChange={
+                                                        Command.Target === undefined
+                                                            ? undefined
+                                                            : (Hovered: boolean) => Preview(
+                                                                Hovered
+                                                                    ? Command.Id
+                                                                    : null
+                                                            )
+                                                    }
+                                                    OnInvoke={ () => Invoke(Command.Id) }
+                                                    key={ Command.Id }
+                                                />
+                                            );
+                                        }) }
+
+                                        { ParentFocusCommand !== undefined && (
+                                            <CompactCommandButton
+                                                Active={ false }
+                                                Disabled={ ParentFocusCommand.Disabled }
+                                                Icon={ <ArrowUpRegular /> }
+                                                Label={ ParentFocusCommand.Target?.Title
+                                                    ?? Presentation[
+                                                        ParentFocusCommand.Id
+                                                    ].Label }
+                                                OnInvoke={
+                                                    () => Invoke(ParentFocusCommand.Id)
+                                                }
+                                                Shortcut={ ParentFocusCommand.Shortcut }
+                                            />
+                                        ) }
+                                    </section>
+
+                                    { HasMonitorColumn && (
+                                        <section
+                                            aria-label="Monitors"
+                                            className={ Styles.MonitorButtons }>
+                                            { MonitorCommands.map((
+                                                Command: OverlayCommandDto
+                                            ) => (
+                                                <CompactCommandButton
+                                                    Active={ false }
+                                                    Disabled={ Command.Disabled }
+                                                    Icon={ <DesktopRegular /> }
+                                                    Label={ Command.Target?.Title
+                                                        ?? Presentation[Command.Id].Label }
+                                                    OnInvoke={
+                                                        () => Invoke(Command.Id)
+                                                    }
+                                                    Shortcut={ Command.Shortcut }
+                                                    key={ Command.Id }
+                                                />
+                                            )) }
+                                        </section>
+                                    ) }
+                                </div>
+                            </>
+                        ) }
+                    </div>
+                ) : IsTiledInsertDirectionScreen ? (
+                    <div className={ Styles.PadLayout }>
+                        <DirectionalPad
+                            Down={ ToPlainPadDirection(
+                                OverlayCommandId.ChooseInsertDown
                             ) }
-                        </div>
+                            Left={ ToPlainPadDirection(
+                                OverlayCommandId.ChooseInsertLeft
+                            ) }
+                            Right={ ToPlainPadDirection(
+                                OverlayCommandId.ChooseInsertRight
+                            ) }
+                            Up={ ToPlainPadDirection(
+                                OverlayCommandId.ChooseInsertUp
+                            ) } />
+                    </div>
+                ) : IsTiledInsertWindowScreen ? (
+                    <div className={ Styles.PadLayout }>
+                        { InsertWindows.length === 0 ? (
+                            <p className={ Styles.Placeholder }>
+                                No floating windows are currently available.
+                            </p>
+                        ) : (
+                            <section
+                                aria-label="Floating windows"
+                                className={ Styles.FocusButtons }>
+                                { InsertWindows.map((
+                                    InsertWindow: OverlayInsertWindowDto,
+                                    Index: number
+                                ) => (
+                                    <CompactCommandButton
+                                        Active={ InsertWindow.Active }
+                                        Icon={ InsertWindow.Target.Icon === undefined
+                                            ? <AppGenericRegular />
+                                            : (
+                                                <img
+                                                    alt=""
+                                                    className={
+                                                        Styles.ApplicationIconImage
+                                                    }
+                                                    src={
+                                                        "data:image/png;base64,"
+                                                        + InsertWindow.Target.Icon
+                                                    } />
+                                            ) }
+                                        Label={ InsertWindow.Target.Title }
+                                        OnInvoke={ () => SelectInsertWindow(Index) }
+                                        { ...(InsertWindow.Active
+                                            ? {
+                                                Shortcut: GetCommand(
+                                                    OverlayCommandId.CommitInsertWindow
+                                                ).Shortcut
+                                            }
+                                            : Index === ActiveInsertWindowIndex - 1
+                                                ? {
+                                                    Shortcut: GetCommand(
+                                                        OverlayCommandId
+                                                            .SelectInsertWindowUp
+                                                    ).Shortcut
+                                                }
+                                                : Index === ActiveInsertWindowIndex + 1
+                                                    ? {
+                                                        Shortcut: GetCommand(
+                                                            OverlayCommandId
+                                                                .SelectInsertWindowDown
+                                                        ).Shortcut
+                                                    }
+                                                    : { }) }
+                                        key={ `${ InsertWindow.Target.Title }-${ Index }` }
+                                    />
+                                )) }
+                            </section>
+                        ) }
+
+                        <section
+                            aria-label="Other Insert methods"
+                            className={ Styles.FocusButtons }>
+                            { OpenInsertTargetCommand !== undefined && (
+                                <CompactCommandButton
+                                    Active={ false }
+                                    Disabled={ OpenInsertTargetCommand.Disabled }
+                                    Icon={ <CursorClickRegular /> }
+                                    Label="Drag a window here"
+                                    OnInvoke={ () => Invoke(
+                                        OpenInsertTargetCommand.Id
+                                    ) }
+                                    Shortcut={ OpenInsertTargetCommand.Shortcut }
+                                />
+                            ) }
+                            { OpenInsertTargetForNextWindowCommand !== undefined && (
+                                <CompactCommandButton
+                                    Active={ false }
+                                    Disabled={
+                                        OpenInsertTargetForNextWindowCommand.Disabled
+                                    }
+                                    Icon={ <AddSquareRegular /> }
+                                    Label="Tile the next window here"
+                                    OnInvoke={ () => Invoke(
+                                        OpenInsertTargetForNextWindowCommand.Id
+                                    ) }
+                                    Shortcut={
+                                        OpenInsertTargetForNextWindowCommand.Shortcut
+                                    }
+                                />
+                            ) }
+                        </section>
                     </div>
                 ) : IsTiledMoveScreen ? (
                     <div className={ Styles.PadLayout }>
@@ -898,6 +1274,31 @@ const OverlayApplication = (): React.ReactNode =>
                             Left={ ToPlainPadDirection(OverlayCommandId.ResizeWindowLeft) }
                             Right={ ToPlainPadDirection(OverlayCommandId.ResizeWindowRight) }
                             Up={ ToPlainPadDirection(OverlayCommandId.ResizeWindowUp) } />
+
+                        { TiledResizeBehaviorCommand !== undefined && (
+                            <section
+                                aria-label="Tiled resize behavior"
+                                className={ Styles.FocusButtons }>
+                                <CompactCommandButton
+                                    Active={
+                                        CurrentScreen?.TiledResizeBehavior
+                                            === "AdjacentOnly"
+                                    }
+                                    Disabled={ TiledResizeBehaviorCommand.Disabled }
+                                    Icon={ <ResizeLargeRegular /> }
+                                    Label={
+                                        CurrentScreen?.TiledResizeBehavior
+                                            === "AdjacentOnly"
+                                            ? "Resize adjacent window only"
+                                            : "Preserve other window ratios"
+                                    }
+                                    OnInvoke={
+                                        () => Invoke(TiledResizeBehaviorCommand.Id)
+                                    }
+                                    Shortcut={ TiledResizeBehaviorCommand.Shortcut }
+                                />
+                            </section>
+                        ) }
                     </div>
                 ) : IsTileScreen ? (
                     <p className={ Styles.Placeholder }>
