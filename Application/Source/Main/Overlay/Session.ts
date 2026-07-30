@@ -132,6 +132,17 @@ export interface FocusFailure
     readonly WindowTitle: string;
 }
 
+/**
+ * A floating window raised to the foreground to satisfy a Focus command, and the
+ * window it should be restored directly behind once focus moves elsewhere.
+ */
+export interface RaisedFloatingWindowZOrder
+{
+    /** The window directly above this one before it was raised, if any. */
+    readonly RestoreBehind: Option.Option<Handle.HWND>;
+    readonly Window: Handle.HWND;
+}
+
 type FocusCommandId =
     | typeof CommandId.FocusMoveDown
     | typeof CommandId.FocusMoveLeft
@@ -512,6 +523,16 @@ export interface OverlaySessionImpl
     /** Set the window from which the overlay was activated. */
     readonly SetActivationWindow: (Window: Handle.HWND) => Effect.Effect<void>;
 
+    /** Remember a floating window raised for Focus, and where to restore it later. */
+    readonly RecordRaisedFloatingWindowZOrder: (
+        Value: RaisedFloatingWindowZOrder
+    ) => Effect.Effect<void>;
+
+    /** Remove and return the floating window most recently raised for Focus, if any. */
+    readonly TakeRaisedFloatingWindowZOrder: Effect.Effect<
+        Option.Option<RaisedFloatingWindowZOrder>
+    >;
+
     /** Whether the primary modifier (e.g. Shift) is currently held. */
     readonly PrimaryModifierHeld: Effect.Effect<boolean>;
 
@@ -795,6 +816,9 @@ const Live = Layer.effect(
             }
         ));
         const ActivationWindow = yield* Ref.make(Option.none<Handle.HWND>());
+        const RaisedFloatingWindowZOrderRef = yield* Ref.make(
+            Option.none<RaisedFloatingWindowZOrder>()
+        );
         const PrimaryModifierHeldRef = yield* Ref.make(false);
         const FineModifierHeldRef = yield* Ref.make(false);
         const ResizeModeRef = yield* Ref.make<ResizeModeType>(ResizeMode.Grow);
@@ -1709,6 +1733,8 @@ const Live = Layer.effect(
                 )),
                 Effect.andThen(Ref.set(FocusFailureRef, Option.some(Failure)))
             ),
+            RecordRaisedFloatingWindowZOrder: (Value: RaisedFloatingWindowZOrder) =>
+                Ref.set(RaisedFloatingWindowZOrderRef, Option.some(Value)),
             RefreshTiledInsertWindows,
             Reset: Effect.gen(function*()
             {
@@ -1987,6 +2013,10 @@ const Live = Layer.effect(
                     : ScreenDto;
             }),
             TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none()),
+            TakeRaisedFloatingWindowZOrder: Ref.getAndSet(
+                RaisedFloatingWindowZOrderRef,
+                Option.none()
+            ),
             TiledInsertCaptureNext: Ref.get(TiledInsertCaptureNextRef),
             TiledInsertDragActive: Ref.get(TiledInsertDragActiveRef),
             TiledInsertTarget: Ref.get(TiledInsertTargetRef),

@@ -276,10 +276,49 @@ const OnActivate = (
     }
 });
 
+/** The manageable top-level window directly above `Target` in the current z-order. */
+const GetWindowAbove = (Target: Handle.HWND): Option.Option<Handle.HWND> =>
+{
+    const Windows = Window.GetManageableTopLevelWindows();
+
+    if (Result.isFailure(Windows))
+    {
+        return Option.none();
+    }
+
+    const Preceding = Windows.success[Windows.success.indexOf(Target) - 1];
+    return Preceding === undefined ? Option.none() : Option.some(Preceding);
+};
+
+/** Put a raised floating window back directly behind its recorded prior neighbor. */
+const RestoreFloatingWindowZOrder = (
+    Raised: OverlaySession.RaisedFloatingWindowZOrder
+): Effect.Effect<void> => Option.match(Raised.RestoreBehind, {
+    onNone: () => Effect.void,
+    onSome: (PrecedingWindow: Handle.HWND) => Effect.gen(function*()
+    {
+        const RestoreResult = Window.SetWindowZOrderAfter(Raised.Window, PrecedingWindow);
+
+        if (Result.isFailure(RestoreResult))
+        {
+            yield* Logging.LogDebug(
+                "Command.Focus",
+                "Could not restore a floating window's prior z-order.",
+                { Window: Raised.Window }
+            );
+        }
+    })
+});
+
 const RestoreActivationWindowFocus = (
     Session: OverlaySession.OverlaySessionImpl
 ) => pipe(
-    Session.TakeActivationWindow,
+    Session.TakeRaisedFloatingWindowZOrder,
+    Effect.flatMap(Option.match({
+        onNone: () => Effect.void,
+        onSome: RestoreFloatingWindowZOrder
+    })),
+    Effect.andThen(Session.TakeActivationWindow),
     Effect.flatMap(Option.match({
         onNone: () => Effect.void,
         onSome: (WindowHandle: Handle.HWND) => pipe(
@@ -444,6 +483,7 @@ const FocusDirection = (
         return;
     }
 
+    const PrecedingWindow = GetWindowAbove(Target.value);
     const FocusResult = Window.SetForegroundWindow(Target.value);
     if (Result.isFailure(FocusResult))
     {
@@ -468,10 +508,22 @@ const FocusDirection = (
         return;
     }
 
+    // A prior direction pick may have raised a different window to satisfy Focus;
+    // now that focus has moved away from it, restore its original z-order.
+    const PreviouslyRaised = yield* Session.TakeRaisedFloatingWindowZOrder;
+    if (Option.isSome(PreviouslyRaised) && PreviouslyRaised.value.Window !== Target.value)
+    {
+        yield* RestoreFloatingWindowZOrder(PreviouslyRaised.value);
+    }
+
     // Keep the overlay open on the Focus screen, repainted over the newly-focused
     // window, with its direction choices recomputed relative to that window.
     yield* Session.ClearFocusPreview;
     yield* Session.SetActivationWindow(Target.value);
+    yield* Session.RecordRaisedFloatingWindowZOrder({
+        RestoreBehind: PrecedingWindow,
+        Window: Target.value
+    });
 
     const ActivationTarget = GetActivationTarget(Target.value);
 

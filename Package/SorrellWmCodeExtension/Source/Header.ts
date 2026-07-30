@@ -62,7 +62,16 @@ export function DeriveModuleName(
 
         if (FileName !== undefined)
         {
-            ModulePathParts[FileNameIndex] = FileName.replace(ExtensionPattern, "");
+            const FileNameWithoutExtension: string = FileName.replace(ExtensionPattern, "");
+
+            if (FileNameWithoutExtension.toLowerCase() === "index")
+            {
+                ModulePathParts.pop();
+            }
+            else
+            {
+                ModulePathParts[FileNameIndex] = FileNameWithoutExtension;
+            }
         }
     }
 

@@ -18,6 +18,7 @@ import {
 } from "@fluentui/react-components";
 import { Key, Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
+import { UseGuardedHover } from "./UseGuardedHover.js";
 
 /** Presentation properties for a primary overlay command. */
 export interface CommandButtonProps
@@ -155,6 +156,7 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
     const ShortcutParts = GetShortcutParts(Props.Shortcut);
+    const HoverHandlers = UseGuardedHover(Props.OnHoverChange);
 
     return (
         <Button
@@ -164,8 +166,7 @@ const CommandButton = (Props: CommandButtonProps): React.JSX.Element =>
             disabled={ Props.Disabled === true }
             icon={ Props.Icon }
             onClick={ Props.OnInvoke }
-            onMouseEnter={ () => Props.OnHoverChange?.(true) }
-            onMouseLeave={ () => Props.OnHoverChange?.(false) }
+            { ...HoverHandlers }
             size="large"
             title={ Props.Description }>
             <span className={ Styles.Content }>
@@ -212,6 +213,7 @@ const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode
     const ShortcutParts = Props.Shortcut === undefined
         ? [ ]
         : GetShortcutParts(Props.Shortcut);
+    const HoverHandlers = UseGuardedHover(Props.OnHoverChange);
 
     return (
         <Button
@@ -221,8 +223,7 @@ const CompactCommandButton = (Props: CompactCommandButtonProps): React.ReactNode
             disabled={ Props.Disabled === true }
             { ...(Props.Icon === undefined ? { } : { icon: Props.Icon }) }
             onClick={ Props.OnInvoke }
-            onMouseEnter={ () => Props.OnHoverChange?.(true) }
-            onMouseLeave={ () => Props.OnHoverChange?.(false) }
+            { ...HoverHandlers }
             size="small"
             title={ Props.Label }>
             <span className={ Styles.Content }>

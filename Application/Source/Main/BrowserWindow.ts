@@ -9,7 +9,9 @@
  * @license   MIT
  */
 
+import * as AppSettings from "./AppSettings/AppSettings.ts";
 import * as Logging from "./Log.ts";
+import * as TrayIcon from "./TrayIcon.ts";
 import type {
     BrowserWindowConstructorOptions,
     BrowserWindow as ElectronBrowserWindow,
@@ -28,7 +30,7 @@ import {
     Struct,
     pipe
 } from "effect";
-import electron, { app } from "electron";
+import electron, { app, nativeTheme } from "electron";
 import type { Box } from "@sorrell/math";
 import { ToRectangle as BoxToRectangle } from "./Utility/Math/Box.js";
 import { DevFeatures } from "./Development/DevFeatures.ts";
@@ -989,10 +991,17 @@ export/** Construct the normal, persistent settings-window specification. */
 const SettingsWindowSpec = Effect.gen(function*()
 {
     const { Options: BaseOptions, Url } = GetSpecBase();
+    const Settings = yield* AppSettings.AppSettings;
+    const CurrentSettings = yield* Settings.Get;
+    const IconVariant = TrayIcon.ResolveTrayIconVariant(
+        CurrentSettings.UseSimplifiedTrayIcon,
+        nativeTheme.shouldUseDarkColors
+    );
     const SettingsOptions: BrowserWindowConstructorOptions =
         {
             backgroundMaterial: "mica",
             height: 640,
+            icon: TrayIcon.GetTrayIconPath(IconVariant),
             minHeight: 480,
             minWidth: 640,
             show: true,

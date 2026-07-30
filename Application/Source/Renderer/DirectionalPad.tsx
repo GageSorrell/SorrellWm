@@ -19,10 +19,14 @@ import {
     CaretUpFilled,
     type FluentIcon
 } from "@fluentui/react-icons";
+import { Color as ColorPackage, Contrast } from "@sorrell/color";
+import { Option, pipe } from "effect";
+import { ColorScheme } from "../Shared/Theme.js";
 import { GetShortcutParts } from "./CommandButton.js";
 import { Keybind } from "@sorrell/keyboard-ui";
-import { Option } from "effect";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
+import { UseColorScheme } from "./UseColorScheme.js";
+import { UseGuardedHover } from "./UseGuardedHover.js";
 
 /** One direction's presentation on the pad. */
 export interface DirectionalPadDirection
@@ -180,21 +184,101 @@ interface DirectionCaretProps extends
 const CaretGrayPercent = 67;
 const CaretHoveredGrayPercent = 30;
 
+export/**
+       * The base color of the window's acrylic background material, before any accent
+       * or wallpaper tinting, for each color scheme.
+       */
+const AcrylicBaseColorHex: Readonly<Record<ColorScheme, string>> = {
+    [ ColorScheme.Dark ]: "#202020",
+    [ ColorScheme.Light ]: "#f3f3f3"
+};
+
+export/** Matches Fluent UI's `colorNeutralForegroundDisabled` token for each color scheme. */
+const InactiveForegroundColorHex: Readonly<Record<ColorScheme, string>> = {
+    [ ColorScheme.Dark ]: "#5c5c5c",
+    [ ColorScheme.Light ]: "#bdbdbd"
+};
+
+export/** How much more contrast an adjusted caret color should have than the baseline. */
+const ContrastMargin = 1.05;
+
+const ParseCssColor = (Value: string): ColorPackage.Color | undefined =>
+    Option.getOrUndefined(pipe(
+        ColorPackage.From.Rgb(Value),
+        Option.orElse(() => ColorPackage.From.Hex(Value))
+    ));
+
+const MixColor = (
+    GrayColor: ColorPackage.Color,
+    TintColor: ColorPackage.Color,
+    GrayPercent: number
+): ColorPackage.Color =>
+{
+    const GrayWeight = GrayPercent / 100;
+    const TintWeight = 1 - GrayWeight;
+
+    return ColorPackage.Color(
+        GrayColor.R * GrayWeight + TintColor.R * TintWeight,
+        GrayColor.G * GrayWeight + TintColor.G * TintWeight,
+        GrayColor.B * GrayWeight + TintColor.B * TintWeight
+    );
+};
+
+export/**
+       * Mix the disabled-gray token with a target tint color, ensuring the result has
+       * at least as much contrast against the acrylic background as the disabled-gray
+       * token itself does (with a bit to spare), so a dim tint never becomes hard to
+       * see.
+       */
+const GetTintedFill = (
+    TintColorValue: string,
+    GrayPercent: number,
+    Scheme: ColorScheme
+): string =>
+{
+    const InactiveColor = Option.getOrThrow(
+        ColorPackage.From.Hex(InactiveForegroundColorHex[ Scheme ])
+    );
+    const BackgroundColor = Option.getOrThrow(
+        ColorPackage.From.Hex(AcrylicBaseColorHex[ Scheme ])
+    );
+    const TintColor = ParseCssColor(TintColorValue) ?? InactiveColor;
+    const MixedColor = MixColor(InactiveColor, TintColor, GrayPercent);
+
+    const BaselineRatio = Contrast.ContrastRatio(InactiveColor, BackgroundColor);
+    const MixedRatio = Contrast.ContrastRatio(MixedColor, BackgroundColor);
+
+    const ResultColor = MixedRatio < BaselineRatio
+        ? Contrast.EnsureContrast(MixedColor, BackgroundColor, BaselineRatio * ContrastMargin)
+        : MixedColor;
+
+    return ColorPackage.Format.Hex(ResultColor);
+};
+
 const DirectionCaret = (Props: DirectionCaretProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
 
     const { Color, Disabled, Icon, OnHoverChange, OnInvoke } = Props;
     const [ IsHovered, SetIsHovered ] = useState(false);
+    const CurrentColorScheme = UseColorScheme();
     const HasColor = !Disabled && Option.isSome(Color);
 
     const primaryFill = Disabled || Option.isNone(Color)
         ? tokens.colorNeutralForegroundDisabled
-        : `color-mix(in srgb, ${ tokens.colorNeutralForegroundDisabled } ` +
-            `${ IsHovered ? CaretHoveredGrayPercent : CaretGrayPercent }%, ${ Color.value })`;
+        : GetTintedFill(
+            Color.value,
+            IsHovered ? CaretHoveredGrayPercent : CaretGrayPercent,
+            CurrentColorScheme
+        );
     const IconStyle: CSSProperties | undefined = HasColor && IsHovered
         ? { filter: "saturate(1.35)" }
         : undefined;
+    const HoverHandlers = UseGuardedHover((Hovered: boolean) =>
+    {
+        SetIsHovered(Hovered);
+        OnHoverChange?.(Hovered);
+    });
 
     return (
         <Button
@@ -203,16 +287,7 @@ const DirectionCaret = (Props: DirectionCaretProps): React.JSX.Element =>
             className={ mergeClasses(Styles.Caret, Disabled && Styles.CaretDisabled) }
             disabled={ Disabled }
             onClick={ OnInvoke }
-            onMouseEnter={ () =>
-            {
-                SetIsHovered(true);
-                OnHoverChange?.(true);
-            } }
-            onMouseLeave={ () =>
-            {
-                SetIsHovered(false);
-                OnHoverChange?.(false);
-            } }>
+            { ...HoverHandlers }>
             <Icon
                 style={ IconStyle }
                 { ...{ primaryFill } } />

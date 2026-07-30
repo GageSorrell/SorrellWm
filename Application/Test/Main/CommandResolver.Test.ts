@@ -622,6 +622,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     PreviewFocusTarget: () => Effect.void,
     PrimaryModifierHeld: Effect.succeed(false),
     RecordFocusFailure: () => Effect.void,
+    RecordRaisedFloatingWindowZOrder: () => Effect.void,
     RefreshTiledInsertWindows: Effect.void,
     Reset: Effect.void,
     ResizeMode: Effect.succeed(ResizeMode.Grow),
@@ -646,6 +647,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
         Id: OverlayScreenId.FloatingHome
     }),
     TakeActivationWindow: Effect.succeed(Option.none()),
+    TakeRaisedFloatingWindowZOrder: Effect.succeed(Option.none()),
     TiledInsertCaptureNext: Effect.succeed(false),
     TiledInsertDragActive: Effect.succeed(false),
     TiledInsertTarget: Effect.succeed(Option.none()),

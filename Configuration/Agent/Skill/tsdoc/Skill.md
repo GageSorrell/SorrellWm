@@ -52,7 +52,7 @@ Use a normal multiline TSDoc comment in TypeScript source,
  * const result = example()
  * ```
  *
- * @category constructors
+ * @category Constructor
  * @since 1.0.0
  */
 ```
@@ -147,15 +147,11 @@ When multiple tags are present, keep them in this order:
 
 Tag requirements by declaration kind:
 
-- Root declarations require `@category` and stable-semver `@since`, and must
-  not use `@default`.
-- Namespaces and declarations inside namespaces require stable-semver `@since`,
-  may use `@category`, and must not use `@default`.
-- Member TSDoc is optional. When present, it follows the same prose and layout
-  rules, may use optional stable-semver `@since`, may use non-empty `@default`,
+* All exported items require `@category` and stable-semver `@since`, and must not use `@default`.
+* Namespaces and declarations inside namespaces require stable-semver `@since`, may use `@category`, and must not use `@default`.
+* Member TSDocs are required when nontrivial.  When present, it follows the same prose and layout rules, must use stable-semver `@since`, may use non-empty `@default`,
   and must not use `@category`.
-- Any declaration may use `@deprecated` with a non-empty message and repeated
-  non-empty `@see` tags for semantically useful related public APIs.
+* Any declaration may use `@deprecated` with a non-empty message and repeated non-empty `@see` tags for semantically useful related public APIs.
 
 ## Updating existing TSDoc
 

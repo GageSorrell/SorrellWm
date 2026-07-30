@@ -10,4 +10,5 @@
  */
 
 export * as Color from "./Color.js";
+export * as Contrast from "./Contrast.js";
 export * as LinearColor from "./LinearColor.js";

@@ -21,6 +21,7 @@ import * as OverlayShared from "../Shared/OverlayCommand.ts";
 import * as Theme from "./Theme.ts";
 import * as Tiling from "./Tiling/index.ts";
 import * as TitlebarFlyout from "./TitlebarFlyout.ts";
+import * as Tray from "./Tray.ts";
 import * as Update from "./Update.ts";
 import { Box, IntPoint } from "@sorrell/math";
 import { Effect, Layer, ManagedRuntime, Option, Schema, Stream, pipe } from "effect";
@@ -141,11 +142,19 @@ const TitlebarFlyoutLive = pipe(
         OverlaySessionLive
     ))
 );
+const TrayLive = pipe(
+    Tray.Live,
+    Layer.provideMerge(Layer.mergeAll(
+        AppSettingsLive,
+        CommandServicesLive
+    ))
+);
 
 const ApplicationCoreLive = Layer.mergeAll(
     CommandServicesLive,
     Tiling.Manager.Live,
-    TitlebarFlyoutLive
+    TitlebarFlyoutLive,
+    TrayLive
 );
 const ApplicationServicesLive = pipe(
     Layer.mergeAll(
@@ -940,6 +949,7 @@ const StartApplication = Effect.gen(function*()
     );
     const TilingManager = yield* Tiling.Manager.TilingManager;
     yield* TitlebarFlyout.TitlebarFlyout;
+    yield* Tray.Tray;
     const BrowserWindows = yield* BrowserWindow.BrowserWindow;
     const Settings = yield* AppSettings.AppSettings;
     const InitialSettings = yield* Settings.Get;

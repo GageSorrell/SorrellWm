@@ -1210,7 +1210,8 @@ const CurrentSettings: AppSettings.AppSettings = {
     Theme: "System",
     TileExistingWindowsOnStartup: false,
     TiledResizeBehavior: "PreserveRatios",
-    TiledWindowGap: 8
+    TiledWindowGap: 8,
+    UseSimplifiedTrayIcon: false
 };
 
 const FakeAppSettings = Layer.succeed(AppSettings.AppSettings, {

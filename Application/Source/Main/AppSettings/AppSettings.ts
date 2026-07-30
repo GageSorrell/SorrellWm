@@ -136,6 +136,10 @@ const SettingsSchema = Schema.Struct({
         Schema.Int,
         Schema.check(Schema.isGreaterThanOrEqualTo(0)),
         Schema.withDecodingDefaultKey(Effect.succeed(8))
+    ),
+    UseSimplifiedTrayIcon: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(false))
     )
 });
 
@@ -174,7 +178,8 @@ const AppSettings = _AppSettings.Make(
             Theme: "System",
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
-            TiledWindowGap: 8
+            TiledWindowGap: 8,
+            UseSimplifiedTrayIcon: false
         }
     }
 );

@@ -90,6 +90,27 @@ describe("source headers", (): void =>
         )).toBe("@sorrell/windows/Native/Windows");
     });
 
+    it("omits a trailing index segment from derived module paths", (): void =>
+    {
+        const PackageRoot: string = join("workspace", "Package", "Example");
+
+        expect(DeriveModuleName(
+            join(PackageRoot, "Source", "index.ts"),
+            PackageRoot,
+            "@sorrell/example"
+        )).toBe("@sorrell/example");
+        expect(DeriveModuleName(
+            join(PackageRoot, "Source", "Feature", "index.ts"),
+            PackageRoot,
+            "@sorrell/example"
+        )).toBe("@sorrell/example/Feature");
+        expect(DeriveModuleName(
+            join(PackageRoot, "Source", "Feature", "Index.tsx"),
+            PackageRoot,
+            "@sorrell/example"
+        )).toBe("@sorrell/example/Feature");
+    });
+
     it("recognizes supported paths and existing generated headers", (): void =>
     {
         expect(IsSupportedSourcePath("View.tsx")).toBe(true);

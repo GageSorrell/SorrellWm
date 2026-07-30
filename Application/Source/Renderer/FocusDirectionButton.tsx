@@ -15,6 +15,7 @@ import { Button, makeStyles, mergeClasses, tokens } from "@fluentui/react-compon
 import type { CSSProperties } from "react";
 import type { OverlayCommandDto } from "../Shared/OverlayCommand.js";
 import { UseDominantColor } from "./UseDominantColor.js";
+import { UseGuardedHover } from "./UseGuardedHover.js";
 
 /** Props for {@link FocusDirectionButton}. */
 export interface FocusDirectionButtonProps
@@ -77,6 +78,7 @@ const FocusDirectionButton = (Props: FocusDirectionButtonProps): React.JSX.Eleme
     const TintStyle: CSSProperties | undefined = Disabled || Color === undefined
         ? undefined
         : { backgroundColor: `rgba(${ Color.R }, ${ Color.G }, ${ Color.B }, 0.16)` };
+    const HoverHandlers = UseGuardedHover(Props.OnHoverChange);
 
     return (
         <Button
@@ -84,8 +86,7 @@ const FocusDirectionButton = (Props: FocusDirectionButtonProps): React.JSX.Eleme
             className={ mergeClasses(Styles.Button, Disabled && Styles.ButtonDisabled) }
             disabled={ Disabled }
             onClick={ Props.OnInvoke }
-            onMouseEnter={ () => Props.OnHoverChange?.(true) }
-            onMouseLeave={ () => Props.OnHoverChange?.(false) }
+            { ...HoverHandlers }
             style={ TintStyle }
             title={ Target?.Title }>
             <span

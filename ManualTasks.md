@@ -140,3 +140,13 @@ Please create a `boolean` app setting which if enabled (disabled by default), ca
 ---
 
 Please handle tiled window minimizing and maximizing by remembering where the window was before it was minimized.  When restored, the window should be put back where it was originally, unless the panel to which it belongs has changed state.  If the tiling tree state does not allow for a straightforward restoration, then the window should be placed in the tree at the position that most closely resembles where it was on the screen before it was minimized or maximized.
+
+---
+
+Please add a tray icon to `@sorrell/wm`.  Its bottom button of its context menu should say "Close", and should cause the application to exit.  The button above that should say "Settings", and clicking it should open the settings window.  Double-clicking the tray icon should also launch the settings window.  If the user tries to open the settings window via the tray, and the settings window is already open, then the existing settings window should be focused.  By default, the tray icon should be the same `BoardColor` icon used by the Command Palette extension in `/Package/SorrellWmCommandPalette`, but there should also be a new app setting `UseSimplifiedTrayIcon`, which should be `false` by default.  If `true`, then the tray icon should be the ◱ character, rendered with stroke color `#151515` or white, depending upon whether the system dark mode is enabled.  Hovering over the tray icon should give the tooltip text `SorrellWm v${app.getVersion()}`.  Please place these tray images in the `/Application/Resource` directory.  Please also set the taskbar icon for the settings window to be the same icon used for the tray, however this should be an `.ico` of the appropriate icon, which should contain the icon at all resolutions recommended for Windows applications (the tray icon will likely need to be a separate file, such as a `.png` or whatever Electron recommends).
+
+---
+
+@TODO Modify the "per-app settings" bottom command button to use the new "navigate to and focus setting" feature when opening the settings window to view the per-app settings.  Also, if the app does not have an entry in the per-app settings, then an entry should be created upon pressing this button.
+
+---

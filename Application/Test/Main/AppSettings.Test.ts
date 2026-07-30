@@ -249,7 +249,8 @@ describe("AppSettings schema", () =>
             Theme: "System",
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
-            TiledWindowGap: 8
+            TiledWindowGap: 8,
+            UseSimplifiedTrayIcon: false
         });
     });
 

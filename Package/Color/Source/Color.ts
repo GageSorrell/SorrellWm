@@ -16,7 +16,7 @@ import { Int } from "@sorrell/math";
 export/**
        * The type identifier for this module.
        *
-       * @category Identifier
+       * @category Constant
        * @since 1.0.0
        */
 const TypeId = "~sorrell/color/Color" as const;
@@ -24,7 +24,12 @@ const TypeId = "~sorrell/color/Color" as const;
 /** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
 
-/** An RGB color whose channels are integers in the inclusive range 0–255. */
+/**
+ * An RGB color whose channels are integers in the inclusive range `{0..255}`.
+ *
+ * @category Color
+ * @since 1.0.0
+ */
 export interface Color
 {
     readonly [ TypeId ]: TypeId;

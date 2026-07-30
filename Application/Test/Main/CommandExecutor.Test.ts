@@ -137,7 +137,8 @@ vi.mock("@sorrell/windows", async () =>
             GetMovingWindow: vi.fn(() => EffectOption.none()),
             GetWindowRect: vi.fn(() => EffectOption.none()),
             SetForegroundWindow: vi.fn(() => EffectResult.succeed(undefined)),
-            SetWindowRect: vi.fn(() => EffectResult.succeed(undefined))
+            SetWindowRect: vi.fn(() => EffectResult.succeed(undefined)),
+            SetWindowZOrderAfter: vi.fn(() => EffectResult.succeed(undefined))
         }
     };
 });
@@ -157,6 +158,7 @@ beforeEach(() =>
     vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.SetForegroundWindow).mockReturnValue(Result.succeed(undefined));
+    vi.mocked(WindowsWindow.SetWindowZOrderAfter).mockReturnValue(Result.succeed(undefined));
     vi.mocked(WindowsScreen.GetMonitors).mockReturnValue(Result.succeed([ ]));
 });
 
@@ -460,6 +462,159 @@ describe("CommandExecutor.Execute", () =>
         ]);
         expect(WindowsWindow.SetForegroundWindow).toHaveBeenCalledWith(ForegroundWindow);
     });
+
+    it(
+        "restores a floating window's prior z-order once focus moves to a different window",
+        async () =>
+        {
+            const WindowC = 3n as Handle.HWND;
+            const WindowB = 2n as Handle.HWND;
+            const WindowD = 4n as Handle.HWND;
+            vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
+                Result.succeed([ WindowC, WindowB, WindowD ])
+            );
+
+            await Effect.runPromise(pipe(
+                Effect.gen(function*()
+                {
+                    const Executor = yield* CommandExecutor;
+
+                    yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                        Id: "FocusMoveRight"
+                    }));
+                    yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                        Id: "FocusMoveLeft"
+                    }));
+                }),
+                Effect.provide(Live),
+                Effect.provide(FakeHotkey()),
+                Effect.provide(FakeAppSettings()),
+                Effect.provide(FakeBrowserWindow([ ])),
+                Effect.provide(FakeOverlaySession(
+                    Option.none(),
+                    Option.none(),
+                    Option.none(),
+                    Option.none(),
+                    OverlayScreenId.FloatingHome,
+                    () => undefined,
+                    Option.none(),
+                    () => undefined,
+                    () => undefined,
+                    [ Option.some(WindowB), Option.some(WindowD) ]
+                )),
+                Effect.provide(FakeTilingManager()),
+                Effect.provide(IdleResolver)
+            ));
+
+            expect(WindowsWindow.SetForegroundWindow).toHaveBeenNthCalledWith(1, WindowB);
+            expect(WindowsWindow.SetForegroundWindow).toHaveBeenNthCalledWith(2, WindowD);
+            expect(WindowsWindow.SetWindowZOrderAfter).toHaveBeenCalledExactlyOnceWith(
+                WindowB,
+                WindowC
+            );
+        }
+    );
+
+    it(
+        "does not restore z-order when Focus returns to the window already raised",
+        async () =>
+        {
+            const WindowC = 3n as Handle.HWND;
+            const WindowB = 2n as Handle.HWND;
+            vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
+                Result.succeed([ WindowC, WindowB ])
+            );
+
+            await Effect.runPromise(pipe(
+                Effect.gen(function*()
+                {
+                    const Executor = yield* CommandExecutor;
+
+                    yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                        Id: "FocusMoveRight"
+                    }));
+                    yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                        Id: "FocusMoveLeft"
+                    }));
+                }),
+                Effect.provide(Live),
+                Effect.provide(FakeHotkey()),
+                Effect.provide(FakeAppSettings()),
+                Effect.provide(FakeBrowserWindow([ ])),
+                Effect.provide(FakeOverlaySession(
+                    Option.none(),
+                    Option.none(),
+                    Option.none(),
+                    Option.none(),
+                    OverlayScreenId.FloatingHome,
+                    () => undefined,
+                    Option.none(),
+                    () => undefined,
+                    () => undefined,
+                    [ Option.some(WindowB), Option.some(WindowB) ]
+                )),
+                Effect.provide(FakeTilingManager()),
+                Effect.provide(IdleResolver)
+            ));
+
+            expect(WindowsWindow.SetWindowZOrderAfter).not.toHaveBeenCalled();
+        }
+    );
+
+    it(
+        "restores a raised floating window's z-order when the overlay is deactivated",
+        async () =>
+        {
+            const ForegroundWindow = 42n as Handle.HWND;
+            const WindowC = 3n as Handle.HWND;
+            const WindowB = 2n as Handle.HWND;
+            vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(
+                Option.some(ForegroundWindow)
+            );
+            vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.some(
+                Box.Box(0, 1200, 800, 0)
+            ));
+            vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
+                Result.succeed([ WindowC, WindowB ])
+            );
+
+            await Effect.runPromise(pipe(
+                Effect.gen(function*()
+                {
+                    const Executor = yield* CommandExecutor;
+
+                    yield* Executor.Execute(UiCommands.Activate());
+                    yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                        Id: "FocusMoveRight"
+                    }));
+                    yield* Executor.Execute(UiCommands.Deactivate());
+                }),
+                Effect.provide(Live),
+                Effect.provide(FakeHotkey()),
+                Effect.provide(FakeAppSettings(73)),
+                Effect.provide(FakeBrowserWindow([ ])),
+                Effect.provide(FakeOverlaySession(
+                    Option.none(),
+                    Option.none(),
+                    Option.none(),
+                    Option.none(),
+                    OverlayScreenId.FloatingHome,
+                    () => undefined,
+                    Option.none(),
+                    () => undefined,
+                    () => undefined,
+                    [ Option.some(WindowB) ]
+                )),
+                Effect.provide(FakeTilingManager()),
+                Effect.provide(IdleResolver)
+            ));
+
+            expect(WindowsWindow.SetWindowZOrderAfter).toHaveBeenCalledExactlyOnceWith(
+                WindowB,
+                WindowC
+            );
+        }
+    );
 
     it("ignores overlay activation while the foreground window is fullscreen", async () =>
     {
@@ -1042,7 +1197,8 @@ const FakeAppSettings = (
         Theme: "System",
         TileExistingWindowsOnStartup: false,
         TiledResizeBehavior: "PreserveRatios",
-        TiledWindowGap: 8
+        TiledWindowGap: 8,
+        UseSimplifiedTrayIcon: false
     };
     const Service: AppSettings.Service = {
         Changes: Stream.empty,
@@ -1071,11 +1227,19 @@ const FakeOverlaySession = (
     OnSetTiledMovePanelTarget: (
         Target: OverlaySession.TiledMovePanelTarget
     ) => void = () => undefined,
-    OnClearTiledMovePanelTarget: () => void = () => undefined
+    OnClearTiledMovePanelTarget: () => void = () => undefined,
+    // Successive Focus targets returned across repeated ResolveFocusTarget calls
+    // (e.g. multiple direction picks in one Focus session). Falls back to
+    // `FocusTarget` once exhausted, or when omitted entirely.
+    ResolveFocusTargetSequence?: ReadonlyArray<Option.Option<Handle.HWND>>
 ) => Layer.suspend(() =>
 {
     let Stack: ReadonlyArray<OverlayScreenId> = [ InitialScreen ];
+    let ResolveFocusTargetCallCount = 0;
     let ActivationWindow = InitialActivationWindow;
+    let RaisedFloatingWindowZOrder: Option.Option<
+        OverlaySession.RaisedFloatingWindowZOrder
+    > = Option.none();
     let PrimaryModifierHeld = false;
     let FineModifierHeld = false;
     let CurrentResizeMode: ResizeModeType = ResizeMode.Grow;
@@ -1122,13 +1286,32 @@ const FakeOverlaySession = (
         {
             CurrentFocusFailure = Option.some(Failure);
         }),
+        RecordRaisedFloatingWindowZOrder: (
+            Value: OverlaySession.RaisedFloatingWindowZOrder
+        ) => Effect.sync((): void =>
+        {
+            RaisedFloatingWindowZOrder = Option.some(Value);
+        }),
         RefreshTiledInsertWindows: Effect.void,
         Reset: Effect.sync((): void =>
         {
             Stack = [ OverlayScreenId.FloatingHome ];
         }),
         ResizeMode: Effect.sync(() => CurrentResizeMode),
-        ResolveFocusTarget: () => Effect.succeed(FocusTarget),
+        ResolveFocusTarget: () => Effect.sync(() =>
+        {
+            if (ResolveFocusTargetSequence === undefined)
+            {
+                return FocusTarget;
+            }
+
+            const Index = Math.min(
+                ResolveFocusTargetCallCount,
+                ResolveFocusTargetSequence.length - 1
+            );
+            ResolveFocusTargetCallCount += 1;
+            return ResolveFocusTargetSequence[Index] ?? FocusTarget;
+        }),
         ResolveTiledFocusCommit: Effect.succeed(TiledFocusCommit),
         ResolveTiledFocusTarget: () => Effect.succeed(TiledFocusTarget),
         ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
@@ -1180,6 +1363,12 @@ const FakeOverlaySession = (
             const CurrentActivationWindow = ActivationWindow;
             ActivationWindow = Option.none();
             return CurrentActivationWindow;
+        }),
+        TakeRaisedFloatingWindowZOrder: Effect.sync(() =>
+        {
+            const Current = RaisedFloatingWindowZOrder;
+            RaisedFloatingWindowZOrder = Option.none();
+            return Current;
         }),
         TiledInsertCaptureNext: Effect.sync(() => CurrentTiledInsertCaptureNext),
         TiledInsertDragActive: Effect.sync(() => CurrentTiledInsertDragActive),

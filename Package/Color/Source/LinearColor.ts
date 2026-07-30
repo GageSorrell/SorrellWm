@@ -24,7 +24,7 @@ const TypeId = "~sorrell/color/LinearColor" as const;
 export type TypeId = typeof TypeId;
 
 /**
- * An RGB color whose channels are decimals in the inclusive range `[0, ]`.
+ * An RGB color whose channels are decimals in the inclusive range `[0, 1]`.
  *
  * @category Color
  * @since 1.0.0
