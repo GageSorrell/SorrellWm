@@ -1248,6 +1248,31 @@ describe("OverlaySession.Live tiled resize behavior", () =>
     });
 });
 
+describe("OverlaySession.Live resize recovery", () =>
+{
+    it("records and clears the failed-shrink warning", async () =>
+    {
+        const [ Failed, Cleared ] = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.RecordResizeRecoveryFailure;
+                const FailedSnapshot = yield* Session.Snapshot;
+                yield* Session.ClearResizeRecoveryFailure;
+                const ClearedSnapshot = yield* Session.Snapshot;
+                return [ FailedSnapshot, ClearedSnapshot ] as const;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(Failed.ResizeRecoveryFailure).toBe(true);
+        expect(Cleared.ResizeRecoveryFailure).toBeUndefined();
+    });
+});
+
 const CurrentSettings: AppSettings.AppSettings = {
     FocusPreviewOpacity: 75,
     IgnoreActivationKeybindInFullscreen: true,
@@ -1260,6 +1285,11 @@ const CurrentSettings: AppSettings.AppSettings = {
     OverlayBackdropIntensity: 50,
     OverlayRoundedCorners: true,
     PerAppSettings: { },
+    ResizeRecoveryStrategy:
+    {
+        Threshold: 128,
+        _tag: "Continue"
+    },
     RunAtStartup: true,
     ShowStackPanelMinimizeFlyout: true,
     ShowTitlebarFlyout: true,

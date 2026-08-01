@@ -557,6 +557,12 @@ export interface OverlaySessionImpl
     /** Cycle the tiled Resize screen's redistribution behavior. */
     readonly ToggleTiledResizeBehavior: Effect.Effect<void>;
 
+    /** Clear the resize-recovery warning from the current tiled flow. */
+    readonly ClearResizeRecoveryFailure: Effect.Effect<void>;
+
+    /** Show that the latest tiled operation was rolled back after a failed shrink. */
+    readonly RecordResizeRecoveryFailure: Effect.Effect<void>;
+
     /** Clear the reserved tiled Insert region and its window selection. */
     readonly ClearTiledInsert: Effect.Effect<void>;
 
@@ -827,6 +833,7 @@ const Live = Layer.effect(
         );
         const ExcludedFocusWindows = yield* Ref.make<ReadonlySet<Handle.HWND>>(new Set());
         const FocusFailureRef = yield* Ref.make(Option.none<FocusFailure>());
+        const ResizeRecoveryFailureRef = yield* Ref.make(false);
         const TiledFocusLocationRef = yield* Ref.make(
             Option.none<TiledFocusLocation>()
         );
@@ -1240,6 +1247,7 @@ const Live = Layer.effect(
             ));
         });
         const ClearFocusFailure = Ref.set(FocusFailureRef, Option.none());
+        const ClearResizeRecoveryFailure = Ref.set(ResizeRecoveryFailureRef, false);
         const ResolveCurrentFocusTarget = (
             Id: OverlayCommandId
         ): Effect.Effect<Option.Option<Handle.HWND>> => Effect.gen(function*()
@@ -1599,6 +1607,7 @@ const Live = Layer.effect(
                 Effect.andThen(ClearTiledFocusPanelPreview),
                 Effect.andThen(ClearTiledMovePanelPreview),
                 Effect.andThen(ClearFocusFailure),
+                Effect.andThen(ClearResizeRecoveryFailure),
                 Effect.andThen(Ref.set(TiledFocusLocationRef, Option.none())),
                 Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none()))
             ),
@@ -1612,6 +1621,7 @@ const Live = Layer.effect(
                 Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none()))
             ),
             ClearFocusPreview,
+            ClearResizeRecoveryFailure,
             ClearTiledInsert,
             ClearTiledMovePanelTarget: Ref.set(
                 TiledMovePanelTargetRef,
@@ -1680,7 +1690,8 @@ const Live = Layer.effect(
                         : Effect.void
                 ),
                 Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none())),
-                Effect.andThen(ClearFocusFailure)
+                Effect.andThen(ClearFocusFailure),
+                Effect.andThen(ClearResizeRecoveryFailure)
             ),
             PreviewFocusTarget: (Id: OverlayCommandId | null) => Effect.gen(function*()
             {
@@ -1735,6 +1746,7 @@ const Live = Layer.effect(
             ),
             RecordRaisedFloatingWindowZOrder: (Value: RaisedFloatingWindowZOrder) =>
                 Ref.set(RaisedFloatingWindowZOrderRef, Option.some(Value)),
+            RecordResizeRecoveryFailure: Ref.set(ResizeRecoveryFailureRef, true),
             RefreshTiledInsertWindows,
             Reset: Effect.gen(function*()
             {
@@ -1753,6 +1765,7 @@ const Live = Layer.effect(
                 yield* ClearTiledFocusPanelPreview;
                 yield* ClearTiledMovePanelPreview;
                 yield* ClearFocusFailure;
+                yield* ClearResizeRecoveryFailure;
             }),
             ResizeMode: Ref.get(ResizeModeRef),
             ResolveFocusTarget: ResolveCurrentFocusTarget,
@@ -1979,6 +1992,9 @@ const Live = Layer.effect(
                     }
                 );
                 const CurrentFocusFailure = yield* Ref.get(FocusFailureRef);
+                const ResizeRecoveryFailure = yield* Ref.get(
+                    ResizeRecoveryFailureRef
+                );
                 const ScreenDto = OverlayCommandCatalog.FromKeybindSettings(
                     CurrentScreen,
                     CurrentSettings.Keybinds,
@@ -2001,7 +2017,7 @@ const Live = Layer.effect(
                     InsertWindows
                 );
 
-                return (
+                const ScreenWithFocusFailure = (
                     CurrentScreen === ScreenId.FloatingFocus
                     || CurrentScreen === ScreenId.TiledFocus
                 )
@@ -2011,6 +2027,13 @@ const Live = Layer.effect(
                         FocusFailure: { WindowTitle: CurrentFocusFailure.value.WindowTitle }
                     }
                     : ScreenDto;
+
+                return ResizeRecoveryFailure
+                    ? {
+                        ...ScreenWithFocusFailure,
+                        ResizeRecoveryFailure: true
+                    }
+                    : ScreenWithFocusFailure;
             }),
             TakeActivationWindow: Ref.getAndSet(ActivationWindow, Option.none()),
             TakeRaisedFloatingWindowZOrder: Ref.getAndSet(

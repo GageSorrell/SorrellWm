@@ -54,6 +54,8 @@ export function UseSettingControlRegistration<TargetElement extends HTMLElement>
     const NodeRef = useRef<TargetElement>(null);
     const PulseHandleRef = useRef<MotionImperativeRef | undefined>(undefined);
     const Context = useContext(SettingControlsContext);
+    const Register = Context?.Register;
+    const SubscribePulse = Context?.SubscribePulse;
 
     useLayoutEffect(() =>
     {
@@ -64,23 +66,23 @@ export function UseSettingControlRegistration<TargetElement extends HTMLElement>
 
     useEffect(() =>
     {
-        if (Context === undefined || Id === undefined)
+        if (Register === undefined || Id === undefined)
         {
             return undefined;
         }
 
-        return Context.Register(Id, { Icon, Subtitle, Title }, NodeRef.current);
-    }, [ Context, Id, Title, Subtitle, Icon ]);
+        return Register(Id, { Icon, Subtitle, Title }, NodeRef.current);
+    }, [ Register, Id, Title, Subtitle, Icon ]);
 
     useEffect(() =>
     {
-        if (Context === undefined || Id === undefined)
+        if (SubscribePulse === undefined || Id === undefined)
         {
             return undefined;
         }
 
-        return Context.SubscribePulse(Id, () => PulseHandleRef.current?.setPlayState("running"));
-    }, [ Context, Id ]);
+        return SubscribePulse(Id, () => PulseHandleRef.current?.setPlayState("running"));
+    }, [ SubscribePulse, Id ]);
 
     return { NodeRef, PulseHandleRef };
 }

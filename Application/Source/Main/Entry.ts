@@ -416,6 +416,7 @@ const ToGeneralSettingsDto = (
 ): GeneralSettingsDto => ({
     IgnoreActivationKeybindInFullscreen:
         Settings.IgnoreActivationKeybindInFullscreen,
+    ResizeRecoveryStrategy: Settings.ResizeRecoveryStrategy,
     TileExistingWindowsOnStartup: Settings.TileExistingWindowsOnStartup,
     TiledResizeBehavior: Settings.TiledResizeBehavior,
     TiledWindowDetachDistance: Settings.TiledWindowDetachDistance,
@@ -463,6 +464,14 @@ ipcMain.handle(AppApiChannel.GeneralSettingsSet, (
             );
         }
 
+        if (PatchValue.ResizeRecoveryStrategy !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "ResizeRecoveryStrategy",
+                PatchValue.ResizeRecoveryStrategy
+            );
+        }
+
         if (PatchValue.TiledWindowGap !== undefined)
         {
             yield* Settings.SetSetting("TiledWindowGap", PatchValue.TiledWindowGap);
@@ -489,6 +498,26 @@ ipcMain.handle(AppApiChannel.GeneralSettingsSet, (
             Settings: Object.keys(PatchValue)
         });
         return ToGeneralSettingsDto(yield* Settings.Get);
+    }));
+});
+
+ipcMain.removeHandler(AppApiChannel.SettingsOpen);
+ipcMain.handle(AppApiChannel.SettingsOpen, (
+    _Event: IpcMainInvokeEvent,
+    PathValue: unknown
+) =>
+{
+    if (typeof PathValue !== "string")
+    {
+        throw new TypeError("The requested settings path is invalid.");
+    }
+
+    return ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Executor = yield* Command.Executor.CommandExecutor;
+        yield* Executor.Execute(Command.Ui.UiCommand().OpenSettings({
+            Path: Option.some(PathValue)
+        }));
     }));
 });
 

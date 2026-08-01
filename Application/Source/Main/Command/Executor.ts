@@ -664,6 +664,7 @@ const CenterOverlayOnTiledWindow = (
 
 const MoveTiledWindow = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
     ActivationWindow: Handle.HWND,
@@ -676,6 +677,9 @@ const MoveTiledWindow = (
         return;
     }
 
+    const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
+    let Completed = true;
+
     switch (Action.value._tag)
     {
         case "SelectPanel":
@@ -685,20 +689,72 @@ const MoveTiledWindow = (
         case "MoveIntoPanel":
             yield* TilingManager.MoveIntoPanel(
                 ActivationWindow,
-                Action.value.TargetPanelPath
+                Action.value.TargetPanelPath,
+                RecoveryStrategy
+            ).pipe(
+                Effect.catchTag("ResizeRecoveryCanceledError", (
+                    Failure: Tiling.Manager.ResizeRecoveryCanceledError
+                ) => Effect.gen(function*()
+                {
+                    Completed = false;
+                    yield* Logging.LogWarning(
+                        "Overlay.Move",
+                        "Cancelled a tiled move because a window could not be made smaller.",
+                        Failure,
+                        { Window: Failure.Window }
+                    );
+                }))
             );
             break;
         case "MoveToContainingPanel":
-            yield* TilingManager.MoveToContainingPanel(ActivationWindow);
+            yield* TilingManager.MoveToContainingPanel(
+                ActivationWindow,
+                RecoveryStrategy
+            ).pipe(
+                Effect.catchTag("ResizeRecoveryCanceledError", (
+                    Failure: Tiling.Manager.ResizeRecoveryCanceledError
+                ) => Effect.gen(function*()
+                {
+                    Completed = false;
+                    yield* Logging.LogWarning(
+                        "Overlay.Move",
+                        "Cancelled a tiled move because a window could not be made smaller.",
+                        Failure,
+                        { Window: Failure.Window }
+                    );
+                }))
+            );
             break;
         case "MoveToIndex":
             yield* TilingManager.MoveToIndex(
                 ActivationWindow,
-                Action.value.TargetIndex
+                Action.value.TargetIndex,
+                RecoveryStrategy
+            ).pipe(
+                Effect.catchTag("ResizeRecoveryCanceledError", (
+                    Failure: Tiling.Manager.ResizeRecoveryCanceledError
+                ) => Effect.gen(function*()
+                {
+                    Completed = false;
+                    yield* Logging.LogWarning(
+                        "Overlay.Move",
+                        "Cancelled a tiled move because a window could not be made smaller.",
+                        Failure,
+                        { Window: Failure.Window }
+                    );
+                }))
             );
             break;
     }
 
+    if (!Completed)
+    {
+        yield* Session.RecordResizeRecoveryFailure;
+        yield* PublishOverlayScreen(BrowserWindows, Session);
+        return;
+    }
+
+    yield* Session.ClearResizeRecoveryFailure;
     yield* Session.ClearTiledMovePanelTarget;
     yield* CenterOverlayOnTiledWindow(
         BrowserWindows,
@@ -725,6 +781,7 @@ const MoveWindowDirection = (
         {
             yield* MoveTiledWindow(
                 BrowserWindows,
+                Settings,
                 Session,
                 TilingManager,
                 ActivationWindow.value,
@@ -793,6 +850,7 @@ const MinimumWindowSize = 40;
 
 const ResizeWindowByEdge = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
     ActivationWindow: Handle.HWND,
@@ -802,7 +860,7 @@ const ResizeWindowByEdge = (
 {
     if (DeltaPixels === 0)
     {
-        return;
+        return true;
     }
 
     const Snapshot = yield* TilingManager.Snapshot;
@@ -810,26 +868,50 @@ const ResizeWindowByEdge = (
     if (IsWindowTiled(Snapshot, ActivationWindow))
     {
         const Behavior = yield* Session.TiledResizeBehavior;
-        yield* TilingManager.Resize(
+        const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
+        const Completed = yield* TilingManager.Resize(
             ActivationWindow,
             ResizeDirectionByEdge[Edge],
             EdgeOutwardSign[Edge] * DeltaPixels,
-            Behavior
+            Behavior,
+            RecoveryStrategy
+        ).pipe(
+            Effect.as(true),
+            Effect.catchTag("ResizeRecoveryCanceledError", (
+                Failure: Tiling.Manager.ResizeRecoveryCanceledError
+            ) => Effect.gen(function*()
+            {
+                yield* Logging.LogWarning(
+                    "Overlay.Resize",
+                    "Cancelled a tiled resize because a window could not be made smaller.",
+                    Failure,
+                    { Window: Failure.Window }
+                );
+                yield* Session.RecordResizeRecoveryFailure;
+                yield* PublishOverlayScreen(BrowserWindows, Session);
+                return false;
+            }))
         );
+        if (!Completed)
+        {
+            return false;
+        }
+
+        yield* Session.ClearResizeRecoveryFailure;
         yield* CenterOverlayOnTiledWindow(
             BrowserWindows,
             TilingManager,
             ActivationWindow
         );
         yield* PublishOverlayScreen(BrowserWindows, Session);
-        return;
+        return true;
     }
 
     const CurrentBounds = Window.GetWindowRect(ActivationWindow);
 
     if (Option.isNone(CurrentBounds))
     {
-        return;
+        return true;
     }
 
     const Current = CurrentBounds.value;
@@ -842,7 +924,7 @@ const ResizeWindowByEdge = (
 
     if (Box.Width(NewBounds) < MinimumWindowSize || Box.Height(NewBounds) < MinimumWindowSize)
     {
-        return;
+        return true;
     }
 
     const ResizeResult = Window.SetWindowRect(ActivationWindow, NewBounds);
@@ -855,7 +937,7 @@ const ResizeWindowByEdge = (
             ResizeResult.failure,
             { Window: ActivationWindow }
         );
-        return;
+        return true;
     }
 
     // Center the overlay on the bounds we just resized the window to, rather
@@ -867,6 +949,7 @@ const ResizeWindowByEdge = (
     );
 
     yield* PublishOverlayScreen(BrowserWindows, Session);
+    return true;
 });
 
 // Grow always moves an edge outward; Shrink always moves it inward. The sign
@@ -897,6 +980,7 @@ const ResizeWindowDirection = (
 
     yield* ResizeWindowByEdge(
         BrowserWindows,
+        Settings,
         Session,
         TilingManager,
         ActivationWindow.value,
@@ -959,7 +1043,7 @@ const AnimateDirectionalHold = (
     ApplyDelta: (
         ActivationWindow: Handle.HWND,
         DeltaPixels: number
-    ) => Effect.Effect<void, unknown>
+    ) => Effect.Effect<boolean, unknown>
 ) => Effect.gen(function*()
 {
     yield* Effect.sleep(Duration.millis(MoveAnimationInitialDelayMillis));
@@ -1044,7 +1128,11 @@ const AnimateDirectionalHold = (
 
             if (Option.isSome(CurrentActivationWindow))
             {
-                yield* ApplyDelta(CurrentActivationWindow.value, Step);
+                const Continue = yield* ApplyDelta(CurrentActivationWindow.value, Step);
+                if (!Continue)
+                {
+                    break;
+                }
             }
 
             TotalMoved += Step;
@@ -1088,7 +1176,7 @@ const AnimateMoveWindow = (
             ActivationWindow,
             Unit.X * DeltaPixels,
             Unit.Y * DeltaPixels
-        )
+        ).pipe(Effect.as(true))
     );
 });
 
@@ -1118,6 +1206,7 @@ const AnimateResizeWindow = (
         HeldBox,
         (ActivationWindow: Handle.HWND, DeltaPixels: number) => ResizeWindowByEdge(
             BrowserWindows,
+            Settings,
             Session,
             TilingManager,
             ActivationWindow,
@@ -1191,8 +1280,10 @@ const IsPointInBox = (
 
 const CompleteTiledInsert = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
+    RuntimeState: TiledInsertRuntimeState,
     WindowValue: Handle.HWND
 ) => Effect.gen(function*()
 {
@@ -1202,11 +1293,46 @@ const CompleteTiledInsert = (
         return;
     }
 
-    yield* TilingManager.Insert(
+    const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
+    const Completed = yield* TilingManager.Insert(
         WindowValue,
         Target.value.TargetWindow,
-        Target.value.Direction
+        Target.value.Direction,
+        RecoveryStrategy
+    ).pipe(
+        Effect.as(true),
+        Effect.catchTag("ResizeRecoveryCanceledError", (
+            Failure: Tiling.Manager.ResizeRecoveryCanceledError
+        ) => Effect.gen(function*()
+        {
+            yield* Logging.LogWarning(
+                "Overlay.Insert",
+                "Cancelled a tiled insertion because a window could not be made smaller.",
+                Failure,
+                { Window: Failure.Window }
+            );
+            return false;
+        }))
     );
+    if (!Completed)
+    {
+        const IsTargetVisible = yield* BrowserWindows.IsVisible(
+            BrowserWindow.Key.InsertTarget
+        ).pipe(Effect.match({
+            onFailure: () => false,
+            onSuccess: (Visible: boolean) => Visible
+        }));
+        if (IsTargetVisible)
+        {
+            yield* ReturnToTiledInsertList(BrowserWindows, Session, RuntimeState);
+        }
+
+        yield* Session.RecordResizeRecoveryFailure;
+        yield* PublishOverlayScreen(BrowserWindows, Session);
+        return;
+    }
+
+    yield* Session.ClearResizeRecoveryFailure;
     yield* Session.ClearTiledInsert;
     yield* Session.Reset;
     yield* IgnoreMissingBrowserWindow(
@@ -1329,6 +1455,7 @@ const ShowTiledInsertTarget = (
 
 const ChooseTiledInsertDirection = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
     Direction: Tiling.Tree.FocusDirection
@@ -1340,23 +1467,48 @@ const ChooseTiledInsertDirection = (
         return;
     }
 
+    const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
     const Bounds = yield* TilingManager.PreviewInsert(
         ActivationWindow.value,
-        Direction
+        Direction,
+        RecoveryStrategy
+    ).pipe(
+        Effect.map(Option.some),
+        Effect.catchTag("ResizeRecoveryCanceledError", (
+            Failure: Tiling.Manager.ResizeRecoveryCanceledError
+        ) => Effect.gen(function*()
+        {
+            yield* Logging.LogWarning(
+                "Overlay.Insert",
+                "Cancelled a tiled Insert preview because a window could not be made smaller.",
+                Failure,
+                { Window: Failure.Window }
+            );
+            yield* Session.RecordResizeRecoveryFailure;
+            yield* PublishOverlayScreen(BrowserWindows, Session);
+            return Option.none<Box.Box>();
+        }))
     );
+    if (Option.isNone(Bounds))
+    {
+        return;
+    }
+
+    yield* Session.ClearResizeRecoveryFailure;
     yield* Session.SetTiledInsertTarget({
-        Bounds,
+        Bounds: Bounds.value,
         Direction,
         TargetWindow: ActivationWindow.value
     });
     yield* Session.RefreshTiledInsertWindows;
     yield* Session.Navigate(OverlayScreenId.TiledInsertWindow);
-    yield* BrowserWindows.SetBounds(BrowserWindow.Key.Overlay, Bounds);
+    yield* BrowserWindows.SetBounds(BrowserWindow.Key.Overlay, Bounds.value);
     yield* PublishOverlayScreen(BrowserWindows, Session);
 });
 
 const PollTiledInsertTarget = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
     RuntimeState: TiledInsertRuntimeState
@@ -1436,8 +1588,10 @@ const PollTiledInsertTarget = (
         {
             yield* CompleteTiledInsert(
                 BrowserWindows,
+                Settings,
                 Session,
                 TilingManager,
+                RuntimeState,
                 LastMovingWindow.value
             );
             return;
@@ -1469,8 +1623,10 @@ const PollTiledInsertTarget = (
     {
         yield* CompleteTiledInsert(
             BrowserWindows,
+            Settings,
             Session,
             TilingManager,
+            RuntimeState,
             NewWindow
         );
     }
@@ -1577,9 +1733,28 @@ const ExecuteUi = (
         case "Deactivate":
             return Effect.gen(function*()
             {
+                const TiledInsertTarget = yield* Session.TiledInsertTarget;
+                if (Option.isSome(TiledInsertTarget))
+                {
+                    const IsInsertTargetVisible = yield* BrowserWindows.IsVisible(
+                        BrowserWindow.Key.InsertTarget
+                    ).pipe(Effect.match({
+                        onFailure: () => false,
+                        onSuccess: (Visible: boolean) => Visible
+                    }));
+                    if (IsInsertTargetVisible)
+                    {
+                        yield* Logging.LogDebug(
+                            "Overlay.Insert",
+                            "Kept the tiled Insert preview active after the overlay deactivated."
+                        );
+                        return;
+                    }
+                }
+
                 yield* Logging.LogInfo("Overlay", "Deactivating the command overlay.");
                 yield* Session.ClearFocusPreview;
-                if (Option.isSome(yield* Session.TiledInsertTarget))
+                if (Option.isSome(TiledInsertTarget))
                 {
                     yield* TilingManager.Reconcile;
                     yield* Session.ClearTiledInsert;
@@ -1761,6 +1936,7 @@ const ExecuteUi = (
                     ? Effect.void
                     : ChooseTiledInsertDirection(
                         BrowserWindows,
+                        Settings,
                         Session,
                         TilingManager,
                         Direction
@@ -1788,8 +1964,10 @@ const ExecuteUi = (
                         onNone: () => Effect.void,
                         onSome: (WindowValue: Handle.HWND) => CompleteTiledInsert(
                             BrowserWindows,
+                            Settings,
                             Session,
                             TilingManager,
+                            InsertRuntime,
                             WindowValue
                         )
                     }))
@@ -2068,6 +2246,7 @@ const Live = Layer.effect(
         yield* pipe(
             PollTiledInsertTarget(
                 BrowserWindows,
+                Settings,
                 Session,
                 TilingManager,
                 InsertRuntime

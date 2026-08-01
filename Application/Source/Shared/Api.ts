@@ -151,6 +151,9 @@ export interface AppApi
     readonly platform: string;
     readonly settings:
     {
+        /** Open the settings window at a given application settings path. */
+        readonly open: (Path: string) => Promise<void>;
+
         /** Observe requests to navigate the settings window to a given path. */
         readonly onNavigate: (Listener: (Path: string | null) => void) => () => void;
     };
@@ -199,6 +202,7 @@ const AppApiChannel = Object.freeze({
     PerAppSettingsSet: "per-app-settings:set" as const,
     RendererLogWrite: "renderer-log:write" as const,
     SettingsNavigate: "settings:navigate" as const,
+    SettingsOpen: "settings:open" as const,
     ThemeChanged: "theme:changed",
     ThemeGet: "theme:get",
     UpdateDownloadAndInstall: "update:download-and-install" as const,

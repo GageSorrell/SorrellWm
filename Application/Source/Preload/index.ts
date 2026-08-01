@@ -167,6 +167,9 @@ const OnSettingsNavigate = (
     return () => void SettingsNavigateListeners.delete(Listener);
 };
 
+const OpenSettings = async (Path: string): Promise<void> =>
+    void await ipcRenderer.invoke(AppApiChannel.SettingsOpen, Path);
+
 const BackOverlayScreen = async (): Promise<void> =>
     void await ipcRenderer.invoke(AppApiChannel.OverlayBack);
 
@@ -513,7 +516,8 @@ const applicationApi: AppApi = Object.freeze({
     }),
     platform: process.platform,
     settings: Object.freeze({
-        onNavigate: OnSettingsNavigate
+        onNavigate: OnSettingsNavigate,
+        open: OpenSettings
     }),
     theme: Object.freeze({
         get: GetRendererTheme,

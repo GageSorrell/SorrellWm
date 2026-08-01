@@ -10,11 +10,11 @@
  */
 
 import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
+import { MakeSettingControlId, ParseSettingControlId } from "./SettingControlId.js";
 import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-ui";
 import { Text, Title2, makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
-import { ParseSettingControlId } from "./SettingControlId.js";
 import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
 import { SettingsGeneral } from "./SettingsGeneral.js";
 import { SettingsHome } from "./SettingsHome.js";
@@ -121,7 +121,17 @@ const SettingsShell = (): React.JSX.Element =>
     useEffect(
         () => window.sorrell.settings.onNavigate((Value: string | null) =>
         {
-            SetPath(Value === null ? null : DecodeSettingsPath(Value));
+            const NextPath = Value === null ? null : DecodeSettingsPath(Value);
+            SetPath(NextPath);
+
+            const Highlight = NextPath?.Params.Highlight;
+            if (NextPath !== null && Highlight !== undefined)
+            {
+                SetPendingScrollId(MakeSettingControlId(
+                    NextPath.Section,
+                    Highlight
+                ));
+            }
         }),
         [ ]
     );
@@ -153,6 +163,11 @@ const SettingsShell = (): React.JSX.Element =>
             return undefined;
         }
 
+        if (!Object.hasOwn(Controls, PendingScrollId))
+        {
+            return undefined;
+        }
+
         const Frame = requestAnimationFrame(() =>
         {
             ScrollToAndPulse(PendingScrollId);
@@ -160,7 +175,7 @@ const SettingsShell = (): React.JSX.Element =>
         });
 
         return (): void => cancelAnimationFrame(Frame);
-    }, [ PendingScrollId, SelectedSection, ScrollToAndPulse ]);
+    }, [ Controls, PendingScrollId, SelectedSection, ScrollToAndPulse ]);
 
     const OnToggleSidebar = () => SetIsSidebarOpen(Boolean.not);
 

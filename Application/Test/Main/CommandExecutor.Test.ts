@@ -281,7 +281,8 @@ describe("CommandExecutor.Execute", () =>
 
         expect(PreviewInsert).toHaveBeenCalledWith(
             1n,
-            Tiling.Tree.FocusDirection.Up
+            Tiling.Tree.FocusDirection.Up,
+            { Threshold: 128, _tag: "Continue" }
         );
         expect(ResultValue.Current).toBe(OverlayScreenId.TiledInsertWindow);
         expect(ResultValue.Target).toEqual(Option.some({
@@ -368,7 +369,8 @@ describe("CommandExecutor.Execute", () =>
         expect(Insert).toHaveBeenCalledWith(
             FloatingWindow,
             TiledWindow,
-            Tiling.Tree.FocusDirection.Right
+            Tiling.Tree.FocusDirection.Right,
+            { Threshold: 128, _tag: "Continue" }
         );
         expect(Operations).toContain("ForceClose:InsertTarget");
         expect(WindowsWindow.SetForegroundWindow)
@@ -432,7 +434,8 @@ describe("CommandExecutor.Execute", () =>
         expect(Insert).toHaveBeenCalledWith(
             NewWindow,
             TiledWindow,
-            Tiling.Tree.FocusDirection.Down
+            Tiling.Tree.FocusDirection.Down,
+            { Threshold: 128, _tag: "Continue" }
         );
     });
 
@@ -506,6 +509,108 @@ describe("CommandExecutor.Execute", () =>
             Bounds: PreviewBounds,
             Key: BrowserWindow.Key.InsertTarget
         });
+    });
+
+    it("keeps the tiled window at its previewed size when the activation key is " +
+        "released after the temporary Insert target opens", async () =>
+    {
+        const TiledWindow = 1n as Handle.HWND;
+        const WorkArea = Box.Box(0, 1000, 600, 0);
+        let CurrentBounds = WorkArea;
+        const Applied = new Array<{ Bounds: MathBox.Box; Window: Handle.HWND; }>();
+        const TilingManagerLive = Tiling.Manager.MakeLive({
+            Enumerate: () => Result.succeed([ ]),
+            GetWindowRect: () => Option.some(CurrentBounds),
+            GetWindowWorkArea: () => Option.some(WorkArea),
+            SetWindowRect: (WindowValue: Handle.HWND, Bounds: MathBox.Box) =>
+            {
+                Applied.push({ Bounds, Window: WindowValue });
+                CurrentBounds = Bounds;
+                return Result.succeed(undefined);
+            }
+        });
+
+        const TargetAfterDeactivate = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                const Session = yield* OverlaySession.OverlaySession;
+                const Manager = yield* Tiling.Manager.TilingManager;
+
+                yield* Manager.Tile(TiledWindow);
+                Applied.length = 0;
+
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ChooseInsertRight"
+                }));
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "OpenInsertTarget"
+                }));
+                yield* Executor.Execute(UiCommands.Deactivate());
+
+                return yield* Session.TiledInsertTarget;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow([ ], Effect.void, () => undefined, true)),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(TiledWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledInsertDirection
+            )),
+            Effect.provide(TilingManagerLive),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Applied.at(-1)).toEqual({
+            Bounds: Box.Box(0, 500, 600, 0),
+            Window: TiledWindow
+        });
+        expect(Option.isSome(TargetAfterDeactivate)).toBe(true);
+    });
+
+    it("still cancels a tiled Insert preview when deactivated before the " +
+        "temporary target opens", async () =>
+    {
+        const TiledWindow = 1n as Handle.HWND;
+        const Reconcile = vi.fn(() => Effect.void);
+
+        const TargetAfterDeactivate = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                const Session = yield* OverlaySession.OverlaySession;
+
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ChooseInsertRight"
+                }));
+                yield* Executor.Execute(UiCommands.Deactivate());
+
+                return yield* Session.TiledInsertTarget;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(TiledWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledInsertDirection
+            )),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Reconcile).toHaveBeenCalledOnce();
+        expect(Option.isNone(TargetAfterDeactivate)).toBe(true);
     });
 
     it("restores foreground focus without displaying a backdrop", async () =>
@@ -1056,14 +1161,16 @@ describe("CommandExecutor.Execute", () =>
             ActivationWindow,
             Tiling.Tree.FocusDirection.Right,
             20,
-            "PreserveRatios"
+            "PreserveRatios",
+            { Threshold: 128, _tag: "Continue" }
         );
         expect(Resize).toHaveBeenNthCalledWith(
             2,
             ActivationWindow,
             Tiling.Tree.FocusDirection.Left,
             20,
-            "AdjacentOnly"
+            "AdjacentOnly",
+            { Threshold: 128, _tag: "Continue" }
         );
     });
 
@@ -1154,7 +1261,11 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(IdleResolver)
         ));
 
-        expect(MoveIntoPanel).toHaveBeenCalledWith(ActivationWindow, [ 1 ]);
+        expect(MoveIntoPanel).toHaveBeenCalledWith(
+            ActivationWindow,
+            [ 1 ],
+            { Threshold: 128, _tag: "Continue" }
+        );
         expect(ClearTarget).toHaveBeenCalledOnce();
         expect(Operations).toEqual([
             "SetBounds:Overlay",
@@ -1437,6 +1548,11 @@ const FakeAppSettings = (
         OverlayBackdropIntensity,
         OverlayRoundedCorners: true,
         PerAppSettings: { },
+        ResizeRecoveryStrategy:
+        {
+            Threshold: 128,
+            _tag: "Continue"
+        },
         RunAtStartup: true,
         ShowStackPanelMinimizeFlyout: true,
         ShowTitlebarFlyout: true,
@@ -1510,6 +1626,7 @@ const FakeOverlaySession = (
             ActivationWindow = Option.none();
         }),
         ClearFocusPreview: Effect.void,
+        ClearResizeRecoveryFailure: Effect.void,
         ClearTiledInsert: Effect.sync((): void =>
         {
             CurrentTiledInsertCaptureNext = false;
@@ -1533,6 +1650,7 @@ const FakeOverlaySession = (
         {
             CurrentFocusFailure = Option.some(Failure);
         }),
+        RecordResizeRecoveryFailure: Effect.void,
         RecordRaisedFloatingWindowZOrder: (
             Value: OverlaySession.RaisedFloatingWindowZOrder
         ) => Effect.sync((): void =>

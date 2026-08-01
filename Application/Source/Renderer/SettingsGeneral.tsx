@@ -25,10 +25,12 @@ import {
 import type {
     GeneralSettingsDto,
     GeneralSettingsPatch,
+    ResizeRecoveryStrategy as ResizeRecoveryStrategyType,
     TiledResizeBehavior
 } from "../Shared/AppSettings.js";
 import {
     IsTiledResizeBehavior,
+    ResizeRecoveryStrategy,
     TiledResizeBehaviors
 } from "../Shared/AppSettings.js";
 import { Setting, SettingGroup } from "@sorrell/settings-ui";
@@ -42,10 +44,41 @@ const TiledResizeBehaviorLabel: Readonly<Record<TiledResizeBehavior, string>> = 
     PreserveRatios: "Preserve Other Ratios"
 };
 
+type ResizeRecoveryStrategyTag = ResizeRecoveryStrategyType["_tag"];
+
+const ResizeRecoveryStrategyLabel: Readonly<Record<ResizeRecoveryStrategyTag, string>> = {
+    Cancel: "Cancel the Operation",
+    Continue: "Continue with Actual Size",
+    Ignore: "Ignore the Actual Size"
+};
+
+const MakeResizeRecoveryStrategy = (
+    Tag: ResizeRecoveryStrategyTag,
+    Threshold: number | undefined
+): ResizeRecoveryStrategyType =>
+{
+    switch (Tag)
+    {
+        case "Cancel":
+            return ResizeRecoveryStrategy.Cancel();
+        case "Continue":
+            return ResizeRecoveryStrategy.Continue({ Threshold });
+        case "Ignore":
+            return ResizeRecoveryStrategy.Ignore({ Threshold });
+    }
+};
+
 const UseStyles = makeStyles({
     Loading:
     {
         color: tokens.colorNeutralForeground3
+    },
+    ResizeRecoveryControls:
+    {
+        alignItems: "center",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: tokens.spacingHorizontalS
     },
     SpinButton:
     {
@@ -158,6 +191,93 @@ const SettingsGeneral = (): React.JSX.Element =>
                 Id={ MakeSettingControlId(SettingsSectionId.General, "Tiling") }
                 Subtitle="Control spacing around and between tiled windows."
                 Title="Tiling">
+                <Setting
+                    Control={
+                        <div className={ Styles.ResizeRecoveryControls }>
+                            <Dropdown
+                                aria-label="Resize recovery strategy"
+                                onOptionSelect={ (
+                                    _Event: SelectionEvents,
+                                    Data: OptionOnSelectData
+                                ) =>
+                                {
+                                    const Tag = Data.optionValue;
+                                    if (Tag === "Cancel" || Tag === "Continue" || Tag === "Ignore")
+                                    {
+                                        const Current = Settings.ResizeRecoveryStrategy;
+                                        const Threshold = Current._tag === "Cancel"
+                                            ? 128
+                                            : Current.Threshold;
+                                        Commit({
+                                            ResizeRecoveryStrategy:
+                                                MakeResizeRecoveryStrategy(Tag, Threshold)
+                                        });
+                                    }
+                                } }
+                                selectedOptions={ [ Settings.ResizeRecoveryStrategy._tag ] }
+                                value={
+                                    ResizeRecoveryStrategyLabel[
+                                        Settings.ResizeRecoveryStrategy._tag
+                                    ]
+                                }>
+                                { ([ "Cancel", "Continue", "Ignore" ] as const).map((
+                                    Tag: ResizeRecoveryStrategyTag
+                                ) => (
+                                    <Option
+                                        key={ Tag }
+                                        value={ Tag }>
+                                        { ResizeRecoveryStrategyLabel[Tag] }
+                                    </Option>
+                                )) }
+                            </Dropdown>
+
+                            { Settings.ResizeRecoveryStrategy._tag !== "Cancel" && (
+                                <SpinButton
+                                    aria-label="Resize recovery threshold"
+                                    className={ Styles.SpinButton }
+                                    min={ 0 }
+                                    onChange={ (
+                                        _Event: SpinButtonChangeEvent,
+                                        Data: SpinButtonOnChangeData
+                                    ) =>
+                                    {
+                                        const DisplayValue = Data.displayValue?.trim();
+                                        const Value = Data.value ?? (
+                                            DisplayValue === undefined || DisplayValue.length === 0
+                                                ? undefined
+                                                : Number(DisplayValue)
+                                        );
+
+                                        if (
+                                            Value === undefined
+                                            || (Number.isInteger(Value) && Value >= 0)
+                                        )
+                                        {
+                                            Commit({
+                                                ResizeRecoveryStrategy: MakeResizeRecoveryStrategy(
+                                                    Settings.ResizeRecoveryStrategy._tag,
+                                                    Value
+                                                )
+                                            });
+                                        }
+                                    } }
+                                    placeholder="No minimum"
+                                    step={ 1 }
+                                    value={ Settings.ResizeRecoveryStrategy.Threshold ?? null } />
+                            ) }
+                        </div>
+                    }
+                    Icon={ GridRegular }
+                    Id={ MakeSettingControlId(
+                        SettingsSectionId.General,
+                        "ResizeRecoveryStrategy"
+                    ) }
+                    Subtitle={
+                        "Choose whether tiled Move, Resize, and Insert operations cancel, "
+                        + "adapt, or ignore an application's enforced minimum window size."
+                    }
+                    Title="Resize Recovery Strategy" />
+
                 <Setting
                     Control={
                         <SpinButton

@@ -15,6 +15,10 @@ import { Effect, Option, Result } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";
+import {
+    ResizeRecoveryStrategy,
+    type ResizeRecoveryStrategy as ResizeRecoveryStrategyType
+} from "../../Source/Shared/AppSettings.ts";
 
 vi.mock("@sorrell/windows", () => ({
     Window: { }
@@ -515,6 +519,113 @@ describe("TilingManager", () =>
         )).toEqual([ 2 ]);
         expect(Applied.length).toBeGreaterThan(0);
     });
+
+    it.each([
+        {
+            ExpectedResult: "Canceled",
+            ExpectedWidth: 500,
+            Strategy: ResizeRecoveryStrategy.Cancel()
+        },
+        {
+            ExpectedResult: "Canceled",
+            ExpectedWidth: 500,
+            Strategy: ResizeRecoveryStrategy.Continue({ Threshold: 450 })
+        },
+        {
+            ExpectedResult: "Applied",
+            ExpectedWidth: 400,
+            Strategy: ResizeRecoveryStrategy.Continue({ Threshold: 128 })
+        },
+        {
+            ExpectedResult: "Applied",
+            ExpectedWidth: 400,
+            Strategy: ResizeRecoveryStrategy.Continue({ Threshold: undefined })
+        },
+        {
+            ExpectedResult: "Applied",
+            ExpectedWidth: 300,
+            Strategy: ResizeRecoveryStrategy.Ignore({ Threshold: undefined })
+        }
+    ] as const)(
+        "uses $Strategy._tag recovery when a tiled window remains larger than requested",
+        async ({ ExpectedResult, ExpectedWidth, Strategy }: {
+            readonly ExpectedResult: "Applied" | "Canceled";
+            readonly ExpectedWidth: number;
+            readonly Strategy: ResizeRecoveryStrategyType;
+        }) =>
+        {
+            const WorkArea = Bounds(0, 1000, 600, 0);
+            const Actual = new Map<Handle.HWND, Box.Box>([
+                [ Hwnd(1), WorkArea ],
+                [ Hwnd(2), WorkArea ]
+            ]);
+            let EnforceMinimum = false;
+            const Dependencies: TilingManager.Dependencies = {
+                Enumerate: () => Result.succeed([ ]),
+                GetWindowRect: (WindowValue: Handle.HWND) => Option.fromUndefinedOr(
+                    Actual.get(WindowValue)
+                ),
+                GetWindowWorkArea: () => Option.some(WorkArea),
+                SetWindowRect: (WindowValue: Handle.HWND, Rectangle: Box.Box) =>
+                {
+                    const AppliedBounds = EnforceMinimum
+                        && WindowValue === Hwnd(1)
+                        && Box.Width(Rectangle) < 400
+                        ? Bounds(
+                            Rectangle.Top,
+                            Rectangle.Left + 400,
+                            Rectangle.Bottom,
+                            Rectangle.Left
+                        )
+                        : Rectangle;
+                    Actual.set(WindowValue, AppliedBounds);
+                    return Result.succeed(undefined);
+                }
+            };
+
+            const ResultValue = await Effect.runPromise(Effect.gen(function*()
+            {
+                const Manager = yield* TilingManager.TilingManager;
+                yield* Manager.Tile(
+                    Hwnd(1),
+                    undefined,
+                    TilingTree.Orientation.Horizontal
+                );
+                yield* Manager.Tile(
+                    Hwnd(2),
+                    Hwnd(1),
+                    TilingTree.Orientation.Horizontal
+                );
+                EnforceMinimum = true;
+
+                const MutationResult = yield* Manager.Resize(
+                    Hwnd(1),
+                    TilingTree.FocusDirection.Right,
+                    -200,
+                    "PreserveRatios",
+                    Strategy
+                ).pipe(
+                    Effect.as("Applied" as const),
+                    Effect.catchTag(
+                        "ResizeRecoveryCanceledError",
+                        () => Effect.succeed("Canceled" as const)
+                    )
+                );
+
+                return {
+                    MutationResult,
+                    State: yield* Manager.Snapshot
+                };
+            }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+            const FirstPlacement = TilingTree.Layout(ResultValue.State).find(
+                (Placement: TilingTree.Placement): boolean =>
+                    Placement.Window === Hwnd(1)
+            );
+            expect(ResultValue.MutationResult).toBe(ExpectedResult);
+            expect(Box.Width(FirstPlacement!.Bounds)).toBe(ExpectedWidth);
+        }
+    );
 
     it("preserves original bounds when refresh discovers a monitor change", async () =>
     {

@@ -18,6 +18,11 @@ describe("SettingsGeneral", () =>
     {
         vi.mocked(window.sorrell.generalSettings.get).mockResolvedValue({
             IgnoreActivationKeybindInFullscreen: true,
+            ResizeRecoveryStrategy:
+            {
+                Threshold: 128,
+                _tag: "Continue"
+            },
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
             TiledWindowDetachDistance: 128,
@@ -28,6 +33,11 @@ describe("SettingsGeneral", () =>
         ) => ({
             IgnoreActivationKeybindInFullscreen:
                 Patch.IgnoreActivationKeybindInFullscreen ?? true,
+            ResizeRecoveryStrategy:
+                Patch.ResizeRecoveryStrategy ?? {
+                    Threshold: 128,
+                    _tag: "Continue"
+                },
             TileExistingWindowsOnStartup: Patch.TileExistingWindowsOnStartup ?? false,
             TiledResizeBehavior:
                 Patch.TiledResizeBehavior ?? "PreserveRatios",
@@ -87,6 +97,59 @@ describe("SettingsGeneral", () =>
 
         await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
             TiledWindowGap: 9
+        }));
+    });
+
+    it("loads and updates the resize recovery strategy and threshold", async () =>
+    {
+        render(<SettingsGeneral />);
+
+        const Strategy = await screen.findByRole("combobox", {
+            name: "Resize recovery strategy"
+        });
+        expect(Strategy).toHaveTextContent("Continue with Actual Size");
+
+        const Threshold = screen.getByRole("spinbutton", {
+            name: "Resize recovery threshold"
+        });
+        expect(Threshold).toHaveValue("128");
+
+        fireEvent.change(Threshold, { target: { value: "64" } });
+        fireEvent.blur(Threshold);
+
+        await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
+            ResizeRecoveryStrategy:
+            {
+                Threshold: 64,
+                _tag: "Continue"
+            }
+        }));
+
+        fireEvent.click(Strategy);
+        fireEvent.click(await screen.findByRole("option", {
+            name: "Ignore the Actual Size"
+        }));
+
+        await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
+            ResizeRecoveryStrategy:
+            {
+                Threshold: 64,
+                _tag: "Ignore"
+            }
+        }));
+
+        const UpdatedThreshold = screen.getByRole("spinbutton", {
+            name: "Resize recovery threshold"
+        });
+        fireEvent.change(UpdatedThreshold, { target: { value: "" } });
+        fireEvent.blur(UpdatedThreshold);
+
+        await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
+            ResizeRecoveryStrategy:
+            {
+                Threshold: undefined,
+                _tag: "Ignore"
+            }
         }));
     });
 

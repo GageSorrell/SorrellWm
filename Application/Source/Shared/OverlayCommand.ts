@@ -399,6 +399,9 @@ export interface OverlayScreenDto
     readonly IsTiledMovePanelTargeted?: boolean;
     readonly MonitorCommands?: ReadonlyArray<OverlayCommandDto>;
 
+    /** Whether the latest tiled operation was rolled back after a window resisted shrinking. */
+    readonly ResizeRecoveryFailure?: boolean;
+
     /** Whether the Resize screen is currently growing or shrinking the window. */
     readonly ResizeMode?: ResizeMode;
 
@@ -594,6 +597,10 @@ const IsOverlayScreenDto = (Value: unknown): Value is OverlayScreenDto =>
         && (
             Candidate.ResizeMode === undefined
             || IsResizeMode(Candidate.ResizeMode)
+        )
+        && (
+            Candidate.ResizeRecoveryFailure === undefined
+            || IsBoolean(Candidate.ResizeRecoveryFailure)
         )
         && (
             Candidate.StackWindows === undefined

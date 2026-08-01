@@ -54,6 +54,11 @@ Object.defineProperty(window, "sorrell", {
         {
             get: vi.fn(() => Promise.resolve({
                 IgnoreActivationKeybindInFullscreen: true,
+                ResizeRecoveryStrategy:
+                {
+                    Threshold: 128,
+                    _tag: "Continue"
+                },
                 TileExistingWindowsOnStartup: false,
                 TiledResizeBehavior: "PreserveRatios",
                 TiledWindowDetachDistance: 128,
@@ -62,6 +67,11 @@ Object.defineProperty(window, "sorrell", {
             set: vi.fn((Settings: GeneralSettingsPatch) => Promise.resolve({
                 IgnoreActivationKeybindInFullscreen:
                     Settings.IgnoreActivationKeybindInFullscreen ?? true,
+                ResizeRecoveryStrategy:
+                    Settings.ResizeRecoveryStrategy ?? {
+                        Threshold: 128,
+                        _tag: "Continue"
+                    },
                 TileExistingWindowsOnStartup:
                     Settings.TileExistingWindowsOnStartup ?? false,
                 TiledResizeBehavior:
@@ -128,6 +138,7 @@ Object.defineProperty(window, "sorrell", {
         platform: "win32",
         settings:
         {
+            open: vi.fn(() => Promise.resolve()),
             onNavigate: vi.fn(() => (): void => undefined)
         },
         theme:

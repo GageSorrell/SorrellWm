@@ -174,3 +174,9 @@ Please create a package under `./Package` which makes it easy to create animatio
 ---
 
 <!-- Currently, in the Insert flow, when the window is drawn that allows a window to be tiled by dragging the window on top of it, the tiled that was resized to make room for the new window resets back to its original size, instead of remaining half of its previous size.  Please fix this. -->
+
+---
+
+<!-- Please add an app setting "ResizeRecoveryStrategy".  This should be a tagged enum of tags "Cancel", "Continue", or "Ignore", such that the "Ignore" and "Continue" cases have a property `readonly Threshold: number | undefined;`.  The default value should be the "Continue" with a `Threshold` of 128.  This should inform the behavior of the tiled Move, Resize, and Insert flows.
+
+When one of these flows attempts to change the size of a window, it should check whether the window's size updated to be what it should be.  If it is larger than it should be, then the value of this new app setting should be used as follows: if "Cancel", then the flow should revert to the previous step, and a message bar should display explaining that the window could be made smaller, so the operation was canceled.  This message bar should contain a link to this new app setting, and clicking that link should highlight the app setting via the new feature of the settings UI package.  If the app setting is set to "Continue", then if `Threshold` is defined, the operation should continue as long as the window's length and width are at least the value of `Threshold` in pixels.  If `Threshold` is `undefined`, then the operation should always continue, but should adjust according to the actual size of the window that was resized.  If the app setting is "Ignore", then the operation should always continue, but the window that failed to resize appropriately should be treated as if it *did* resize to the desired size. -->

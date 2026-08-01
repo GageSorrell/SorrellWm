@@ -243,6 +243,11 @@ describe("AppSettings schema", () =>
             OverlayBackdropIntensity: 50,
             OverlayRoundedCorners: true,
             PerAppSettings: { },
+            ResizeRecoveryStrategy:
+            {
+                Threshold: 128,
+                _tag: "Continue"
+            },
             RunAtStartup: true,
             ShowStackPanelMinimizeFlyout: true,
             ShowTitlebarFlyout: true,
@@ -309,6 +314,42 @@ describe("AppSettings schema", () =>
         const Decoded = await DecodeSettings({ });
 
         expect(Decoded.TileExistingWindowsOnStartup).toBe(false);
+    });
+
+    it("continues with a 128 pixel resize-recovery threshold by default", async () =>
+    {
+        const Decoded = await DecodeSettings({ });
+
+        expect(Decoded.ResizeRecoveryStrategy).toEqual({
+            Threshold: 128,
+            _tag: "Continue"
+        });
+    });
+
+    it.each([
+        { _tag: "Cancel" },
+        { Threshold: undefined, _tag: "Continue" },
+        { Threshold: 64, _tag: "Continue" },
+        { Threshold: undefined, _tag: "Ignore" },
+        { Threshold: 0, _tag: "Ignore" }
+    ])("accepts the $_tag resize-recovery strategy", async (Strategy) =>
+    {
+        const Decoded = await DecodeSettings({
+            ResizeRecoveryStrategy: Strategy
+        });
+
+        expect(Decoded.ResizeRecoveryStrategy).toEqual(Strategy);
+    });
+
+    it.each([
+        { _tag: "Unknown" },
+        { Threshold: -1, _tag: "Continue" },
+        { Threshold: 1.5, _tag: "Ignore" }
+    ])("rejects an invalid resize-recovery strategy", async (Strategy) =>
+    {
+        await expect(DecodeSettings({
+            ResizeRecoveryStrategy: Strategy
+        })).rejects.toBeDefined();
     });
 
     it("defaults the tiled-window gap to 8 pixels", async () =>

@@ -35,6 +35,7 @@ import {
     BreadcrumbDivider,
     BreadcrumbItem,
     Button,
+    Link,
     MessageBar,
     MessageBarBody,
     MessageBarTitle,
@@ -44,6 +45,7 @@ import {
 } from "@fluentui/react-components";
 import { CommandButton, CompactCommandButton } from "./CommandButton.js";
 import { DirectionalPad, type DirectionalPadDirection } from "./DirectionalPad.js";
+import { EncodeSettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
 import { Option, Predicate, Struct } from "effect";
 import {
     type OverlayCommandDto,
@@ -647,6 +649,20 @@ const OverlayApplication = (): React.ReactNode =>
         ));
     };
 
+    const OpenResizeRecoveryStrategy = (): void =>
+    {
+        void window.sorrell.settings.open(EncodeSettingsPath({
+            Params:
+            {
+                Highlight: "ResizeRecoveryStrategy"
+            },
+            Section: SettingsSectionId.General
+        })).catch(Logging.ReportRejection(
+            "Overlay",
+            "Could not open the resize recovery setting."
+        ));
+    };
+
     const Back = (): void =>
     {
         void window.sorrell.overlay.back().catch(Logging.ReportRejection(
@@ -878,6 +894,28 @@ const OverlayApplication = (): React.ReactNode =>
                         role="alert">
                         { ErrorMessage }
                     </p>
+                ) }
+
+                { CurrentScreen?.ResizeRecoveryFailure === true && (
+                    <MessageBar
+                        intent="warning"
+                        layout="multiline">
+                        <MessageBarBody>
+                            <MessageBarTitle>
+                                Window could not be made smaller
+                            </MessageBarTitle>
+                            The operation was canceled and the previous tiled layout was restored.{ " " }
+                            <Link
+                                href="#"
+                                onClick={ (Event: React.MouseEvent<HTMLAnchorElement>) =>
+                                {
+                                    Event.preventDefault();
+                                    OpenResizeRecoveryStrategy();
+                                } }>
+                                Resize Recovery Strategy
+                            </Link>
+                        </MessageBarBody>
+                    </MessageBar>
                 ) }
 
                 { IsFocusScreen ? (

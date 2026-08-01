@@ -9,6 +9,35 @@
  * @license   MIT
  */
 
+import { Data } from "effect";
+
+/**
+ * Represents how a tiled flow recovers when a native window remains larger than its assigned
+ * tile.
+ *
+ * @category Model
+ * @since 0.1.0
+ */
+export type ResizeRecoveryStrategy = Data.TaggedEnum<{
+    readonly Cancel: { };
+    readonly Continue:
+    {
+        readonly Threshold: number | undefined;
+    };
+    readonly Ignore:
+    {
+        readonly Threshold: number | undefined;
+    };
+}>;
+
+export/**
+       * Constructors and matchers for tiled resize-recovery strategies.
+       *
+       * @category Constructors
+       * @since 0.1.0
+       */
+const ResizeRecoveryStrategy = Data.taggedEnum<ResizeRecoveryStrategy>();
+
 /** The Move overlay screen's configurable step sizes and press-and-hold speeds. */
 export interface FloatingWindowSettingsDto
 {
@@ -39,6 +68,9 @@ export interface GeneralSettingsDto
 
     /** Tile existing floating windows when SorrellWm starts. */
     readonly TileExistingWindowsOnStartup: boolean;
+
+    /** How tiled flows recover when an application enforces a larger minimum window size. */
+    readonly ResizeRecoveryStrategy: ResizeRecoveryStrategy;
 
     /**
      * The distance, in 100%-scale pixels, a tiled window must be dragged before it detaches
@@ -114,6 +146,27 @@ const IsFiniteNumber = (Value: unknown): Value is number =>
 const IsNonNegativeInteger = (Value: unknown): Value is number =>
     Number.isInteger(Value) && (Value as number) >= 0;
 
+export/** Determine whether a value is a supported tiled resize-recovery strategy. */
+const IsResizeRecoveryStrategy = (Value: unknown): Value is ResizeRecoveryStrategy =>
+{
+    if (typeof Value !== "object" || Value === null || !("_tag" in Value))
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<ResizeRecoveryStrategy>;
+    if (Candidate._tag === "Cancel")
+    {
+        return true;
+    }
+
+    return (Candidate._tag === "Continue" || Candidate._tag === "Ignore")
+        && (
+            Candidate.Threshold === undefined
+            || IsNonNegativeInteger(Candidate.Threshold)
+        );
+};
+
 export/** Determine whether a value is a supported tiled-resize behavior. */
 const IsTiledResizeBehavior = (Value: unknown): Value is TiledResizeBehavior =>
     typeof Value === "string"
@@ -127,6 +180,9 @@ const IsGeneralSettingsDto = (Value: unknown): Value is GeneralSettingsDto =>
         Value as Partial<GeneralSettingsDto>
     ).IgnoreActivationKeybindInFullscreen === "boolean"
     && typeof (Value as Partial<GeneralSettingsDto>).TileExistingWindowsOnStartup === "boolean"
+    && IsResizeRecoveryStrategy(
+        (Value as Partial<GeneralSettingsDto>).ResizeRecoveryStrategy
+    )
     && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowDetachDistance)
     && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowGap)
     && IsTiledResizeBehavior((Value as Partial<GeneralSettingsDto>).TiledResizeBehavior);
@@ -146,6 +202,9 @@ const IsGeneralSettingsPatch = (Value: unknown): Value is GeneralSettingsPatch =
     ) && (
         Candidate.TileExistingWindowsOnStartup === undefined
         || typeof Candidate.TileExistingWindowsOnStartup === "boolean"
+    ) && (
+        Candidate.ResizeRecoveryStrategy === undefined
+        || IsResizeRecoveryStrategy(Candidate.ResizeRecoveryStrategy)
     ) && (
         Candidate.TiledWindowDetachDistance === undefined
         || IsNonNegativeInteger(Candidate.TiledWindowDetachDistance)

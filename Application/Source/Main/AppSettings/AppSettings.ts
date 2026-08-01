@@ -14,6 +14,7 @@ import * as _AppSettings from "@sorrell/app-settings";
 import { Effect, Schema, pipe } from "effect";
 import type {
     NewWindowBehavior,
+    ResizeRecoveryStrategy,
     TiledResizeBehavior
 } from "../../Shared/AppSettings.js";
 import {
@@ -30,9 +31,28 @@ export type TypeId = typeof TypeId;
 
 const NewWindowBehaviorSchema = Schema.Literals(NewWindowBehaviors);
 const TiledResizeBehaviorSchema = Schema.Literals(TiledResizeBehaviors);
+const ResizeRecoveryThresholdSchema = pipe(
+    Schema.UndefinedOr(pipe(
+        Schema.Int,
+        Schema.check(Schema.isGreaterThanOrEqualTo(0))
+    )),
+    Schema.withDecodingDefaultKey(Effect.succeed(undefined))
+);
+const ResizeRecoveryStrategySchema = Schema.TaggedUnion({
+    Cancel: { },
+    Continue:
+    {
+        Threshold: ResizeRecoveryThresholdSchema
+    },
+    Ignore:
+    {
+        Threshold: ResizeRecoveryThresholdSchema
+    }
+});
 
 /** The behavior applied when an application creates a new window. */
 export type { NewWindowBehavior };
+export type { ResizeRecoveryStrategy };
 export type { TiledResizeBehavior };
 
 export/** Settings that override window-manager behavior for one executable. */
@@ -108,6 +128,13 @@ const SettingsSchema = Schema.Struct({
         Schema.Record(Schema.String, PerAppSettings),
         Schema.withDecodingDefaultKey(Effect.succeed({ }))
     ),
+    ResizeRecoveryStrategy: pipe(
+        ResizeRecoveryStrategySchema,
+        Schema.withDecodingDefaultKey(Effect.succeed({
+            Threshold: 128,
+            _tag: "Continue" as const
+        }))
+    ),
     RunAtStartup: pipe(
         Schema.Boolean,
         Schema.withDecodingDefaultKey(Effect.succeed(true))
@@ -177,6 +204,11 @@ const AppSettings = _AppSettings.Make(
             OverlayBackdropIntensity: 2,
             OverlayRoundedCorners: true,
             PerAppSettings: { },
+            ResizeRecoveryStrategy:
+            {
+                Threshold: 128,
+                _tag: "Continue"
+            },
             RunAtStartup: true,
             ShowStackPanelMinimizeFlyout: true,
             ShowTitlebarFlyout: true,

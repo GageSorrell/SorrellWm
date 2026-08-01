@@ -480,6 +480,28 @@ describe("OverlayApplication", () =>
         }
     );
 
+    it("links a tiled resize-recovery warning to the highlighted app setting", async () =>
+    {
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue({
+            ...ResizeScreen("Grow"),
+            Id: "TiledResize",
+            ResizeRecoveryFailure: true,
+            TiledResizeBehavior: "PreserveRatios"
+        });
+
+        render(<OverlayApplication />);
+
+        expect(await screen.findByText("Window could not be made smaller"))
+            .toBeInTheDocument();
+        fireEvent.click(screen.getByRole("link", {
+            name: "Resize Recovery Strategy"
+        }));
+
+        expect(window.sorrell.settings.open).toHaveBeenCalledWith(
+            "General?Highlight=ResizeRecoveryStrategy"
+        );
+    });
+
     it("renders Ctrl plus SelectUp as the tiled parent-panel command", async () =>
     {
         const ParentCommand = Command(
