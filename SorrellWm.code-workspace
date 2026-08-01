@@ -1,13 +1,20 @@
 {
-	"folders": [
+	"folders":
+    [
 		{
 			"path": "."
 		}
 	],
-	"settings": {
-        "npm.enableScriptExplorer": true,
-        "npm.exclude": [ "**/Distribution", "**/Distribution/**", "**/node_modules/**" ],
-		"files.associations": {
+	"settings":
+    {
+        "npm.exclude":
+        [
+            "**/Distribution",
+            "**/Distribution/**",
+            "**/node_modules/**"
+        ],
+		"files.associations":
+        {
 			".eslintrc": "jsonc",
 			".eslintignore": "ignore",
 			"algorithm": "cpp",
@@ -86,7 +93,8 @@
 			"span": "cpp",
 			"*.rh": "cpp"
 		},
-		"cSpell.words": [
+		"cSpell.words":
+        [
             "AEKR",
             "allman",
             "Asar",
@@ -99,6 +107,7 @@
             "Catppuccin",
             "cctype",
             "charconv",
+            "chrono",
             "clocale",
             "CLSID",
             "cmath",
@@ -109,7 +118,9 @@
             "compgen",
             "COMPREPLY",
             "cppcoreguidelines",
+            "cppm",
             "Csswg",
+            "cstdarg",
             "cstddef",
             "cstdint",
             "cstdio",
@@ -121,6 +132,7 @@
             "CYCAPTION",
             "DBUS",
             "Debuff",
+            "deque",
             "downarrow",
             "dwmapi",
             "DWMWA",
@@ -319,13 +331,17 @@
             "XBUTTON",
             "xfacet",
             "XTGETTCAP",
-            "XTVERSION"
+            "XTVERSION",
+            "xutility",
+            "Yieldable"
         ],
         "js/ts.tsdk.path": "node_modules/typescript/lib",
         "dotnet.defaultSolution": "disable"
 	},
-	"extensions": {
-		"recommendations": [
+	"extensions":
+    {
+		"recommendations":
+        [
 			"ms-vscode.cpptools",
 			"josetr.cmake-language-support-vscode",
 			"streetsidesoftware.code-spell-checker",

@@ -13,16 +13,18 @@
 import { basename, isAbsolute, relative } from "node:path";
 
 const ExtensionPattern: RegExp = /\.(?:tsx?|cc|cpp|cxx|h|hh|hpp|hxx|ixx|cppm|inl|ipp|tpp)$/iu;
+const NodeModulesSegmentPattern: RegExp = /(?:^|[\\/])node_modules(?:[\\/]|$)/u;
 
 /**
- * Determine whether a path points to a supported TypeScript or C++ source file.
+ * Determine whether a path points to a supported TypeScript or C++ source file
+ * outside of any `node_modules` directory.
  *
  * @param FilePath - The file-system path to inspect.
  * @returns {boolean} Whether the path has a supported source-file extension.
  */
 export function IsSupportedSourcePath(FilePath: string): boolean
 {
-    return ExtensionPattern.test(FilePath);
+    return ExtensionPattern.test(FilePath) && !NodeModulesSegmentPattern.test(FilePath);
 }
 
 /**

@@ -86,7 +86,7 @@
     ],
     "scripts": {
         "build": "tsc -p ./tsconfig.json",
-        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../../Package/EsLintConfigSorrell --ext .ts,.tsx Source Test",
+        "lint": "eslint --config ./eslint.config.js \"Source/**/*.{ts,tsx}\" \"Test/**/*.{ts,tsx}\"",
         "pretest": "npm run test:native:build",
         "test": "vitest run",
         "test:native:build": "node ./Test/NativeFixture/build.mjs",
@@ -102,7 +102,7 @@
         "@types/react": "19.2.17",
         "@types/react-dom": "19.2.3",
         "cross-env": "10.1.0",
-        "effect": "4.0.0-beta.101",
+        "effect": "4.0.0-beta.102",
         "jsdom": "29.1.1",
         "node-addon-api": "8.9.0",
         "react": "19.2.7",
@@ -111,7 +111,7 @@
         "vitest": "4.1.10"
     },
     "peerDependencies": {
-        "effect": "^4.0.0-beta.101",
+        "effect": "4.0.0-beta.102",
         "react": ">=18 <20"
     },
     "peerDependenciesMeta": {

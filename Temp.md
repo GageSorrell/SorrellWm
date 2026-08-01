@@ -32,3 +32,11 @@ Please add an `elevation` prop to the `Box` component, which can be an integer f
 ---
 
 Please modify TextInput, TextArea, and VarInput to support selecting text: holding Control or Shift while pressing an arrow key, page up/down, or home/end should cause text to be selected, and pressing a navigation key or moving focus to another element should cause no text to be selected.  Pressing a key that inserts text should insert that text, replacing the selection.  Selecting via the mouse should also be supported.
+
+---
+
+<!-- Please modify the monorepo's VS Code extension so that the top-level comment is not generated for files that belong to `node_modules`. -->
+
+---
+
+Please modify the monorepo's VS Code extension so that the top-level comment is not generated for files that are ignored by git.

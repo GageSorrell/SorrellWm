@@ -98,7 +98,7 @@
     "scripts": {
         "build": "tsc -p ./tsconfig.json",
         "build:showcase": "tsc -p ./tsconfig.showcase.json",
-        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts,.tsx Source Showcase Test",
+        "lint": "eslint --config ./eslint.config.js \"Source/**/*.{ts,tsx}\" \"Showcase/**/*.{ts,tsx}\" \"Test/**/*.{ts,tsx}\"",
         "showcase": "npm run build:showcase && node ./Intermediate/Showcase/Showcase/index.js",
         "generate:bit-fonts": "node ./Script/GenerateBitFonts.mjs",
         "generate:phosphor-icons": "node ./Script/GeneratePhosphorIcons.mjs",
@@ -149,7 +149,7 @@
         "@resvg/resvg-js": "2.6.2",
         "@sorrell/math": "1.0.0",
         "color-name": "1.1.4",
-        "effect": "^4.0.0-beta",
+        "effect": "4.0.0-beta.102",
         "jsonc-parser": "3.3.1",
         "mathjax": "4.1.3",
         "sixel": "0.16.0"

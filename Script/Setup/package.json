@@ -25,8 +25,8 @@
         "typecheck": "tsc --noEmit -p tsconfig.json"
     },
     "dependencies": {
-        "@effect/platform-node": "4.0.0-beta.101",
-        "effect": "4.0.0-beta.101",
+        "@effect/platform-node": "4.0.0-beta.102",
+        "effect": "4.0.0-beta.102",
         "ora": "9.4.1"
     },
     "devDependencies": {

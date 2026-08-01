@@ -46,7 +46,7 @@ class SSetupOptions extends Context.Service<SSetupOptions, ISetupOptions>()(
 ) { }
 
 const RepositoryRoot: string = resolve(import.meta.dirname, "../../..");
-const LocalConfigurationPath: string = join(RepositoryRoot, "Configuration", "Local.json");
+const LocalConfigurationPath: string = join(RepositoryRoot, "Configuration", "CodeExtension.json");
 const VisualStudioCodePackage: string = join(
     RepositoryRoot,
     "Package",
@@ -116,7 +116,7 @@ const ClearCommand: Command.Command<
     { },
     (): Effect.Effect<void, Error, FileSystem.FileSystem | SSetupOptions> => ClearSetupState()
 ).pipe(Command.withDescription(
-    "Delete Configuration/Local.json and reset local setup state."
+    "Delete Configuration/CodeExtension.json and reset local setup state."
 ));
 
 const RootCommand: Command.Command<
@@ -255,7 +255,7 @@ function ClearSetupState(): Effect.Effect<
 
         if (Options.Verbose)
         {
-            yield* Console.log("Cleared Configuration/Local.json.");
+            yield* Console.log("Cleared Configuration/CodeExtension.json.");
         }
     });
 }

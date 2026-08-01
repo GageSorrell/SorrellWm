@@ -1,11 +1,11 @@
 {
     "name": "@sorrell/eslint-config",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "The ESLint config used by SorrellWm *et al.*",
-    "main": "./index.cjs",
+    "main": "./index.js",
     "keywords":
     [
-        "ESLint",
+        "eslint",
         "config",
         "sorrell",
         "lint",
@@ -19,15 +19,30 @@
         "url": "https://sorrell.sh"
     },
     "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EsLintConfigSorrell/ReadMe.md",
+    "bugs":
+    {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository":
+    {
+        "directory": "Package/EsLintConfigSorrell",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
     "license": "MIT",
-    "type": "commonjs",
+    "type": "module",
     "peerDependencies":
     {
-        "eslint": "^9.39.4"
+        "eslint": "^9.39.4",
+        "typescript": "^6.0.0"
     },
     "peerDependenciesMeta":
     {
         "eslint":
+        {
+            "optional": false
+        },
+        "typescript":
         {
             "optional": false
         }
@@ -40,7 +55,6 @@
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.0.1",
         "eslint-plugin-tsdoc": "^0.5.2",
-        "typescript-eslint": "^8.57.2",
-        "@typescript-eslint/eslint-plugin": "^8.57.1"
+        "typescript-eslint": "^8.65.0"
     }
 }

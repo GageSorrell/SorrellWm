@@ -10,11 +10,13 @@
  */
 
 import { Data, Predicate } from "effect";
-import type { Types } from "effect";
+import type { Cause, Types } from "effect";
 import type { Unify } from "effect/Unify";
 
-/** A property key used to nominally identify every member of a tagged enum. */
-export type TypeId = string | symbol;
+/**
+ * A property key used to nominally identify every member of a tagged enum.
+ */
+export type PropertyKey = string | symbol;
 
 /**
  * Transforms a record of variant definitions into a discriminated union whose
@@ -22,7 +24,7 @@ export type TypeId = string | symbol;
  */
 export type TaggedEnum<
     A extends Record<string, Record<string, any>> & UntaggedChildren<A>,
-    Identifier extends TypeId
+    Identifier extends PropertyKey
 > = keyof A extends infer Tag
     ? Tag extends keyof A
         ? Types.Simplify<
@@ -51,7 +53,7 @@ export declare namespace TaggedEnum
     {
         readonly taggedEnum: { readonly _tag: string };
         readonly numberOfGenerics: number;
-        readonly TypeId: TypeId;
+        readonly TypeId: PropertyKey;
 
         readonly A: unknown;
         readonly B: unknown;
@@ -60,7 +62,7 @@ export declare namespace TaggedEnum
     }
 
     /** A generic tagged-enum definition supporting up to four type parameters. */
-    export interface WithGenerics<Count extends number, Identifier extends TypeId>
+    export interface WithGenerics<Count extends number, Identifier extends PropertyKey>
         extends GenericDefinition
     {
         readonly taggedEnum: { readonly _tag: string }
@@ -90,7 +92,7 @@ export declare namespace TaggedEnum
 
     /** Infers the nominal key shared by all members of a tagged enum. */
     export type TypeIdOf<A extends { readonly _tag: string }> = Exclude<{
-        readonly [Key in keyof A]: Key extends TypeId
+        readonly [Key in keyof A]: Key extends PropertyKey
             ? A extends { readonly [Property in Key]: Key } ? Key : never
             : never;
     }[keyof A], "_tag">;
@@ -99,7 +101,7 @@ export declare namespace TaggedEnum
     export type Args<
         A extends { readonly _tag: string },
         Tag extends A["_tag"],
-        Identifier extends TypeId = TypeIdOf<A>,
+        Identifier extends PropertyKey = TypeIdOf<A>,
         EnumValue = Extract<A, { readonly _tag: Tag }>
     > = {
         readonly [Key in keyof EnumValue as Key extends "_tag" | Identifier
@@ -123,7 +125,7 @@ export declare namespace TaggedEnum
     /** Constructors and matchers returned for a non-generic tagged enum. */
     export type Constructor<
         A extends { readonly _tag: string },
-        Identifier extends TypeId = TypeIdOf<A>
+        Identifier extends PropertyKey = TypeIdOf<A>
     > = Types.Simplify<{
         readonly [Tag in A["_tag"]]: ConstructorFrom<
             Extract<A, { readonly _tag: Tag }>,
@@ -221,7 +223,7 @@ const taggedEnum: {
     <A extends { readonly _tag: string }>(
         TypeId: TaggedEnum.TypeIdOf<A>
     ): TaggedEnum.Constructor<A>;
-} = ((TypeIdValue: TypeId): unknown =>
+} = ((TypeIdValue: PropertyKey): unknown =>
 {
     const Base = Data.taggedEnum<any>();
     const IsA = Predicate.hasProperty(TypeIdValue);

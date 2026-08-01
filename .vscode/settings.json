@@ -9,11 +9,6 @@
     },
     "eslint.enable": true,
     "eslint.nodePath": "node_modules",
-	"eslint.options":
-	{
-		"overrideConfigFile": "./Configuration/.eslintrc.cjs"
-	},
-    "eslint.useFlatConfig": false,
   	"eslint.workingDirectories":
 	[
         { "!cwd": false, "directory": "**" }

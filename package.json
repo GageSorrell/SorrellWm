@@ -35,6 +35,7 @@
     },
     "type": "module",
     "scripts": {
+        "code-extension:install": "npm run build --workspace Package/SorrellWmCodeExtension && npm run package:vsix --workspace Package/SorrellWmCodeExtension && code --install-extension Package/SorrellWmCodeExtension/SorrellWmCodeExtension.vsix --force && node -e \"console.log('\n\nExtension installed.  Reload the window via the Command Palette (Developer: Reload Window) to pick up the update.')\"",
         "postinstall": "tsx ./Script/Setup/Source/index.ts --postinstall"
     },
     "workspaces": [
@@ -51,6 +52,7 @@
         "Package/Math",
         "Package/React",
         "Package/SettingsUi",
+        "Package/SorrellUi",
         "Package/TsConfigSorrell",
         "Package/Utility",
         "Package/Windows",

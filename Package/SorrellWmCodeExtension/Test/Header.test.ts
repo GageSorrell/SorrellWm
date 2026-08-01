@@ -126,6 +126,15 @@ describe("source headers", (): void =>
         expect(IsSupportedSourcePath("Windows.tpp")).toBe(true);
         expect(IsSupportedSourcePath("View.jsx")).toBe(false);
         expect(IsSupportedSourcePath("Windows.c")).toBe(false);
+        expect(IsSupportedSourcePath(
+            join("Package", "Example", "node_modules", "Dependency", "Index.ts")
+        )).toBe(false);
+        expect(IsSupportedSourcePath(
+            "node_modules/Dependency/Source/Index.tsx"
+        )).toBe(false);
+        expect(IsSupportedSourcePath(
+            join("Package", "my_node_modules_thing", "Widget.ts")
+        )).toBe(true);
         expect(HasGeneratedHeader(
             "/**\n * @module Example\n * @file      Example.ts\n */\n"
         )).toBe(true);

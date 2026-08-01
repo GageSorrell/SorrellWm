@@ -9,10 +9,10 @@
  * @license   MIT
  */
 
-import { Effect, FileSystem } from "effect";
+import { Data, Effect, FileSystem } from "effect";
 
 /**
- * Persistent state stored in `Configuration/Local.json`.
+ * Persistent state stored in `Configuration/CodeExtension.json`.
  */
 export interface ILocalConfiguration
 {
@@ -22,24 +22,15 @@ export interface ILocalConfiguration
 /**
  * An error raised when local setup state cannot be interpreted safely.
  */
-export class FLocalConfigurationError extends Error
-{
-    /**
-     * Create a local configuration error.
-     *
-     * @param Message - The human-readable failure description.
-     * @param Cause - The underlying failure, when available.
-     */
-    public constructor(Message: string, Cause?: unknown)
-    {
-        super(Message, { cause: Cause });
-        this.name = "FLocalConfigurationError";
-    }
-}
+export class LocalConfigError extends Data.TaggedError("LocalConfigError")<{
+    readonly Cause?: unknown;
+    readonly Message: string;
+}> { }
 
-const DefaultLocalConfiguration: ILocalConfiguration = {
-    HasRun: false
-};
+const DefaultLocalConfiguration: ILocalConfiguration =
+    {
+        HasRun: false
+    };
 
 /**
  * Create the local configuration when absent, then read and validate it.
@@ -63,19 +54,19 @@ export function EnsureLocalConfiguration(
 
         const Content: string = yield* FileSystemService.readFileString(LocalConfigurationPath);
         const Parsed: unknown = yield* Effect.try({
-            catch: (Cause: unknown): FLocalConfigurationError =>
-                new FLocalConfigurationError(
-                    `Could not parse ${ LocalConfigurationPath } as JSON.`,
-                    Cause
-                ),
+            catch: (Cause: unknown): LocalConfigError =>
+                new LocalConfigError({
+                    Cause,
+                    Message: `Could not parse ${ LocalConfigurationPath } as JSON.`,
+                }),
             try: (): unknown => JSON.parse(Content)
         });
 
         if (!IsLocalConfiguration(Parsed))
         {
-            return yield* Effect.fail(new FLocalConfigurationError(
-                `${ LocalConfigurationPath } must contain a boolean HasRun property.`
-            ));
+            return yield* Effect.fail(new LocalConfigError({
+                Message: `${ LocalConfigurationPath } must contain a boolean HasRun property.`
+            }));
         }
 
         return Parsed;

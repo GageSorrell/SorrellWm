@@ -4,6 +4,10 @@
     "version": "0.1.0",
     "description": "Workspace automation for the SorrellWm TypeScript and C++ source conventions.",
     "publisher": "GageSorrell",
+    "maintainers":
+    [
+        "Gage Sorrell <gage@sorrell.sh>"
+    ],
     "license": "MIT",
     "author": {
         "name": "Gage Sorrell",
@@ -17,6 +21,7 @@
         "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
     "homepage": "https://github.com/GageSorrell/SorrellWm/tree/main/Package/SorrellWmCodeExtension",
+    "icon": "Resource/Icon.png",
     "type": "module",
     "engines": {
         "vscode": "^1.125.0"
@@ -42,6 +47,7 @@
         "Distribution/extension.cjs.map",
         "License.md",
         "ReadMe.md",
+        "Resource/Icon.png",
         "package.json"
     ],
     "capabilities": {
@@ -101,7 +107,7 @@
     },
     "scripts": {
         "build": "npm run typecheck && esbuild Source/Extension.ts --bundle --external:vscode --format=cjs --platform=node --target=node20 --outfile=Distribution/extension.cjs --sourcemap",
-        "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../EsLintConfigSorrell --ext .ts Source Test",
+        "lint": "eslint --config ../../Configuration/eslint.config.js \"Source/**/*.ts\" \"Test/**/*.ts\"",
         "package:vsix": "vsce package --allow-star-activation --no-dependencies --out ./SorrellWmCodeExtension.vsix",
         "test": "vitest run",
         "typecheck": "tsc --noEmit -p tsconfig.json",

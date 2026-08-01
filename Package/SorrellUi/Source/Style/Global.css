@@ -1,0 +1,222 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Font Sizes — ported from EffectWebsite/src/styles/global.css */
+  --text-xs: 0.7rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.375;
+  --text-xl: 1.563rem;
+  --text-xl--line-height: 1.375;
+  --text-2xl: 1.953rem;
+  --text-2xl--line-height: 1.375;
+  --text-3xl: 2.441rem;
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 3.052rem;
+  --text-4xl--line-height: 1.25;
+  --text-5xl: 3.815rem;
+  --text-5xl--line-height: 1.15;
+  --text-6xl: 4.768rem;
+  --text-6xl--line-height: 1.15;
+
+  /* Line Heights */
+  --leading-tighter: 1.15;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /*
+   * Font Families — no font files are bundled with this package. Consumers who want exact
+   * visual fidelity should install Inter and JetBrains Mono themselves (e.g. via
+   * @fontsource/inter and @fontsource/jetbrains-mono) and set --sorrell-ui-font-sans /
+   * --sorrell-ui-font-mono; otherwise these fall back to system font stacks.
+   */
+  --font-sans: var(--sorrell-ui-font-sans, Inter, ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(--sorrell-ui-font-mono, "JetBrains Mono", ui-monospace, monospace);
+
+  /* Border Radius */
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+
+  /* Colors - Zinc */
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+}
+
+/*
+ * Maps `bg-background`, `text-primary`, etc. utility classes to the light/dark custom
+ * properties defined below, so Tailwind actually generates them (v4 only emits a utility for
+ * a semantic color name once a matching `--color-*` variable exists).
+ */
+@theme inline {
+  --color-background: var(--sorrell-ui-background);
+  --color-border: var(--sorrell-ui-border);
+  --color-destructive: var(--sorrell-ui-destructive);
+  --color-foreground: var(--sorrell-ui-foreground);
+  --color-input: var(--sorrell-ui-input);
+  --color-muted: var(--sorrell-ui-muted);
+  --color-muted-foreground: var(--sorrell-ui-muted-foreground);
+  --color-primary: var(--sorrell-ui-primary);
+  --color-primary-foreground: var(--sorrell-ui-primary-foreground);
+  --color-ring: var(--sorrell-ui-ring);
+  --color-secondary: var(--sorrell-ui-secondary);
+  --color-secondary-foreground: var(--sorrell-ui-secondary-foreground);
+}
+
+/*
+ * Semantic tokens are namespaced with a `sorrell-ui-` prefix so this package never clobbers a
+ * consuming app's own CSS custom properties. `background`/`foreground`/`muted-foreground`/
+ * `ring`/`border` are ported from EffectWebsite's light/dark `oklch` tokens; `primary`/
+ * `secondary`/`muted`/`input`/`destructive` aren't defined anywhere in the source (its
+ * shared Button component isn't actually used by the landing page, so these were never
+ * filled in) and are filled in here using the same zinc/red palette the rest of the design
+ * already uses (e.g. ComparisonChart's `red-500` "without" line).
+ */
+:root {
+  --sorrell-ui-background: oklch(1 0 0);
+  --sorrell-ui-foreground: oklch(0.141 0.004 285.766);
+  --sorrell-ui-muted-foreground: oklch(0.552 0.014 285.866);
+  --sorrell-ui-ring: oklch(0.696 0.149 162.505);
+  --sorrell-ui-border: oklch(0.92 0.004 285.888);
+  --sorrell-ui-primary: #18181b;
+  --sorrell-ui-primary-foreground: #fafafa;
+  --sorrell-ui-secondary: #f4f4f5;
+  --sorrell-ui-secondary-foreground: #18181b;
+  --sorrell-ui-muted: #f4f4f5;
+  --sorrell-ui-input: #e4e4e7;
+  --sorrell-ui-destructive: #dc2626;
+  --sorrell-ui-hero-glow-a: rgba(9, 9, 11, 0.05);
+  --sorrell-ui-hero-glow-b: rgba(9, 9, 11, 0.03);
+}
+
+.dark {
+  --sorrell-ui-background: oklch(0.141 0.004 285.766);
+  --sorrell-ui-foreground: oklch(0.985 0 0);
+  --sorrell-ui-muted-foreground: oklch(0.712 0.013 285.965);
+  --sorrell-ui-ring: oklch(0.773 0.153 163.251);
+  --sorrell-ui-border: oklch(0.274 0.005 285.941);
+  --sorrell-ui-primary: #fafafa;
+  --sorrell-ui-primary-foreground: #18181b;
+  --sorrell-ui-secondary: #27272a;
+  --sorrell-ui-secondary-foreground: #fafafa;
+  --sorrell-ui-muted: #27272a;
+  --sorrell-ui-input: #27272a;
+  --sorrell-ui-destructive: #ef4444;
+  --sorrell-ui-hero-glow-a: rgba(255, 255, 255, 0.12);
+  --sorrell-ui-hero-glow-b: rgba(255, 255, 255, 0.08);
+}
+
+/*
+ * Hand-written CSS behind the components below (GridBackground, Hero, QuoteMarquee,
+ * ComparisonChart) that can't be expressed as plain Tailwind utility classes — all class
+ * names are namespaced with `sorrell-ui-` to avoid colliding with a consuming app's CSS.
+ */
+@layer components {
+  .sorrell-ui-grid-bg {
+    background-size: calc(73.75rem / 6) 194px;
+    background-position: calc(50% + 73.75rem / 12) 0;
+    transition: opacity 0.25s ease-out;
+  }
+
+  .sorrell-ui-grid-bg--light {
+    background-image:
+      linear-gradient(to right, rgba(228, 228, 231, 0.7) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(228, 228, 231, 0.7) 1px, transparent 1px);
+    opacity: 1;
+  }
+
+  .sorrell-ui-grid-bg--dark {
+    background-image:
+      linear-gradient(to right, rgba(39, 39, 42, 0.7) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(39, 39, 42, 0.7) 1px, transparent 1px);
+    opacity: 0;
+  }
+
+  .dark .sorrell-ui-grid-bg--light {
+    opacity: 0;
+  }
+
+  .dark .sorrell-ui-grid-bg--dark {
+    opacity: 1;
+  }
+
+  .sorrell-ui-hero-glow {
+    background: radial-gradient(ellipse 50% 80% at 70% -20%, var(--sorrell-ui-hero-glow-a) 0%, transparent 40%),
+      radial-gradient(ellipse 30% 50% at 80% 0%, var(--sorrell-ui-hero-glow-b) 0%, transparent 30%);
+    animation: sorrell-ui-hero-glow-pulse 4s ease-in-out infinite;
+    will-change: opacity;
+  }
+
+  .sorrell-ui-quotes-rail {
+    cursor: grab;
+    padding-left: max(1rem, calc((100vw - 73.75rem) / 2 + 1rem));
+    padding-right: max(1rem, calc((100vw - 73.75rem) / 2 + 1rem));
+  }
+
+  .sorrell-ui-quotes-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sorrell-ui-quotes-rail[data-dragging="true"] {
+    cursor: grabbing;
+  }
+
+  .sorrell-ui-chart-grid-line {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+
+  .sorrell-ui-chart-area {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+
+  .sorrell-ui-chart-line {
+    transition: stroke-dashoffset 1.2s ease;
+  }
+
+  [data-in-view="true"] .sorrell-ui-chart-grid-line {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  [data-in-view="true"] .sorrell-ui-chart-area {
+    opacity: 1;
+  }
+}
+
+@keyframes sorrell-ui-hero-glow-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sorrell-ui-hero-glow {
+    animation: none;
+  }
+
+  .sorrell-ui-chart-grid-line,
+  .sorrell-ui-chart-area,
+  .sorrell-ui-chart-line {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
