@@ -52,7 +52,7 @@
         "@sorrell/math": "1.0.0",
         "@sorrell/react": "1.0.0",
         "@sorrell/settings-ui": "1.0.0",
-        "@sorrell/utility": "1.0.0",
+        "@sorrell/utility": "1.1.0",
         "@sorrell/windows": "1.0.0",
         "@sorrell/windows-ui": "1.0.0",
         "react-intl": "10.1.18"

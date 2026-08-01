@@ -16,7 +16,6 @@
 
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { CompactKey } from "./CompactKey.tsx";
-import { Hash } from "effect";
 import type { ReactNode } from "react";
 
 const UseStyles = makeStyles({
@@ -43,8 +42,13 @@ const Keybind = ({ Keys }: KeybindProps): React.JSX.Element =>
     return (
         <div className={ Styles.Root }>
             {
+                /*
+                 * `Key` is a `ReactNode` that may be an icon element (e.g. `<Key.Shift />`),
+                 * not a plain hashable value — `Keys` is a fixed-order array rebuilt fresh
+                 * on every render, so the index alone is a safe, stable React key.
+                 */
                 Keys.map((Key: ReactNode, Index: number) => (
-                    <CompactKey key={ Hash.array([ Key, Index ]) }>{ Key }</CompactKey>
+                    <CompactKey key={ Index }>{ Key }</CompactKey>
                 ))
             }
         </div>

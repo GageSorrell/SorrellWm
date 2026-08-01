@@ -15,6 +15,21 @@ import type * as React from "react";
 
 import { Cn } from "./ClassName.js";
 
+const FrameClassName =
+    "relative block aspect-video w-full overflow-hidden rounded-lg border border-zinc-800 bg-black";
+
+const PosterBaseClassName =
+    "pointer-events-none absolute inset-0 h-full w-full bg-black object-contain " +
+    "transition-opacity duration-300 ease-out";
+
+const PlayButtonBaseClassName =
+    "group absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity " +
+    "duration-300 ease-out hover:bg-black/40";
+
+const PlayIconWrapperClassName =
+    "flex h-16 w-16 items-center justify-center rounded-full bg-white/80 text-zinc-900 " +
+    "backdrop-blur-sm transition-transform group-hover:scale-105";
+
 /** Props for {@link VideoCard}. */
 export interface VideoCardProps
 {
@@ -27,7 +42,9 @@ export interface VideoCardProps
  * @category Component
  * @since 1.0.0
  */
-export const VideoCard = ({ className: ClassName, poster: Poster, src: Src }: VideoCardProps): React.JSX.Element =>
+export const VideoCard = (
+    { className: ClassName, poster: Poster, src: Src }: VideoCardProps
+): React.JSX.Element =>
 {
     const VideoRef = useRef<HTMLVideoElement>(null);
     const [ ShowOverlay, SetShowOverlay ] = useState(true);
@@ -54,7 +71,7 @@ export const VideoCard = ({ className: ClassName, poster: Poster, src: Src }: Vi
     };
 
     return (
-        <div className={ Cn("relative block aspect-video w-full overflow-hidden rounded-lg border border-zinc-800 bg-black", ClassName) }>
+        <div className={ Cn(FrameClassName, ClassName) }>
             <video className="h-full w-full object-contain"
                 controls={ !ShowOverlay }
                 onEnded={ OnPauseOrEnd }
@@ -70,16 +87,19 @@ export const VideoCard = ({ className: ClassName, poster: Poster, src: Src }: Vi
 
             <img alt=""
                 aria-hidden="true"
-                className={ Cn("pointer-events-none absolute inset-0 h-full w-full bg-black object-contain transition-opacity duration-300 ease-out", ShowOverlay ? "opacity-100" : "opacity-0") }
+                className={ Cn(PosterBaseClassName, ShowOverlay ? "opacity-100" : "opacity-0") }
                 src={ Poster } />
 
             <button aria-hidden={ !ShowOverlay }
                 aria-label="Play video"
-                className={ Cn("group absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-300 ease-out hover:bg-black/40", ShowOverlay ? "opacity-100" : "pointer-events-none opacity-0") }
+                className={ Cn(
+                    PlayButtonBaseClassName,
+                    ShowOverlay ? "opacity-100" : "pointer-events-none opacity-0"
+                ) }
                 onClick={ StartPlayback }
                 tabIndex={ ShowOverlay ? 0 : -1 }
                 type="button">
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/80 text-zinc-900 backdrop-blur-sm transition-transform group-hover:scale-105">
+                <span className={ PlayIconWrapperClassName }>
                     <svg aria-hidden="true"
                         className="ml-0.5 size-8"
                         fill="currentColor"

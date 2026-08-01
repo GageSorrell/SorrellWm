@@ -19,6 +19,8 @@ const ObserverThreshold = 0.35;
 const HorizontalGridLineCount = 5;
 const VerticalGridLineCount = 3;
 
+const AxisLabelClassName = "font-mono text-[10px] tracking-wide text-zinc-400/75 uppercase";
+
 /** A single line/area series in a {@link ComparisonChart}. */
 export interface ComparisonSeries
 {
@@ -50,7 +52,18 @@ export interface ComparisonChartProps
  * @category Component
  * @since 1.0.0
  */
-export const ComparisonChart = ({ className: ClassName, description: Description, height: Height = 140, series: Series, title: Title, width: Width = 400, xAxisEndLabel: XAxisEndLabel, xAxisStartLabel: XAxisStartLabel }: ComparisonChartProps): React.JSX.Element =>
+export const ComparisonChart = (
+    {
+        className: ClassName,
+        description: Description,
+        height: Height = 140,
+        series: Series,
+        title: Title,
+        width: Width = 400,
+        xAxisEndLabel: XAxisEndLabel,
+        xAxisStartLabel: XAxisStartLabel
+    }: ComparisonChartProps
+): React.JSX.Element =>
 {
     const TitleId = useId();
     const DescriptionId = useId();
@@ -93,8 +106,14 @@ export const ComparisonChart = ({ className: ClassName, description: Description
         };
     }, []);
 
-    const HorizontalGridLines = Array.from({ length: HorizontalGridLineCount }, (_Value, Index) => (Height / (HorizontalGridLineCount - 1)) * Index);
-    const VerticalGridLines = Array.from({ length: VerticalGridLineCount }, (_Value, Index) => (Width / (VerticalGridLineCount + 1)) * (Index + 1));
+    const HorizontalGridLines = Array.from(
+        { length: HorizontalGridLineCount },
+        (_Value, Index) => (Height / (HorizontalGridLineCount - 1)) * Index
+    );
+    const VerticalGridLines = Array.from(
+        { length: VerticalGridLineCount },
+        (_Value, Index) => (Width / (VerticalGridLineCount + 1)) * (Index + 1)
+    );
 
     return (
         <div className={ Cn("block w-full", ClassName) }
@@ -189,8 +208,8 @@ export const ComparisonChart = ({ className: ClassName, description: Description
             {
                 XAxisStartLabel !== undefined || XAxisEndLabel !== undefined ?
                     <div className="mt-3 flex justify-between">
-                        <span className="font-mono text-[10px] tracking-wide text-zinc-400/75 uppercase">{ XAxisStartLabel }</span>
-                        <span className="font-mono text-[10px] tracking-wide text-zinc-400/75 uppercase">{ XAxisEndLabel }</span>
+                        <span className={ AxisLabelClassName }>{ XAxisStartLabel }</span>
+                        <span className={ AxisLabelClassName }>{ XAxisEndLabel }</span>
                     </div> :
                     undefined
             }
@@ -203,7 +222,9 @@ export const ComparisonChart = ({ className: ClassName, description: Description
                                 key={ SeriesItem.label }>
                                 <div className="h-1.5 w-1.5 rounded-full"
                                     style={ { backgroundColor: SeriesItem.color } } />
-                                <span className="font-mono text-xs text-zinc-400 uppercase">{ SeriesItem.label }</span>
+                                <span className="font-mono text-xs text-zinc-400 uppercase">
+                                    { SeriesItem.label }
+                                </span>
                             </div>
                         ))
                 }

@@ -418,6 +418,7 @@ const ToGeneralSettingsDto = (
         Settings.IgnoreActivationKeybindInFullscreen,
     TileExistingWindowsOnStartup: Settings.TileExistingWindowsOnStartup,
     TiledResizeBehavior: Settings.TiledResizeBehavior,
+    TiledWindowDetachDistance: Settings.TiledWindowDetachDistance,
     TiledWindowGap: Settings.TiledWindowGap
 });
 
@@ -466,6 +467,14 @@ ipcMain.handle(AppApiChannel.GeneralSettingsSet, (
         {
             yield* Settings.SetSetting("TiledWindowGap", PatchValue.TiledWindowGap);
             yield* TilingManager.SetGap(PatchValue.TiledWindowGap);
+        }
+
+        if (PatchValue.TiledWindowDetachDistance !== undefined)
+        {
+            yield* Settings.SetSetting(
+                "TiledWindowDetachDistance",
+                PatchValue.TiledWindowDetachDistance
+            );
         }
 
         if (PatchValue.TiledResizeBehavior !== undefined)
@@ -992,8 +1001,6 @@ const StartApplication = Effect.gen(function*()
     yield* Overlay.Session.OverlaySession;
     yield* MessageLoop.MessageLoop;
 
-    const Specification = yield* BrowserWindow.MainWindowSpec;
-    yield* BrowserWindows.Ensure(Specification);
     yield* BrowserWindows.Ensure(yield* BrowserWindow.OverlayWindowSpec);
 
     if ((yield* DevFeatures).StaticOverlay)

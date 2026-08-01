@@ -22,6 +22,10 @@ const HeadingClassName = "leading-tighter max-w-md text-2xl font-semibold text-w
 
 const CardTitleClassName = "flex items-center gap-2 font-mono text-base font-medium text-white uppercase";
 
+const CardIconClassName = "flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800";
+
+const ChecklistIconWrapperClassName = "flex h-6 w-6 shrink-0 items-center justify-center";
+
 /** A single problem→solution card in a {@link FeatureGrid}. */
 export interface FeatureGridItem
 {
@@ -89,7 +93,7 @@ export const FeatureGrid = (
                                     </div>
 
                                     <h3 className={ CardTitleClassName }>
-                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800">
+                                        <span className={ CardIconClassName }>
                                             { Item.icon }
                                         </span>
                                         { Item.title }
@@ -101,7 +105,7 @@ export const FeatureGrid = (
                                                 (
                                                     <li className="flex items-start gap-2"
                                                         key={ ChecklistEntry }>
-                                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                                                        <span className={ ChecklistIconWrapperClassName }>
                                                             <Check aria-hidden="true"
                                                                 className="h-4 w-4 text-emerald-500" />
                                                         </span>

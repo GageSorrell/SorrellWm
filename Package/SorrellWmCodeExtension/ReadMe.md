@@ -20,7 +20,7 @@ and returns the absolute path of the created component directory.
 
 ## Source module headers
 
-When a supported TypeScript or C++ file is created anywhere in the open workspace, the extension inserts the project's JSDoc-compatible header at the beginning of the file and saves it. It does not replace a header that it previously generated.
+When a supported TypeScript or C++ file is created anywhere in the open workspace, the extension inserts the project's JSDoc-compatible header at the beginning of the file and saves it. It skips files ignored by Git and does not replace a header that it previously generated.
 
 Supported extensions are `.ts`, `.tsx`, `.cc`, `.cpp`, `.cxx`, `.h`, `.hh`,
 `.hpp`, `.hxx`, `.ixx`, `.cppm`, `.inl`, `.ipp`, and `.tpp`.

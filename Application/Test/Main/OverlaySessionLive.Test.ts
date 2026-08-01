@@ -22,6 +22,7 @@ import {
 } from "../../Source/Main/Overlay/Session.ts";
 import {
     type OverlayCommandDto,
+    IsOverlayScreenDto,
     OverlayScreenId,
     type OverlayStackWindowDto
 } from "../../Source/Shared/OverlayCommand.ts";
@@ -307,6 +308,61 @@ describe("OverlaySession.Live Focus targets", () =>
             "Resize",
             "Float"
         ]);
+    });
+
+    it("produces a Snapshot the IPC boundary accepts for a floating window", async () =>
+    {
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(Snapshot.Id).toBe(OverlayScreenId.FloatingHome);
+        expect(Snapshot.Commands.length).toBeGreaterThan(0);
+        expect(IsOverlayScreenDto(Snapshot)).toBe(true);
+    });
+
+    it("produces a Snapshot the IPC boundary accepts for a tiled window", async () =>
+    {
+        TilingSnapshot = {
+            Workspaces: [
+                {
+                    Bounds: Box.Box(0, 1920, 1080, 0),
+                    Id: Tiling.Tree.WorkspaceId(
+                        Box.Box(0, 1920, 1080, 0)
+                    ),
+                    Root: Tiling.Tree.Window({
+                        InitialBounds: Box.Box(100, 200, 200, 100),
+                        Window: CurrentWindow
+                    })
+                }
+            ]
+        };
+
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(Snapshot.Id).toBe(OverlayScreenId.TiledHome);
+        expect(Snapshot.Commands.length).toBeGreaterThan(0);
+        expect(IsOverlayScreenDto(Snapshot)).toBe(true);
     });
 
     it("lists only floating Insert candidates and cycles the active window", async () =>
@@ -1210,6 +1266,7 @@ const CurrentSettings: AppSettings.AppSettings = {
     Theme: "System",
     TileExistingWindowsOnStartup: false,
     TiledResizeBehavior: "PreserveRatios",
+    TiledWindowDetachDistance: 128,
     TiledWindowGap: 8,
     UseSimplifiedTrayIcon: false
 };

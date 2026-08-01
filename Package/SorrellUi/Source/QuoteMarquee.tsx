@@ -19,6 +19,39 @@ import { UseQuoteMarquee } from "./UseQuoteMarquee.js";
 
 const CopyIndexes: ReadonlyArray<number> = [ 0, 1, 2 ];
 
+const EyebrowClassName = "mb-3 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase";
+
+const HeadingClassName = "leading-tighter max-w-2xl text-2xl font-semibold text-white md:text-3xl";
+
+const NavButtonClassName =
+    "inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border " +
+    "border-zinc-700 bg-zinc-900/50 text-zinc-400 transition-colors hover:border-zinc-500 " +
+    "hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50";
+
+const RailClassName =
+    "sorrell-ui-quotes-rail flex touch-pan-y gap-4 overflow-x-auto px-4 " +
+    "[-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] select-none";
+
+const CardClassName =
+    "min-h-54 md:min-h-56 flex w-65 shrink-0 flex-col border border-zinc-700 bg-zinc-950 p-4 " +
+    "md:w-80 md:p-6";
+
+const FadeLeftClassName =
+    "pointer-events-none absolute inset-y-0 left-0 hidden w-16 md:block " +
+    "bg-[linear-gradient(to_right,rgb(9_9_11),transparent)]";
+
+const FadeRightClassName =
+    "pointer-events-none absolute inset-y-0 right-0 w-16 md:w-20 " +
+    "bg-[linear-gradient(to_left,rgb(9_9_11),transparent)]";
+
+const AttributionRowClassName = "mt-auto flex items-center gap-2.5 pt-3 md:gap-3 md:pt-8";
+
+const AuthorClassName = "shrink-0 font-mono text-sm font-medium text-zinc-200";
+
+const AttributionDividerClassName = "h-px flex-1 bg-[linear-gradient(to_right,transparent,rgb(63_63_70))]";
+
+const LogoWrapperClassName = "flex shrink-0 items-center text-zinc-300";
+
 /** A single quote in a {@link QuoteMarquee}. */
 export interface Quote
 {
@@ -42,9 +75,16 @@ export interface QuoteMarqueeProps
  * @category Component
  * @since 1.0.0
  */
-export const QuoteMarquee = ({ className: ClassName, eyebrow: Eyebrow, heading: Heading, quotes: Quotes }: QuoteMarqueeProps): React.JSX.Element =>
+export const QuoteMarquee = (
+    { className: ClassName, eyebrow: Eyebrow, heading: Heading, quotes: Quotes }: QuoteMarqueeProps
+): React.JSX.Element =>
 {
-    const { containerRef: ContainerRef, railRef: RailRef, scrollNext: ScrollNext, scrollPrevious: ScrollPrevious } = UseQuoteMarquee();
+    const {
+        containerRef: ContainerRef,
+        railRef: RailRef,
+        scrollNext: ScrollNext,
+        scrollPrevious: ScrollPrevious
+    } = UseQuoteMarquee();
 
     return (
         <div className={ Cn("block w-full", ClassName) }
@@ -55,22 +95,22 @@ export const QuoteMarquee = ({ className: ClassName, eyebrow: Eyebrow, heading: 
                         <div>
                             {
                                 Eyebrow !== undefined ?
-                                    <p className="mb-3 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">{ Eyebrow }</p> :
+                                    <p className={ EyebrowClassName }>{ Eyebrow }</p> :
                                     undefined
                             }
-                            <h2 className="leading-tighter max-w-2xl text-2xl font-semibold text-white md:text-3xl">{ Heading }</h2>
+                            <h2 className={ HeadingClassName }>{ Heading }</h2>
                         </div>
 
                         <div className="flex gap-2">
                             <button aria-label="Scroll quotes left"
-                                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ NavButtonClassName }
                                 onClick={ ScrollPrevious }
                                 type="button">
                                 <ChevronLeft aria-hidden="true"
                                     className="h-4 w-4" />
                             </button>
                             <button aria-label="Scroll quotes right"
-                                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ NavButtonClassName }
                                 onClick={ ScrollNext }
                                 type="button">
                                 <ChevronRight aria-hidden="true"
@@ -82,25 +122,31 @@ export const QuoteMarquee = ({ className: ClassName, eyebrow: Eyebrow, heading: 
 
                 <div className="relative isolate">
                     <div aria-label="Developer quotes"
-                        className="sorrell-ui-quotes-rail flex touch-pan-y gap-4 overflow-x-auto px-4 [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] select-none"
+                        className={ RailClassName }
                         ref={ RailRef }
                         tabIndex={ 0 }>
                         {
                             CopyIndexes.map((CopyIndex) =>
                                 Quotes.map((QuoteItem) =>
                                     (
-                                        <article className="min-h-54 md:min-h-56 flex w-65 shrink-0 flex-col border border-zinc-700 bg-zinc-950 p-4 md:w-80 md:p-6"
+                                        <article className={ CardClassName }
                                             data-copy={ CopyIndex }
                                             data-role="card"
                                             key={ `${ CopyIndex }-${ QuoteItem.author }` }>
-                                            <p className="text-sm text-zinc-400 leading-relaxed md:text-base">&ldquo;{ QuoteItem.text }&rdquo;</p>
+                                            <p className="text-sm text-zinc-400 leading-relaxed md:text-base">
+                                                &ldquo;{ QuoteItem.text }&rdquo;
+                                            </p>
 
-                                            <div className="mt-auto flex items-center gap-2.5 pt-3 md:gap-3 md:pt-8">
-                                                <span className="shrink-0 font-mono text-sm font-medium text-zinc-200">{ QuoteItem.author }</span>
-                                                <div className="h-px flex-1 bg-[linear-gradient(to_right,transparent,rgb(63_63_70))]" />
+                                            <div className={ AttributionRowClassName }>
+                                                <span className={ AuthorClassName }>
+                                                    { QuoteItem.author }
+                                                </span>
+                                                <div className={ AttributionDividerClassName } />
                                                 {
                                                     QuoteItem.logo !== undefined ?
-                                                        <div className="flex shrink-0 items-center text-zinc-300">{ QuoteItem.logo }</div> :
+                                                        <div className={ LogoWrapperClassName }>
+                                                            { QuoteItem.logo }
+                                                        </div> :
                                                         undefined
                                                 }
                                             </div>
@@ -110,9 +156,9 @@ export const QuoteMarquee = ({ className: ClassName, eyebrow: Eyebrow, heading: 
                     </div>
 
                     <div aria-hidden="true"
-                        className="pointer-events-none absolute inset-y-0 left-0 hidden w-16 bg-[linear-gradient(to_right,rgb(9_9_11),transparent)] md:block" />
+                        className={ FadeLeftClassName } />
                     <div aria-hidden="true"
-                        className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-[linear-gradient(to_left,rgb(9_9_11),transparent)] md:w-20" />
+                        className={ FadeRightClassName } />
                 </div>
             </section>
         </div>

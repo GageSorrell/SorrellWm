@@ -15,6 +15,36 @@ import type { ReactNode } from "react";
 
 import { Cn } from "./ClassName.js";
 
+const EyebrowClassName = "mb-3 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase";
+
+const HeadingClassName = "leading-tighter text-2xl font-semibold text-white md:text-3xl";
+
+const DescriptionClassName = "mt-5 max-w-lg text-lg leading-relaxed text-zinc-400";
+
+const ActionClassName =
+    "mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 " +
+    "text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 " +
+    "hover:bg-zinc-800 hover:no-underline";
+
+const DetailsClassName = "group rounded-md border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-900/50";
+
+const SummaryClassName =
+    "flex cursor-pointer list-none items-center justify-between bg-transparent px-5 py-4 " +
+    "text-base leading-snug font-medium text-zinc-300 hover:bg-transparent hover:text-white";
+
+const ChevronWrapperClassName =
+    "ml-2 flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800/80 text-zinc-400 " +
+    "transition-all duration-200 group-hover:bg-zinc-700";
+
+const AnswerClassName =
+    "px-5 pt-0 pb-5 text-[15px] leading-relaxed text-zinc-400 [&_a]:underline " +
+    "[&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4";
+
+const ChevronIconClassName = "transition-transform duration-200 group-open:rotate-180";
+
+const CollapsibleClassName =
+    "grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out group-open:grid-rows-[1fr]";
+
 /** A single question/answer pair in a {@link Faq}. */
 export interface FaqItem
 {
@@ -45,7 +75,16 @@ export interface FaqProps
  * @category Component
  * @since 1.0.0
  */
-export const Faq = ({ action: Action, className: ClassName, description: Description, eyebrow: Eyebrow, heading: Heading, items: Items }: FaqProps): React.JSX.Element =>
+export const Faq = (
+    {
+        action: Action,
+        className: ClassName,
+        description: Description,
+        eyebrow: Eyebrow,
+        heading: Heading,
+        items: Items
+    }: FaqProps
+): React.JSX.Element =>
 {
     return (
         <section className={ Cn("relative w-full py-24 md:pt-40 md:pb-24", ClassName) }>
@@ -54,18 +93,18 @@ export const Faq = ({ action: Action, className: ClassName, description: Descrip
                     <div className="w-full px-4 lg:w-1/2">
                         {
                             Eyebrow !== undefined ?
-                                <p className="mb-3 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">{ Eyebrow }</p> :
+                                <p className={ EyebrowClassName }>{ Eyebrow }</p> :
                                 undefined
                         }
-                        <h2 className="leading-tighter text-2xl font-semibold text-white md:text-3xl">{ Heading }</h2>
+                        <h2 className={ HeadingClassName }>{ Heading }</h2>
                         {
                             Description !== undefined ?
-                                <p className="mt-5 max-w-lg text-lg leading-relaxed text-zinc-400">{ Description }</p> :
+                                <p className={ DescriptionClassName }>{ Description }</p> :
                                 undefined
                         }
                         {
                             Action !== undefined ?
-                                <a className="mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:no-underline"
+                                <a className={ ActionClassName }
                                     href={ Action.href }
                                     rel="noopener noreferrer"
                                     target="_blank">
@@ -81,13 +120,13 @@ export const Faq = ({ action: Action, className: ClassName, description: Descrip
                             {
                                 Items.map((Item) =>
                                     (
-                                        <details className="group rounded-md border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-900/50"
+                                        <details className={ DetailsClassName }
                                             key={ Item.question }>
-                                            <summary className="flex cursor-pointer list-none items-center justify-between bg-transparent px-5 py-4 text-base leading-snug font-medium text-zinc-300 hover:bg-transparent hover:text-white">
+                                            <summary className={ SummaryClassName }>
                                                 { Item.question }
-                                                <span className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800/80 text-zinc-400 transition-all duration-200 group-hover:bg-zinc-700">
+                                                <span className={ ChevronWrapperClassName }>
                                                     <svg aria-hidden="true"
-                                                        className="transition-transform duration-200 group-open:rotate-180"
+                                                        className={ ChevronIconClassName }
                                                         fill="none"
                                                         height="16"
                                                         stroke="currentColor"
@@ -100,9 +139,9 @@ export const Faq = ({ action: Action, className: ClassName, description: Descrip
                                                     </svg>
                                                 </span>
                                             </summary>
-                                            <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out group-open:grid-rows-[1fr]">
+                                            <div className={ CollapsibleClassName }>
                                                 <div className="overflow-hidden">
-                                                    <div className="px-5 pt-0 pb-5 text-[15px] leading-relaxed text-zinc-400 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4">
+                                                    <div className={ AnswerClassName }>
                                                         { Item.answer }
                                                     </div>
                                                 </div>

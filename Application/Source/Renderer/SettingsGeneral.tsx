@@ -190,6 +190,39 @@ const SettingsGeneral = (): React.JSX.Element =>
 
                 <Setting
                     Control={
+                        <SpinButton
+                            aria-label="Tiled window detach distance"
+                            className={ Styles.SpinButton }
+                            min={ 0 }
+                            onChange={ (
+                                _Event: SpinButtonChangeEvent,
+                                Data: SpinButtonOnChangeData
+                            ) =>
+                            {
+                                const Value = Data.value ?? (
+                                    Data.displayValue === undefined
+                                        ? undefined
+                                        : Number(Data.displayValue)
+                                );
+
+                                if (Value !== undefined && Number.isInteger(Value) && Value >= 0)
+                                {
+                                    Commit({ TiledWindowDetachDistance: Value });
+                                }
+                            } }
+                            step={ 1 }
+                            value={ Settings.TiledWindowDetachDistance } />
+                    }
+                    Icon={ GridRegular }
+                    Id={ MakeSettingControlId(SettingsSectionId.General, "TiledWindowDetachDistance") }
+                    Subtitle={
+                        "How far you must drag a tiled window before it detaches and floats, "
+                        + "instead of snapping back to its tile. Scaled by display."
+                    }
+                    Title="Tiled Window Detach Distance" />
+
+                <Setting
+                    Control={
                         <Dropdown
                             aria-label="Initial tiled resize behavior"
                             onOptionSelect={ (

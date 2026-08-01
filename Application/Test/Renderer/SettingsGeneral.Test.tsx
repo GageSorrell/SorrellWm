@@ -20,6 +20,7 @@ describe("SettingsGeneral", () =>
             IgnoreActivationKeybindInFullscreen: true,
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
+            TiledWindowDetachDistance: 128,
             TiledWindowGap: 8
         });
         vi.mocked(window.sorrell.generalSettings.set).mockImplementation(async (
@@ -30,6 +31,8 @@ describe("SettingsGeneral", () =>
             TileExistingWindowsOnStartup: Patch.TileExistingWindowsOnStartup ?? false,
             TiledResizeBehavior:
                 Patch.TiledResizeBehavior ?? "PreserveRatios",
+            TiledWindowDetachDistance:
+                Patch.TiledWindowDetachDistance ?? 128,
             TiledWindowGap: Patch.TiledWindowGap ?? 8
         }));
     });
@@ -84,6 +87,23 @@ describe("SettingsGeneral", () =>
 
         await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
             TiledWindowGap: 9
+        }));
+    });
+
+    it("loads and updates the tiled-window detach distance", async () =>
+    {
+        render(<SettingsGeneral />);
+
+        const Distance = await screen.findByRole("spinbutton", {
+            name: "Tiled window detach distance"
+        });
+        expect(Distance).toHaveValue("128");
+
+        fireEvent.change(Distance, { target: { value: "256" } });
+        fireEvent.blur(Distance);
+
+        await waitFor(() => expect(window.sorrell.generalSettings.set).toHaveBeenCalledWith({
+            TiledWindowDetachDistance: 256
         }));
     });
 

@@ -1,5 +1,5 @@
 /**
- *
+ * General-purpose utilities for TypeScript and effect.
  *
  * @module @sorrell/utility
  *
@@ -9,5 +9,5 @@
  * @license   MIT
  */
 
-export * as SorrellData from "./Data.js";
-export * as SorrellFunction from "./Function.ts";
+export * as Data from "./Data.js";
+export * as Function from "./Function.js";

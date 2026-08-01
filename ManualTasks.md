@@ -150,3 +150,27 @@ Please add a tray icon to `@sorrell/wm`.  Its bottom button of its context menu 
 @TODO Modify the "per-app settings" bottom command button to use the new "navigate to and focus setting" feature when opening the settings window to view the per-app settings.  Also, if the app does not have an entry in the per-app settings, then an entry should be created upon pressing this button.
 
 ---
+
+<!-- Please modify the monorepo's VS Code extension so that the top-level comment is not generated for files that are ignored by git. -->
+
+---
+
+(Use plan mode)
+
+Please create a setup that allows for the creation of documentation websites for SorrellWm and various packages in this monorepo.  This should implemented via multiple packages: a script package (under the `Script` directory) for creating website packages, a package for shared tooling used by these websites, a package that provides a Fluent UI-based theme, and a package that applies a theme that is based on Effect's documentation website.  These packages should allow for the creation of Docusaurus websites.  The websites should support versioning and multiple languages (by default, support en-US and es-US).  These websites should also support MDX containing react components, and twoslash.  The script package should also allow for publishing these websites to subdomains of `sorrell.sh`, which should use the AWS SDK and vercel SDK to add a subdomain via AWS (the domain is set up through Route 53), and deploy the website with vercel.
+
+---
+
+Please add the following feature to `@sorrell/wm`: for each titlebar flyout feature (corresponding to the min/max caption buttons), if a given window does not have caption buttons that the window manager can detect, then the window manager should use the system's display scale for that window's scale to assume the locations of the minimize and maximize buttons.  This should be controlled via an app setting (enabled/disabled) and should be enabled by default.  This feature should also be exposed as a per-app setting, enabled by default per-app, and should be enabled if and only if the application-wide app setting is enabled *and* the per-app setting is enabled.
+
+---
+
+<!-- The app's icon in the taskbar is very small (it has a lot of padding), please fix this. -->
+
+---
+
+Please create a package under `./Package` which makes it easy to create animations that resemble windows on a desktop being manipulated.  The windows should be represented with boxes that have rounded corners and shadows resembling windows in Windows 11.  These should be able to be moved instantaneously, moved over a given duration, resized (over a fixed duration), and created/destroyed (with an animation that resembles windows in Windows being created/destroyed).  There should also be an optional cursor, whose position and type (pointer, etc.) can be animated, and can be animated to drag windows around.  Please export a component that wraps Fluent UI's `TeachingPopover` component such that the `TeachingPopoverBody`'s `media` prop is one of the animations that can be made with this new package.  This teaching popover should accept three props: one that is an animation as just described, a prop that is used as the child of `TeachingPopoverTitle`, and the last prop should be inserted as the last child of `TeachingPopoverSurface`.
+
+---
+
+<!-- Currently, in the Insert flow, when the window is drawn that allows a window to be tiled by dragging the window on top of it, the tiled that was resized to make room for the new window resets back to its original size, instead of remaining half of its previous size.  Please fix this. -->

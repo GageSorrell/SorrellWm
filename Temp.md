@@ -19,10 +19,6 @@ Additionally, the context should also allow for, along with the interaction prov
 
 ---
 
-Please add LaTeX support via MathJax or similar.  Use the `Svg` component if it will help, otherwise use sixel.  Accept a fallback prop if sixel rendering (or any other necessary features) aren't supported.
-
----
-
 Please add a `BackdropProvider` component.  This component should make the screen's background color (assume, but don't verify that this provider takes up the entire screen).  It should accept an optional `backgroundColor` prop to use as the color, but the default color (it's expected that a custom `backgroundColor` won't be specified most of the time) should be a darker form of the terminal's background color.  The percentage should be the same for most terminal background colors, but if the terminal's background color is *very* dark, then the percentage of darkness should be higher, to try to have sufficient contrast.  The default background color of the `Box` component should be the terminal's background color.  If the terminal's background color cannot be determined, then this component should not do anything, and the `Box` component should not set its `backgroundColor` when a value isn't provided to it.
 
 ---
@@ -36,7 +32,3 @@ Please modify TextInput, TextArea, and VarInput to support selecting text: holdi
 ---
 
 <!-- Please modify the monorepo's VS Code extension so that the top-level comment is not generated for files that belong to `node_modules`. -->
-
----
-
-Please modify the monorepo's VS Code extension so that the top-level comment is not generated for files that are ignored by git.

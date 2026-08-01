@@ -47,6 +47,7 @@ import { AppApiChannel } from "../../Shared/Api.ts";
 import type { BackdropPresentation } from "../../Shared/Backdrop.ts";
 import { DevFeatures } from "../Development/DevFeatures.ts";
 import type { InsertTargetPresentation } from "../../Shared/InsertTarget.ts";
+import { screen } from "electron";
 
 export/** The service identifier for command execution. */
 const TypeId = "~sorrell/wm/Main/Command/Executor" as const;
@@ -70,6 +71,11 @@ interface TiledInsertRuntimeState
     LastMovingBounds: Option.Option<Box.Box>;
     LastMovingWindow: Option.Option<Handle.HWND>;
     SuppressNextTargetClose: boolean;
+}
+
+interface TiledDragRuntimeState
+{
+    LastMovingWindow: Option.Option<Handle.HWND>;
 }
 
 /** A recognized command has no executor implementation yet. */
@@ -1300,6 +1306,17 @@ const ShowTiledInsertTarget = (
     yield* BrowserWindows.Ensure(
         BrowserWindow.GetInsertTargetWindowSpec(Target.value.Bounds)
     );
+    // `Ensure` only applies its spec's bounds when it constructs a fresh window; if the
+    // Insert target window key is still registered as open from a prior flow (e.g. its
+    // "Closed" event hasn't finished propagating yet), `Ensure` reuses that window as-is
+    // and leaves it at its previous size and position. Every other Bounds-driven window
+    // in this module (Focus preview, Backdrop, the Overlay resize in
+    // ChooseTiledInsertDirection) follows an `Ensure`/`Open` with an explicit `SetBounds`
+    // for exactly this reason.
+    yield* BrowserWindows.SetBounds(
+        BrowserWindow.Key.InsertTarget,
+        Target.value.Bounds
+    );
     yield* BrowserWindows.Hide(BrowserWindow.Key.Overlay);
     yield* BrowserWindows.Focus(BrowserWindow.Key.InsertTarget);
     yield* PublishInsertTarget(BrowserWindows, Session);
@@ -1459,6 +1476,82 @@ const PollTiledInsertTarget = (
     }
 });
 
+const PollTiledWindowDetach = (
+    Settings: AppSettings.Service,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    RuntimeState: TiledDragRuntimeState
+) => Effect.gen(function*()
+{
+    const Snapshot = yield* TilingManager.Snapshot;
+    const MovingWindow = Window.GetMovingWindow().pipe(
+        Option.filter((WindowValue: Handle.HWND): boolean =>
+            IsWindowTiled(Snapshot, WindowValue))
+    );
+
+    if (Option.isSome(MovingWindow))
+    {
+        RuntimeState.LastMovingWindow = MovingWindow;
+        return;
+    }
+
+    const LastMovingWindow = RuntimeState.LastMovingWindow;
+    RuntimeState.LastMovingWindow = Option.none();
+
+    if (Option.isNone(LastMovingWindow))
+    {
+        return;
+    }
+
+    const Gap = yield* TilingManager.Gap;
+    const Placement = Tiling.Tree.Layout(Snapshot, Gap).find(
+        (Candidate: Tiling.Tree.Placement): boolean =>
+            Candidate.Window === LastMovingWindow.value
+    );
+    const ReleasedBounds = Window.GetWindowRect(LastMovingWindow.value);
+
+    if (Placement === undefined || Option.isNone(ReleasedBounds))
+    {
+        return;
+    }
+
+    // A native resize also reports GUI_INMOVESIZE; only a same-size relocation
+    // is a drag this feature should react to.
+    const WasResized = Box.Width(Placement.Bounds) !== Box.Width(ReleasedBounds.value)
+        || Box.Height(Placement.Bounds) !== Box.Height(ReleasedBounds.value);
+
+    if (WasResized)
+    {
+        return;
+    }
+
+    const DeltaX = ReleasedBounds.value.Left - Placement.Bounds.Left;
+    const DeltaY = ReleasedBounds.value.Top - Placement.Bounds.Top;
+    const Distance = Math.hypot(DeltaX, DeltaY);
+    const ScaleFactor = screen.getDisplayMatching(
+        BoxUtility.ToRectangle(ReleasedBounds.value)
+    ).scaleFactor;
+    const DetachDistance = yield* Settings.GetSetting("TiledWindowDetachDistance");
+    const Threshold = DetachDistance * ScaleFactor;
+
+    if (Distance < Threshold)
+    {
+        yield* TilingManager.Reconcile;
+        yield* Logging.LogInfo(
+            "Tiling.Drag",
+            "Snapped a dragged tiled window back to its tiled bounds.",
+            { Distance, Threshold, Window: LastMovingWindow.value }
+        );
+        return;
+    }
+
+    yield* TilingManager.Float(LastMovingWindow.value);
+    yield* Logging.LogInfo(
+        "Tiling.Drag",
+        "Detached a dragged tiled window; it is now floating.",
+        { Distance, Threshold, Window: LastMovingWindow.value }
+    );
+});
+
 const ExecuteUi = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
@@ -1575,7 +1668,10 @@ const ExecuteUi = (
         case "OpenSettings":
             return Effect.gen(function*()
             {
-                yield* BrowserWindows.Ensure(yield* BrowserWindow.SettingsWindowSpec);
+                const Specification = yield* BrowserWindow.SettingsWindowSpec.pipe(
+                    Effect.provideService(AppSettings.AppSettings, Settings)
+                );
+                yield* BrowserWindows.Ensure(Specification);
                 // yield* BrowserWindows.Focus(BrowserWindow.Key.Overlay);
                 yield* BrowserWindows.Show(BrowserWindow.Key.Settings);
                 yield* BrowserWindows.Focus(BrowserWindow.Key.Settings);
@@ -1775,6 +1871,9 @@ const Live = Layer.effect(
             LastMovingBounds: Option.none(),
             LastMovingWindow: Option.none(),
             SuppressNextTargetClose: false
+        };
+        const DragRuntime: TiledDragRuntimeState = {
+            LastMovingWindow: Option.none()
         };
         const Execute = MakeExecute(
             BrowserWindows,
@@ -1976,6 +2075,18 @@ const Live = Layer.effect(
             Effect.catch((Cause: unknown) => Logging.LogWarning(
                 "Overlay.Insert",
                 "Could not update the temporary tiled Insert target.",
+                Cause
+            )),
+            Effect.andThen(Effect.sleep("50 millis")),
+            Effect.forever,
+            Effect.forkScoped({ startImmediately: true })
+        );
+
+        yield* pipe(
+            PollTiledWindowDetach(Settings, TilingManager, DragRuntime),
+            Effect.catch((Cause: unknown) => Logging.LogWarning(
+                "Tiling.Drag",
+                "Could not resolve a completed tiled-window drag.",
                 Cause
             )),
             Effect.andThen(Effect.sleep("50 millis")),

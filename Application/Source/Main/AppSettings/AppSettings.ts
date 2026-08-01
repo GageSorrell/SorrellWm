@@ -132,6 +132,11 @@ const SettingsSchema = Schema.Struct({
         TiledResizeBehaviorSchema,
         Schema.withDecodingDefaultKey(Effect.succeed("PreserveRatios" as const))
     ),
+    TiledWindowDetachDistance: pipe(
+        Schema.Int,
+        Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+        Schema.withDecodingDefaultKey(Effect.succeed(128))
+    ),
     TiledWindowGap: pipe(
         Schema.Int,
         Schema.check(Schema.isGreaterThanOrEqualTo(0)),
@@ -178,6 +183,7 @@ const AppSettings = _AppSettings.Make(
             Theme: "System",
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
+            TiledWindowDetachDistance: 128,
             TiledWindowGap: 8,
             UseSimplifiedTrayIcon: false
         }

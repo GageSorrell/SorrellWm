@@ -56,6 +56,7 @@ Object.defineProperty(window, "sorrell", {
                 IgnoreActivationKeybindInFullscreen: true,
                 TileExistingWindowsOnStartup: false,
                 TiledResizeBehavior: "PreserveRatios",
+                TiledWindowDetachDistance: 128,
                 TiledWindowGap: 8
             })),
             set: vi.fn((Settings: GeneralSettingsPatch) => Promise.resolve({
@@ -65,6 +66,8 @@ Object.defineProperty(window, "sorrell", {
                     Settings.TileExistingWindowsOnStartup ?? false,
                 TiledResizeBehavior:
                     Settings.TiledResizeBehavior ?? "PreserveRatios",
+                TiledWindowDetachDistance:
+                    Settings.TiledWindowDetachDistance ?? 128,
                 TiledWindowGap: Settings.TiledWindowGap ?? 8
             }))
         },

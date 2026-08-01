@@ -1,5 +1,5 @@
 /**
- *
+ * Extended forms of exports from effect's `Data` module.
  *
  * @module @sorrell/utility/Data
  *
@@ -12,6 +12,9 @@
 import { Data, Predicate } from "effect";
 import type { Cause, Types } from "effect";
 import type { Unify } from "effect/Unify";
+
+export const TypeId = "~sorrell/utility/Data" as const;
+export type TypeId = typeof TypeId;
 
 /**
  * A property key used to nominally identify every member of a tagged enum.
@@ -249,3 +252,78 @@ const taggedEnum: {
         }
     });
 }) as any;
+
+type TaggedError = <Tag extends string>(Tag: Tag) => new<A extends object = { }>(
+    Args: Types.VoidIfEmpty<{ readonly [P in keyof A as P extends "_tag" ? never : P]: A[P] }>
+) => Readonly<A> &
+    Cause.YieldableError &
+    {
+        readonly _tag: Tag;
+        readonly Cause?: unknown;
+        readonly Message: string;
+    };
+
+export const EmptyParameter: unique symbol = Symbol.for(`${ TypeId }!EmptyParameter`);
+export type EmptyParameter = typeof EmptyParameter;
+
+/**
+ * An extended form of effect's `TaggedError` whose returned class contains a `static`
+ * factory `Make`, which accepts an argument for the custom properties, and returns a function
+ * that accepts a `Cause` or a `Message` and optional `Cause`, and the corresponding `message` and `cause`
+ * properties are set to these.  If no `Message` is supplied, and the given `Cause` has a `string` `message`
+ * or `Message` property, then the `message` property of the tagged error class is set to this value.
+ *
+ * @category Constructor
+ * @since 1.1.0
+ */
+export const TaggedError = <TagType extends string>(
+  Tag: TagType
+): new<A extends Record<string, any> = { }>(
+  Args: Types.VoidIfEmpty<{ readonly [P in keyof A as P extends "_tag" ? never : P]: A[P] }>
+) => Cause.YieldableError & { readonly _tag: TagType } & Readonly<A> => {
+    class Base extends Data.TaggedError(Tag)<{ }>
+    {
+        public static Make(Args: ConstructorParameters<typeof Base>)
+        {
+            function Out(Message: string, Cause?: unknown): Base;
+            function Out(Cause: unknown): Base;
+            function Out(MessageOrCause: unknown, Cause: unknown = EmptyParameter): Base
+            {
+                const OutError = new Base(Args as any);
+
+                if (Predicate.isString(MessageOrCause))
+                {
+                    OutError.message = MessageOrCause;
+
+                    if (Cause !== EmptyParameter)
+                    {
+                        OutError.cause = Cause;
+                    }
+                }
+                else
+                {
+                    OutError.cause = Cause;
+                    if (Predicate.isObject(Cause))
+                    {
+                        if (Predicate.hasProperty(Cause, "message") && Predicate.isString(Cause.message))
+                        {
+                            OutError.message = Cause.message;
+                        }
+                        else if (Predicate.hasProperty(Cause, "Message") && Predicate.isString(Cause.Message))
+                        {
+                            OutError.message = Cause.Message;
+                        }
+                    }
+                }
+
+                return OutError;
+            }
+
+            return Out;
+        }
+    };
+
+    (Base.prototype as any).name = Tag;
+
+    return Base as any;
+};

@@ -752,6 +752,47 @@ describe("OverlayApplication", () =>
         expect(window.sorrell.overlay.invoke)
             .toHaveBeenCalledWith("ToggleTiledResizeBehavior");
     });
+
+    it("renders the Move screen's distance toggle when its shortcut includes Shift", async () =>
+    {
+        // The default PrimaryModifier keybind is Shift, which GetShortcutParts renders
+        // as a <Key.Shift /> icon element rather than a plain string.
+        const ShiftShortcut = {
+            KeyCode: 0x10,
+            KeyLabel: "SHIFT",
+            Modifiers: { Alt: false, Control: false, Shift: true, Super: false }
+        } as const;
+        const MoveScreen: OverlayScreenDto = {
+            CanGoBack: true,
+            Commands: [
+                Command("MoveWindowLeft", "SelectLeft", "H", 0x48),
+                Command("MoveWindowUp", "SelectUp", "K", 0x4B),
+                Command("MoveWindowDown", "SelectDown", "J", 0x4A),
+                Command("MoveWindowRight", "SelectRight", "L", 0x4C)
+            ],
+            DistanceToggle: {
+                Active: false,
+                FineActive: false,
+                FineDistance: 1,
+                FineShortcut: {
+                    KeyCode: 0x12,
+                    KeyLabel: "MENU",
+                    Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
+                },
+                PrimaryDistance: 20,
+                SecondaryDistance: 50,
+                Shortcut: ShiftShortcut
+            },
+            Id: "FloatingMove"
+        };
+
+        vi.mocked(window.sorrell.overlay.get).mockResolvedValue(MoveScreen);
+        render(<OverlayApplication />);
+
+        expect(await screen.findByText("Step Size")).toBeInTheDocument();
+        expect(screen.getByText("20")).toBeInTheDocument();
+        expect(screen.getByText("50")).toBeInTheDocument();
+    });
 });
 
 /** Construct one renderer-safe command fixture. */

@@ -40,6 +40,12 @@ export interface GeneralSettingsDto
     /** Tile existing floating windows when SorrellWm starts. */
     readonly TileExistingWindowsOnStartup: boolean;
 
+    /**
+     * The distance, in 100%-scale pixels, a tiled window must be dragged before it detaches
+     * and floats instead of snapping back to its tiled bounds.
+     */
+    readonly TiledWindowDetachDistance: number;
+
     /** Pixels between tiled windows and between tiles and their monitor edges. */
     readonly TiledWindowGap: number;
 
@@ -121,6 +127,7 @@ const IsGeneralSettingsDto = (Value: unknown): Value is GeneralSettingsDto =>
         Value as Partial<GeneralSettingsDto>
     ).IgnoreActivationKeybindInFullscreen === "boolean"
     && typeof (Value as Partial<GeneralSettingsDto>).TileExistingWindowsOnStartup === "boolean"
+    && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowDetachDistance)
     && IsNonNegativeInteger((Value as Partial<GeneralSettingsDto>).TiledWindowGap)
     && IsTiledResizeBehavior((Value as Partial<GeneralSettingsDto>).TiledResizeBehavior);
 
@@ -139,6 +146,9 @@ const IsGeneralSettingsPatch = (Value: unknown): Value is GeneralSettingsPatch =
     ) && (
         Candidate.TileExistingWindowsOnStartup === undefined
         || typeof Candidate.TileExistingWindowsOnStartup === "boolean"
+    ) && (
+        Candidate.TiledWindowDetachDistance === undefined
+        || IsNonNegativeInteger(Candidate.TiledWindowDetachDistance)
     ) && (
         Candidate.TiledWindowGap === undefined
         || IsNonNegativeInteger(Candidate.TiledWindowGap)

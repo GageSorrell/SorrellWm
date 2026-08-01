@@ -60,9 +60,15 @@ function WrapBoardColor(CanvasSize)
     const FillRatio = 0.8;
     const IconSize = CanvasSize * FillRatio;
     const Offset = (CanvasSize - IconSize) / 2;
-    const Scale = IconSize / 20;
+    // The Fluent icon's visible artwork spans (3, 3) through (17, 17) inside
+    // its 20x20 view box.  Remove that built-in margin before applying our own;
+    // otherwise the two margins compound and the taskbar glyph renders at only
+    // 56% of the available width.
+    const ArtworkMinimum = 3;
+    const ArtworkSize = 14;
+    const Scale = IconSize / ArtworkSize;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${ CanvasSize }" height="${ CanvasSize }" viewBox="0 0 ${ CanvasSize } ${ CanvasSize }">
-  <g transform="translate(${ Offset } ${ Offset }) scale(${ Scale })">${ BoardColorBody }</g>
+  <g transform="translate(${ Offset } ${ Offset }) scale(${ Scale }) translate(-${ ArtworkMinimum } -${ ArtworkMinimum })">${ BoardColorBody }</g>
 </svg>`;
 }
 

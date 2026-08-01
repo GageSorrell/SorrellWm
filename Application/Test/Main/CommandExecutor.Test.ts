@@ -36,6 +36,7 @@ import {
     type ResizeMode as ResizeModeType
 } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { screen as ElectronScreen } from "electron";
 
 vi.mock("electron", () =>
 {
@@ -43,6 +44,7 @@ vi.mock("electron", () =>
         BrowserWindow: class { },
         app: { isPackaged: true },
         screen: {
+            getDisplayMatching: vi.fn(() => ({ scaleFactor: 1 })),
             screenToDipRect: (
                 _Window: null,
                 Rectangle: Electron.Rectangle
@@ -157,6 +159,9 @@ beforeEach(() =>
     );
     vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.none());
+    vi.mocked(ElectronScreen.getDisplayMatching).mockReturnValue(
+        { scaleFactor: 1 } as Electron.Display
+    );
     vi.mocked(WindowsWindow.SetForegroundWindow).mockReturnValue(Result.succeed(undefined));
     vi.mocked(WindowsWindow.SetWindowZOrderAfter).mockReturnValue(Result.succeed(undefined));
     vi.mocked(WindowsScreen.GetMonitors).mockReturnValue(Result.succeed([ ]));
@@ -299,9 +304,17 @@ describe("CommandExecutor.Execute", () =>
         vi.mocked(WindowsWindow.GetManageableTopLevelWindows).mockReturnValue(
             Result.succeed([ FloatingWindow ])
         );
-        vi.mocked(WindowsWindow.GetMovingWindow)
-            .mockReturnValueOnce(Option.some(FloatingWindow))
-            .mockReturnValue(Option.none());
+        // Call-count-windowed rather than `mockReturnValueOnce`, since the tiled-window
+        // drag detach poll loop also calls `GetMovingWindow` concurrently every tick and
+        // would otherwise race this test's poller for a single one-shot return value.
+        let MovingWindowCallCount = 0;
+        vi.mocked(WindowsWindow.GetMovingWindow).mockImplementation(() =>
+        {
+            MovingWindowCallCount += 1;
+            return MovingWindowCallCount <= 4
+                ? Option.some(FloatingWindow)
+                : Option.none();
+        });
         vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
             Option.some(Box.Box(100, 500, 400, 100))
         );
@@ -319,7 +332,10 @@ describe("CommandExecutor.Execute", () =>
                 yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
                     Id: "OpenInsertTarget"
                 }));
-                yield* Effect.sleep("180 millis");
+                // Generous margin: the release transition needs at least two real poll
+                // ticks, and a second concurrent poll loop (tiled-window drag detach)
+                // now shares the same 50ms cadence and can slow ticks under CPU load.
+                yield* Effect.sleep("500 millis");
             }),
             Effect.provide(Live),
             Effect.provide(FakeHotkey()),
@@ -418,6 +434,78 @@ describe("CommandExecutor.Execute", () =>
             TiledWindow,
             Tiling.Tree.FocusDirection.Down
         );
+    });
+
+    it("opens the temporary Insert target window sized to the previewed placement, " +
+        "even when the window key is being reused from a prior flow", async () =>
+    {
+        const TiledWindow = 1n as Handle.HWND;
+        const PreviewBounds = Box.Box(100, 700, 500, 100);
+        const SetBoundsCalls = new Array<{
+            Bounds: MathBox.Box;
+            Key: BrowserWindow.Key;
+        }>();
+        const ReusedService: BrowserWindow.BrowserWindowImpl = {
+            // Simulates `Ensure` reusing an already-open window: it deliberately
+            // ignores the requested spec's bounds, the way the real implementation
+            // does when a window with this key is still registered as open.
+            Ensure: (Specification: BrowserWindow.Spec) => Effect.succeed({
+                ElectronWindowId: 1,
+                Key: Specification.Key
+            }),
+            Events: Stream.empty,
+            Focus: () => Effect.void,
+            ForceClose: () => Effect.void,
+            GetNativeHandle: () => Effect.succeed(99n as Handle.HWND),
+            Hide: () => Effect.void,
+            IsVisible: () => Effect.succeed(true),
+            Open: (Specification: BrowserWindow.Spec) => Effect.succeed({
+                ElectronWindowId: 1,
+                Key: Specification.Key
+            }),
+            RequestClose: () => Effect.void,
+            Send: () => Effect.void,
+            SetBounds: (Key: BrowserWindow.Key, Bounds: MathBox.Box) => Effect.sync(() =>
+            {
+                SetBoundsCalls.push({ Bounds, Key });
+            }),
+            Show: () => Effect.void,
+            ShowInactive: () => Effect.void
+        };
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "ChooseInsertRight"
+                }));
+                yield* Executor.Execute(UiCommands.NoOpOverlayCommand({
+                    Id: "OpenInsertTarget"
+                }));
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(Layer.succeed(BrowserWindow.BrowserWindow, ReusedService)),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(TiledWindow),
+                Option.none(),
+                Option.none(),
+                OverlayScreenId.TiledInsertDirection
+            )),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { PreviewInsert: () => Effect.succeed(PreviewBounds) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(SetBoundsCalls).toContainEqual({
+            Bounds: PreviewBounds,
+            Key: BrowserWindow.Key.InsertTarget
+        });
     });
 
     it("restores foreground focus without displaying a backdrop", async () =>
@@ -1120,6 +1208,163 @@ describe("CommandExecutor.Live", () =>
     });
 });
 
+describe("CommandExecutor.Live tiled-window drag detach", () =>
+{
+    const TiledWindow = 1n as Handle.HWND;
+
+    it("snaps a dragged tiled window back to its tiled bounds when released " +
+        "under the detach-distance threshold", async () =>
+    {
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        // Released 20px right and 20px down (distance ≈ 28.3), same size ⇒ a move, not a resize.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(20, 1940, 1100, 20))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                yield* CommandExecutor;
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Reconcile).toHaveBeenCalled();
+        expect(Float).not.toHaveBeenCalled();
+    });
+
+    it("detaches a dragged tiled window into a floating window when released " +
+        "at or beyond the detach-distance threshold", async () =>
+    {
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        // Released exactly 128px right, same size ⇒ equal to the default threshold.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(0, 2048, 1080, 128))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                yield* CommandExecutor;
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Float).toHaveBeenCalledWith(TiledWindow);
+        expect(Reconcile).not.toHaveBeenCalled();
+    });
+
+    it("scales the detach-distance threshold by the dragged window's display scale factor", async () =>
+    {
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        // Released 150px right, same size: below the 200%-scaled 200px threshold, but
+        // above the unscaled 100px setting value, so scaling must be what saves it.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(0, 2070, 1080, 150))
+        );
+        vi.mocked(ElectronScreen.getDisplayMatching).mockReturnValue(
+            { scaleFactor: 2 } as Electron.Display
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                yield* CommandExecutor;
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 100)),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(ElectronScreen.getDisplayMatching).toHaveBeenCalledWith({
+            height: 1080,
+            width: 1920,
+            x: 150,
+            y: 0
+        });
+        expect(Reconcile).toHaveBeenCalled();
+        expect(Float).not.toHaveBeenCalled();
+    });
+
+    it("leaves a tiled window alone when it was resized rather than moved", async () =>
+    {
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        // Same top-left, larger size ⇒ a resize, which this feature must not react to.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(0, 2200, 1200, 0))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                yield* CommandExecutor;
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Reconcile).not.toHaveBeenCalled();
+        expect(Float).not.toHaveBeenCalled();
+    });
+});
+
 const IdleResolver = Layer.succeed(CommandResolver.CommandResolver, {
     Commands: Stream.never,
     Resolve: () => Effect.succeed(Option.none()),
@@ -1176,7 +1421,8 @@ const FakeTilingManager = (
 
 const FakeAppSettings = (
     OverlayBackdropIntensity: number = 50,
-    IgnoreActivationKeybindInFullscreen: boolean = true
+    IgnoreActivationKeybindInFullscreen: boolean = true,
+    TiledWindowDetachDistance: number = 128
 ) =>
 {
     const Current: AppSettings.AppSettings = {
@@ -1197,6 +1443,7 @@ const FakeAppSettings = (
         Theme: "System",
         TileExistingWindowsOnStartup: false,
         TiledResizeBehavior: "PreserveRatios",
+        TiledWindowDetachDistance,
         TiledWindowGap: 8,
         UseSimplifiedTrayIcon: false
     };

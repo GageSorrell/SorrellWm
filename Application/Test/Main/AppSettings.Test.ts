@@ -249,6 +249,7 @@ describe("AppSettings schema", () =>
             Theme: "System",
             TileExistingWindowsOnStartup: false,
             TiledResizeBehavior: "PreserveRatios",
+            TiledWindowDetachDistance: 128,
             TiledWindowGap: 8,
             UseSimplifiedTrayIcon: false
         });
@@ -328,6 +329,33 @@ describe("AppSettings schema", () =>
     {
         await expect(DecodeSettings({ TiledWindowGap: Gap })).rejects.toBeDefined();
     });
+
+    it("defaults the tiled-window detach distance to 128 pixels", async () =>
+    {
+        const Decoded = await DecodeSettings({ });
+
+        expect(Decoded.TiledWindowDetachDistance).toBe(128);
+    });
+
+    it.each([ 0, 256 ])(
+        "accepts a tiled-window detach distance of %i pixels",
+        async (Distance: number) =>
+        {
+            const Decoded = await DecodeSettings({ TiledWindowDetachDistance: Distance });
+
+            expect(Decoded.TiledWindowDetachDistance).toBe(Distance);
+        }
+    );
+
+    it.each([ -1, 128.5 ])(
+        "rejects a tiled-window detach distance of %s pixels",
+        async (Distance: number) =>
+        {
+            await expect(
+                DecodeSettings({ TiledWindowDetachDistance: Distance })
+            ).rejects.toBeDefined();
+        }
+    );
 
     it("defaults tiled resizing to preserving the other window ratios", async () =>
     {

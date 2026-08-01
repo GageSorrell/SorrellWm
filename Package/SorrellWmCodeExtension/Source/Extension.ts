@@ -55,6 +55,7 @@ import {
     ValidateReactComponentName
 } from "./ReactComponent.js";
 import { isAbsolute, posix, relative, resolve } from "node:path";
+import { IsGitIgnored } from "./Git.js";
 
 interface PackageContext
 {
@@ -755,6 +756,11 @@ async function AddHeader(FileUri: Uri): Promise<void>
     const Folder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(FileUri);
 
     if (Folder === undefined)
+    {
+        return;
+    }
+
+    if (await IsGitIgnored(FileUri.fsPath))
     {
         return;
     }
