@@ -8,6 +8,6 @@ This is the documentation for SorrellWm.
 
 This directory hosts the GitHub-Flavored Markdown documentation for developing in this monorepo.
 
-## Website
+- [Documentation and Storybook website platform](./Developer/Sites/ReadMe.md)
 
-This directory hosts the user-facing documentation website for SorrellWm.
+Generated websites live as independent workspaces below the root `Website/` directory. There is no root SorrellWm documentation website or shared documentation subdomain.

@@ -1,12 +1,14 @@
-# Domain Docs
+<span style="font-size: 12px;">Documentation for SorrellWm.<br />(c) 2024&mdash;2026 Gage Sorrell.  Provided under the [MIT License](../../License.md).</span>
+
+# Domain Documentation
 
 How the engineering skills should consume this repo's domain documentation when exploring the codebase.
 
 ## Before exploring, read these
 
-- **`CONTEXT-MAP.md`** at the repo root — it points at one `CONTEXT.md` per context (workspace). Read each one relevant to the topic.
-- **`docs/adr/`** at the repo root — system-wide decisions that touch the area you're about to work in.
-- **`<workspace>/docs/adr/`** — e.g. `Application/docs/adr/`, `Package/Windows/docs/adr/` — context-scoped decisions for that workspace.
+- **`ContextMap.md`** at the repo root — it points at one `CONTEXT.md` per context (workspace). Read each one relevant to the topic.
+- **`Documentation/Agent/`** at the repo root — system-wide decisions that touch the area you're about to work in.
+- **`<workspace>/Documentation/Adr/`** — *e.g.*, `Application/Documentation/Adr/`, `Package/Windows/Documentation/Adr/` — context-scoped decisions for that workspace.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
@@ -17,28 +19,28 @@ This is a multi-context repo — each npm workspace listed in the root `package.
 ```
 /
 ├── CONTEXT-MAP.md
-├── docs/adr/                          ← system-wide decisions
+├── Documentation/Adr/                          ← system-wide decisions
 ├── Application/
 │   ├── CONTEXT.md
-│   └── docs/adr/
+│   └── Documentation/Adr/
 ├── Package/
 │   ├── AppSettings/
 │   │   ├── CONTEXT.md
-│   │   └── docs/adr/
+│   │   └── Documentation/Adr/
 │   ├── Color/
 │   │   ├── CONTEXT.md
-│   │   └── docs/adr/
+│   │   └── Documentation/Adr/
 │   ├── Windows/
 │   │   ├── CONTEXT.md
-│   │   └── docs/adr/
+│   │   └── Documentation/Adr/
 │   └── ...  (one per Package/* workspace)
 └── Script/
     ├── Setup/
     │   ├── CONTEXT.md
-    │   └── docs/adr/
+    │   └── Documentation/Adr/
     └── WmScript/
         ├── CONTEXT.md
-        └── docs/adr/
+        └── Documentation/Adr/
 ```
 
 Coding standards (as opposed to domain/architectural knowledge) live separately, under `Configuration/Agent/` — see `Agents.md` at the repo root.
@@ -49,8 +51,8 @@ When your output names a domain concept (in an issue title, a refactor proposal,
 
 If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 
-## Flag ADR conflicts
+## Flag Adr conflicts
 
-If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
+If your output contradicts an existing Adr, surface it explicitly rather than silently overriding:
 
-> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+> _Contradicts Adr-0007 (event-sourced orders) — but worth reopening because…_

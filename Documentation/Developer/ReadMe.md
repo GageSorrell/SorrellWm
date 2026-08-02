@@ -3,3 +3,8 @@
 # Developer
 
 This directory hosts the GitHub-Flavored Markdown documentation for developing in this monorepo.
+
+## Guides
+
+- [Application architecture](./ApplicationOverview.md)
+- [Documentation and Storybook website platform](./Sites/ReadMe.md)
