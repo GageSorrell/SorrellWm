@@ -1,0 +1,13 @@
+:root { --ifm-font-family-base: "Segoe UI Variable", "Segoe UI", sans-serif; --ifm-color-primary: #0f6cbd; --ifm-border-radius: 8px; }
+[data-theme="dark"] { --ifm-color-primary: #479ef5; }
+.navbar { background: color-mix(in srgb, var(--ifm-background-surface-color) 88%, transparent); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ifm-toc-border-color); }
+.card, .theme-doc-markdown pre { border-radius: 8px; box-shadow: 0 8px 24px rgb(0 0 0 / 14%); }
+.menu__link, .navbar__link, .pagination-nav__link { border-radius: 6px; }
+.sorrell-docs-landing h1, .sorrell-docs-landing h2 { color: #242424 !important; }
+.sorrell-docs-landing article { color: #242424; background: #fff !important; border-color: #d1d1d1 !important; border-radius: 8px; box-shadow: 0 8px 24px rgb(0 0 0 / 10%); }
+.sorrell-docs-landing article h3 { color: #242424 !important; }
+.sorrell-docs-landing article .text-zinc-400 { color: #616161 !important; }
+[data-theme="dark"] .sorrell-docs-landing h1, [data-theme="dark"] .sorrell-docs-landing h2 { color: #fff !important; }
+[data-theme="dark"] .sorrell-docs-landing article { color: #f5f5f5; background: #1f1f1f !important; border-color: #484848 !important; }
+[data-theme="dark"] .sorrell-docs-landing article h3 { color: #fff !important; }
+[data-theme="dark"] .sorrell-docs-landing article .text-zinc-400 { color: #c7c7c7 !important; }

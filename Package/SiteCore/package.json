@@ -1,0 +1,89 @@
+{
+    "name": "@sorrell/site-core",
+    "version": "1.0.0",
+    "description": "Shared definitions and configuration factories for Sorrell documentation websites.",
+    "type": "module",
+    "license": "MIT",
+    "author": {
+        "name": "Gage Sorrell",
+        "email": "gage@sorrell.sh",
+        "url": "https://sorrell.sh"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git",
+        "directory": "Package/SiteCore"
+    },
+    "exports": {
+        ".": {
+            "types": "./Distribution/index.d.ts",
+            "import": "./Distribution/index.js",
+            "default": "./Distribution/index.js"
+        },
+        "./Docusaurus": {
+            "types": "./Distribution/Docusaurus.d.ts",
+            "import": "./Distribution/Docusaurus.js",
+            "default": "./Distribution/Docusaurus.js"
+        },
+        "./Schema": {
+            "types": "./Distribution/Schema.d.ts",
+            "import": "./Distribution/Schema.js",
+            "default": "./Distribution/Schema.js"
+        },
+        "./Storybook": {
+            "types": "./Distribution/Storybook.d.ts",
+            "import": "./Distribution/Storybook.js",
+            "default": "./Distribution/Storybook.js"
+        },
+        "./Twoslash": {
+            "types": "./Distribution/Twoslash.d.ts",
+            "import": "./Distribution/Twoslash.js",
+            "default": "./Distribution/Twoslash.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "Distribution",
+        "License.md",
+        "ReadMe.md"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "lint": "eslint --config eslint.config.js \"Source/**/*.ts\" \"Test/**/*.ts\"",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json"
+    },
+    "dependencies": {
+        "@shikijs/rehype": "4.4.1",
+        "@shikijs/twoslash": "4.4.1",
+        "effect": "4.0.0-beta.102",
+        "shiki": "4.4.1"
+    },
+    "peerDependencies": {
+        "@docusaurus/core": "^3.10.2",
+        "@docusaurus/preset-classic": "^3.10.2",
+        "@storybook/react-vite": "^10.5.5",
+        "storybook": "^10.5.5"
+    },
+    "peerDependenciesMeta": {
+        "@docusaurus/core": { "optional": true },
+        "@docusaurus/preset-classic": { "optional": true },
+        "@storybook/react-vite": { "optional": true },
+        "storybook": { "optional": true }
+    },
+    "devDependencies": {
+        "@docusaurus/core": "3.10.2",
+        "@docusaurus/preset-classic": "3.10.2",
+        "@docusaurus/types": "3.10.2",
+        "@sorrell/tsconfig": "1.0.0",
+        "@storybook/react-vite": "10.5.5",
+        "@types/node": "26.1.1",
+        "storybook": "10.5.5",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    }
+}

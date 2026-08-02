@@ -17,31 +17,31 @@ export type FFlagKey =
     | FComplexFlagKey;
 
 export type FSimpleFlag =
-{
-    Name: FSimpleFlagKey;
-};
+    {
+        Name: FSimpleFlagKey;
+    };
 
 export type FComplexFlag =
-{
-    Name: FComplexFlagKey;
-    Value: string;
-};
+    {
+        Name: FComplexFlagKey;
+        Value: string;
+    };
 
 export type FFlag =
     | FSimpleFlag
     | FComplexFlag;
 
 export type FFunctionArgument =
-{
-    Name: string;
-    Type: string;
-};
+    {
+        Name: string;
+        Type: string;
+    };
 
 export type FRegisteredFunction =
-{
-    Name: string;
-    FilePath: string;
-    ReturnType: string;
-    Arguments: Array<FFunctionArgument>;
-    Flags: Array<FFlag>;
-};
+    {
+        Name: string;
+        FilePath: string;
+        ReturnType: string;
+        Arguments: Array<FFunctionArgument>;
+        Flags: Array<FFlag>;
+    };

@@ -48,20 +48,28 @@
         "Package/LogClient",
         "Package/Color",
         "Package/DesktopAnimation",
+        "Package/DocsLanding",
+        "Package/DocusaurusThemeEffect",
+        "Package/DocusaurusThemeFluent",
         "Package/InkUi",
         "Package/KeyboardUi",
         "Package/Math",
         "Package/React",
         "Package/SettingsUi",
+        "Package/SiteCore",
         "Package/SorrellUi",
+        "Package/StorybookThemeEffect",
+        "Package/StorybookThemeFluent",
         "Package/TsConfigSorrell",
         "Package/Utility",
         "Package/Windows",
         "Package/WmApi",
         "Package/WindowsUi",
         "Script/Setup",
+        "Script/Site",
         "Script/WmScript",
-        "Package/SorrellWmCodeExtension"
+        "Package/SorrellWmCodeExtension",
+        "Website/*"
     ],
     "allowScripts":
     {
@@ -71,6 +79,9 @@
         "msgpackr-extract@3.0.4": true,
         "@sorrell/windows@1.0.0": true,
         "esbuild": true
+    },
+    "overrides": {
+        "@babel/traverse": "7.29.7"
     },
     "devDependencies": {
         "@effect/language-service": "0.87.0",

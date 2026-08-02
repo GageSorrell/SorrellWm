@@ -1,0 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+:root { --ifm-font-family-base: Inter, sans-serif; --ifm-font-family-monospace: "JetBrains Mono", monospace; --ifm-color-primary: #71717a; --ifm-background-color: #fafafa; }
+[data-theme="dark"] { --ifm-color-primary: #d4d4d8; --ifm-background-color: #09090b; --ifm-background-surface-color: #101012; }
+.sorrell-effect-docs { min-height: 100vh; background-image: linear-gradient(rgb(113 113 122 / 8%) 1px, transparent 1px), linear-gradient(90deg, rgb(113 113 122 / 8%) 1px, transparent 1px); background-size: 32px 32px; }
+.navbar { border-bottom: 1px solid #27272a; background: rgb(9 9 11 / 88%); backdrop-filter: blur(16px); }
+.theme-doc-markdown pre { border: 1px solid #27272a; border-radius: 6px; box-shadow: 0 0 80px rgb(255 255 255 / 4%); }

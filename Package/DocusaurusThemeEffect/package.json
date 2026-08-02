@@ -1,0 +1,11 @@
+{
+    "name": "@sorrell/docusaurus-theme-effect",
+    "version": "1.0.0",
+    "description": "Effect-inspired theme plugin for Sorrell Docusaurus websites.",
+    "type": "module", "license": "MIT",
+    "exports": { ".": { "types": "./Distribution/index.d.ts", "import": "./Distribution/index.js", "default": "./Distribution/index.js" }, "./package.json": "./package.json" },
+    "files": [ "Distribution", "Source/Style.css", "License.md", "ReadMe.md" ],
+    "scripts": { "build": "tsc -p tsconfig.json", "lint": "eslint --config eslint.config.js \"Source/**/*.{ts,tsx}\"", "typecheck": "tsc --noEmit -p tsconfig.json" },
+    "peerDependencies": { "@docusaurus/core": "^3.10.2", "@docusaurus/theme-classic": "^3.10.2", "react": ">=19.2.0 <20", "react-dom": ">=19.2.0 <20" },
+    "devDependencies": { "@docusaurus/core": "3.10.2", "@docusaurus/theme-classic": "3.10.2", "@sorrell/tsconfig": "1.0.0", "@types/node": "26.1.1", "@types/react": "19.2.17", "react": "19.2.7", "react-dom": "19.2.7", "typescript": "6.0.2" }
+}

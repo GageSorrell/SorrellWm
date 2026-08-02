@@ -1,0 +1,1 @@
+{ "extends": "@sorrell/tsconfig", "compilerOptions": { "noEmit": false, "outDir": "./Distribution", "rootDir": "./Source", "types": [ "node" ] }, "include": [ "Source" ] }

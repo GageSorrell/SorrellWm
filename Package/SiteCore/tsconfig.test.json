@@ -1,0 +1,9 @@
+{
+    "extends": "@sorrell/tsconfig",
+    "compilerOptions": {
+        "noEmit": true,
+        "tsBuildInfoFile": "./Intermediate/TypeScript/tsconfig.test.tsbuildinfo",
+        "types": [ "node", "vitest/globals" ]
+    },
+    "include": [ "Source", "Test" ]
+}

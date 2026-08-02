@@ -1,0 +1,3 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap");
+.sorrell-effect-preview { box-sizing: border-box; min-height: 100vh; padding: 1.5rem; color: #e4e4e7; font-family: Inter, sans-serif; background-color: #09090b; background-image: linear-gradient(rgb(113 113 122 / 10%) 1px, transparent 1px), linear-gradient(90deg, rgb(113 113 122 / 10%) 1px, transparent 1px); background-size: 32px 32px; }
+.sorrell-effect-preview--light { color: #18181b; background-color: #fafafa; }
