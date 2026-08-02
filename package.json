@@ -47,6 +47,7 @@
         "Package/Log",
         "Package/LogClient",
         "Package/Color",
+        "Package/DesktopAnimation",
         "Package/InkUi",
         "Package/KeyboardUi",
         "Package/Math",

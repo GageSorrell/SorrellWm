@@ -1,0 +1,85 @@
+{
+    "name": "@sorrell/desktop-animation",
+    "version": "1.0.0",
+    "description": "Declarative Windows 11-style desktop animations for React and Fluent UI teaching popovers.",
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/DesktopAnimation#readme",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/DesktopAnimation",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./AnimationTeachingPopover": {
+            "import": "./Distribution/AnimationTeachingPopover.js",
+            "types": "./Distribution/AnimationTeachingPopover.d.ts"
+        },
+        "./DesktopAnimation": {
+            "import": "./Distribution/DesktopAnimation.js",
+            "types": "./Distribution/DesktopAnimation.d.ts"
+        },
+        "./Model": {
+            "import": "./Distribution/Model.js",
+            "types": "./Distribution/Model.d.ts"
+        },
+        "./Timeline": {
+            "import": "./Distribution/Timeline.js",
+            "types": "./Distribution/Timeline.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "Distribution",
+        "License.md",
+        "ReadMe.md"
+    ],
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "lint": "eslint --config ./eslint.config.js \"Source/**/*.{ts,tsx}\" \"Test/**/*.{ts,tsx}\"",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
+    },
+    "keywords": [
+        "animation",
+        "desktop",
+        "fluent-ui",
+        "react",
+        "windows-11"
+    ],
+    "peerDependencies": {
+        "@fluentui/react-components": "^9.0.0",
+        "react": ">=19.2.0 <20",
+        "react-dom": ">=19.2.0 <20"
+    },
+    "devDependencies": {
+        "@fluentui/react-components": "9.74.4",
+        "@sorrell/tsconfig": "1.0.0",
+        "@testing-library/react": "16.3.2",
+        "@types/node": "26.1.1",
+        "@types/react": "19.2.17",
+        "@types/react-dom": "19.2.3",
+        "cross-env": "10.1.0",
+        "jsdom": "29.1.1",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    },
+    "engines": {
+        "node": ">=26.5.0",
+        "npm": ">=12.0.1"
+    }
+}

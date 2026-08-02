@@ -14,6 +14,7 @@ See `Documentation/Agent/Domain.md` for how to consume these.
 | Package/Log | [Package/Log/CONTEXT.md](./Package/Log/CONTEXT.md) |
 | Package/LogClient | [Package/LogClient/CONTEXT.md](./Package/LogClient/CONTEXT.md) |
 | Package/Color | [Package/Color/CONTEXT.md](./Package/Color/CONTEXT.md) |
+| Package/DesktopAnimation | [Package/DesktopAnimation/CONTEXT.md](./Package/DesktopAnimation/CONTEXT.md) |
 | Package/InkUi | [Package/InkUi/CONTEXT.md](./Package/InkUi/CONTEXT.md) |
 | Package/KeyboardUi | [Package/KeyboardUi/CONTEXT.md](./Package/KeyboardUi/CONTEXT.md) |
 | Package/Math | [Package/Math/CONTEXT.md](./Package/Math/CONTEXT.md) |

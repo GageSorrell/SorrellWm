@@ -1,0 +1,16 @@
+{
+    "extends": "@sorrell/tsconfig",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "noEmit": true,
+        "tsBuildInfoFile": "./Intermediate/TypeScript/tsconfig.test.tsbuildinfo",
+        "types": [
+            "node",
+            "vitest/globals"
+        ]
+    },
+    "include": [
+        "Source",
+        "Test"
+    ]
+}
