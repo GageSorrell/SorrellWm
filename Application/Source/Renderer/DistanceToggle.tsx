@@ -76,8 +76,8 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
 
-    // Alt (fine step) takes precedence over Shift (secondary distance) when
-    // both are held.
+    /* Alt (fine step) takes precedence over Shift (secondary distance) *
+     * when both are held.                                              */
     const IsPrimaryActive = !Props.FineActive && !Props.Active;
     const IsSecondaryActive = !Props.FineActive && Props.Active;
     const IsFineActive = Props.FineActive;
@@ -90,8 +90,8 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
             <span className={ Styles.Label }>Step Size</span>
             <span className={ Styles.Values }>
                 <span className={ Styles.Pair }>
-                    { /* The default step has no modifier of its own, but still reserves
-                         the same width a keybind would take up, so all three values align. */ }
+                    { /* The default step has no modifier of its own, but still reserves    *
+                       * the same width a keybind would take up, so all three values align. */ }
                     <span className={ Styles.KeybindPlaceholder }>
                         <Keybind Keys={ GetShortcutParts(Props.Shortcut) } />
                     </span>

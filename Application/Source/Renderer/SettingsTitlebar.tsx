@@ -132,7 +132,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link SettingsTitlebar}. */
+/** {@inheritDoc SettingsTitlebar} */
 export interface SettingsTitlebarProps
 {
     /** Every registered `Setting`/`SettingGroup`, from `UseSettingControls`, to search over. */

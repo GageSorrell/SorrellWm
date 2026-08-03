@@ -55,7 +55,7 @@ export interface CaseStudyListLink
     readonly label: string;
 }
 
-/** Props for {@link CaseStudyList}. */
+/** {@inheritDoc CaseStudyList} */
 export interface CaseStudyListProps
 {
     readonly className?: string;

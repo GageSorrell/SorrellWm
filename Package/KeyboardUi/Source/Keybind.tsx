@@ -27,7 +27,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link Keybind}. */
+/** {@inheritDoc Keybind} */
 export interface KeybindProps
 {
     /** The shortcut's keys, in order, e.g. `[<Grid16Regular />, "Ctrl", "T"]`. */

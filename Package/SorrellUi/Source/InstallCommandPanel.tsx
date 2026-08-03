@@ -74,7 +74,7 @@ const InstallCommand = (PackageManagerValue: PackageManager, PackageName: string
     }
 };
 
-/** Props for {@link InstallCommandPanel}. */
+/** {@inheritDoc InstallCommandPanel} */
 export interface InstallCommandPanelProps
 {
     readonly className?: string;

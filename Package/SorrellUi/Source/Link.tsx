@@ -54,7 +54,7 @@ const LinkVariants = cva(
 
 type LinkVariantProps = VariantProps<typeof LinkVariants>;
 
-/** Props for {@link Link}. */
+/** {@inheritDoc Link} */
 export type LinkProps = {
     readonly active?: boolean;
     readonly children: ReactNode;

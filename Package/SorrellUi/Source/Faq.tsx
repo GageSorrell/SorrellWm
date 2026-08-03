@@ -60,7 +60,7 @@ export interface FaqAction
     readonly label: string;
 }
 
-/** Props for {@link Faq}. */
+/** {@inheritDoc Faq} */
 export interface FaqProps
 {
     readonly action?: FaqAction;

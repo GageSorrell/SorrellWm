@@ -35,7 +35,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link KeybindBadge}. */
+/** {@inheritDoc KeybindBadge} */
 export interface KeybindBadgeProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "type">
 {
     /** The keys to display, in order, e.g. `[<WindowsLogo />, "Ctrl", "T"]`. */

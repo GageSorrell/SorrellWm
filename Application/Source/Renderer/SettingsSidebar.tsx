@@ -337,7 +337,7 @@ const HandleNavItemSelect = (
     }
 };
 
-/** Props for {@link SettingsSidebar}. */
+/** {@inheritDoc SettingsSidebar} */
 export interface SettingsSidebarProps
 {
     readonly MountNode?: HTMLElement | undefined;

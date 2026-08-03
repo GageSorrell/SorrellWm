@@ -24,7 +24,7 @@ const VeryDarkLuminance = 0.025;
 const TerminalBackgroundContext =
     React.createContext<string | null | undefined>(undefined);
 
-/** Props for {@link BackdropProvider}. */
+/** {@inheritDoc BackdropProvider} */
 export interface BackdropProviderProps extends React.PropsWithChildren
 {
     /** Backdrop color. Defaults to a darkened terminal background color. */

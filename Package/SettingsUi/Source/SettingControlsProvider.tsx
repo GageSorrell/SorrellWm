@@ -25,7 +25,7 @@ import
     type SettingControlsContextValue
 } from "./SettingControlsContext.js";
 
-/** Props for {@link SettingControlsProvider}. */
+/** {@inheritDoc SettingControlsProvider} */
 export interface SettingControlsProviderProps
 {
     readonly children?: ReactNode;

@@ -74,7 +74,7 @@ type DisplayLayoutProps =
 
 type DisplayInkTextProps = Omit<Ink.TextProps, "children">;
 
-/** Props for {@link Display}. */
+/** {@inheritDoc Display} */
 export type DisplayProps =
     DisplayInkTextProps &
     DisplayLayoutProps &

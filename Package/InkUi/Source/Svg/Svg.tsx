@@ -38,7 +38,7 @@ export type SvgRasterization =
     | "crisp"
     | "smooth";
 
-/** Props for {@link Svg}. Dimensions use the same terminal-cell units as Ink's `Box`. */
+/** {@inheritDoc Svg} */
 export interface SvgProps extends SizeProps
 {
     readonly children: string | SvgElement;

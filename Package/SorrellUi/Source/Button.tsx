@@ -78,7 +78,7 @@ const ButtonVariants = cva(
     }
 );
 
-/** Props for {@link Button}. */
+/** {@inheritDoc Button} */
 export type ButtonProps = ButtonPrimitive.Props & VariantProps<typeof ButtonVariants>;
 
 /**

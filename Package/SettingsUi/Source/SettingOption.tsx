@@ -42,7 +42,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link SettingOption}. */
+/** {@inheritDoc SettingOption} */
 export interface SettingOptionProps
 {
     /** The row's main content, e.g. a checkbox with its label. */

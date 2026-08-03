@@ -45,7 +45,7 @@ export interface DirectionalPadDirection
     readonly Shortcut: ShortcutDto;
 }
 
-/** Props for {@link DirectionalPad}. Any direction left unset is not rendered. */
+/** {@inheritDoc DirectionalPad} */
 export interface DirectionalPadProps
 {
     readonly Down?: DirectionalPadDirection;

@@ -73,7 +73,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link KeybindEditorDialogBody}. */
+/** {@inheritDoc KeybindEditorDialogBody} */
 export interface KeybindEditorDialogBodyProps
 {
     readonly Description?: ReactNode;

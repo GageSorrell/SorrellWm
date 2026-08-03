@@ -13,7 +13,7 @@ import type * as React from "react";
 
 import { Cn } from "./ClassName.js";
 
-/** Props for {@link SectionDivider}. */
+/** {@inheritDoc SectionDivider} */
 export interface SectionDividerProps
 {
     readonly className?: string;

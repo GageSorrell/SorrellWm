@@ -99,7 +99,7 @@ type CssTextProps = Pick<React.CSSProperties,
     | "wordBreak"
     | "wordSpacing">;
 
-/** Props for {@link Text}. CSS typography properties are provided directly. */
+/** {@inheritDoc Text} */
 export type TextProps =
     Ink.TextProps &
     LayoutProps &

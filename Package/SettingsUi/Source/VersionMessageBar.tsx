@@ -42,7 +42,7 @@ export interface VersionMessageBarAction
 /** The color/icon treatment of a {@link VersionMessageBar}. */
 export type VersionMessageBarIntent = "Success" | "Warn";
 
-/** Props for {@link VersionMessageBar}. */
+/** {@inheritDoc VersionMessageBar} */
 export interface VersionMessageBarProps
 {
     /** A button placed on its own row, e.g. "Install now". Providing one switches to a multiline layout. */

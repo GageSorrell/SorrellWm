@@ -25,7 +25,7 @@ export interface CallToActionLink
     readonly label: string;
 }
 
-/** Props for {@link CallToAction}. */
+/** {@inheritDoc CallToAction} */
 export interface CallToActionProps
 {
     readonly children?: ReactNode;

@@ -26,7 +26,7 @@ export type ElevationShadowDefaults = Partial<Record<
     Omit<ShadowDefaults, "elevation">
 >>;
 
-/** Props for {@link ShadowProvider}. */
+/** {@inheritDoc ShadowProvider} */
 export interface ShadowProviderProps extends React.PropsWithChildren, ShadowDefaults
 {
     /** General defaults, overridden by direct provider props. */

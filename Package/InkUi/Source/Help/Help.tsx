@@ -78,7 +78,7 @@ interface InternalHelpContextValue extends HelpContextValue
 
 const HelpContext = React.createContext<InternalHelpContextValue | undefined>(undefined);
 
-/** Props for {@link HelpProvider}. */
+/** {@inheritDoc HelpProvider} */
 export interface HelpProviderProps extends React.PropsWithChildren
 {
     /** Compact-border radius used for tooltip surfaces and Help Mode targets. */
@@ -91,7 +91,7 @@ export interface HelpProviderProps extends React.PropsWithChildren
     readonly icon?: React.ReactNode;
 }
 
-/** Props for {@link Tooltip}. */
+/** {@inheritDoc Tooltip} */
 export interface TooltipProps
 {
     readonly children: React.ReactElement;

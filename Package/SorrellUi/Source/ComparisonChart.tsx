@@ -35,7 +35,7 @@ export interface ComparisonSeries
     readonly linePath: string;
 }
 
-/** Props for {@link ComparisonChart}. */
+/** {@inheritDoc ComparisonChart} */
 export interface ComparisonChartProps
 {
     readonly className?: string;

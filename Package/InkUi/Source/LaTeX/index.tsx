@@ -19,7 +19,7 @@ import {
 import { pathToFileURL } from "node:url";
 import { useTheme } from "../Theme.tsx";
 
-/** Props for {@link Latex}. The source is raw tex without math delimiters. */
+/** {@inheritDoc Latex} */
 export interface LatexProps extends Omit<SvgProps, "children">
 {
     /** Raw tex source, such as `String.raw` followed by `\\frac{a}{b}`. */

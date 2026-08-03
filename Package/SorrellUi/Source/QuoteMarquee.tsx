@@ -62,7 +62,7 @@ export interface Quote
     readonly text: string;
 }
 
-/** Props for {@link QuoteMarquee}. */
+/** {@inheritDoc QuoteMarquee} */
 export interface QuoteMarqueeProps
 {
     readonly className?: string;

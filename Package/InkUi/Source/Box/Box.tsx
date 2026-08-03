@@ -40,7 +40,7 @@ import { createRequire } from "node:module";
 import { image2sixel } from "sixel";
 import { useTerminalBackgroundColor } from "../Backdrop/index.js";
 
-/** Props for {@link Box}. */
+/** {@inheritDoc Box} */
 export type BoxProps = Omit<Ink.BoxProps, "borderStyle"> & BoxMouseHandlers &
 {
     readonly children?: React.ReactNode;

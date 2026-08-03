@@ -37,7 +37,7 @@ export interface HeroSocialProofLogo
     readonly node: ReactNode;
 }
 
-/** Props for {@link Hero}. */
+/** {@inheritDoc Hero} */
 export interface HeroProps
 {
     /** Eyebrow badge, rendered as a link above the heading. Omit to hide the badge. */

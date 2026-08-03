@@ -36,7 +36,7 @@ export interface FeatureGridItem
     readonly title: string;
 }
 
-/** Props for {@link FeatureGrid}. */
+/** {@inheritDoc FeatureGrid} */
 export interface FeatureGridProps
 {
     /** Rendered beside the heading, e.g. a {@link ComparisonChart}. */

@@ -13,7 +13,7 @@ import type * as React from "react";
 
 import { Cn } from "./ClassName.js";
 
-/** Props for {@link GridBackground}. */
+/** {@inheritDoc GridBackground} */
 export interface GridBackgroundProps
 {
     readonly className?: string;

@@ -35,7 +35,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link CompactKey}. */
+/** {@inheritDoc CompactKey} */
 export interface CompactKeyProps
 {
     /**

@@ -41,7 +41,7 @@ export interface ScrollbarGeometry
     readonly Start: number;
 }
 
-/** Props for {@link ScrollView}. */
+/** {@inheritDoc ScrollView} */
 export interface ScrollViewProps extends Omit<
     BoxProps,
     "children" | "overflow" | "overflowX" | "overflowY"

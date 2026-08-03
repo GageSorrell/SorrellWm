@@ -20,7 +20,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link SettingToggle}. */
+/** {@inheritDoc SettingToggle} */
 export interface SettingToggleProps
 {
     /** An accessible name for the switch, since its visible label only ever reads "On"/"Off". */

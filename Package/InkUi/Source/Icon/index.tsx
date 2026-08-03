@@ -12,7 +12,7 @@
 import * as React from "react";
 import { Svg, type SvgProps } from "../Svg/Svg.tsx";
 
-/** Props for {@link Icon}. */
+/** {@inheritDoc Icon} */
 export interface IconProps
 {
     readonly fallback?: SvgProps["fallback"];

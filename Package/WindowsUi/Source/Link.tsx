@@ -46,7 +46,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link Link}. Identical to Fluent UI's own `LinkProps`. */
+/** {@inheritDoc Link} */
 export type LinkProps = FluentLinkProps;
 
 export/**

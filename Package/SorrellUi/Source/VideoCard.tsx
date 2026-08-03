@@ -30,7 +30,7 @@ const PlayIconWrapperClassName =
     "flex h-16 w-16 items-center justify-center rounded-full bg-white/80 text-zinc-900 " +
     "backdrop-blur-sm transition-transform group-hover:scale-105";
 
-/** Props for {@link VideoCard}. */
+/** {@inheritDoc VideoCard} */
 export interface VideoCardProps
 {
     readonly className?: string;
