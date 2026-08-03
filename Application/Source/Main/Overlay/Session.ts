@@ -478,6 +478,9 @@ export interface OverlaySessionImpl
     /** The application name of the window from which the overlay was activated, if any. */
     readonly GetActivationApplicationName: Effect.Effect<Option.Option<string>>;
 
+    /** The executable path of the window from which the overlay was activated, if any. */
+    readonly GetActivationApplicationExecutablePath: Effect.Effect<Option.Option<string>>;
+
     /** The current window from which the overlay was activated, if any. */
     readonly GetActivationWindow: Effect.Effect<Option.Option<Handle.HWND>>;
 
@@ -1630,6 +1633,10 @@ const Live = Layer.effect(
             Current,
             FineModifierHeld: Ref.get(FineModifierHeldRef),
             FocusFailure: Ref.get(FocusFailureRef),
+            GetActivationApplicationExecutablePath: pipe(
+                Ref.get(ActivationWindow),
+                Effect.map(Option.flatMap(Window.GetExecutablePath))
+            ),
             GetActivationApplicationName: pipe(
                 Ref.get(ActivationWindow),
                 Effect.map(Option.flatMap(GetApplicationName))

@@ -76,6 +76,9 @@ export interface NativeBinding
         readonly GetApplicationNameFromPath?: (
             ExecutablePath: string
         ) => Attempt.NativeAttempt<string>;
+        readonly GetExecutablePath?: (
+            Window: Handle.HWND
+        ) => Attempt.NativeAttempt<string>;
         readonly Capture?: (
             Window: Handle.HWND
         ) => Attempt.NativeAttempt<string>;

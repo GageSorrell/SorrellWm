@@ -146,6 +146,9 @@ const SettingsShell = (): React.JSX.Element =>
 
     const SelectedSection = Path?.Section ?? SettingsSectionId.Home;
     const ApplicationName = Path?.Params.Name;
+    const TargetExecutablePath = Path?.Params.Source === "Overlay"
+        ? Path.Params.ExecutablePath
+        : undefined;
 
     // Wait one frame for the just-selected section's "display: none" to lift and its layout
     // to settle, so `scrollIntoView` has real geometry to scroll to.
@@ -255,7 +258,9 @@ const SettingsShell = (): React.JSX.Element =>
                     </div>
 
                     { SelectedSection === SettingsSectionId.PerAppSettings && (
-                        <SettingsPerApp />
+                        <SettingsPerApp
+                            TargetApplicationName={ ApplicationName }
+                            TargetExecutablePath={ TargetExecutablePath } />
                     ) }
 
                     { SelectedSection === SettingsSectionId.Home && (

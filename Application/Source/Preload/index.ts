@@ -24,11 +24,13 @@ import {
     IsGeneralSettingsPatch,
     IsOverlaySettingsDto,
     IsPerAppSettingPatch,
+    IsPerAppSettingsApplicationsDto,
     IsPerAppSettingsEntriesDto,
     IsPerAppSettingsEntryDto,
     type OverlaySettingsDto,
     type OverlaySettingsPatch,
     type PerAppSettingPatch,
+    type PerAppSettingsApplicationDto,
     type PerAppSettingsEntryDto
 } from "../Shared/AppSettings.ts";
 import {
@@ -412,9 +414,35 @@ const GetPerAppSettings = async (): Promise<ReadonlyArray<PerAppSettingsEntryDto
     return Response;
 };
 
-const AddPerAppSettings = async (): Promise<PerAppSettingsEntryDto | null> =>
+const GetRecentPerAppSettingsApplications = async (): Promise<
+    ReadonlyArray<PerAppSettingsApplicationDto>
+> =>
 {
-    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.PerAppSettingsAdd);
+    const Response: unknown = await ipcRenderer.invoke(
+        AppApiChannel.PerAppSettingsRecentGet
+    );
+
+    if (!IsPerAppSettingsApplicationsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid recent applications.");
+    }
+
+    return Response;
+};
+
+const AddPerAppSettings = async (
+    ExecutablePath?: string
+): Promise<PerAppSettingsEntryDto | null> =>
+{
+    if (ExecutablePath !== undefined && ExecutablePath.trim().length === 0)
+    {
+        throw new TypeError("The requested application executable path is invalid.");
+    }
+
+    const Response: unknown = await ipcRenderer.invoke(
+        AppApiChannel.PerAppSettingsAdd,
+        ExecutablePath
+    );
 
     if (Response !== null && !IsPerAppSettingsEntryDto(Response))
     {
@@ -512,6 +540,7 @@ const applicationApi: AppApi = Object.freeze({
     perAppSettings: Object.freeze({
         add: AddPerAppSettings,
         get: GetPerAppSettings,
+        getRecent: GetRecentPerAppSettingsApplications,
         set: SetPerAppSettings
     }),
     platform: process.platform,

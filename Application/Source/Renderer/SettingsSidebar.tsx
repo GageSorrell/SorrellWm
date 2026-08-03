@@ -10,7 +10,7 @@
  * @license   MIT
  */
 
-import type * as React from "react";
+import * as React from "react";
 import {
     AppsColor,
     ArrowSquareColor,
@@ -356,6 +356,10 @@ const SettingsSidebar = (
     const Styles = UseStyles();
 
     const NavDrawerStyle = mergeClasses(Styles.Base, Styles.NavDrawerBase);
+    const NavigationBody = React.useMemo(
+        () => <NavigationItems SelectedSection={ SelectedSection } />,
+        [ SelectedSection ]
+    );
 
     if (Type === "overlay")
     {
@@ -370,7 +374,7 @@ const SettingsSidebar = (
                 selectedValue={ SelectedSection }
                 type="overlay">
                 <NavDrawerBody>
-                    <NavigationItems SelectedSection={ SelectedSection } />
+                    { NavigationBody }
                 </NavDrawerBody>
 
                 <NavigationFooter />
@@ -387,7 +391,7 @@ const SettingsSidebar = (
             selectedValue={ SelectedSection }
             type="inline">
             <NavDrawerBody>
-                <NavigationItems SelectedSection={ SelectedSection } />
+                { NavigationBody }
             </NavDrawerBody>
 
             <NavigationFooter />

@@ -18,6 +18,10 @@ import {
     Button,
     Caption1,
     Dropdown,
+    MessageBar,
+    MessageBarActions,
+    MessageBarBody,
+    MessageBarTitle,
     Option,
     type OptionOnSelectData,
     type SelectionEvents,
@@ -36,6 +40,7 @@ import {
     type NewWindowBehavior,
     NewWindowBehaviors,
     type PerAppSettingPatch,
+    type PerAppSettingsApplicationDto,
     type PerAppSettingsEntryDto
 } from "../Shared/AppSettings.js";
 import { SettingOption, SettingToggle } from "@sorrell/settings-ui";
@@ -97,6 +102,38 @@ const UseStyles = makeStyles({
         textOverflow: "ellipsis",
         whiteSpace: "nowrap"
     },
+    RecentIdentity:
+    {
+        alignItems: "center",
+        display: "flex",
+        gap: tokens.spacingHorizontalM,
+        minWidth: 0
+    },
+    RecentItem:
+    {
+        alignItems: "center",
+        backgroundColor: tokens.colorNeutralBackground1,
+        borderRadius: tokens.borderRadiusLarge,
+        display: "flex",
+        gap: tokens.spacingHorizontalM,
+        justifyContent: "space-between",
+        padding: tokens.spacingVerticalS
+    },
+    RecentList:
+    {
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalXS,
+        listStyle: "none",
+        margin: 0,
+        padding: 0
+    },
+    RecentSection:
+    {
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalS
+    },
     Toolbar:
     {
         display: "flex",
@@ -104,6 +141,12 @@ const UseStyles = makeStyles({
         width: "100%"
     }
 });
+
+interface SettingsPerAppProps
+{
+    readonly TargetApplicationName?: string | undefined;
+    readonly TargetExecutablePath?: string | undefined;
+}
 
 const SortEntries = (
     Entries: ReadonlyArray<PerAppSettingsEntryDto>
@@ -113,11 +156,17 @@ const SortEntries = (
 ) => Left.FriendlyName.localeCompare(Right.FriendlyName));
 
 export/** Render executable selection and per-application behavior controls. */
-const SettingsPerApp = (): React.JSX.Element =>
+const SettingsPerApp = ({
+    TargetApplicationName,
+    TargetExecutablePath
+}: SettingsPerAppProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
     const [ Entries, SetEntries ] = useState<
         ReadonlyArray<PerAppSettingsEntryDto> | null
+    >(null);
+    const [ RecentApplications, SetRecentApplications ] = useState<
+        ReadonlyArray<PerAppSettingsApplicationDto> | null
     >(null);
     const [ IsAdding, SetIsAdding ] = useState<boolean>(false);
 
@@ -137,6 +186,18 @@ const SettingsPerApp = (): React.JSX.Element =>
                 "Settings",
                 "Could not load per-application settings."
             ));
+        window.sorrell.perAppSettings.getRecent()
+            .then((Loaded: ReadonlyArray<PerAppSettingsApplicationDto>) =>
+            {
+                if (!IsCancelled)
+                {
+                    SetRecentApplications(Loaded.slice(0, 5));
+                }
+            })
+            .catch(Logging.ReportRejection(
+                "Settings",
+                "Could not load recent applications."
+            ));
 
         return (): void =>
         {
@@ -153,10 +214,10 @@ const SettingsPerApp = (): React.JSX.Element =>
                     Entry.ExecutablePath === Updated.ExecutablePath ? Updated : Entry)));
     };
 
-    const AddApplication = (): void =>
+    const AddApplication = (ExecutablePath?: string): void =>
     {
         SetIsAdding(true);
-        window.sorrell.perAppSettings.add()
+        window.sorrell.perAppSettings.add(ExecutablePath)
             .then((Added: PerAppSettingsEntryDto | null) =>
             {
                 if (Added === null)
@@ -176,6 +237,10 @@ const SettingsPerApp = (): React.JSX.Element =>
                     ) => Entry.ExecutablePath !== Added.ExecutablePath);
                     return SortEntries([ ...WithoutDuplicate, Added ]);
                 });
+                SetRecentApplications((
+                    Current: ReadonlyArray<PerAppSettingsApplicationDto> | null
+                ) => Current?.filter((Application: PerAppSettingsApplicationDto) =>
+                    Application.ExecutablePath !== Added.ExecutablePath) ?? null);
             })
             .catch(Logging.ReportRejection(
                 "Settings",
@@ -183,6 +248,18 @@ const SettingsPerApp = (): React.JSX.Element =>
             ))
             .finally(() => SetIsAdding(false));
     };
+
+    const ConfiguredPaths = new Set(
+        (Entries ?? [ ]).map((Entry: PerAppSettingsEntryDto) =>
+            Entry.ExecutablePath.toLowerCase())
+    );
+    const VisibleRecentApplications = (RecentApplications ?? [ ])
+        .filter((Application: PerAppSettingsApplicationDto) =>
+            !ConfiguredPaths.has(Application.ExecutablePath.toLowerCase()))
+        .slice(0, 5);
+    const ShowTargetMessage = Entries !== null
+        && TargetExecutablePath !== undefined
+        && !ConfiguredPaths.has(TargetExecutablePath.toLowerCase());
 
     const Commit = (
         Entry: PerAppSettingsEntryDto,
@@ -205,14 +282,84 @@ const SettingsPerApp = (): React.JSX.Element =>
 
     return (
         <>
+            { ShowTargetMessage && (
+                <MessageBar intent="info">
+                    <MessageBarBody>
+                        <MessageBarTitle>
+                            Per-app settings have not been created
+                        </MessageBarTitle>
+                        { TargetApplicationName === undefined
+                            ? "The focused application is using the default window behavior."
+                            : `${ TargetApplicationName } is using the default window behavior.` }
+                    </MessageBarBody>
+                    <MessageBarActions>
+                        <Button
+                            disabled={ IsAdding }
+                            onClick={ () => AddApplication(TargetExecutablePath) }>
+                            Add
+                        </Button>
+                    </MessageBarActions>
+                </MessageBar>
+            ) }
+
             <div className={ Styles.Toolbar }>
                 <Button
                     disabled={ IsAdding }
                     icon={ <AddRegular /> }
-                    onClick={ AddApplication }>
+                    onClick={ () => AddApplication() }>
                     Add Application
                 </Button>
             </div>
+
+            { VisibleRecentApplications.length > 0 && (
+                <section
+                    aria-labelledby="recent-applications-title"
+                    className={ Styles.RecentSection }>
+                    <Text
+                        as="h3"
+                        id="recent-applications-title"
+                        size={ 400 }
+                        weight="semibold">
+                        Recently opened applications
+                    </Text>
+                    <ul className={ Styles.RecentList }>
+                        { VisibleRecentApplications.map((
+                            Application: PerAppSettingsApplicationDto
+                        ) => (
+                            <li
+                                className={ Styles.RecentItem }
+                                key={ Application.ExecutablePath }>
+                                <span className={ Styles.RecentIdentity }>
+                                    { Application.Icon === undefined
+                                        ? (
+                                            <AppGenericRegular
+                                                className={ Styles.ApplicationIcon } />
+                                        )
+                                        : (
+                                            <img
+                                                alt=""
+                                                className={ Styles.ApplicationIcon }
+                                                src={
+                                                    `data:image/png;base64,${ Application.Icon }`
+                                                } />
+                                        ) }
+                                    <Text weight="semibold">
+                                        { Application.FriendlyName }
+                                    </Text>
+                                </span>
+                                <Button
+                                    aria-label={ `Add ${ Application.FriendlyName }` }
+                                    disabled={ IsAdding }
+                                    onClick={ () => AddApplication(
+                                        Application.ExecutablePath
+                                    ) }>
+                                    Add
+                                </Button>
+                            </li>
+                        )) }
+                    </ul>
+                </section>
+            ) }
 
             { Entries === null && (
                 <p className={ Styles.Loading }>Loading…</p>

@@ -78,6 +78,12 @@ interface TiledDragRuntimeState
     LastMovingWindow: Option.Option<Handle.HWND>;
 }
 
+interface OverlayFollowRuntimeState
+{
+    Active: boolean;
+    LastMovingActivationWindow: Option.Option<Handle.HWND>;
+}
+
 /** A recognized command has no executor implementation yet. */
 export class UnsupportedCommandError extends
     Data.TaggedError("UnsupportedCommandError")<{
@@ -197,9 +203,12 @@ const OnActivate = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
-    TilingManager: Tiling.Manager.TilingManagerImpl
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    OverlayFollowRuntime: OverlayFollowRuntimeState
 ) => Effect.gen(function*()
 {
+    OverlayFollowRuntime.Active = false;
+    OverlayFollowRuntime.LastMovingActivationWindow = Option.none();
     const StaticOverlay = (yield* DevFeatures).StaticOverlay;
     const ActivationTarget: Option.Option<OverlayActivationTarget> = pipe(
         Window.GetForegroundWindow(),
@@ -270,6 +279,7 @@ const OnActivate = (
         }
 
         yield* BrowserWindows.Show(BrowserWindow.Key.Overlay);
+        OverlayFollowRuntime.Active = true;
     }
     else
     {
@@ -1632,21 +1642,93 @@ const PollTiledInsertTarget = (
     }
 });
 
-const PollTiledWindowDetach = (
-    Settings: AppSettings.Service,
-    TilingManager: Tiling.Manager.TilingManagerImpl,
-    RuntimeState: TiledDragRuntimeState
+const FollowOverlayDuringNativeMove = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Session: OverlaySession.OverlaySessionImpl,
+    OverlayFollowRuntime: OverlayFollowRuntimeState,
+    MovingWindow: Option.Option<Handle.HWND>
 ) => Effect.gen(function*()
 {
+    if (!OverlayFollowRuntime.Active)
+    {
+        OverlayFollowRuntime.LastMovingActivationWindow = Option.none();
+        return;
+    }
+
+    const ActivationWindow = yield* Session.GetActivationWindow;
+    if (Option.isNone(ActivationWindow))
+    {
+        OverlayFollowRuntime.LastMovingActivationWindow = Option.none();
+        return;
+    }
+
+    const IsActivationWindowMoving = Option.isSome(MovingWindow)
+        && ActivationWindow.value === MovingWindow.value;
+    // Windows clears hwndMoveSize as soon as the drag is released. Remembering
+    // the prior match gives us one final bounds sample at the exact release
+    // position instead of leaving the overlay at the preceding poll frame.
+    const WasActivationWindowMoving = Option.isSome(
+        OverlayFollowRuntime.LastMovingActivationWindow
+    ) && OverlayFollowRuntime.LastMovingActivationWindow.value === ActivationWindow.value;
+
+    if (!IsActivationWindowMoving && !WasActivationWindowMoving)
+    {
+        return;
+    }
+
+    OverlayFollowRuntime.LastMovingActivationWindow = IsActivationWindowMoving
+        ? ActivationWindow
+        : Option.none();
+
+    if (
+        (yield* Session.Current) === OverlayScreenId.TiledInsertWindow
+        || !(yield* BrowserWindows.IsVisible(BrowserWindow.Key.Overlay))
+    )
+    {
+        return;
+    }
+
+    const MovingBounds = Window.GetWindowRect(ActivationWindow.value);
+
+    if (Option.isSome(MovingBounds))
+    {
+        yield* BrowserWindows.SetBounds(
+            BrowserWindow.Key.Overlay,
+            GetOverlayBoundsFor(MovingBounds.value)
+        );
+    }
+});
+
+const PollTiledWindowDetach = (
+    BrowserWindows: BrowserWindow.BrowserWindowImpl,
+    Session: OverlaySession.OverlaySessionImpl,
+    Settings: AppSettings.Service,
+    TilingManager: Tiling.Manager.TilingManagerImpl,
+    RuntimeState: TiledDragRuntimeState,
+    OverlayFollowRuntime: OverlayFollowRuntimeState
+) => Effect.gen(function*()
+{
+    const MovingWindow = Window.GetMovingWindow();
+    yield* FollowOverlayDuringNativeMove(
+        BrowserWindows,
+        Session,
+        OverlayFollowRuntime,
+        MovingWindow
+    ).pipe(Effect.catch((Cause: unknown) => Logging.LogWarning(
+        "Overlay",
+        "Could not follow the activation window during a native move.",
+        Cause
+    )));
+
     const Snapshot = yield* TilingManager.Snapshot;
-    const MovingWindow = Window.GetMovingWindow().pipe(
+    const MovingTiledWindow = MovingWindow.pipe(
         Option.filter((WindowValue: Handle.HWND): boolean =>
             IsWindowTiled(Snapshot, WindowValue))
     );
 
-    if (Option.isSome(MovingWindow))
+    if (Option.isSome(MovingTiledWindow))
     {
-        RuntimeState.LastMovingWindow = MovingWindow;
+        RuntimeState.LastMovingWindow = MovingTiledWindow;
         return;
     }
 
@@ -1714,6 +1796,7 @@ const ExecuteUi = (
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
     InsertRuntime: TiledInsertRuntimeState,
+    OverlayFollowRuntime: OverlayFollowRuntimeState,
     Command: Ui.UiCommand
 ) =>
 {
@@ -1727,12 +1810,15 @@ const ExecuteUi = (
                     BrowserWindows,
                     Settings,
                     Session,
-                    TilingManager
+                    TilingManager,
+                    OverlayFollowRuntime
                 );
             });
         case "Deactivate":
             return Effect.gen(function*()
             {
+                OverlayFollowRuntime.Active = false;
+                OverlayFollowRuntime.LastMovingActivationWindow = Option.none();
                 const TiledInsertTarget = yield* Session.TiledInsertTarget;
                 if (Option.isSome(TiledInsertTarget))
                 {
@@ -1996,7 +2082,8 @@ const MakeExecute = (
     Settings: AppSettings.Service,
     Session: OverlaySession.OverlaySessionImpl,
     TilingManager: Tiling.Manager.TilingManagerImpl,
-    InsertRuntime: TiledInsertRuntimeState
+    InsertRuntime: TiledInsertRuntimeState,
+    OverlayFollowRuntime: OverlayFollowRuntimeState
 ): CommandExecutorImpl["Execute"] => Effect.fn("CommandExecutor.Execute")(
     function* (Command: CommandResolver.Resolved)
     {
@@ -2015,6 +2102,7 @@ const MakeExecute = (
                     Session,
                     TilingManager,
                     InsertRuntime,
+                    OverlayFollowRuntime,
                     Command
                 );
             case "Wm":
@@ -2053,12 +2141,17 @@ const Live = Layer.effect(
         const DragRuntime: TiledDragRuntimeState = {
             LastMovingWindow: Option.none()
         };
+        const OverlayFollowRuntime: OverlayFollowRuntimeState = {
+            Active: false,
+            LastMovingActivationWindow: Option.none()
+        };
         const Execute = MakeExecute(
             BrowserWindows,
             Settings,
             Session,
             TilingManager,
-            InsertRuntime
+            InsertRuntime,
+            OverlayFollowRuntime
         );
 
         yield* pipe(
@@ -2067,7 +2160,14 @@ const Live = Layer.effect(
                 (Event._tag === "Closed" || Event._tag === "Hidden")
                 && Event.Key === BrowserWindow.Key.Overlay
             ),
-            Stream.runForEach(() => Session.ClearFocusPreview),
+            Stream.runForEach(() => pipe(
+                Effect.sync(() =>
+                {
+                    OverlayFollowRuntime.Active = false;
+                    OverlayFollowRuntime.LastMovingActivationWindow = Option.none();
+                }),
+                Effect.andThen(Session.ClearFocusPreview)
+            )),
             Effect.forkScoped({ startImmediately: true })
         );
 
@@ -2262,7 +2362,14 @@ const Live = Layer.effect(
         );
 
         yield* pipe(
-            PollTiledWindowDetach(Settings, TilingManager, DragRuntime),
+            PollTiledWindowDetach(
+                BrowserWindows,
+                Session,
+                Settings,
+                TilingManager,
+                DragRuntime,
+                OverlayFollowRuntime
+            ),
             Effect.catch((Cause: unknown) => Logging.LogWarning(
                 "Tiling.Drag",
                 "Could not resolve a completed tiled-window drag.",

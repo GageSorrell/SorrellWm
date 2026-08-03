@@ -380,3 +380,6 @@ them across multiple machines.
 
 - **[Defining cluster entities](https://github.com/Effect-TS/effect/blob/main/ai-docs/src/80_cluster/10_entities.ts)**: Define distributed entity RPCs and run them in a cluster.
 
+## Miscellaneous
+
+Always use the free function `pipe`, rather  than the function property `.pipe(...)`

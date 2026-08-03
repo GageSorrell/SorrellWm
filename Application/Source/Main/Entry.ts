@@ -24,7 +24,7 @@ import * as TitlebarFlyout from "./TitlebarFlyout.ts";
 import * as Tray from "./Tray.ts";
 import * as Update from "./Update.ts";
 import { Box, IntPoint } from "@sorrell/math";
-import { Effect, Layer, ManagedRuntime, Option, Schema, Stream, pipe } from "effect";
+import { Effect, Layer, ManagedRuntime, Option, Result, Schema, Stream, pipe } from "effect";
 import {
     BrowserWindow as ElectronBrowserWindow,
     type Event,
@@ -51,6 +51,7 @@ import {
     IsPerAppSettingPatch,
     type OverlaySettingsDto,
     type PerAppSettingDto,
+    type PerAppSettingsApplicationDto,
     type PerAppSettingsEntryDto
 } from "../Shared/AppSettings.ts";
 import {
@@ -602,21 +603,27 @@ const GetExecutableIcon = async (
     }
 };
 
-const ToPerAppSettingsEntryDto = async (
-    ExecutablePath: string,
-    Settings: PerAppSettingDto
-): Promise<PerAppSettingsEntryDto> =>
+const ToPerAppSettingsApplicationDto = async (
+    ExecutablePath: string
+): Promise<PerAppSettingsApplicationDto> =>
 {
     const Icon = await GetExecutableIcon(ExecutablePath);
 
     return {
         ExecutablePath,
         FriendlyName: GetExecutableFriendlyName(ExecutablePath),
-        IgnoreModal: Settings.IgnoreModal,
-        NewWindowBehavior: Settings.NewWindowBehavior,
         ...(Icon === undefined ? { } : { Icon })
     };
 };
+
+const ToPerAppSettingsEntryDto = async (
+    ExecutablePath: string,
+    Settings: PerAppSettingDto
+): Promise<PerAppSettingsEntryDto> => ({
+    ...await ToPerAppSettingsApplicationDto(ExecutablePath),
+    IgnoreModal: Settings.IgnoreModal,
+    NewWindowBehavior: Settings.NewWindowBehavior
+});
 
 const GetPerAppSettingsEntries = async (): Promise<
     ReadonlyArray<PerAppSettingsEntryDto>
@@ -643,30 +650,106 @@ const GetPerAppSettingsEntries = async (): Promise<
 ipcMain.removeHandler(AppApiChannel.PerAppSettingsGet);
 ipcMain.handle(AppApiChannel.PerAppSettingsGet, GetPerAppSettingsEntries);
 
+const NormalizeExecutablePath = (ExecutablePath: string): string =>
+    ExecutablePath.trim().toLowerCase();
+
+ipcMain.removeHandler(AppApiChannel.PerAppSettingsRecentGet);
+ipcMain.handle(AppApiChannel.PerAppSettingsRecentGet, async (): Promise<
+    ReadonlyArray<PerAppSettingsApplicationDto>
+> =>
+{
+    const Current = await ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        return (yield* Settings.Get).PerAppSettings;
+    }));
+    const ConfiguredPaths = new Set(
+        Object.keys(Current).map(NormalizeExecutablePath)
+    );
+    const Windows = Window.GetManageableTopLevelWindows();
+
+    if (Result.isFailure(Windows))
+    {
+        return [ ];
+    }
+
+    const SeenPaths = new Set<string>();
+    const RecentPaths: Array<string> = [ ];
+
+    for (const WindowHandle of Windows.success)
+    {
+        const ExecutablePath = Window.GetExecutablePath(WindowHandle);
+        if (Option.isNone(ExecutablePath))
+        {
+            continue;
+        }
+
+        const NormalizedPath = NormalizeExecutablePath(ExecutablePath.value);
+        if (
+            ConfiguredPaths.has(NormalizedPath)
+            || SeenPaths.has(NormalizedPath)
+        )
+        {
+            continue;
+        }
+
+        SeenPaths.add(NormalizedPath);
+        RecentPaths.push(ExecutablePath.value);
+
+        if (RecentPaths.length === 5)
+        {
+            break;
+        }
+    }
+
+    return Promise.all(RecentPaths.map(ToPerAppSettingsApplicationDto));
+});
+
 ipcMain.removeHandler(AppApiChannel.PerAppSettingsAdd);
 ipcMain.handle(AppApiChannel.PerAppSettingsAdd, async (
-    EventValue: IpcMainInvokeEvent
+    EventValue: IpcMainInvokeEvent,
+    RequestedExecutablePathValue: unknown
 ): Promise<PerAppSettingsEntryDto | null> =>
 {
-    const Options: OpenDialogOptions = {
-        filters: [
-            {
-                extensions: [ "exe" ],
-                name: "Applications"
-            }
-        ],
-        properties: [ "openFile" ],
-        title: "Add Application"
-    };
-    const Parent = ElectronBrowserWindow.fromWebContents(EventValue.sender);
-    const Selection = Parent === null
-        ? await dialog.showOpenDialog(Options)
-        : await dialog.showOpenDialog(Parent, Options);
-    const ExecutablePath = Selection.filePaths[0];
-
-    if (Selection.canceled || ExecutablePath === undefined)
+    if (
+        RequestedExecutablePathValue !== undefined
+        && (
+            typeof RequestedExecutablePathValue !== "string"
+            || !isAbsolute(RequestedExecutablePathValue)
+            || extname(RequestedExecutablePathValue).toLowerCase() !== ".exe"
+        )
+    )
     {
-        return null;
+        throw new TypeError("The requested application executable path is invalid.");
+    }
+
+    let ExecutablePath: string | undefined =
+        typeof RequestedExecutablePathValue === "string"
+            ? RequestedExecutablePathValue
+            : undefined;
+
+    if (ExecutablePath === undefined)
+    {
+        const Options: OpenDialogOptions = {
+            filters: [
+                {
+                    extensions: [ "exe" ],
+                    name: "Applications"
+                }
+            ],
+            properties: [ "openFile" ],
+            title: "Add Application"
+        };
+        const Parent = ElectronBrowserWindow.fromWebContents(EventValue.sender);
+        const Selection = Parent === null
+            ? await dialog.showOpenDialog(Options)
+            : await dialog.showOpenDialog(Parent, Options);
+        ExecutablePath = Selection.filePaths[0];
+
+        if (Selection.canceled || ExecutablePath === undefined)
+        {
+            return null;
+        }
     }
 
     const PerExecutableSettings = await ApplicationRuntime.runPromise(

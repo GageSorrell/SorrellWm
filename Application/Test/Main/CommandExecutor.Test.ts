@@ -1317,6 +1317,64 @@ describe("CommandExecutor.Live", () =>
             "Hide:Overlay"
         ]);
     });
+
+    it("keeps the visible overlay centered while its activation window is dragged", async () =>
+    {
+        const ActivationWindow = 42n as Handle.HWND;
+        const InitialBounds = Box.Box(100, 1100, 700, 100);
+        const MovedBounds = Box.Box(300, 1500, 900, 500);
+        const ReleasedBounds = Box.Box(320, 1520, 920, 520);
+        const OverlayBounds = new Array<MathBox.Box>();
+        vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(
+            Option.some(ActivationWindow)
+        );
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(InitialBounds)
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+                yield* Executor.Execute(UiCommands.Activate());
+
+                vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+                    Option.some(MovedBounds)
+                );
+                vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(
+                    Option.some(ActivationWindow)
+                );
+                yield* Effect.sleep("120 millis");
+
+                vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+                    Option.some(ReleasedBounds)
+                );
+                vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(
+                    Option.none()
+                );
+                yield* Effect.sleep("120 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings()),
+            Effect.provide(FakeBrowserWindow(
+                [ ],
+                Effect.void,
+                (Bounds: MathBox.Box) => OverlayBounds.push(Bounds),
+                true
+            )),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager()),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(OverlayBounds).toContainEqual(
+            Box.Box(100, 1000, 700, 200)
+        );
+        expect(OverlayBounds.at(-1)).toEqual(
+            Box.Box(320, 1420, 920, 620)
+        );
+    });
 });
 
 describe("CommandExecutor.Live tiled-window drag detach", () =>
@@ -1637,6 +1695,7 @@ const FakeOverlaySession = (
         Current: Effect.sync(Current),
         FineModifierHeld: Effect.sync(() => FineModifierHeld),
         FocusFailure: Effect.sync(() => CurrentFocusFailure),
+        GetActivationApplicationExecutablePath: Effect.succeed(Option.none<string>()),
         GetActivationApplicationName: Effect.succeed(Option.none<string>()),
         GetActivationWindow: Effect.sync(() => ActivationWindow),
         MoveTiledInsertSelection: () => Effect.void,
@@ -1650,13 +1709,13 @@ const FakeOverlaySession = (
         {
             CurrentFocusFailure = Option.some(Failure);
         }),
-        RecordResizeRecoveryFailure: Effect.void,
         RecordRaisedFloatingWindowZOrder: (
             Value: OverlaySession.RaisedFloatingWindowZOrder
         ) => Effect.sync((): void =>
         {
             RaisedFloatingWindowZOrder = Option.some(Value);
         }),
+        RecordResizeRecoveryFailure: Effect.void,
         RefreshTiledInsertWindows: Effect.void,
         Reset: Effect.sync((): void =>
         {
@@ -1679,8 +1738,8 @@ const FakeOverlaySession = (
         }),
         ResolveTiledFocusCommit: Effect.succeed(TiledFocusCommit),
         ResolveTiledFocusTarget: () => Effect.succeed(TiledFocusTarget),
-        ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
         ResolveTiledMoveAction: () => Effect.succeed(TiledMoveAction),
+        ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
         SelectedTiledInsertWindow: Effect.succeed(Option.none()),
         SetActivationWindow: (WindowHandle: Handle.HWND) => Effect.sync((): void =>
         {

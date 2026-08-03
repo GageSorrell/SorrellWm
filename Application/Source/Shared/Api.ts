@@ -17,6 +17,7 @@ import type {
     OverlaySettingsDto,
     OverlaySettingsPatch,
     PerAppSettingPatch,
+    PerAppSettingsApplicationDto,
     PerAppSettingsEntryDto
 } from "./AppSettings.js";
 import type { OverlayCommandId, OverlayScreenDto } from "./OverlayCommand.js";
@@ -135,11 +136,16 @@ export interface AppApi
 
     readonly perAppSettings:
     {
-        /** Choose an executable and append its default per-application settings. */
-        readonly add: () => Promise<PerAppSettingsEntryDto | null>;
+        /** Append default per-application settings, choosing an executable when omitted. */
+        readonly add: (
+            ExecutablePath?: string
+        ) => Promise<PerAppSettingsEntryDto | null>;
 
         /** Retrieve every configured executable and its presentation metadata. */
         readonly get: () => Promise<ReadonlyArray<PerAppSettingsEntryDto>>;
+
+        /** Retrieve recently opened applications that do not have per-application settings. */
+        readonly getRecent: () => Promise<ReadonlyArray<PerAppSettingsApplicationDto>>;
 
         /** Persist a partial behavior update for one configured executable. */
         readonly set: (
@@ -199,6 +205,7 @@ const AppApiChannel = Object.freeze({
     OverlayStackWindowSelect: "overlay-stack-window:select" as const,
     PerAppSettingsAdd: "per-app-settings:add" as const,
     PerAppSettingsGet: "per-app-settings:get" as const,
+    PerAppSettingsRecentGet: "per-app-settings:recent-get" as const,
     PerAppSettingsSet: "per-app-settings:set" as const,
     RendererLogWrite: "renderer-log:write" as const,
     SettingsNavigate: "settings:navigate" as const,

@@ -27,6 +27,19 @@ Object.defineProperty(globalThis, "NodeFilter", {
     value: window.NodeFilter
 });
 
+class TestResizeObserver
+{
+    disconnect(): void { }
+    observe(_Target: unknown): void { }
+    unobserve(_Target: unknown): void { }
+}
+
+Object.defineProperty(globalThis, "ResizeObserver", {
+    configurable: true,
+    value: TestResizeObserver,
+    writable: true
+});
+
 Object.defineProperty(window, "sorrell", {
     configurable: true,
     value:
@@ -125,6 +138,7 @@ Object.defineProperty(window, "sorrell", {
         {
             add: vi.fn(() => Promise.resolve(null)),
             get: vi.fn(() => Promise.resolve([ ])),
+            getRecent: vi.fn(() => Promise.resolve([ ])),
             set: vi.fn((
                 ExecutablePath: string,
                 Settings: PerAppSettingPatch
@@ -138,8 +152,8 @@ Object.defineProperty(window, "sorrell", {
         platform: "win32",
         settings:
         {
-            open: vi.fn(() => Promise.resolve()),
-            onNavigate: vi.fn(() => (): void => undefined)
+            onNavigate: vi.fn(() => (): void => undefined),
+            open: vi.fn(() => Promise.resolve())
         },
         theme:
         {

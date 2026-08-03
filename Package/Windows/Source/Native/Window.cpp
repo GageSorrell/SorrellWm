@@ -717,6 +717,32 @@ Napi::Value GetApplicationNameFromPath(const Napi::CallbackInfo& CallbackInfo)
     ));
 }
 
+Napi::Value GetExecutablePath_Node(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> WindowHandle = GetWindowArgument(CallbackInfo);
+
+    if (!WindowHandle.has_value())
+    {
+        return Out.Fail("Expected a valid window handle.");
+    }
+
+    const std::optional<std::wstring> ExecutablePath = GetExecutablePath(
+        WindowHandle.value()
+    );
+    if (!ExecutablePath.has_value())
+    {
+        return Out.Fail("Could not get the window application's executable path.");
+    }
+
+    return Out.Succeed(Napi::String::New(
+        Environment,
+        reinterpret_cast<const char16_t*>(ExecutablePath->data()),
+        ExecutablePath->size()
+    ));
+}
+
 Napi::Value GetWindowRect_Node(const Napi::CallbackInfo& CallbackInfo)
 {
     const Napi::Env Environment = CallbackInfo.Env();

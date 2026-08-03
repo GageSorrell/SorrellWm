@@ -18,7 +18,16 @@ import { Context, Effect, Layer, Option, Stream, pipe } from "effect";
 import { Tray as ElectronTray, Menu, app, nativeImage, nativeTheme } from "electron";
 import type { NativeImage } from "electron";
 
+export/**
+       * The type identifier for this module.
+       *
+       * @category Constant
+       * @since 0.1.0
+       */
 const TypeId = "~sorrell/wm/Main/Tray" as const;
+
+/** {@inheritDoc TypeId:var} */
+export type TypeId = typeof TypeId;
 
 /** The running tray-icon controller. */
 export interface TrayImpl
@@ -27,8 +36,7 @@ export interface TrayImpl
 }
 
 /** Supervise the system tray icon and its context menu. */
-export class Tray extends
-    Context.Service<Tray, TrayImpl>()(TypeId) { }
+export class Tray extends Context.Service<Tray, TrayImpl>()(TypeId) { }
 
 const LoadIcon = (Variant: TrayIcon.TrayIconVariant): NativeImage =>
     nativeImage.createFromPath(TrayIcon.GetTrayIconPath(Variant));

@@ -129,13 +129,23 @@ export interface PerAppSettingDto
     readonly NewWindowBehavior: NewWindowBehavior;
 }
 
-/** Renderer-safe settings and presentation metadata for one executable. */
-export interface PerAppSettingsEntryDto extends PerAppSettingDto
+/**
+ * Renderer-safe presentation metadata for an application executable.
+ *
+ * @category Model
+ * @since 0.1.0
+ */
+export interface PerAppSettingsApplicationDto
 {
     readonly ExecutablePath: string;
     readonly FriendlyName: string;
     readonly Icon?: string;
 }
+
+/** Renderer-safe settings and presentation metadata for one executable. */
+export interface PerAppSettingsEntryDto extends
+    PerAppSettingDto,
+    PerAppSettingsApplicationDto { }
 
 /** A partial update to one executable's window-manager behavior. */
 export type PerAppSettingPatch = Partial<PerAppSettingDto>;
@@ -225,23 +235,52 @@ const IsNewWindowBehavior = (Value: unknown): Value is NewWindowBehavior =>
     typeof Value === "string"
     && (NewWindowBehaviors as ReadonlyArray<string>).includes(Value);
 
-export/** Determine whether an IPC value is a complete per-executable settings entry. */
-const IsPerAppSettingsEntryDto = (Value: unknown): Value is PerAppSettingsEntryDto =>
+export/**
+       * Determines whether an IPC value describes an application executable.
+       *
+       * @category Guard
+       * @since 0.1.0
+       */
+const IsPerAppSettingsApplicationDto = (
+    Value: unknown
+): Value is PerAppSettingsApplicationDto =>
 {
     if (typeof Value !== "object" || Value === null)
     {
         return false;
     }
 
-    const Candidate = Value as Partial<PerAppSettingsEntryDto>;
+    const Candidate = Value as Partial<PerAppSettingsApplicationDto>;
     return typeof Candidate.ExecutablePath === "string"
         && Candidate.ExecutablePath.trim().length > 0
         && typeof Candidate.FriendlyName === "string"
         && Candidate.FriendlyName.trim().length > 0
-        && (Candidate.Icon === undefined || typeof Candidate.Icon === "string")
-        && typeof Candidate.IgnoreModal === "boolean"
+        && (Candidate.Icon === undefined || typeof Candidate.Icon === "string");
+};
+
+export/** Determine whether an IPC value is a complete per-executable settings entry. */
+const IsPerAppSettingsEntryDto = (Value: unknown): Value is PerAppSettingsEntryDto =>
+{
+    if (!IsPerAppSettingsApplicationDto(Value))
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<PerAppSettingsEntryDto>;
+    return typeof Candidate.IgnoreModal === "boolean"
         && IsNewWindowBehavior(Candidate.NewWindowBehavior);
 };
+
+export/**
+       * Determines whether an IPC value is a list of application executables.
+       *
+       * @category Guard
+       * @since 0.1.0
+       */
+const IsPerAppSettingsApplicationsDto = (
+    Value: unknown
+): Value is ReadonlyArray<PerAppSettingsApplicationDto> =>
+    Array.isArray(Value) && Value.every(IsPerAppSettingsApplicationDto);
 
 export/** Determine whether an IPC value is a list of per-executable settings entries. */
 const IsPerAppSettingsEntriesDto = (

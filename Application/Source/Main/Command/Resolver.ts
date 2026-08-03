@@ -66,7 +66,8 @@ export/** Resolve an available screen command without retaining renderer details
 const ResolveOverlayCommand = (
     Screen: OverlayScreenId,
     Id: OverlayCommandId,
-    ApplicationName: Option.Option<string> = Option.none()
+    ApplicationName: Option.Option<string> = Option.none(),
+    ApplicationExecutablePath: Option.Option<string> = Option.none()
 ): Option.Option<Resolved> =>
 {
     const IsPrimaryCommand = GetOverlayCommandDefinitions(Screen).some((
@@ -153,10 +154,17 @@ const ResolveOverlayCommand = (
     {
         return Option.some(UiCommands.OpenSettings({
             Path: Option.some(EncodeSettingsPath({
-                Params: Option.match(ApplicationName, {
-                    onNone: () => ({ }),
-                    onSome: (Name: string) => ({ Name })
-                }),
+                Params: {
+                    ...Option.match(ApplicationName, {
+                        onNone: () => ({ }),
+                        onSome: (Name: string) => ({ Name })
+                    }),
+                    ...Option.match(ApplicationExecutablePath, {
+                        onNone: () => ({ }),
+                        onSome: (ExecutablePath: string) => ({ ExecutablePath })
+                    }),
+                    Source: "Overlay"
+                },
                 Section: SettingsSectionId.PerAppSettings
             }))
         }));
@@ -169,7 +177,8 @@ export/** Resolve one hotkey activation for an overlay screen. */
 const Resolve = (
     Activation: Hotkey.Match,
     Screen: OverlayScreenId = ScreenId.FloatingHome,
-    ApplicationName: Option.Option<string> = Option.none()
+    ApplicationName: Option.Option<string> = Option.none(),
+    ApplicationExecutablePath: Option.Option<string> = Option.none()
 ): Option.Option<Resolved> =>
 {
     switch (Activation.Keybind.Id)
@@ -213,7 +222,8 @@ const Resolve = (
                 return ResolveOverlayCommand(
                     Screen,
                     OverlayCommandId.MoveWindowIntoPanel,
-                    ApplicationName
+                    ApplicationName,
+                    ApplicationExecutablePath
                 );
             }
 
@@ -222,7 +232,8 @@ const Resolve = (
                 return ResolveOverlayCommand(
                     Screen,
                     OverlayCommandId.CommitInsertWindow,
-                    ApplicationName
+                    ApplicationName,
+                    ApplicationExecutablePath
                 );
             }
 
@@ -290,7 +301,12 @@ const Resolve = (
 
             return Definition === undefined
                 ? Option.none()
-                : ResolveOverlayCommand(Screen, Definition.Id, ApplicationName);
+                : ResolveOverlayCommand(
+                    Screen,
+                    Definition.Id,
+                    ApplicationName,
+                    ApplicationExecutablePath
+                );
         }
     }
 };
@@ -327,13 +343,27 @@ const Live = Layer.effect(
         {
             const Screen = yield* Session.Current;
             const ApplicationName = yield* Session.GetActivationApplicationName;
-            return Resolve(Activation, Screen, ApplicationName);
+            const ApplicationExecutablePath =
+                yield* Session.GetActivationApplicationExecutablePath;
+            return Resolve(
+                Activation,
+                Screen,
+                ApplicationName,
+                ApplicationExecutablePath
+            );
         });
         const ResolveCurrentOverlayCommand = (Id: OverlayCommandId) => Effect.gen(function*()
         {
             const Screen = yield* Session.Current;
             const ApplicationName = yield* Session.GetActivationApplicationName;
-            return ResolveOverlayCommand(Screen, Id, ApplicationName);
+            const ApplicationExecutablePath =
+                yield* Session.GetActivationApplicationExecutablePath;
+            return ResolveOverlayCommand(
+                Screen,
+                Id,
+                ApplicationName,
+                ApplicationExecutablePath
+            );
         });
 
         return {

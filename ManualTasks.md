@@ -179,3 +179,31 @@ Please add the following feature to `@sorrell/wm`: for each titlebar flyout feat
 <!-- Please add an app setting "ResizeRecoveryStrategy".  This should be a tagged enum of tags "Cancel", "Continue", or "Ignore", such that the "Ignore" and "Continue" cases have a property `readonly Threshold: number | undefined;`.  The default value should be the "Continue" with a `Threshold` of 128.  This should inform the behavior of the tiled Move, Resize, and Insert flows.
 
 When one of these flows attempts to change the size of a window, it should check whether the window's size updated to be what it should be.  If it is larger than it should be, then the value of this new app setting should be used as follows: if "Cancel", then the flow should revert to the previous step, and a message bar should display explaining that the window could be made smaller, so the operation was canceled.  This message bar should contain a link to this new app setting, and clicking that link should highlight the app setting via the new feature of the settings UI package.  If the app setting is set to "Continue", then if `Threshold` is defined, the operation should continue as long as the window's length and width are at least the value of `Threshold` in pixels.  If `Threshold` is `undefined`, then the operation should always continue, but should adjust according to the actual size of the window that was resized.  If the app setting is "Ignore", then the operation should always continue, but the window that failed to resize appropriately should be treated as if it *did* resize to the desired size. -->
+
+---
+
+<!-- The settings window, when pulled up via the Tab button in the overlay (the per-app settings) window, flashes its contents briefly, then becomes blank.  The console shows this error,
+
+```
+react-dom_client.js?v=5255419e:6733 Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+    at getRootForUpdatedFiber (react-dom_client.js?v=5255419e:3258:128)
+    at enqueueConcurrentHookUpdate (react-dom_client.js?v=5255419e:3242:16)
+    at dispatchSetStateInternal (react-dom_client.js?v=5255419e:6564:20)
+    at dispatchSetState (react-dom_client.js?v=5255419e:6535:9)
+    at @fluentui_react-components.js?v=0340932e:47271:5
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=5255419e:18299:20)
+    at runWithFiberInDEV (react-dom_client.js?v=5255419e:729:72)
+    at commitHookEffectListMount (react-dom_client.js?v=5255419e:9143:163)
+    at commitHookLayoutEffects (react-dom_client.js?v=5255419e:9123:60)
+    at commitLayoutEffectOnFiber (react-dom_client.js?v=5255419e:9636:26)
+
+The above error occurred in the <NavDrawerBody> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RendererErrorBoundary.
+```
+
+Please fix this. -->
+
+---
+
+Please modify SorrellWm so that when a tiled window is resized via the cursor dragging one of its border, the surrounding windows are also resized.  This should mean that if the dragged edge is perpendicular to that window's panel, then other nodes in that panel are resized.  The nodes on the side of the edge that is resized should be resized so that their proportions relative to each other are preserved.  If the dragged edge is parallel to the window's panel, then adjacent nodes should be resized in the same way (preserving relative proportions).  If there is nothing adjacent to the edge (for example, if the panel is a root panel), then the resize should be undone when the cursor is released.

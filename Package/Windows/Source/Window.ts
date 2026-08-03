@@ -124,6 +124,17 @@ const GetApplicationNameFromPath = (
         ? Attempt.AsOption(Binding.Window.GetApplicationNameFromPath(ExecutablePath))
         : Option.none();
 
+export/**
+       * Gets the executable path of the process that owns a window.
+       *
+       * @category Getter
+       * @since 1.0.0
+       */
+const GetExecutablePath = (Window: Handle.HWND): Option.Option<string> =>
+    typeof Binding.Window.GetExecutablePath === "function"
+        ? Attempt.AsOption(Binding.Window.GetExecutablePath(Window))
+        : Option.none();
+
 export/** Get the maximize button beneath the cursor, if one is being hovered. */
 const GetHoveredMaximizeButton = (): Option.Option<HoveredMaximizeButton> =>
     typeof Binding.Window.GetHoveredMaximizeButton !== "function"

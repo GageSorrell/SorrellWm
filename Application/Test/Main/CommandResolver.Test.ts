@@ -495,7 +495,7 @@ describe("CommandResolver.Resolve", () =>
 
         expect(Resolved).toMatchObject({ Category: "Ui", _tag: "OpenSettings" });
         expect(Option.getOrThrow((Resolved as { Path: Option.Option<string>; }).Path))
-            .toBe("PerAppSettings");
+            .toBe("PerAppSettings?Source=Overlay");
     });
 
     it("includes the activation window's application name in the per-app settings path", () =>
@@ -507,7 +507,23 @@ describe("CommandResolver.Resolve", () =>
         ));
 
         expect(Option.getOrThrow((Resolved as { Path: Option.Option<string>; }).Path))
-            .toBe("PerAppSettings?Name=Notepad");
+            .toBe("PerAppSettings?Name=Notepad&Source=Overlay");
+    });
+
+    it("includes the activation window's executable path in the per-app settings path", () =>
+    {
+        const Resolved = Option.getOrThrow(Resolve(
+            Activation(Id.Toggle, Windows.VK.TAB, Phase.Pressed),
+            OverlayScreenId.FloatingHome,
+            Option.some("Notepad"),
+            Option.some(String.raw`C:\Windows\notepad.exe`)
+        ));
+
+        expect(Option.getOrThrow((Resolved as { Path: Option.Option<string>; }).Path))
+            .toBe(
+                "PerAppSettings?Name=Notepad&ExecutablePath=C%3A%5CWindows%5Cnotepad.exe"
+                + "&Source=Overlay"
+            );
     });
 
     it("does not invent commands for actions without command semantics", () =>
@@ -616,6 +632,7 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     Current: Effect.succeed(OverlayScreenId.FloatingHome),
     FineModifierHeld: Effect.succeed(false),
     FocusFailure: Effect.succeed(Option.none()),
+    GetActivationApplicationExecutablePath: Effect.succeed(Option.none()),
     GetActivationApplicationName: Effect.succeed(Option.none()),
     GetActivationWindow: Effect.succeed(Option.none()),
     MoveTiledInsertSelection: () => Effect.void,
@@ -623,16 +640,16 @@ const HomeSession = Layer.succeed(OverlaySession.OverlaySession, {
     PreviewFocusTarget: () => Effect.void,
     PrimaryModifierHeld: Effect.succeed(false),
     RecordFocusFailure: () => Effect.void,
-    RecordResizeRecoveryFailure: Effect.void,
     RecordRaisedFloatingWindowZOrder: () => Effect.void,
+    RecordResizeRecoveryFailure: Effect.void,
     RefreshTiledInsertWindows: Effect.void,
     Reset: Effect.void,
     ResizeMode: Effect.succeed(ResizeMode.Grow),
     ResolveFocusTarget: () => Effect.succeed(Option.none()),
     ResolveTiledFocusCommit: Effect.succeed(Option.none()),
     ResolveTiledFocusTarget: () => Effect.succeed(Option.none()),
-    ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
     ResolveTiledMoveAction: () => Effect.succeed(Option.none()),
+    ResolveTiledStackWindow: () => Effect.succeed(Option.none()),
     SelectedTiledInsertWindow: Effect.succeed(Option.none()),
     SetActivationWindow: () => Effect.void,
     SetFineModifierHeld: () => Effect.void,
