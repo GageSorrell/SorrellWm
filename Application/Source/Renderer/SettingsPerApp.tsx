@@ -63,9 +63,9 @@ const UseStyles = makeStyles({
     ApplicationIcon:
     {
         flexShrink: 0,
-        height: "2rem",
+        height: "1.25rem",
         objectFit: "contain",
-        width: "2rem"
+        width: "1.25rem"
     },
     Empty:
     {
@@ -117,7 +117,7 @@ const UseStyles = makeStyles({
         display: "flex",
         gap: tokens.spacingHorizontalM,
         justifyContent: "space-between",
-        padding: tokens.spacingVerticalS
+        padding: tokens.spacingVerticalM
     },
     RecentList:
     {
@@ -331,25 +331,23 @@ const SettingsPerApp = ({
                                 key={ Application.ExecutablePath }>
                                 <span className={ Styles.RecentIdentity }>
                                     { Application.Icon === undefined
-                                        ? (
-                                            <AppGenericRegular
-                                                className={ Styles.ApplicationIcon } />
-                                        )
+                                        ? <AppGenericRegular className={ Styles.ApplicationIcon } />
                                         : (
                                             <img
                                                 alt=""
                                                 className={ Styles.ApplicationIcon }
-                                                src={
-                                                    `data:image/png;base64,${ Application.Icon }`
-                                                } />
+                                                src={ `data:image/png;base64,${ Application.Icon }` }
+                                            />
                                         ) }
                                     <Text weight="semibold">
                                         { Application.FriendlyName }
                                     </Text>
                                 </span>
                                 <Button
+                                    appearance="subtle"
                                     aria-label={ `Add ${ Application.FriendlyName }` }
                                     disabled={ IsAdding }
+                                    icon={ <AddRegular /> }
                                     onClick={ () => AddApplication(
                                         Application.ExecutablePath
                                     ) }>
@@ -394,9 +392,9 @@ const SettingsPerApp = ({
                                 size="large">
                                 <span className={ Styles.HeaderText }>
                                     <Text weight="semibold">{ Entry.FriendlyName }</Text>
-                                    <Caption1 className={ Styles.Path }>
+                                    {/* <Caption1 className={ Styles.Path }>
                                         { Entry.ExecutablePath }
-                                    </Caption1>
+                                    </Caption1> */}
                                 </span>
                             </AccordionHeader>
 
@@ -439,8 +437,8 @@ const SettingsPerApp = ({
                                                 </Option>
                                             )) }
                                         </Dropdown>
-                                    } />
-
+                                    }
+                                />
                                 <SettingOption
                                     Content={
                                         <span className={ Styles.OptionText }>

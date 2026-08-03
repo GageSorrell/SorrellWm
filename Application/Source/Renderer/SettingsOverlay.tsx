@@ -97,7 +97,6 @@ const SettingsOverlay = (): React.JSX.Element =>
     return (
         <>
             <SettingGroup
-                Icon={ EyeRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.Overlay, "TitlebarFlyouts") }
                 Subtitle="Control overlays opened from native window caption buttons."
                 Title="Titlebar Flyouts">
@@ -126,7 +125,6 @@ const SettingsOverlay = (): React.JSX.Element =>
             </SettingGroup>
 
             <SettingGroup
-                Icon={ EyeRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.Overlay, "FocusPreviews") }
                 Subtitle="Control how directional Focus targets are presented over obscured floating windows."
                 Title="Focus Previews">

@@ -67,6 +67,7 @@ const UseStyles = makeStyles({
     },
     Icon:
     {
+        alignSelf: "flex-start",
         color: tokens.colorNeutralForeground2,
         flexShrink: 0,
         fontSize: "1.25rem"
@@ -140,12 +141,15 @@ const Setting = (
     const { NodeRef, PulseHandleRef } =
         UseSettingControlRegistration<HTMLDivElement>({ Icon, Id, Subtitle, Title });
 
+    const RootStyle = mergeClasses(Styles.Root, Disabled === true ? Styles.RootDisabled : undefined);
+
     return (
-        <PulseMotion RestingColor={ tokens.colorNeutralBackground1 }
+        <PulseMotion
+            RestingColor={ tokens.colorNeutralBackground1 }
             imperativeRef={ PulseHandleRef }>
             <div
                 aria-disabled={ Disabled }
-                className={ mergeClasses(Styles.Root, Disabled === true ? Styles.RootDisabled : undefined) }
+                className={ RootStyle }
                 ref={ NodeRef }>
                 <div className={ Styles.Header }>
                     <Icon className={ Styles.Icon } />

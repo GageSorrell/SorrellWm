@@ -128,7 +128,6 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
 
     return (
         <SettingGroup
-            Icon={ ArrowMoveRegular }
             Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "MoveStepSizes") }
             Subtitle="Control how far, and how fast, a floating window moves on the Move overlay screen."
             Title="Move Step Sizes">

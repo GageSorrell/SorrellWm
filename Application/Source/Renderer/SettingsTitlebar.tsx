@@ -239,6 +239,7 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
                     value={ Query }>
                     { Results.map(({ Entry, Id }: SettingSearchResult) => (
                         <Option
+                            checkIcon={ null }
                             key={ Id }
                             text={ typeof Entry.Title === "string" ? Entry.Title : Id }
                             value={ Id }>

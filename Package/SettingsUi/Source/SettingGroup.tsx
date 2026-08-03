@@ -9,7 +9,6 @@
  * @license   MIT
  */
 
-import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { PulseMotion } from "./Internal/PulseMotion.js";
@@ -21,12 +20,6 @@ const UseStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalXXS
-    },
-    Icon:
-    {
-        color: tokens.colorNeutralForeground1,
-        flexShrink: 0,
-        fontSize: tokens.fontSizeBase400
     },
     Root:
     {
@@ -64,9 +57,6 @@ export interface SettingGroupProps
     /** {@link Setting} rows shown under this category, spaced with a small gap. */
     readonly children: ReactNode;
 
-    /** Shown before the title, when present. */
-    readonly Icon?: FluentIcon;
-
     /**
      * An identifier making this group addressable through `UseSettingControls`, which can
      * scroll to it and pulse its background. Omit for groups that never need to be jumped to.
@@ -78,11 +68,11 @@ export interface SettingGroupProps
 }
 
 export/** A titled category of settings, e.g. "Find My Mouse". */
-const SettingGroup = ({ children, Icon, Id, Subtitle, Title }: SettingGroupProps): React.JSX.Element =>
+const SettingGroup = ({ children, Id, Subtitle, Title }: SettingGroupProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
     const { NodeRef, PulseHandleRef } =
-        UseSettingControlRegistration<HTMLElement>({ Icon, Id, Subtitle, Title });
+        UseSettingControlRegistration<HTMLElement>({ Id, Subtitle, Title });
 
     return (
         <PulseMotion RestingColor="transparent"
@@ -91,7 +81,6 @@ const SettingGroup = ({ children, Icon, Id, Subtitle, Title }: SettingGroupProps
                 ref={ NodeRef }>
                 <div className={ Styles.Header }>
                     <h2 className={ Styles.Title }>
-                        { Icon !== undefined && <Icon className={ Styles.Icon } /> }
                         { Title }
                     </h2>
 

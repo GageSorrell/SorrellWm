@@ -32,6 +32,9 @@ const GetInitialRendererTheme = (): RendererTheme => ({
 });
 
 const UseGlobalStyles = makeStaticStyles({
+    "#root": {
+        minHeight: "100vh"
+    },
     "*": {
         boxSizing: "border-box"
     },
@@ -52,8 +55,7 @@ const UseGlobalStyles = makeStaticStyles({
 
 const UseStyles = makeStyles({
     Provider: {
-        backgroundColor: "transparent",
-        minHeight: "100vh"
+        backgroundColor: "transparent"
     }
 });
 
