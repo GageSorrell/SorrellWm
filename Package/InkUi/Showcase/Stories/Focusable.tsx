@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for focusable.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Focusable
  *

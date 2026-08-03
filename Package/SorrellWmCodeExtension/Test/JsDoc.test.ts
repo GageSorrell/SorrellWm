@@ -1,5 +1,5 @@
 /**
- *
+ * Tests JSDoc expansion behavior for the SorrellWm code extension.
  *
  * @module @sorrell/sorrell-wm-code-extension/JsDoc.test
  * @internal

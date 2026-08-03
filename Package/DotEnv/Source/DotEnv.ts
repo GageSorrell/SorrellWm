@@ -1,5 +1,5 @@
 /**
- *
+ * Operations for loading environment variables from dotenv files.
  *
  * @module @sorrell/dotenv/DotEnv
  * @internal

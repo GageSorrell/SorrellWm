@@ -1,5 +1,5 @@
 /**
- *
+ * Exports the Ink UI showcase stories.
  *
  * @module @sorrell/ink-ui/Showcase/Stories
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for status bar.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/StatusBar
  *

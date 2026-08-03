@@ -1,5 +1,5 @@
 /**
- *
+ * Log forwarding types and operations for forward sink.
  *
  * @module @sorrell/log/Forward/ForwardSink
  *

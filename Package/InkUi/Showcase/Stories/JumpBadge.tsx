@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for jump badge.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/JumpBadge
  *

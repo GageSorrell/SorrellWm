@@ -1,5 +1,5 @@
 /**
- *
+ * Logger types and operations for structured logging.
  *
  * @module @sorrell/log/Logger
  *

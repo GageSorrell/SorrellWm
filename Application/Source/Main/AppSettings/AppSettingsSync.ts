@@ -42,9 +42,7 @@ namespace Sync
         {
             const BrowserWindows = yield* BrowserWindow.BrowserWindow;
 
-            yield* BrowserWindows.ForceClose(BrowserWindow.Key.Overlay).pipe(
-                Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
-            );
+            yield* pipe(BrowserWindows.ForceClose(BrowserWindow.Key.Overlay), Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void));
             yield* BrowserWindows.Ensure(yield* BrowserWindow.OverlayWindowSpec);
             yield* Logging.LogDebug(
                 "Settings.Sync",
@@ -59,13 +57,11 @@ namespace Sync
             const Session = yield* OverlaySession.OverlaySession;
             const Screen = yield* Session.Snapshot;
 
-            yield* BrowserWindows.Send(
+            yield* pipe(BrowserWindows.Send(
                 BrowserWindow.Key.Overlay,
                 AppApiChannel.OverlayScreenChanged,
                 Screen
-            ).pipe(
-                Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void)
-            );
+            ), Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void));
             yield* Logging.LogDebug(
                 "Settings.Sync",
                 "Published updated keybind presentation to the overlay."

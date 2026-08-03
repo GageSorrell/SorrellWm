@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for gradient badge.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/GradientBadge
  *

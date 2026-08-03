@@ -1,4 +1,6 @@
 /**
+ * Configures Vitest for the `@sorrell/log-client` workspace.
+ *
  * @module @sorrell/log-client/vitest.config
  *
  * @file      vitest.config.ts

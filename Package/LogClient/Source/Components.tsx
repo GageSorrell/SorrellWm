@@ -12,6 +12,7 @@
 import {
     Effect,
     Fiber,
+    pipe,
     Stream
 } from "effect";
 import {
@@ -179,11 +180,10 @@ export function useLogClient(
                 }));
             });
 
-            yield* ConnectToPipe(ResolvedPort, {
+            yield* pipe(ConnectToPipe(ResolvedPort, {
                 ...(BufferCapacity === undefined ? { } : { BufferCapacity }),
                 ...(MaximumLineBytes === undefined ? { } : { MaximumLineBytes })
-            }).pipe(
-                Stream.runForEach((Message: WireMessage) => Effect.sync(() =>
+            }), Stream.runForEach((Message: WireMessage) => Effect.sync(() =>
                 {
                     SetState((Current: LogClientState) =>
                     {
@@ -234,13 +234,11 @@ export function useLogClient(
                                 };
                         }
                     });
-                }))
-            );
+                })));
         });
 
         const FiberValue = Effect.runFork(
-            Program.pipe(
-                Effect.match({
+            pipe(Program, Effect.match({
                     onFailure: (ErrorValue: LogClientError) =>
                     {
                         SetState((Current: LogClientState) => ({
@@ -258,8 +256,7 @@ export function useLogClient(
                                 Status: "Disconnected"
                             });
                     }
-                })
-            )
+                }))
         );
 
         return (): void =>

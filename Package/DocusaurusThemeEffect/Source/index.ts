@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/docusaurus-theme-effect`.
  *
  * @module @sorrell/docusaurus-theme-effect
  *

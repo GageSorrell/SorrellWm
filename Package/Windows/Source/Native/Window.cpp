@@ -764,6 +764,31 @@ Napi::Value GetWindowRect_Node(const Napi::CallbackInfo& CallbackInfo)
     return Out.Succeed(RectangleToNapi(Environment, Rectangle));
 }
 
+Napi::Value GetWindowFrameRect(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const std::optional<HWND> WindowHandle = GetWindowArgument(CallbackInfo);
+
+    if (!WindowHandle.has_value())
+    {
+        return Out.Fail("Expected a valid window handle.");
+    }
+
+    RECT Rectangle { };
+    if (FAILED(DwmGetWindowAttribute(
+        WindowHandle.value(),
+        DWMWA_EXTENDED_FRAME_BOUNDS,
+        &Rectangle,
+        sizeof(Rectangle)
+    )) && GetWindowRect(WindowHandle.value(), &Rectangle) == FALSE)
+    {
+        return Out.Fail("Could not get the visible window frame rectangle.");
+    }
+
+    return Out.Succeed(RectangleToNapi(Environment, Rectangle));
+}
+
 Napi::Value IsWindowObscured(const Napi::CallbackInfo& CallbackInfo)
 {
     const Napi::Env Environment = CallbackInfo.Env();

@@ -1,5 +1,5 @@
 /**
- *
+ * Command catalogs and navigation state for the application overlay.
  *
  * @module @sorrell/wm/Main/Overlay
  *

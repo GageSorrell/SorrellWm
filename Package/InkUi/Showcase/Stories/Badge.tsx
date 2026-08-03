@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for badge.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Badge
  *

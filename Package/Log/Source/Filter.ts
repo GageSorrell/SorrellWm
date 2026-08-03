@@ -1,5 +1,5 @@
 /**
- *
+ * Filter types and operations for structured logging.
  *
  * @module @sorrell/log/Filter
  *

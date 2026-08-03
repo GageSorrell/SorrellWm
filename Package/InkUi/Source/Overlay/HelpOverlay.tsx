@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for help overlay.
  *
  * @module @sorrell/ink-ui/Overlay/HelpOverlay
  *

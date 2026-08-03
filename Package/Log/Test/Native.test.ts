@@ -1,5 +1,5 @@
 /**
- *
+ * Tests native behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Native.test
  *

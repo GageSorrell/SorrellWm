@@ -1,5 +1,5 @@
 /**
- *
+ * Integer interval types and operations.
  *
  * @module @sorrell/math/IntInterval
  *

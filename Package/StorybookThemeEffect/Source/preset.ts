@@ -1,5 +1,5 @@
 /**
- *
+ * Storybook preset configuration for `@sorrell/storybook-theme-effect`.
  *
  * @module @sorrell/storybook-theme-effect/preset
  *

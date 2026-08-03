@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for shortcut.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Shortcut
  *

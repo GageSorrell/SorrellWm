@@ -1,5 +1,5 @@
 /**
- *
+ * Docusaurus root theme component for `@sorrell/docusaurus-theme-effect`.
  *
  * @module @sorrell/docusaurus-theme-effect/theme/Root
  *

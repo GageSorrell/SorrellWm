@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/docs-landing`.
  *
  * @module @sorrell/docs-landing
  *

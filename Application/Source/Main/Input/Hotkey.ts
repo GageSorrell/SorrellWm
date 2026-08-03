@@ -1,5 +1,5 @@
 /**
- *
+ * Defines persistent keybinds and matches them against the global keyboard stream.
  *
  * @module @sorrell/wm/Main/Input/Hotkey
  *

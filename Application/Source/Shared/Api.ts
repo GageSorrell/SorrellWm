@@ -1,5 +1,5 @@
 /**
- *
+ * Renderer-safe contracts and IPC channels for the application's preload bridge.
  *
  * @module @sorrell/wm/Shared/ApplicationProgrammingInterface
  *

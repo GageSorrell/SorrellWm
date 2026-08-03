@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for timeline tab.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/TimelineTab
  *

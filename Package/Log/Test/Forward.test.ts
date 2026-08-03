@@ -1,5 +1,5 @@
 /**
- *
+ * Tests forward behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Forward.test
  *

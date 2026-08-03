@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for window.
  *
  * @module @sorrell/windows/Window
  *
@@ -213,6 +213,21 @@ const GetWindowRect = (Window: Handle.HWND): Option.Option<Box.Box> => pipe(
         Rectangle.Left
     ))
 );
+
+export/** Get a window's visible DWM frame bounds in screen coordinates. */
+const GetWindowFrameRect = (Window: Handle.HWND): Option.Option<Box.Box> =>
+    typeof Binding.Window.GetWindowFrameRect !== "function"
+        ? GetWindowRect(Window)
+        : pipe(
+            Binding.Window.GetWindowFrameRect(Window),
+            Attempt.AsOption,
+            Option.map((Rectangle: Box.BoxArg<number>) => Box.Box(
+                Rectangle.Top,
+                Rectangle.Right,
+                Rectangle.Bottom,
+                Rectangle.Left
+            ))
+        );
 
 export/** Get a window's title, including an empty title when the window has no caption. */
 const GetWindowText: { (Window: Handle.HWND): Option.Option<string>; } =

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for H6.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/H6
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/app-settings`.
  *
  * @module @sorrell/app-settings
  *

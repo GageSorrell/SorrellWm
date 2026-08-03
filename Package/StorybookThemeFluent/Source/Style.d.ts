@@ -1,5 +1,5 @@
 /**
- *
+ * Style-module declarations for `@sorrell/storybook-theme-fluent`.
  *
  * @module @sorrell/storybook-theme-fluent/Style.d
  *

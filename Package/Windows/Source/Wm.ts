@@ -1,5 +1,5 @@
 /**
- *
+ * Windows message constants and their union type.
  *
  * @module @sorrell/windows/Wm
  *

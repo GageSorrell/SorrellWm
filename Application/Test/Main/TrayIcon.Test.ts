@@ -1,4 +1,6 @@
 /**
+ * Tests selection of tray icon variants for Windows themes.
+ *
  * @module @sorrell/wm/Test/TrayIcon
  *
  * @file      TrayIcon.Test.ts

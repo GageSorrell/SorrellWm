@@ -1,5 +1,5 @@
 /**
- *
+ * Structured log formatting with JSON lines formatter.
  *
  * @module @sorrell/log/Formatting/JsonLinesFormatter
  *

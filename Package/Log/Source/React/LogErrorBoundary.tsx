@@ -1,5 +1,5 @@
 /**
- *
+ * React integration for structured logging with log error boundary.
  *
  * @module @sorrell/log/React/LogErrorBoundary
  *

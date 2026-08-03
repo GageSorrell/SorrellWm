@@ -1,5 +1,5 @@
 /**
- *
+ * Tests contextual titlebar flyouts for native caption buttons.
  *
  * @module @sorrell/wm/Test/TitlebarFlyout
  *

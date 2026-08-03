@@ -1,5 +1,5 @@
 /**
- *
+ * Tests root renderer theme selection and application composition.
  *
  * @module @sorrell/wm/Renderer/Source/RootTest
  *

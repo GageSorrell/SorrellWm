@@ -14,7 +14,7 @@ import * as SorrellLogging from "@sorrell/log/Effect";
 import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
 import { describe, expect, it } from "vitest";
 import { Box } from "@sorrell/math";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import type { Handle } from "@sorrell/windows";
 import { InMemorySink } from "@sorrell/log/Testing";
 
@@ -36,7 +36,7 @@ describe("Logging", () =>
             Sinks: [ Sink ]
         });
 
-        await Effect.runPromise(Logging.LogWarning(
+        await Effect.runPromise(pipe(Logging.LogWarning(
             "Overlay.Preview",
             "Preview operation failed.",
             new Error("test failure"),
@@ -44,7 +44,7 @@ describe("Logging", () =>
                 Operation: "Ensure",
                 Window: "FocusPreviewLeft"
             }
-        ).pipe(Effect.provide(LoggingLayer)));
+        ), Effect.provide(LoggingLayer)));
 
         expect(Sink.Records).toHaveLength(1);
         expect(Sink.Records[0]).toMatchObject({
@@ -114,9 +114,7 @@ describe("Logging", () =>
         };
 
         await Effect.runPromise(
-            Logging.LogTilingState(State).pipe(
-                Effect.provideService(SorrellLogging.LogRuntime, Runtime)
-            )
+            pipe(Logging.LogTilingState(State), Effect.provideService(SorrellLogging.LogRuntime, Runtime))
         );
         await Effect.runPromise(Runtime.Flush);
         await Effect.runPromise(Runtime.Shutdown);

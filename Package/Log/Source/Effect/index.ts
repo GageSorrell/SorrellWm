@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the Effect module in `@sorrell/log`.
  *
  * @module @sorrell/log/Effect/index
  *
@@ -13,6 +13,7 @@ import {
     Layer as EffectLayer,
     type Layer as LayerType,
     LogLevel,
+    pipe,
     References
 } from "effect";
 import {
@@ -60,7 +61,5 @@ export function Layer(
         EffectLayer.succeed(References.MinimumLogLevel, EffectMinimumLevel)
     );
 
-    return AdapterLayer.pipe(
-        EffectLayer.provideMerge(RuntimeLayer(Options))
-    );
+    return pipe(AdapterLayer, EffectLayer.provideMerge(RuntimeLayer(Options)));
 }

@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the forward module in `@sorrell/log`.
  *
  * @module @sorrell/log/Forward/index
  *

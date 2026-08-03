@@ -1,5 +1,5 @@
 /**
- *
+ * Structured log formatting with pretty formatter.
  *
  * @module @sorrell/log/Formatting/PrettyFormatter
  *

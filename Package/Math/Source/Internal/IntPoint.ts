@@ -1,5 +1,5 @@
 /**
- *
+ * Integer point types and operations.
  *
  * @module @sorrell/math/Internal/IntPoint
  * @internal

@@ -1,5 +1,5 @@
 /**
- *
+ * Factories for composing Ink UI showcase stories.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Factory
  *

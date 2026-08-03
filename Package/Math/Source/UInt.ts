@@ -1,5 +1,5 @@
 /**
- *
+ * Branded unsigned integer values and arithmetic operations.
  *
  * @module @sorrell/math/UInt
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for command.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Command
  *

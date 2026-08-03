@@ -1,5 +1,5 @@
 /**
- *
+ * Log forwarding types and operations for receiver.
  *
  * @module @sorrell/log/Forward/Receiver
  *

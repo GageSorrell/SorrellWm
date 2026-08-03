@@ -1,4 +1,6 @@
 /**
+ * Tests renderer-safe overlay commands projected from configured hotkeys.
+ *
  * @module @sorrell/wm/Test/OverlayCommandCatalog
  *
  * @file      OverlayCommandCatalog.Test.ts

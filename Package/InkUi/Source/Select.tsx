@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for select.
  *
  * @module @sorrell/ink-ui/Select
  *

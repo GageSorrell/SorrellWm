@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the internal module in `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Internal
  * @internal

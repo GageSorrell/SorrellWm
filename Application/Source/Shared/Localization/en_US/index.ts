@@ -1,5 +1,5 @@
 /**
- *
+ * US English application localization.
  *
  * @module @sorrell/wm/Shared/Localization/en_US/index
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Configures Vitest for the `@sorrell/log` workspace.
  *
  * @module @sorrell/log/vitest.config
  *

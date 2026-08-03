@@ -1,5 +1,5 @@
 /**
- *
+ * Publish operations for generating and publishing documentation sites.
  *
  * @module @sorrell/site/Publish
  *

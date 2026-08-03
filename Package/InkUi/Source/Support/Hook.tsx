@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for hook.
  *
  * @module @sorrell/ink-ui/Support/Hook
  *

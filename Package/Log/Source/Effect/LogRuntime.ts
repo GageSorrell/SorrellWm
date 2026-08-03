@@ -1,5 +1,5 @@
 /**
- *
+ * Effect integration for structured logging with log runtime.
  *
  * @module @sorrell/log/Effect/LogRuntime
  *
@@ -14,7 +14,8 @@ import {
     Data,
     Effect,
     Layer as EffectLayer,
-    type LogLevel
+    type LogLevel,
+    pipe
 } from "effect";
 import * as Category from "../Category.js";
 import type { CategoryInput } from "../Category.js";
@@ -522,7 +523,7 @@ export function RuntimeLayer(
         LogRuntime,
         Effect.acquireRelease(
             Effect.sync(() => Make(Options)),
-            (Runtime: Service) => Runtime.Shutdown.pipe(Effect.ignore)
+            (Runtime: Service) => pipe(Runtime.Shutdown, Effect.ignore)
         )
     );
 }

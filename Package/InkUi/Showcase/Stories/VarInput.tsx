@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for entering values with variable substitution.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/VarInput
  *

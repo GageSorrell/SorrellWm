@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for completion menu.
  *
  * @module @sorrell/ink-ui/CompletionMenu
  *

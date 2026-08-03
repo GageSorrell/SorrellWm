@@ -1,4 +1,6 @@
 /**
+ * Tests the live overlay session with native window and monitor state.
+ *
  * @module @sorrell/wm/Test/OverlaySessionLive
  *
  * @file      OverlaySessionLive.Test.ts

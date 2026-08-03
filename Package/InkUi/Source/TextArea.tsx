@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for text area.
  *
  * @module @sorrell/ink-ui/TextArea
  *

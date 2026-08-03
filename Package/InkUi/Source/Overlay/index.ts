@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the overlay module in `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Overlay
  *

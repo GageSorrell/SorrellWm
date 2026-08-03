@@ -1,5 +1,5 @@
 /**
- *
+ * Tests runtime behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Runtime.test
  *

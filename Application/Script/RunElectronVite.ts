@@ -1,5 +1,5 @@
 /**
- *
+ * Runs the Electron Vite command with Electron's normal runtime environment restored.
  *
  * @module @sorrell/wm/Script/RunElectronVite
  * @internal

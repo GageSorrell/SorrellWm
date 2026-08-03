@@ -1,5 +1,5 @@
 /**
- *
+ * Tests tiling-state ownership and native window reconciliation.
  *
  * @module @sorrell/wm/Test/TilingManager
  *
@@ -11,7 +11,7 @@
 
 import * as TilingManager from "../../Source/Main/Tiling/Manager.ts";
 import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
-import { Effect, Option, Result } from "effect";
+import { Effect, Option, Result, pipe } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";
@@ -86,15 +86,56 @@ describe("TilingManager", () =>
             Applied
         );
 
-        await Effect.runPromise(Effect.gen(function*()
+        await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.SetGap(8);
             yield* Manager.TileExistingWindows;
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(Applied).toEqual([
             { Bounds: Bounds(8, 992, 592, 8), Window: Hwnd(1) }
+        ]);
+    });
+
+    it("compensates for invisible window frames so visible tiled gaps stay uniform", async () =>
+    {
+        const WorkArea = Bounds(0, 3440, 1440, 0);
+        const Handles = [ Hwnd(1), Hwnd(2) ];
+        const Applied = new Array<AppliedBounds>();
+        const OuterBounds = new Map<Handle.HWND, Box.Box>([
+            [ Hwnd(1), Bounds(0, 1728, 1440, 0) ],
+            [ Hwnd(2), Bounds(0, 3440, 1440, 1712) ]
+        ]);
+        const FrameBounds = new Map<Handle.HWND, Box.Box>([
+            [ Hwnd(1), Bounds(0, 1720, 1432, 8) ],
+            [ Hwnd(2), Bounds(0, 3432, 1432, 1720) ]
+        ]);
+        const Dependencies: TilingManager.Dependencies = {
+            ...FakeDependencies(
+                Handles,
+                OuterBounds,
+                new Map(Handles.map((WindowValue: Handle.HWND) => [
+                    WindowValue,
+                    WorkArea
+                ])),
+                Applied
+            ),
+            GetWindowFrameRect: (WindowValue: Handle.HWND) => Option.fromUndefinedOr(
+                FrameBounds.get(WindowValue)
+            )
+        };
+
+        await Effect.runPromise(pipe(Effect.gen(function*()
+        {
+            const Manager = yield* TilingManager.TilingManager;
+            yield* Manager.SetGap(8);
+            yield* Manager.TileExistingWindows;
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
+
+        expect(Applied).toEqual([
+            { Bounds: Bounds(8, 1724, 1440, 0), Window: Hwnd(1) },
+            { Bounds: Bounds(8, 3440, 1440, 1716), Window: Hwnd(2) }
         ]);
     });
 
@@ -121,13 +162,13 @@ describe("TilingManager", () =>
             Applied
         );
 
-        const State = await Effect.runPromise(Effect.gen(function*()
+        const State = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             expect((yield* Manager.Snapshot).Workspaces).toEqual([ ]);
             yield* Manager.TileExistingWindows;
             return yield* Manager.Snapshot;
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(State.Workspaces).toHaveLength(2);
         expect(State.Workspaces[0]?.Root?._tag).toBe("Panel");
@@ -156,13 +197,13 @@ describe("TilingManager", () =>
             [ ]
         );
 
-        const Managed = await Effect.runPromise(Effect.gen(function*()
+        const Managed = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.Tile(Hwnd(1));
             yield* Manager.TileExistingWindows;
             return TilingTree.Windows((yield* Manager.Snapshot).Workspaces[0]!.Root);
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(Managed.map((Value: TilingTree.ManagedWindow) => Value.Window))
             .toEqual([ Hwnd(1) ]);
@@ -170,11 +211,11 @@ describe("TilingManager", () =>
 
     it("starts with an empty state when native startup discovery is unavailable", async () =>
     {
-        const State = await Effect.runPromise(Effect.gen(function*()
+        const State = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             return yield* Manager.Snapshot;
-        }).pipe(Effect.provide(TilingManager.MakeLive({
+        }), Effect.provide(TilingManager.MakeLive({
             Enumerate: () => Result.fail({ Message: "Native method unavailable." }),
             GetWindowRect: () => Option.none(),
             GetWindowWorkArea: () => Option.none(),
@@ -203,7 +244,7 @@ describe("TilingManager", () =>
             Applied
         );
 
-        const ResultValue = await Effect.runPromise(Effect.gen(function*()
+        const ResultValue = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.TileExistingWindows;
@@ -220,7 +261,7 @@ describe("TilingManager", () =>
                 FinalState: yield* Manager.Snapshot,
                 SplitState
             };
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(TilingTree.Layout(ResultValue.SplitState).map(
             (Placement: TilingTree.Placement) => ({
@@ -259,7 +300,7 @@ describe("TilingManager", () =>
             [ ]
         );
 
-        const State = await Effect.runPromise(Effect.gen(function*()
+        const State = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
 
@@ -280,7 +321,7 @@ describe("TilingManager", () =>
             );
 
             return yield* Manager.Snapshot;
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         const Root = State.Workspaces[0]?.Root;
         expect(Root?._tag).toBe("Panel");
@@ -311,7 +352,7 @@ describe("TilingManager", () =>
             Applied
         );
 
-        const ResultValue = await Effect.runPromise(Effect.gen(function*()
+        const ResultValue = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.Tile(
@@ -342,7 +383,7 @@ describe("TilingManager", () =>
                 PreviewBounds,
                 PreviewSnapshot
             };
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(ResultValue.PreviewBounds).toEqual(Bounds(0, 500, 300, 0));
         expect(TilingTree.Windows(ResultValue.PreviewSnapshot.Workspaces[0]!.Root)
@@ -384,7 +425,7 @@ describe("TilingManager", () =>
             AppliedZOrders
         );
 
-        const State = await Effect.runPromise(Effect.gen(function*()
+        const State = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
 
@@ -405,7 +446,7 @@ describe("TilingManager", () =>
             AppliedZOrders.length = 0;
             yield* Manager.BringStackWindowToFront(Hwnd(3));
             return yield* Manager.Snapshot;
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         const Root = State.Workspaces[0]?.Root;
         expect(Root?._tag === "Panel"
@@ -445,13 +486,13 @@ describe("TilingManager", () =>
             Applied
         );
 
-        const State = await Effect.runPromise(Effect.gen(function*()
+        const State = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.TileExistingWindows;
             yield* Manager.Move(Hwnd(1), Hwnd(2), TilingTree.Orientation.Vertical);
             return yield* Manager.Snapshot;
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(State.Workspaces).toHaveLength(1);
         expect(TilingTree.Layout(State).map((Placement: TilingTree.Placement) => ({
@@ -481,7 +522,7 @@ describe("TilingManager", () =>
             Applied
         );
 
-        const ResultValue = await Effect.runPromise(Effect.gen(function*()
+        const ResultValue = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.Tile(Hwnd(1), undefined, TilingTree.Orientation.Horizontal);
@@ -501,7 +542,7 @@ describe("TilingManager", () =>
                 Nested,
                 Promoted: yield* Manager.Snapshot
             };
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(TilingTree.Windows(ResultValue.Nested.Workspaces[0]!.Root)
             .map((Value: TilingTree.ManagedWindow) => Value.Window))
@@ -583,7 +624,7 @@ describe("TilingManager", () =>
                 }
             };
 
-            const ResultValue = await Effect.runPromise(Effect.gen(function*()
+            const ResultValue = await Effect.runPromise(pipe(Effect.gen(function*()
             {
                 const Manager = yield* TilingManager.TilingManager;
                 yield* Manager.Tile(
@@ -598,25 +639,23 @@ describe("TilingManager", () =>
                 );
                 EnforceMinimum = true;
 
-                const MutationResult = yield* Manager.Resize(
+                const MutationResult = yield* pipe(Manager.Resize(
                     Hwnd(1),
                     TilingTree.FocusDirection.Right,
                     -200,
                     "PreserveRatios",
                     Strategy
-                ).pipe(
-                    Effect.as("Applied" as const),
+                ), Effect.as("Applied" as const),
                     Effect.catchTag(
                         "ResizeRecoveryCanceledError",
                         () => Effect.succeed("Canceled" as const)
-                    )
-                );
+                    ));
 
                 return {
                     MutationResult,
                     State: yield* Manager.Snapshot
                 };
-            }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+            }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
             const FirstPlacement = TilingTree.Layout(ResultValue.State).find(
                 (Placement: TilingTree.Placement): boolean =>
@@ -647,7 +686,7 @@ describe("TilingManager", () =>
             [ ]
         );
 
-        const Managed = await Effect.runPromise(Effect.gen(function*()
+        const Managed = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Manager = yield* TilingManager.TilingManager;
             yield* Manager.TileExistingWindows;
@@ -658,7 +697,7 @@ describe("TilingManager", () =>
             return TilingTree.Windows(State.Workspaces[0]!.Root).find(
                 (Value: TilingTree.ManagedWindow): boolean => Value.Window === Hwnd(1)
             );
-        }).pipe(Effect.provide(TilingManager.MakeLive(Dependencies))));
+        }), Effect.provide(TilingManager.MakeLive(Dependencies))));
 
         expect(Managed).toBeDefined();
         expect(Box.Tupled(Managed!.InitialBounds)).toEqual(Box.Tupled(FirstInitial));

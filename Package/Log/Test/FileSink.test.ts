@@ -1,5 +1,5 @@
 /**
- *
+ * Tests file sink behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/FileSink.test
  *

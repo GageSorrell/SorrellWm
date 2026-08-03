@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for scroll area.
  *
  * @module @sorrell/ink-ui/ScrollArea
  *

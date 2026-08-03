@@ -1,5 +1,5 @@
 /**
- *
+ * Navigation state and controls for the Ink UI showcase.
  *
  * @module @sorrell/ink-ui/Showcase/Navigation
  *

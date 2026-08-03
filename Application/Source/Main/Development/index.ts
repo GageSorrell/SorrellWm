@@ -1,5 +1,5 @@
 /**
- *
+ * Development-only application configuration.
  *
  * @module @sorrell/wm/Main/Development
  *

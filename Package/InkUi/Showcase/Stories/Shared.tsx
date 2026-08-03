@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for shared.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Shared
  *

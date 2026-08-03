@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/math`.
  *
  * @module @sorrell/math
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Converts native operation attempts into Effect results and options.
  *
  * @module @sorrell/windows/Internal/Attempt
  * @internal

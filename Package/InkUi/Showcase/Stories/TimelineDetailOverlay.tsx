@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for timeline detail overlay.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/TimelineDetailOverlay
  *

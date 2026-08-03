@@ -1,4 +1,6 @@
 /**
+ * Tests navigation among settings sections and registered controls.
+ *
  * @module @sorrell/wm/Test/SettingsNavigation
  *
  * @file      SettingsNavigation.Test.tsx

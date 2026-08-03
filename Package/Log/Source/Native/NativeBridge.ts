@@ -1,5 +1,5 @@
 /**
- *
+ * Native logging integration for native bridge.
  *
  * @module @sorrell/log/Native/NativeBridge
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for mouse provider.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/MouseProvider
  *

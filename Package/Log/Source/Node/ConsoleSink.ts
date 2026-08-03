@@ -1,5 +1,5 @@
 /**
- *
+ * Node.js logging support for console sink.
  *
  * @module @sorrell/log/Node/ConsoleSink
  *

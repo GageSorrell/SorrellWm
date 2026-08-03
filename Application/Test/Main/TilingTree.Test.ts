@@ -1,5 +1,5 @@
 /**
- *
+ * Tests immutable tiling-tree operations and geometric projection.
  *
  * @module @sorrell/wm/Test/TilingTree
  *
@@ -13,6 +13,7 @@ import * as TilingTree from "../../Source/Main/Tiling/Tree.ts";
 import { describe, expect, it } from "vitest";
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";
+import { Option } from "effect";
 
 const Hwnd = (Value: number): Handle.HWND => BigInt(Value) as Handle.HWND;
 const Bounds = (Top: number, Right: number, Bottom: number, Left: number): Box.Box =>
@@ -87,29 +88,29 @@ describe("TilingTree", () =>
             TilingTree.Orientation.Horizontal,
             [ WindowNode(1), WindowNode(2), WindowNode(3) ]
         );
-        const [ InsertedLeft, DidInsertLeft ] =
-            TilingTree.InsertWindowInDirection(
-                Root,
-                { InitialBounds: WorkArea, Window: Hwnd(4) },
-                Hwnd(2),
-                TilingTree.FocusDirection.Left
-            );
-        const [ InsertedUp, DidInsertUp ] =
-            TilingTree.InsertWindowInDirection(
-                Root,
-                { InitialBounds: WorkArea, Window: Hwnd(5) },
-                Hwnd(2),
-                TilingTree.FocusDirection.Up
-            );
+        const InsertedLeftResult = TilingTree.InsertWindowInDirection(
+            Root,
+            { InitialBounds: WorkArea, Window: Hwnd(4) },
+            Hwnd(2),
+            TilingTree.FocusDirection.Left
+        );
+        const InsertedUpResult = TilingTree.InsertWindowInDirection(
+            Root,
+            { InitialBounds: WorkArea, Window: Hwnd(5) },
+            Hwnd(2),
+            TilingTree.FocusDirection.Up
+        );
+        const InsertedLeft = Option.getOrThrow(InsertedLeftResult);
+        const InsertedUp = Option.getOrThrow(InsertedUpResult);
 
-        expect(DidInsertLeft).toBe(true);
+        expect(Option.isSome(InsertedLeftResult)).toBe(true);
         expect(TilingTree.Windows(InsertedLeft).map(
             (Value: TilingTree.ManagedWindow) => Value.Window
         )).toEqual([ Hwnd(1), Hwnd(4), Hwnd(2), Hwnd(3) ]);
         expect(InsertedLeft._tag === "Panel" ? InsertedLeft.Ratios : [ ])
             .toEqual([ 1 / 3, 1 / 6, 1 / 6, 1 / 3 ]);
 
-        expect(DidInsertUp).toBe(true);
+        expect(Option.isSome(InsertedUpResult)).toBe(true);
         expect(InsertedUp._tag).toBe("Panel");
         expect(InsertedUp._tag === "Panel"
             ? InsertedUp.Children[1]
@@ -235,15 +236,17 @@ describe("TilingTree", () =>
             TilingTree.Window({ InitialBounds: Bounds(0, 10, 10, 0), Window: Hwnd(1) }),
             TilingTree.Window({ InitialBounds: Bounds(0, 20, 10, 10), Window: Hwnd(2) })
         );
-        const [ WithRatio, RatioChanged ] = TilingTree.SetPanelRatio(Root, [ ], 0.25);
-        const [ WithOrientation, OrientationChanged ] = TilingTree.SetPanelOrientation(
+        const WithRatioResult = TilingTree.SetPanelRatio(Root, [ ], 0.25);
+        const WithRatio = Option.getOrThrow(WithRatioResult);
+        const WithOrientationResult = TilingTree.SetPanelOrientation(
             WithRatio,
             [ ],
             TilingTree.Orientation.Vertical
         );
+        const WithOrientation = Option.getOrThrow(WithOrientationResult);
 
-        expect(RatioChanged).toBe(true);
-        expect(OrientationChanged).toBe(true);
+        expect(Option.isSome(WithRatioResult)).toBe(true);
+        expect(Option.isSome(WithOrientationResult)).toBe(true);
         expect(WithOrientation).toMatchObject({
             Orientation: "Vertical",
             Ratio: 0.25,
@@ -268,20 +271,22 @@ describe("TilingTree", () =>
             TilingTree.Orientation.Horizontal,
             [ WindowNode(1), WindowNode(2), Nested ]
         );
-        const [ WithOrientation, OrientationChanged ] = TilingTree.SetPanelOrientation(
+        const WithOrientationResult = TilingTree.SetPanelOrientation(
             Root,
             [ 2 ],
             TilingTree.Orientation.Vertical
         );
-        const [ WithRatio, RatioChanged ] = TilingTree.SetPanelRatio(
+        const WithOrientation = Option.getOrThrow(WithOrientationResult);
+        const WithRatioResult = TilingTree.SetPanelRatio(
             WithOrientation,
             [ ],
             0.5,
             2
         );
+        const WithRatio = Option.getOrThrow(WithRatioResult);
 
-        expect(OrientationChanged).toBe(true);
-        expect(RatioChanged).toBe(true);
+        expect(Option.isSome(WithOrientationResult)).toBe(true);
+        expect(Option.isSome(WithRatioResult)).toBe(true);
         expect(WithOrientation._tag === "Panel"
             ? WithOrientation.Children[2]
             : undefined).toMatchObject({
@@ -308,7 +313,7 @@ describe("TilingTree", () =>
             [ WindowNode(1), WindowNode(2), WindowNode(3) ],
             [ 0.2, 0.3, 0.5 ]
         );
-        const [ Preserved, DidPreserve ] = TilingTree.ResizeWindow(
+        const PreservedResult = TilingTree.ResizeWindow(
             Root,
             WorkArea,
             Hwnd(2),
@@ -316,7 +321,7 @@ describe("TilingTree", () =>
             100,
             "PreserveRatios"
         );
-        const [ Adjacent, DidTransfer ] = TilingTree.ResizeWindow(
+        const AdjacentResult = TilingTree.ResizeWindow(
             Root,
             WorkArea,
             Hwnd(2),
@@ -324,8 +329,10 @@ describe("TilingTree", () =>
             100,
             "AdjacentOnly"
         );
+        const Preserved = Option.getOrThrow(PreservedResult);
+        const Adjacent = Option.getOrThrow(AdjacentResult);
 
-        expect(DidPreserve).toBe(true);
+        expect(Option.isSome(PreservedResult)).toBe(true);
         const PreservedRatios = Preserved._tag === "Panel"
             ? Preserved.Ratios
             : [ ];
@@ -333,9 +340,36 @@ describe("TilingTree", () =>
         expect(PreservedRatios[1]).toBeCloseTo(0.4);
         expect(PreservedRatios[2]).toBeCloseTo(3 / 7);
         expect(PreservedRatios).toHaveLength(3);
-        expect(DidTransfer).toBe(true);
+        expect(Option.isSome(AdjacentResult)).toBe(true);
         expect(Adjacent._tag === "Panel" ? Adjacent.Ratios : [ ])
             .toEqual([ 0.1, 0.4, 0.5 ]);
+    });
+
+    it("does not resize the opposite edge when the selected edge is flush with the root", () =>
+    {
+        const WorkArea = Bounds(0, 1000, 400, 0);
+        const Left = TilingTree.Window({
+            InitialBounds: WorkArea,
+            Window: Hwnd(1)
+        });
+        const Right = TilingTree.Window({
+            InitialBounds: WorkArea,
+            Window: Hwnd(2)
+        });
+        const Root = TilingTree.Panel(
+            TilingTree.Orientation.Horizontal,
+            [ Left, Right ]
+        );
+        const Resized = TilingTree.ResizeWindow(
+            Root,
+            WorkArea,
+            Hwnd(1),
+            TilingTree.FocusDirection.Left,
+            -100,
+            "PreserveRatios"
+        );
+
+        expect(Resized).toEqual(Option.none());
     });
 
     it("resizes a perpendicular containing branch and every window inside it", () =>
@@ -354,7 +388,7 @@ describe("TilingTree", () =>
             TilingTree.Orientation.Vertical,
             [ Row, WindowNode(3) ]
         );
-        const [ Resized, DidResize ] = TilingTree.ResizeWindow(
+        const ResizedResult = TilingTree.ResizeWindow(
             Root,
             WorkArea,
             Hwnd(1),
@@ -362,11 +396,12 @@ describe("TilingTree", () =>
             80,
             "PreserveRatios"
         );
+        const Resized = Option.getOrThrow(ResizedResult);
         const State: TilingTree.State = {
             Workspaces: [ { Bounds: WorkArea, Id: "primary", Root: Resized } ]
         };
 
-        expect(DidResize).toBe(true);
+        expect(Option.isSome(ResizedResult)).toBe(true);
         expect(TilingTree.Layout(State).map((Placement: TilingTree.Placement) => ({
             Bounds: Box.Tupled(Placement.Bounds),
             Window: Placement.Window
@@ -465,32 +500,35 @@ describe("TilingTree", () =>
             [ WindowNode(1), Nested, WindowNode(5) ]
         );
 
-        const [ Reordered, DidReorder ] = TilingTree.MoveWindowToIndex(
+        const ReorderedResult = TilingTree.MoveWindowToIndex(
             Root,
             Hwnd(4),
             0
         );
-        expect(DidReorder).toBe(true);
+        const Reordered = Option.getOrThrow(ReorderedResult);
+        expect(Option.isSome(ReorderedResult)).toBe(true);
         expect(TilingTree.Windows(TilingTree.GetNodeAtPath(Reordered, [ 1 ]) ?? null)
             .map((Value: TilingTree.ManagedWindow) => Value.Window))
             .toEqual([ Hwnd(4), Hwnd(2), Hwnd(3) ]);
 
-        const [ Promoted, DidPromote ] = TilingTree.MoveWindowToContainingPanel(
+        const PromotedResult = TilingTree.MoveWindowToContainingPanel(
             Root,
             Hwnd(2)
         );
-        expect(DidPromote).toBe(true);
+        const Promoted = Option.getOrThrow(PromotedResult);
+        expect(Option.isSome(PromotedResult)).toBe(true);
         expect(TilingTree.Windows(Promoted)
             .map((Value: TilingTree.ManagedWindow) => Value.Window))
             .toEqual([ Hwnd(1), Hwnd(3), Hwnd(4), Hwnd(2), Hwnd(5) ]);
         expect(TilingTree.FindWindowPath(Promoted, Hwnd(2))).toEqual([ 2 ]);
 
-        const [ Inserted, DidInsert ] = TilingTree.MoveWindowIntoPanel(
+        const InsertedResult = TilingTree.MoveWindowIntoPanel(
             Root,
             Hwnd(1),
             [ 1 ]
         );
-        expect(DidInsert).toBe(true);
+        const Inserted = Option.getOrThrow(InsertedResult);
+        expect(Option.isSome(InsertedResult)).toBe(true);
         expect(TilingTree.Windows(Inserted)
             .map((Value: TilingTree.ManagedWindow) => Value.Window))
             .toEqual([ Hwnd(1), Hwnd(2), Hwnd(3), Hwnd(4), Hwnd(5) ]);
@@ -501,12 +539,13 @@ describe("TilingTree", () =>
             WindowNode(1),
             Nested
         );
-        const [ Collapsed, DidCollapse ] = TilingTree.MoveWindowIntoPanel(
+        const CollapsedResult = TilingTree.MoveWindowIntoPanel(
             TwoChildRoot,
             Hwnd(1),
             [ 1 ]
         );
-        expect(DidCollapse).toBe(true);
+        const Collapsed = Option.getOrThrow(CollapsedResult);
+        expect(Option.isSome(CollapsedResult)).toBe(true);
         expect(Collapsed).toMatchObject({
             Orientation: TilingTree.Orientation.Vertical,
             _tag: "Panel"

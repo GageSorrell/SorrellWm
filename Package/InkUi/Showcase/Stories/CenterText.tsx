@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for center text.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/CenterText
  *

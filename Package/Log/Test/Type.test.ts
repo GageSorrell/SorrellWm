@@ -1,5 +1,5 @@
 /**
- *
+ * Tests type behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Type.test
  *

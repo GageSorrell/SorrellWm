@@ -1,5 +1,5 @@
 /**
- *
+ * Tests effectful Electron window creation, reuse, and lifecycle management.
  *
  * @module @sorrell/wm/Test/BrowserWindow
  *

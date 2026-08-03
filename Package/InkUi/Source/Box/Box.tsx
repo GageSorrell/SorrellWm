@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for box.
  *
  * @module @sorrell/ink-ui/Box/Box
  *

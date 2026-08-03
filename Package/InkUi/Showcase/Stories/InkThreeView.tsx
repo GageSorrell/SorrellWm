@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for rendering a Three.js scene in Ink.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/InkThreeView
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Interactive showcase application for Ink UI components.
  *
  * @module @sorrell/ink-ui/Showcase/Showcase
  *

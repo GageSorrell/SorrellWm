@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for theme.
  *
  * @module @sorrell/windows/Theme
  *

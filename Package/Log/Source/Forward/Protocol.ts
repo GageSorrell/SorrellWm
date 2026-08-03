@@ -1,5 +1,5 @@
 /**
- *
+ * Log forwarding types and operations for protocol.
  *
  * @module @sorrell/log/Forward/Protocol
  *

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 /**
+ * Command-line entry point for Windows build operations.
+ *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
@@ -9,7 +11,7 @@
 
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { Command } from "@sorrell/effect/unstable/cli";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import { GetVersion } from "../Command/Command.js";
 import { IndexCommand } from "../Index/IndexCommand.js";
 import { InitCommand } from "../Init/Init.js";
@@ -61,17 +63,16 @@ async function Main(): Promise<void>
     /* eslint-disable-next-line @typescript-eslint/typedef */
     const CliFn =
         Command.run(
-            MainCommand.pipe(Command.withSubcommands(SubCommands)),
+            pipe(MainCommand, Command.withSubcommands(SubCommands)),
             {
                 name: "@sorrell/cli",
                 version
             }
         );
 
-    CliFn(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);
+    pipe(CliFn(process.argv), Effect.provide(NodeContext.layer), NodeRuntime.runMain);
 }
 
 Main();
 
     "cmake-step": "cmake-js compile --out ../Build",
-

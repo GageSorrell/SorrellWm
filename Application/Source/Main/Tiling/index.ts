@@ -1,5 +1,5 @@
 /**
- *
+ * Tiling-tree state and its native window manager.
  *
  * @module @sorrell/wm/Main/Tiling
  *

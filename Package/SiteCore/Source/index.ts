@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/site-core`.
  *
  * @module @sorrell/site-core
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Extension operations for the SorrellWm code extension.
  *
  * @module @sorrell/sorrell-wm-code-extension/Extension
  *

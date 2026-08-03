@@ -1,4 +1,6 @@
 /**
+ * Tests the settings renderer surface and its responsive layout.
+ *
  * @module @sorrell/wm/Test/Settings
  *
  * @file      Settings.Test.tsx

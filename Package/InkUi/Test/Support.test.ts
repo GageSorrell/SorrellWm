@@ -1,5 +1,5 @@
 /**
- *
+ * Tests support behavior for `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Test/Support.test
  *

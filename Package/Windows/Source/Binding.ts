@@ -118,6 +118,9 @@ export interface NativeBinding
         readonly GetWindowRect: (
             Window: Handle.HWND
         ) => Attempt.NativeAttempt<Box.BoxArg<number>>;
+        readonly GetWindowFrameRect?: (
+            Window: Handle.HWND
+        ) => Attempt.NativeAttempt<Box.BoxArg<number>>;
         readonly GetWindowText: (Window: Handle.HWND) => Attempt.NativeAttempt<string>;
         readonly GetWindowWorkArea: (
             Window: Handle.HWND

@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the badge module in `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Badge
  *

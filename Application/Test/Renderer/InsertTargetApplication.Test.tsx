@@ -1,4 +1,6 @@
 /**
+ * Tests the temporary tiled Insert target renderer.
+ *
  * @module @sorrell/wm/Renderer/InsertTargetApplicationTest
  *
  * @file      InsertTargetApplication.Test.tsx

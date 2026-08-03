@@ -81,12 +81,10 @@ const SceneRendererLive: Layer.Layer<SceneRenderer> = Layer.succeed(
         }),
         RenderString: (Input: SceneRenderInput) => Effect.gen(function*()
         {
-            const TheViewport: Viewport.Viewport = yield* Viewport.ValidateViewport(Input.Viewport).pipe(
-                Effect.mapError((Cause: InvalidViewport | InvalidRenderOptions) => new SceneRenderFailed({
+            const TheViewport: Viewport.Viewport = yield* pipe(Viewport.ValidateViewport(Input.Viewport), Effect.mapError((Cause: InvalidViewport | InvalidRenderOptions) => new SceneRenderFailed({
                     Cause,
                     Message: Cause.Message
-                }))
-            );
+                })));
 
             return yield* Effect.try({
                 catch: (Cause: unknown) => new SceneRenderFailed({

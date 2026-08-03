@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for text input.
  *
  * @module @sorrell/ink-ui/TextInput
  *

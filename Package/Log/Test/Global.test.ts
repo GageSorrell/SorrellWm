@@ -11,7 +11,8 @@
 
 import {
     DateTime,
-    Effect
+    Effect,
+    pipe
 } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -43,9 +44,7 @@ describe("global values", () =>
         });
 
         await Effect.runPromise(
-            LogGlobal(Counter, 7).pipe(
-                Effect.provideService(LogRuntime, Runtime)
-            )
+            pipe(LogGlobal(Counter, 7), Effect.provideService(LogRuntime, Runtime))
         );
         await Effect.runPromise(Runtime.Flush);
 
@@ -85,15 +84,13 @@ describe("global values", () =>
         });
 
         await Effect.runPromise(
-            LogGlobal(
+            pipe(LogGlobal(
                 StartedAt,
                 DateTime.makeUnsafe("2026-07-24T04:59:00.000Z")
-            ).pipe(Effect.provideService(LogRuntime, Runtime))
+            ), Effect.provideService(LogRuntime, Runtime))
         );
         await expect(Effect.runPromise(
-            LogGlobal(Percentage, 101).pipe(
-                Effect.provideService(LogRuntime, Runtime)
-            )
+            pipe(LogGlobal(Percentage, 101), Effect.provideService(LogRuntime, Runtime))
         )).rejects.toBeDefined();
         await Effect.runPromise(Runtime.Flush);
 

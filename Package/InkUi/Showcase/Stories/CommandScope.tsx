@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for command scope.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/CommandScope
  *

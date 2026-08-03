@@ -1,5 +1,5 @@
 /**
- *
+ * Tests construction of Fluent UI themes from application theme data.
  *
  * @module @sorrell/wm/Renderer/Source/ThemeTest
  *

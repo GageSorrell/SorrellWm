@@ -1,5 +1,5 @@
 /**
- *
+ * Tests core behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Core.test
  *

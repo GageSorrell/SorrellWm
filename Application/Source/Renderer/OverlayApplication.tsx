@@ -46,7 +46,7 @@ import {
 import { CommandButton, CompactCommandButton } from "./CommandButton.js";
 import { DirectionalPad, type DirectionalPadDirection } from "./DirectionalPad.js";
 import { EncodeSettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
-import { Option, Predicate, Struct } from "effect";
+import { Option, Predicate, Struct, pipe } from "effect";
 import {
     type OverlayCommandDto,
     OverlayCommandId,
@@ -738,7 +738,7 @@ const OverlayApplication = (): React.ReactNode =>
     // Sampled unconditionally (even outside the Focus screen) to satisfy the
     // rules of hooks; each call no-ops when there is no target icon.
     const ToColor = (Color: SampledColor | undefined): Option.Option<string> =>
-        Option.fromNullishOr(Color).pipe(Option.map(ToCssColor));
+        pipe(Option.fromNullishOr(Color), Option.map(ToCssColor));
     const FocusMoveDownColor = ToColor(
         UseDominantColor(FindCommand(OverlayCommandId.FocusMoveDown)?.Target?.Icon)
     );

@@ -1,4 +1,6 @@
 /**
+ * Tests command-button shortcut presentation.
+ *
  * @module @sorrell/wm/Renderer/CommandButtonTest
  *
  * @file      CommandButton.Test.tsx

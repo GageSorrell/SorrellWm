@@ -1,5 +1,5 @@
 /**
- *
+ * Docusaurus root theme component for `@sorrell/docusaurus-theme-fluent`.
  *
  * @module @sorrell/docusaurus-theme-fluent/theme/Root
  *

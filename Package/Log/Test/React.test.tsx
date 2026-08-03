@@ -1,5 +1,5 @@
 /**
- *
+ * Tests React behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/React.test
  *

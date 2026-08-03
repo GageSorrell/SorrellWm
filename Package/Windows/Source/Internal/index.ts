@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the internal module in `@sorrell/windows`.
  *
  * @module @sorrell/windows/Internal
  * @internal

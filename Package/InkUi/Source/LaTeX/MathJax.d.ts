@@ -1,5 +1,5 @@
 /**
- *
+ * MathJax declarations for rendering LaTeX in Ink.
  *
  * @module @sorrell/ink-ui/Latex/MathJax
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for select.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Select
  *

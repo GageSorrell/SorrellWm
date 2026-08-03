@@ -1,5 +1,5 @@
 /**
- *
+ * Branded PNG data returned by Windows file-icon operations.
  *
  * @module @sorrell/windows/File
  *
@@ -147,4 +147,3 @@ export namespace Png
            */
     const PngUnsafe = Brand.nominal<Png>();
 }
-

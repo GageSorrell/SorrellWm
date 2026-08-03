@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for screen.
  *
  * @module @sorrell/windows/Screen
  *

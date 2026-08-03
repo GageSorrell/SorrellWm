@@ -1,4 +1,6 @@
 /**
+ * Tests guarded hover changes caused by pointer and element movement.
+ *
  * @module @sorrell/wm/Test/UseGuardedHover
  *
  * @file      UseGuardedHover.Test.tsx

@@ -1,5 +1,5 @@
 /**
- *
+ * US English text for the command overlay.
  *
  * @module @sorrell/wm/Localization/Overlay
  *

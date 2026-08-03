@@ -533,20 +533,20 @@ const MakeLive = (DependenciesValue: Dependencies) => Layer.effect(
             Ready: Deferred.Deferred<Handle, Error>
         ): Effect.Effect<void> => pipe(
             RunLifecycle(SpecificationValue, Ready),
-            Effect.catch((ErrorValue: Error) => Logging.LogError(
+            Effect.catch((ErrorValue: Error) => pipe(Logging.LogError(
                 "BrowserWindow",
                 "An Electron window lifecycle failed.",
                 ErrorValue,
                 { Window: SpecificationValue.Key }
-            ).pipe(
-                Effect.andThen(Deferred.fail(Ready, ErrorValue)),
-                Effect.asVoid
-            )),
+            ),
+            Effect.andThen(Deferred.fail(Ready, ErrorValue)),
+            Effect.asVoid)),
             Effect.ensuring(Effect.gen(function*()
             {
-                yield* Deferred.fail(Ready, new BrowserWindowClosedBeforeReadyError({
-                    Key: SpecificationValue.Key
-                }));
+                yield* Deferred.fail(
+                    Ready,
+                    new BrowserWindowClosedBeforeReadyError(Struct.pick(SpecificationValue, [ "Key" ]))
+                );
                 yield* RemoveEntry(SpecificationValue.Key, Ready);
             })),
             Effect.forkIn(ManagerScope, { startImmediately: true }),

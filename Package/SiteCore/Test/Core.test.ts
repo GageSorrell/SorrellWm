@@ -1,5 +1,5 @@
 /**
- *
+ * Tests core behavior for `@sorrell/site-core`.
  *
  * @module @sorrell/site-core/Test/Core.test
  *

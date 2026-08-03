@@ -1,5 +1,5 @@
 /**
- *
+ * Tests command execution and supervision of the command stream.
  *
  * @module @sorrell/wm/Test/CommandExecutor
  *
@@ -217,9 +217,11 @@ describe("CommandExecutor.Execute", () =>
         }
     });
 
-    it("tiles all existing windows and republishes the resulting Home screen", async () =>
+    it("tiles all existing windows and re-centers the overlay over its activation window", async () =>
     {
+        const ActivationWindow = 1n as Handle.HWND;
         const Operations = new Array<string>();
+        const OverlayBounds = new Array<MathBox.Box>();
 
         await Effect.runPromise(pipe(
             Effect.gen(function*()
@@ -230,15 +232,26 @@ describe("CommandExecutor.Execute", () =>
             Effect.provide(Live),
             Effect.provide(FakeHotkey()),
             Effect.provide(FakeAppSettings()),
-            Effect.provide(FakeBrowserWindow(Operations)),
-            Effect.provide(FakeOverlaySession()),
-            Effect.provide(FakeTilingManager()),
+            Effect.provide(FakeBrowserWindow(
+                Operations,
+                Effect.void,
+                (Bounds: MathBox.Box) => OverlayBounds.push(Bounds)
+            )),
+            Effect.provide(FakeOverlaySession(
+                Option.none(),
+                Option.some(ActivationWindow)
+            )),
+            Effect.provide(FakeTilingManager([ ActivationWindow ])),
             Effect.provide(IdleResolver)
         ));
 
         expect(TileExistingWindows).toHaveBeenCalledOnce();
         expect(Operations).toEqual([
+            "SetBounds:Overlay",
             "Send:Overlay:overlay-screen:changed:FloatingHome"
+        ]);
+        expect(OverlayBounds).toEqual([
+            Box.Box(28, 1360, 1052, 560)
         ]);
     });
 

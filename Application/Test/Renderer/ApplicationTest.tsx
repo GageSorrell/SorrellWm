@@ -1,5 +1,5 @@
 /**
- *
+ * Tests routing to the renderer surface selected by the window query string.
  *
  * @module @sorrell/wm/Renderer/ApplicationTest
  *

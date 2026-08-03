@@ -1,4 +1,6 @@
 /**
+ * Tests overlay rendering and command interaction across its screens.
+ *
  * @module @sorrell/wm/Renderer/OverlayApplicationTest
  *
  * @file      OverlayApplicationTest.tsx

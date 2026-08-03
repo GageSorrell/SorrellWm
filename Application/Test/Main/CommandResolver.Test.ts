@@ -1,5 +1,5 @@
 /**
- *
+ * Tests conversion of hotkey activations into application commands.
  *
  * @module @sorrell/wm/Test/CommandResolver
  *

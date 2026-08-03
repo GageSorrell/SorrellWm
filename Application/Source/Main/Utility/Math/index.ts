@@ -1,5 +1,5 @@
 /**
- *
+ * Mathematical utilities for main-process geometry.
  *
  * @module @sorrell/wm/Main/Utility/Math
  *

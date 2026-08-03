@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the testing module in `@sorrell/log`.
  *
  * @module @sorrell/log/Testing/index
  *

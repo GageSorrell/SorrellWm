@@ -1,5 +1,5 @@
 /**
- *
+ * Function utilities for traced Effect operations.
  *
  * @module @sorrell/wm/Main/Utility/Function
  *

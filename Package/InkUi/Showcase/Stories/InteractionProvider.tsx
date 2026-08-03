@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for interaction provider.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/InteractionProvider
  *

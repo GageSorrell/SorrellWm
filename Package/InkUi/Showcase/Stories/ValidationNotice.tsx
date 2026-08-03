@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for validation notice.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/ValidationNotice
  *

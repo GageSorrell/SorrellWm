@@ -1,5 +1,5 @@
 /**
- *
+ * React integration for structured logging with log context.
  *
  * @module @sorrell/log/React/LogContext
  *

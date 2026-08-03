@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for theme provider.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/ThemeProvider
  *

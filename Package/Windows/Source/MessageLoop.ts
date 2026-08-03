@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for message loop.
  *
  * @module @sorrell/windows/MessageLoop
  *

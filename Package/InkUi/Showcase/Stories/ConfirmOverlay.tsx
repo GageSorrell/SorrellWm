@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for confirm overlay.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/ConfirmOverlay
  *

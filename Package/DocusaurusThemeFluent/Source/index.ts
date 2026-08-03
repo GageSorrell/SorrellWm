@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/docusaurus-theme-fluent`.
  *
  * @module @sorrell/docusaurus-theme-fluent
  *

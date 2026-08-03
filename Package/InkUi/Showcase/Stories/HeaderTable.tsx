@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for header table.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/HeaderTable
  *

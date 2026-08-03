@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for YAML body viewer.
  *
  * @module @sorrell/ink-ui/CodeEditor/YamlBodyViewer
  *

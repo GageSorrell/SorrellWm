@@ -1,5 +1,5 @@
 /**
- *
+ * Tests transient backdrop presentation and animation.
  *
  * @module @sorrell/wm/Renderer/Source/BackdropApplicationTest
  *

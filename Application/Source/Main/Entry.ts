@@ -271,16 +271,14 @@ ipcMain.on(AppApiChannel.RendererLogWrite, (
     const RendererWindow = GetRendererWindowName(EventValue);
 
     void ApplicationRuntime.runPromise(
-        Schema.decodeUnknownEffect(RendererLogEntrySchema)(Value).pipe(
-            Effect.flatMap((Entry: RendererLogEntry) =>
+        pipe(Schema.decodeUnknownEffect(RendererLogEntrySchema)(Value), Effect.flatMap((Entry: RendererLogEntry) =>
                 WriteRendererLog(Entry, RendererWindow)),
             Effect.catch((Cause: unknown) => Logging.LogWarning(
                 "Renderer",
                 "Rejected an invalid renderer log event.",
                 Cause,
                 { RendererWindow }
-            ))
-        )
+            )))
     ).catch(() => undefined);
 });
 
@@ -1084,14 +1082,12 @@ const StartApplication = Effect.gen(function*()
         || DevelopmentFeatures.TileOnStart
     )
     {
-        yield* TilingManager.TileExistingWindows.pipe(
-            Effect.catch((ErrorValue: Tiling.Manager.TilingManagerError) =>
+        yield* pipe(TilingManager.TileExistingWindows, Effect.catch((ErrorValue: Tiling.Manager.TilingManagerError) =>
                 Effect.logWarning(
                     "Could not tile existing windows; tiling will start with an empty state.",
                     ErrorValue
                 )
-            )
-        );
+            ));
     }
 
     yield* Logging.LogTilingState(yield* TilingManager.Snapshot);

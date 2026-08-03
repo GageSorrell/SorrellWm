@@ -1,5 +1,5 @@
 /**
- *
+ * Configures Vitest for the `@sorrell/site-core` workspace.
  *
  * @module @sorrell/site-core/vitest.config
  *

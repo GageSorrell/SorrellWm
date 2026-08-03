@@ -1,5 +1,5 @@
 /**
- *
+ * Docusaurus definitions shared by documentation sites.
  *
  * @module @sorrell/site-core/Docusaurus
  *

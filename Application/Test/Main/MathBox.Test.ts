@@ -1,5 +1,5 @@
 /**
- *
+ * Tests centering and midpoint operations for window geometry.
  *
  * @module @sorrell/wm/Test/MathBox
  *

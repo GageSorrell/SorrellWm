@@ -1,5 +1,5 @@
 /**
- *
+ * Tests generator behavior for Site.
  *
  * @module @sorrell/site/Test/Generator.test
  *

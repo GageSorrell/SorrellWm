@@ -1,5 +1,5 @@
 /**
- *
+ * Types and operations for points in the real plane.
  *
  * @module @sorrell/math/RealPlane
  *

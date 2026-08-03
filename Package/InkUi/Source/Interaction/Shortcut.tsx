@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for shortcut.
  *
  * @module @sorrell/ink-ui/Interaction/Shortcut
  *

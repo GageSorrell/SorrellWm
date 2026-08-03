@@ -1,5 +1,5 @@
 /**
- *
+ * Storybook manager configuration for `@sorrell/storybook-theme-fluent`.
  *
  * @module @sorrell/storybook-theme-fluent/manager
  *

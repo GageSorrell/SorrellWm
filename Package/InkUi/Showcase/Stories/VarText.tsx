@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for text with variable substitution.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/VarText
  *

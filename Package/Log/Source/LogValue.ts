@@ -1,5 +1,5 @@
 /**
- *
+ * Log value types and operations for structured logging.
  *
  * @module @sorrell/log/LogValue
  *

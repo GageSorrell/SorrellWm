@@ -57,7 +57,7 @@ const BoardColorBody = `
 /** Wrap {@link BoardColorBody} in a square canvas, centered with margin. */
 function WrapBoardColor(CanvasSize)
 {
-    const FillRatio = 0.8;
+    const FillRatio = 0.9;
     const IconSize = CanvasSize * FillRatio;
     const Offset = (CanvasSize - IconSize) / 2;
     // The Fluent icon's visible artwork spans (3, 3) through (17, 17) inside
@@ -79,7 +79,7 @@ function WrapBoardColor(CanvasSize)
  */
 function WrapSimplified(CanvasSize, StrokeColor)
 {
-    const Margin = CanvasSize * 0.14;
+    const Margin = CanvasSize * 0.07;
     const Side = CanvasSize - Margin * 2;
     const StrokeWidth = Math.max(1, CanvasSize * 0.09);
     const QuadrantSide = Side / 2;

@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, pipe, Schema } from "effect";
 
 export const SchemaTypeId = Symbol.for("@sorrell/site-core/Schema");
 export type SchemaTypeId = typeof SchemaTypeId;
@@ -20,28 +20,20 @@ export const LandingFeatureSchema = Schema.Struct({
 
 /** Secret-free landing content stored in `website.config.json`. @category Schema @since 1.0.0 */
 export const LandingContentSchema = Schema.Struct({
-    Actions: Schema.Array(LandingActionSchema).pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed([]))
-    ),
+    Actions: pipe(Schema.Array(LandingActionSchema), Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed([]))),
     Description: NonEmptyString,
-    Features: Schema.Array(LandingFeatureSchema).pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed([]))
-    ),
+    Features: pipe(Schema.Array(LandingFeatureSchema), Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed([]))),
     InstallationPackage: Schema.optional(NonEmptyString),
-    Links: Schema.Array(LandingActionSchema).pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed([]))
-    )
+    Links: pipe(Schema.Array(LandingActionSchema), Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed([])))
 });
 
 const CommonFields = {
     Landing: LandingContentSchema,
-    OutputDirectory: NonEmptyString.pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed("build"))
-    ),
+    OutputDirectory: pipe(NonEmptyString, Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed("build"))),
     PackageName,
     Subdomain,
     Theme,
@@ -52,29 +44,21 @@ const CommonFields = {
 /** A Docusaurus website definition with localization and versioning defaults. @category Schema @since 1.0.0 */
 export const DocusaurusWebsiteSchema = Schema.Struct({
     ...CommonFields,
-    DefaultLocale: NonEmptyString.pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed("en-US"))
-    ),
+    DefaultLocale: pipe(NonEmptyString, Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed("en-US"))),
     Kind: Schema.Literal("Docusaurus"),
-    Locales: Schema.Array(NonEmptyString).pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed([ "en-US", "es-US" ]))
-    ),
-    Versioning: Schema.Boolean.pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed(true))
-    )
+    Locales: pipe(Schema.Array(NonEmptyString), Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed([ "en-US", "es-US" ]))),
+    Versioning: pipe(Schema.Boolean, Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed(true)))
 });
 
 /** A Storybook website definition. @category Schema @since 1.0.0 */
 export const StorybookWebsiteSchema = Schema.Struct({
     ...CommonFields,
     Kind: Schema.Literal("Storybook"),
-    LandingEnabled: Schema.Boolean.pipe(
-        Schema.optional,
-        Schema.withDecodingDefault(Effect.succeed(false))
-    ),
+    LandingEnabled: pipe(Schema.Boolean, Schema.optional,
+        Schema.withDecodingDefault(Effect.succeed(false))),
     SourceWorkspace: NonEmptyString,
     Stories: Schema.Array(NonEmptyString)
 });

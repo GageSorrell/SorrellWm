@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/dotenv`.
  *
  * @module @sorrell/dotenv
  *

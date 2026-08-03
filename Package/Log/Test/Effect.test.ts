@@ -1,5 +1,5 @@
 /**
- *
+ * Tests Effect behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Effect.test
  *
@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import { Cause, Effect } from "effect";
+import { Cause, Effect, pipe } from "effect";
 import { describe, expect, it } from "vitest";
 import { Layer, WithCategory } from "../Source/Effect/index.js";
 import { Make as MakeMemorySink } from "../Source/Testing/InMemorySink.js";
@@ -28,7 +28,7 @@ describe("Effect logger integration", () =>
             Sinks: [ Sink ]
         });
 
-        const Program = Effect.gen(function*()
+        const Program = pipe(Effect.gen(function*()
         {
             yield* Effect.logTrace("trace", { Count: 1 });
             yield* Effect.logDebug("debug");
@@ -36,15 +36,13 @@ describe("Effect logger integration", () =>
             yield* Effect.logWarning("warn");
             yield* Effect.logError(Cause.fail("boom"), "error");
             yield* Effect.logFatal("fatal");
-        }).pipe(
-            Effect.annotateLogs({
+        }), Effect.annotateLogs({
                 RequestIdentifier: "request-1"
             }),
             Effect.withLogSpan("work"),
             WithCategory("Layout"),
             WithCategory("Window"),
-            Effect.provide(Logging)
-        );
+            Effect.provide(Logging));
 
         await Effect.runPromise(Program);
 
@@ -71,13 +69,11 @@ describe("Effect logger integration", () =>
     {
         const Sink = MakeMemorySink();
         await Effect.runPromise(
-            Effect.logInfo("manual").pipe(
-                Effect.annotateLogs("@sorrell/log/category", "Manual"),
+            pipe(Effect.logInfo("manual"), Effect.annotateLogs("@sorrell/log/category", "Manual"),
                 Effect.provide(Layer({
                     DefaultCategory: "Application",
                     Sinks: [ Sink ]
-                }))
-            )
+                })))
         );
 
         expect(Sink.Records[0]?.Category).toBe("Application.Manual");

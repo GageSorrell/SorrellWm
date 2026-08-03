@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for command.
  *
  * @module @sorrell/ink-ui/Interaction/Command
  *

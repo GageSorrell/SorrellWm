@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for thread.
  *
  * @module @sorrell/windows/Thread
  *

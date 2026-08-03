@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for view pane.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/ViewPane
  *

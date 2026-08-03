@@ -1,4 +1,6 @@
 /**
+ * Types describing generated repository artifacts and cleanup options.
+ *
  * @file      CleanRepo.Types.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell

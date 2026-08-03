@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for JSON body viewer.
  *
  * @module @sorrell/ink-ui/CodeEditor/JsonBodyViewer
  *

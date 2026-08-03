@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for focus scope.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/FocusScope
  *

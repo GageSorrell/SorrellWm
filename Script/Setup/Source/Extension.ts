@@ -1,5 +1,5 @@
 /**
- *
+ * Extension operations for local monorepo setup.
  *
  * @module @sorrell/wm-monorepo-setup/Extension
  *

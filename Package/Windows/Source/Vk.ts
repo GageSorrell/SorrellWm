@@ -1,5 +1,5 @@
 /**
- *
+ * Windows virtual-key constants and their union type.
  *
  * @module @sorrell/windows/Vk
  *

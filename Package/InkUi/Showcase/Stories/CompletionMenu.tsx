@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for completion menu.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/CompletionMenu
  *

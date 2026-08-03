@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for JSON body viewer.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/JsonBodyViewer
  *

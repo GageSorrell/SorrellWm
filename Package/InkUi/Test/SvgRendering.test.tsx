@@ -1,5 +1,5 @@
 /**
- *
+ * Tests SVG rendering behavior for `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Test/SvgRendering.test
  *

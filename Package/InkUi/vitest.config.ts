@@ -1,4 +1,6 @@
 /**
+ * Configures Vitest for the `@sorrell/ink-ui` workspace.
+ *
  * @module @sorrell/ink-ui/vitest.config
  *
  * @file      vitest.config.ts

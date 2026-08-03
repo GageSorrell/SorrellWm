@@ -1,5 +1,5 @@
 /**
- *
+ * Category types and operations for structured logging.
  *
  * @module @sorrell/log/Category
  *

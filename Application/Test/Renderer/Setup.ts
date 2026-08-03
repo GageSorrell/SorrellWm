@@ -1,5 +1,5 @@
 /**
- *
+ * Configures the renderer test environment and its preload bridge substitute.
  *
  * @module @sorrell/wm/Renderer/Test/Setup
  *

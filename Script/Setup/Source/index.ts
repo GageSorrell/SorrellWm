@@ -1,5 +1,5 @@
 /**
- *
+ * Entry point for the setup tool.
  *
  * @module @sorrell/wm-monorepo-setup/Index
  *
@@ -16,7 +16,7 @@ import {
     WriteLocalConfiguration
 } from "./Configuration.js";
 import { Command, Flag, Param, Prompt } from "effect/unstable/cli";
-import { Console, Context, Effect } from "effect";
+import { Console, Context, Effect, pipe } from "effect";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { join, resolve } from "node:path";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -60,7 +60,7 @@ const RootCommandBase: Command.Command<
     Record<never, never>,
     Error,
     Command.Environment | SSetupOptions
-> = Command.make(
+> = pipe(Command.make(
     "wm-monorepo-setup",
     { },
     (): Effect.Effect<
@@ -68,7 +68,7 @@ const RootCommandBase: Command.Command<
         Error,
         Command.Environment | SSetupOptions
     > => RunAllFeatures()
-).pipe(Command.withDescription(
+), Command.withDescription(
     "Configure optional local features for the SorrellWm monorepo."
 ));
 
@@ -78,13 +78,11 @@ const ExtensionCommand: Command.Command<
     Record<never, never>,
     Error,
     ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | SSetupOptions
-> = Command.make(
+> = pipe(Command.make(
     "extension",
     {
-        enabled: Param.boolean(Param.argumentKind, "enabled").pipe(
-            Param.withDefault(true),
-            Param.withDescription("Whether the VS Code extension should be enabled.")
-        )
+        enabled: pipe(Param.boolean(Param.argumentKind, "enabled"), Param.withDefault(true),
+            Param.withDescription("Whether the VS Code extension should be enabled."))
     },
     ({ enabled }: IExtensionCommandInput): Effect.Effect<
         void,
@@ -96,12 +94,12 @@ const ExtensionCommand: Command.Command<
             Error,
             ChildProcessSpawner.ChildProcessSpawner
         > =>
-            ConfigureExtension(enabled, Options.Verbose, {
+            pipe(ConfigureExtension(enabled, Options.Verbose, {
                 RepositoryRoot,
                 VisualStudioCodePackage
-            }).pipe(Effect.as(true))
+            }), Effect.as(true))
         )
-).pipe(Command.withDescription(
+), Command.withDescription(
     "Build and install, or uninstall, the SorrellWm VS Code extension."
 ));
 
@@ -111,11 +109,11 @@ const ClearCommand: Command.Command<
     Record<never, never>,
     Error,
     FileSystem.FileSystem | SSetupOptions
-> = Command.make(
+> = pipe(Command.make(
     "clear",
     { },
     (): Effect.Effect<void, Error, FileSystem.FileSystem | SSetupOptions> => ClearSetupState()
-).pipe(Command.withDescription(
+), Command.withDescription(
     "Delete Configuration/CodeExtension.json and reset local setup state."
 ));
 
@@ -125,14 +123,9 @@ const RootCommand: Command.Command<
     IRootCommandInput,
     Error,
     Command.Environment
-> = RootCommandBase.pipe(
-    Command.withSharedFlags({
-        force: Flag.boolean("force").pipe(
-            Flag.withDescription("Run setup even when it has already completed.")
-        ),
-        postinstall: Flag.boolean("postinstall").pipe(
-            Flag.withDescription("Run in quiet npm postinstall mode.")
-        )
+> = pipe(RootCommandBase, Command.withSharedFlags({
+        force: pipe(Flag.boolean("force"), Flag.withDescription("Run setup even when it has already completed.")),
+        postinstall: pipe(Flag.boolean("postinstall"), Flag.withDescription("Run in quiet npm postinstall mode."))
     }),
     Command.withSubcommands([ ExtensionCommand, ClearCommand ]),
     Command.provideEffect(
@@ -142,16 +135,15 @@ const RootCommand: Command.Command<
             PostInstall: Input.postinstall,
             Verbose: !Input.postinstall
         })
-    )
-);
+    ));
 
-const Program: Effect.Effect<void, Error> = Effect.gen(
+const Program: Effect.Effect<void, Error> = pipe(Effect.gen(
     function*()
     {
         yield* EnsureLocalConfiguration(LocalConfigurationPath);
         yield* Command.run(RootCommand, { version: "0.1.0" });
     }
-).pipe(Effect.provide(NodeServices.layer));
+), Effect.provide(NodeServices.layer));
 
 NodeRuntime.runMain(Program);
 

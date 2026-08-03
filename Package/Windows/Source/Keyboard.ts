@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for keyboard.
  *
  * @module @sorrell/windows/Keyboard
  *

@@ -182,8 +182,6 @@ const TelemetryLive: Layer.Layer<
 {
     const Manager = yield* TilingManager.TilingManager;
 
-    yield* Manager.Changes.pipe(
-        Stream.runForEach(LogTilingState),
-        Effect.forkScoped({ startImmediately: true })
-    );
+    yield* pipe(Manager.Changes, Stream.runForEach(LogTilingState),
+        Effect.forkScoped({ startImmediately: true }));
 }));

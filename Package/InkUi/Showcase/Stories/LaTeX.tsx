@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for LaTeX.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Latex
  *

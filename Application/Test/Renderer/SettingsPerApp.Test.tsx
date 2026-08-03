@@ -1,4 +1,6 @@
 /**
+ * Tests per-application settings management.
+ *
  * @module @sorrell/wm/Renderer/SettingsPerAppTest
  *
  * @file      SettingsPerApp.Test.tsx

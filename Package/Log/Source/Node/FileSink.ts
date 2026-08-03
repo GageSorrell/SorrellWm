@@ -1,5 +1,5 @@
 /**
- *
+ * Node.js logging support for file sink.
  *
  * @module @sorrell/log/Node/FileSink
  *

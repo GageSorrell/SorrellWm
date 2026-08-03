@@ -11,6 +11,7 @@
 
 import {
     Effect,
+    pipe,
     Stream
 } from "effect";
 import { describe, expect, it } from "vitest";
@@ -71,11 +72,9 @@ describe("Effect log client", () =>
                     .resolves.toBe(Port);
 
                 const Messages = await Effect.runPromise(
-                    ConnectToPipe(Port).pipe(
-                        Stream.take(3),
+                    pipe(ConnectToPipe(Port), Stream.take(3),
                         Stream.runCollect,
-                        Effect.map((Values) => Array.from(Values))
-                    )
+                        Effect.map((Values) => Array.from(Values)))
                 );
                 expect(Messages.map((Message) => Message.Type))
                     .toEqual([ "Hello", "Log", "GlobalSnapshot" ]);

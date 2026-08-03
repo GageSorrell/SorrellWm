@@ -1,5 +1,5 @@
 /**
- *
+ * Converts, measures, and centers rectangular boxes for Electron windows.
  *
  * @module @sorrell/wm/Main/Utility/Math/Box
  *

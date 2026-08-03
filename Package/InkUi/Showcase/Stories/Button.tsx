@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for button.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Button
  *

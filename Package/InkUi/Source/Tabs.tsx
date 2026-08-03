@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for tabs.
  *
  * @module @sorrell/ink-ui/Tabs
  *

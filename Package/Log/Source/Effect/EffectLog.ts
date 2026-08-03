@@ -1,5 +1,5 @@
 /**
- *
+ * Effect integration for structured logging with Effect log.
  *
  * @module @sorrell/log/Effect/EffectLog
  *
@@ -16,6 +16,7 @@ import {
     Layer as EffectLayer,
     Logger as EffectLogger,
     type Logger,
+    pipe,
     References
 } from "effect";
 import * as Category from "../Category.js";
@@ -142,8 +143,6 @@ export function WithCategory(
 
     return <A, E, R>(
         EffectValue: Effect.Effect<A, E, R>
-    ): Effect.Effect<A, E, R> => EffectValue.pipe(
-        Effect.updateService(CurrentCategory, (Parent: Category.Category | undefined) =>
-            Parent === undefined ? ChildValue : Category.Child(Parent, ChildValue))
-    );
+    ): Effect.Effect<A, E, R> => pipe(EffectValue, Effect.updateService(CurrentCategory, (Parent: Category.Category | undefined) =>
+            Parent === undefined ? ChildValue : Category.Child(Parent, ChildValue)));
 }

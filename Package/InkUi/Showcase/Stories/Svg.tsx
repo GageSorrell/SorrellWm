@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for SVG.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Svg
  *

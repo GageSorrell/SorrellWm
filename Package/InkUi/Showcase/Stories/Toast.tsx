@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for toast.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Toast
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the native module in `@sorrell/log`.
  *
  * @module @sorrell/log/Native/index
  *

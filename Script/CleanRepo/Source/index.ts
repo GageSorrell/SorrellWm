@@ -1,4 +1,6 @@
 /**
+ * Command-line entry point for removing generated repository artifacts.
+ *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell

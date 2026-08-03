@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for text area.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/TextArea
  *

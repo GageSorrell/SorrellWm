@@ -1,5 +1,5 @@
 /**
- *
+ * Tests application settings schemas, defaults, and migrations.
  *
  * @module @sorrell/wm/Test/AppSettings
  *

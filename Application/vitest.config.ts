@@ -1,4 +1,6 @@
 /**
+ * Configures Vitest for the `@sorrell/wm` renderer test suite.
+ *
  * @file      Renderer test configuration.
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell

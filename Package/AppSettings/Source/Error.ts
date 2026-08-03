@@ -1,5 +1,5 @@
 /**
- *
+ * Error types and operations for schema-validated application settings.
  *
  * @module @sorrell/app-settings/Error
  *

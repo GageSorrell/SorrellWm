@@ -1,4 +1,6 @@
 /**
+ * Tests the proxy renderer for occluded Focus targets.
+ *
  * @module @sorrell/wm/Renderer/FocusPreviewApplicationTest
  *
  * @file      FocusPreviewApplication.Test.tsx

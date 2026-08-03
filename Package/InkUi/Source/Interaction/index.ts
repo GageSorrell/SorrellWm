@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the interaction module in `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Interaction
  *

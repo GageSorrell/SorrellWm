@@ -1,5 +1,5 @@
 /**
- *
+ * Log forwarding types and operations for validation.
  *
  * @module @sorrell/log/Forward/Validation
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Tests app settings behavior for `@sorrell/app-settings`.
  *
  * @module @sorrell/app-settings/Test/AppSettings.test
  *
@@ -16,6 +16,7 @@ import {
     Fiber,
     Layer,
     Option,
+    pipe,
     Result,
     Schema,
     Stream
@@ -106,15 +107,13 @@ describe("AppSettings", () =>
             }
         });
 
-        const Current = await Effect.runPromise(Effect.gen(function*()
+        const Current = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Service = yield* Settings;
             yield* Service.setSetting("theme", "dark");
             return yield* Service.get;
-        }).pipe(
-            Effect.provide(Settings.layer),
-            Effect.provide(PlatformLayer)
-        ));
+        }), Effect.provide(Settings.layer),
+            Effect.provide(PlatformLayer)));
 
         expect(Current).toEqual({
             launchAtStartup: false,
@@ -136,7 +135,7 @@ describe("AppSettings", () =>
             }
         });
 
-        const Outcome = await Effect.runPromise(Effect.gen(function*()
+        const Outcome = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Service = yield* Settings;
 
@@ -146,14 +145,12 @@ describe("AppSettings", () =>
                 await mkdir(FilePath);
             });
 
-            const SetResult = yield* Service.setSetting("theme", "dark").pipe(Effect.result);
+            const SetResult = yield* pipe(Service.setSetting("theme", "dark"), Effect.result);
             const Current = yield* Service.get;
 
             return { Current, SetResult };
-        }).pipe(
-            Effect.provide(Settings.layer),
-            Effect.provide(PlatformLayer)
-        ));
+        }), Effect.provide(Settings.layer),
+            Effect.provide(PlatformLayer)));
 
         expect(Result.isFailure(Outcome.SetResult)).toBe(true);
         if (Result.isFailure(Outcome.SetResult))
@@ -210,24 +207,22 @@ describe("AppSettings", () =>
                 }
             })
         );
-        const Live = SynchronizationLive.pipe(
-            Layer.provideMerge(Settings.layer),
+        const Live = pipe(SynchronizationLive, Layer.provideMerge(Settings.layer),
             Layer.provide(PlatformLayer),
-            Layer.provide(ExternalStateLive)
-        );
+            Layer.provide(ExternalStateLive));
 
-        const Outcome = await Effect.runPromise(Effect.gen(function*()
+        const Outcome = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Service = yield* Settings;
 
             yield* Service.setSetting("launchAtStartup", true);
             yield* Service.setSetting("theme", "blocked");
             yield* Service.setSetting("theme", "dark");
-            yield* Deferred.await(DarkApplied).pipe(Effect.timeout("5 seconds"));
+            yield* pipe(Deferred.await(DarkApplied), Effect.timeout("5 seconds"));
             const Current = yield* Service.get;
 
             return { Current };
-        }).pipe(Effect.provide(Live)));
+        }), Effect.provide(Live)));
 
         expect(Attempts).toEqual([ "light", "blocked", "dark" ]);
         expect(ExternalThemes).toEqual([ "light", "dark" ]);
@@ -249,15 +244,13 @@ describe("AppSettings", () =>
             watchDebounce: "10 millis"
         });
 
-        const Changed = await Effect.runPromise(Effect.gen(function*()
+        const Changed = await Effect.runPromise(pipe(Effect.gen(function*()
         {
             const Service = yield* Settings;
-            const ChangeFiber = yield* Service.changes.pipe(
-                Stream.filter((Value: Settings) => Value.theme === "external"),
+            const ChangeFiber = yield* pipe(Service.changes, Stream.filter((Value: Settings) => Value.theme === "external"),
                 Stream.runHead,
                 Effect.timeout("5 seconds"),
-                Effect.forkChild
-            );
+                Effect.forkChild);
 
             yield* Effect.promise(() => writeFile(FilePath, JSON.stringify({
                 launchAtStartup: true,
@@ -265,10 +258,8 @@ describe("AppSettings", () =>
             }), "utf8"));
 
             return yield* Fiber.join(ChangeFiber);
-        }).pipe(
-            Effect.provide(Settings.layer),
-            Effect.provide(PlatformLayer)
-        ));
+        }), Effect.provide(Settings.layer),
+            Effect.provide(PlatformLayer)));
 
         expect(Option.getOrThrow(Changed)).toEqual({
             launchAtStartup: true,

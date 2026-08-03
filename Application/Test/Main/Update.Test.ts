@@ -1,4 +1,6 @@
 /**
+ * Tests release discovery, installer download, and update result handling.
+ *
  * @module @sorrell/wm/Test/Update
  *
  * @file      Update.Test.ts

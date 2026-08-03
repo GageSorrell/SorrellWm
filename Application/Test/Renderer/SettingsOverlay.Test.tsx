@@ -1,4 +1,6 @@
 /**
+ * Tests the overlay settings section.
+ *
  * @module @sorrell/wm/Renderer/SettingsOverlayTest
  *
  * @file      SettingsOverlay.Test.tsx

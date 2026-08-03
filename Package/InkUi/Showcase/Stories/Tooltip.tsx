@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for tooltip.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Tooltip
  *

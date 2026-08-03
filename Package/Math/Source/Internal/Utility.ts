@@ -1,5 +1,5 @@
 /**
- *
+ * Internal utility operations for discrete geometry and arithmetic.
  *
  * @module @sorrell/math/Internal/Utility
  * @internal

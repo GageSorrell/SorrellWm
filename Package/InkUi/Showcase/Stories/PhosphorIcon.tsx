@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for phosphor icon.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/PhosphorIcon
  *

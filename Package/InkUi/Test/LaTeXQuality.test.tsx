@@ -1,5 +1,5 @@
 /**
- *
+ * Tests the quality of LaTeX rendering in `@sorrell/ink-ui`.
  *
  * @module @sorrell/ink-ui/Test/LaTeXQuality.test
  *

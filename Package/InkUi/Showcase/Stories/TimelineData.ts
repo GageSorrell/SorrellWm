@@ -1,5 +1,5 @@
 /**
- *
+ * Sample timeline data for the Ink UI showcase.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/TimelineData
  *

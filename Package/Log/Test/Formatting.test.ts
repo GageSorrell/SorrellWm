@@ -1,5 +1,5 @@
 /**
- *
+ * Tests formatting behavior for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Formatting.test
  *

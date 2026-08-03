@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for the React module in `@sorrell/log`.
  *
  * @module @sorrell/log/React/index
  *

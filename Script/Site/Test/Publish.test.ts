@@ -1,5 +1,5 @@
 /**
- *
+ * Tests publish behavior for Site.
  *
  * @module @sorrell/site/Test/Publish.test
  *

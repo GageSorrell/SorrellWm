@@ -1,4 +1,6 @@
 /**
+ * Tests window specifications for occluded Focus target previews.
+ *
  * @module @sorrell/wm/Test/BrowserWindowFocusPreview
  *
  * @file      BrowserWindowFocusPreview.Test.ts

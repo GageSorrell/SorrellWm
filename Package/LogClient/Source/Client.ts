@@ -18,6 +18,7 @@ import {
     Cause,
     Data,
     Effect,
+    pipe,
     Queue,
     Stream
 } from "effect";
@@ -148,8 +149,7 @@ export function ResolvePipePort(
         });
     }
 
-    return DiscoverPipePorts().pipe(
-        Effect.flatMap((Ports: ReadonlyArray<number>) =>
+    return pipe(DiscoverPipePorts(), Effect.flatMap((Ports: ReadonlyArray<number>) =>
         {
             const First = Ports[0];
             return First === undefined
@@ -158,8 +158,7 @@ export function ResolvePipePort(
                     `No named pipes matching ${ NamedPipe.NamePrefix }<port> are active.`
                 ))
                 : Effect.succeed(First);
-        })
-    );
+        }));
 }
 
 /**
@@ -223,8 +222,7 @@ function ConnectedStream(
         });
 
         return Effect.acquireRelease(
-            Acquire.pipe(
-                Effect.tap((SocketValue: Socket) => Effect.sync(() =>
+            pipe(Acquire, Effect.tap((SocketValue: Socket) => Effect.sync(() =>
                 {
                     let BufferValue = "";
                     let Ended = false;
@@ -337,8 +335,7 @@ function ConnectedStream(
                             Queue.endUnsafe(QueueValue);
                         }
                     });
-                }))
-            ),
+                }))),
             (SocketValue: Socket) => Effect.sync(() =>
             {
                 SocketValue.removeAllListeners();
@@ -379,8 +376,6 @@ export function Messages(
 ): Stream.Stream<WireMessage, LogClientError>
 {
     return Stream.unwrap(
-        ResolvePipePort(Options.Port).pipe(
-            Effect.map((PortValue: number) => ConnectedStream(PortValue, Options))
-        )
+        pipe(ResolvePipePort(Options.Port), Effect.map((PortValue: number) => ConnectedStream(PortValue, Options)))
     );
 }

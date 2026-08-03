@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for picker overlay.
  *
  * @module @sorrell/ink-ui/Overlay/PickerOverlay
  *

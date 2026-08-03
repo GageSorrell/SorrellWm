@@ -10,20 +10,18 @@
  */
 
 import * as SorrellLogging from "@sorrell/log/Effect";
-import { Effect } from "effect";
+import { Effect, type Record, pipe } from "effect";
 
 /** Structured context attached to an application log event. */
-export interface EventAnnotations
-{
-    readonly [Key: string]: unknown;
-}
+export interface EventAnnotations extends Record.ReadonlyRecord<string, unknown> { }
 
 const Annotate = (
     Category: string,
     Annotations: EventAnnotations
-) => <Value, ErrorValue, Requirements>(
-    EventValue: Effect.Effect<Value, ErrorValue, Requirements>
-): Effect.Effect<Value, ErrorValue, Requirements> => EventValue.pipe(
+) => <A, E, R>(
+    EventValue: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => pipe(
+    EventValue,
     Effect.annotateLogs(Annotations),
     SorrellLogging.WithCategory(Category)
 );
@@ -33,7 +31,8 @@ const LogDebug = (
     Category: string,
     Message: string,
     Annotations: EventAnnotations = { }
-): Effect.Effect<void> => Effect.logDebug(Message).pipe(
+): Effect.Effect<void> => pipe(
+    Effect.logDebug(Message),
     Annotate(Category, Annotations)
 );
 
@@ -42,7 +41,8 @@ const LogInfo = (
     Category: string,
     Message: string,
     Annotations: EventAnnotations = { }
-): Effect.Effect<void> => Effect.logInfo(Message).pipe(
+): Effect.Effect<void> => pipe(
+    Effect.logInfo(Message),
     Annotate(Category, Annotations)
 );
 
@@ -52,11 +52,12 @@ const LogWarning = (
     Message: string,
     Cause?: unknown,
     Annotations: EventAnnotations = { }
-): Effect.Effect<void> => (
+): Effect.Effect<void> => pipe(
     Cause === undefined
         ? Effect.logWarning(Message)
-        : Effect.logWarning(Message, Cause)
-).pipe(Annotate(Category, Annotations));
+        : Effect.logWarning(Message, Cause),
+    Annotate(Category, Annotations)
+);
 
 export/** Emit a categorized error event. */
 const LogError = (
@@ -64,8 +65,9 @@ const LogError = (
     Message: string,
     Cause?: unknown,
     Annotations: EventAnnotations = { }
-): Effect.Effect<void> => (
+): Effect.Effect<void> => pipe(
     Cause === undefined
         ? Effect.logError(Message)
-        : Effect.logError(Message, Cause)
-).pipe(Annotate(Category, Annotations));
+        : Effect.logError(Message, Cause),
+    Annotate(Category, Annotations)
+);

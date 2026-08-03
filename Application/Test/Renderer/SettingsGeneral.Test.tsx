@@ -1,4 +1,6 @@
 /**
+ * Tests general window manager settings controls.
+ *
  * @module @sorrell/wm/Test/SettingsGeneral
  *
  * @file      SettingsGeneral.Test.tsx

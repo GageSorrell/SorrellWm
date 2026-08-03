@@ -1,5 +1,5 @@
 /**
- *
+ * React integration for structured logging with use log lifecycle.
  *
  * @module @sorrell/log/React/useLogLifecycle
  *

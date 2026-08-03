@@ -1,5 +1,5 @@
 /**
- *
+ * Progress operations for local monorepo setup.
  *
  * @module @sorrell/wm-monorepo-setup/Progress
  * @internal
@@ -10,7 +10,7 @@
  * @license   MIT
  */
 
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import type { Ora } from "ora";
 import ora from "ora";
 
@@ -39,8 +39,7 @@ export function WithProgress<Success, Failure, Requirements>(
     {
         const Spinner: Ora = ora(PendingMessage).start();
 
-        return yield* Operation.pipe(
-            Effect.tap((): Effect.Effect<void> => Effect.sync((): void =>
+        return yield* pipe(Operation, Effect.tap((): Effect.Effect<void> => Effect.sync((): void =>
             {
                 Spinner.succeed(CompleteMessage);
             })),
@@ -54,7 +53,6 @@ export function WithProgress<Success, Failure, Requirements>(
                 {
                     Spinner.stop();
                 }
-            }))
-        );
+            })));
     });
 }

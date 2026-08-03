@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for tips.
  *
  * @module @sorrell/ink-ui/Tips
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Button types and operations for Ink UI.
  *
  * @module @sorrell/ink-ui/Mouse/Button
  *

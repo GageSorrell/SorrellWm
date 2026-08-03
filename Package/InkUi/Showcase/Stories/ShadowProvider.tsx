@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for shadow provider.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/ShadowProvider
  *

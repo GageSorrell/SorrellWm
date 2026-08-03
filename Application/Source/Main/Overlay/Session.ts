@@ -858,47 +858,37 @@ const Live = Layer.effect(
         const Current = pipe(SubscriptionRef.get(Stack), Effect.map(GetCurrent));
         const ResolveHomeScreen = (
             WindowValue: Option.Option<Handle.HWND>
-        ): Effect.Effect<OverlayScreenId> => TilingManager.Snapshot.pipe(
-            Effect.map((Snapshot: Tiling.Tree.State): OverlayScreenId =>
+        ): Effect.Effect<OverlayScreenId> => pipe(TilingManager.Snapshot, Effect.map((Snapshot: Tiling.Tree.State): OverlayScreenId =>
                 Option.isSome(WindowValue) && IsWindowTiled(Snapshot, WindowValue.value)
                     ? ScreenId.TiledHome
-                    : ScreenId.FloatingHome)
-        );
+                    : ScreenId.FloatingHome));
         const UpdateHomeScreen = (
             WindowValue: Option.Option<Handle.HWND>
-        ): Effect.Effect<void> => ResolveHomeScreen(WindowValue).pipe(
-            Effect.flatMap((Home: OverlayScreenId) => SubscriptionRef.update(
+        ): Effect.Effect<void> => pipe(ResolveHomeScreen(WindowValue), Effect.flatMap((Home: OverlayScreenId) => SubscriptionRef.update(
                 Stack,
                 (Value: ReadonlyArray<OverlayScreenId>) => Object.freeze([
                     Home,
                     ...Value.slice(1)
                 ])
-            ))
-        );
+            )));
         const ClearFocusPreview = Effect.sync(() =>
         {
             Window.ClearWindowDimming();
         });
         const ClearFocusProxyWindows = Effect.forEach(
             FocusPreviewKeys,
-            (Key: FocusPreviewKey) => BrowserWindows.ForceClose(Key).pipe(
-                Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
-                Effect.ignore
-            ),
+            (Key: FocusPreviewKey) => pipe(BrowserWindows.ForceClose(Key), Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+                Effect.ignore),
             { concurrency: "unbounded", discard: true }
         );
-        const ClearTiledFocusPanelPreview = BrowserWindows.ForceClose(
+        const ClearTiledFocusPanelPreview = pipe(BrowserWindows.ForceClose(
             BrowserWindow.Key.TiledFocusPanelPreview
-        ).pipe(
-            Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
-            Effect.ignore
-        );
-        const ClearTiledMovePanelPreview = BrowserWindows.ForceClose(
+        ), Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+            Effect.ignore);
+        const ClearTiledMovePanelPreview = pipe(BrowserWindows.ForceClose(
             BrowserWindow.Key.TiledMovePanelPreview
-        ).pipe(
-            Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
-            Effect.ignore
-        );
+        ), Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+            Effect.ignore);
         const ClearTiledInsert = Effect.all([
             Ref.set(TiledInsertCaptureNextRef, false),
             Ref.set(TiledInsertDragActiveRef, false),
@@ -930,8 +920,7 @@ const Live = Layer.effect(
                     ? [ ]
                     : [ {
                         Target: GetTargetPresentation({
-                            Bounds: Window.GetWindowRect(WindowHandle)
-                                .pipe(Option.getOrElse(() => Box.Box(0, 0, 0, 0))),
+                            Bounds: pipe(Window.GetWindowRect(WindowHandle), Option.getOrElse(() => Box.Box(0, 0, 0, 0))),
                             Window: WindowHandle
                         }),
                         Window: WindowHandle
@@ -946,16 +935,14 @@ const Live = Layer.effect(
                 { WindowCount: Candidates.length }
             );
         });
-        const GetFocusProxyNativeHandles = Effect.forEach(
+        const GetFocusProxyNativeHandles = pipe(Effect.forEach(
             FocusPreviewKeys,
-            (Key: FocusPreviewKey) => BrowserWindows.GetNativeHandle(Key).pipe(
-                Effect.match({
+            (Key: FocusPreviewKey) => pipe(BrowserWindows.GetNativeHandle(Key), Effect.match({
                     onFailure: () => Option.none<Handle.HWND>(),
                     onSuccess: Option.some
-                })
-            ),
+                })),
             { concurrency: "unbounded" }
-        ).pipe(Effect.map((
+        ), Effect.map((
             Handles: ReadonlyArray<Option.Option<Handle.HWND>>
         ): ReadonlyArray<Handle.HWND> => Handles.flatMap((
             HandleOption: Option.Option<Handle.HWND>
@@ -967,14 +954,12 @@ const Live = Layer.effect(
         ): Effect.Effect<void> => Effect.gen(function*()
         {
             const TilingSnapshot = yield* TilingManager.Snapshot;
-            const OverlayHandle = yield* BrowserWindows.GetNativeHandle(
+            const OverlayHandle = yield* pipe(BrowserWindows.GetNativeHandle(
                 BrowserWindow.Key.Overlay
-            ).pipe(
-                Effect.match({
+            ), Effect.match({
                     onFailure: () => Option.none<Handle.HWND>(),
                     onSuccess: Option.some
-                })
-            );
+                }));
             const ExistingProxyHandles = yield* GetFocusProxyNativeHandles;
             const OcclusionExclusions: Array<Handle.HWND> = [
                 ...ExistingProxyHandles,
@@ -990,10 +975,8 @@ const Live = Layer.effect(
             {
                 const Key = FocusPreviewKeyByCommandId[Id];
                 const Target = ResolveTarget(CurrentWindow, Id, Excluded);
-                const Close = BrowserWindows.ForceClose(Key).pipe(
-                    Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
-                    Effect.ignore
-                );
+                const Close = pipe(BrowserWindows.ForceClose(Key), Effect.catchTag("BrowserWindowNotFoundError", () => Effect.void),
+                    Effect.ignore);
 
                 if (
                     Option.isNone(Target)
@@ -1052,27 +1035,25 @@ const Live = Layer.effect(
                     ...(Option.isSome(TargetIcon) ? { Icon: TargetIcon.value } : { })
                 };
 
-                yield* BrowserWindows.Ensure(
+                yield* pipe(BrowserWindows.Ensure(
                     BrowserWindow.GetFocusPreviewWindowSpec(Key, Target.value.Bounds)
-                ).pipe(RecoverPreviewOperation("Ensure", Key));
-                yield* BrowserWindows.SetBounds(
+                ), RecoverPreviewOperation("Ensure", Key));
+                yield* pipe(BrowserWindows.SetBounds(
                     Key,
                     Target.value.Bounds
-                ).pipe(RecoverPreviewOperation("SetBounds", Key));
-                yield* BrowserWindows.Send(
+                ), RecoverPreviewOperation("SetBounds", Key));
+                yield* pipe(BrowserWindows.Send(
                     Key,
                     AppApiChannel.FocusPreviewChanged,
                     Presentation
-                ).pipe(RecoverPreviewOperation("Send", Key));
-                yield* BrowserWindows.ShowInactive(
+                ), RecoverPreviewOperation("Send", Key));
+                yield* pipe(BrowserWindows.ShowInactive(
                     Key
-                ).pipe(RecoverPreviewOperation("ShowInactive", Key));
-                const PreviewHandle = yield* BrowserWindows.GetNativeHandle(Key).pipe(
-                    Effect.match({
+                ), RecoverPreviewOperation("ShowInactive", Key));
+                const PreviewHandle = yield* pipe(BrowserWindows.GetNativeHandle(Key), Effect.match({
                         onFailure: () => Option.none<Handle.HWND>(),
                         onSuccess: Option.some
-                    })
-                );
+                    }));
 
                 if (
                     Option.isSome(PreviewHandle)
@@ -1097,7 +1078,7 @@ const Live = Layer.effect(
             {
                 // Both surfaces are always-on-top. Raising the command overlay
                 // last guarantees every proxy remains directly beneath it.
-                yield* BrowserWindows.ShowInactive(BrowserWindow.Key.Overlay).pipe(Effect.ignore);
+                yield* pipe(BrowserWindows.ShowInactive(BrowserWindow.Key.Overlay), Effect.ignore);
             }
         });
         const SyncTiledFocusPanelPreview = (
@@ -1149,27 +1130,27 @@ const Live = Layer.effect(
                 ShowIcon: false
             };
 
-            yield* BrowserWindows.Ensure(
+            yield* pipe(BrowserWindows.Ensure(
                 BrowserWindow.GetFocusPreviewWindowSpec(Key, Bounds)
-            ).pipe(RecoverPreviewOperation("Ensure", Key));
-            yield* BrowserWindows.SetBounds(
+            ), RecoverPreviewOperation("Ensure", Key));
+            yield* pipe(BrowserWindows.SetBounds(
                 Key,
                 Bounds
-            ).pipe(RecoverPreviewOperation("SetBounds", Key));
-            yield* BrowserWindows.Send(
+            ), RecoverPreviewOperation("SetBounds", Key));
+            yield* pipe(BrowserWindows.Send(
                 Key,
                 AppApiChannel.FocusPreviewChanged,
                 Presentation
-            ).pipe(RecoverPreviewOperation("Send", Key));
-            yield* BrowserWindows.ShowInactive(
+            ), RecoverPreviewOperation("Send", Key));
+            yield* pipe(BrowserWindows.ShowInactive(
                 Key
-            ).pipe(RecoverPreviewOperation("ShowInactive", Key));
+            ), RecoverPreviewOperation("ShowInactive", Key));
 
             // The panel highlight and overlay are both always-on-top. Raising
             // the overlay last keeps the highlight directly beneath it.
-            yield* BrowserWindows.ShowInactive(
+            yield* pipe(BrowserWindows.ShowInactive(
                 BrowserWindow.Key.Overlay
-            ).pipe(RecoverPreviewOperation(
+            ), RecoverPreviewOperation(
                 "RaiseOverlay",
                 BrowserWindow.Key.Overlay
             ));
@@ -1227,24 +1208,24 @@ const Live = Layer.effect(
                 ShowIcon: false
             };
 
-            yield* BrowserWindows.Ensure(
+            yield* pipe(BrowserWindows.Ensure(
                 BrowserWindow.GetFocusPreviewWindowSpec(Key, Bounds)
-            ).pipe(RecoverPreviewOperation("Ensure", Key));
-            yield* BrowserWindows.SetBounds(
+            ), RecoverPreviewOperation("Ensure", Key));
+            yield* pipe(BrowserWindows.SetBounds(
                 Key,
                 Bounds
-            ).pipe(RecoverPreviewOperation("SetBounds", Key));
-            yield* BrowserWindows.Send(
+            ), RecoverPreviewOperation("SetBounds", Key));
+            yield* pipe(BrowserWindows.Send(
                 Key,
                 AppApiChannel.FocusPreviewChanged,
                 Presentation
-            ).pipe(RecoverPreviewOperation("Send", Key));
-            yield* BrowserWindows.ShowInactive(
+            ), RecoverPreviewOperation("Send", Key));
+            yield* pipe(BrowserWindows.ShowInactive(
                 Key
-            ).pipe(RecoverPreviewOperation("ShowInactive", Key));
-            yield* BrowserWindows.ShowInactive(
+            ), RecoverPreviewOperation("ShowInactive", Key));
+            yield* pipe(BrowserWindows.ShowInactive(
                 BrowserWindow.Key.Overlay
-            ).pipe(RecoverPreviewOperation(
+            ), RecoverPreviewOperation(
                 "RaiseOverlay",
                 BrowserWindow.Key.Overlay
             ));
@@ -1690,10 +1671,8 @@ const Live = Layer.effect(
                 ),
                 Effect.andThen(
                     Screen === ScreenId.TiledResize
-                        ? Settings.GetSetting("TiledResizeBehavior").pipe(
-                            Effect.flatMap((Behavior: TiledResizeBehavior) =>
-                                Ref.set(TiledResizeBehaviorRef, Behavior))
-                        )
+                        ? pipe(Settings.GetSetting("TiledResizeBehavior"), Effect.flatMap((Behavior: TiledResizeBehavior) =>
+                                Ref.set(TiledResizeBehaviorRef, Behavior)))
                         : Effect.void
                 ),
                 Effect.andThen(Ref.set(TiledMovePanelTargetRef, Option.none())),
@@ -1823,10 +1802,10 @@ const Live = Layer.effect(
             SetResizeMode: (Mode: ResizeModeType) =>
                 Ref.set(ResizeModeRef, Mode),
             SetTiledFocusSelection: (Selection: TiledFocusSelection) =>
-                Logging.LogDebug("Overlay.Focus", "Changed the tiled focus selection.", {
+                pipe(Logging.LogDebug("Overlay.Focus", "Changed the tiled focus selection.", {
                     Path: Selection.Path,
                     WorkspaceId: Selection.WorkspaceId
-                }).pipe(Effect.andThen(Ref.set(TiledFocusLocationRef, Option.some({
+                }), Effect.andThen(Ref.set(TiledFocusLocationRef, Option.some({
                     Path: Selection.Path,
                     ...(Selection.StackActiveIndex === undefined
                         ? { }
@@ -1846,10 +1825,10 @@ const Live = Layer.effect(
                 Target: TiledInsertTarget
             ) => Ref.set(TiledInsertTargetRef, Option.some(Object.freeze(Target))),
             SetTiledMovePanelTarget: (Target: TiledMovePanelTarget) =>
-                Logging.LogDebug("Overlay.Move", "Selected a tiled move target panel.", {
+                pipe(Logging.LogDebug("Overlay.Move", "Selected a tiled move target panel.", {
                     Path: Target.TargetPanelPath,
                     WorkspaceId: Target.WorkspaceId
-                }).pipe(Effect.andThen(
+                }), Effect.andThen(
                     Ref.set(TiledMovePanelTargetRef, Option.some(Target))
                 )),
             Snapshot: Effect.gen(function*()

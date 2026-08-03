@@ -1,5 +1,5 @@
 /**
- *
+ * Windows API types and operations for time.
  *
  * @module @sorrell/windows/Time
  *

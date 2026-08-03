@@ -15,6 +15,7 @@ Napi::Value GetManageableTopLevelWindows(const Napi::CallbackInfo& CallbackInfo)
 Napi::Value GetMovingWindow(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetMouseHoverTime(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetRefreshRate(const Napi::CallbackInfo& CallbackInfo);
+Napi::Value GetWindowFrameRect(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetWindowRect_Node(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetWindowText_Node(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetWindowWorkArea(const Napi::CallbackInfo& CallbackInfo);

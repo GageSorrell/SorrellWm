@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for timeline entry.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/TimelineEntry
  *

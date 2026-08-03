@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for context.
  *
  * @module @sorrell/ink-ui/Mouse/Context
  *

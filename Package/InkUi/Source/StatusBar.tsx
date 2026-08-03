@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for status bar.
  *
  * @module @sorrell/ink-ui/StatusBar
  *

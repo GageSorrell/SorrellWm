@@ -1,5 +1,5 @@
 /**
- *
+ * Locates the native logging headers for addon consumers.
  *
  * @module @sorrell/log/Native/GetIncludeDirectory
  *

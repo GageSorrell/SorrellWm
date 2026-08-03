@@ -1,5 +1,5 @@
 /**
- *
+ * Cardinal directions and operations for matching, mirroring, and rotating them.
  *
  * @module @sorrell/wm/Main/Utility/Cardinal
  *

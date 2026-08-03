@@ -1,5 +1,5 @@
 /**
- *
+ * Header operations for the SorrellWm code extension.
  *
  * @module @sorrell/sorrell-wm-code-extension/Header
  * @internal

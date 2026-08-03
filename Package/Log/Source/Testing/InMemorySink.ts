@@ -1,5 +1,5 @@
 /**
- *
+ * In-memory structured log sink for tests.
  *
  * @module @sorrell/log/Testing/InMemorySink
  *

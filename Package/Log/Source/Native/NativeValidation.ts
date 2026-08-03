@@ -1,5 +1,5 @@
 /**
- *
+ * Native logging integration for native validation.
  *
  * @module @sorrell/log/Native/NativeValidation
  *

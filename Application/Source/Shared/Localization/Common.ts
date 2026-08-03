@@ -1,5 +1,5 @@
 /**
- *
+ * English text shared across application surfaces.
  *
  * @module @sorrell/wm/Localization/Common
  *

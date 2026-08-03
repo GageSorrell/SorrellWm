@@ -11,6 +11,7 @@
 
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import { pipe } from "effect";
 import { InvalidRenderOptions, InvalidViewport } from "./InkThreeError.js";
 
 /**
@@ -46,13 +47,11 @@ const ValidateViewport: {
     (Value: unknown): Effect.Effect<Viewport, InvalidViewport | InvalidRenderOptions, unknown>;
 } = Effect.fn("ValidateViewport")(function*(Value: unknown)
 {
-    const Parsed: Viewport = yield* Schema.decodeUnknownEffect(ViewportSchema)(Value).pipe(
-        Effect.mapError(({ message: Message }) => new InvalidRenderOptions({
+    const Parsed: Viewport = yield* pipe(Schema.decodeUnknownEffect(ViewportSchema)(Value), Effect.mapError(({ message: Message }) => new InvalidRenderOptions({
             Message,
             OptionName: "Viewport",
             Value
-        }))
-    );
+        })));
 
     const InvalidViewportDimension = (Dimension: "height" | "width"): Effect.Effect<never, InvalidViewport> =>
         Effect.fail(new InvalidViewport({

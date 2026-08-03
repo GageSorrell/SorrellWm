@@ -1,5 +1,5 @@
 /**
- *
+ * Native logging integration for native record.
  *
  * @module @sorrell/log/Native/NativeRecord
  *

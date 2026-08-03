@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for help overlay.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/HelpOverlay
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Tests header behavior for SorrellWm code extension.
  *
  * @module @sorrell/sorrell-wm-code-extension/Header.test
  * @internal

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for box.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Box
  *

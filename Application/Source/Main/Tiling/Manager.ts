@@ -10,7 +10,7 @@
  */
 
 import * as TilingTree from "./Tree.ts";
-import { Context, Data, Effect, Layer, Option, Ref, SubscriptionRef } from "effect";
+import { Context, Data, Effect, Layer, Option, Ref, SubscriptionRef, pipe } from "effect";
 import { type Handle, Window } from "@sorrell/windows";
 import type {
     ResizeRecoveryStrategy,
@@ -35,6 +35,11 @@ export interface Dependencies
 
     /** Read a top-level window's current bounds. */
     readonly GetWindowRect: (WindowValue: Handle.HWND) => Option.Option<Box.Box>;
+
+    /** Read a top-level window's visible DWM frame bounds. */
+    readonly GetWindowFrameRect?: (
+        WindowValue: Handle.HWND
+    ) => Option.Option<Box.Box>;
 
     /** Read the work area containing a top-level window. */
     readonly GetWindowWorkArea: (WindowValue: Handle.HWND) => Option.Option<Box.Box>;
@@ -272,18 +277,14 @@ const InsertPreviewWindow = 0n as Handle.HWND;
 const LogTilingDebug = (
     Message: string,
     Annotations: Readonly<Record<string, unknown>> = { }
-): Effect.Effect<void> => Effect.logDebug(Message).pipe(
-    Effect.annotateLogs(Annotations),
-    WithCategory("Tiling")
-);
+): Effect.Effect<void> => pipe(Effect.logDebug(Message), Effect.annotateLogs(Annotations),
+    WithCategory("Tiling"));
 
 const LogTilingInfo = (
     Message: string,
     Annotations: Readonly<Record<string, unknown>> = { }
-): Effect.Effect<void> => Effect.logInfo(Message).pipe(
-    Effect.annotateLogs(Annotations),
-    WithCategory("Tiling")
-);
+): Effect.Effect<void> => pipe(Effect.logInfo(Message), Effect.annotateLogs(Annotations),
+    WithCategory("Tiling"));
 
 const DirectionForBounds = (Bounds: Box.Box): TilingTree.Orientation =>
     Box.Width(Bounds) >= Box.Height(Bounds)
@@ -436,7 +437,7 @@ const MergeDiscoveredWindows = (
 const UpdateWorkspace = (
     Current: TilingTree.State,
     WorkspaceId: string,
-    Transform: (Root: TilingTree.Node) => readonly [ TilingTree.Node, boolean ],
+    Transform: (Root: TilingTree.Node) => Option.Option<TilingTree.Node>,
     Path: TilingTree.Path
 ): Effect.Effect<TilingTree.State, PanelNotFoundError | WorkspaceNotFoundError> =>
 {
@@ -455,21 +456,21 @@ const UpdateWorkspace = (
         return Effect.fail(new PanelNotFoundError({ Path, WorkspaceId }));
     }
 
-    const [ Root, Updated ] = Transform(Workspace.Root);
-    if (!Updated)
+    const Root = Transform(Workspace.Root);
+    if (Option.isNone(Root))
     {
         return Effect.fail(new PanelNotFoundError({ Path, WorkspaceId }));
     }
 
     const Workspaces = [ ...Current.Workspaces ];
-    Workspaces[Index] = FreezeWorkspace(Workspace, Root);
+    Workspaces[Index] = FreezeWorkspace(Workspace, Root.value);
     return Effect.succeed(FreezeState(Workspaces));
 };
 
 const UpdateManagedWindowWorkspace = (
     Current: TilingTree.State,
     WindowValue: Handle.HWND,
-    Transform: (Root: TilingTree.Node) => readonly [ TilingTree.Node, boolean ]
+    Transform: (Root: TilingTree.Node) => Option.Option<TilingTree.Node>
 ): Effect.Effect<TilingTree.State, WindowNotManagedError> =>
 {
     const WorkspaceIndex = Current.Workspaces.findIndex(
@@ -488,16 +489,27 @@ const UpdateManagedWindowWorkspace = (
         return Effect.fail(new WindowNotManagedError({ Window: WindowValue }));
     }
 
-    const [ Root, Updated ] = Transform(Workspace.Root);
-    if (!Updated)
+    const Root = Transform(Workspace.Root);
+    if (Option.isNone(Root))
     {
         return Effect.succeed(Current);
     }
 
     const Workspaces = [ ...Current.Workspaces ];
-    Workspaces[WorkspaceIndex] = FreezeWorkspace(Workspace, Root);
+    Workspaces[WorkspaceIndex] = FreezeWorkspace(Workspace, Root.value);
     return Effect.succeed(FreezeState(Workspaces));
 };
+
+const ExpandWindowBoundsForFrame = (
+    DesiredFrame: Box.Box,
+    CurrentFrame: Box.Box,
+    CurrentOuter: Box.Box
+): Box.Box => Box.Box(
+    DesiredFrame.Top - Math.max(0, CurrentFrame.Top - CurrentOuter.Top),
+    DesiredFrame.Right + Math.max(0, CurrentOuter.Right - CurrentFrame.Right),
+    DesiredFrame.Bottom + Math.max(0, CurrentOuter.Bottom - CurrentFrame.Bottom),
+    DesiredFrame.Left - Math.max(0, CurrentFrame.Left - CurrentOuter.Left)
+);
 
 export/** Construct a tiling-manager layer using injectable native-window operations. */
 const MakeLive = (
@@ -536,19 +548,33 @@ const MakeLive = (
                 Placements,
                 (Placement: TilingTree.Placement) => Effect.gen(function*()
                 {
+                    const CurrentOuter = DependenciesValue.GetWindowRect(
+                        Placement.Window
+                    );
+                    const CurrentFrame = DependenciesValue.GetWindowFrameRect?.(
+                        Placement.Window
+                    ) ?? Option.none<Box.Box>();
+                    const TargetBounds = Option.isSome(CurrentOuter)
+                        && Option.isSome(CurrentFrame)
+                        ? ExpandWindowBoundsForFrame(
+                            Placement.Bounds,
+                            CurrentFrame.value,
+                            CurrentOuter.value
+                        )
+                        : Placement.Bounds;
+                    const GetVisibleBounds = DependenciesValue.GetWindowFrameRect
+                        ?? DependenciesValue.GetWindowRect;
                     const Before = VerifyResizes
-                        ? DependenciesValue.GetWindowRect(Placement.Window)
+                        ? GetVisibleBounds(Placement.Window)
                         : Option.none<Box.Box>();
-                    yield* Effect.sync(() =>
-                        DependenciesValue.SetWindowRect(Placement.Window, Placement.Bounds)
-                    ).pipe(
-                        Effect.flatMap(Effect.fromResult),
+                    yield* pipe(Effect.sync(() =>
+                        DependenciesValue.SetWindowRect(Placement.Window, TargetBounds)
+                    ), Effect.flatMap(Effect.fromResult),
                         Effect.mapError((Failure: SimpleError) => new WindowLayoutError({
                             Bounds: Placement.Bounds,
                             Message: Failure.Message,
                             Window: Placement.Window
-                        }))
-                    );
+                        })));
 
                     if (
                         !VerifyResizes
@@ -562,7 +588,7 @@ const MakeLive = (
                         return Option.none<ResizeMismatch>();
                     }
 
-                    let Actual = DependenciesValue.GetWindowRect(Placement.Window);
+                    let Actual = GetVisibleBounds(Placement.Window);
                     if (
                         Option.isSome(Actual)
                         && Box.Width(Actual.value) === Box.Width(Before.value)
@@ -574,7 +600,7 @@ const MakeLive = (
                     )
                     {
                         yield* Effect.sleep("50 millis");
-                        Actual = DependenciesValue.GetWindowRect(Placement.Window);
+                        Actual = GetVisibleBounds(Placement.Window);
                     }
 
                     if (
@@ -618,21 +644,19 @@ const MakeLive = (
                             (
                                 WindowValue: Handle.HWND,
                                 Index: number
-                            ) => Effect.sync(() =>
+                            ) => pipe(Effect.sync(() =>
                                 DependenciesValue.SetWindowZOrderAfter!(
                                     WindowValue,
                                     Windows[Index]!
                                 )
-                            ).pipe(
-                                Effect.flatMap(Effect.fromResult),
+                            ), Effect.flatMap(Effect.fromResult),
                                 Effect.mapError((Failure: SimpleError) =>
                                     new WindowLayoutError({
                                         Bounds: BoundsByWindow.get(WindowValue)
                                         ?? Box.Box(0, 0, 0, 0),
                                         Message: Failure.Message,
                                         Window: WindowValue
-                                    }))
-                            ),
+                                    }))),
                             { discard: true }
                         );
                     },
@@ -680,7 +704,7 @@ const MakeLive = (
                     }
 
                     const BeforeAdjustment = Adjusted;
-                    Adjusted = yield* UpdateManagedWindowWorkspace(
+                    Adjusted = yield* pipe(UpdateManagedWindowWorkspace(
                         BeforeAdjustment,
                         Mismatch.Window,
                         (Root: TilingTree.Node) =>
@@ -700,7 +724,7 @@ const MakeLive = (
                                 Gap
                             );
                         }
-                    ).pipe(Effect.orElseSucceed(() => BeforeAdjustment));
+                    ), Effect.orElseSucceed(() => BeforeAdjustment));
                 }
             }
 
@@ -769,10 +793,8 @@ const MakeLive = (
             ) => Effect.Effect<TilingTree.State, ErrorType>
         ): Effect.Effect<void, ErrorType | WindowLayoutError> => SubscriptionRef.modifyEffect(
             StateRef,
-            (Current: TilingTree.State) => Transform(Current).pipe(
-                Effect.tap(Apply),
-                Effect.map((Next: TilingTree.State) => [ undefined, Next ] as const)
-            )
+            (Current: TilingTree.State) => pipe(Transform(Current), Effect.tap(Apply),
+                Effect.map((Next: TilingTree.State) => [ undefined, Next ] as const))
         );
 
         const CommitWithRecovery = <ErrorType>(
@@ -787,23 +809,20 @@ const MakeLive = (
             ? Commit(Transform)
             : SubscriptionRef.modifyEffect(
                 StateRef,
-                (Current: TilingTree.State) => Transform(Current).pipe(
-                    Effect.flatMap((Next: TilingTree.State) => ApplyWithRecovery(
+                (Current: TilingTree.State) => pipe(Transform(Current), Effect.flatMap((Next: TilingTree.State) => ApplyWithRecovery(
                         Current,
                         Next,
                         undefined,
                         RecoveryStrategy
                     )),
-                    Effect.map((Next: TilingTree.State) => [ undefined, Next ] as const)
-                )
+                    Effect.map((Next: TilingTree.State) => [ undefined, Next ] as const))
             );
 
-        const Discover = Effect.sync(DependenciesValue.Enumerate).pipe(
-            Effect.flatMap(Effect.fromResult),
+        const Discover = pipe(Effect.sync(DependenciesValue.Enumerate), Effect.flatMap(Effect.fromResult),
             Effect.mapError((Failure: SimpleError) => new WindowEnumerationError({
                 Message: Failure.Message
             })),
-            Effect.flatMap((Handles: ReadonlyArray<Handle.HWND>) => Effect.forEach(
+            Effect.flatMap((Handles: ReadonlyArray<Handle.HWND>) => pipe(Effect.forEach(
                 Handles,
                 (WindowValue: Handle.HWND) => Effect.gen(function*()
                 {
@@ -818,17 +837,16 @@ const MakeLive = (
 
                     return Seed;
                 })
-            ).pipe(Effect.map((
+            ), Effect.map((
                 Seeds: ReadonlyArray<Option.Option<TilingTree.WindowSeed>>
             ) => Seeds.flatMap(
                 (Seed: Option.Option<TilingTree.WindowSeed>): ReadonlyArray<
                     TilingTree.WindowSeed
                 > =>
                     Option.isSome(Seed) ? [ Seed.value ] : [ ]
-            ))))
-        );
+            )))));
 
-        const Refresh = Effect.flatMap(
+        const Refresh = pipe(Effect.flatMap(
             Discover,
             (Seeds: ReadonlyArray<TilingTree.WindowSeed>) => Commit(
                 (Current: TilingTree.State) => Effect.succeed(
@@ -837,33 +855,29 @@ const MakeLive = (
                         : MergeDiscoveredWindows(Current, Seeds)
                 )
             )
-        ).pipe(Effect.tap(() => LogTilingInfo(
+        ), Effect.tap(() => LogTilingInfo(
             "Refreshed the tiling state from native windows."
         )));
 
-        const TileExistingWindows = SubscriptionRef.get(StateRef).pipe(
-            Effect.flatMap((Current: TilingTree.State) =>
+        const TileExistingWindows = pipe(SubscriptionRef.get(StateRef), Effect.flatMap((Current: TilingTree.State) =>
                 TilingTree.AreRootPanelsEmpty(Current)
-                    ? Discover.pipe(
-                        Effect.flatMap((
+                    ? pipe(Discover, Effect.flatMap((
                             Seeds: ReadonlyArray<TilingTree.WindowSeed>
                         ) => Seeds.length === 0
                             ? LogTilingDebug(
                                 "No discoverable floating windows were available to tile."
                             )
-                            : Commit((Latest: TilingTree.State) => Effect.succeed(
+                            : pipe(Commit((Latest: TilingTree.State) => Effect.succeed(
                                 TilingTree.AreRootPanelsEmpty(Latest)
                                     ? TilingTree.FromWindowSeedsAtRootPanels(Seeds)
                                     : Latest
-                            )).pipe(Effect.tap(() => LogTilingInfo(
+                            )), Effect.tap(() => LogTilingInfo(
                                 "Tiled existing floating windows.",
                                 { WindowCount: Seeds.length }
-                            ))))
-                    )
+                            )))))
                     : LogTilingDebug(
                         "Skipped tiling existing windows because a root panel is not empty."
-                    ))
-        );
+                    )));
 
         const Tile = (
             WindowValue: Handle.HWND,
@@ -877,7 +891,7 @@ const MakeLive = (
                 return Effect.fail(new WindowMetadataUnavailableError({ Window: WindowValue }));
             }
 
-            return Commit((Current: TilingTree.State) =>
+            return pipe(Commit((Current: TilingTree.State) =>
             {
                 if (FindManagedWindow(Current, WindowValue) !== undefined)
                 {
@@ -913,7 +927,7 @@ const MakeLive = (
                 }
 
                 return Effect.succeed(FreezeState(Workspaces));
-            }).pipe(Effect.tap(() => LogTilingInfo("Tiled a native window.", {
+            }), Effect.tap(() => LogTilingInfo("Tiled a native window.", {
                 Orientation: Orientation ?? "Automatic",
                 Target: Target ?? "None",
                 Window: WindowValue
@@ -944,7 +958,7 @@ const MakeLive = (
                 return yield* new WindowNotManagedError({ Window: Target });
             }
 
-            const [ Root, Inserted ] = TilingTree.InsertWindowInDirection(
+            const Root = TilingTree.InsertWindowInDirection(
                 Workspace.Root,
                 {
                     InitialBounds: Managed.InitialBounds,
@@ -954,13 +968,13 @@ const MakeLive = (
                 Direction
             );
 
-            if (!Inserted)
+            if (Option.isNone(Root))
             {
                 return yield* new WindowNotManagedError({ Window: Target });
             }
 
             const Workspaces = [ ...Current.Workspaces ];
-            Workspaces[WorkspaceIndex] = FreezeWorkspace(Workspace, Root);
+            Workspaces[WorkspaceIndex] = FreezeWorkspace(Workspace, Root.value);
             const PreviewState = FreezeState(Workspaces);
             const AppliedState = yield* ApplyWithRecovery(
                 Current,
@@ -1001,7 +1015,7 @@ const MakeLive = (
                 }));
             }
 
-            return CommitWithRecovery((Current: TilingTree.State) =>
+            return pipe(CommitWithRecovery((Current: TilingTree.State) =>
             {
                 if (FindManagedWindow(Current, WindowValue) !== undefined)
                 {
@@ -1018,7 +1032,7 @@ const MakeLive = (
                         Direction
                     )
                 );
-            }, RecoveryStrategy).pipe(Effect.tap(() => LogTilingInfo(
+            }, RecoveryStrategy), Effect.tap(() => LogTilingInfo(
                 "Inserted a floating window into a directional tile.",
                 {
                     Direction,
@@ -1045,17 +1059,15 @@ const MakeLive = (
 
             if (RestoreInitialBounds && Removed !== undefined)
             {
-                yield* Effect.sync(() => DependenciesValue.SetWindowRect(
+                yield* pipe(Effect.sync(() => DependenciesValue.SetWindowRect(
                     WindowValue,
                     Removed!.InitialBounds
-                )).pipe(
-                    Effect.flatMap(Effect.fromResult),
+                )), Effect.flatMap(Effect.fromResult),
                     Effect.mapError((Failure: SimpleError) => new WindowLayoutError({
                         Bounds: Removed!.InitialBounds,
                         Message: Failure.Message,
                         Window: WindowValue
-                    }))
-                );
+                    })));
             }
 
             yield* LogTilingInfo("Floated a tiled window.", {
@@ -1069,7 +1081,7 @@ const MakeLive = (
             Target: Handle.HWND,
             Orientation?: TilingTree.Orientation,
             RecoveryStrategy?: ResizeRecoveryStrategy
-        ) => CommitWithRecovery((Current: TilingTree.State) =>
+        ) => pipe(CommitWithRecovery((Current: TilingTree.State) =>
         {
             const Managed = FindManagedWindow(Current, WindowValue);
             if (Managed === undefined)
@@ -1106,7 +1118,7 @@ const MakeLive = (
             );
 
             return Effect.succeed(FreezeState(Workspaces));
-        }, RecoveryStrategy).pipe(Effect.tap(() => LogTilingInfo(
+        }, RecoveryStrategy), Effect.tap(() => LogTilingInfo(
             "Moved a tiled window beside another window.",
             {
                 Orientation: Orientation ?? "Automatic",
@@ -1119,7 +1131,7 @@ const MakeLive = (
             WindowValue: Handle.HWND,
             TargetPanelPath: TilingTree.Path,
             RecoveryStrategy?: ResizeRecoveryStrategy
-        ) => CommitWithRecovery((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
+        ) => pipe(CommitWithRecovery((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
             Current,
             WindowValue,
             (Root: TilingTree.Node) => TilingTree.MoveWindowIntoPanel(
@@ -1127,7 +1139,7 @@ const MakeLive = (
                 WindowValue,
                 TargetPanelPath
             )
-        ), RecoveryStrategy).pipe(Effect.tap(() => LogTilingInfo("Moved a tiled window into a panel.", {
+        ), RecoveryStrategy), Effect.tap(() => LogTilingInfo("Moved a tiled window into a panel.", {
             TargetPanelPath,
             Window: WindowValue
         })));
@@ -1135,14 +1147,14 @@ const MakeLive = (
         const MoveToContainingPanel: TilingManagerImpl["MoveToContainingPanel"] = (
             WindowValue: Handle.HWND,
             RecoveryStrategy?: ResizeRecoveryStrategy
-        ) => CommitWithRecovery((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
+        ) => pipe(CommitWithRecovery((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
             Current,
             WindowValue,
             (Root: TilingTree.Node) => TilingTree.MoveWindowToContainingPanel(
                 Root,
                 WindowValue
             )
-        ), RecoveryStrategy).pipe(Effect.tap(() => LogTilingInfo(
+        ), RecoveryStrategy), Effect.tap(() => LogTilingInfo(
             "Moved a tiled window to its containing panel.",
             { Window: WindowValue }
         )));
@@ -1151,7 +1163,7 @@ const MakeLive = (
             WindowValue: Handle.HWND,
             TargetIndex: number,
             RecoveryStrategy?: ResizeRecoveryStrategy
-        ) => CommitWithRecovery((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
+        ) => pipe(CommitWithRecovery((Current: TilingTree.State) => UpdateManagedWindowWorkspace(
             Current,
             WindowValue,
             (Root: TilingTree.Node) => TilingTree.MoveWindowToIndex(
@@ -1159,14 +1171,14 @@ const MakeLive = (
                 WindowValue,
                 TargetIndex
             )
-        ), RecoveryStrategy).pipe(Effect.tap(() => LogTilingInfo("Reordered a tiled window.", {
+        ), RecoveryStrategy), Effect.tap(() => LogTilingInfo("Reordered a tiled window.", {
             TargetIndex,
             Window: WindowValue
         })));
 
         const BringStackWindowToFront: TilingManagerImpl[
             "BringStackWindowToFront"
-        ] = (WindowValue: Handle.HWND) => Commit((
+        ] = (WindowValue: Handle.HWND) => pipe(Commit((
             Current: TilingTree.State
         ) => UpdateManagedWindowWorkspace(
             Current,
@@ -1175,7 +1187,7 @@ const MakeLive = (
                 Root,
                 WindowValue
             )
-        )).pipe(Effect.tap(() => LogTilingInfo(
+        )), Effect.tap(() => LogTilingInfo(
             "Brought a tiled window to the front of its stack.",
             { Window: WindowValue }
         )));
@@ -1224,7 +1236,7 @@ const MakeLive = (
             Path: TilingTree.Path,
             RatioValue: number,
             ChildIndex: number = 0
-        ) => Commit((Current: TilingTree.State) => UpdateWorkspace(
+        ) => pipe(Commit((Current: TilingTree.State) => UpdateWorkspace(
             Current,
             WorkspaceId,
             (Root: TilingTree.Node) => TilingTree.SetPanelRatio(
@@ -1234,7 +1246,7 @@ const MakeLive = (
                 ChildIndex
             ),
             Path
-        )).pipe(Effect.tap(() => LogTilingInfo("Changed a panel ratio.", {
+        )), Effect.tap(() => LogTilingInfo("Changed a panel ratio.", {
             ChildIndex,
             Path,
             Ratio: RatioValue,
@@ -1245,7 +1257,7 @@ const MakeLive = (
             WorkspaceId: string,
             Path: TilingTree.Path,
             OrientationValue: TilingTree.Orientation
-        ) => Commit((Current: TilingTree.State) => UpdateWorkspace(
+        ) => pipe(Commit((Current: TilingTree.State) => UpdateWorkspace(
             Current,
             WorkspaceId,
             (Root: TilingTree.Node) => TilingTree.SetPanelOrientation(
@@ -1254,7 +1266,7 @@ const MakeLive = (
                 OrientationValue
             ),
             Path
-        )).pipe(Effect.tap(() => LogTilingInfo("Changed a panel orientation.", {
+        )), Effect.tap(() => LogTilingInfo("Changed a panel orientation.", {
             Orientation: OrientationValue,
             Path,
             WorkspaceId
@@ -1262,17 +1274,15 @@ const MakeLive = (
 
         const Changes = SubscriptionRef.changes(StateRef);
         const Gap = Ref.get(GapRef);
-        const Reconcile = SubscriptionRef.get(StateRef).pipe(Effect.flatMap(Apply));
+        const Reconcile = pipe(SubscriptionRef.get(StateRef), Effect.flatMap(Apply));
         const SetGap: TilingManagerImpl["SetGap"] = (Value: number) =>
-            Ref.set(
+            pipe(Ref.set(
                 GapRef,
                 Number.isFinite(Value) ? Math.max(0, Math.floor(Value)) : 0
-            ).pipe(
-                Effect.andThen(Reconcile),
+            ), Effect.andThen(Reconcile),
                 Effect.tap(() => LogTilingInfo("Changed the tiled-window gap.", {
                     Gap: Value
-                }))
-            );
+                })));
         const Snapshot = SubscriptionRef.get(StateRef);
 
         return {
@@ -1302,6 +1312,7 @@ const MakeLive = (
 export/** Live tiling manager backed by the `@sorrell/windows` native package. */
 const Live = MakeLive({
     Enumerate: Window.GetManageableTopLevelWindows,
+    GetWindowFrameRect: Window.GetWindowFrameRect,
     GetWindowRect: Window.GetWindowRect,
     GetWindowWorkArea: Window.GetWindowWorkArea,
     SetWindowRect: Window.SetWindowRect,

@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for focus.
  *
  * @module @sorrell/ink-ui/Interaction/Focus
  *

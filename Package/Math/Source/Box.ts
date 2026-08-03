@@ -1,5 +1,5 @@
 /**
- *
+ * Rectangular box types and operations for discrete geometry.
  *
  * @module @sorrell/math/Box
  *

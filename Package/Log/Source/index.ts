@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/log`.
  *
  * @module @sorrell/log/index
  *

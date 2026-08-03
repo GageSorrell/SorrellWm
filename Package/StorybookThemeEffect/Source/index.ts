@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/storybook-theme-effect`.
  *
  * @module @sorrell/storybook-theme-effect
  *

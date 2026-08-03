@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for theme overlay.
  *
  * @module @sorrell/ink-ui/Overlay/ThemeOverlay
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for YAML editor overlay.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/YamlEditorOverlay
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Mouse event types and operations for Ink UI.
  *
  * @module @sorrell/ink-ui/Mouse/MouseEvent
  *

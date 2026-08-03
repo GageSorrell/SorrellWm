@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for tabs.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Tabs
  *

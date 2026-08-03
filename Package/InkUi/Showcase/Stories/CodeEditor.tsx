@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for code editor.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/CodeEditor
  *

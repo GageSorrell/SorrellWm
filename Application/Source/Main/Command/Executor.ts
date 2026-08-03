@@ -697,12 +697,11 @@ const MoveTiledWindow = (
             yield* PublishOverlayScreen(BrowserWindows, Session);
             return;
         case "MoveIntoPanel":
-            yield* TilingManager.MoveIntoPanel(
+            yield* pipe(TilingManager.MoveIntoPanel(
                 ActivationWindow,
                 Action.value.TargetPanelPath,
                 RecoveryStrategy
-            ).pipe(
-                Effect.catchTag("ResizeRecoveryCanceledError", (
+            ), Effect.catchTag("ResizeRecoveryCanceledError", (
                     Failure: Tiling.Manager.ResizeRecoveryCanceledError
                 ) => Effect.gen(function*()
                 {
@@ -713,15 +712,13 @@ const MoveTiledWindow = (
                         Failure,
                         { Window: Failure.Window }
                     );
-                }))
-            );
+                })));
             break;
         case "MoveToContainingPanel":
-            yield* TilingManager.MoveToContainingPanel(
+            yield* pipe(TilingManager.MoveToContainingPanel(
                 ActivationWindow,
                 RecoveryStrategy
-            ).pipe(
-                Effect.catchTag("ResizeRecoveryCanceledError", (
+            ), Effect.catchTag("ResizeRecoveryCanceledError", (
                     Failure: Tiling.Manager.ResizeRecoveryCanceledError
                 ) => Effect.gen(function*()
                 {
@@ -732,16 +729,14 @@ const MoveTiledWindow = (
                         Failure,
                         { Window: Failure.Window }
                     );
-                }))
-            );
+                })));
             break;
         case "MoveToIndex":
-            yield* TilingManager.MoveToIndex(
+            yield* pipe(TilingManager.MoveToIndex(
                 ActivationWindow,
                 Action.value.TargetIndex,
                 RecoveryStrategy
-            ).pipe(
-                Effect.catchTag("ResizeRecoveryCanceledError", (
+            ), Effect.catchTag("ResizeRecoveryCanceledError", (
                     Failure: Tiling.Manager.ResizeRecoveryCanceledError
                 ) => Effect.gen(function*()
                 {
@@ -752,8 +747,7 @@ const MoveTiledWindow = (
                         Failure,
                         { Window: Failure.Window }
                     );
-                }))
-            );
+                })));
             break;
     }
 
@@ -879,14 +873,13 @@ const ResizeWindowByEdge = (
     {
         const Behavior = yield* Session.TiledResizeBehavior;
         const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
-        const Completed = yield* TilingManager.Resize(
+        const Completed = yield* pipe(TilingManager.Resize(
             ActivationWindow,
             ResizeDirectionByEdge[Edge],
             EdgeOutwardSign[Edge] * DeltaPixels,
             Behavior,
             RecoveryStrategy
-        ).pipe(
-            Effect.as(true),
+        ), Effect.as(true),
             Effect.catchTag("ResizeRecoveryCanceledError", (
                 Failure: Tiling.Manager.ResizeRecoveryCanceledError
             ) => Effect.gen(function*()
@@ -900,8 +893,7 @@ const ResizeWindowByEdge = (
                 yield* Session.RecordResizeRecoveryFailure;
                 yield* PublishOverlayScreen(BrowserWindows, Session);
                 return false;
-            }))
-        );
+            })));
         if (!Completed)
         {
             return false;
@@ -1179,14 +1171,14 @@ const AnimateMoveWindow = (
         Settings,
         Session,
         HeldBox,
-        (ActivationWindow: Handle.HWND, DeltaPixels: number) => MoveWindowByOffset(
+        (ActivationWindow: Handle.HWND, DeltaPixels: number) => pipe(MoveWindowByOffset(
             BrowserWindows,
             Session,
             TilingManager,
             ActivationWindow,
             Unit.X * DeltaPixels,
             Unit.Y * DeltaPixels
-        ).pipe(Effect.as(true))
+        ), Effect.as(true))
     );
 });
 
@@ -1250,7 +1242,7 @@ const InsertDirectionByCommand: Readonly<Partial<Record<
 
 const IgnoreMissingBrowserWindow = <Value, ErrorType>(
     EffectValue: Effect.Effect<Value, ErrorType>
-): Effect.Effect<void> => EffectValue.pipe(Effect.ignore);
+): Effect.Effect<void> => pipe(EffectValue, Effect.ignore);
 
 const GetInsertTargetPresentation = (
     Session: OverlaySession.OverlaySessionImpl
@@ -1262,14 +1254,12 @@ const GetInsertTargetPresentation = (
 const PublishInsertTarget = (
     BrowserWindows: BrowserWindow.BrowserWindowImpl,
     Session: OverlaySession.OverlaySessionImpl
-) => GetInsertTargetPresentation(Session).pipe(
-    Effect.flatMap((Presentation: InsertTargetPresentation) =>
+) => pipe(GetInsertTargetPresentation(Session), Effect.flatMap((Presentation: InsertTargetPresentation) =>
         BrowserWindows.Send(
             BrowserWindow.Key.InsertTarget,
             AppApiChannel.InsertTargetChanged,
             Presentation
-        ))
-);
+        )));
 
 const GetManageableWindowSet = (): ReadonlySet<Handle.HWND> =>
 {
@@ -1304,13 +1294,12 @@ const CompleteTiledInsert = (
     }
 
     const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
-    const Completed = yield* TilingManager.Insert(
+    const Completed = yield* pipe(TilingManager.Insert(
         WindowValue,
         Target.value.TargetWindow,
         Target.value.Direction,
         RecoveryStrategy
-    ).pipe(
-        Effect.as(true),
+    ), Effect.as(true),
         Effect.catchTag("ResizeRecoveryCanceledError", (
             Failure: Tiling.Manager.ResizeRecoveryCanceledError
         ) => Effect.gen(function*()
@@ -1322,13 +1311,12 @@ const CompleteTiledInsert = (
                 { Window: Failure.Window }
             );
             return false;
-        }))
-    );
+        })));
     if (!Completed)
     {
-        const IsTargetVisible = yield* BrowserWindows.IsVisible(
+        const IsTargetVisible = yield* pipe(BrowserWindows.IsVisible(
             BrowserWindow.Key.InsertTarget
-        ).pipe(Effect.match({
+        ), Effect.match({
             onFailure: () => false,
             onSuccess: (Visible: boolean) => Visible
         }));
@@ -1351,11 +1339,9 @@ const CompleteTiledInsert = (
     yield* IgnoreMissingBrowserWindow(
         BrowserWindows.Hide(BrowserWindow.Key.Overlay)
     );
-    yield* CloseBackdrop(BrowserWindows).pipe(Effect.ignore);
-    yield* Effect.sync(() => Window.SetForegroundWindow(WindowValue)).pipe(
-        Effect.flatMap(Effect.fromResult),
-        Effect.ignore
-    );
+    yield* pipe(CloseBackdrop(BrowserWindows), Effect.ignore);
+    yield* pipe(Effect.sync(() => Window.SetForegroundWindow(WindowValue)), Effect.flatMap(Effect.fromResult),
+        Effect.ignore);
     yield* Logging.LogInfo("Overlay.Insert", "Completed a tiled Insert flow.", {
         Direction: Target.value.Direction,
         Target: Target.value.TargetWindow,
@@ -1383,7 +1369,7 @@ const CancelTiledInsert = (
     yield* IgnoreMissingBrowserWindow(
         BrowserWindows.Hide(BrowserWindow.Key.Overlay)
     );
-    yield* CloseBackdrop(BrowserWindows).pipe(Effect.ignore);
+    yield* pipe(CloseBackdrop(BrowserWindows), Effect.ignore);
     yield* RestoreActivationWindowFocus(Session);
     yield* Logging.LogInfo("Overlay.Insert", "Cancelled the tiled Insert flow.");
 });
@@ -1478,12 +1464,11 @@ const ChooseTiledInsertDirection = (
     }
 
     const RecoveryStrategy = yield* Settings.GetSetting("ResizeRecoveryStrategy");
-    const Bounds = yield* TilingManager.PreviewInsert(
+    const Bounds = yield* pipe(TilingManager.PreviewInsert(
         ActivationWindow.value,
         Direction,
         RecoveryStrategy
-    ).pipe(
-        Effect.map(Option.some),
+    ), Effect.map(Option.some),
         Effect.catchTag("ResizeRecoveryCanceledError", (
             Failure: Tiling.Manager.ResizeRecoveryCanceledError
         ) => Effect.gen(function*()
@@ -1497,8 +1482,7 @@ const ChooseTiledInsertDirection = (
             yield* Session.RecordResizeRecoveryFailure;
             yield* PublishOverlayScreen(BrowserWindows, Session);
             return Option.none<Box.Box>();
-        }))
-    );
+        })));
     if (Option.isNone(Bounds))
     {
         return;
@@ -1532,9 +1516,9 @@ const PollTiledInsertTarget = (
         return;
     }
 
-    const IsTargetVisible = yield* BrowserWindows.IsVisible(
+    const IsTargetVisible = yield* pipe(BrowserWindows.IsVisible(
         BrowserWindow.Key.InsertTarget
-    ).pipe(Effect.match({
+    ), Effect.match({
         onFailure: () => false,
         onSuccess: (Visible: boolean) => Visible
     }));
@@ -1546,12 +1530,10 @@ const PollTiledInsertTarget = (
     }
 
     const Snapshot = yield* TilingManager.Snapshot;
-    const MovingWindow = Window.GetMovingWindow().pipe(
-        Option.filter((WindowValue: Handle.HWND): boolean =>
+    const MovingWindow = pipe(Window.GetMovingWindow(), Option.filter((WindowValue: Handle.HWND): boolean =>
             !IsWindowTiled(Snapshot, WindowValue)),
         Option.filter((WindowValue: Handle.HWND): boolean =>
-            GetManageableWindowSet().has(WindowValue))
-    );
+            GetManageableWindowSet().has(WindowValue)));
 
     if (Option.isSome(MovingWindow))
     {
@@ -1567,7 +1549,7 @@ const PollTiledInsertTarget = (
         if (!(yield* Session.TiledInsertDragActive))
         {
             yield* Session.SetTiledInsertDragActive(true);
-            yield* PublishInsertTarget(BrowserWindows, Session).pipe(Effect.ignore);
+            yield* pipe(PublishInsertTarget(BrowserWindows, Session), Effect.ignore);
         }
         return;
     }
@@ -1579,7 +1561,7 @@ const PollTiledInsertTarget = (
     if (yield* Session.TiledInsertDragActive)
     {
         yield* Session.SetTiledInsertDragActive(false);
-        yield* PublishInsertTarget(BrowserWindows, Session).pipe(Effect.ignore);
+        yield* pipe(PublishInsertTarget(BrowserWindows, Session), Effect.ignore);
     }
 
     if (Option.isSome(LastMovingWindow))
@@ -1709,22 +1691,20 @@ const PollTiledWindowDetach = (
 ) => Effect.gen(function*()
 {
     const MovingWindow = Window.GetMovingWindow();
-    yield* FollowOverlayDuringNativeMove(
+    yield* pipe(FollowOverlayDuringNativeMove(
         BrowserWindows,
         Session,
         OverlayFollowRuntime,
         MovingWindow
-    ).pipe(Effect.catch((Cause: unknown) => Logging.LogWarning(
+    ), Effect.catch((Cause: unknown) => Logging.LogWarning(
         "Overlay",
         "Could not follow the activation window during a native move.",
         Cause
     )));
 
     const Snapshot = yield* TilingManager.Snapshot;
-    const MovingTiledWindow = MovingWindow.pipe(
-        Option.filter((WindowValue: Handle.HWND): boolean =>
-            IsWindowTiled(Snapshot, WindowValue))
-    );
+    const MovingTiledWindow = pipe(MovingWindow, Option.filter((WindowValue: Handle.HWND): boolean =>
+            IsWindowTiled(Snapshot, WindowValue)));
 
     if (Option.isSome(MovingTiledWindow))
     {
@@ -1822,9 +1802,9 @@ const ExecuteUi = (
                 const TiledInsertTarget = yield* Session.TiledInsertTarget;
                 if (Option.isSome(TiledInsertTarget))
                 {
-                    const IsInsertTargetVisible = yield* BrowserWindows.IsVisible(
+                    const IsInsertTargetVisible = yield* pipe(BrowserWindows.IsVisible(
                         BrowserWindow.Key.InsertTarget
-                    ).pipe(Effect.match({
+                    ), Effect.match({
                         onFailure: () => false,
                         onSuccess: (Visible: boolean) => Visible
                     }));
@@ -1910,11 +1890,23 @@ const ExecuteUi = (
                 }
             });
         case "TileAll":
-            return pipe(
-                TilingManager.TileExistingWindows,
-                Effect.andThen(Session.Reset),
-                Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
-            );
+            return Effect.gen(function*()
+            {
+                yield* TilingManager.TileExistingWindows;
+                yield* Session.Reset;
+
+                const ActivationWindow = yield* Session.GetActivationWindow;
+                if (Option.isSome(ActivationWindow))
+                {
+                    yield* CenterOverlayOnTiledWindow(
+                        BrowserWindows,
+                        TilingManager,
+                        ActivationWindow.value
+                    );
+                }
+
+                yield* PublishOverlayScreen(BrowserWindows, Session);
+            });
         case "ToggleTiledResizeBehavior":
             return pipe(
                 Session.ToggleTiledResizeBehavior,
@@ -1929,9 +1921,7 @@ const ExecuteUi = (
         case "OpenSettings":
             return Effect.gen(function*()
             {
-                const Specification = yield* BrowserWindow.SettingsWindowSpec.pipe(
-                    Effect.provideService(AppSettings.AppSettings, Settings)
-                );
+                const Specification = yield* pipe(BrowserWindow.SettingsWindowSpec, Effect.provideService(AppSettings.AppSettings, Settings));
                 yield* BrowserWindows.Ensure(Specification);
                 // yield* BrowserWindows.Focus(BrowserWindow.Key.Overlay);
                 yield* BrowserWindows.Show(BrowserWindow.Key.Settings);
@@ -1968,8 +1958,7 @@ const ExecuteUi = (
                 Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
             );
         case "SelectTiledStackWindow":
-            return Session.ResolveTiledStackWindow(Command.Index).pipe(
-                Effect.flatMap(Option.match({
+            return pipe(Session.ResolveTiledStackWindow(Command.Index), Effect.flatMap(Option.match({
                     onNone: () => Effect.void,
                     onSome: (Selection: OverlaySession.TiledFocusSelection) =>
                         ApplyTiledFocusSelection(
@@ -1978,8 +1967,7 @@ const ExecuteUi = (
                             TilingManager,
                             Selection
                         )
-                }))
-            );
+                })));
         case "SetTiledInsertCaptureNext":
             return Effect.gen(function*()
             {
@@ -2031,22 +2019,17 @@ const ExecuteUi = (
 
             if (Command.Id === "SelectInsertWindowUp")
             {
-                return Session.MoveTiledInsertSelection(-1).pipe(
-                    Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
-                );
+                return pipe(Session.MoveTiledInsertSelection(-1), Effect.andThen(PublishOverlayScreen(BrowserWindows, Session)));
             }
 
             if (Command.Id === "SelectInsertWindowDown")
             {
-                return Session.MoveTiledInsertSelection(1).pipe(
-                    Effect.andThen(PublishOverlayScreen(BrowserWindows, Session))
-                );
+                return pipe(Session.MoveTiledInsertSelection(1), Effect.andThen(PublishOverlayScreen(BrowserWindows, Session)));
             }
 
             if (Command.Id === "CommitInsertWindow")
             {
-                return Session.SelectedTiledInsertWindow.pipe(
-                    Effect.flatMap(Option.match({
+                return pipe(Session.SelectedTiledInsertWindow, Effect.flatMap(Option.match({
                         onNone: () => Effect.void,
                         onSome: (WindowValue: Handle.HWND) => CompleteTiledInsert(
                             BrowserWindows,
@@ -2056,8 +2039,7 @@ const ExecuteUi = (
                             InsertRuntime,
                             WindowValue
                         )
-                    }))
-                );
+                    })));
             }
 
             if (
@@ -2329,16 +2311,14 @@ const Live = Layer.effect(
                     return Effect.void;
                 }
 
-                return Session.TiledInsertTarget.pipe(
-                    Effect.flatMap(Option.match({
+                return pipe(Session.TiledInsertTarget, Effect.flatMap(Option.match({
                         onNone: () => Effect.void,
                         onSome: () => CancelTiledInsert(
                             BrowserWindows,
                             Session,
                             TilingManager
                         )
-                    }))
-                );
+                    })));
             }),
             Effect.forkScoped({ startImmediately: true })
         );

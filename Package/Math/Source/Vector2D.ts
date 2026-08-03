@@ -1,5 +1,5 @@
 /**
- *
+ * Two-dimensional vector types and operations.
  *
  * @module @sorrell/math/Vector2D
  *

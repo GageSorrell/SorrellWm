@@ -1,4 +1,6 @@
 /**
+ * Tests directional-pad colors and target availability states.
+ *
  * @module @sorrell/wm/Test/DirectionalPad
  *
  * @file      DirectionalPad.Test.tsx

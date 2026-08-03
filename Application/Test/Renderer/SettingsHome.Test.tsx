@@ -1,4 +1,6 @@
 /**
+ * Tests version and update status presentation on the settings home section.
+ *
  * @module @sorrell/wm/Test/SettingsHome
  *
  * @file      SettingsHome.Test.tsx

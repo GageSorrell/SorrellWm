@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for confirm overlay.
  *
  * @module @sorrell/ink-ui/Overlay/ConfirmOverlay
  *

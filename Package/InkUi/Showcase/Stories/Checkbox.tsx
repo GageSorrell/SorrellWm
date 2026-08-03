@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for checkbox.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/Checkbox
  *

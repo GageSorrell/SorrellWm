@@ -1,5 +1,5 @@
 /**
- *
+ * Public exports for `@sorrell/storybook-theme-fluent`.
  *
  * @module @sorrell/storybook-theme-fluent
  *

@@ -11,6 +11,7 @@
 
 import { Box } from "@sorrell/math";
 import type { Handle } from "@sorrell/windows";
+import { Option } from "effect";
 import type { TiledResizeBehavior } from "../../Shared/AppSettings.ts";
 
 export/** The arrangements a panel can apply to its children. */
@@ -813,18 +814,17 @@ const InsertAtWindow = (
     Direction: Orientation,
     Ratio: number,
     InsertBefore: boolean = false
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     if (Root._tag === "Window")
     {
         return Root.Value.Window === Target
-            ? [
+            ? Option.some(
                 InsertBefore
                     ? Panel(Direction, Window(Value), Root, Ratio)
-                    : Panel(Direction, Root, Window(Value), Ratio),
-                true
-            ]
-            : [ Root, false ];
+                    : Panel(Direction, Root, Window(Value), Ratio)
+            )
+            : Option.none();
     }
 
     const DirectTargetIndex = Root.Children.findIndex((Child: Node): boolean =>
@@ -840,12 +840,12 @@ const InsertAtWindow = (
         ] as [ Node, Node, ...Array<Node> ];
         const Ratios = SplitChildRatio(Root.Ratios, DirectTargetIndex, Ratio);
 
-        return [ Panel(Root.Orientation, Children, Ratios), true ];
+        return Option.some(Panel(Root.Orientation, Children, Ratios));
     }
 
     for (let ChildIndex = 0; ChildIndex < Root.Children.length; ChildIndex += 1)
     {
-        const [ Child, Inserted ] = InsertAtWindow(
+        const Child = InsertAtWindow(
             Root.Children[ChildIndex]!,
             Target,
             Value,
@@ -854,22 +854,21 @@ const InsertAtWindow = (
             InsertBefore
         );
 
-        if (Inserted)
+        if (Option.isSome(Child))
         {
             const Children = [ ...Root.Children ];
-            Children[ChildIndex] = Child;
-            return [
+            Children[ChildIndex] = Child.value;
+            return Option.some(
                 Panel(
                     Root.Orientation,
                     Children as [ Node, Node, ...Array<Node> ],
                     Root.Ratios
-                ),
-                true
-            ];
+                )
+            );
         }
     }
 
-    return [ Root, false ];
+    return Option.none();
 };
 
 export/** Insert a window beside a target leaf, or beside the last leaf when omitted. */
@@ -892,7 +891,7 @@ const InsertWindow = (
     }
 
     const TargetWindow = Target ?? Windows(Root).at(-1)!.Window;
-    const [ Next, Inserted ] = InsertAtWindow(
+    const Next = InsertAtWindow(
         Root,
         TargetWindow,
         Value,
@@ -900,7 +899,10 @@ const InsertWindow = (
         Ratio
     );
 
-    return Inserted ? Next : Panel(Direction, Root, Window(Value), Ratio);
+    return Option.getOrElse(
+        Next,
+        () => Panel(Direction, Root, Window(Value), Ratio)
+    );
 };
 
 export/**
@@ -921,11 +923,11 @@ const InsertWindowInDirection = (
     Value: ManagedWindow,
     Target: Handle.HWND,
     Direction: FocusDirection
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     if (HasWindow(Root, Value.Window))
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const OrientationValue =
@@ -1010,19 +1012,19 @@ export/**
 const BringStackWindowToFront = (
     Root: Node,
     WindowValue: Handle.HWND
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     if (Root._tag === "Window")
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     let Changed = false;
     const Children = Root.Children.map((Child: Node): Node =>
     {
-        const [ Next, ChildChanged ] = BringStackWindowToFront(Child, WindowValue);
-        Changed ||= ChildChanged;
-        return Next;
+        const Next = BringStackWindowToFront(Child, WindowValue);
+        Changed ||= Option.isSome(Next);
+        return Option.getOrElse(Next, () => Child);
     });
     const Ratios = [ ...Root.Ratios ];
 
@@ -1042,23 +1044,22 @@ const BringStackWindowToFront = (
     }
 
     return Changed
-        ? [
+        ? Option.some(
             Panel(
                 Root.Orientation,
                 Children as [ Node, Node, ...Array<Node> ],
                 Ratios
-            ),
-            true
-        ]
-        : [ Root, false ];
+            )
+        )
+        : Option.none();
 };
 
 const UpdateNodeAtPath = (
     Root: Node,
     PathValue: Path,
-    Transform: (NodeValue: Node) => readonly [ Node, boolean ],
+    Transform: (NodeValue: Node) => Option.Option<Node>,
     Depth: number = 0
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     if (Depth === PathValue.length)
     {
@@ -1067,7 +1068,7 @@ const UpdateNodeAtPath = (
 
     if (Root._tag === "Window")
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const ChildIndex = PathValue[Depth];
@@ -1078,41 +1079,40 @@ const UpdateNodeAtPath = (
         || ChildIndex >= Root.Children.length
     )
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
-    const [ Child, Updated ] = UpdateNodeAtPath(
+    const Child = UpdateNodeAtPath(
         Root.Children[ChildIndex]!,
         PathValue,
         Transform,
         Depth + 1
     );
 
-    return Updated
-        ? [
+    return Option.isSome(Child)
+        ? Option.some(
             Panel(
                 Root.Orientation,
                 Root.Children.map((Current: Node, Index: number): Node =>
-                    Index === ChildIndex ? Child : Current
+                    Index === ChildIndex ? Child.value : Current
                 ) as [ Node, Node, ...Array<Node> ],
                 Root.Ratios
-            ),
-            true
-        ]
-        : [ Root, false ];
+            )
+        )
+        : Option.none();
 };
 
 const UpdatePanel = (
     Root: Node,
     PathValue: Path,
-    Transform: (PanelValue: PanelNode) => readonly [ PanelNode, boolean ]
-): readonly [ Node, boolean ] => UpdateNodeAtPath(
+    Transform: (PanelValue: PanelNode) => Option.Option<PanelNode>
+): Option.Option<Node> => UpdateNodeAtPath(
     Root,
     PathValue,
-    (NodeValue: Node): readonly [ Node, boolean ] =>
+    (NodeValue: Node): Option.Option<Node> =>
         NodeValue._tag === "Panel"
             ? Transform(NodeValue)
-            : [ NodeValue, false ]
+            : Option.none()
 );
 
 export/**
@@ -1125,12 +1125,12 @@ const MoveWindowToIndex = (
     Root: Node,
     WindowValue: Handle.HWND,
     TargetIndex: number
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     const CurrentPath = FindWindowPath(Root, WindowValue);
     if (CurrentPath === undefined || CurrentPath.length === 0)
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const ParentPath = CurrentPath.slice(0, -1);
@@ -1139,7 +1139,7 @@ const MoveWindowToIndex = (
     return UpdatePanel(
         Root,
         ParentPath,
-        (PanelValue: PanelNode): readonly [ PanelNode, boolean ] =>
+        (PanelValue: PanelNode): Option.Option<PanelNode> =>
         {
             if (
                 !Number.isInteger(TargetIndex)
@@ -1150,21 +1150,20 @@ const MoveWindowToIndex = (
                 || PanelValue.Children[CurrentIndex].Value.Window !== WindowValue
             )
             {
-                return [ PanelValue, false ];
+                return Option.none();
             }
 
             const Children = [ ...PanelValue.Children ];
             const [ WindowNodeValue ] = Children.splice(CurrentIndex, 1);
             Children.splice(TargetIndex, 0, WindowNodeValue!);
 
-            return [
+            return Option.some(
                 Panel(
                     PanelValue.Orientation,
                     Children as [ Node, Node, ...Array<Node> ],
                     PanelValue.Ratios
-                ),
-                true
-            ];
+                )
+            );
         }
     );
 };
@@ -1181,12 +1180,12 @@ export/**
 const MoveWindowToContainingPanel = (
     Root: Node,
     WindowValue: Handle.HWND
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     const CurrentPath = FindWindowPath(Root, WindowValue);
     if (CurrentPath === undefined || CurrentPath.length < 2)
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const GrandparentPath = CurrentPath.slice(0, -2);
@@ -1196,7 +1195,7 @@ const MoveWindowToContainingPanel = (
     return UpdatePanel(
         Root,
         GrandparentPath,
-        (Grandparent: PanelNode): readonly [ PanelNode, boolean ] =>
+        (Grandparent: PanelNode): Option.Option<PanelNode> =>
         {
             const OwningPanel = Grandparent.Children[OwningPanelIndex];
             const WindowNodeValue = OwningPanel?._tag === "Panel"
@@ -1209,7 +1208,7 @@ const MoveWindowToContainingPanel = (
                 || WindowNodeValue.Value.Window !== WindowValue
             )
             {
-                return [ Grandparent, false ];
+                return Option.none();
             }
 
             const RemainingChildren = OwningPanel.Children.filter(
@@ -1229,14 +1228,13 @@ const MoveWindowToContainingPanel = (
             Children[OwningPanelIndex] = RemainingOwner;
             Children.splice(OwningPanelIndex + 1, 0, WindowNodeValue);
 
-            return [
+            return Option.some(
                 Panel(
                     Grandparent.Orientation,
                     Children as [ Node, Node, ...Array<Node> ],
                     SplitChildRatio(Grandparent.Ratios, OwningPanelIndex, 0.5)
-                ),
-                true
-            ];
+                )
+            );
         }
     );
 };
@@ -1254,7 +1252,7 @@ const MoveWindowIntoPanel = (
     Root: Node,
     WindowValue: Handle.HWND,
     TargetPanelPath: Path
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     const CurrentPath = FindWindowPath(Root, WindowValue);
     if (
@@ -1263,7 +1261,7 @@ const MoveWindowIntoPanel = (
         || TargetPanelPath.length !== CurrentPath.length
     )
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const ParentPath = CurrentPath.slice(0, -1);
@@ -1276,17 +1274,17 @@ const MoveWindowIntoPanel = (
 
     if (!IsSameParent || Math.abs(CurrentIndex - TargetIndex) !== 1)
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     return UpdateNodeAtPath(
         Root,
         ParentPath,
-        (ParentNode: Node): readonly [ Node, boolean ] =>
+        (ParentNode: Node): Option.Option<Node> =>
         {
             if (ParentNode._tag !== "Panel")
             {
-                return [ ParentNode, false ];
+                return Option.none();
             }
 
             const WindowNodeValue = ParentNode.Children[CurrentIndex];
@@ -1297,7 +1295,7 @@ const MoveWindowIntoPanel = (
                 || TargetPanel?._tag !== "Panel"
             )
             {
-                return [ ParentNode, false ];
+                return Option.none();
             }
 
             const UpdatedTarget = Panel(
@@ -1320,33 +1318,32 @@ const MoveWindowIntoPanel = (
             );
 
             return RemainingChildren.length === 1
-                ? [ RemainingChildren[0]!, true ]
-                : [
+                ? Option.some(RemainingChildren[0]!)
+                : Option.some(
                     Panel(
                         ParentNode.Orientation,
                         RemainingChildren as [ Node, Node, ...Array<Node> ],
                         RemainingRatios
-                    ),
-                    true
-                ];
+                    )
+                );
         }
     );
 };
 
 export/**
-       * Change one child's normalized panel ratio and report whether the panel
-       * path and child index existed. The first child remains the default for
-       * compatibility with the original binary-panel API.
+       * Change one child's normalized panel ratio when the panel path and child
+       * index exist. The first child remains the default for compatibility with
+       * the original binary-panel API.
        */
 const SetPanelRatio = (
     Root: Node,
     PathValue: Path,
     Ratio: number,
     ChildIndex: number = 0
-): readonly [ Node, boolean ] => UpdatePanel(
+): Option.Option<Node> => UpdatePanel(
     Root,
     PathValue,
-    (PanelValue: PanelNode): readonly [ PanelNode, boolean ] =>
+    (PanelValue: PanelNode): Option.Option<PanelNode> =>
     {
         if (
             !Number.isInteger(ChildIndex)
@@ -1354,17 +1351,16 @@ const SetPanelRatio = (
             || ChildIndex >= PanelValue.Children.length
         )
         {
-            return [ PanelValue, false ];
+            return Option.none();
         }
 
-        return [
+        return Option.some(
             Panel(
                 PanelValue.Orientation,
                 PanelValue.Children,
                 SetRatioAt(PanelValue.Ratios, ChildIndex, Ratio)
-            ),
-            true
-        ];
+            )
+        );
     }
 );
 
@@ -1415,7 +1411,9 @@ export/**
        *
        * Parallel directions resize the window within its owning panel.
        * Perpendicular directions climb to the nearest matching ancestor and
-       * therefore resize the entire intervening branch.
+       * therefore resize the entire intervening branch. Panels without a sibling
+       * on the selected side are skipped, so selecting an exterior root edge is
+       * a no-op.
        *
        * @category mutations
        * @since 0.1.0
@@ -1428,12 +1426,12 @@ const ResizeWindow = (
     DeltaPixels: number,
     Behavior: TiledResizeBehavior,
     Gap: number = 0
-): readonly [ Node, boolean ] =>
+): Option.Option<Node> =>
 {
     const WindowPath = FindWindowPath(Root, WindowValue);
     if (WindowPath === undefined || WindowPath.length === 0 || DeltaPixels === 0)
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const RequiredOrientation =
@@ -1447,30 +1445,47 @@ const ResizeWindow = (
     {
         const CandidatePath = WindowPath.slice(0, Depth);
         const Candidate = GetNodeAtPath(Root, CandidatePath);
+        const CandidateTargetIndex = WindowPath[Depth];
 
-        if (Candidate?._tag === "Panel" && Candidate.Orientation === RequiredOrientation)
+        if (
+            Candidate?._tag === "Panel"
+            && Candidate.Orientation === RequiredOrientation
+            && CandidateTargetIndex !== undefined
+        )
         {
+            const AdjacentIndex = CandidateTargetIndex
+                + (
+                    Direction === FocusDirection.Left
+                    || Direction === FocusDirection.Up
+                        ? -1
+                        : 1
+                );
+            if (AdjacentIndex < 0 || AdjacentIndex >= Candidate.Children.length)
+            {
+                continue;
+            }
+
             PanelPath = CandidatePath;
-            TargetIndex = WindowPath[Depth];
+            TargetIndex = CandidateTargetIndex;
             break;
         }
     }
 
     if (PanelPath === undefined || TargetIndex === undefined)
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     const PanelBounds = GetNodeBoundsAtPath(Root, RootBounds, PanelPath, Gap);
     if (PanelBounds === undefined)
     {
-        return [ Root, false ];
+        return Option.none();
     }
 
     return UpdatePanel(
         Root,
         PanelPath,
-        (PanelValue: PanelNode): readonly [ PanelNode, boolean ] =>
+        (PanelValue: PanelNode): Option.Option<PanelNode> =>
         {
             const ChildBounds = SplitBounds(
                 PanelBounds,
@@ -1490,7 +1505,7 @@ const ResizeWindow = (
 
             if (ContentLength <= 0)
             {
-                return [ PanelValue, false ];
+                return Option.none();
             }
 
             const DeltaRatio = DeltaPixels / ContentLength;
@@ -1508,7 +1523,7 @@ const ResizeWindow = (
 
                 if (AdjacentIndex < 0 || AdjacentIndex >= PanelValue.Children.length)
                 {
-                    return [ PanelValue, false ];
+                    return Option.none();
                 }
 
                 Ratios = TransferPanelRatio(
@@ -1528,33 +1543,31 @@ const ResizeWindow = (
             }
 
             return Ratios === PanelValue.Ratios
-                ? [ PanelValue, false ]
-                : [
+                ? Option.none()
+                : Option.some(
                     Panel(
                         PanelValue.Orientation,
                         PanelValue.Children,
                         Ratios
-                    ),
-                    true
-                ];
+                    )
+                );
         }
     );
 };
 
-export/** Change a panel's child arrangement and report whether the path existed. */
+export/** Change a panel's child arrangement when the path exists. */
 const SetPanelOrientation = (
     Root: Node,
     PathValue: Path,
     Direction: Orientation
-): readonly [ Node, boolean ] => UpdatePanel(
+): Option.Option<Node> => UpdatePanel(
     Root,
     PathValue,
-    (PanelValue: PanelNode) => [
+    (PanelValue: PanelNode) => Option.some(
         Panel(
             Direction,
             PanelValue.Children,
             PanelValue.Ratios
-        ),
-        true
-    ]
+        )
+    )
 );

@@ -1,4 +1,6 @@
 /**
+ * Tests directional window selection for overlay navigation.
+ *
  * @module @sorrell/wm/Test/OverlaySession
  *
  * @file      OverlaySession.Test.ts

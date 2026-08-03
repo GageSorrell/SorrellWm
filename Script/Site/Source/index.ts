@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- *
+ * Command-line entry point for generating and publishing documentation sites.
  *
  * @module @sorrell/site
  *
@@ -11,7 +11,7 @@
  */
 
 import { join, relative, resolve } from "node:path";
-import { Console, Effect, FileSystem, Option } from "effect";
+import { Console, Effect, FileSystem, Option, pipe } from "effect";
 import { Command, Flag, Param, Prompt } from "effect/unstable/cli";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { DecodeWebsiteDefinition, type WebsiteDefinition } from "@sorrell/site-core/Schema";
@@ -24,8 +24,8 @@ export const SiteCliTypeId = Symbol.for("@sorrell/site/Cli");
 export type SiteCliTypeId = typeof SiteCliTypeId;
 
 const RepositoryRoot = resolve(import.meta.dirname, "../../..");
-const RequiredText = (Name: string, Message: string) => Flag.string(Name).pipe(Flag.withFallbackPrompt(Prompt.text({ message: Message })));
-const ThemeFlag = Flag.choice("theme", [ "Effect", "Fluent" ]).pipe(Flag.withFallbackPrompt(Prompt.select({
+const RequiredText = (Name: string, Message: string) => pipe(Flag.string(Name), Flag.withFallbackPrompt(Prompt.text({ message: Message })));
+const ThemeFlag = pipe(Flag.choice("theme", [ "Effect", "Fluent" ]), Flag.withFallbackPrompt(Prompt.select({
     choices: [ { title: "Effect", value: "Effect" as const }, { title: "Fluent UI", value: "Fluent" as const } ],
     message: "Choose a site theme"
 })));
@@ -40,7 +40,7 @@ const CommonCreateFlags = {
     title: RequiredText("title", "Website title")
 };
 
-const DocusaurusCommand = Command.make("docusaurus", CommonCreateFlags, (Input) =>
+const DocusaurusCommand = pipe(Command.make("docusaurus", CommonCreateFlags, (Input) =>
     CreateWebsite({
         Kind: "Docusaurus",
         Landing: DefaultLanding(Input.title, Input.packageName),
@@ -53,9 +53,9 @@ const DocusaurusCommand = Command.make("docusaurus", CommonCreateFlags, (Input) 
         VercelProjectName: Option.getOrElse(Input.project, () => `${ Input.subdomain }-docs`),
         Versioning: true
     }, Input.destination, Input.dryRun)
-).pipe(Command.withDescription("Create a localized, versioned Docusaurus website."));
+), Command.withDescription("Create a localized, versioned Docusaurus website."));
 
-const StorybookCommand = Command.make("storybook", {
+const StorybookCommand = pipe(Command.make("storybook", {
     ...CommonCreateFlags,
     landing: Flag.boolean("landing"),
     source: RequiredText("source", "Source workspace containing components"),
@@ -72,25 +72,19 @@ const StorybookCommand = Command.make("storybook", {
     Theme: Input.theme,
     Title: Input.title,
     VercelProjectName: Option.getOrElse(Input.project, () => `${ Input.subdomain }-storybook`)
-}, Input.destination, Input.dryRun)).pipe(Command.withDescription("Create a React/Vite Storybook website."));
+}, Input.destination, Input.dryRun)), Command.withDescription("Create a React/Vite Storybook website."));
 
-const CreateCommand = Command.make("create", {}, () => Console.log("Choose docusaurus or storybook.")).pipe(
-    Command.withSubcommands([ DocusaurusCommand, StorybookCommand ]),
-    Command.withDescription("Create a website workspace under Website/.")
-);
+const CreateCommand = pipe(Command.make("create", {}, () => Console.log("Choose docusaurus or storybook.")), Command.withSubcommands([ DocusaurusCommand, StorybookCommand ]),
+    Command.withDescription("Create a website workspace under Website/."));
 
-const PublishCommand = Command.make("publish", {
+const PublishCommand = pipe(Command.make("publish", {
     dryRun: Flag.boolean("dry-run"),
     replaceDns: Flag.boolean("replace-dns"),
     workspace: Param.path(Param.argumentKind, "website-workspace", { mustExist: true, pathType: "directory" })
-}, (Input) => PublishWorkspace(Input.workspace, Input.dryRun, Input.replaceDns)).pipe(
-    Command.withDescription("Build and publish a website to its configured sorrell.sh subdomain.")
-);
+}, (Input) => PublishWorkspace(Input.workspace, Input.dryRun, Input.replaceDns)), Command.withDescription("Build and publish a website to its configured sorrell.sh subdomain."));
 
-const RootCommand = Command.make("sorrell-site", {}, () => Console.log("Choose create or publish.")).pipe(
-    Command.withSubcommands([ CreateCommand, PublishCommand ]),
-    Command.withDescription("Create and publish independent Sorrell documentation websites.")
-);
+const RootCommand = pipe(Command.make("sorrell-site", {}, () => Console.log("Choose create or publish.")), Command.withSubcommands([ CreateCommand, PublishCommand ]),
+    Command.withDescription("Create and publish independent Sorrell documentation websites."));
 
 const CreateWebsite = (
     Definition: WebsiteDefinition,
@@ -145,5 +139,5 @@ const DefaultLanding = (Title: string, PackageName: string) => ({
 
 const PascalName = (Value: string): string => Value.split(/[^a-zA-Z0-9]+/u).filter(Boolean).map((Part) => `${ Part.at(0)?.toUpperCase() ?? "" }${ Part.slice(1) }`).join("") || "Website";
 
-const Program = Command.run(RootCommand, { version: "1.0.0" }).pipe(Effect.provide(NodeServices.layer));
+const Program = pipe(Command.run(RootCommand, { version: "1.0.0" }), Effect.provide(NodeServices.layer));
 NodeRuntime.runMain(Program);

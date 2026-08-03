@@ -1,5 +1,5 @@
 /**
- *
+ * Node.js logging support for node metadata.
  *
  * @module @sorrell/log/Node/NodeMetadata
  *

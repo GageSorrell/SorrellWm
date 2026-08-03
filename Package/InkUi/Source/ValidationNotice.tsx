@@ -1,5 +1,5 @@
 /**
- *
+ * Ink UI component for validation notice.
  *
  * @module @sorrell/ink-ui/ValidationNotice
  *

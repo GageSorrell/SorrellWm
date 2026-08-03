@@ -1,5 +1,5 @@
 /**
- *
+ * React integration for structured logging with use log category.
  *
  * @module @sorrell/log/React/useLogCategory
  *

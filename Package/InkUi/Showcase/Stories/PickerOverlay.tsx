@@ -1,5 +1,5 @@
 /**
- *
+ * Showcase story for picker overlay.
  *
  * @module @sorrell/ink-ui/Showcase/Stories/PickerOverlay
  *

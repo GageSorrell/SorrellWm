@@ -228,13 +228,11 @@ const Sync = <Settings extends object, Identifier, Error, Requirements>(
 
         yield* pipe(
             SettingsService.Changes,
-            Stream.runForEach((Current: Settings) => Effect.suspend(() => Synchronize(Current)).pipe(
-                Effect.catch((ErrorValue: Error) => Effect.logWarning(
+            Stream.runForEach((Current: Settings) => pipe(Effect.suspend(() => Synchronize(Current)), Effect.catch((ErrorValue: Error) => Effect.logWarning(
                     `Settings synchronization failed for ${ SettingsTag.key }; `
                     + "the committed value remains active.",
                     ErrorValue
-                ))
-            )),
+                )))),
             Effect.forkScoped({ startImmediately: true })
         );
     })
@@ -569,9 +567,7 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         );
 
     const Persist = (Value: Settings): Effect.Effect<State<Settings>, Error.Any> =>
-        EncodeState(Value).pipe(
-            Effect.tap((StateValue: State<Settings>) => WriteJson(StateValue.Json))
-        );
+        pipe(EncodeState(Value), Effect.tap((StateValue: State<Settings>) => WriteJson(StateValue.Json)));
 
     const Exists: boolean = yield* pipe(
         Fs.exists(AbsoluteFilePath),
@@ -612,27 +608,21 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
                 Effect.flatMap(EncodeState),
                 Effect.flatMap((Next: State<Settings>) => Next.Json === Current.Json
                     ? Effect.succeed(Option.none())
-                    : WriteJson(Next.Json).pipe(
-                        Effect.as(Option.some(Next))
-                    ))
+                    : pipe(WriteJson(Next.Json), Effect.as(Option.some(Next))))
             )
         ),
         Effect.uninterruptible
     );
 
-    const Reload: Effect.Effect<void> = SubscriptionRef.updateSomeEffect(
+    const Reload: Effect.Effect<void> = pipe(SubscriptionRef.updateSomeEffect(
         StateRef,
-        (Current: State<Settings>) => ReadState.pipe(
-            Effect.flatMap((Next: State<Settings>) => Next.Json === Current.Json
+        (Current: State<Settings>) => pipe(ReadState, Effect.flatMap((Next: State<Settings>) => Next.Json === Current.Json
                 ? Effect.succeed(Option.none())
-                : Effect.succeed(Option.some(Next)))
-        )
-    ).pipe(
-        Effect.catch((ErrorValue: Error.Any) => Effect.logWarning(
+                : Effect.succeed(Option.some(Next))))
+    ), Effect.catch((ErrorValue: Error.Any) => Effect.logWarning(
             "Ignoring an invalid external app-settings update.",
             ErrorValue
-        ))
-    );
+        )));
 
     const WatchOnce: Effect.Effect<void, Error.FileError> = pipe(
         Fs.watch(DirectoryPath),
@@ -648,15 +638,13 @@ const MakeService = <Settings extends object, Encoded, DecodingServices, Encodin
         }))
     );
 
-    yield* WatchOnce.pipe(
-        Effect.catch((ErrorValue: Error.FileError) => Effect.logWarning(
+    yield* pipe(WatchOnce, Effect.catch((ErrorValue: Error.FileError) => Effect.logWarning(
             "The app-settings file watcher stopped; it will be restarted.",
             ErrorValue
         )),
         Effect.andThen(Effect.sleep(Options.watchRetryDelay)),
         Effect.forever,
-        Effect.forkScoped({ startImmediately: true })
-    );
+        Effect.forkScoped({ startImmediately: true }));
 
     return {
         Changes: pipe(

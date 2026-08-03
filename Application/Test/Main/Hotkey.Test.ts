@@ -1,5 +1,5 @@
 /**
- *
+ * Tests keybind matching, lifecycle phases, rebinding, and key suppression.
  *
  * @module @sorrell/wm/Main/HotkeyTest
  *

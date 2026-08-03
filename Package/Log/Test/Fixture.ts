@@ -1,5 +1,5 @@
 /**
- *
+ * Test fixtures for `@sorrell/log`.
  *
  * @module @sorrell/log/Test/Fixture
  *

@@ -1,5 +1,5 @@
 /**
- *
+ * Branded integer values and arithmetic operations.
  *
  * @module @sorrell/math/Int
  *
