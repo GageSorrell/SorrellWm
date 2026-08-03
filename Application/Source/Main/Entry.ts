@@ -24,7 +24,7 @@ import * as TitlebarFlyout from "./TitlebarFlyout.ts";
 import * as Tray from "./Tray.ts";
 import * as Update from "./Update.ts";
 import { Box, IntPoint } from "@sorrell/math";
-import { Effect, Layer, ManagedRuntime, Option, Result, Schema, Stream, pipe } from "effect";
+import { Effect, Function, Layer, ManagedRuntime, Option, Result, Schema, Stream, pipe } from "effect";
 import {
     BrowserWindow as ElectronBrowserWindow,
     type Event,
@@ -188,7 +188,7 @@ const ReportRejectedOperation = async <Value>(
             `${ Operation } failed.`,
             Cause,
             { Operation }
-        )).catch(() => undefined);
+        )).catch(Function.constUndefined);
         throw Cause;
     }
 };
@@ -271,15 +271,16 @@ ipcMain.on(AppApiChannel.RendererLogWrite, (
     const RendererWindow = GetRendererWindowName(EventValue);
 
     void ApplicationRuntime.runPromise(
-        pipe(Schema.decodeUnknownEffect(RendererLogEntrySchema)(Value), Effect.flatMap((Entry: RendererLogEntry) =>
-                WriteRendererLog(Entry, RendererWindow)),
+        pipe(
+            Schema.decodeUnknownEffect(RendererLogEntrySchema)(Value),
+            Effect.flatMap((Entry: RendererLogEntry) => WriteRendererLog(Entry, RendererWindow)),
             Effect.catch((Cause: unknown) => Logging.LogWarning(
                 "Renderer",
                 "Rejected an invalid renderer log event.",
                 Cause,
                 { RendererWindow }
             )))
-    ).catch(() => undefined);
+    ).catch(Function.constUndefined);
 });
 
 ipcMain.removeHandler(AppApiChannel.ThemeGet);
@@ -308,7 +309,7 @@ ipcMain.handle(AppApiChannel.UpdateDownloadAndInstall, async (
             "Update",
             "Could not download or launch the update installer.",
             Cause
-        )).catch(() => undefined);
+        )).catch(Function.constUndefined);
 
         const Status = await Update.GetUpdateStatus(Update.LiveDependencies);
         const Parent = ElectronBrowserWindow.fromWebContents(EventValue.sender);
@@ -596,7 +597,7 @@ const GetExecutableIcon = async (
         await ApplicationRuntime.runPromise(Logging.LogDebug(
             "Settings",
             "Could not retrieve an application icon for per-application settings."
-        )).catch(() => undefined);
+        )).catch(Function.constUndefined);
         return undefined;
     }
 };
@@ -1077,12 +1078,11 @@ const StartApplication = Effect.gen(function*()
 
     yield* TilingManager.SetGap(InitialSettings.TiledWindowGap);
 
-    if (
-        InitialSettings.TileExistingWindowsOnStartup
-        || DevelopmentFeatures.TileOnStart
-    )
+    if (InitialSettings.TileExistingWindowsOnStartup || DevelopmentFeatures.TileOnStart)
     {
-        yield* pipe(TilingManager.TileExistingWindows, Effect.catch((ErrorValue: Tiling.Manager.TilingManagerError) =>
+        yield* pipe(
+            TilingManager.TileExistingWindows,
+            Effect.catch((ErrorValue: Tiling.Manager.TilingManagerError) =>
                 Effect.logWarning(
                     "Could not tile existing windows; tiling will start with an empty state.",
                     ErrorValue
@@ -1139,7 +1139,7 @@ void app.whenReady().then(async (): Promise<void> =>
         IsApplicationRuntimeDisposing = true;
         await ApplicationRuntime.runPromise(
             Effect.logError("SorrellWm failed to start.", Cause)
-        ).catch(() => undefined);
+        ).catch(Function.constUndefined);
         await ApplicationRuntime.dispose();
         app.exit(1);
     }
@@ -1159,9 +1159,9 @@ app.on("before-quit", (event: Event): void =>
 
     void ApplicationRuntime.runPromise(
         Effect.logInfo("Stopping SorrellWm.")
-    ).catch(() => undefined).finally(() =>
-        ApplicationRuntime.dispose().finally(app.quit)
-    );
+    )
+        .catch(Function.constUndefined)
+        .finally(() => ApplicationRuntime.dispose().finally(app.quit));
 });
 
 app.on("activate", () => void ReportRejectedOperation(
