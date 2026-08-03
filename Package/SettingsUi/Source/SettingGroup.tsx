@@ -36,7 +36,7 @@ const UseStyles = makeStyles({
     Subtitle:
     {
         color: tokens.colorNeutralForeground3,
-        fontSize: tokens.fontSizeBase300,
+        fontSize: tokens.fontSizeBase200,
         margin: 0
     },
     Title:
@@ -51,7 +51,7 @@ const UseStyles = makeStyles({
     }
 });
 
-/** Props for {@link SettingGroup}. */
+/** {@inheritDoc SettingGroup} */
 export interface SettingGroupProps
 {
     /** {@link Setting} rows shown under this category, spaced with a small gap. */

@@ -12,6 +12,7 @@
  */
 
 import * as React from "react";
+import { BoardColor, SearchRegular } from "@fluentui/react-icons";
 import {
     Combobox,
     Hamburger,
@@ -25,7 +26,6 @@ import {
 } from "@fluentui/react-components";
 import { DragRegion, NoDragRegion } from "./AppRegion.js";
 import { SearchSettingControls, type SettingSearchResult } from "./SettingsSearch.js";
-import { BoardColor } from "@fluentui/react-icons";
 import type { SettingControlEntry } from "@sorrell/settings-ui";
 import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.js";
 
@@ -82,6 +82,7 @@ const UseStyles = makeStyles({
     },
     OptionIcon:
     {
+        alignSelf: "flex-start",
         color: tokens.colorNeutralForeground2,
         flexShrink: 0,
         fontSize: "1.25rem"
@@ -225,6 +226,7 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
             <div className={ Styles.Center }>
                 <Combobox
                     className={ Styles.SearchBox }
+                    expandIcon={ <SearchRegular /> }
                     freeform
                     onBlur={ () => SetIsSearchFocused(false) }
                     onChange={ (Event: React.ChangeEvent<HTMLInputElement>) =>
@@ -244,13 +246,19 @@ const SettingsTitlebar = (Props: SettingsTitlebarProps): React.JSX.Element =>
                             text={ typeof Entry.Title === "string" ? Entry.Title : Id }
                             value={ Id }>
                             <div className={ Styles.OptionRow }>
-                                { Entry.Icon !== undefined && <Entry.Icon className={ Styles.OptionIcon } /> }
-
+                                {
+                                    Entry.Icon !== undefined
+                                        ? <Entry.Icon className={ Styles.OptionIcon } />
+                                        : <div style={ { width: "1.25rem"  } }></div>
+                                }
                                 <div className={ Styles.OptionText }>
-                                    <span className={ Styles.OptionTitle }>{ Entry.Title }</span>
-
+                                    <span className={ Styles.OptionTitle }>
+                                        { Entry.Title }
+                                    </span>
                                     { Entry.Subtitle !== undefined && (
-                                        <span className={ Styles.OptionSubtitle }>{ Entry.Subtitle }</span>
+                                        <span className={ Styles.OptionSubtitle }>
+                                            { Entry.Subtitle }
+                                        </span>
                                     ) }
                                 </div>
                             </div>

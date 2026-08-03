@@ -47,11 +47,12 @@ interface NumericFieldProps
     readonly Min?: number;
     readonly OnCommit: (Value: number) => void;
     readonly Step?: number;
+    readonly Unit?: string;
     readonly Value: number;
 }
 
 const NumericField = (
-    { Min = 0, OnCommit, Step = 1, Value }: NumericFieldProps
+    { Min = 0, OnCommit, Step = 1, Unit, Value }: NumericFieldProps
 ): React.JSX.Element =>
 {
     const Styles = UseStyles();
@@ -59,14 +60,18 @@ const NumericField = (
     return (
         <SpinButton
             className={ Styles.SpinButton }
+            displayValue={ Unit === undefined ? undefined : `${ Value } ${ Unit }` }
             min={ Min }
             onChange={ (
                 _Event: SpinButtonChangeEvent,
                 Data: SpinButtonOnChangeData
             ) =>
             {
+                const DisplayValue = Data.displayValue?.trim();
                 const NextValue = Data.value ?? (
-                    Data.displayValue === undefined ? undefined : Number(Data.displayValue)
+                    DisplayValue === undefined || DisplayValue.length === 0
+                        ? undefined
+                        : Number.parseFloat(DisplayValue)
                 );
 
                 if (NextValue !== undefined && Number.isFinite(NextValue))
@@ -135,6 +140,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                 Control={ <NumericField
                     Min={ 1 }
                     OnCommit={ (Value: number) => Commit("MoveStepPrimary", Value) }
+                    Unit="px"
                     Value={ Settings.MoveStepPrimary } /> }
                 Icon={ ArrowMoveRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "PrimaryStepSize") }
@@ -156,6 +162,7 @@ const SettingsFloatingWindows = (): React.JSX.Element =>
                 Control={ <NumericField
                     Min={ 1 }
                     OnCommit={ (Value: number) => Commit("MoveStepSecondary", Value) }
+                    Unit="px"
                     Value={ Settings.MoveStepSecondary } /> }
                 Icon={ ArrowMaximizeRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.FloatingWindows, "SecondaryStepSize") }

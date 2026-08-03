@@ -15,7 +15,11 @@ import type {
     PerAppSettingsEntryDto
 } from "../../Source/Shared/AppSettings.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+    fireEvent,
+    render,
+    screen
+} from "@testing-library/react";
 import { SettingsPerApp } from "../../Source/Renderer/SettingsPerApp.tsx";
 
 const ExecutablePath = String.raw`C:\Program Files\Example\Example.exe`;
@@ -53,14 +57,37 @@ describe("SettingsPerApp", () =>
         fireEvent.click(AddButton);
 
         expect(window.sorrell.perAppSettings.add).toHaveBeenCalledOnce();
-        expect(await screen.findByText("Example Application")).toBeInTheDocument();
-        expect(screen.getByText(ExecutablePath)).toBeInTheDocument();
-        expect(document.querySelector("img")).toHaveAttribute(
+        expect(await screen.findByText("Example Application")).toBeVisible();
+        const Icon = document.querySelector("img");
+        expect(Icon).toHaveAttribute(
             "src",
             "data:image/png;base64,application-icon"
         );
         expect(screen.queryByText("New Window Behavior")).not.toBeInTheDocument();
     });
+
+    it.each([ "display name", "app icon" ] as const)(
+        "shows the executable path when the %s is hovered",
+        async (TargetKind: "display name" | "app icon") =>
+        {
+            vi.mocked(window.sorrell.perAppSettings.get)
+                .mockResolvedValue([ Entry ]);
+            render(<SettingsPerApp />);
+
+            const DisplayName = await screen.findByText("Example Application");
+            const Icon = document.querySelector("img");
+            const Target = TargetKind === "display name" ? DisplayName : Icon;
+            expect(Target).not.toBeNull();
+
+            fireEvent.mouseEnter(Target!);
+
+            const TooltipTarget = Target!.closest("[aria-describedby]");
+            expect(TooltipTarget).not.toBeNull();
+            const TooltipId = TooltipTarget!.getAttribute("aria-describedby");
+            expect(document.getElementById(TooltipId!))
+                .toHaveTextContent(ExecutablePath);
+        }
+    );
 
     it("offers at most five recent unconfigured applications and adds one directly", async () =>
     {
@@ -122,7 +149,9 @@ describe("SettingsPerApp", () =>
                 TargetExecutablePath={ ExecutablePath } />
         );
 
-        expect(await screen.findByText(ExecutablePath)).toBeVisible();
+        const DisplayName = await screen.findByText("Example Application");
+        fireEvent.mouseEnter(DisplayName);
+        expect(await screen.findByText(ExecutablePath)).toBeInTheDocument();
         expect(screen.queryByText("Per-app settings have not been created"))
             .not.toBeInTheDocument();
         expect(screen.queryByText("Recently opened applications"))

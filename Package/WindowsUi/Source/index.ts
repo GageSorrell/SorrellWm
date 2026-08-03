@@ -11,4 +11,8 @@
 
 export * from "./CaptionButtons.js";
 export * from "./Link.js";
-
+export {
+    Scrollbars,
+    type ScrollbarsProps,
+    TypeId as ScrollbarsTypeId
+} from "./Scrollbars.js";

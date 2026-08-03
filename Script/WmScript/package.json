@@ -12,7 +12,7 @@
         "snap:on": "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./SetSnapWindows.ps1 -State On"
     },
     "engines": {
-        "node": ">=26.5.0",
-        "npm": ">=12.0.1"
+        "node": ">=26.6.0",
+        "npm": ">=12.0.2"
     }
 }

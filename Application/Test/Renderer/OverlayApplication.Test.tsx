@@ -155,7 +155,7 @@ describe("OverlayApplication", () =>
                 Command("Focus", "SelectLeft", "H", 0x48),
                 Command("Insert", "SelectUp", "K", 0x4B),
                 Command("Move", "SelectDown", "J", 0x4A),
-                Command("Resize", "SelectRight", "L", 0x4C),
+                Command("Resize", "SelectRight", "L", 0x4C, undefined, true),
                 {
                     ...FloatCommand,
                     Shortcut: {
@@ -190,6 +190,7 @@ describe("OverlayApplication", () =>
             "title",
             "Insert a window into the layout."
         );
+        expect(Buttons[3]).toBeDisabled();
         expect(Buttons[4]).toHaveTextContent("K");
 
         fireEvent.click(Buttons[4] as HTMLElement);
@@ -424,7 +425,7 @@ describe("OverlayApplication", () =>
         expect(MoveUp.querySelectorAll("svg")).toHaveLength(2);
         expect(MoveDown.querySelector("img")).not.toBeInTheDocument();
 
-        fireEvent.mouseEnter(MoveLeft);
+        fireEvent.mouseEnter(MoveLeft, { movementX: 1, movementY: 0 });
         expect(window.sorrell.overlay.preview).toHaveBeenCalledWith("FocusMoveLeft");
         fireEvent.mouseLeave(MoveLeft);
         expect(window.sorrell.overlay.preview).toHaveBeenLastCalledWith(null);
@@ -767,7 +768,7 @@ describe("OverlayApplication", () =>
             + "Press Tab to change how surrounding windows respond."
         )).toBeInTheDocument();
         const Behavior = screen.getByRole("button", {
-            name: "Preserve other window ratios"
+            name: /Preserve other window ratios/
         });
         expect(Behavior).toHaveTextContent("⭾");
         expect(Behavior).toHaveAttribute("aria-pressed", "false");

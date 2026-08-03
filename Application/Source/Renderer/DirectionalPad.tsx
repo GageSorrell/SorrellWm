@@ -52,10 +52,10 @@ export interface DirectionalPadProps
 
     /**
      * Flip every caret to point toward the pad's center instead of away from
-     * it, e.g. to represent shrinking a window's edges inward rather than
+     * it, *e.g.*, to represent shrinking a window's edges inward rather than
      * growing them outward. Purely visual; direction assignment is unaffected.
      */
-    readonly Inward?: boolean;
+    readonly Invert?: boolean;
 
     readonly Left?: DirectionalPadDirection;
     readonly Right?: DirectionalPadDirection;
@@ -310,7 +310,7 @@ const DirectionalPad = (Props: DirectionalPadProps): React.JSX.Element =>
                         <DirectionCaret
                             Color={ Props.Up.Color }
                             Disabled={ Props.Up.Disabled }
-                            Icon={ Props.Inward === true ? CaretDownFilled : CaretUpFilled }
+                            Icon={ Props.Invert === true ? CaretDownFilled : CaretUpFilled }
                             OnHoverChange={ Props.Up.OnHoverChange }
                             OnInvoke={ Props.Up.OnInvoke } />
                         <Keybind Keys={ GetShortcutParts(Props.Up.Shortcut) } />
@@ -327,7 +327,7 @@ const DirectionalPad = (Props: DirectionalPadProps): React.JSX.Element =>
                         <DirectionCaret
                             Color={ Props.Left.Color }
                             Disabled={ Props.Left.Disabled }
-                            Icon={ Props.Inward === true ? CaretRightFilled : CaretLeftFilled }
+                            Icon={ Props.Invert === true ? CaretRightFilled : CaretLeftFilled }
                             OnHoverChange={ Props.Left.OnHoverChange }
                             OnInvoke={ Props.Left.OnInvoke } />
                         <Keybind Keys={ GetShortcutParts(Props.Left.Shortcut) } />
@@ -348,7 +348,7 @@ const DirectionalPad = (Props: DirectionalPadProps): React.JSX.Element =>
                         <DirectionCaret
                             Color={ Props.Right.Color }
                             Disabled={ Props.Right.Disabled }
-                            Icon={ Props.Inward === true ? CaretLeftFilled : CaretRightFilled }
+                            Icon={ Props.Invert === true ? CaretLeftFilled : CaretRightFilled }
                             OnHoverChange={ Props.Right.OnHoverChange }
                             OnInvoke={ Props.Right.OnInvoke } />
                         <Keybind Keys={ GetShortcutParts(Props.Right.Shortcut) } />
@@ -365,7 +365,7 @@ const DirectionalPad = (Props: DirectionalPadProps): React.JSX.Element =>
                         <DirectionCaret
                             Color={ Props.Down.Color }
                             Disabled={ Props.Down.Disabled }
-                            Icon={ Props.Inward === true ? CaretUpFilled : CaretDownFilled }
+                            Icon={ Props.Invert === true ? CaretUpFilled : CaretDownFilled }
                             OnHoverChange={ Props.Down.OnHoverChange }
                             OnInvoke={ Props.Down.OnInvoke } />
                         <Keybind Keys={ GetShortcutParts(Props.Down.Shortcut) } />

@@ -1299,7 +1299,7 @@ const OverlayApplication = (): React.ReactNode =>
                     <div className={ Styles.PadLayout }>
                         <DirectionalPad
                             Down={ ToPlainPadDirection(OverlayCommandId.ResizeWindowDown) }
-                            Inward={ CurrentScreen?.ResizeMode === "Shrink" }
+                            Invert={ CurrentScreen?.ResizeMode === "Shrink" }
                             Left={ ToPlainPadDirection(OverlayCommandId.ResizeWindowLeft) }
                             Right={ ToPlainPadDirection(OverlayCommandId.ResizeWindowRight) }
                             Up={ ToPlainPadDirection(OverlayCommandId.ResizeWindowUp) } />

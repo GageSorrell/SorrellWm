@@ -22,6 +22,7 @@ import { ColorScheme } from "../Shared/Theme.js";
 import { CreateFluentTheme } from "./Theme.js";
 import { RendererErrorBoundary } from "./RendererErrorBoundary.js";
 import type { RendererTheme } from "../Shared/Theme.js";
+import { Scrollbars } from "@sorrell/windows-ui";
 
 const GetInitialRendererTheme = (): RendererTheme => ({
     AccentColor: null,
@@ -32,30 +33,40 @@ const GetInitialRendererTheme = (): RendererTheme => ({
 });
 
 const UseGlobalStyles = makeStaticStyles({
-    "#root": {
+    "#root":
+    {
         minHeight: "100vh"
     },
-    "*": {
+    "*":
+    {
         boxSizing: "border-box"
     },
-    ":root": {
+    ":root":
+    {
         fontFamily: "Inter, 'Segoe UI Variable', 'Segoe UI', sans-serif",
         fontSynthesis: "none",
         textRendering: "optimizeLegibility"
     },
-    body: {
+    body:
+    {
         margin: 0,
         minHeight: "100vh",
         minWidth: "320px"
     },
-    button: {
+    button:
+    {
         font: "inherit"
     }
 });
 
 const UseStyles = makeStyles({
-    Provider: {
+    Provider:
+    {
         backgroundColor: "transparent"
+    },
+    Scrollbars:
+    {
+        display: "contents"
     }
 });
 
@@ -106,7 +117,11 @@ const Root = (): React.JSX.Element =>
             <FluentProvider
                 className={ Styles.Provider }
                 theme={ FluentTheme }>
-                <Application />
+                <Scrollbars
+                    className={ Styles.Scrollbars }
+                    data-testid="window-scrollbars">
+                    <Application />
+                </Scrollbars>
             </FluentProvider>
         </RendererErrorBoundary>
     );

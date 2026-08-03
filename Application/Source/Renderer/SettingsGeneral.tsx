@@ -38,6 +38,7 @@ import { useEffect, useState } from "react";
 import { GridRegular } from "@fluentui/react-icons";
 import { MakeSettingControlId } from "./SettingControlId.js";
 import { SettingsSectionId } from "../Shared/SettingsPath.js";
+import { String } from "effect";
 
 const TiledResizeBehaviorLabel: Readonly<Record<TiledResizeBehavior, string>> = {
     AdjacentOnly: "Adjacent Window Only",
@@ -75,8 +76,9 @@ const UseStyles = makeStyles({
     },
     ResizeRecoveryControls:
     {
-        alignItems: "center",
+        alignItems: "flex-end",
         display: "flex",
+        flexDirection: "column",
         flexWrap: "wrap",
         gap: tokens.spacingHorizontalS
     },
@@ -135,7 +137,6 @@ const SettingsGeneral = (): React.JSX.Element =>
     return (
         <>
             <SettingGroup
-                Icon={ GridRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.General, "OverlayActivation") }
                 Subtitle="Choose when the command overlay can be opened."
                 Title="Overlay Activation">
@@ -164,7 +165,6 @@ const SettingsGeneral = (): React.JSX.Element =>
             </SettingGroup>
 
             <SettingGroup
-                Icon={ GridRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.General, "Startup") }
                 Subtitle="Choose how SorrellWm initializes the desktop when it starts."
                 Title="Startup">
@@ -187,7 +187,6 @@ const SettingsGeneral = (): React.JSX.Element =>
             </SettingGroup>
 
             <SettingGroup
-                Icon={ GridRegular }
                 Id={ MakeSettingControlId(SettingsSectionId.General, "Tiling") }
                 Subtitle="Control spacing around and between tiled windows."
                 Title="Tiling">
@@ -235,6 +234,7 @@ const SettingsGeneral = (): React.JSX.Element =>
                                 <SpinButton
                                     aria-label="Resize recovery threshold"
                                     className={ Styles.SpinButton }
+                                    displayValue={ `${ Settings.ResizeRecoveryStrategy.Threshold } px` }
                                     min={ 0 }
                                     onChange={ (
                                         _Event: SpinButtonChangeEvent,
@@ -245,7 +245,7 @@ const SettingsGeneral = (): React.JSX.Element =>
                                         const Value = Data.value ?? (
                                             DisplayValue === undefined || DisplayValue.length === 0
                                                 ? undefined
-                                                : Number(DisplayValue)
+                                                : Number(String.slice(undefined, 3)(DisplayValue))
                                         );
 
                                         if (
@@ -276,23 +276,25 @@ const SettingsGeneral = (): React.JSX.Element =>
                         "Choose whether tiled Move, Resize, and Insert operations cancel, "
                         + "adapt, or ignore an application's enforced minimum window size."
                     }
-                    Title="Resize Recovery Strategy" />
-
+                    Title="Resize Recovery Strategy"
+                />
                 <Setting
                     Control={
                         <SpinButton
                             aria-label="Tiled window gap"
                             className={ Styles.SpinButton }
+                            displayValue={ `${ Settings.TiledWindowGap } px` }
                             min={ 0 }
                             onChange={ (
                                 _Event: SpinButtonChangeEvent,
                                 Data: SpinButtonOnChangeData
                             ) =>
                             {
+                                const DisplayValue = Data.displayValue?.trim();
                                 const Value = Data.value ?? (
-                                    Data.displayValue === undefined
+                                    DisplayValue === undefined || DisplayValue.length === 0
                                         ? undefined
-                                        : Number(Data.displayValue)
+                                        : Number.parseInt(DisplayValue, 10)
                                 );
 
                                 if (Value !== undefined && Number.isInteger(Value) && Value >= 0)
@@ -306,23 +308,25 @@ const SettingsGeneral = (): React.JSX.Element =>
                     Icon={ GridRegular }
                     Id={ MakeSettingControlId(SettingsSectionId.General, "TiledWindowGap") }
                     Subtitle="Pixels between adjacent tiled windows and between tiles and monitor edges."
-                    Title="Tiled Window Gap" />
-
+                    Title="Tiled Window Gap"
+                />
                 <Setting
                     Control={
                         <SpinButton
                             aria-label="Tiled window detach distance"
                             className={ Styles.SpinButton }
+                            displayValue={ `${ Settings.TiledWindowDetachDistance } px` }
                             min={ 0 }
                             onChange={ (
                                 _Event: SpinButtonChangeEvent,
                                 Data: SpinButtonOnChangeData
                             ) =>
                             {
+                                const DisplayValue = Data.displayValue?.trim();
                                 const Value = Data.value ?? (
-                                    Data.displayValue === undefined
+                                    DisplayValue === undefined || DisplayValue.length === 0
                                         ? undefined
-                                        : Number(Data.displayValue)
+                                        : Number.parseInt(DisplayValue, 10)
                                 );
 
                                 if (Value !== undefined && Number.isInteger(Value) && Value >= 0)
@@ -352,20 +356,12 @@ const SettingsGeneral = (): React.JSX.Element =>
                             {
                                 if (IsTiledResizeBehavior(Data.optionValue))
                                 {
-                                    Commit({
-                                        TiledResizeBehavior: Data.optionValue
-                                    });
+                                    Commit({ TiledResizeBehavior: Data.optionValue });
                                 }
                             } }
                             selectedOptions={ [ Settings.TiledResizeBehavior ] }
-                            value={
-                                TiledResizeBehaviorLabel[
-                                    Settings.TiledResizeBehavior
-                                ]
-                            }>
-                            { TiledResizeBehaviors.map((
-                                Behavior: TiledResizeBehavior
-                            ) => (
+                            value={ TiledResizeBehaviorLabel[Settings.TiledResizeBehavior] }>
+                            { TiledResizeBehaviors.map((Behavior: TiledResizeBehavior) => (
                                 <Option
                                     key={ Behavior }
                                     value={ Behavior }>
@@ -380,7 +376,8 @@ const SettingsGeneral = (): React.JSX.Element =>
                         "Choose whether tiled resizing preserves every other ratio "
                         + "or transfers space only to the adjacent window."
                     }
-                    Title="Initial Resize Behavior" />
+                    Title="Initial Resize Behavior"
+                />
             </SettingGroup>
         </>
     );

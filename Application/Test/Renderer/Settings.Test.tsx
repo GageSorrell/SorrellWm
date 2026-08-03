@@ -12,6 +12,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsApplication } from "../../Source/Renderer/Settings.tsx";
+import { tokens } from "@fluentui/react-components";
 
 vi.mock("../../Source/Renderer/SettingsSidebar.tsx", () => ({
     SettingsSidebar: (): null => null
@@ -29,7 +30,9 @@ describe("SettingsApplication", () =>
     beforeEach(() =>
     {
         vi.clearAllMocks();
-        vi.mocked(window.sorrell.settings.onNavigate).mockImplementation((Listener) =>
+        vi.mocked(window.sorrell.settings.onNavigate).mockImplementation((
+            Listener: (Path: string | null) => void
+        ) =>
         {
             Navigate = Listener;
             return (): void => undefined;
@@ -62,5 +65,22 @@ describe("SettingsApplication", () =>
             behavior: "smooth",
             block: "center"
         }));
+    });
+
+    it("places a large Fluent gap between setting groups", async () =>
+    {
+        render(<SettingsApplication />);
+        act(() => Navigate("General"));
+
+        const FirstGroup = (await screen.findByRole("heading", {
+            name: "Overlay Activation"
+        })).closest("section");
+        const SecondGroup = screen.getByRole("heading", {
+            name: "Startup"
+        }).closest("section");
+
+        expect(FirstGroup?.parentElement).toBe(SecondGroup?.parentElement);
+        expect(getComputedStyle(FirstGroup!.parentElement!).gap)
+            .toBe(tokens.spacingVerticalL);
     });
 });

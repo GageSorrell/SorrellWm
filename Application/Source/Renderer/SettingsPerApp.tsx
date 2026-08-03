@@ -27,6 +27,7 @@ import {
     type SelectionEvents,
     type SwitchOnChangeData,
     Text,
+    Tooltip,
     makeStyles,
     tokens
 } from "@fluentui/react-components";
@@ -67,6 +68,13 @@ const UseStyles = makeStyles({
         objectFit: "contain",
         width: "1.25rem"
     },
+    ApplicationIdentity:
+    {
+        alignItems: "center",
+        display: "inline-flex",
+        gap: tokens.spacingHorizontalM,
+        minWidth: 0
+    },
     Empty:
     {
         color: tokens.colorNeutralForeground3,
@@ -94,13 +102,6 @@ const UseStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalXXS
-    },
-    Path:
-    {
-        color: tokens.colorNeutralForeground3,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
     },
     RecentIdentity:
     {
@@ -381,21 +382,34 @@ const SettingsPerApp = ({
                             value={ Entry.ExecutablePath }>
                             <AccordionHeader
                                 expandIconPosition="end"
-                                icon={ Entry.Icon === undefined
-                                    ? <AppGenericRegular className={ Styles.ApplicationIcon } />
-                                    : (
-                                        <img
-                                            alt=""
-                                            className={ Styles.ApplicationIcon }
-                                            src={ `data:image/png;base64,${ Entry.Icon }` } />
-                                    ) }
                                 size="large">
-                                <span className={ Styles.HeaderText }>
-                                    <Text weight="semibold">{ Entry.FriendlyName }</Text>
-                                    {/* <Caption1 className={ Styles.Path }>
-                                        { Entry.ExecutablePath }
-                                    </Caption1> */}
-                                </span>
+                                <Tooltip
+                                    content={ Entry.ExecutablePath }
+                                    relationship="description">
+                                    <span className={ Styles.ApplicationIdentity }>
+                                        { Entry.Icon === undefined
+                                            ? (
+                                                <AppGenericRegular
+                                                    className={
+                                                        Styles.ApplicationIcon
+                                                    } />
+                                            )
+                                            : (
+                                                <img
+                                                    alt=""
+                                                    className={ Styles.ApplicationIcon }
+                                                    src={
+                                                        "data:image/png;base64,"
+                                                        + Entry.Icon
+                                                    } />
+                                            ) }
+                                        <span className={ Styles.HeaderText }>
+                                            <Text weight="semibold">
+                                                { Entry.FriendlyName }
+                                            </Text>
+                                        </span>
+                                    </span>
+                                </Tooltip>
                             </AccordionHeader>
 
                             <AccordionPanel>

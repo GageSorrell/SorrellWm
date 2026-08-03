@@ -19,15 +19,15 @@ import {
     Window as WindowsWindow
 } from "@sorrell/windows";
 import {
-    Live,
-    OverlaySession
-} from "../../Source/Main/Overlay/Session.ts";
-import {
-    type OverlayCommandDto,
     IsOverlayScreenDto,
+    type OverlayCommandDto,
     OverlayScreenId,
     type OverlayStackWindowDto
 } from "../../Source/Shared/OverlayCommand.ts";
+import {
+    Live,
+    OverlaySession
+} from "../../Source/Main/Overlay/Session.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Box } from "@sorrell/math";
 
@@ -310,6 +310,133 @@ describe("OverlaySession.Live Focus targets", () =>
             "Resize",
             "Float"
         ]);
+        expect(Snapshot.Commands.find((Command: OverlayCommandDto) =>
+            Command.Id === "Resize")).toMatchObject({ Disabled: true });
+    });
+
+    it("keeps tiled Resize enabled when the root panel has another window", async () =>
+    {
+        const WorkArea = Box.Box(0, 1920, 1080, 0);
+        const WindowNode = (WindowValue: Handle.HWND): Tiling.Tree.WindowNode =>
+            Tiling.Tree.Window({
+                InitialBounds: Box.Box(100, 200, 200, 100),
+                Window: WindowValue
+            });
+        TilingSnapshot = {
+            Workspaces: [
+                {
+                    Bounds: WorkArea,
+                    Id: Tiling.Tree.WorkspaceId(WorkArea),
+                    Root: Tiling.Tree.Panel(
+                        Tiling.Tree.Orientation.Horizontal,
+                        [ WindowNode(CurrentWindow), WindowNode(RightWindow) ]
+                    )
+                }
+            ]
+        };
+
+        const Snapshot = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                return yield* Session.Snapshot;
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(Snapshot.Commands.find((Command: OverlayCommandDto) =>
+            Command.Id === "Resize")).toMatchObject({ Disabled: false });
+    });
+
+    it("treats a sole root window as root-panel focus", async () =>
+    {
+        const PrimaryWorkArea = Box.Box(0, 1920, 1080, 0);
+        const RightWorkArea = Box.Box(0, 3840, 1080, 1920);
+        TilingSnapshot = {
+            Workspaces: [
+                {
+                    Bounds: PrimaryWorkArea,
+                    Id: Tiling.Tree.WorkspaceId(PrimaryWorkArea),
+                    Root: Tiling.Tree.Window({
+                        InitialBounds: PrimaryWorkArea,
+                        Window: CurrentWindow
+                    })
+                },
+                {
+                    Bounds: RightWorkArea,
+                    Id: Tiling.Tree.WorkspaceId(RightWorkArea),
+                    Root: Tiling.Tree.Panel(
+                        Tiling.Tree.Orientation.Vertical,
+                        [
+                            Tiling.Tree.Window({
+                                InitialBounds: Box.Box(0, 2880, 540, 1920),
+                                Window: MonitorRightWindowA
+                            }),
+                            Tiling.Tree.Window({
+                                InitialBounds: Box.Box(540, 2880, 1080, 1920),
+                                Window: MonitorRightWindowB
+                            })
+                        ]
+                    )
+                }
+            ]
+        };
+        MonitorSnapshot = [
+            Monitor(1, "Primary", PrimaryWorkArea),
+            Monitor(2, "Projector", RightWorkArea)
+        ];
+
+        const ResultValue = await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Session = yield* OverlaySession;
+                yield* Session.SetActivationWindow(CurrentWindow);
+                yield* Session.Navigate(OverlayScreenId.TiledFocus);
+                const Initial = yield* Session.Snapshot;
+                const Right = Option.getOrThrow(
+                    yield* Session.ResolveTiledFocusTarget("FocusMoveRight")
+                );
+                const Primary = Option.getOrThrow(
+                    yield* Session.ResolveTiledFocusTarget("FocusMonitor1")
+                );
+
+                return { Initial, Primary, Right };
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeAppSettings),
+            Effect.provide(FakeBrowserWindows),
+            Effect.provide(FakeTilingManager)
+        ));
+
+        expect(ResultValue.Initial.IsRootPanelFocused).toBe(true);
+        expect(ResultValue.Initial.Commands.find((Command: OverlayCommandDto) =>
+            Command.Id === "FocusMoveRight")).toMatchObject({
+            Disabled: false,
+            Target: { Title: "Display 2: Projector" }
+        });
+        expect(ResultValue.Initial.Commands.filter((Command: OverlayCommandDto) =>
+            Command.Id === "FocusMoveLeft"
+            || Command.Id === "FocusMoveUp"
+            || Command.Id === "FocusMoveDown"
+        ).every((Command: OverlayCommandDto) => Command.Disabled)).toBe(true);
+        expect(ResultValue.Initial.MonitorCommands).toMatchObject([
+            { Disabled: false, Id: "FocusMonitor1" },
+            { Disabled: false, Id: "FocusMonitor2" }
+        ]);
+        expect(ResultValue.Primary).toMatchObject({
+            Node: { _tag: "Window" },
+            Path: [ ],
+            WorkspaceId: Tiling.Tree.WorkspaceId(PrimaryWorkArea)
+        });
+        expect(ResultValue.Right).toMatchObject({
+            Node: { _tag: "Panel" },
+            Path: [ ],
+            WorkspaceId: Tiling.Tree.WorkspaceId(RightWorkArea)
+        });
     });
 
     it("produces a Snapshot the IPC boundary accepts for a floating window", async () =>

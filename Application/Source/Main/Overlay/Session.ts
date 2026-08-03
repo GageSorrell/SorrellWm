@@ -280,6 +280,17 @@ const IsWindowTiled = (
 ): boolean => Snapshot.Workspaces.some((Workspace: Tiling.Tree.Workspace) =>
     Tiling.Tree.HasWindow(Workspace.Root, WindowValue));
 
+const IsOnlyWindowInRootPanel = (
+    Snapshot: Tiling.Tree.State,
+    WindowValue: Handle.HWND
+): boolean => Snapshot.Workspaces.some((Workspace: Tiling.Tree.Workspace) =>
+    Workspace.Root?._tag === "Window"
+    && Workspace.Root.Value.Window === WindowValue);
+
+const IsRootPanelFocusSelection = (
+    Selection: TiledFocusSelection
+): boolean => Selection.Path.length === 0;
+
 const FindTiledFocusSelection = (
     Snapshot: Tiling.Tree.State,
     WindowValue: Handle.HWND
@@ -723,25 +734,34 @@ const GetTargetPresentation = (Target: FocusWindowCandidate): OverlayCommandTarg
 const GetTiledFocusPresentation = (
     Selection: TiledFocusSelection,
     Monitors: ReadonlyArray<Screen.MonitorInfo> = [ ]
-): OverlayCommandTargetDto => Selection.Node._tag === "Window"
-    ? GetTargetPresentation({
-        Bounds: Selection.Node.Value.InitialBounds,
-        Window: Selection.Node.Value.Window
-    })
-    : (() =>
-    {
-        const Monitor = Selection.Path.length === 0
-            ? Monitors.find((Candidate: Screen.MonitorInfo) =>
-                Tiling.Tree.WorkspaceId(Candidate.WorkArea) === Selection.WorkspaceId)
-            : undefined;
+): OverlayCommandTargetDto =>
+{
+    const Monitor = IsRootPanelFocusSelection(Selection)
+        ? Monitors.find((Candidate: Screen.MonitorInfo) =>
+            Tiling.Tree.WorkspaceId(Candidate.WorkArea) === Selection.WorkspaceId)
+        : undefined;
 
+    if (Monitor !== undefined)
+    {
         return {
             Icon: undefined,
-            Title: Monitor === undefined
-                ? `${ Selection.Node.Orientation } panel`
-                : `Display ${ Monitor.DisplayId }: ${ Monitor.DeviceName }`
+            Title: `Display ${ Monitor.DisplayId }: ${ Monitor.DeviceName }`
         };
-    })();
+    }
+
+    if (Selection.Node._tag === "Window")
+    {
+        return GetTargetPresentation({
+            Bounds: Selection.Node.Value.InitialBounds,
+            Window: Selection.Node.Value.Window
+        });
+    }
+
+    return {
+        Icon: undefined,
+        Title: `${ Selection.Node.Orientation } panel`
+    };
+};
 
 const GetStackWindowPresentations = (
     Selection: TiledFocusSelection
@@ -793,7 +813,7 @@ const GetMonitorCommandStates = (
         ) => Candidate.Id === Tiling.Tree.WorkspaceId(Monitor.WorkArea));
 
         States[Id] = {
-            Disabled: Workspace?.Root?._tag !== "Panel",
+            Disabled: Workspace === undefined || Workspace.Root === null,
             Target: {
                 Icon: undefined,
                 Title: `Display ${ Monitor.DisplayId }: ${ Monitor.DeviceName }`
@@ -1088,7 +1108,10 @@ const Live = Layer.effect(
         {
             if (
                 Option.isNone(Selection)
-                || Selection.value.Node._tag !== "Panel"
+                || (
+                    Selection.value.Node._tag !== "Panel"
+                    && !IsRootPanelFocusSelection(Selection.value)
+                )
             )
             {
                 return yield* ClearTiledFocusPanelPreview;
@@ -1323,10 +1346,7 @@ const Live = Layer.effect(
 
             if (IsFocusMonitorCommandId(Id))
             {
-                if (
-                    CurrentSelection.value.Path.length !== 0
-                    || CurrentSelection.value.Node._tag !== "Panel"
-                )
+                if (!IsRootPanelFocusSelection(CurrentSelection.value))
                 {
                     return Option.none();
                 }
@@ -1344,7 +1364,8 @@ const Live = Layer.effect(
                         Candidate: Tiling.Tree.Workspace
                     ) => Candidate.Id === Tiling.Tree.WorkspaceId(Monitor.WorkArea));
 
-                return TargetWorkspace?.Root?._tag === "Panel"
+                return TargetWorkspace !== undefined
+                    && TargetWorkspace.Root !== null
                     ? Option.some(MakeTiledFocusSelection(
                         TargetWorkspace.Root,
                         Object.freeze([ ]),
@@ -1354,8 +1375,7 @@ const Live = Layer.effect(
             }
 
             if (
-                CurrentSelection.value.Path.length === 0
-                && CurrentSelection.value.Node._tag === "Panel"
+                IsRootPanelFocusSelection(CurrentSelection.value)
                 && IsFocusCommandId(Id)
             )
             {
@@ -1364,7 +1384,7 @@ const Live = Layer.effect(
                     Snapshot.Workspaces.flatMap((
                         CandidateWorkspace: Tiling.Tree.Workspace
                     ) => CandidateWorkspace.Id === Workspace.Id
-                        || CandidateWorkspace.Root?._tag !== "Panel"
+                        || CandidateWorkspace.Root === null
                         ? [ ]
                         : [ {
                             Bounds: CandidateWorkspace.Bounds,
@@ -1376,7 +1396,7 @@ const Live = Layer.effect(
 
                 return Option.map(Candidate, (Value: {
                     readonly Bounds: Box.Box;
-                    readonly Node: Tiling.Tree.PanelNode;
+                    readonly Node: Tiling.Tree.Node;
                     readonly Workspace: Tiling.Tree.Workspace;
                 }): TiledFocusSelection => MakeTiledFocusSelection(
                     Value.Node,
@@ -1870,6 +1890,18 @@ const Live = Layer.effect(
                 let InsertWindows: ReadonlyArray<OverlayInsertWindowDto> = [ ];
                 let StackWindows: ReadonlyArray<OverlayStackWindowDto> = [ ];
 
+                if (
+                    CurrentScreen === ScreenId.TiledHome
+                    && Option.isSome(CurrentWindowOpt)
+                    && IsOnlyWindowInRootPanel(
+                        TilingSnapshot,
+                        CurrentWindowOpt.value
+                    )
+                )
+                {
+                    DisabledCommandIds.add(CommandId.Resize);
+                }
+
                 if (CurrentScreen === ScreenId.FloatingFocus)
                 {
                     const WindowsResult = Window.GetManageableTopLevelWindows();
@@ -1909,8 +1941,7 @@ const Live = Layer.effect(
                         CurrentSettings
                     );
                     IsRootPanelFocused = Option.isSome(CurrentSelection)
-                        && CurrentSelection.value.Path.length === 0
-                        && CurrentSelection.value.Node._tag === "Panel";
+                        && IsRootPanelFocusSelection(CurrentSelection.value);
                     StackWindows = Option.isSome(CurrentSelection)
                         ? GetStackWindowPresentations(CurrentSelection.value)
                         : [ ];

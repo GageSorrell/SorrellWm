@@ -29,8 +29,8 @@ const UseStyles = makeStyles({
     {
         alignItems: "center",
         display: "flex",
-        gap: tokens.spacingHorizontalS,
-        width: "13rem"
+        gap: tokens.spacingHorizontalXXS,
+        width: "12rem"
     },
     Loading:
     {
@@ -42,7 +42,6 @@ const UseStyles = makeStyles({
     },
     Value:
     {
-        minWidth: "3rem",
         textAlign: "right"
     }
 });
@@ -121,7 +120,8 @@ const SettingsOverlay = (): React.JSX.Element =>
                         "Show a window picker when the minimize button of a "
                         + "window in a stack panel is hovered."
                     }
-                    Title="Stack Picker on Minimize Hover" />
+                    Title="Stack Picker on Minimize Hover"
+                />
             </SettingGroup>
 
             <SettingGroup
@@ -142,7 +142,6 @@ const SettingsOverlay = (): React.JSX.Element =>
                                 ) => Commit({
                                     FocusPreviewOpacity: Math.round(Data.value)
                                 }) }
-                                // step={ 1 }
                                 value={ Settings.FocusPreviewOpacity } />
                             <span className={ Styles.Value }>
                                 { Settings.FocusPreviewOpacity }%
@@ -152,7 +151,8 @@ const SettingsOverlay = (): React.JSX.Element =>
                     Icon={ EyeRegular }
                     Id={ MakeSettingControlId(SettingsSectionId.Overlay, "PreviewOpacity") }
                     Subtitle="Opacity of the sampled-color fill shown over a fully obscured floating window."
-                    Title="Preview Opacity" />
+                    Title="Preview Opacity"
+                />
             </SettingGroup>
         </>
     );

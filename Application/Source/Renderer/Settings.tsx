@@ -12,7 +12,7 @@
 import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
 import { MakeSettingControlId, ParseSettingControlId } from "./SettingControlId.js";
 import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-ui";
-import { Text, Title2, makeStyles, tokens } from "@fluentui/react-components";
+import { Text, Title2, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
 import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
@@ -66,6 +66,12 @@ const UseStyles = makeStyles({
     Hidden:
     {
         display: "none"
+    },
+    SettingGroups:
+    {
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalL
     },
     Shell:
     {
@@ -237,23 +243,32 @@ const SettingsShell = (): React.JSX.Element =>
                         for search to lose by unmounting it.
                     */ }
                     <div
-                        className={
-                            SelectedSection === SettingsSectionId.General ? undefined : Styles.Hidden
-                        }>
+                        className={ mergeClasses(
+                            Styles.SettingGroups,
+                            SelectedSection === SettingsSectionId.General
+                                ? undefined
+                                : Styles.Hidden
+                        ) }>
                         <SettingsGeneral />
                     </div>
 
                     <div
-                        className={
-                            SelectedSection === SettingsSectionId.Overlay ? undefined : Styles.Hidden
-                        }>
+                        className={ mergeClasses(
+                            Styles.SettingGroups,
+                            SelectedSection === SettingsSectionId.Overlay
+                                ? undefined
+                                : Styles.Hidden
+                        ) }>
                         <SettingsOverlay />
                     </div>
 
                     <div
-                        className={
-                            SelectedSection === SettingsSectionId.FloatingWindows ? undefined : Styles.Hidden
-                        }>
+                        className={ mergeClasses(
+                            Styles.SettingGroups,
+                            SelectedSection === SettingsSectionId.FloatingWindows
+                                ? undefined
+                                : Styles.Hidden
+                        ) }>
                         <SettingsFloatingWindows />
                     </div>
 

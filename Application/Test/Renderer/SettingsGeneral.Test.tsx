@@ -92,7 +92,7 @@ describe("SettingsGeneral", () =>
         const Gap = await screen.findByRole("spinbutton", {
             name: "Tiled window gap"
         });
-        expect(Gap).toHaveValue("8");
+        expect(Gap).toHaveValue("8 px");
 
         fireEvent.change(Gap, { target: { value: "9" } });
         fireEvent.blur(Gap);
@@ -114,7 +114,7 @@ describe("SettingsGeneral", () =>
         const Threshold = screen.getByRole("spinbutton", {
             name: "Resize recovery threshold"
         });
-        expect(Threshold).toHaveValue("128");
+        expect(Threshold).toHaveValue("128 px");
 
         fireEvent.change(Threshold, { target: { value: "64" } });
         fireEvent.blur(Threshold);
@@ -162,7 +162,7 @@ describe("SettingsGeneral", () =>
         const Distance = await screen.findByRole("spinbutton", {
             name: "Tiled window detach distance"
         });
-        expect(Distance).toHaveValue("128");
+        expect(Distance).toHaveValue("128 px");
 
         fireEvent.change(Distance, { target: { value: "256" } });
         fireEvent.blur(Distance);

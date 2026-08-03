@@ -1,5 +1,5 @@
 /**
- * One row within an expanded {@link Setting}'s accordion body, e.g. a checkbox or a
+ * One row within an expanded {@link Setting}'s accordion body, *e.g.*, a checkbox or a
  * labelled control.
  *
  * @module @sorrell/settings-ui/SettingOption

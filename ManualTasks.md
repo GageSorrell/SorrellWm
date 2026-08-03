@@ -206,4 +206,12 @@ Please fix this. -->
 
 ---
 
-Please modify SorrellWm so that when a tiled window is resized via the cursor dragging one of its border, the surrounding windows are also resized.  This should mean that if the dragged edge is perpendicular to that window's panel, then other nodes in that panel are resized.  The nodes on the side of the edge that is resized should be resized so that their proportions relative to each other are preserved.  If the dragged edge is parallel to the window's panel, then adjacent nodes should be resized in the same way (preserving relative proportions).  If there is nothing adjacent to the edge (for example, if the panel is a root panel), then the resize should be undone when the cursor is released.
+<!-- Please modify SorrellWm so that when a tiled window is resized via the cursor dragging one of its border, the surrounding windows are also resized.  This should mean that if the dragged edge is perpendicular to that window's panel, then other nodes in that panel are resized.  The nodes on the side of the edge that is resized should be resized so that their proportions relative to each other are preserved.  If the dragged edge is parallel to the window's panel, then adjacent nodes should be resized in the same way (preserving relative proportions).  If there is nothing adjacent to the edge (for example, if the panel is a root panel), then the resize should be undone when the cursor is released. -->
+
+---
+
+<!-- Please modify the per-app settings entries so that the executable path is shown when the cursor is hovered over the app icon or display name. -->
+
+---
+
+Please create a package `@sorrell/create-wm-api` which guides the user through creating a basic project that uses `@sorrell/wm-api` to run as a client that SorrellWm can connect to and query.

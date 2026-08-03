@@ -17,7 +17,7 @@ import type { OverlayCommandDto } from "../Shared/OverlayCommand.js";
 import { UseDominantColor } from "./UseDominantColor.js";
 import { UseGuardedHover } from "./UseGuardedHover.js";
 
-/** Props for {@link FocusDirectionButton}. */
+/** {@inheritDoc FocusDirectionButton} */
 export interface FocusDirectionButtonProps
 {
     readonly Command: OverlayCommandDto;
