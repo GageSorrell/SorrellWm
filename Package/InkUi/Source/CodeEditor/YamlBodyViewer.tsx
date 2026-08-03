@@ -18,7 +18,7 @@ import { useRoutedInput } from "../Interaction/Shortcut.ts";
 /** {@inheritDoc YamlEditorOverlay} */
 export interface YamlEditorOverlayProps
 {
-    readonly OnCancel?: (() => void) | undefined;
+    readonly OnCancel?: Thunk | undefined;
     readonly OnChange?: ((Value: string) => void) | undefined;
     readonly OnSubmit?: ((Value: string) => void) | undefined;
     readonly Title?: string;

@@ -39,6 +39,9 @@ export interface VideoCardProps
 }
 
 /**
+ * A video with a poster image and centered play button that hides once playback starts and
+ * reappears on pause/end, at which point native controls take over.
+ *
  * @category Component
  * @since 1.0.0
  */

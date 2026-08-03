@@ -183,7 +183,7 @@ export const InstallCommandPanel = (
         <div className={ Cn(PanelClassName, ClassName) }>
             <div aria-label="Copy install command"
                 className={ CopyRowClassName }
-                onClick={ () => void OnCopy() }
+                onClick={ OnCopy }
                 onKeyDown={ OnCopyKeyDown }
                 role="button"
                 tabIndex={ 0 }>

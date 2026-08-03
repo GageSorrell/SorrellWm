@@ -78,9 +78,6 @@ const DefaultMaximumBufferedRecords = 1_000;
 const DefaultMaximumClientBufferBytes = 1_048_576;
 const DefaultGlobalRetention = "7 days";
 
-/**
- *
- */
 function NonNegativeInteger(
     Value: number | undefined,
     Fallback: number,
@@ -97,9 +94,6 @@ function NonNegativeInteger(
     return Resolved;
 }
 
-/**
- *
- */
 function PositiveInteger(
     Value: number | undefined,
     Fallback: number,

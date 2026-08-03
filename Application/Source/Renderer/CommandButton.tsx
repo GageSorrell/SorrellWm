@@ -18,6 +18,7 @@ import {
 } from "@fluentui/react-components";
 import { Key, Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
+import type { Thunk } from "@sorrell/utility/Function";
 import { UseGuardedHover } from "./UseGuardedHover.js";
 
 /** Presentation properties for a primary overlay command. */
@@ -30,7 +31,7 @@ export interface CommandButtonProps
     readonly Icon: NonNullable<ButtonProps["icon"]>;
     readonly Label: string;
     readonly OnHoverChange?: ((Hovered: boolean) => void) | undefined;
-    readonly OnInvoke: () => void;
+    readonly OnInvoke: Thunk;
     readonly Shortcut: ShortcutDto;
 }
 

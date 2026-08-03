@@ -11,6 +11,7 @@
  * @license   MIT
  */
 
+import type { Thunk } from "@sorrell/utility/Function";
 import { useCallback, useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
@@ -24,7 +25,7 @@ interface MarqueeInstance
     readonly scrollByCard: (direction: -1 | 1) => void;
 }
 
-/** Return value of {@link UseQuoteMarquee}. */
+/** {@inheritDoc UseQuoteMarquee} */
 export interface UseQuoteMarqueeResult
 {
     /** Attach to the section/wrapper element used to detect on/off-screen visibility. */
@@ -32,17 +33,23 @@ export interface UseQuoteMarqueeResult
 
     /**
      * Attach to the scrollable rail. Its direct card children must carry
-     * `data-role="card"` and `data-copy={copyIndex}` (0, 1, 2, …) — the hook measures the
+     * `data-role="card"` and `data-copy={ copyIndex }` (0, 1, 2, ...)--the hook measures the
      * gap between the first cards of copy `0` and `1` to know how far one full loop is.
      */
     readonly railRef: RefObject<HTMLDivElement | null>;
+
     /** Wire to a "next" button's `onClick`. */
-    readonly scrollNext: () => void;
+    readonly scrollNext: Thunk;
+
     /** Wire to a "previous" button's `onClick`. */
-    readonly scrollPrevious: () => void;
+    readonly scrollPrevious: Thunk;
 }
 
 /**
+ * The interaction logic behind {@link QuoteMarquee}: an infinite, auto-scrolling rail with
+ * pointer-drag, pause-on-hover/focus, `prefers-reduced-motion` handling, and prev/next
+ * controls.
+ *
  * @category Hook
  * @since 1.0.0
  */

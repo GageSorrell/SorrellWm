@@ -37,6 +37,7 @@ import {
 } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen as ElectronScreen } from "electron";
+import type { Thunk } from "@sorrell/utility/Function";
 
 vi.mock("electron", () =>
 {
@@ -1661,7 +1662,7 @@ const FakeOverlaySession = (
     OnSetTiledMovePanelTarget: (
         Target: OverlaySession.TiledMovePanelTarget
     ) => void = () => undefined,
-    OnClearTiledMovePanelTarget: () => void = () => undefined,
+    OnClearTiledMovePanelTarget: Thunk = () => undefined,
     // Successive Focus targets returned across repeated ResolveFocusTarget calls
     // (e.g. multiple direction picks in one Focus session). Falls back to
     // `FocusTarget` once exhausted, or when omitted entirely.

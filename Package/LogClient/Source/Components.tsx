@@ -103,9 +103,6 @@ const Formatter = Pretty({
     MultilineObjects: false
 });
 
-/**
- *
- */
 function InitialState(Port?: number): LogClientState
 {
     return {
@@ -117,9 +114,6 @@ function InitialState(Port?: number): LogClientState
     };
 }
 
-/**
- *
- */
 function UpsertGlobal(
     Values: ReadonlyArray<GlobalLogValue>,
     Value: GlobalLogValue
@@ -390,9 +384,7 @@ export const LogViewer = ({
     );
 };
 
-/**
- *
- */
+
 const LogClientContent = ({
     Title = "@sorrell/log client",
     ...Options

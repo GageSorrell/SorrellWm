@@ -38,9 +38,6 @@ export interface EffectLoggerOptions
     readonly DefaultCategory?: CategoryInput;
 }
 
-/**
- *
- */
 function Messages(Value: unknown): ReadonlyArray<unknown>
 {
     return Array.isArray(Value) ? Value : [ Value ];

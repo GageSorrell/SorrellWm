@@ -14,6 +14,7 @@ import { AppGenericRegular, type FluentIcon } from "@fluentui/react-icons";
 import { Button, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import type { CSSProperties } from "react";
 import type { OverlayCommandDto } from "../Shared/OverlayCommand.js";
+import type { Thunk } from "@sorrell/utility/Function";
 import { UseDominantColor } from "./UseDominantColor.js";
 import { UseGuardedHover } from "./UseGuardedHover.js";
 
@@ -23,7 +24,7 @@ export interface FocusDirectionButtonProps
     readonly Command: OverlayCommandDto;
     readonly Icon: FluentIcon;
     readonly OnHoverChange?: ((Hovered: boolean) => void) | undefined;
-    readonly OnInvoke: () => void;
+    readonly OnInvoke: Thunk;
 }
 
 const UseStyles = makeStyles({

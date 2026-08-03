@@ -17,6 +17,7 @@ import {
     Validate
 } from "./NativeValidation.js";
 import type { NativeValidationOptions } from "./NativeRecord.js";
+import type { Thunk } from "@sorrell/utility/Function";
 
 /** Native callback composition and validation configuration. */
 export interface NativeCallbackOptions extends NativeValidationOptions
@@ -66,11 +67,11 @@ export function CreateCallback(
 /** Minimal native addon bridge lifecycle surface. */
 export interface ReleasableBridge
 {
-    readonly Release?: () => void;
-    readonly Close?: () => void;
+    readonly Release?: Thunk;
+    readonly Close?: Thunk;
 }
 
-/** Release an addon bridge using its idempotent final lifecycle operation. */
+/** Release an add-on bridge using its idempotent final lifecycle operation. */
 export function Release(Bridge: ReleasableBridge): void
 {
     if (Bridge.Close !== undefined)

@@ -63,7 +63,7 @@ const Publish = <A,>(Store: StreamStore<A>, Value: A | undefined): void =>
 
 const useStore = <A,>(Store: StreamStore<A>): A | undefined =>
 {
-    const Subscribe = React.useCallback((Notify: Listener): (() => void) =>
+    const Subscribe = React.useCallback((Notify: Listener): Thunk =>
     {
         Store.Listeners.add(Notify);
         return () => Store.Listeners.delete(Notify);

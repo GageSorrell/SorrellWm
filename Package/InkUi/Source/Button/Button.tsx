@@ -93,8 +93,8 @@ export interface ButtonProps extends Omit<BoxProps, "children">
     readonly IconPosition?: IconPosition;
     readonly Id?: string;
     readonly Large?: boolean;
-    readonly OnBlur?: (() => void) | undefined;
-    readonly OnFocus?: (() => void) | undefined;
+    readonly OnBlur?: Thunk | undefined;
+    readonly OnFocus?: Thunk | undefined;
     readonly OnPress?: ((Event: ButtonPressEvent) => void) | undefined;
     readonly Order?: number;
     readonly Shape?: CornerShapeValue;

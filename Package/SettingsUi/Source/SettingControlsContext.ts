@@ -12,6 +12,7 @@
 import { createContext } from "react";
 import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
+import type { Thunk } from "@sorrell/utility/Function";
 
 /** The icon, title, and subtitle recorded for one addressable {@link Setting} or {@link SettingGroup}. */
 export interface SettingControlEntry
@@ -33,13 +34,13 @@ export interface SettingControlsContextValue
      * Register one addressable component's entry and element, called by {@link Setting} and
      * {@link SettingGroup}. Returns a cleanup function that unregisters it.
      */
-    readonly Register: (Id: string, Entry: SettingControlEntry, Element: HTMLElement | null) => () => void;
+    readonly Register: (Id: string, Entry: SettingControlEntry, Element: HTMLElement | null) => Thunk;
 
     /** Scroll to the component registered under `Id`, if any, then pulse its background. */
     readonly ScrollToAndPulse: (Id: string) => void;
 
     /** Subscribe to pulse requests for `Id`, called by {@link Setting} and {@link SettingGroup}. */
-    readonly SubscribePulse: (Id: string, Listener: () => void) => () => void;
+    readonly SubscribePulse: (Id: string, Listener: Thunk) => Thunk;
 }
 
 /** Internal React context shared by the public provider and hooks. */

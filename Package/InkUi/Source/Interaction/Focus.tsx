@@ -33,8 +33,8 @@ export interface FocusRegistration
     readonly CommandScopeId?: string;
     readonly Disabled?: boolean;
     readonly Id: string;
-    readonly OnBlur?: (() => void) | undefined;
-    readonly OnFocus?: (() => void) | undefined;
+    readonly OnBlur?: Thunk | undefined;
+    readonly OnFocus?: Thunk | undefined;
     readonly Order?: number;
     readonly ScopeId: string;
 }
@@ -107,7 +107,7 @@ export class FocusRegistry
 
     public readonly GetSnapshot = (): number => this.Version;
 
-    public readonly Subscribe = (Listener: () => void): (() => void) =>
+    public readonly Subscribe = (Listener: () => void): Thunk =>
     {
         MutableHashSet.add(this.Listeners, Listener);
         return () => MutableHashSet.remove(this.Listeners, Listener);
@@ -687,8 +687,8 @@ export interface UseFocusableOptions
     readonly CommandScopeId?: string;
     readonly Disabled?: boolean;
     readonly Id?: string;
-    readonly OnBlur?: (() => void) | undefined;
-    readonly OnFocus?: (() => void) | undefined;
+    readonly OnBlur?: Thunk | undefined;
+    readonly OnFocus?: Thunk | undefined;
     readonly Order?: number;
 }
 

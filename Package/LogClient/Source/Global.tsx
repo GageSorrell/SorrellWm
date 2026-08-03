@@ -147,9 +147,6 @@ export function FormatGlobalDuration(
     return Duration.format(Duration.millis(Math.max(0, Now - Timestamp)));
 }
 
-/**
- *
- */
 function FormatValue(Value: GlobalLogValue["Value"]): string
 {
     if (Value === null)
@@ -215,9 +212,7 @@ export const GlobalNumberBar = ({
     );
 };
 
-/**
- *
- */
+
 const DateTimeValue = ({
     DisplayTimeSince,
     Value

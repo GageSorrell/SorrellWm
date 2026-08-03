@@ -184,7 +184,7 @@ export function HelpProvider({
         });
     }, [ ExitHelpMode, GetVisibleIds ]);
 
-    const Register = React.useCallback((Registration: TooltipRegistration): (() => void) =>
+    const Register = React.useCallback((Registration: TooltipRegistration): Thunk =>
     {
         Registrations.current.set(Registration.Id, Registration);
         SetVersion((Current: number) => Current + 1);

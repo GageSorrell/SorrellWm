@@ -53,9 +53,6 @@ export interface MessageStreamOptions
 const DefaultBufferCapacity = 4_096;
 const DefaultMaximumLineBytes = 1_048_576;
 
-/**
- *
- */
 function ErrorFor(
     Operation: LogClientOperation,
     Message: string,
@@ -69,9 +66,6 @@ function ErrorFor(
     });
 }
 
-/**
- *
- */
 function PositiveInteger(
     Value: number | undefined,
     Fallback: number,
@@ -161,9 +155,6 @@ export function ResolvePipePort(
         }));
 }
 
-/**
- *
- */
 function ConnectedStream(
     PortValue: number,
     Options: MessageStreamOptions

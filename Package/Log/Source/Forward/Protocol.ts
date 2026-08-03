@@ -69,25 +69,16 @@ export function Serialize(Message: WireMessage): string
     return `${ JSON.stringify(Message) }\n`;
 }
 
-/**
- *
- */
 function IsRecord(Value: unknown): Value is Readonly<Record<string, unknown>>
 {
     return typeof Value === "object" && Value !== null && !Array.isArray(Value);
 }
 
-/**
- *
- */
 function IsOptionalString(Value: unknown): Value is string | undefined
 {
     return Value === undefined || typeof Value === "string";
 }
 
-/**
- *
- */
 function Application(
     Value: unknown
 ): ApplicationMetadata | undefined
@@ -114,9 +105,6 @@ function Application(
     };
 }
 
-/**
- *
- */
 function Process(Value: unknown): ProcessMetadata | undefined
 {
     if (!IsRecord(Value)

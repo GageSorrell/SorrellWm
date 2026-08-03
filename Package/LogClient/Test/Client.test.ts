@@ -23,9 +23,6 @@ import {
 } from "../Source/Client.js";
 import { Record } from "./Fixture.js";
 
-/**
- *
- */
 function TestPort(): number
 {
     return 20_000 + ((process.pid + Math.floor(Math.random() * 20_000)) % 30_000);

@@ -35,7 +35,7 @@ export interface PickerOverlayProps<A>
     readonly EmptyMessage?: string;
     readonly Height?: number;
     readonly Items: ReadonlyArray<PickerItem<A>>;
-    readonly OnCancel?: (() => void) | undefined;
+    readonly OnCancel?: Thunk | undefined;
     readonly OnHighlight?: ((Item: PickerItem<A> | undefined) => void) | undefined;
     readonly OnSelect: (Item: PickerItem<A>) => void;
     readonly RenderItem?: (

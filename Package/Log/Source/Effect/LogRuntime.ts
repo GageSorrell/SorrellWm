@@ -34,6 +34,8 @@ import {
 } from "../Normalize.js";
 import { Redacted } from "../Redacted.js";
 import type { LogSink } from "../Sink.js";
+import type { Thunk } from "@sorrell/utility/Function";
+import type { ReadonlyRecord } from "effect/Record";
 
 /** Behavior used when the runtime input queue reaches capacity. */
 export type OverflowStrategy = "DropNewest" | "DropOldest" | "Backpressure";
@@ -89,17 +91,14 @@ interface RuntimeState
     Queue: Array<LogInput>;
     Sequence: number;
     Shutdown: boolean;
-    Waiters: Array<() => void>;
+    Waiters: Array<Thunk>;
 }
 
-const DefaultQueue: QueueOptions = {
-    Capacity: 1_024,
-    OverflowStrategy: "DropNewest"
-};
-
-/**
- *
- */
+const DefaultQueue: QueueOptions =
+    {
+        Capacity: 1_024,
+        OverflowStrategy: "DropNewest"
+    };
 function InfrastructureFallback(
     Sink: string,
     ErrorValue: unknown,
@@ -127,10 +126,6 @@ function InfrastructureFallback(
         // A fallback failure has no safe downstream reporting path.
     }
 }
-
-/**
- *
- */
 function AwaitIdle(State: RuntimeState): Promise<void>
 {
     if (!State.Draining && State.Queue.length === 0)
@@ -138,15 +133,9 @@ function AwaitIdle(State: RuntimeState): Promise<void>
         return Promise.resolve();
     }
 
-    return new Promise<void>((Resolve: () => void) =>
-    {
-        State.Waiters.push(Resolve);
-    });
+    return new Promise<void>(State.Waiters.push);
 }
 
-/**
- *
- */
 function NotifyIdle(State: RuntimeState): void
 {
     if (State.Draining || State.Queue.length > 0)
@@ -161,9 +150,6 @@ function NotifyIdle(State: RuntimeState): void
     }
 }
 
-/**
- *
- */
 function AsTimestamp(Input: Date | string | undefined, Now: () => Date): string
 {
     try
@@ -181,15 +167,11 @@ function AsTimestamp(Input: Date | string | undefined, Now: () => Date): string
         return new Date(0).toISOString();
     }
 }
-
-/**
- *
- */
 function NormalizeAnnotations(
     Input: Readonly<Record<string, unknown>> | undefined,
     Options: NormalizeOptions,
     RedactedKeys: ReadonlySet<string>
-): Readonly<Record<string, ReturnType<typeof Normalize>>>
+): ReadonlyRecord<string, ReturnType<typeof Normalize>>
 {
     const Output: Record<string, ReturnType<typeof Normalize>> = { };
 
@@ -203,9 +185,6 @@ function NormalizeAnnotations(
     return Output;
 }
 
-/**
- *
- */
 function PreNormalizedAnnotations(
     Input: Readonly<Record<string, unknown>> | undefined
 ): Readonly<Record<string, LogValue>>
@@ -213,9 +192,6 @@ function PreNormalizedAnnotations(
     return (Input ?? { }) as Readonly<Record<string, LogValue>>;
 }
 
-/**
- *
- */
 function NormalizeRecord(
     Input: LogInput,
     Sequence: number,

@@ -106,7 +106,7 @@ const MouseProvider = ({
 
     const Subscribe = React.useCallback((
         Handler: (Event: MouseEvent.MouseEvent) => void
-    ): (() => void) =>
+    ): Thunk =>
     {
         Subscribers.current.add(Handler);
         return () => Subscribers.current.delete(Handler);

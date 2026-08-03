@@ -140,9 +140,6 @@ export class GlobalValueError extends Data.TaggedError("GlobalValueError")<{
     readonly Message: string;
 }> { }
 
-/**
- *
- */
 function ShortText(Value: string, Name: string): string
 {
     if (Value.length === 0 || Value.length > 256 || /[\u0000-\u001f]/u.test(Value))
@@ -153,9 +150,6 @@ function ShortText(Value: string, Name: string): string
     return Value;
 }
 
-/**
- *
- */
 function Bound(Value: number | undefined, Name: string): number | undefined
 {
     if (Value !== undefined && !Number.isFinite(Value))
@@ -166,9 +160,6 @@ function Bound(Value: number | undefined, Name: string): number | undefined
     return Value;
 }
 
-/**
- *
- */
 function Definition(
     Key: string,
     Options: GlobalOptions
@@ -305,9 +296,6 @@ export function MakeGlobal<Key extends string, Value = unknown>(
     });
 }
 
-/**
- *
- */
 function Encode<Key extends string, Value>(
     GlobalValue: Global<Key, Value>,
     ValueInput: Value

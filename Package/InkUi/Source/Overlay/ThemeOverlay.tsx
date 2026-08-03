@@ -16,7 +16,7 @@ import { type Theme, Themes } from "../Theme.tsx";
 /** {@inheritDoc ThemePickerOverlay} */
 export interface ThemePickerOverlayProps
 {
-    readonly OnCancel?: (() => void) | undefined;
+    readonly OnCancel?: Thunk | undefined;
     readonly OnSelect: (Theme: Theme) => void;
     readonly Values?: ReadonlyArray<Theme>;
 }

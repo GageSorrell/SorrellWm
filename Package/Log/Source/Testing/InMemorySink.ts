@@ -12,20 +12,21 @@
 import { Effect } from "effect";
 import type { LogRecord } from "../LogRecord.js";
 import type { LogSink } from "../Sink.js";
+import type { Thunk } from "@sorrell/utility/Function";
 
 /** In-memory sink and observation helpers for deterministic tests. */
 export interface InMemorySink extends LogSink
 {
     readonly Records: ReadonlyArray<LogRecord>;
-    readonly Clear: () => void;
+    readonly Clear: Thunk;
     readonly AwaitNext: Effect.Effect<LogRecord>;
 }
 
 /** Construct an ordered in-memory sink. */
 export function Make(): InMemorySink
 {
-    const Records: Array<LogRecord> = [];
-    const Waiters: Array<(Record: LogRecord) => void> = [];
+    const Records: Array<LogRecord> = [ ];
+    const Waiters: Array<(Record: LogRecord) => void> = [ ];
 
     return {
         AwaitNext: Effect.promise(() => new Promise<LogRecord>(

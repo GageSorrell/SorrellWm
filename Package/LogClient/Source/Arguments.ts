@@ -39,9 +39,6 @@ Options:
 When no port is supplied, the first active ${ NamedPipe.NamePrefix }<port>
 pipe is selected automatically. Press Escape to exit.`;
 
-/**
- *
- */
 function ParsePort(Text: string): number
 {
     if (!/^\d+$/.test(Text))

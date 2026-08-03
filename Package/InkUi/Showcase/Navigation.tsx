@@ -26,7 +26,7 @@ export interface NavigationProps
     readonly Items: ReadonlyArray<ComponentStory>;
     readonly OnCollapse: () => void;
     readonly OnExit: () => void;
-    readonly OnFocus?: (() => void) | undefined;
+    readonly OnFocus?: Thunk | undefined;
     readonly OnSearchActiveChange: (Active: boolean) => void;
     readonly OnSearchChange: (Value: string) => void;
     readonly OnSelect: (Story: ComponentStory) => void;

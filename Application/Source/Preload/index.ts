@@ -56,6 +56,7 @@ import {
 } from "../Shared/Update.ts";
 import type { IpcRendererEvent } from "electron";
 import type { RendererLogEntry } from "../Shared/Logging.ts";
+import type { Thunk } from "@sorrell/utility/Function";
 import electron from "electron";
 
 const { contextBridge, ipcRenderer } = electron;
@@ -82,9 +83,7 @@ ipcRenderer.on(AppApiChannel.BackdropShow, (_Event: IpcRendererEvent, Value: unk
     }
 });
 
-const OnBackdropShow = (
-    Listener: (Presentation: BackdropPresentation) => void
-): (() => void) =>
+const OnBackdropShow = (Listener: (Presentation: BackdropPresentation) => void): Thunk =>
 {
     BackdropListeners.add(Listener);
 
@@ -119,9 +118,7 @@ ipcRenderer.on(AppApiChannel.FocusPreviewChanged, (
     }
 });
 
-const OnFocusPreviewChanged = (
-    Listener: (Presentation: FocusPreviewPresentation) => void
-): (() => void) =>
+const OnFocusPreviewChanged = (Listener: (Presentation: FocusPreviewPresentation) => void): Thunk =>
 {
     FocusPreviewListeners.add(Listener);
 
@@ -156,7 +153,7 @@ ipcRenderer.on(AppApiChannel.SettingsNavigate, (_Event: IpcRendererEvent, Value:
 
 const OnSettingsNavigate = (
     Listener: (Path: string | null) => void
-): (() => void) =>
+): Thunk =>
 {
     SettingsNavigateListeners.add(Listener);
 
@@ -221,7 +218,7 @@ const PreviewOverlayFocus = async (
 
 const OnOverlayScreenChanged = (
     Listener: (Screen: OverlayScreenDto) => void
-): (() => void) =>
+): Thunk =>
 {
     const OnChanged = (_Event: IpcRendererEvent, Value: unknown): void =>
     {
@@ -258,7 +255,7 @@ const GetInsertTarget = async (): Promise<InsertTargetPresentation> =>
 
 const OnInsertTargetChanged = (
     Listener: (Presentation: InsertTargetPresentation) => void
-): (() => void) =>
+): Thunk =>
 {
     const OnChanged = (_Event: IpcRendererEvent, Value: unknown): void =>
     {
@@ -299,7 +296,7 @@ const GetRendererTheme = async (): Promise<RendererTheme> =>
 
 const OnRendererThemeChanged = (
     Listener: (Theme: RendererTheme) => void
-): (() => void) =>
+): Thunk =>
 {
     const OnChanged = (_Event: IpcRendererEvent, Value: unknown): void =>
     {

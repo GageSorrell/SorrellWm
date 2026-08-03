@@ -12,9 +12,7 @@
 import * as Category from "../Source/Category.js";
 import type { LogRecord } from "../Source/LogRecord.js";
 
-/**
- *
- */
+
 export function RecordFixture(Overrides: Partial<LogRecord> = { }): LogRecord
 {
     return {

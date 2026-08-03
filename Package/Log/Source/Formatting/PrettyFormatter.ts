@@ -55,9 +55,6 @@ export interface PrettyOptions
     readonly ColorLevel?: 0 | 1 | 2 | 3;
 }
 
-/**
- *
- */
 function DefaultTheme(ChalkValue: ChalkInstance): PrettyTheme
 {
     return {
@@ -77,9 +74,6 @@ function DefaultTheme(ChalkValue: ChalkInstance): PrettyTheme
     };
 }
 
-/**
- *
- */
 function ResolveColorLevel(Options: PrettyOptions): 0 | 1 | 2 | 3
 {
     switch (Options.ColorMode ?? "Auto")
@@ -95,17 +89,11 @@ function ResolveColorLevel(Options: PrettyOptions): 0 | 1 | 2 | 3
     }
 }
 
-/**
- *
- */
 function IsTagged(Value: LogValue): Value is Exclude<LogValue, null | boolean | number | string>
 {
     return typeof Value === "object" && Value !== null && "_tag" in Value;
 }
 
-/**
- *
- */
 function FormatValue(
     Value: LogValue,
     Theme: PrettyTheme,
@@ -224,9 +212,6 @@ function FormatValue(
     }
 }
 
-/**
- *
- */
 function LimitLineWidth(Text: string, Maximum: number | undefined): string
 {
     if (Maximum === undefined || Text.length <= Maximum)

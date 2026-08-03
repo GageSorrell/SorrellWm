@@ -20,17 +20,11 @@ import * as NamedPipe from "../Source/Node/NamedPipe.js";
 import { Make } from "../Source/Node/NamedPipeSink.js";
 import { RecordFixture } from "./Fixture.js";
 
-/**
- *
- */
 function TestPort(): number
 {
     return 40_000 + ((process.pid + Math.floor(Math.random() * 10_000)) % 20_000);
 }
 
-/**
- *
- */
 function Reader(
     PipePath: string,
     Count: number
@@ -83,9 +77,7 @@ function Reader(
     };
 }
 
-/**
- *
- */
+
 async function Within<Value>(
     PromiseValue: Promise<Value>,
     Label: string

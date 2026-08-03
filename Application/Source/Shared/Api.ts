@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
+import type { AsyncThunk, Thunk } from "@sorrell/utility/Function";
 import type {
     FloatingWindowSettingsDto,
     FloatingWindowSettingsPatch,
@@ -27,7 +28,6 @@ import type { FocusPreviewPresentation } from "./FocusPreview.js";
 import type { InsertTargetPresentation } from "./InsertTarget.js";
 import type { RendererLogEntry } from "./Logging.js";
 import type { RendererTheme } from "./Theme.js";
-import type { Thunk } from "@sorrell/utility/Function";
 
 /**
  * Runtime versions that are safe to expose to a renderer.
@@ -62,9 +62,7 @@ export interface AppApi
     readonly focusPreview:
     {
         /** Observe presentation changes for this occluded-window Focus proxy. */
-        readonly onChanged: (
-            Listener: (Presentation: FocusPreviewPresentation) => void
-        ) => () => void;
+        readonly onChanged: (Listener: (Presentation: FocusPreviewPresentation) => void) => Thunk;
     };
 
     readonly generalSettings:
@@ -79,10 +77,10 @@ export interface AppApi
     readonly insertTarget:
     {
         /** Cancel the tiled Insert flow and close the temporary target. */
-        readonly cancel: () => Promise<void>;
+        readonly cancel: AsyncThunk;
 
         /** Return to the floating-window list in the overlay. */
-        readonly chooseWindow: () => Promise<void>;
+        readonly chooseWindow: AsyncThunk;
 
         /** Retrieve the current temporary Insert target state. */
         readonly get: () => Promise<InsertTargetPresentation>;
@@ -90,7 +88,7 @@ export interface AppApi
         /** Observe native drag and next-window-capture state changes. */
         readonly onChanged: (
             Listener: (Presentation: InsertTargetPresentation) => void
-        ) => () => void;
+        ) => Thunk;
 
         /** Choose whether the next eligible new window should be inserted. */
         readonly setCaptureNext: (Enabled: boolean) => Promise<void>;
@@ -105,7 +103,7 @@ export interface AppApi
     readonly overlay:
     {
         /** Return to the preceding overlay screen. */
-        readonly back: () => Promise<void>;
+        readonly back: AsyncThunk;
 
         /** Retrieve the current overlay-screen snapshot. */
         readonly get: () => Promise<OverlayScreenDto>;
@@ -120,9 +118,7 @@ export interface AppApi
         readonly preview: (Id: OverlayCommandId | null) => Promise<void>;
 
         /** Observe changes to the current overlay screen or its command catalog. */
-        readonly onChanged: (
-            Listener: (Screen: OverlayScreenDto) => void
-        ) => () => void;
+        readonly onChanged: (Listener: (Screen: OverlayScreenDto) => void) => Thunk;
     };
 
     readonly overlaySettings:
@@ -137,9 +133,7 @@ export interface AppApi
     readonly perAppSettings:
     {
         /** Append default per-application settings, choosing an executable when omitted. */
-        readonly add: (
-            ExecutablePath?: string
-        ) => Promise<PerAppSettingsEntryDto | null>;
+        readonly add: (ExecutablePath?: string) => Promise<PerAppSettingsEntryDto | null>;
 
         /** Retrieve every configured executable and its presentation metadata. */
         readonly get: () => Promise<ReadonlyArray<PerAppSettingsEntryDto>>;
@@ -161,7 +155,7 @@ export interface AppApi
         readonly open: (Path: string) => Promise<void>;
 
         /** Observe requests to navigate the settings window to a given path. */
-        readonly onNavigate: (Listener: (Path: string | null) => void) => () => void;
+        readonly onNavigate: (Listener: (Path: string | null) => void) => Thunk;
     };
     readonly theme:
     {
@@ -169,7 +163,7 @@ export interface AppApi
         readonly get: () => Promise<RendererTheme>;
 
         /** Observe changes to Electron's color scheme or the Windows accent color. */
-        readonly onChanged: (Listener: (Theme: RendererTheme) => void) => () => void;
+        readonly onChanged: (Listener: (Theme: RendererTheme) => void) => Thunk;
     };
     readonly update:
     {

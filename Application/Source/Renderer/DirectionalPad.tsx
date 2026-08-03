@@ -25,6 +25,7 @@ import { ColorScheme } from "../Shared/Theme.js";
 import { GetShortcutParts } from "./CommandButton.js";
 import { Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../Shared/Hotkey.js";
+import type { Thunk } from "@sorrell/utility/Function";
 import { UseColorScheme } from "./UseColorScheme.js";
 import { UseGuardedHover } from "./UseGuardedHover.js";
 
@@ -41,7 +42,7 @@ export interface DirectionalPadDirection
     readonly Label?: ReactNode;
 
     readonly OnHoverChange?: ((Hovered: boolean) => void) | undefined;
-    readonly OnInvoke: () => void;
+    readonly OnInvoke: Thunk;
     readonly Shortcut: ShortcutDto;
 }
 

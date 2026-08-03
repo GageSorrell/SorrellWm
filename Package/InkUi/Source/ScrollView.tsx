@@ -68,8 +68,8 @@ export interface ScrollViewProps extends Omit<
     readonly Id?: string;
     /** Called after the viewport's offsets change. */
     readonly OnScroll?: ((Position: ScrollViewPosition) => void) | undefined;
-    readonly OnBlur?: (() => void) | undefined;
-    readonly OnFocus?: (() => void) | undefined;
+    readonly OnBlur?: Thunk | undefined;
+    readonly OnFocus?: Thunk | undefined;
     /** Interaction-system focus ordering. */
     readonly Order?: number;
     /** CSS-like overflow policy for both axes. Defaults to `auto`. */

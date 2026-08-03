@@ -40,9 +40,6 @@ export interface FileSinkOptions
     readonly Pretty?: Omit<PrettyOptions, "ColorMode">;
 }
 
-/**
- *
- */
 function ErrorFor(
     Cause: unknown,
     Operation: "Write" | "Flush" | "Shutdown"

@@ -43,6 +43,7 @@ import {
 } from "@fluentui/react-components";
 import { KeyChip } from "./KeyChip.js";
 import type { ReactNode } from "react";
+import type { Thunk } from "@sorrell/utility/Function";
 
 const UseStyles = makeStyles({
     Content:
@@ -82,14 +83,14 @@ export interface KeybindEditorDialogBodyProps
     readonly Keys: ReadonlyArray<ReactNode>;
 
     /** Called when the dialog's Cancel button is pressed, in addition to it closing the dialog. */
-    readonly OnCancel?: () => void;
+    readonly OnCancel?: Thunk;
 
     /** Omit to hide the "Clear" action. */
-    readonly OnClear?: () => void;
+    readonly OnClear?: Thunk;
 
     /** Omit to hide the "Reset" action. */
-    readonly OnReset?: () => void;
-    readonly OnSave: () => void;
+    readonly OnReset?: Thunk;
+    readonly OnSave: Thunk;
     readonly SaveDisabled?: boolean;
     readonly Title: ReactNode;
 
@@ -117,7 +118,9 @@ const KeybindEditorDialogBody = (
 
     return (
         <DialogBody>
-            <DialogTitle>{ Title }</DialogTitle>
+            <DialogTitle>
+                { Title }
+            </DialogTitle>
 
             <DialogContent className={ Styles.Content }>
                 { Description !== undefined && (

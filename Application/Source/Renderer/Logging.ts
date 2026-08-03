@@ -77,7 +77,7 @@ const ReportRejection = (
 };
 
 export/** Install process-wide browser error and rejection reporting. */
-const InstallGlobalHandlers = (): (() => void) =>
+const InstallGlobalHandlers = (): Thunk =>
 {
     const OnError = (EventValue: ErrorEvent): void =>
     {

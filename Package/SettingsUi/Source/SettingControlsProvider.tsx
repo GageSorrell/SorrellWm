@@ -24,6 +24,7 @@ import
     SettingControlsContext,
     type SettingControlsContextValue
 } from "./SettingControlsContext.js";
+import type { Thunk } from "@sorrell/utility/Function";
 
 /** {@inheritDoc SettingControlsProvider} */
 export interface SettingControlsProviderProps
@@ -40,13 +41,13 @@ export function SettingControlsProvider({ children }: SettingControlsProviderPro
 {
     const [ Entries, SetEntries ] = useState<Record<string, SettingControlEntry>>({});
     const ElementsRef = useRef(new Map<string, HTMLElement | null>());
-    const PulseListenersRef = useRef(new Map<string, Set<() => void>>());
+    const PulseListenersRef = useRef(new Map<string, Set<Thunk>>());
 
     const Register = useCallback((
         Id: string,
         Entry: SettingControlEntry,
         Element: HTMLElement | null
-    ): (() => void) =>
+    ): Thunk =>
     {
         ElementsRef.current.set(Id, Element);
         SetEntries((Previous) => ({ ...Previous, [ Id ]: Entry }));
@@ -63,9 +64,9 @@ export function SettingControlsProvider({ children }: SettingControlsProviderPro
         };
     }, []);
 
-    const SubscribePulse = useCallback((Id: string, Listener: () => void): (() => void) =>
+    const SubscribePulse = useCallback((Id: string, Listener: Thunk): Thunk =>
     {
-        const Listeners = PulseListenersRef.current.get(Id) ?? new Set<() => void>();
+        const Listeners = PulseListenersRef.current.get(Id) ?? new Set<Thunk>();
         PulseListenersRef.current.set(Id, Listeners);
         Listeners.add(Listener);
 

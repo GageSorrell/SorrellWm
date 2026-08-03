@@ -27,9 +27,6 @@ import {
     GlobalValueGrid
 } from "../Source/Global.js";
 
-/**
- *
- */
 function IntegerValue(
     Key: string,
     Value: number

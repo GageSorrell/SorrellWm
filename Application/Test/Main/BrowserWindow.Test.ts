@@ -25,6 +25,7 @@ import type {
 import { Effect, Fiber, Result, pipe } from "effect";
 import { describe, expect, it } from "vitest";
 import { EventEmitter } from "node:events";
+import type { Thunk } from "@sorrell/utility/Function";
 
 type OpenHandler = (Details: HandlerDetails) => { readonly action: "deny"; };
 
@@ -227,8 +228,8 @@ describe("BrowserWindow", () =>
         const Windows = new Array<FakeWindow>();
         const ConstructorOptions = new Array<BrowserWindowConstructorOptions>();
         const ExternalUrls = new Array<string>();
-        let CompleteLoad: (() => void) | undefined;
-        const Load = (Window: FakeWindow): Promise<void> => new Promise((Resolve: () => void) =>
+        let CompleteLoad: Thunk | undefined;
+        const Load = (Window: FakeWindow): Promise<void> => new Promise((Resolve: Thunk) =>
         {
             CompleteLoad = (): void =>
             {

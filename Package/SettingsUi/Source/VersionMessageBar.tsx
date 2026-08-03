@@ -22,6 +22,7 @@ import {
     makeStyles,
     tokens
 } from "@fluentui/react-components";
+import type { Thunk } from "@sorrell/utility/Function";
 import type { ReactNode } from "react";
 
 /** A trailing link shown at the end of a {@link VersionMessageBar}'s first line. */
@@ -29,14 +30,14 @@ export interface VersionMessageBarLink
 {
     readonly Href?: string;
     readonly Label: ReactNode;
-    readonly OnClick?: () => void;
+    readonly OnClick?: Thunk;
 }
 
 /** A button shown on its own row beneath a {@link VersionMessageBar}'s text. */
 export interface VersionMessageBarAction
 {
     readonly Label: ReactNode;
-    readonly OnClick: () => void;
+    readonly OnClick: Thunk;
 }
 
 /** The color/icon treatment of a {@link VersionMessageBar}. */

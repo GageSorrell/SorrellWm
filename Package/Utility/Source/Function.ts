@@ -20,3 +20,14 @@ export interface Thunk<Args extends ReadonlyArray<unknown> = readonly [ ]>
 {
     (...Args: Args): void;
 }
+
+/**
+ * An async function with side effects, with no argument vector by default.
+ *
+ * @category Function
+ * @since 1.0.0
+ */
+export interface AsyncThunk<Args extends ReadonlyArray<unknown> = readonly [ ]>
+{
+    (...Args: Args): Promise<void>;
+}

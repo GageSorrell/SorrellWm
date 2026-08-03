@@ -42,9 +42,6 @@ export const DefaultOptions: NormalizeOptions = Object.freeze({
     MaximumStringLength: 16_384
 });
 
-/**
- *
- */
 function MergeOptions(Options?: Partial<NormalizeOptions>): NormalizeOptions
 {
     return {
@@ -53,9 +50,6 @@ function MergeOptions(Options?: Partial<NormalizeOptions>): NormalizeOptions
     };
 }
 
-/**
- *
- */
 function Truncated(Reason: string, Omitted?: number): LogTruncated
 {
     return Omitted === undefined
@@ -63,9 +57,6 @@ function Truncated(Reason: string, Omitted?: number): LogTruncated
         : { _tag: "Truncated", Omitted, Reason };
 }
 
-/**
- *
- */
 function Unavailable(Reason: string, Type?: string): LogUnavailable
 {
     return Type === undefined
@@ -73,9 +64,6 @@ function Unavailable(Reason: string, Type?: string): LogUnavailable
         : { _tag: "Unavailable", Reason, Type };
 }
 
-/**
- *
- */
 function RedactedValue(Label?: string): LogRedacted
 {
     return Label === undefined
@@ -83,9 +71,6 @@ function RedactedValue(Label?: string): LogRedacted
         : { _tag: "Redacted", Label };
 }
 
-/**
- *
- */
 function SafeType(Value: object): string | undefined
 {
     try
@@ -104,9 +89,6 @@ function SafeType(Value: object): string | undefined
     }
 }
 
-/**
- *
- */
 function Shorten(Value: string, Options: NormalizeOptions): string | LogTruncated
 {
     if (Value.length <= Options.MaximumStringLength)
@@ -128,9 +110,6 @@ interface NormalizerState
     readonly Options: NormalizeOptions;
 }
 
-/**
- *
- */
 function MarkNormalized(Value: LogValue, State: NormalizerState): LogValue
 {
     if (typeof Value === "object" && Value !== null)
@@ -141,9 +120,6 @@ function MarkNormalized(Value: LogValue, State: NormalizerState): LogValue
     return Value;
 }
 
-/**
- *
- */
 function NormalizeObject(
     Value: object,
     Depth: number,
@@ -353,9 +329,6 @@ function NormalizeObject(
     }
 }
 
-/**
- *
- */
 function NormalizeError(
     Value: Error,
     Depth: number,
@@ -452,9 +425,6 @@ function NormalizeError(
     };
 }
 
-/**
- *
- */
 function NormalizePlainObject(
     Value: object,
     Depth: number,
@@ -544,9 +514,6 @@ function NormalizePlainObject(
         : { _tag: "Object", Type, Value: Output };
 }
 
-/**
- *
- */
 function NormalizeValue(
     Value: unknown,
     Depth: number,

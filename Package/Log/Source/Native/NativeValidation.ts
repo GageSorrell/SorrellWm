@@ -17,9 +17,6 @@ import type {
     NativeValidationOptions
 } from "./NativeRecord.js";
 
-/**
- *
- */
 function IsFieldValue(
     Value: unknown,
     MaximumStringLength: number

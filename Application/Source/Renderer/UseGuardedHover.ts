@@ -12,13 +12,14 @@
  */
 
 import type { MouseEvent as ReactMouseEvent } from "react";
+import type { Thunk } from "@sorrell/utility/Function";
 import { useRef } from "react";
 
 /** Mouse handlers to spread onto an element in place of raw `onMouseEnter`/`onMouseLeave`. */
 export interface GuardedHoverHandlers
 {
     readonly onMouseEnter: (Event: ReactMouseEvent) => void;
-    readonly onMouseLeave: () => void;
+    readonly onMouseLeave: Thunk;
 }
 
 export/**

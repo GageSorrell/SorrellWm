@@ -228,7 +228,6 @@ async function DeleteNodeGeneratedArtifacts(
 
     return Targets;
 }
-
 function GetFileTargetKind(BaseName: string): FNodeGeneratedArtifactKind | null
 {
     if (BaseName === "package-lock.json")
@@ -243,7 +242,6 @@ function GetFileTargetKind(BaseName: string): FNodeGeneratedArtifactKind | null
 
     return null;
 }
-
 function FormatTargetKind(Kind: FNodeGeneratedArtifactKind): string
 {
     switch (Kind)
@@ -258,7 +256,6 @@ function FormatTargetKind(Kind: FNodeGeneratedArtifactKind): string
             return "*.tsbuildinfo file";
     }
 }
-
 function IsMissingFileError(ErrorValue: unknown): boolean
 {
     return (
@@ -268,7 +265,6 @@ function IsMissingFileError(ErrorValue: unknown): boolean
         ErrorValue.code === "ENOENT"
     );
 }
-
 function CreateErrorMessage(ErrorValue: unknown): string
 {
     if (ErrorValue instanceof Error)

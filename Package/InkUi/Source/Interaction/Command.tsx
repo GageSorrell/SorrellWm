@@ -315,7 +315,7 @@ export class CommandRegistry
 
     public readonly GetSnapshot = (): number => this.Version;
 
-    public readonly Subscribe = (Listener: () => void): (() => void) =>
+    public readonly Subscribe = (Listener: () => void): Thunk =>
     {
         MutableHashSet.add(this.Listeners, Listener);
         return () => MutableHashSet.remove(this.Listeners, Listener);

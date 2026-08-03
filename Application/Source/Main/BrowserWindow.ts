@@ -37,6 +37,7 @@ import { DevFeatures } from "./Development/DevFeatures.ts";
 import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.ts";
 import type { Handle as WindowsHandle } from "@sorrell/windows";
 import { join } from "path";
+import type { Thunk } from "@sorrell/utility/Function";
 
 const TypeId = "~sorrell/wm/Main/BrowserWindow" as const;
 
@@ -251,12 +252,12 @@ type OpenDecision =
 
 interface WindowListeners
 {
-    readonly Closed: () => void;
-    readonly Focused: () => void;
-    readonly Hidden: () => void;
-    readonly ReadyToShow: () => void;
-    readonly Shown: () => void;
-    readonly Unresponsive: () => void;
+    readonly Closed: Thunk;
+    readonly Focused: Thunk;
+    readonly Hidden: Thunk;
+    readonly ReadyToShow: Thunk;
+    readonly Shown: Thunk;
+    readonly Unresponsive: Thunk;
 }
 
 const SecureOptions = (SpecificationValue: Spec): BrowserWindowConstructorOptions =>
@@ -281,7 +282,7 @@ const SecureOptions = (SpecificationValue: Spec): BrowserWindowConstructorOption
 const TryOperation = (
     KeyValue: Key,
     OperationValue: Operation,
-    OperationEffect: () => void
+    OperationEffect: Thunk
 ): Effect.Effect<void, BrowserWindowOperationError> => Effect.try({
     catch: (Cause: unknown) => new BrowserWindowOperationError({
         Cause,
