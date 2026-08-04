@@ -60,7 +60,7 @@ const NumericField = (
     return (
         <SpinButton
             className={ Styles.SpinButton }
-            displayValue={ Unit === undefined ? undefined : `${ Value } ${ Unit }` }
+            { ...(Unit !== undefined ? { displayValue: `${ Value } ${ Unit }` } : { }) }
             min={ Min }
             onChange={ (
                 _Event: SpinButtonChangeEvent,
@@ -80,7 +80,8 @@ const NumericField = (
                 }
             } }
             step={ Step }
-            value={ Value } />
+            value={ Value }
+        />
     );
 };
 

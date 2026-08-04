@@ -50,3 +50,8 @@ nsis:
   oneClick: false
 
 artifactName: "${productName}-${version}-${os}-${arch}.${ext}"
+
+publish:
+  provider: github
+  owner: GageSorrell
+  repo: SorrellWm

@@ -17,5 +17,8 @@
         "Source/Shared/**/*.ts",
         "Test/**/*.ts",
         "vitest.config.ts"
+    ],
+    "exclude": [
+        "Test/Renderer/*.ts",
     ]
 }

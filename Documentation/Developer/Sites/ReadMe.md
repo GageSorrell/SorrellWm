@@ -1,4 +1,4 @@
-<span style="font-size: 12px;">Documentation for `SorrellWm`.<br />(c) 2026 Gage Sorrell. Provided under the [MIT License](../../../License.md).</span>
+<span style="font-size: 12px;">Documentation for SorrellWm.<br />(c) 2026 Gage Sorrell. Provided under the [MIT License](../../../License.md).</span>
 
 # Documentation and Storybook Website Platform
 

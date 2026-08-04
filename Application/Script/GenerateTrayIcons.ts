@@ -10,24 +10,34 @@
  * QUADRANT) glyph, drawn as vector shapes rather than rendered text so it stays crisp
  * at tray sizes without depending on a system font's glyph coverage.
  *
- * @file      GenerateTrayIcons.mjs
+ * @module @sorrell/wm/Script/GenerateTrayIcons
+ *
+ * @file      GenerateTrayIcons.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-import { execFileSync } from "node:child_process";
+/* eslint-disable no-console */
+
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 
 const InkscapeExecutable = "C:/Program Files/Inkscape/bin/inkscape.exe";
 const ApplicationDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
 const ResourceDirectory = join(ApplicationDirectory, "Resource");
+const MonorepoResourceDirectory = join(dirname(ApplicationDirectory), "Resource");
+
+/** Dimension of the standalone color-icon PNG rendered into {@link MonorepoResourceDirectory}. */
+const ColorPngSize = 256;
 
 /** Icon sizes recommended for Windows applications (taskbar, Explorer, tray, shortcuts). */
-const IconSizes = [ 16, 24, 32, 48, 64, 128, 256 ];
+const IconSizes = [ 16, 24, 32, 48, 64, 128, 256 ] as const;
+
+/* eslint-disable @stylistic/max-len */
 
 /** `BoardColor` path and gradient data, 20x20 viewBox, copied from `@fluentui/react-icons`. */
 const BoardColorBody = `
@@ -54,30 +64,37 @@ const BoardColorBody = `
     </linearGradient>
   </defs>`;
 
+/* eslint-enable @stylistic/max-len */
+
 /** Wrap {@link BoardColorBody} in a square canvas, centered with margin. */
-function WrapBoardColor(CanvasSize)
+const WrapBoardColor = (CanvasSize: number): string =>
 {
-    const FillRatio = 0.9;
+    const FillRatio = 0.9 as const;
     const IconSize = CanvasSize * FillRatio;
     const Offset = (CanvasSize - IconSize) / 2;
-    // The Fluent icon's visible artwork spans (3, 3) through (17, 17) inside
-    // its 20x20 view box.  Remove that built-in margin before applying our own;
-    // otherwise the two margins compound and the taskbar glyph renders at only
-    // 56% of the available width.
-    const ArtworkMinimum = 3;
-    const ArtworkSize = 14;
+
+    /* The Fluent icon's visible artwork spans (3, 3) through (17, 17) inside    *
+     * its 20x20 view box.  Remove that built-in margin before applying our own; *
+     * otherwise the two margins compound and the taskbar glyph renders at only  *
+     * 56% of the available width.                                               */
+    const ArtworkMinimum = 3 as const;
+    const ArtworkSize = 14 as const;
     const Scale = IconSize / ArtworkSize;
+
+    /* eslint-disable @stylistic/max-len */
+
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${ CanvasSize }" height="${ CanvasSize }" viewBox="0 0 ${ CanvasSize } ${ CanvasSize }">
   <g transform="translate(${ Offset } ${ Offset }) scale(${ Scale }) translate(-${ ArtworkMinimum } -${ ArtworkMinimum })">${ BoardColorBody }</g>
 </svg>`;
-}
+    /* eslint-enable @stylistic/max-len */
+};
 
 /**
  * A vector approximation of "◱" (U+25F1 WHITE SQUARE WITH LOWER LEFT QUADRANT): a
  * stroked square outline with a solid square filling its lower-left quadrant, both
  * drawn in a single color.
  */
-function WrapSimplified(CanvasSize, StrokeColor)
+function WrapSimplified(CanvasSize: number, StrokeColor: string): string
 {
     const Margin = CanvasSize * 0.07;
     const Side = CanvasSize - Margin * 2;
@@ -86,20 +103,37 @@ function WrapSimplified(CanvasSize, StrokeColor)
     const QuadrantX = Margin;
     const QuadrantY = Margin + Side - QuadrantSide;
 
+    /* eslint-disable @stylistic/max-len */
+
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${ CanvasSize }" height="${ CanvasSize }" viewBox="0 0 ${ CanvasSize } ${ CanvasSize }">
   <rect x="${ Margin }" y="${ Margin }" width="${ Side }" height="${ Side }" fill="none" stroke="${ StrokeColor }" stroke-width="${ StrokeWidth }" />
   <rect x="${ QuadrantX }" y="${ QuadrantY }" width="${ QuadrantSide }" height="${ QuadrantSide }" fill="${ StrokeColor }" />
 </svg>`;
+
+    /* eslint-enable @stylistic/max-len */
 }
 
-const Variants = [
-    { FileName: "TrayIconColor.ico", Wrap: (Size) => WrapBoardColor(Size) },
-    { FileName: "TrayIconSimplifiedLight.ico", Wrap: (Size) => WrapSimplified(Size, "#151515") },
-    { FileName: "TrayIconSimplifiedDark.ico", Wrap: (Size) => WrapSimplified(Size, "#ffffff") }
-];
+interface Variant
+{
+    FileName: string;
+    Wrap: (Size: number) => string;
+}
+
+const Variants: Array<Variant> =
+    [
+        { FileName: "TrayIconColor.ico",           Wrap: (Size: number) => WrapBoardColor(Size) },
+        { FileName: "TrayIconSimplifiedLight.ico", Wrap: (Size: number) => WrapSimplified(Size, "#151515") },
+        { FileName: "TrayIconSimplifiedDark.ico",  Wrap: (Size: number) => WrapSimplified(Size, "#FFFFFF") }
+    ];
+
+interface Frame
+{
+    Png: Buffer;
+    Size: number;
+}
 
 /** Pack same-icon PNGs of different sizes into a single Windows `.ico` file. */
-function BuildIco(Frames)
+const BuildIco = (Frames: Array<Frame>): Buffer =>
 {
     const HeaderSize = 6;
     const EntrySize = 16;
@@ -110,10 +144,10 @@ function BuildIco(Frames)
     Header.writeUInt16LE(Frames.length, 4);
 
     const Entries = Buffer.alloc(EntrySize * Frames.length);
-    const ImageBuffers = [ ];
+    const ImageBuffers: Array<Buffer> = [ ];
     let Offset = DirectorySize;
 
-    Frames.forEach((Frame, Index) =>
+    Frames.forEach((Frame: Frame, Index: number) =>
     {
         const EntryOffset = Index * EntrySize;
         const SizeByte = Frame.Size >= 256 ? 0 : Frame.Size;
@@ -130,7 +164,7 @@ function BuildIco(Frames)
     });
 
     return Buffer.concat([ Header, Entries, ...ImageBuffers ]);
-}
+};
 
 const TempDirectory = mkdtempSync(join(tmpdir(), "sorrellwm-tray-icons-"));
 
@@ -138,7 +172,7 @@ try
 {
     for (const Variant of Variants)
     {
-        const Frames = IconSizes.map((Size) =>
+        const Frames = IconSizes.map((Size: typeof IconSizes[number]) =>
         {
             const SvgPath = join(TempDirectory, `${ Variant.FileName }-${ Size }.svg`);
             const PngPath = join(TempDirectory, `${ Variant.FileName }-${ Size }.png`);
@@ -156,6 +190,20 @@ try
         const IcoPath = join(ResourceDirectory, Variant.FileName);
         writeFileSync(IcoPath, BuildIco(Frames));
         console.log(`Rendered ${ IcoPath }`);
+
+        if (Variant.FileName === "TrayIconColor.ico")
+        {
+            const ColorFrame = Frames.find((Frame: Frame) => Frame.Size === ColorPngSize);
+            if (ColorFrame === undefined)
+            {
+                /* eslint-disable-next-line @stylistic/max-len */
+                throw new Error(`No ${ ColorPngSize }x${ ColorPngSize } frame was rendered for ${ Variant.FileName }`);
+            }
+
+            const ColorPngPath = join(MonorepoResourceDirectory, "Logo.png");
+            writeFileSync(ColorPngPath, ColorFrame.Png);
+            console.log(`Rendered ${ ColorPngPath }`);
+        }
     }
 }
 finally

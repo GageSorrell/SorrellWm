@@ -1,4 +1,4 @@
-<span style="font-size: 12px;">Documentation for `SorrellWm`.<br />(c) 2026 Gage Sorrell.  Provided under the [MIT License](../../License.md).</span>
+<span style="font-size: 12px;">Documentation for SorrellWm.<br />(c) 2024&ndash;2026 Gage Sorrell.  Provided under the [MIT License](../../License.md).</span>
 
 # Application Overview
 
@@ -22,7 +22,7 @@ Sandboxed preload
 Electron main process ──► native Node/Node-API modules ──► Windows API
 ```
 
-The renderer must never import Node.js, Electron, or native modules. Privileged work belongs in the main process. The preload process is only a typed adapter between those two environments.
+The renderer must never import NodeJS, Electron, or native modules. Privileged work belongs in the main process. The preload process is only a typed adapter between those two environments.
 
 The versions in [`Application/package.json`](../../Application/package.json) are the source of truth. The initial foundation uses:
 

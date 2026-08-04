@@ -14,6 +14,7 @@ import type {
     RendererLogEntry,
     RendererLogLevel
 } from "../Shared/Logging.js";
+import type { Thunk } from "@sorrell/utility/Function";
 
 const DescribeCause = (Cause: unknown): string =>
     Cause instanceof globalThis.Error

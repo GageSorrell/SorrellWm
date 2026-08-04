@@ -1,4 +1,6 @@
-# <img src="./Application/Resource/Icon/Brand/BrandLight.png" alt="Logo" width="28" />&nbsp;SorrellWM
+<span style="font-size: 12px;">&copy; 2024&ndash;2026 Gage Sorrell.  Provided under the [MIT License](./License.md).</span>
+
+# <img src="./Resource/Logo.png" alt="Logo" width="28" />&nbsp;SorrellWm
 
 *The tiling window manager for everyone.*
 
@@ -17,7 +19,8 @@ Install the required packages, then clone this repo.
 
 ### Required Packages
 
-|                         Package | Version         |
-|--------------------------------:|:----------------|
-|     [CMake](https://cmake.org/) | `^4.0.0`        |
-| [NodeJS](https://nodejs.org/en) | `>=24.14.0 <25` |
+|                           Package | Version    |
+|----------------------------------:|:-----------|
+|       [CMake](https://cmake.org/) | `^4.0.0`   |
+| [Inkscape](https://inkscape.org/) | `^1.4.4`   |
+|   [NodeJS](https://nodejs.org/en) | `>=26.5.0` |

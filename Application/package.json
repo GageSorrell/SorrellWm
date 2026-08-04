@@ -43,6 +43,7 @@
         "prepare:renderer": "npm run build --workspace @sorrell/settings-ui --workspace @sorrell/windows-ui",
         "preview": "tsx ./Script/RunElectronVite.ts preview",
         "rebuild:native": "electron-builder install-app-deps",
+        "release": "npm run build && electron-builder --publish always",
         "test": "vitest run",
         "test:watch": "vitest",
         "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"

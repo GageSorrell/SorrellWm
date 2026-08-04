@@ -1,15 +1,15 @@
-<span style="font-size: 12px;">Documentation for `SorrellWm`.<br />(c) 2026 Gage Sorrell.  Provided under the [MIT License](../License.md).</span>
+<span style="font-size: 12px;">Documentation for SorrellWm.<br />(c) 2026 Gage Sorrell.  Provided under the [MIT License](../License.md).</span>
 
 # Documentation
 
 > [!IMPORTANT]
-> You are likely looking for [the documentation for `SorrellWm`.  The documentation website is available here](https://wm.sorrell.sh); this directory holds the *source* for the documentation website.
+> You are likely looking for [the documentation for SorrellWm.  The documentation website is available here](https://wm.sorrell.sh); this directory holds the *source* for the documentation website.
 >
 > Since the documentation content is written in GitHub-Flavored Markdown, you *can* read the source on GitHub or in your IDE, but the [website](https://wm.sorrell.sh) (built with `vitepress`) has several added niceties.
 
 ## `411`
 
-[The documentation website](https://wm.sorrell.sh) contains the documentation for `SorrellWm`.
+[The documentation website](https://wm.sorrell.sh) contains the documentation for SorrellWm.
 The documentation for other packages is in its own location respectively.
 
 The following table lists all packages in the monorepo that have documentation (or have documentation that is in the process of being written),
@@ -18,7 +18,7 @@ The following table lists all packages in the monorepo that have documentation (
 | ---: | :--- | :---: |
 | `reactive-event` | Type-aware event handling for apps built with `electron` and `react`. | `@TODO`&nbsp;&nbsp;([`ReadMe.md`](../Package/ReactiveEvent/ReadMe.md)) |
 | `reactive-event-cli` | CLI utility for automating development of projects using [`reactive-event`](../Package/ReactiveEvent/ReadMe.md). | `@TODO`&nbsp;&nbsp;([`ReadMe.md`](../Package/ReactiveEventCli/ReadMe.md)) |
-| `@sorrell/win-32` | Exposes the [Windows API](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-api-list) to `SorrellWm` and contains all other native functionality for `SorrellWm`. | `@TODO`&nbsp;&nbsp;([`ReadMe.md`](../Package/OraSpinnerDemo/ReadMe.md)) |
+| `@sorrell/win-32` | Exposes the [Windows API](https://learn.microsoft.com/en-us/windows/win32/apiindex/windows-api-list) to `SorrellWm` and contains all other native functionality for SorrellWm. | `@TODO`&nbsp;&nbsp;([`ReadMe.md`](../Package/OraSpinnerDemo/ReadMe.md)) |
 | `@sorrell/utilities` | General-purpose utilities for runtime and development. | `@TODO`&nbsp;&nbsp;([`ReadMe.md`](../Package/Utilities/ReadMe.md)) |
 | `@sorrell/cli-utilities` | Utilities for CLI applications (terminal-based user interfaces). | `@TODO`&nbsp;&nbsp;([`ReadMe.md`](../Package/CliUtilities/ReadMe.md)) |
 
