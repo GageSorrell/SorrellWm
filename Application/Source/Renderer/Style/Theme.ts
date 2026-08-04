@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import type { AccentColor, RendererTheme } from "../Shared/Theme.js";
+import type { AccentColor, RendererTheme } from "../../Shared/Theme.js";
 import {
     type BrandVariants,
     type Theme,
@@ -18,7 +18,7 @@ import {
     webDarkTheme,
     webLightTheme
 } from "@fluentui/react-components";
-import { ColorScheme } from "../Shared/Theme.js";
+import { ColorScheme } from "../../Shared/Theme.js";
 
 interface RgbColor
 {
@@ -52,26 +52,26 @@ const CreateBrandVariants = (AccentColorValue: AccentColor): BrandVariants =>
     const Color: RgbColor = ParseHexColor(AccentColorValue);
 
     /* The numeric brand steps are deliberately presented in their visual order. */
-    /* eslint-disable sort-keys */
-    const Brand: BrandVariants = {
-        10: MixColor(Color, 0, 0.84),
-        20: MixColor(Color, 0, 0.72),
-        30: MixColor(Color, 0, 0.60),
-        40: MixColor(Color, 0, 0.48),
-        50: MixColor(Color, 0, 0.36),
-        60: MixColor(Color, 0, 0.24),
-        70: MixColor(Color, 0, 0.12),
-        80: MixColor(Color, 0, 0),
-        90: MixColor(Color, 255, 0.12),
-        100: MixColor(Color, 255, 0.24),
-        110: MixColor(Color, 255, 0.36),
-        120: MixColor(Color, 255, 0.48),
-        130: MixColor(Color, 255, 0.60),
-        140: MixColor(Color, 255, 0.70),
-        150: MixColor(Color, 255, 0.80),
-        160: MixColor(Color, 255, 0.90)
-    };
-    /* eslint-enable sort-keys */
+    const Brand: BrandVariants =
+        {
+            10: MixColor(Color, 0, 0.84),
+            20: MixColor(Color, 0, 0.72),
+            30: MixColor(Color, 0, 0.60),
+            40: MixColor(Color, 0, 0.48),
+            50: MixColor(Color, 0, 0.36),
+            60: MixColor(Color, 0, 0.24),
+            70: MixColor(Color, 0, 0.12),
+            80: MixColor(Color, 0, 0),
+            90: MixColor(Color, 255, 0.12),
+
+            100: MixColor(Color, 255, 0.24),
+            110: MixColor(Color, 255, 0.36),
+            120: MixColor(Color, 255, 0.48),
+            130: MixColor(Color, 255, 0.60),
+            140: MixColor(Color, 255, 0.70),
+            150: MixColor(Color, 255, 0.80),
+            160: MixColor(Color, 255, 0.90)
+        };
 
     return Brand;
 };

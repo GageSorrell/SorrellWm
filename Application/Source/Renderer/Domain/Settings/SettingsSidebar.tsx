@@ -25,7 +25,7 @@ import {
     WindowAppsRegular,
     WrenchColor
 } from "@fluentui/react-icons";
-import { IsSettingsSectionId, SettingsSectionId } from "../Shared/SettingsPath.js";
+import { IsSettingsSectionId, SettingsSectionId } from "../../../Shared/SettingsPath.js";
 import {
     NavCategory,
     NavCategoryItem,

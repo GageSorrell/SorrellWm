@@ -139,6 +139,7 @@ vi.mock("@sorrell/windows", async () =>
                 EffectResult.succeed([ ])),
             GetMovingWindow: vi.fn(() => EffectOption.none()),
             GetWindowRect: vi.fn(() => EffectOption.none()),
+            IsLeftMouseButtonDown: vi.fn(() => EffectOption.some(false)),
             SetForegroundWindow: vi.fn(() => EffectResult.succeed(undefined)),
             SetWindowRect: vi.fn(() => EffectResult.succeed(undefined)),
             SetWindowZOrderAfter: vi.fn(() => EffectResult.succeed(undefined))
@@ -160,6 +161,7 @@ beforeEach(() =>
     );
     vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.none());
+    vi.mocked(WindowsWindow.IsLeftMouseButtonDown).mockReturnValue(Option.some(false));
     vi.mocked(ElectronScreen.getDisplayMatching).mockReturnValue(
         { scaleFactor: 1 } as Electron.Display
     );
@@ -1428,6 +1430,56 @@ describe("CommandExecutor.Live tiled-window drag detach", () =>
         ));
 
         expect(Reconcile).toHaveBeenCalled();
+        expect(Float).not.toHaveBeenCalled();
+    });
+
+    it("does not finalize the drag when GetMovingWindow briefly reports " +
+        "not-moving while the left mouse button is still held", async () =>
+    {
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            // Poll 1: drag begins.
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            // Poll 2: GUI_INMOVESIZE reads as momentarily cleared, but the drag
+            // hasn't actually ended — IsLeftMouseButtonDown below reports the
+            // button is still held.
+            .mockReturnValueOnce(Option.none())
+            // Poll 3: the flicker passes and the drag resumes.
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            // Poll 4+: the drag has genuinely ended.
+            .mockReturnValue(Option.none());
+        vi.mocked(WindowsWindow.IsLeftMouseButtonDown)
+            .mockReturnValueOnce(Option.some(true))
+            .mockReturnValue(Option.some(false));
+        // Released 20px right and 20px down (distance ≈ 28.3), same size ⇒ a move, not a resize.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(20, 1940, 1100, 20))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                yield* CommandExecutor;
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        // The mid-drag flicker must not have been treated as the release: the
+        // eventual real release should still be the one that resolves it, and
+        // it should resolve exactly once.
+        expect(Reconcile).toHaveBeenCalledTimes(1);
         expect(Float).not.toHaveBeenCalled();
     });
 

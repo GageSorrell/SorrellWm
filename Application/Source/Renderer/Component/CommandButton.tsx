@@ -17,9 +17,9 @@ import {
     tokens
 } from "@fluentui/react-components";
 import { Key, Keybind } from "@sorrell/keyboard-ui";
-import type { ShortcutDto } from "../Shared/Hotkey.js";
+import type { ShortcutDto } from "../../Shared/Hotkey.js";
 import type { Thunk } from "@sorrell/utility/Function";
-import { UseGuardedHover } from "./UseGuardedHover.js";
+import { UseGuardedHover } from "../Hook/UseGuardedHover.js";
 
 /** Presentation properties for a primary overlay command. */
 export interface CommandButtonProps

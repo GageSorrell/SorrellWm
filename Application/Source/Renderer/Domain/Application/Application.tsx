@@ -13,7 +13,7 @@ import { BackdropApplication } from "./BackdropApplication.js";
 import { FocusPreviewApplication } from "./FocusPreviewApplication.js";
 import { InsertTargetApplication } from "./InsertTargetApplication.js";
 import { OverlayApplication } from "./OverlayApplication.js";
-import { SettingsApplication } from "./Settings.js";
+import { SettingsApplication } from "../Settings/Settings.js";
 
 /**
  * Render the surface associated with the current logical browser window.

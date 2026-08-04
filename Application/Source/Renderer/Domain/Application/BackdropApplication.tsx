@@ -10,16 +10,17 @@
  */
 
 import { useEffect, useState } from "react";
-import type { BackdropPresentation } from "../Shared/Backdrop.js";
+import type { BackdropPresentation } from "../../../Shared/Backdrop.js";
 import { makeStyles } from "@fluentui/react-components";
 
 const TransparentPresentation: BackdropPresentation = Object.freeze({
     DurationMilliseconds: 0,
     Intensity: 0
-});
+} as const);
 
 const UseStyles = makeStyles({
-    Backdrop: {
+    Backdrop:
+    {
         height: "100vh",
         pointerEvents: "none",
         transitionProperty: "background-color",
@@ -47,6 +48,7 @@ const BackdropApplication = (): React.JSX.Element =>
             style={ {
                 backgroundColor: `rgba(0, 0, 0, ${ Presentation.Intensity / 100 })`,
                 transitionDuration: `${ Presentation.DurationMilliseconds }ms`
-            } } />
+            } }
+        />
     );
 };

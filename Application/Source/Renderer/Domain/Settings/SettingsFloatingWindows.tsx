@@ -10,7 +10,7 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../../Logging.js";
 import {
     ArrowMaximizeRegular,
     ArrowMoveRegular,
@@ -25,9 +25,9 @@ import {
     tokens
 } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
-import type { FloatingWindowSettingsDto } from "../Shared/AppSettings.js";
+import type { FloatingWindowSettingsDto } from "../../../Shared/AppSettings.js";
 import { MakeSettingControlId } from "./SettingControlId.js";
-import { SettingsSectionId } from "../Shared/SettingsPath.js";
+import { SettingsSectionId } from "../../../Shared/SettingsPath.js";
 
 const UseStyles = makeStyles({
     Loading:

@@ -21,13 +21,13 @@ import {
 } from "@fluentui/react-icons";
 import { Color as ColorPackage, Contrast } from "@sorrell/color";
 import { Option, pipe } from "effect";
-import { ColorScheme } from "../Shared/Theme.js";
+import { ColorScheme } from "../../Shared/Theme.js";
 import { GetShortcutParts } from "./CommandButton.js";
 import { Keybind } from "@sorrell/keyboard-ui";
-import type { ShortcutDto } from "../Shared/Hotkey.js";
+import type { ShortcutDto } from "../../Shared/Hotkey.js";
 import type { Thunk } from "@sorrell/utility/Function";
-import { UseColorScheme } from "./UseColorScheme.js";
-import { UseGuardedHover } from "./UseGuardedHover.js";
+import { UseColorScheme } from "../Hook/UseColorScheme.js";
+import { UseGuardedHover } from "../Hook/UseGuardedHover.js";
 
 /** One direction's presentation on the pad. */
 export interface DirectionalPadDirection

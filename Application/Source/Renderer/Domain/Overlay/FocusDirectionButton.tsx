@@ -12,11 +12,10 @@
 
 import { AppGenericRegular, type FluentIcon } from "@fluentui/react-icons";
 import { Button, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import { UseDominantColor, UseGuardedHover } from "../../Hook/index.js";
 import type { CSSProperties } from "react";
-import type { OverlayCommandDto } from "../Shared/OverlayCommand.js";
+import type { OverlayCommandDto } from "../../../Shared/OverlayCommand.js";
 import type { Thunk } from "@sorrell/utility/Function";
-import { UseDominantColor } from "./UseDominantColor.js";
-import { UseGuardedHover } from "./UseGuardedHover.js";
 
 /** {@inheritDoc FocusDirectionButton} */
 export interface FocusDirectionButtonProps

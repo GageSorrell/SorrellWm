@@ -9,10 +9,10 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../Logging.js";
 import { useEffect, useState } from "react";
-import { ColorScheme } from "../Shared/Theme.js";
-import type { RendererTheme } from "../Shared/Theme.js";
+import { ColorScheme } from "../../Shared/Theme.js";
+import type { RendererTheme } from "../../Shared/Theme.js";
 
 const GetInitialColorScheme = (): ColorScheme =>
     typeof window.matchMedia === "function"

@@ -24,10 +24,10 @@ import {
     mergeClasses,
     tokens
 } from "@fluentui/react-components";
-import { DragRegion, NoDragRegion } from "./AppRegion.js";
+import { DragRegion, NoDragRegion } from "../../Style/AppRegion.js";
 import { SearchSettingControls, type SettingSearchResult } from "./SettingsSearch.js";
 import type { SettingControlEntry } from "@sorrell/settings-ui";
-import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.js";
+import { SettingsTitlebarHeight } from "../../../Shared/SettingsWindow.js";
 import type { Thunk } from "@sorrell/utility/Function";
 
 /** The native window-control overlay's approximate reserved width, in pixels. */

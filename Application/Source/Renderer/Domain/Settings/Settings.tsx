@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
+import { DecodeSettingsPath, type SettingsPath, SettingsSectionId } from "../../../Shared/SettingsPath.js";
 import { MakeSettingControlId, ParseSettingControlId } from "./SettingControlId.js";
 import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-ui";
 import { Text, Title2, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";

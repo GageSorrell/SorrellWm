@@ -144,6 +144,10 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
         Napi::Function::New(Environment, GetMouseHoverTime)
     );
     Window.Set(
+        "IsLeftMouseButtonDown",
+        Napi::Function::New(Environment, IsLeftMouseButtonDown)
+    );
+    Window.Set(
         "GetRefreshRate",
         Napi::Function::New(Environment, GetRefreshRate)
     );

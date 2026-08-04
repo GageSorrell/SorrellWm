@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../../Logging.js";
 import {
     AddSquareRegular,
     AppGenericRegular,
@@ -43,9 +43,13 @@ import {
     mergeClasses,
     tokens
 } from "@fluentui/react-components";
-import { CommandButton, CompactCommandButton } from "./CommandButton.js";
-import { DirectionalPad, type DirectionalPadDirection } from "./DirectionalPad.js";
-import { EncodeSettingsPath, SettingsSectionId } from "../Shared/SettingsPath.js";
+import {
+    CommandButton,
+    CompactCommandButton,
+    DirectionalPad,
+    type DirectionalPadDirection
+} from "../../Component/index.js";
+import { EncodeSettingsPath, SettingsSectionId } from "../../../Shared/SettingsPath.js";
 import { Option, Predicate, Struct, pipe } from "effect";
 import {
     type OverlayCommandDto,
@@ -56,11 +60,11 @@ import {
     type OverlayScreenDto,
     OverlayScreenId,
     type OverlayStackWindowDto
-} from "../Shared/OverlayCommand.js";
-import { type SampledColor, ToCssColor, UseDominantColor } from "./UseDominantColor.js";
+} from "../../../Shared/OverlayCommand.js";
+import { type SampledColor, ToCssColor, UseDominantColor } from "../../Hook/index.js";
 import { useEffect, useState } from "react";
-import { DistanceToggle } from "./DistanceToggle.js";
-import { FocusDirectionButton } from "./FocusDirectionButton.js";
+import { DistanceToggle } from "../Overlay/DistanceToggle.js";
+import { FocusDirectionButton } from "../Overlay/FocusDirectionButton.js";
 
 interface PresentationContext
 {

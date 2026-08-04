@@ -17,9 +17,9 @@ import {
     makeStyles
 } from "@fluentui/react-components";
 import { useEffect, useMemo, useState } from "react";
-import { Application } from "./Application.js";
+import { Application } from "./Domain/Application/Application.js";
 import { ColorScheme } from "../Shared/Theme.js";
-import { CreateFluentTheme } from "./Theme.js";
+import { CreateFluentTheme } from "./Style/Theme.js";
 import { RendererErrorBoundary } from "./RendererErrorBoundary.js";
 import type { RendererTheme } from "../Shared/Theme.js";
 import { Scrollbars } from "@sorrell/windows-ui";

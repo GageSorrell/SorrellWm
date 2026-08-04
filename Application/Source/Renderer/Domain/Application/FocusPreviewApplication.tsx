@@ -13,10 +13,10 @@ import { type CSSProperties, useEffect, useId, useState } from "react";
 import type {
     FocusPreviewExcludedRegion,
     FocusPreviewPresentation
-} from "../Shared/FocusPreview.js";
+} from "../../../Shared/FocusPreview.js";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { AppGenericRegular } from "@fluentui/react-icons";
-import { UseDominantColor } from "./UseDominantColor.js";
+import { UseDominantColor } from "../../Hook/index.js";
 
 const UseStyles = makeStyles({
     Fill:

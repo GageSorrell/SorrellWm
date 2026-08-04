@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../../Logging.js";
 import {
     Dropdown,
     Option,
@@ -27,17 +27,17 @@ import type {
     GeneralSettingsPatch,
     ResizeRecoveryStrategy as ResizeRecoveryStrategyType,
     TiledResizeBehavior
-} from "../Shared/AppSettings.js";
+} from "../../../Shared/AppSettings.js";
 import {
     IsTiledResizeBehavior,
     ResizeRecoveryStrategy,
     TiledResizeBehaviors
-} from "../Shared/AppSettings.js";
+} from "../../../Shared/AppSettings.js";
 import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import { useEffect, useState } from "react";
 import { GridRegular } from "@fluentui/react-icons";
 import { MakeSettingControlId } from "./SettingControlId.js";
-import { SettingsSectionId } from "../Shared/SettingsPath.js";
+import { SettingsSectionId } from "../../../Shared/SettingsPath.js";
 import { String } from "effect";
 
 const TiledResizeBehaviorLabel: Readonly<Record<TiledResizeBehavior, string>> = {

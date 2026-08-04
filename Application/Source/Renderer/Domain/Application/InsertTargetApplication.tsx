@@ -9,8 +9,8 @@
  * @license   MIT
  */
 
-import "./InsertTargetApplication.css";
-import * as Logging from "./Logging.js";
+import "../../Style/InsertTargetApplication.css";
+import * as Logging from "../../Logging.js";
 import {
     Button,
     Checkbox,
@@ -19,7 +19,7 @@ import {
     tokens
 } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
-import type { InsertTargetPresentation } from "../Shared/InsertTarget.js";
+import type { InsertTargetPresentation } from "../../../Shared/InsertTarget.js";
 
 const InitialPresentation: InsertTargetPresentation = Object.freeze({
     CaptureNextWindow: false,

@@ -309,6 +309,20 @@ const IsCurrentProcessElevated = (): Option.Option<boolean> =>
         ? Attempt.AsOption(Binding.Window.IsCurrentProcessElevated())
         : Option.none();
 
+export/**
+       * Determine whether the left (primary) mouse button is currently held
+       * down, or return `None` when Windows cannot be queried.
+       *
+       * `GetMovingWindow`'s underlying GUI_INMOVESIZE flag is a cross-process
+       * snapshot that can read as momentarily cleared in the middle of an
+       * otherwise-continuous drag; this is a more reliable signal for telling
+       * a genuine drag release apart from a stale read.
+       */
+const IsLeftMouseButtonDown = (): Option.Option<boolean> =>
+    typeof Binding.Window.IsLeftMouseButtonDown === "function"
+        ? Attempt.AsOption(Binding.Window.IsLeftMouseButtonDown())
+        : Option.none();
+
 export/** Activate a top-level window and direct keyboard input to it. */
 const SetForegroundWindow = (
     Window: Handle.HWND

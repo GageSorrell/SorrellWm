@@ -127,6 +127,7 @@ export interface NativeBinding
         ) => Attempt.NativeAttempt<Box.BoxArg<number>>;
         readonly HasRoundedCorners: (Window: Handle.HWND) => Attempt.NativeAttempt<boolean>;
         readonly IsCurrentProcessElevated?: () => Attempt.NativeAttempt<boolean>;
+        readonly IsLeftMouseButtonDown?: () => Attempt.NativeAttempt<boolean>;
         readonly IsSnapLayoutsOnHoverEnabled?: () => Attempt.NativeAttempt<boolean>;
         readonly IsSnapWindowsEnabled?: () => Attempt.NativeAttempt<boolean>;
         readonly IsWindowElevated?: (Window: Handle.HWND) => Attempt.NativeAttempt<boolean>;

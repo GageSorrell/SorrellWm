@@ -21,6 +21,7 @@ Napi::Value GetWindowText_Node(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value GetWindowWorkArea(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value HasRoundedCorners(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsCurrentProcessElevated(const Napi::CallbackInfo& CallbackInfo);
+Napi::Value IsLeftMouseButtonDown(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsSnapLayoutsOnHoverEnabled(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsSnapWindowsEnabled(const Napi::CallbackInfo& CallbackInfo);
 Napi::Value IsWindowElevated(const Napi::CallbackInfo& CallbackInfo);

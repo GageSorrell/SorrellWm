@@ -10,12 +10,12 @@
  */
 
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
-import { GetShortcutParts } from "./CommandButton.js";
+import { GetShortcutParts } from "../../Component/CommandButton.js";
 import { Keybind } from "@sorrell/keyboard-ui";
-import type { OverlayDistanceToggleDto } from "../Shared/OverlayCommand.js";
+import type { OverlayDistanceToggleDto } from "../../../Shared/OverlayCommand.js";
 import { RulerRegular } from "@fluentui/react-icons";
 
-/** Presentation properties for the Move screen's distance toggle. */
+/** {@inheritDoc DistanceToggle} */
 export interface DistanceToggleProps extends OverlayDistanceToggleDto { }
 
 const UseStyles = makeStyles({
@@ -87,7 +87,9 @@ const DistanceToggle = (Props: DistanceToggleProps): React.JSX.Element =>
             aria-label="Move distance"
             className={ Styles.Root }>
             <RulerRegular className={ Styles.Icon } />
-            <span className={ Styles.Label }>Step Size</span>
+            <span className={ Styles.Label }>
+                Step Size
+            </span>
             <span className={ Styles.Values }>
                 <span className={ Styles.Pair }>
                     { /* The default step has no modifier of its own, but still reserves    *

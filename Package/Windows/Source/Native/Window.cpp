@@ -648,6 +648,20 @@ Napi::Value GetMovingWindow(const Napi::CallbackInfo& CallbackInfo)
     return Out.Succeed(Napi::BigInt::New(Environment, NumericHandle));
 }
 
+// `GetGUIThreadInfo`'s GUI_INMOVESIZE flag is a cross-process snapshot of the
+// foreground thread's state, and can be observed as momentarily cleared for a
+// poll or two in the middle of an otherwise-continuous drag. The left mouse
+// button's physical state doesn't share that flicker, so callers use this
+// alongside `GetMovingWindow` to tell a genuine drag release apart from a
+// stale read.
+Napi::Value IsLeftMouseButtonDown(const Napi::CallbackInfo& CallbackInfo)
+{
+    const Napi::Env Environment = CallbackInfo.Env();
+    Result Out(Environment);
+    const bool IsDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    return Out.Succeed(Napi::Boolean::New(Environment, IsDown));
+}
+
 Napi::Value GetApplicationName(const Napi::CallbackInfo& CallbackInfo)
 {
     const Napi::Env Environment = CallbackInfo.Env();

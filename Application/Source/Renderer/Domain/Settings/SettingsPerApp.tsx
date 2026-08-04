@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../../Logging.js";
 import {
     Accordion,
     AccordionHeader,
@@ -43,7 +43,7 @@ import {
     type PerAppSettingPatch,
     type PerAppSettingsApplicationDto,
     type PerAppSettingsEntryDto
-} from "../Shared/AppSettings.js";
+} from "../../../Shared/AppSettings.js";
 import { SettingOption, SettingToggle } from "@sorrell/settings-ui";
 
 const BehaviorLabel = Object.freeze({

@@ -1712,6 +1712,20 @@ const PollTiledWindowDetach = (
         return;
     }
 
+    // GetMovingWindow's underlying GUI_INMOVESIZE flag is a cross-process
+    // snapshot that can read as momentarily cleared for a poll or two in the
+    // middle of an otherwise-continuous drag. Treating that as the drag's end
+    // prematurely reconciles or floats the window mid-drag, and then leaves
+    // nothing to react to the eventual real release. As long as the left
+    // mouse button is still physically down, keep waiting instead.
+    if (
+        Option.isSome(RuntimeState.LastMovingWindow)
+        && Option.getOrElse(Window.IsLeftMouseButtonDown(), () => false)
+    )
+    {
+        return;
+    }
+
     const LastMovingWindow = RuntimeState.LastMovingWindow;
     RuntimeState.LastMovingWindow = Option.none();
 

@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../../Logging.js";
 import { Setting, SettingGroup } from "@sorrell/settings-ui";
 import {
     Slider,
@@ -21,8 +21,8 @@ import {
 import { useEffect, useState } from "react";
 import { EyeRegular } from "@fluentui/react-icons";
 import { MakeSettingControlId } from "./SettingControlId.js";
-import type { OverlaySettingsDto } from "../Shared/AppSettings.js";
-import { SettingsSectionId } from "../Shared/SettingsPath.js";
+import type { OverlaySettingsDto } from "../../../Shared/AppSettings.js";
+import { SettingsSectionId } from "../../../Shared/SettingsPath.js";
 
 const UseStyles = makeStyles({
     Control:

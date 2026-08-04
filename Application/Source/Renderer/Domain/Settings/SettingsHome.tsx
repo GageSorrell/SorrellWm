@@ -10,9 +10,9 @@
  * @license   MIT
  */
 
-import * as Logging from "./Logging.js";
+import * as Logging from "../../Logging.js";
 import { useEffect, useState } from "react";
-import type { UpdateStatusDto } from "../Shared/Update.js";
+import type { UpdateStatusDto } from "../../../Shared/Update.js";
 import { VersionMessageBar } from "@sorrell/settings-ui";
 
 export/** Render the current version, and an update banner when a newer version is available. */
