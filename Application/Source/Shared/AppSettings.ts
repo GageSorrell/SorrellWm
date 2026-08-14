@@ -60,6 +60,22 @@ export interface FloatingWindowSettingsDto
 /** A partial update to the floating-window settings; only the given fields are changed. */
 export type FloatingWindowSettingsPatch = Partial<FloatingWindowSettingsDto>;
 
+/**
+ * Settings for the local MCP (Model Context Protocol) server, which lets AI agents drive
+ * window management over a loopback-only HTTP connection.
+ */
+export interface McpServerSettingsDto
+{
+    /** Whether the MCP server's HTTP listener is running. Off by default. */
+    readonly Enabled: boolean;
+
+    /** The loopback port the MCP server listens on when enabled. */
+    readonly Port: number;
+}
+
+/** A partial update to the MCP server settings; only the given fields are changed. */
+export type McpServerSettingsPatch = Partial<McpServerSettingsDto>;
+
 /** General window-manager behavior exposed to the settings renderer. */
 export interface GeneralSettingsDto
 {
@@ -342,6 +358,34 @@ const IsFloatingWindowSettingsPatch = (Value: unknown): Value is FloatingWindowS
             Candidate.MoveStepSecondarySpeedFactor === undefined
             || IsFiniteNumber(Candidate.MoveStepSecondarySpeedFactor)
         );
+};
+
+const IsPort = (Value: unknown): Value is number =>
+    Number.isInteger(Value) && (Value as number) >= 1 && (Value as number) <= 65_535;
+
+export/** Determine whether an IPC value is a complete MCP-server settings snapshot. */
+const IsMcpServerSettingsDto = (Value: unknown): Value is McpServerSettingsDto =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<McpServerSettingsDto>;
+    return typeof Candidate.Enabled === "boolean" && IsPort(Candidate.Port);
+};
+
+export/** Determine whether an IPC value is a valid MCP-server settings patch. */
+const IsMcpServerSettingsPatch = (Value: unknown): Value is McpServerSettingsPatch =>
+{
+    if (typeof Value !== "object" || Value === null)
+    {
+        return false;
+    }
+
+    const Candidate = Value as Partial<McpServerSettingsDto>;
+    return (Candidate.Enabled === undefined || typeof Candidate.Enabled === "boolean")
+        && (Candidate.Port === undefined || IsPort(Candidate.Port));
 };
 
 export/** Determine whether an IPC value is a complete overlay-settings snapshot. */

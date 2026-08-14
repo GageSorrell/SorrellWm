@@ -1,0 +1,17 @@
+{
+    "extends": "@sorrell/tsconfig",
+    "compilerOptions":
+    {
+        "allowJs": true,
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "lib": [ "DOM", "ESNext" ],
+        "module": "preserve",
+        "moduleDetection": "force",
+        "moduleResolution": "bundler",
+        "customConditions": [ "react-native" ],
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "target": "ESNext"
+    }
+}

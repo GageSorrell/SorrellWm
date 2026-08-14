@@ -7,9 +7,6 @@
         "*": true,
         "json": false
     },
-    "eslint.options": {
-        "overrideConfigFile": "./Configuration/eslint.config.js"
-    },
     "eslint.enable": true,
     "eslint.nodePath": "node_modules",
   	"eslint.workingDirectories":

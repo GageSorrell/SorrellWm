@@ -44,6 +44,7 @@
         "Package/DotEnv",
         "Package/EsBuildConfigSorrell",
         "Package/EsLintConfigSorrell",
+        "Package/EsLintPluginSorrell",
         "Package/Log",
         "Package/LogClient",
         "Package/Color",
@@ -65,10 +66,13 @@
         "Package/Windows",
         "Package/WmApi",
         "Package/WindowsUi",
+        "Script/InitPackage",
         "Script/Setup",
         "Script/Site",
         "Script/WmScript",
         "Package/SorrellWmCodeExtension",
+        "Package/Cli",
+        "Package/CliUtility",
         "Website/*"
     ],
     "allowScripts":

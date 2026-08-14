@@ -1,10 +1,9 @@
 {
     "name": "@sorrell/eslint-config",
-    "version": "1.0.1",
+    "version": "2.3.0",
     "description": "The ESLint config used by SorrellWm *et al.*",
     "main": "./index.js",
-    "keywords":
-    [
+    "keywords": [
         "eslint",
         "config",
         "sorrell",
@@ -12,44 +11,37 @@
         "linter",
         "configuration"
     ],
-    "author":
-    {
+    "author": {
         "email": "gage@sorrell.sh",
         "name": "Gage Sorrell",
         "url": "https://sorrell.sh"
     },
     "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EsLintConfigSorrell/ReadMe.md",
-    "bugs":
-    {
+    "bugs": {
         "url": "https://github.com/GageSorrell/SorrellWm/issues"
     },
-    "repository":
-    {
+    "repository": {
         "directory": "Package/EsLintConfigSorrell",
         "type": "git",
         "url": "git+https://github.com/GageSorrell/SorrellWm.git"
     },
     "license": "MIT",
     "type": "module",
-    "peerDependencies":
-    {
+    "peerDependencies": {
         "eslint": "^9.39.4",
         "typescript": "^6.0.0"
     },
-    "peerDependenciesMeta":
-    {
-        "eslint":
-        {
+    "peerDependenciesMeta": {
+        "eslint": {
             "optional": false
         },
-        "typescript":
-        {
+        "typescript": {
             "optional": false
         }
     },
-    "dependencies":
-    {
+    "dependencies": {
         "@eslint/js": "^9.39.4",
+        "@sorrell/eslint-plugin": "1.1.0",
         "@stylistic/eslint-plugin": "^5.10.0",
         "eslint-plugin-jsdoc": "^62.8.1",
         "eslint-plugin-react": "^7.37.5",

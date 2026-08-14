@@ -1708,6 +1708,15 @@ const PollTiledWindowDetach = (
 
     if (Option.isSome(MovingTiledWindow))
     {
+        if (Option.isNone(RuntimeState.LastMovingWindow))
+        {
+            yield* Logging.LogDebug(
+                "Tiling.Drag",
+                "Detected a tiled window entering a native move/size loop.",
+                { Window: MovingTiledWindow.value }
+            );
+        }
+
         RuntimeState.LastMovingWindow = MovingTiledWindow;
         return;
     }
@@ -1734,15 +1743,41 @@ const PollTiledWindowDetach = (
         return;
     }
 
+    yield* Logging.LogDebug(
+        "Tiling.Drag",
+        "Resolving a completed tiled-window drag.",
+        { Window: LastMovingWindow.value }
+    );
+
     const Gap = yield* TilingManager.Gap;
     const Placement = Tiling.Tree.Layout(Snapshot, Gap).find(
         (Candidate: Tiling.Tree.Placement): boolean =>
             Candidate.Window === LastMovingWindow.value
     );
-    const ReleasedBounds = Window.GetWindowRect(LastMovingWindow.value);
+    // `Placement.Bounds` is a visible-bounds value (it's what Tiling.Manager's Apply
+    // expands outward for DWM's invisible resize-border padding before actually
+    // setting a window's rect; see ExpandWindowBoundsForFrame). Comparing it against
+    // the *raw* GetWindowRect below would make WasResized true for essentially every
+    // real window, every time, since the raw rect is always padded a few pixels
+    // larger than what's visible. GetWindowFrameRect strips that padding back off so
+    // both sides of the comparison mean the same thing; fall back to the raw rect
+    // only when the frame-aware query isn't available.
+    const ReleasedBounds = pipe(
+        Window.GetWindowFrameRect(LastMovingWindow.value),
+        Option.orElse(() => Window.GetWindowRect(LastMovingWindow.value))
+    );
 
     if (Placement === undefined || Option.isNone(ReleasedBounds))
     {
+        yield* Logging.LogDebug(
+            "Tiling.Drag",
+            "Could not resolve the drag: no Placement or ReleasedBounds.",
+            {
+                HasPlacement: Placement !== undefined,
+                HasReleasedBounds: Option.isSome(ReleasedBounds),
+                Window: LastMovingWindow.value
+            }
+        );
         return;
     }
 
@@ -1753,6 +1788,15 @@ const PollTiledWindowDetach = (
 
     if (WasResized)
     {
+        yield* Logging.LogDebug(
+            "Tiling.Drag",
+            "Treated the drag as a resize; ignoring it.",
+            {
+                PlacementBounds: Placement.Bounds,
+                ReleasedBounds: ReleasedBounds.value,
+                Window: LastMovingWindow.value
+            }
+        );
         return;
     }
 

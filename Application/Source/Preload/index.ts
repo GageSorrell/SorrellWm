@@ -22,11 +22,15 @@ import {
     IsFloatingWindowSettingsDto,
     IsGeneralSettingsDto,
     IsGeneralSettingsPatch,
+    IsMcpServerSettingsDto,
+    IsMcpServerSettingsPatch,
     IsOverlaySettingsDto,
     IsPerAppSettingPatch,
     IsPerAppSettingsApplicationsDto,
     IsPerAppSettingsEntriesDto,
     IsPerAppSettingsEntryDto,
+    type McpServerSettingsDto,
+    type McpServerSettingsPatch,
     type OverlaySettingsDto,
     type OverlaySettingsPatch,
     type PerAppSettingPatch,
@@ -373,6 +377,37 @@ const SetFloatingWindowSettings = async (
     return Response;
 };
 
+const GetMcpServerSettings = async (): Promise<McpServerSettingsDto> =>
+{
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.McpServerSettingsGet);
+
+    if (!IsMcpServerSettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid MCP-server settings.");
+    }
+
+    return Response;
+};
+
+const SetMcpServerSettings = async (
+    Patch: McpServerSettingsPatch
+): Promise<McpServerSettingsDto> =>
+{
+    if (!IsMcpServerSettingsPatch(Patch))
+    {
+        throw new TypeError("The requested MCP-server settings patch is invalid.");
+    }
+
+    const Response: unknown = await ipcRenderer.invoke(AppApiChannel.McpServerSettingsSet, Patch);
+
+    if (!IsMcpServerSettingsDto(Response))
+    {
+        throw new TypeError("The main process returned invalid MCP-server settings.");
+    }
+
+    return Response;
+};
+
 const GetOverlaySettings = async (): Promise<OverlaySettingsDto> =>
 {
     const Response: unknown = await ipcRenderer.invoke(AppApiChannel.OverlaySettingsGet);
@@ -521,6 +556,10 @@ const applicationApi: AppApi = Object.freeze({
     }),
     log: Object.freeze({
         write: WriteRendererLog
+    }),
+    mcpServerSettings: Object.freeze({
+        get: GetMcpServerSettings,
+        set: SetMcpServerSettings
     }),
     overlay: Object.freeze({
         back: BackOverlayScreen,

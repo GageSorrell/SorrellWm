@@ -235,6 +235,8 @@ describe("AppSettings schema", () =>
                     Modifiers: { Alt: false, Control: false, Shift: false, Super: false }
                 }
             ],
+            McpServerEnabled: false,
+            McpServerPort: 7_920,
             MoveFineSpeed: 16,
             MoveStepPrimary: 20,
             MoveStepPrimarySpeedFactor: 4,

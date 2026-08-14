@@ -14,6 +14,7 @@ import "@testing-library/jest-dom/vitest";
 import type {
     FloatingWindowSettingsPatch,
     GeneralSettingsPatch,
+    McpServerSettingsPatch,
     OverlaySettingsPatch,
     PerAppSettingPatch
 } from "../../Source/Shared/AppSettings.ts";
@@ -108,6 +109,17 @@ Object.defineProperty(window, "sorrell", {
         log:
         {
             write: vi.fn()
+        },
+        mcpServerSettings:
+        {
+            get: vi.fn(() => Promise.resolve({
+                Enabled: false,
+                Port: 7_920
+            })),
+            set: vi.fn((Settings: McpServerSettingsPatch) => Promise.resolve({
+                Enabled: Settings.Enabled ?? false,
+                Port: Settings.Port ?? 7_920
+            }))
         },
         overlay:
         {

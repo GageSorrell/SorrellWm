@@ -24,7 +24,8 @@ const TypeId = "~sorrell/color/LinearColor" as const;
 export type TypeId = typeof TypeId;
 
 /**
- * An RGB color whose channels are decimals in the inclusive range `[0, 1]`.
+ * An RGB color whose channels, including alpha, are decimals in the inclusive range
+ * `[0, 1]`.
  *
  * @category Color
  * @since 1.0.0
@@ -35,6 +36,7 @@ export interface LinearColor
     readonly R: BigDecimal.BigDecimal;
     readonly G: BigDecimal.BigDecimal;
     readonly B: BigDecimal.BigDecimal;
+    readonly A: BigDecimal.BigDecimal;
 }
 
 /**
@@ -89,7 +91,8 @@ const ToChannel = (Self: ChannelArgument): BigDecimal.BigDecimal =>
 };
 
 export/**
-       * Construct a normalized RGB color, clamping each channel.
+       * Construct a normalized RGB color, clamping each channel. `Alpha` defaults to
+       * `1` (fully opaque) when not specified.
        *
        * @category Constructor
        * @since 1.0.0
@@ -97,10 +100,12 @@ export/**
 const LinearColor = (
     Red: ChannelArgument,
     Green: ChannelArgument,
-    Blue: ChannelArgument
+    Blue: ChannelArgument,
+    Alpha: ChannelArgument = One
 ): LinearColor => ({
     [ TypeId ]: TypeId,
 
+    A: ToChannel(Alpha),
     B: ToChannel(Blue),
     G: ToChannel(Green),
     R: ToChannel(Red)
@@ -116,7 +121,7 @@ const SetRed: {
     (Red: ChannelArgument): (Self: LinearColor) => LinearColor;
     (Self: LinearColor, Red: ChannelArgument): LinearColor;
 } = Function.dual(2, (Self: LinearColor, Red: ChannelArgument): LinearColor =>
-    LinearColor(Red, Self.G, Self.B)
+    LinearColor(Red, Self.G, Self.B, Self.A)
 );
 
 export/**
@@ -129,7 +134,7 @@ const SetGreen: {
     (Green: ChannelArgument): (Self: LinearColor) => LinearColor;
     (Self: LinearColor, Green: ChannelArgument): LinearColor;
 } = Function.dual(2, (Self: LinearColor, Green: ChannelArgument): LinearColor =>
-    LinearColor(Self.R, Green, Self.B)
+    LinearColor(Self.R, Green, Self.B, Self.A)
 );
 
 export/**
@@ -142,7 +147,20 @@ const SetBlue: {
     (Blue: ChannelArgument): (Self: LinearColor) => LinearColor;
     (Self: LinearColor, Blue: ChannelArgument): LinearColor;
 } = Function.dual(2, (Self: LinearColor, Blue: ChannelArgument): LinearColor =>
-    LinearColor(Self.R, Self.G, Blue)
+    LinearColor(Self.R, Self.G, Blue, Self.A)
+);
+
+export/**
+       * Set the alpha channel.
+       *
+       * @category Mutator
+       * @since 2.0.0
+       */
+const SetAlpha: {
+    (Alpha: ChannelArgument): (Self: LinearColor) => LinearColor;
+    (Self: LinearColor, Alpha: ChannelArgument): LinearColor;
+} = Function.dual(2, (Self: LinearColor, Alpha: ChannelArgument): LinearColor =>
+    LinearColor(Self.R, Self.G, Self.B, Alpha)
 );
 
 const ToRgb = (Self: LinearColor): [ number, number, number ] => [
@@ -152,11 +170,12 @@ const ToRgb = (Self: LinearColor): [ number, number, number ] => [
 ];
 
 const FromRgb = (
-    Value: readonly [ number, number, number ]
-): LinearColor => LinearColor(Value[0] / 255, Value[1] / 255, Value[2] / 255);
+    Value: readonly [ number, number, number ],
+    Alpha: ChannelArgument = One
+): LinearColor => LinearColor(Value[0] / 255, Value[1] / 255, Value[2] / 255, Alpha);
 
 export/**
-       * Make a color lighter by adding to its HSL lightness.
+       * Make a color lighter by adding to its HSL lightness. Alpha is unaffected.
        *
        * @category Mutator
        * @since 1.0.0
@@ -171,11 +190,12 @@ const Lighten: {
         Hue,
         Saturation,
         Math.min(100, Math.max(0, Lightness + Amount * 100))
-    ]));
+    ]), Self.A);
 });
 
 export/**
-       * Make a color darker by subtracting from its HSL lightness.
+       * Make a color darker by subtracting from its HSL lightness. Alpha is
+       * unaffected.
        *
        * @category Mutator
        * @since 1.0.0
@@ -353,7 +373,8 @@ export namespace From
     };
 
     export/**
-           * Construct a color from a `readonly` tuple of channels.
+           * Construct a color from a `readonly` tuple of channels. `Alpha` defaults
+           * to `1` (fully opaque) when the tuple has no fourth element.
            *
            * @category Constructor
            * @since 1.0.0
@@ -361,11 +382,13 @@ export namespace From
     const Tuple = (Self: readonly [
         Red: ChannelArgument,
         Green: ChannelArgument,
-        Blue: ChannelArgument
-    ]): LinearColor => LinearColor(Self[0], Self[1], Self[2]);
+        Blue: ChannelArgument,
+        Alpha?: ChannelArgument
+    ]): LinearColor => LinearColor(Self[0], Self[1], Self[2], Self[3]);
 
     export/**
-           * Construct a color from a `Record` of channels.
+           * Construct a color from a `Record` of channels. `A` defaults to `1`
+           * (fully opaque) when not specified.
            *
            * @category Constructor
            * @since 1.0.0
@@ -374,13 +397,14 @@ export namespace From
         readonly R: ChannelArgument;
         readonly G: ChannelArgument;
         readonly B: ChannelArgument;
-    }): LinearColor => LinearColor(Self.R, Self.G, Self.B);
+        readonly A?: ChannelArgument;
+    }): LinearColor => LinearColor(Self.R, Self.G, Self.B, Self.A);
 }
 
 export namespace Format
 {
     export/**
-           * Format as lowercase six-digit hexadecimal RGB.
+           * Format as lowercase six-digit hexadecimal RGB. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -389,7 +413,7 @@ export namespace Format
         `#${ Convert.rgb.hex.raw(ToRgb(Self)).toLowerCase() }`;
 
     export/**
-           * Format as a CSS `rgb()` `string`.
+           * Format as a CSS `rgb()` `string`. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -401,7 +425,7 @@ export namespace Format
     };
 
     export/**
-           * Format as a CSS `hsl()` `string`.
+           * Format as a CSS `hsl()` `string`. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -413,7 +437,7 @@ export namespace Format
     };
 
     export/**
-           * Format as the nearest CSS named color.
+           * Format as the nearest CSS named color. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -422,7 +446,7 @@ export namespace Format
         Convert.rgb.keyword.raw(ToRgb(Self).map(Math.round) as [ number, number, number ]);
 
     export/**
-           * Format as a CSS `hsv()` `string`.
+           * Format as a CSS `hsv()` `string`. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -434,7 +458,7 @@ export namespace Format
     };
 
     export/**
-           * Format as a CSS `hwb()` `string`.
+           * Format as a CSS `hwb()` `string`. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -446,7 +470,7 @@ export namespace Format
     };
 
     export/**
-           * Format as an `ansi16()` `string`.
+           * Format as an `ansi16()` `string`. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -455,7 +479,7 @@ export namespace Format
         `ansi16(${ Convert.rgb.ansi16.raw(ToRgb(Self)) })`;
 
     export/**
-           * Format as an `ansi256()` `string`.
+           * Format as an `ansi256()` `string`. Alpha is not represented.
            *
            * @category Constructor
            * @since 1.0.0
@@ -464,7 +488,7 @@ export namespace Format
         `ansi256(${ Convert.rgb.ansi256.raw(ToRgb(Self)) })`;
 
     export/**
-           * Format as a `readonly` tuple of channels.
+           * Format as a `readonly` tuple of channels, including alpha.
            *
            * @category Constructor
            * @since 1.0.0
@@ -472,11 +496,12 @@ export namespace Format
     const Tuple = (Self: LinearColor): readonly [
         Red: BigDecimal.BigDecimal,
         Green: BigDecimal.BigDecimal,
-        Blue: BigDecimal.BigDecimal
-    ] => [ Self.R, Self.G, Self.B ];
+        Blue: BigDecimal.BigDecimal,
+        Alpha: BigDecimal.BigDecimal
+    ] => [ Self.R, Self.G, Self.B, Self.A ];
 
     export/**
-           * Format as a `Record` of channels.
+           * Format as a `Record` of channels, including alpha.
            *
            * @category Constructor
            * @since 1.0.0
@@ -485,5 +510,6 @@ export namespace Format
         readonly R: BigDecimal.BigDecimal;
         readonly G: BigDecimal.BigDecimal;
         readonly B: BigDecimal.BigDecimal;
-    } => ({ B: Self.B, G: Self.G, R: Self.R });
+        readonly A: BigDecimal.BigDecimal;
+    } => ({ A: Self.A, B: Self.B, G: Self.G, R: Self.R });
 }

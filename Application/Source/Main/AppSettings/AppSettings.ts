@@ -87,6 +87,18 @@ const SettingsSchema = Schema.Struct({
         Schema.Array(Hotkey.KeybindSettingSchema),
         Schema.withDecodingDefaultKey(Effect.succeed(Hotkey.DefaultKeybindSettings))
     ),
+    McpServerEnabled: pipe(
+        Schema.Boolean,
+        Schema.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+    McpServerPort: pipe(
+        Schema.Int,
+        Schema.check(
+            Schema.isGreaterThanOrEqualTo(1),
+            Schema.isLessThanOrEqualTo(65_535)
+        ),
+        Schema.withDecodingDefaultKey(Effect.succeed(7_920))
+    ),
     MoveFineSpeed: pipe(
         Schema.Number,
         Schema.check(Schema.isGreaterThan(0)),
@@ -196,6 +208,8 @@ const AppSettings = _AppSettings.Make(
             FocusPreviewOpacity: 75,
             IgnoreActivationKeybindInFullscreen: true,
             Keybinds: Array.from(Hotkey.DefaultKeybindSettings),
+            McpServerEnabled: false,
+            McpServerPort: 7_920,
             MoveFineSpeed: 16,
             MoveStepPrimary: 20,
             MoveStepPrimarySpeedFactor: 4,

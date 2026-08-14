@@ -31,3 +31,11 @@ export interface AsyncThunk<Args extends ReadonlyArray<unknown> = readonly [ ]>
 {
     (...Args: Args): Promise<void>;
 }
+
+export/**
+       * Run a parameter-less function, discarding the return value.
+       *
+       * @category Function
+       * @since 1.2.0
+       */
+const AsVoid = (In: () => any): Thunk => () => void In();

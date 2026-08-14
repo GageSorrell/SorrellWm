@@ -1,11 +1,16 @@
 {
   "name": "@sorrell/utility",
-  "version": "1.1.0",
+  "private": false,
+  "version": "1.4.2",
   "description": "General-purpose utilities for TypeScript and effect.",
   "exports": {
     ".": {
       "import": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
+    },
+    "./Async": {
+      "import": "./Distribution/Async.js",
+      "types": "./Distribution/Async.d.ts"
     },
     "./Data": {
       "import": "./Distribution/Data.js",
@@ -14,6 +19,10 @@
     "./Function": {
       "import": "./Distribution/Function.js",
       "types": "./Distribution/Function.d.ts"
+    },
+    "./Predicate": {
+      "import": "./Distribution/Predicate.js",
+      "types": "./Distribution/Predicate.d.ts"
     },
     "./package.json": "./package.json"
   },
@@ -29,6 +38,6 @@
     "vitest": "4.1.10"
   },
   "dependencies": {
-    "effect": "4.0.0-beta.102"
+    "effect": "4.0.0-rc.109"
   }
 }

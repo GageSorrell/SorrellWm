@@ -64,6 +64,12 @@ export interface NativeBinding
             SubscriptionId: Subscription.Id
         ) => Attempt.NativeAttempt<void>;
     };
+    readonly Mouse?:
+    {
+        readonly SetCursorPosition?: (X: number, Y: number) => Attempt.NativeAttempt<void>;
+        readonly MouseButtonDown?: (VirtualKey: VK.VK) => Attempt.NativeAttempt<void>;
+        readonly MouseButtonUp?: (VirtualKey: VK.VK) => Attempt.NativeAttempt<void>;
+    };
     readonly Theme:
     {
         readonly GetAccentColor: () => Attempt.NativeAttempt<string>;

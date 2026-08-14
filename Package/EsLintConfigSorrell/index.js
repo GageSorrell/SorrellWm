@@ -10,10 +10,11 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 
 import JavaScript from "@eslint/js";
-import Stylistic from "@stylistic/eslint-plugin";
 import Jsdoc from "eslint-plugin-jsdoc";
 import React from "eslint-plugin-react";
 import ReactHooks from "eslint-plugin-react-hooks";
+import Sorrell from "@sorrell/eslint-plugin";
+import Stylistic from "@stylistic/eslint-plugin";
 import Tsdoc from "eslint-plugin-tsdoc";
 import TypeScriptEslint from "typescript-eslint";
 
@@ -50,6 +51,7 @@ export default defineConfig(
         },
         plugins:
         {
+            "@sorrell": Sorrell,
             "@stylistic": Stylistic,
             jsdoc: Jsdoc,
             react: React,
@@ -187,6 +189,9 @@ export default defineConfig(
             "jsdoc/ts-prefer-function-type": "error",
             "jsdoc/type-formatting": "off",
             "jsdoc/valid-types": "error",
+
+            "@sorrell/jsdoc-file-name": "error",
+            "@sorrell/jsdoc-module-name-package": "error",
 
             "@stylistic/array-bracket-spacing":
             [
@@ -332,7 +337,7 @@ export default defineConfig(
                     custom:
                     {
                         match: true,
-                        regex: "^(?:[AEKR]|[A-Z][a-z].+)$"
+                        regex: "^(?:[AEKRS]|[A-Z][a-z].+)$"
                     },
                     format:
                     [
@@ -370,6 +375,25 @@ export default defineConfig(
                     ],
                     leadingUnderscore: "allow",
                     selector: "variableLike"
+                },
+                {
+                    // React-hook-style names: allow functions and `const`/`let`
+                    // arrow functions to begin with `use`.  The filter keeps
+                    // every other name governed by the PascalCase rules above.
+                    filter:
+                    {
+                        match: true,
+                        regex: "^use"
+                    },
+                    format:
+                    [
+                        "camelCase"
+                    ],
+                    selector:
+                    [
+                        "function",
+                        "variable"
+                    ]
                 }
             ],
             "@typescript-eslint/no-empty-object-type": "off",

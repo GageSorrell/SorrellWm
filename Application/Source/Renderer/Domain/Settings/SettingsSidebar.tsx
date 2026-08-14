@@ -194,7 +194,20 @@ interface NavigationItemsProps
 
 const NavIcon = (Icon: FluentIcon): React.JSX.Element =>
 {
-    return <Icon fontSize="1.2rem" />;
+    // Fluent UI's NavItem only treats the click as a selection when
+    // `event.target` is an HTMLElement (see `useNavItem_unstable`'s
+    // `isHTMLElement(event.target)` guard). The icon renders as an inline
+    // SVG, whose elements are SVGElements rather than HTMLElements, so a
+    // click landing directly on the icon's SVG/path silently fails that
+    // guard and the item never gets selected. Disabling pointer events on
+    // the icon lets the click pass through to its enclosing (HTMLElement)
+    // wrapper instead, so clicking the icon selects the nav item like
+    // clicking anywhere else on the button does.
+    return (
+        <Icon
+            fontSize="1.2rem"
+            style={ { pointerEvents: "none" } } />
+    );
 };
 
 const NavigationItems = ({ SelectedSection }: NavigationItemsProps): React.JSX.Element =>
@@ -293,36 +306,51 @@ const NavigationItems = ({ SelectedSection }: NavigationItemsProps): React.JSX.E
     );
 };
 
-const NavigationFooter = (): React.JSX.Element =>
+const FooterLeaves: ReadonlyArray<NavLeafDefinition> =
+    [
+        {
+            Icon: GiftOpenRegular,
+            Label: "Welcome to SorrellWm",
+            Section: SettingsSectionId.Welcome
+        },
+        {
+            Icon: MegaphoneRegular,
+            Label: "What's new",
+            Section: SettingsSectionId.WhatsNew
+        },
+        {
+            Icon: ChatRegular,
+            Label: "Give feedback",
+            Section: SettingsSectionId.GiveFeedback
+        }
+    ] as const;
+
+const NavigationFooter = ({ SelectedSection }: NavigationItemsProps): React.JSX.Element =>
 {
     const Styles = UseStyles();
 
     const NavDrawerStyle = mergeClasses(Styles.Base, Styles.NavDrawerBase, Styles.NavDrawerFooterBase);
-
-    // @TODO Make these NavItems selectable, then use the nav item styles
-    // based on the current selection, like with the other sidebar nav items.
-    // const NavItemStyleBase = mergeClasses(Styles.Base, Styles.NavItem);
-    // const NavItemStyleSelected = mergeClasses(NavItemStyleBase, Styles.NavItemSelected);
+    const NavItemStyleBase = mergeClasses(Styles.Base, Styles.NavItem);
+    const NavItemStyleSelected = mergeClasses(NavItemStyleBase, Styles.NavItemSelected);
 
     return (
         <NavDrawerFooter className={ NavDrawerStyle }>
-            <NavItem
-                icon={ NavIcon(GiftOpenRegular) }
-                value="__Welcome">
-                Welcome to SorrellWm
-            </NavItem>
-            <NavItem
-                className={ Styles.Base }
-                icon={ NavIcon(MegaphoneRegular) }
-                value="__WhatsNew">
-                What&apos;s new
-            </NavItem>
-            <NavItem
-                className={ Styles.Base }
-                icon={ NavIcon(ChatRegular) }
-                value="__GiveFeedback">
-                Give feedback
-            </NavItem>
+            { FooterLeaves.map(({ Icon, Label, Section }: NavLeafDefinition) =>
+            {
+                const NavItemStyle = Section === SelectedSection
+                    ? NavItemStyleSelected
+                    : NavItemStyleBase;
+
+                return (
+                    <NavItem
+                        className={ NavItemStyle }
+                        icon={ NavIcon(Icon) }
+                        key={ Section }
+                        value={ Section }>
+                        { Label }
+                    </NavItem>
+                );
+            }) }
         </NavDrawerFooter>
     );
 };
@@ -377,7 +405,7 @@ const SettingsSidebar = (
                     { NavigationBody }
                 </NavDrawerBody>
 
-                <NavigationFooter />
+                <NavigationFooter SelectedSection={ SelectedSection } />
             </NavDrawer>
         );
     }
@@ -394,7 +422,7 @@ const SettingsSidebar = (
                 { NavigationBody }
             </NavDrawerBody>
 
-            <NavigationFooter />
+            <NavigationFooter SelectedSection={ SelectedSection } />
         </NavDrawer>
     );
 };

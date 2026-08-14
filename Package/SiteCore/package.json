@@ -56,7 +56,7 @@
     "dependencies": {
         "@shikijs/rehype": "4.4.1",
         "@shikijs/twoslash": "4.4.1",
-        "effect": "4.0.0-beta.102",
+        "effect": "4.0.0-rc.109",
         "shiki": "4.4.1"
     },
     "peerDependencies": {

@@ -1,0 +1,39 @@
+{
+    "name": "@sorrell/wm-init-package",
+    "version": "0.1.0",
+    "description": "Interactive scaffolding for new SorrellWm monorepo packages.",
+    "private": true,
+    "type": "module",
+    "author": {
+        "name": "Gage Sorrell",
+        "email": "gage@sorrell.sh",
+        "url": "https://sorrell.sh"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git",
+        "directory": "Script/InitPackage"
+    },
+    "engines": {
+        "node": ">=26.6.0",
+        "npm": ">=12.0.2"
+    },
+    "scripts": {
+        "lint": "eslint --config ./eslint.config.js \"Source/**/*.ts\"",
+        "start": "tsx Source/index.ts",
+        "typecheck": "tsc --noEmit -p tsconfig.json"
+    },
+    "dependencies": {
+        "@effect/platform-node": "4.0.0-rc.109",
+        "effect": "4.0.0-rc.109",
+        "listr2": "11.0.0",
+        "simple-git": "3.36.0"
+    },
+    "devDependencies": {
+        "@sorrell/tsconfig": "1.0.0",
+        "@types/node": "26.1.1",
+        "tsx": "4.23.1",
+        "typescript": "6.0.2"
+    }
+}

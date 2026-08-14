@@ -1,9 +1,9 @@
 /**
  * An immutable, 8-bit RGB color.
  *
- * @module @sorrell/color/Color
+ * @module @sorrell/color/RgbColor
  *
- * @file      Color.ts
+ * @file      RgbColor.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
@@ -19,7 +19,7 @@ export/**
        * @category Constant
        * @since 1.0.0
        */
-const TypeId = "~sorrell/color/Color" as const;
+const TypeId = "~sorrell/color/RgbColor" as const;
 
 /** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
@@ -30,7 +30,7 @@ export type TypeId = typeof TypeId;
  * @category Color
  * @since 1.0.0
  */
-export interface Color
+export interface RgbColor
 {
     readonly [ TypeId ]: TypeId;
 
@@ -51,12 +51,12 @@ export type ChannelArgument =
     | BigDecimal.BigDecimal;
 
 export/**
-       * Whether a value is a `Color`.
+       * Whether a value is an `RgbColor`.
        *
        * @category Guard
        * @since 1.0.0
        */
-const IsColor: { (Value: unknown): Value is Color; } = Predicate.hasProperty(TypeId) as any;
+const IsRgbColor: { (Value: unknown): Value is RgbColor; } = Predicate.hasProperty(TypeId) as any;
 
 const ToChannel = (Self: ChannelArgument): Int.Int =>
 {
@@ -92,14 +92,14 @@ const ToChannel = (Self: ChannelArgument): Int.Int =>
 };
 
 export/**
-       * Patch some channels of a given `Color`.
+       * Patch some channels of a given `RgbColor`.
        *
        * @category Mutator
        * @since 1.0.0
        */
 const Assign: {
-    (That: Partial<Color>): (Self: Color) => Color;
-    (Self: Color, That: Partial<Color>): Color;
+    (That: Partial<RgbColor>): (Self: RgbColor) => RgbColor;
+    (Self: RgbColor, That: Partial<RgbColor>): RgbColor;
 } = Function.dual(2, Struct.assign);
 
 export/** {@inheritDoc Assign} */
@@ -111,11 +111,11 @@ export/**
        * @category Constructor
        * @since 1.0.0
        */
-const Color = (
+const RgbColor = (
     Red: ChannelArgument,
     Green: ChannelArgument,
     Blue: ChannelArgument
-): Color => ({
+): RgbColor => ({
     [ TypeId ]: TypeId,
 
     B: ToChannel(Blue),
@@ -130,10 +130,10 @@ export/**
        * @since 1.0.0
        */
 const SetRed: {
-    (Red: ChannelArgument): (Self: Color) => Color;
-    (Self: Color, Red: ChannelArgument): Color;
-} = Function.dual(2, (Self: Color, Red: ChannelArgument): Color =>
-    Color(Red, Self.G, Self.B)
+    (Red: ChannelArgument): (Self: RgbColor) => RgbColor;
+    (Self: RgbColor, Red: ChannelArgument): RgbColor;
+} = Function.dual(2, (Self: RgbColor, Red: ChannelArgument): RgbColor =>
+    RgbColor(Red, Self.G, Self.B)
 );
 
 export/**
@@ -143,10 +143,10 @@ export/**
        * @since 1.0.0
        */
 const SetGreen: {
-    (Green: ChannelArgument): (Self: Color) => Color;
-    (Self: Color, Green: ChannelArgument): Color;
-} = Function.dual(2, (Self: Color, Green: ChannelArgument): Color =>
-    Color(Self.R, Green, Self.B)
+    (Green: ChannelArgument): (Self: RgbColor) => RgbColor;
+    (Self: RgbColor, Green: ChannelArgument): RgbColor;
+} = Function.dual(2, (Self: RgbColor, Green: ChannelArgument): RgbColor =>
+    RgbColor(Self.R, Green, Self.B)
 );
 
 export/**
@@ -156,13 +156,13 @@ export/**
        * @since 1.0.0
        */
 const SetBlue: {
-    (Blue: ChannelArgument): (Self: Color) => Color;
-    (Self: Color, Blue: ChannelArgument): Color;
-} = Function.dual(2, (Self: Color, Blue: ChannelArgument): Color =>
-    Color(Self.R, Self.G, Blue)
+    (Blue: ChannelArgument): (Self: RgbColor) => RgbColor;
+    (Self: RgbColor, Blue: ChannelArgument): RgbColor;
+} = Function.dual(2, (Self: RgbColor, Blue: ChannelArgument): RgbColor =>
+    RgbColor(Self.R, Self.G, Blue)
 );
 
-const ToRgb = (Self: Color): [ number, number, number ] => [ Self.R, Self.G, Self.B ] as const;
+const ToRgb = (Self: RgbColor): [ number, number, number ] => [ Self.R, Self.G, Self.B ] as const;
 
 export/**
        * Make a color lighter by adding to its HSL lightness.
@@ -171,9 +171,9 @@ export/**
        * @since 1.0.0
        */
 const Lighten: {
-    (Amount: number): (Self: Color) => Color;
-    (Self: Color, Amount: number): Color;
-} = Function.dual(2, (Self: Color, Amount: number): Color =>
+    (Amount: number): (Self: RgbColor) => RgbColor;
+    (Self: RgbColor, Amount: number): RgbColor;
+} = Function.dual(2, (Self: RgbColor, Amount: number): RgbColor =>
 {
     const [ Hue, Saturation, Lightness ] = Convert.rgb.hsl.raw(ToRgb(Self));
     const NewLightness = Math.min(100, Math.max(0, Lightness + Amount * 100));
@@ -182,7 +182,7 @@ const Lighten: {
         Saturation,
         NewLightness
     ]);
-    return Color(Math.round(Red), Math.round(Green), Math.round(Blue));
+    return RgbColor(Math.round(Red), Math.round(Green), Math.round(Blue));
 });
 
 export/**
@@ -192,9 +192,9 @@ export/**
        * @since 1.0.0
        */
 const Darken: {
-    (Amount: number): (Self: Color) => Color;
-    (Self: Color, Amount: number): Color;
-} = Function.dual(2, (Self: Color, Amount: number): Color =>
+    (Amount: number): (Self: RgbColor) => RgbColor;
+    (Self: RgbColor, Amount: number): RgbColor;
+} = Function.dual(2, (Self: RgbColor, Amount: number): RgbColor =>
     Lighten(Self, -Amount)
 );
 
@@ -229,7 +229,7 @@ const ParseAnsi = (Self: string, Name: string, Max: number): number | undefined 
 
 const FromConverted = (
     Value: readonly [ number, number, number ]
-): Color => Color(Math.round(Value[0]), Math.round(Value[1]), Math.round(Value[2]));
+): RgbColor => RgbColor(Math.round(Value[0]), Math.round(Value[1]), Math.round(Value[2]));
 
 export namespace From
 {
@@ -239,7 +239,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Hex = (Self: string): Option.Option<Color> =>
+    const Hex = (Self: string): Option.Option<RgbColor> =>
     {
         const Match = Self.trim().match(/^#?([\da-f]{3}|[\da-f]{6})$/i);
         return Match
@@ -253,12 +253,12 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Rgb = (Self: string): Option.Option<Color> =>
+    const Rgb = (Self: string): Option.Option<RgbColor> =>
     {
         const Parts = ParseFunctional(Self, "rgb");
         return Parts && Parts.every((Part: number) =>
             Number.isInteger(Part) && Part >= 0 && Part <= 255)
-            ? Option.some(Color(Parts[0], Parts[1], Parts[2]))
+            ? Option.some(RgbColor(Parts[0], Parts[1], Parts[2]))
             : Option.none();
     };
 
@@ -268,7 +268,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Hsl = (Self: string): Option.Option<Color> =>
+    const Hsl = (Self: string): Option.Option<RgbColor> =>
     {
         const Parts = ParseFunctional(Self, "hsl");
         return Parts && Parts[1] >= 0 && Parts[1] <= 100
@@ -287,7 +287,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Keyword = (Self: string): Option.Option<Color> =>
+    const Keyword = (Self: string): Option.Option<RgbColor> =>
     {
         const Keyword = Self.trim().toLowerCase() as
             Parameters<typeof Convert.keyword.rgb.raw>[0];
@@ -303,7 +303,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Hsv = (Self: string): Option.Option<Color> =>
+    const Hsv = (Self: string): Option.Option<RgbColor> =>
     {
         const Parts = ParseFunctional(Self, "hsv");
         return Parts && Parts[1] >= 0 && Parts[1] <= 100
@@ -322,7 +322,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Hwb = (Self: string): Option.Option<Color> =>
+    const Hwb = (Self: string): Option.Option<RgbColor> =>
     {
         const Parts = ParseFunctional(Self, "hwb");
         return Parts && Parts[1] >= 0 && Parts[1] <= 100
@@ -341,7 +341,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Ansi16 = (Self: string): Option.Option<Color> =>
+    const Ansi16 = (Self: string): Option.Option<RgbColor> =>
     {
         const Value = ParseAnsi(Self, "ansi16", 107);
         return Value === undefined
@@ -355,7 +355,7 @@ export namespace From
            * @category Constructor
            * @since 1.0.0
            */
-    const Ansi256 = (Self: string): Option.Option<Color> =>
+    const Ansi256 = (Self: string): Option.Option<RgbColor> =>
     {
         const Value = ParseAnsi(Self, "ansi256", 255);
         return Value === undefined
@@ -373,7 +373,7 @@ export namespace From
         Red: ChannelArgument,
         Green: ChannelArgument,
         Blue: ChannelArgument
-    ]): Color => Color(Self[0], Self[1], Self[2]);
+    ]): RgbColor => RgbColor(Self[0], Self[1], Self[2]);
 
     export/**
            * Construct a color from a `Record` of channels.
@@ -385,7 +385,7 @@ export namespace From
         readonly R: ChannelArgument;
         readonly G: ChannelArgument;
         readonly B: ChannelArgument;
-    }): Color => Color(Self.R, Self.G, Self.B);
+    }): RgbColor => RgbColor(Self.R, Self.G, Self.B);
 }
 
 export namespace Format
@@ -396,7 +396,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Hex = (Self: Color): string =>
+    const Hex = (Self: RgbColor): string =>
         `#${ Convert.rgb.hex.raw(ToRgb(Self)).toLowerCase() }`;
 
     export/**
@@ -405,7 +405,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Rgb = (Self: Color): string =>
+    const Rgb = (Self: RgbColor): string =>
         `rgb(${ Self.R }, ${ Self.G }, ${ Self.B })`;
 
     export/**
@@ -414,7 +414,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Hsl = (Self: Color): string =>
+    const Hsl = (Self: RgbColor): string =>
     {
         const [ Hue, Saturation, Lightness ] = Convert.rgb.hsl.raw(ToRgb(Self));
         return `hsl(${ Math.round(Hue) }, ${ Math.round(Saturation) }%, ${ Math.round(Lightness) }%)`;
@@ -426,7 +426,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Keyword = (Self: Color): string =>
+    const Keyword = (Self: RgbColor): string =>
         Convert.rgb.keyword.raw(ToRgb(Self));
 
     export/**
@@ -435,7 +435,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Hsv = (Self: Color): string =>
+    const Hsv = (Self: RgbColor): string =>
     {
         const [ Hue, Saturation, Value ] = Convert.rgb.hsv.raw(ToRgb(Self));
         return `hsv(${ Math.round(Hue) }, ${ Math.round(Saturation) }%, ${ Math.round(Value) }%)`;
@@ -447,7 +447,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Hwb = (Self: Color): string =>
+    const Hwb = (Self: RgbColor): string =>
     {
         const [ Hue, Whiteness, Blackness ] = Convert.rgb.hwb.raw(ToRgb(Self));
         return `hwb(${ Math.round(Hue) }, ${ Math.round(Whiteness) }%, ${ Math.round(Blackness) }%)`;
@@ -459,7 +459,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Ansi16 = (Self: Color): string =>
+    const Ansi16 = (Self: RgbColor): string =>
         `ansi16(${ Convert.rgb.ansi16.raw(ToRgb(Self)) })`;
 
     export/**
@@ -468,7 +468,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Ansi256 = (Self: Color): string =>
+    const Ansi256 = (Self: RgbColor): string =>
         `ansi256(${ Convert.rgb.ansi256.raw(ToRgb(Self)) })`;
 
     export/**
@@ -477,7 +477,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Tuple = (Self: Color): readonly [
+    const Tuple = (Self: RgbColor): readonly [
         Red: Int.Int,
         Green: Int.Int,
         Blue: Int.Int
@@ -489,7 +489,7 @@ export namespace Format
            * @category Constructor
            * @since 1.0.0
            */
-    const Record = (Self: Color): {
+    const Record = (Self: RgbColor): {
         readonly R: Int.Int;
         readonly G: Int.Int;
         readonly B: Int.Int;

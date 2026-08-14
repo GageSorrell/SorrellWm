@@ -15,6 +15,8 @@ import type {
     FloatingWindowSettingsPatch,
     GeneralSettingsDto,
     GeneralSettingsPatch,
+    McpServerSettingsDto,
+    McpServerSettingsPatch,
     OverlaySettingsDto,
     OverlaySettingsPatch,
     PerAppSettingPatch,
@@ -98,6 +100,15 @@ export interface AppApi
     {
         /** Forward a validated structured renderer log event to the main process. */
         readonly write: (Entry: RendererLogEntry) => void;
+    };
+
+    readonly mcpServerSettings:
+    {
+        /** Retrieve the local MCP server's current enabled state and port. */
+        readonly get: () => Promise<McpServerSettingsDto>;
+
+        /** Persist a partial update to the local MCP server's settings. */
+        readonly set: (Patch: McpServerSettingsPatch) => Promise<McpServerSettingsDto>;
     };
 
     readonly overlay:
@@ -189,6 +200,8 @@ const AppApiChannel = Object.freeze({
     InsertTargetChooseWindow: "insert-target:choose-window" as const,
     InsertTargetGet: "insert-target:get" as const,
     InsertTargetSetCaptureNext: "insert-target:set-capture-next" as const,
+    McpServerSettingsGet: "mcp-server-settings:get" as const,
+    McpServerSettingsSet: "mcp-server-settings:set" as const,
     OverlayBack: "overlay:back" as const,
     OverlayCommandInvoke: "overlay-command:invoke" as const,
     OverlayFocusPreview: "overlay-focus:preview" as const,

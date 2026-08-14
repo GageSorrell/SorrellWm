@@ -9,4 +9,5 @@
  * @license   MIT
  */
 
+export * as ControlledValue from "./ControlledValue.ts";
 export * as Style from "./Style.ts";

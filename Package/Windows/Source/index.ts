@@ -14,6 +14,7 @@ export * as File from "./File.js";
 export * as Handle from "./Handle.js";
 export * as Keyboard from "./Keyboard.js";
 export * as MessageLoop from "./MessageLoop.js";
+export * as Mouse from "./Mouse.js";
 export * as Screen from "./Screen.js";
 export * as Theme from "./Theme.js";
 export * as Thread from "./Thread.js";

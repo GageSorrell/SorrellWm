@@ -60,7 +60,6 @@ async function Main(): Promise<void>
     //     NodeRuntime.runMain
     // );
 
-    /* eslint-disable-next-line @typescript-eslint/typedef */
     const CliFn =
         Command.run(
             pipe(MainCommand, Command.withSubcommands(SubCommands)),
@@ -74,5 +73,3 @@ async function Main(): Promise<void>
 }
 
 Main();
-
-    "cmake-step": "cmake-js compile --out ../Build",

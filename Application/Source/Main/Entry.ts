@@ -15,6 +15,7 @@ import * as BrowserWindow from "./BrowserWindow.ts";
 import * as Command from "./Command/index.ts";
 import * as Input from "./Input/index.ts";
 import * as Logging from "./Logging.ts";
+import * as Mcp from "./Mcp/index.ts";
 import * as MessageLoop from "./MessageLoop.ts";
 import * as Overlay from "./Overlay/index.ts";
 import * as OverlayShared from "../Shared/OverlayCommand.ts";
@@ -47,8 +48,10 @@ import {
     type GeneralSettingsDto,
     IsFloatingWindowSettingsPatch,
     IsGeneralSettingsPatch,
+    IsMcpServerSettingsPatch,
     IsOverlaySettingsPatch,
     IsPerAppSettingPatch,
+    type McpServerSettingsDto,
     type OverlaySettingsDto,
     type PerAppSettingDto,
     type PerAppSettingsApplicationDto,
@@ -150,9 +153,17 @@ const TrayLive = pipe(
         CommandServicesLive
     ))
 );
+const McpServerLive = pipe(
+    Mcp.Server.Live,
+    Layer.provideMerge(Layer.mergeAll(
+        AppSettingsLive,
+        Tiling.Manager.Live
+    ))
+);
 
 const ApplicationCoreLive = Layer.mergeAll(
     CommandServicesLive,
+    McpServerLive,
     Tiling.Manager.Live,
     TitlebarFlyoutLive,
     TrayLive
@@ -408,6 +419,56 @@ ipcMain.handle(AppApiChannel.FloatingWindowSettingsSet, (
         });
         const Current = yield* Settings.Get;
         return ToFloatingWindowSettingsDto(Current);
+    }));
+});
+
+const ToMcpServerSettingsDto = (
+    Settings: AppSettings.AppSettings
+): McpServerSettingsDto => ({
+    Enabled: Settings.McpServerEnabled,
+    Port: Settings.McpServerPort
+});
+
+ipcMain.removeHandler(AppApiChannel.McpServerSettingsGet);
+ipcMain.handle(AppApiChannel.McpServerSettingsGet, () => ApplicationRuntime.runPromise(
+    Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+        const Current = yield* Settings.Get;
+        return ToMcpServerSettingsDto(Current);
+    })
+));
+
+ipcMain.removeHandler(AppApiChannel.McpServerSettingsSet);
+ipcMain.handle(AppApiChannel.McpServerSettingsSet, (
+    _Event: IpcMainInvokeEvent,
+    PatchValue: unknown
+) =>
+{
+    if (!IsMcpServerSettingsPatch(PatchValue))
+    {
+        throw new TypeError("The requested MCP-server settings patch is invalid.");
+    }
+
+    return ApplicationRuntime.runPromise(Effect.gen(function*()
+    {
+        const Settings = yield* AppSettings.AppSettings;
+
+        if (PatchValue.Enabled !== undefined)
+        {
+            yield* Settings.SetSetting("McpServerEnabled", PatchValue.Enabled);
+        }
+
+        if (PatchValue.Port !== undefined)
+        {
+            yield* Settings.SetSetting("McpServerPort", PatchValue.Port);
+        }
+
+        yield* Logging.LogInfo("Settings", "MCP-server settings updated.", {
+            Settings: Object.keys(PatchValue)
+        });
+        const Current = yield* Settings.Get;
+        return ToMcpServerSettingsDto(Current);
     }));
 });
 
@@ -1108,6 +1169,7 @@ const StartApplication = Effect.gen(function*()
     yield* Input.Keyboard.Keyboard;
     yield* Overlay.Session.OverlaySession;
     yield* MessageLoop.MessageLoop;
+    yield* Mcp.Server.McpServer;
 
     yield* BrowserWindows.Ensure(yield* BrowserWindow.OverlayWindowSpec);
 

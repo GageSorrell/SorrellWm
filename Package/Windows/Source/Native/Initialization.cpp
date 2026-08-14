@@ -15,6 +15,7 @@
 #include "./Keyboard.h"
 #include "./MessageLoop.h"
 #include "./Monitor.h"
+#include "./Mouse.h"
 #include "./ScreenCapture.h"
 #include "./Theme.h"
 #include "./Window.h"
@@ -72,6 +73,20 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
     Screen.Set(
         "GetMonitorBrand",
         Napi::Function::New(Environment, GetMonitorBrand)
+    );
+
+    Napi::Object Mouse = Napi::Object::New(Environment);
+    Mouse.Set(
+        "SetCursorPosition",
+        Napi::Function::New(Environment, SetCursorPosition)
+    );
+    Mouse.Set(
+        "MouseButtonDown",
+        Napi::Function::New(Environment, MouseButtonDown)
+    );
+    Mouse.Set(
+        "MouseButtonUp",
+        Napi::Function::New(Environment, MouseButtonUp)
     );
 
     Napi::Object Window = Napi::Object::New(Environment);
@@ -206,6 +221,7 @@ Napi::Object Initialize(Napi::Env Environment, Napi::Object Exports)
 
     Exports.Set("Keyboard", Keyboard);
     Exports.Set("MessageLoop", MessageLoop);
+    Exports.Set("Mouse", Mouse);
     Exports.Set("Screen", Screen);
     Exports.Set("Theme", Theme);
     Exports.Set("Window", Window);

@@ -1206,7 +1206,39 @@ Napi::Value SetForegroundWindow_Node(const Napi::CallbackInfo& CallbackInfo)
         return Out.Fail("Expected a valid window handle.");
     }
 
-    if (SetForegroundWindow(WindowHandle.value()) == FALSE)
+    // Windows normally refuses to let a background process steal the
+    // foreground away from whatever currently has it, and silently or
+    // explicitly fails SetForegroundWindow as a result -- this is common
+    // whenever this is called shortly after the overlay itself (also this
+    // process) just had focus, which is exactly the case when restoring
+    // focus to an activation window after the overlay closes. Briefly
+    // attaching this thread's input state to the current foreground window's
+    // thread is the standard, sanctioned way around that restriction: it
+    // borrows that thread's standing permission to change focus instead of
+    // fighting the OS's anti focus-stealing heuristic outright.
+    const HWND CurrentForeground = GetForegroundWindow();
+    const DWORD CurrentThreadId = GetCurrentThreadId();
+    DWORD ForegroundThreadId = 0;
+    bool Attached = false;
+
+    if (CurrentForeground != nullptr && CurrentForeground != WindowHandle.value())
+    {
+        ForegroundThreadId = GetWindowThreadProcessId(CurrentForeground, nullptr);
+
+        if (ForegroundThreadId != 0 && ForegroundThreadId != CurrentThreadId)
+        {
+            Attached = AttachThreadInput(CurrentThreadId, ForegroundThreadId, TRUE) != FALSE;
+        }
+    }
+
+    const BOOL Succeeded = SetForegroundWindow(WindowHandle.value());
+
+    if (Attached)
+    {
+        AttachThreadInput(CurrentThreadId, ForegroundThreadId, FALSE);
+    }
+
+    if (Succeeded == FALSE)
     {
         return Out.Fail("Windows did not allow the window to become foreground.");
     }

@@ -14,10 +14,13 @@ const SettingsSectionId = Object.freeze({
     Advanced: "Advanced" as const,
     FloatingWindows: "FloatingWindows" as const,
     General: "General" as const,
+    GiveFeedback: "GiveFeedback" as const,
     Home: "Home" as const,
     Keybinds: "Keybinds" as const,
     Overlay: "Overlay" as const,
-    PerAppSettings: "PerAppSettings" as const
+    PerAppSettings: "PerAppSettings" as const,
+    Welcome: "Welcome" as const,
+    WhatsNew: "WhatsNew" as const
 } as const);
 
 /** One of the settings window's navigable sections. */

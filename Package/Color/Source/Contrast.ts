@@ -10,7 +10,7 @@
  * @license   MIT
  */
 
-import { type Color, Darken, Lighten } from "./Color.js";
+import { Darken, Lighten, type RgbColor } from "./RgbColor.js";
 
 export/**
        * The maximum number of lightness-search steps taken by {@link EnsureContrast}.
@@ -45,7 +45,7 @@ export/**
        * @category Contrast
        * @since 1.1.0
        */
-const RelativeLuminance = (Self: Color): number =>
+const RelativeLuminance = (Self: RgbColor): number =>
     0.2126 * Linearize(Self.R) +
     0.7152 * Linearize(Self.G) +
     0.0722 * Linearize(Self.B);
@@ -57,7 +57,7 @@ export/**
        * @category Contrast
        * @since 1.1.0
        */
-const ContrastRatio = (Left: Color, Right: Color): number =>
+const ContrastRatio = (Left: RgbColor, Right: RgbColor): number =>
 {
     const LeftLuminance = RelativeLuminance(Left) + 0.05;
     const RightLuminance = RelativeLuminance(Right) + 0.05;
@@ -76,10 +76,10 @@ export/**
        * @since 1.1.0
        */
 const EnsureContrast = (
-    Self: Color,
-    Background: Color,
+    Self: RgbColor,
+    Background: RgbColor,
     MinimumRatio: number
-): Color =>
+): RgbColor =>
 {
     if (ContrastRatio(Self, Background) >= MinimumRatio)
     {

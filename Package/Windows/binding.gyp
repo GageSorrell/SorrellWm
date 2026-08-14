@@ -8,6 +8,7 @@
                 "Source/Native/Keyboard.cpp",
                 "Source/Native/MessageLoop.cpp",
                 "Source/Native/Monitor.cpp",
+                "Source/Native/Mouse.cpp",
                 "Source/Native/ScreenCapture.cpp",
                 "Source/Native/Theme.cpp",
                 "Source/Native/Utility.cpp",

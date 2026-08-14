@@ -15,13 +15,17 @@ import { SettingControlsProvider, UseSettingControls } from "@sorrell/settings-u
 import { Text, Title2, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Boolean } from "effect";
+import { SettingsAdvanced } from "./SettingsAdvanced.js";
 import { SettingsFloatingWindows } from "./SettingsFloatingWindows.js";
 import { SettingsGeneral } from "./SettingsGeneral.js";
+import { SettingsGiveFeedback } from "./SettingsGiveFeedback.js";
 import { SettingsHome } from "./SettingsHome.js";
 import { SettingsOverlay } from "./SettingsOverlay.js";
 import { SettingsPerApp } from "./SettingsPerApp.js";
 import { SettingsSidebar } from "./SettingsSidebar.js";
 import { SettingsTitlebar } from "./SettingsTitlebar.js";
+import { SettingsWelcome } from "./SettingsWelcome.js";
+import { SettingsWhatsNew } from "./SettingsWhatsNew.js";
 
 /** Below this content width, the sidebar collapses into a toggle-able overlay. */
 const PinnedSidebarMinWidth = 720 as const;
@@ -31,10 +35,13 @@ const SectionLabel: Readonly<Record<SettingsSectionId, string>> =
         [ SettingsSectionId.Advanced ]: "Advanced" as const,
         [ SettingsSectionId.FloatingWindows ]: "Floating Windows" as const,
         [ SettingsSectionId.General ]: "General" as const,
+        [ SettingsSectionId.GiveFeedback ]: "Give feedback" as const,
         [ SettingsSectionId.Home ]: "Home" as const,
         [ SettingsSectionId.Keybinds ]: "Keybinds" as const,
         [ SettingsSectionId.Overlay ]: "Overlay" as const,
-        [ SettingsSectionId.PerAppSettings ]: "Per-App Settings" as const
+        [ SettingsSectionId.PerAppSettings ]: "Per-App Settings" as const,
+        [ SettingsSectionId.Welcome ]: "Welcome to SorrellWm" as const,
+        [ SettingsSectionId.WhatsNew ]: "What's new" as const
     } as const;
 
 const UseStyles = makeStyles({
@@ -272,6 +279,16 @@ const SettingsShell = (): React.JSX.Element =>
                         <SettingsFloatingWindows />
                     </div>
 
+                    <div
+                        className={ mergeClasses(
+                            Styles.SettingGroups,
+                            SelectedSection === SettingsSectionId.Advanced
+                                ? undefined
+                                : Styles.Hidden
+                        ) }>
+                        <SettingsAdvanced />
+                    </div>
+
                     { SelectedSection === SettingsSectionId.PerAppSettings && (
                         <SettingsPerApp
                             TargetApplicationName={ ApplicationName }
@@ -280,6 +297,18 @@ const SettingsShell = (): React.JSX.Element =>
 
                     { SelectedSection === SettingsSectionId.Home && (
                         <SettingsHome />
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.Welcome && (
+                        <SettingsWelcome />
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.WhatsNew && (
+                        <SettingsWhatsNew />
+                    ) }
+
+                    { SelectedSection === SettingsSectionId.GiveFeedback && (
+                        <SettingsGiveFeedback />
                     ) }
                 </main>
             </div>

@@ -9,6 +9,7 @@
  * @license   MIT
  */
 
-export * as Color from "./Color.js";
 export * as Contrast from "./Contrast.js";
 export * as LinearColor from "./LinearColor.js";
+export * as RgbaColor from "./RgbaColor.js";
+export * as RgbColor from "./RgbColor.js";

@@ -1,11 +1,11 @@
 /**
- * @file      Color.ts
+ * @file      Color.test.mjs
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-import * as Color from "../Distribution/Color.js";
+import * as Color from "../Distribution/RgbColor.js";
 import * as LinearColor from "../Distribution/LinearColor.js";
 import { BigDecimal, Option } from "effect";
 import { describe, it } from "node:test";

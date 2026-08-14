@@ -1406,6 +1406,8 @@ const CurrentSettings: AppSettings.AppSettings = {
     FocusPreviewOpacity: 75,
     IgnoreActivationKeybindInFullscreen: true,
     Keybinds: [ ],
+    McpServerEnabled: false,
+    McpServerPort: 7_920,
     MoveFineSpeed: 16,
     MoveStepPrimary: 20,
     MoveStepPrimarySpeedFactor: 4,

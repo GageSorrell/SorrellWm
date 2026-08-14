@@ -35,10 +35,10 @@
     "dependencies":
     {
         "@aws-sdk/client-route-53": "3.1101.0",
-        "@effect/platform-node": "4.0.0-beta.102",
+        "@effect/platform-node": "4.0.0-rc.109",
         "@sorrell/site-core": "1.0.0",
         "@vercel/sdk": "1.28.15",
-        "effect": "4.0.0-beta.102"
+        "effect": "4.0.0-rc.109"
     },
     "devDependencies":
     {

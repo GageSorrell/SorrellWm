@@ -1,0 +1,71 @@
+{
+    "name": "@sorrell/eslint-plugin",
+    "version": "1.2.0",
+    "description": "ES Lint rules that complement popular ES Lint plugins, such as eslint-plugin-jsdoc.",
+    "main": "./Distribution/index.js",
+    "types": "./Distribution/index.d.ts",
+    "exports":
+    {
+        ".":
+        {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "keywords":
+    [
+        "eslint",
+        "eslintplugin",
+        "eslint-plugin",
+        "jsdoc",
+        "react",
+        "sorrell",
+        "lint",
+        "linter"
+    ],
+    "author":
+    {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/EsLintPluginSorrell/ReadMe.md",
+    "bugs":
+    {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository":
+    {
+        "directory": "Package/EsLintPluginSorrell",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "scripts":
+    {
+        "build": "tsc -p ./tsconfig.json",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
+    },
+    "peerDependencies":
+    {
+        "eslint": "^9.39.4"
+    },
+    "peerDependenciesMeta":
+    {
+        "eslint":
+        {
+            "optional": false
+        }
+    },
+    "devDependencies":
+    {
+        "@sorrell/tsconfig": "2.1.0",
+        "@types/node": "26.1.1",
+        "@typescript-eslint/parser": "^8.65.0",
+        "eslint": "^9.39.4",
+        "vitest": "4.1.10"
+    }
+}

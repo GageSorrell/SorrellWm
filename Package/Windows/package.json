@@ -58,6 +58,10 @@
       "import": "./Distribution/MessageLoop.js",
       "types": "./Distribution/MessageLoop.d.ts"
     },
+    "./Mouse": {
+      "import": "./Distribution/Mouse.js",
+      "types": "./Distribution/Mouse.d.ts"
+    },
     "./Screen": {
       "import": "./Distribution/Screen.js",
       "types": "./Distribution/Screen.d.ts"
@@ -102,13 +106,15 @@
     "install": "npm run build:native",
     "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --config ../../Configuration/.eslintrc.cjs --resolve-plugins-relative-to ../../Package/EsLintConfigSorrell --ext .ts Source",
     "prepare": "npm run build:js",
-    "typecheck": "tsc --noEmit -p ./tsconfig.json"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
   },
   "devDependencies": {
     "@sorrell/tsconfig": "1.0.0",
     "@types/node": "26.1.1",
     "cross-env": "10.1.0",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=26.6.0",
@@ -120,7 +126,7 @@
   ],
   "dependencies": {
     "@sorrell/math": "1.0.0",
-    "effect": "4.0.0-beta.102",
+    "effect": "4.0.0-rc.109",
     "node-addon-api": "8.9.0"
   }
 }

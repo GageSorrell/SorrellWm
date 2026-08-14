@@ -10,6 +10,10 @@
         "email": "gage@sorrell.sh",
         "url": "https://sorrell.sh"
     },
+    "bugs": {
+        "email": "gage@sorrell.sh",
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -49,18 +53,20 @@
         "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
     },
     "dependencies": {
-        "@effect/platform-node": "4.0.0-beta.102",
-        "effect": "4.0.0-beta.102",
+        "@effect/platform-node": "4.0.0-rc.109",
+        "effect": "4.0.0-rc.109",
         "@fluentui/react-components": "9.74.4",
         "@fluentui/react-icons": "2.0.333",
+        "@modelcontextprotocol/sdk": "1.30.0",
         "@sorrell/app-settings": "2.0.1",
         "@sorrell/color": "^1.1.0",
         "@sorrell/keyboard-ui": "1.0.0",
         "@sorrell/log": "1.0.0",
         "@sorrell/math": "1.0.0",
-        "@sorrell/react": "1.0.0",
+        "@sorrell/react": "1.1.1",
         "@sorrell/settings-ui": "1.0.0",
         "@sorrell/utility": "1.1.0",
+        "@sorrell/wm-api": "1.0.0",
         "@sorrell/windows": "1.0.0",
         "@sorrell/windows-ui": "1.0.0",
         "react-intl": "10.1.18"

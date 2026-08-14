@@ -25,6 +25,14 @@ When a supported TypeScript or C++ file is created anywhere in the open workspac
 Supported extensions are `.ts`, `.tsx`, `.cc`, `.cpp`, `.cxx`, `.h`, `.hh`,
 `.hpp`, `.hxx`, `.ixx`, `.cppm`, `.inl`, `.ipp`, and `.tpp`.
 
+This is governed by the `sorrellWmCodeExtension.headers.insertOnAnyFileCreation`
+setting, which defaults to `true`. When enabled, the header is inserted into
+every file of a supported extension observed being created anywhere on disk,
+including files created outside the editor (for example by scripts or version
+control). When disabled, the header is only inserted into files created
+through an editor gesture such as the Explorer's "New File" command, or into
+files that are empty or contain only whitespace at the moment they are saved.
+
 The module name consists of the nearest package's `package.json` `name`, followed by the file path beneath its `Source` or `src` directory. The final source extension is removed. For example:
 
 ```text

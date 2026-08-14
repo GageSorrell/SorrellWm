@@ -17,7 +17,7 @@
   "keywords": [ ],
   "type": "module",
   "dependencies": {
-    "effect": "4.0.0-beta.102"
+    "effect": "4.0.0-rc.109"
   },
   "devDependencies": {
     "@sorrell/tsconfig": "1.0.0",

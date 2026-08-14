@@ -9,10 +9,11 @@
  * @see {@link ../Package/EsLintConfigSorrell/index.js} The base config used herein.
  */
 
+import { defineConfig, globalIgnores } from "eslint/config";
 import SorrellConfig from "@sorrell/eslint-config";
-import { defineConfig } from "eslint/config";
 
 export default defineConfig(
+    globalIgnores([ "**/Package/Old/**" ]),
     SorrellConfig,
     {
         rules:

@@ -14,6 +14,7 @@ import {
     type CancellationToken,
     EndOfLine,
     type ExtensionContext,
+    type FileCreateEvent,
     type FileStat,
     type FileSystemWatcher,
     FileType,
@@ -29,6 +30,8 @@ import {
     Selection,
     type TextDocument,
     type TextDocumentChangeEvent,
+    type TextDocumentWillSaveEvent,
+    TextEdit,
     ThemeIcon,
     Uri,
     WorkspaceEdit,
@@ -94,6 +97,9 @@ const IgnoredDirectoryNames: ReadonlySet<string> = new Set([
     "node_modules"
 ]);
 const PendingFiles: Map<string, Promise<void>> = new Map();
+const ConfigurationSection: string = "sorrellWmCodeExtension";
+const InsertHeaderOnAnyFileCreationSetting: string =
+    "headers.insertOnAnyFileCreation";
 const CreateReactComponentCommand: string =
     "sorrellWmCodeExtension.createReactComponent";
 const CreateReactComponentToolName: string =
@@ -165,7 +171,9 @@ const CreateReactComponentTool: LanguageModelTool<CreateReactComponentToolInput>
 };
 
 /**
- * Start watching the workspace for newly created TypeScript and C++ files.
+ * Start watching the workspace for newly created TypeScript and C++ files, and
+ * for the narrower editor-driven creation and empty-file-save events used
+ * when header insertion is not unrestricted.
  *
  * @param Context - The VS Code extension context.
  * @returns {void}
@@ -193,8 +201,130 @@ export function activate(Context: ExtensionContext): void
             CreateReactComponentTool
         ),
         workspace.onDidChangeTextDocument(QueueJsDocExpansion),
-        Watcher.onDidCreate(QueueHeaderInsertion)
+        workspace.onDidCreateFiles(HandleWorkspaceFilesCreated),
+        workspace.onWillSaveTextDocument(HandleTextDocumentWillSave),
+        Watcher.onDidCreate(HandleWatcherFileCreated)
     );
+}
+
+/**
+ * Determine whether a header should be inserted into every newly created
+ * source file, regardless of how it was created.  When this setting is
+ * disabled, headers are only inserted into files created through an editor
+ * gesture such as the Explorer's "New File" command, or into files that are
+ * empty or contain only whitespace when saved.
+ *
+ * @returns {boolean} Whether unrestricted, disk-wide header insertion is enabled.
+ */
+function ShouldInsertHeaderOnAnyFileCreation(): boolean
+{
+    return workspace
+        .getConfiguration(ConfigurationSection)
+        .get<boolean>(InsertHeaderOnAnyFileCreationSetting, true);
+}
+
+/**
+ * Insert a header into a file the disk watcher observed being created, when
+ * insertion is not restricted to editor-driven file creation.
+ *
+ * @param FileUri - The URI reported by the workspace file watcher.
+ * @returns {void}
+ */
+function HandleWatcherFileCreated(FileUri: Uri): void
+{
+    if (ShouldInsertHeaderOnAnyFileCreation())
+    {
+        QueueHeaderInsertion(FileUri);
+    }
+}
+
+/**
+ * Insert headers into files created through an editor gesture, such as the
+ * Explorer's "New File" command, drag-and-drop, or paste.  Runs only when
+ * header insertion is restricted to editor-driven file creation, since the
+ * disk watcher already covers this case otherwise.
+ *
+ * @param Event - The workspace file-creation event.
+ * @returns {void}
+ */
+function HandleWorkspaceFilesCreated(Event: FileCreateEvent): void
+{
+    if (ShouldInsertHeaderOnAnyFileCreation())
+    {
+        return;
+    }
+
+    for (const FileUri of Event.files)
+    {
+        QueueHeaderInsertion(FileUri);
+    }
+}
+
+/**
+ * Insert a header into an empty or whitespace-only document as it is saved,
+ * when header insertion is restricted to editor-driven file creation.
+ *
+ * @param Event - The text document about to be saved.
+ * @returns {void}
+ */
+function HandleTextDocumentWillSave(Event: TextDocumentWillSaveEvent): void
+{
+    if (ShouldInsertHeaderOnAnyFileCreation())
+    {
+        return;
+    }
+
+    const Document: TextDocument = Event.document;
+
+    if (
+        !IsSupportedSourcePath(Document.uri.path)
+        || Document.getText().trim().length > 0
+    )
+    {
+        return;
+    }
+
+    Event.waitUntil(CreateEmptyDocumentHeaderEdits(Document));
+}
+
+/**
+ * Build the pre-save edit that inserts a generated header into an empty or
+ * whitespace-only document.
+ *
+ * @param Document - The document being saved.
+ * @returns {Promise<ReadonlyArray<TextEdit>>} The edits to apply before the save completes.
+ */
+async function CreateEmptyDocumentHeaderEdits(
+    Document: TextDocument
+): Promise<ReadonlyArray<TextEdit>>
+{
+    const Folder: WorkspaceFolder | undefined =
+        workspace.getWorkspaceFolder(Document.uri);
+
+    if (Folder === undefined || await IsGitIgnored(Document.uri.fsPath))
+    {
+        return [];
+    }
+
+    const Package: PackageContext = await FindPackageContext(Document.uri, Folder);
+    const ModuleName: string = DeriveModuleName(
+        Document.uri.fsPath,
+        Package.RootPath,
+        Package.Name
+    );
+    const NewLine: string = Document.eol === EndOfLine.CRLF ? "\r\n" : "\n";
+    const Header: string = CreateHeader(
+        Document.uri.fsPath,
+        ModuleName,
+        new Date().getFullYear(),
+        NewLine
+    );
+
+    Output?.appendLine(`Added a source header to ${Document.uri.fsPath}.`);
+
+    return [
+        TextEdit.insert(new Position(0, 0), `${Header}${NewLine}${NewLine}`)
+    ];
 }
 
 /**
@@ -711,9 +841,10 @@ export function deactivate(): void
 }
 
 /**
- * Serialize header insertion events for an individual file.
+ * Serialize header insertion events for an individual file, whether it was
+ * reported by the disk watcher or by an editor-driven file-creation event.
  *
- * @param FileUri - The URI reported by the workspace file watcher.
+ * @param FileUri - The created file's URI.
  * @returns {void}
  */
 function QueueHeaderInsertion(FileUri: Uri): void

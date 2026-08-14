@@ -138,6 +138,7 @@ vi.mock("@sorrell/windows", async () =>
             GetManageableTopLevelWindows: vi.fn(() =>
                 EffectResult.succeed([ ])),
             GetMovingWindow: vi.fn(() => EffectOption.none()),
+            GetWindowFrameRect: vi.fn(() => EffectOption.none()),
             GetWindowRect: vi.fn(() => EffectOption.none()),
             IsLeftMouseButtonDown: vi.fn(() => EffectOption.some(false)),
             SetForegroundWindow: vi.fn(() => EffectResult.succeed(undefined)),
@@ -160,6 +161,7 @@ beforeEach(() =>
         Result.succeed([ ])
     );
     vi.mocked(WindowsWindow.GetMovingWindow).mockReturnValue(Option.none());
+    vi.mocked(WindowsWindow.GetWindowFrameRect).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(Option.none());
     vi.mocked(WindowsWindow.IsLeftMouseButtonDown).mockReturnValue(Option.some(false));
     vi.mocked(ElectronScreen.getDisplayMatching).mockReturnValue(
@@ -1433,6 +1435,49 @@ describe("CommandExecutor.Live tiled-window drag detach", () =>
         expect(Float).not.toHaveBeenCalled();
     });
 
+    it("does not mistake DWM's invisible resize-border padding on the raw " +
+        "window rect for an actual resize", async () =>
+    {
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        // Same visible size as the tiled placement (1920x1080), moved 20px right
+        // and down ⇒ a move, not a resize.
+        vi.mocked(WindowsWindow.GetWindowFrameRect).mockReturnValue(
+            Option.some(Box.Box(20, 1940, 1100, 20))
+        );
+        // The raw rect is a few pixels larger on every side, as it would be for
+        // any real window with DWM's invisible resize-border padding. If this
+        // were used instead of the frame rect, it would look like a resize.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(12, 1948, 1108, 12))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                yield* CommandExecutor;
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow([ ])),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Reconcile).toHaveBeenCalled();
+        expect(Float).not.toHaveBeenCalled();
+    });
+
     it("does not finalize the drag when GetMovingWindow briefly reports " +
         "not-moving while the left mouse button is still held", async () =>
     {
@@ -1598,6 +1643,108 @@ describe("CommandExecutor.Live tiled-window drag detach", () =>
         expect(Reconcile).not.toHaveBeenCalled();
         expect(Float).not.toHaveBeenCalled();
     });
+
+    it("still shows the overlay over a tiled window once activated after a drag has settled", async () =>
+    {
+        const Operations = new Array<string>();
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValueOnce(Option.none())
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        vi.mocked(WindowsWindow.IsLeftMouseButtonDown)
+            .mockReturnValueOnce(Option.some(true))
+            .mockReturnValue(Option.some(false));
+        vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(Option.some(TiledWindow));
+        // Released 20px right and 20px down, same size ⇒ under the default 128px
+        // threshold, so the drag settles by snapping back rather than detaching.
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(20, 1940, 1100, 20))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+
+                // Let the drag-detach poll observe the flicker and settle before
+                // the user reaches for the activation hotkey.
+                yield* Effect.sleep("500 millis");
+
+                yield* Executor.Execute(UiCommands.Activate());
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        expect(Reconcile).toHaveBeenCalledTimes(1);
+        // The overlay should show once and stay shown — nothing should hide or
+        // close it again immediately afterward.
+        expect(Operations.filter((Operation: string): boolean =>
+            Operation.startsWith("Show:") || Operation.startsWith("Hide:")))
+            .toEqual([ "Show:Overlay" ]);
+    });
+
+    it("shows the overlay when activated while the drag-detach poll is still " +
+        "resolving a just-finished drag", async () =>
+    {
+        const Operations = new Array<string>();
+        const Reconcile = vi.fn(() => Effect.void);
+        const Float = vi.fn(() => Effect.void);
+
+        vi.mocked(WindowsWindow.GetMovingWindow)
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValueOnce(Option.none())
+            .mockReturnValueOnce(Option.some(TiledWindow))
+            .mockReturnValue(Option.none());
+        vi.mocked(WindowsWindow.IsLeftMouseButtonDown)
+            .mockReturnValueOnce(Option.some(true))
+            .mockReturnValue(Option.some(false));
+        vi.mocked(WindowsWindow.GetForegroundWindow).mockReturnValue(Option.some(TiledWindow));
+        vi.mocked(WindowsWindow.GetWindowRect).mockReturnValue(
+            Option.some(Box.Box(20, 1940, 1100, 20))
+        );
+
+        await Effect.runPromise(pipe(
+            Effect.gen(function*()
+            {
+                const Executor = yield* CommandExecutor;
+
+                // Activate right away, racing the drag-detach poll instead of
+                // waiting for it to fully settle first.
+                yield* Executor.Execute(UiCommands.Activate());
+                yield* Effect.sleep("500 millis");
+            }),
+            Effect.provide(Live),
+            Effect.provide(FakeHotkey()),
+            Effect.provide(FakeAppSettings(50, true, 128)),
+            Effect.provide(FakeBrowserWindow(Operations)),
+            Effect.provide(FakeOverlaySession()),
+            Effect.provide(FakeTilingManager(
+                [ TiledWindow ],
+                { Float, Reconcile: Effect.suspend(Reconcile) }
+            )),
+            Effect.provide(IdleResolver)
+        ));
+
+        // The overlay should show once and stay shown — nothing should hide or
+        // close it again afterward, regardless of how the concurrent drag-detach
+        // poll resolves.
+        expect(Operations.filter((Operation: string): boolean =>
+            Operation.startsWith("Show:") || Operation.startsWith("Hide:")))
+            .toEqual([ "Show:Overlay" ]);
+    });
 });
 
 const IdleResolver = Layer.succeed(CommandResolver.CommandResolver, {
@@ -1664,6 +1811,8 @@ const FakeAppSettings = (
         FocusPreviewOpacity: 75,
         IgnoreActivationKeybindInFullscreen,
         Keybinds: [ ],
+        McpServerEnabled: false,
+        McpServerPort: 7_920,
         MoveFineSpeed: 16,
         MoveStepPrimary: 20,
         MoveStepPrimarySpeedFactor: 4,

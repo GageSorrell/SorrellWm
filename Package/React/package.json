@@ -1,7 +1,7 @@
 {
     "name": "@sorrell/react",
     "private": false,
-    "version": "1.0.0",
+    "version": "1.1.1",
     "description": "React hooks and utilities.",
     "author": {
         "email": "gage@sorrell.sh",
@@ -24,6 +24,10 @@
             "import": "./Distribution/index.js",
             "types": "./Distribution/index.d.ts"
         },
+        "./ControlledValue": {
+            "import": "./Distribution/ControlledValue.js",
+            "types": "./Distribution/ControlledValue.d.ts"
+        },
         "./Style": {
             "import": "./Distribution/Style.js",
             "types": "./Distribution/Style.d.ts"
@@ -42,24 +46,25 @@
         "check": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
     },
     "devDependencies": {
-        "@effect/platform-node": "4.0.0-beta.102",
+        "@effect/platform-node": "4.0.0-rc.109",
         "@sorrell/tsconfig": "1.0.0",
         "@types/node": "26.1.1",
         "cross-env": "^10.1.0",
-        "effect": "4.0.0-beta.102",
+        "effect": "4.0.0-rc.109",
+        "react": "19.2.7",
         "typescript": "^6.0.0",
         "vitest": "^4.1.10"
-    },
-    "engines": {
-        "node": ">=26.6.0",
-        "npm": ">=12.0.2"
     },
     "peerDependenciesMeta": {
         "effect": {
             "optional": false
+        },
+        "react": {
+            "optional": false
         }
     },
     "peerDependencies": {
-        "effect": "4.0.0-beta.102"
+        "effect": "4.0.0-rc.109",
+        "react": "19.2.7"
     }
 }

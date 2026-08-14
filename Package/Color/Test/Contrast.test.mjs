@@ -1,11 +1,11 @@
 /**
- * @file      Contrast.ts
+ * @file      Contrast.test.mjs
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
 
-import * as Color from "../Distribution/Color.js";
+import * as Color from "../Distribution/RgbColor.js";
 import * as Contrast from "../Distribution/Contrast.js";
 import { describe, it } from "node:test";
 import Assert from "node:assert/strict";

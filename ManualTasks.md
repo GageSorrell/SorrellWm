@@ -214,4 +214,12 @@ Please fix this. -->
 
 ---
 
-Please create a package `@sorrell/create-wm-api` which guides the user through creating a basic project that uses `@sorrell/wm-api` to run as a client that SorrellWm can connect to and query.
+<!-- Please write a new package `@sorrell/wm-use` in the root `Package` directory.  This package should allow AI agents like Claude Code to use SorrellWm.  Agents should be able to use SorrellWm in a way that most resembles use by a person.  The package should include use `@sorrell/windows` as a dependency, and changes (likely in the form of additions) should be made to `@sorrell/windows` as needed for Windows API functionality.  The package should allow for Claude Code et al. to use the cursor to drag windows around.  Do not worry about restricting what the agent can do with simulating input via the Windows API: the developer using the agent will always be informed that the agent will have strong access to the Windows API via this package, and the developer will always "babysit" to ensure that nothing goes wrong while the agent uses this package.  The agent should be able to "send" any commands to `@sorrell/wm` -->
+
+---
+
+Please write a new package `@sorrell/eslint-plugin` in the root `Package` directory.  This package should
+
+---
+
+Please add a `bin` to `@sorrell/eslint-plugin` with name `@sorrell/eslint-plugin`.  The module associated with this `bin` entry should run ES Lint, and write its results

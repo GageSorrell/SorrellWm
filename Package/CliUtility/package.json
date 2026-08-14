@@ -1,0 +1,56 @@
+{
+    "name": "@sorrell/cli-utility",
+    "version": "1.0.0-beta.1",
+    "private": false,
+    "description": "Utilities for CLI applications.",
+    "keywords": [
+        "cli",
+        "utility",
+        "sorrell",
+        "typescript",
+        "effect"
+    ],
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/CliUtility#ReadMe",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/CliUtility",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "type": "module",
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "lint": "eslint --config ./eslint.config.js \"Source/**/*.ts\""
+    },
+    "exports": {
+        ".": {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./Format": {
+            "import": "./Distribution/Format.js",
+            "types": "./Distribution/Format.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "dependencies": {
+        "effect": "^4.0.0-rc.109",
+        "@effect/platform-node": "^4.0.0-rc.109",
+        "@sorrell/utility": "1.1.0",
+        "@sorrell/math": "1.0.0"
+    },
+    "devDependencies": {
+        "typescript": "6.0.2",
+        "@sorrell/tsconfig": "2.1.0",
+        "@sorrell/eslint-config": "1.0.1",
+        "cross-env": "10.1.0"
+    }
+}

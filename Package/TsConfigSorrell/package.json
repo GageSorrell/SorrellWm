@@ -1,11 +1,23 @@
 {
-  "name": "@sorrell/tsconfig",
-  "version": "1.0.0",
-  "description": "A base tsconfig.json, inspired by the guide on https://effect.solutions.",
-  "exports":
-  {
-    ".": "./tsconfig.json"
-  },
-  "keywords": [ ],
-  "type": "module"
+    "name": "@sorrell/tsconfig",
+    "version": "2.1.0",
+    "description": "Base tsconfig.json files, inspired by the guide on https://effect.solutions, with variants for different use-cases.",
+    "exports":
+    {
+        ".": "./tsconfig.base.json",
+        "./base": "./tsconfig.base.json",
+        "./effect": "./tsconfig.effect.json",
+        "./expo": "./tsconfig.expo.json"
+    },
+    "keywords":
+    [
+        "tsconfig",
+        "typescript",
+        "config",
+        "sorrell",
+        "effect",
+        "expo",
+        "react-native"
+    ],
+    "type": "module"
 }

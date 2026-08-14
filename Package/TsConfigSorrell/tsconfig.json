@@ -1,29 +1,14 @@
 {
     "$schema": "https://raw.githubusercontent.com/Effect-TS/language-service/refs/heads/main/schema.json",
-    "compilerOptions": {
-        "composite": true,
-        "declarationMap": true,
-        "exactOptionalPropertyTypes": true,
-        "incremental": true,
-        "module": "NodeNext",
-        "moduleDetection": "force",
-        "moduleResolution": "NodeNext",
-        "noEmit": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitOverride": true,
-        "noUncheckedIndexedAccess": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "plugins": [
+    "extends": "./tsconfig.base.json",
+
+    "compilerOptions":
+    {
+        "plugins":
+        [
             {
                 "name": "@effect/language-service"
             }
-        ],
-        "rewriteRelativeImportExtensions": true,
-        "skipLibCheck": true,
-        "sourceMap": true,
-        "strict": true,
-        "target": "ES2022",
-        "verbatimModuleSyntax": true
+        ]
     }
 }

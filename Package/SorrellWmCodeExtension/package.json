@@ -57,6 +57,16 @@
         }
     },
     "contributes": {
+        "configuration": {
+            "title": "SorrellWm Code Extension",
+            "properties": {
+                "sorrellWmCodeExtension.headers.insertOnAnyFileCreation": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "When enabled, inserts the generated source header into every newly created TypeScript or C++ file, no matter how it was created. When disabled, the header is only inserted into files created through an editor gesture such as the Explorer's \"New File\" command, or into files that are empty or contain only whitespace when saved."
+                }
+            }
+        },
         "commands": [
             {
                 "category": "SorrellWm",

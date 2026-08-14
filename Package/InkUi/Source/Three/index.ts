@@ -1,7 +1,7 @@
 /**
  * Render ThreeJS scenes in the terminal with ink.
  *
- * @module @sorrell/ink-three
+ * @module @sorrell/ink-ui
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
