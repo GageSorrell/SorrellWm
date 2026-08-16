@@ -29,6 +29,7 @@ See `Documentation/Agent/Domain.md` for how to consume these.
 | Package/TsConfigSorrell | [Package/TsConfigSorrell/CONTEXT.md](./Package/TsConfigSorrell/CONTEXT.md) |
 | Package/StorybookThemeEffect | [Package/StorybookThemeEffect/CONTEXT.md](./Package/StorybookThemeEffect/CONTEXT.md) |
 | Package/StorybookThemeFluent | [Package/StorybookThemeFluent/CONTEXT.md](./Package/StorybookThemeFluent/CONTEXT.md) |
+| Package/Utility | [Package/Utility/CONTEXT.md](./Package/Utility/CONTEXT.md) |
 | Package/Windows | [Package/Windows/CONTEXT.md](./Package/Windows/CONTEXT.md) |
 | Package/WmApi | [Package/WmApi/CONTEXT.md](./Package/WmApi/CONTEXT.md) |
 | Package/WindowsUi | [Package/WindowsUi/CONTEXT.md](./Package/WindowsUi/CONTEXT.md) |

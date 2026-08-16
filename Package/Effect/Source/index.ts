@@ -9,7 +9,6 @@
  * @license   MIT
  */
 
-export * as Async from "./Async.js";
 export * as Data from "./Data.js";
 export * as Function from "./Function.js";
 export * as Predicate from "./Predicate.js";

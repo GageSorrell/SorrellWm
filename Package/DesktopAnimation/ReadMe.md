@@ -3,11 +3,11 @@
 Declarative Windows 11-style desktop animations for React.  The package renders responsive
 window boxes with rounded corners, Fluent shadows, title bars, and optional animated cursors.
 
+The intended use case is to create simple representations of actions performed by a window manager, to educate the user in the context of settings (of a window manager *et al.*).  The pilot package of `@sorrell/desktop-animation` is [SorrellWm](https://wm.sorrell.sh).
+
 ## Defining an animation
 
-Timeline steps run sequentially.  A zero-duration move is instantaneous; supplying a positive
-duration animates it.  `CursorStep.Drag` moves the cursor and window together and temporarily
-uses the grabbing cursor.
+Timeline steps run sequentially.  A zero-duration move is instantaneous; supplying a positive duration animates it.  `CursorStep.Drag` moves the cursor and window together and temporarily uses the grabbing cursor.
 
 ```tsx
 import {
@@ -45,19 +45,24 @@ const Animation = DefineAnimation({
 export const Example = () => <DesktopAnimation Animation={ Animation } />;
 ```
 
-Windows may also enter during the timeline with `WindowStep.Create`.  Cursors may be omitted
-entirely, or shown and hidden during the timeline with `CursorStep.Show` and `CursorStep.Hide`.
+Windows may also enter during the timeline with `WindowStep.Create`.  Cursors may be omitted entirely, or shown and hidden during the timeline with `CursorStep.Show` and `CursorStep.Hide`.
 
 ## Fluent UI teaching popover
 
-`AnimationTeachingPopover` accepts exactly three props.  `Animation` becomes the media of its
-`TeachingPopoverBody`, `Title` becomes the child of `TeachingPopoverTitle`, and `SurfaceChild`
-is inserted last in `TeachingPopoverSurface`.
+`AnimationTeachingPopover` accepts exactly three props.  `Animation` becomes the media of its `TeachingPopoverBody`, `Title` becomes the child of `TeachingPopoverTitle`, and `SurfaceChild` is inserted last in `TeachingPopoverSurface`.
 
 ```tsx
-<AnimationTeachingPopover
-    Animation={ Animation }
-    Title="Arrange a window"
-    SurfaceChild={ <TeachingPopoverFooter>Try it now</TeachingPopoverFooter> }
-/>
+const SurfaceChild =
+    <TeachingPopoverFooter>
+        Try it now
+    </TeachingPopoverFooter>;
+
+const Title = "Arrange a window";
+
+const Animation = /* ... */;
+
+const MyPopover = () =>
+    <AnimationTeachingPopover
+        { ...{ Animation, SurfaceChild, Title } }
+    />;
 ```

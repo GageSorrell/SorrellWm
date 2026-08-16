@@ -63,6 +63,7 @@
         "Package/StorybookThemeEffect",
         "Package/StorybookThemeFluent",
         "Package/TsConfigSorrell",
+        "Package/Utility",
         "Package/Windows",
         "Package/WmApi",
         "Package/WindowsUi",

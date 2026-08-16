@@ -10,8 +10,5 @@ Each submodule re-exports the full contents of its corresponding module in
 collides with an addition of the same name, the addition here wins, since
 ordinary named exports always take precedence over a `export *` re-export.
 
-`@sorrell/effect/Async` has no corresponding module in `effect` and is
-Sorrell-specific throughout.
-
 `@effect/platform-node` is an optional peer dependency; install it yourself
 if a future addition to this package needs it.

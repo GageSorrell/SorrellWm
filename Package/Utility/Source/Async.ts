@@ -1,7 +1,7 @@
 /**
- * General-purpose async helpers with no corresponding module in `effect`.
  *
- * @module @sorrell/effect/Async
+ *
+ * @module @sorrell/utility/Async
  *
  * @file      Async.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import type { Thunk } from "./Function.ts";
+import type { Thunk } from "@sorrell/effect/Function";
 
 export/**
        * Return a promise that resolves to `void` after {@link Duration} milliseconds.
