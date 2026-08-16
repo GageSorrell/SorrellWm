@@ -1,0 +1,88 @@
+{
+    "name": "@sorrell/effect",
+    "private": false,
+    "version": "1.0.0",
+    "description": "Effect-native utilities that extend effect's own core modules.",
+    "keywords": [
+        "effect",
+        "sorrell",
+        "typescript",
+        "utility"
+    ],
+    "author": {
+        "email": "gage@sorrell.sh",
+        "name": "Gage Sorrell",
+        "url": "https://sorrell.sh"
+    },
+    "homepage": "https://github.com/GageSorrell/SorrellWm/tree/Master/Package/Effect#ReadMe",
+    "bugs": {
+        "url": "https://github.com/GageSorrell/SorrellWm/issues"
+    },
+    "repository": {
+        "directory": "Package/Effect",
+        "type": "git",
+        "url": "git+https://github.com/GageSorrell/SorrellWm.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./Distribution/index.js",
+            "types": "./Distribution/index.d.ts"
+        },
+        "./Async": {
+            "import": "./Distribution/Async.js",
+            "types": "./Distribution/Async.d.ts"
+        },
+        "./Data": {
+            "import": "./Distribution/Data.js",
+            "types": "./Distribution/Data.d.ts"
+        },
+        "./Function": {
+            "import": "./Distribution/Function.js",
+            "types": "./Distribution/Function.d.ts"
+        },
+        "./Predicate": {
+            "import": "./Distribution/Predicate.js",
+            "types": "./Distribution/Predicate.d.ts"
+        },
+        "./String": {
+            "import": "./Distribution/String.js",
+            "types": "./Distribution/String.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "Distribution",
+        "License.md",
+        "ReadMe.md"
+    ],
+    "scripts": {
+        "build": "tsc -p ./tsconfig.json",
+        "lint": "eslint --config ./eslint.config.js \"Source/**/*.ts\" \"Test/**/*.ts\"",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
+    },
+    "dependencies": {
+        "effect": "4.0.0-rc.109"
+    },
+    "peerDependencies": {
+        "@effect/platform-node": "4.0.0-rc.109"
+    },
+    "peerDependenciesMeta": {
+        "@effect/platform-node": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@effect/platform-node": "4.0.0-rc.109",
+        "@sorrell/tsconfig": "1.0.0",
+        "@types/node": "26.1.1",
+        "typescript": "6.0.2",
+        "vitest": "4.1.10"
+    },
+    "engines": {
+        "node": ">=26.6.0",
+        "npm": ">=12.0.2"
+    }
+}

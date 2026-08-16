@@ -89,9 +89,9 @@ export const DependencyChoices: ReadonlyArray<DependencyChoice> = [
         Title: "@sorrell/windows-ui"
     },
     {
-        Entries: [ { Name: "@sorrell/utility", Target: "Dependencies", Version: "Resolve" } ],
+        Entries: [ { Name: "@sorrell/effect", Target: "Dependencies", Version: "Resolve" } ],
         Selected: true,
-        Title: "@sorrell/utility"
+        Title: "@sorrell/effect"
     },
     {
         Entries: [ { Name: "@sorrell/log", Target: "Dependencies", Version: "Resolve" } ],

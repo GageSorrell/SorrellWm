@@ -1,7 +1,7 @@
 /**
+ * General-purpose async helpers with no corresponding module in `effect`.
  *
- *
- * @module @sorrell/utility/Async
+ * @module @sorrell/effect/Async
  *
  * @file      Async.ts
  * @author    Gage Sorrell <gage@sorrell.sh>

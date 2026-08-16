@@ -18,6 +18,7 @@ See `Documentation/Agent/Domain.md` for how to consume these.
 | Package/DocsLanding | [Package/DocsLanding/CONTEXT.md](./Package/DocsLanding/CONTEXT.md) |
 | Package/DocusaurusThemeEffect | [Package/DocusaurusThemeEffect/CONTEXT.md](./Package/DocusaurusThemeEffect/CONTEXT.md) |
 | Package/DocusaurusThemeFluent | [Package/DocusaurusThemeFluent/CONTEXT.md](./Package/DocusaurusThemeFluent/CONTEXT.md) |
+| Package/Effect | [Package/Effect/CONTEXT.md](./Package/Effect/CONTEXT.md) |
 | Package/InkUi | [Package/InkUi/CONTEXT.md](./Package/InkUi/CONTEXT.md) |
 | Package/KeyboardUi | [Package/KeyboardUi/CONTEXT.md](./Package/KeyboardUi/CONTEXT.md) |
 | Package/Math | [Package/Math/CONTEXT.md](./Package/Math/CONTEXT.md) |
@@ -28,7 +29,6 @@ See `Documentation/Agent/Domain.md` for how to consume these.
 | Package/TsConfigSorrell | [Package/TsConfigSorrell/CONTEXT.md](./Package/TsConfigSorrell/CONTEXT.md) |
 | Package/StorybookThemeEffect | [Package/StorybookThemeEffect/CONTEXT.md](./Package/StorybookThemeEffect/CONTEXT.md) |
 | Package/StorybookThemeFluent | [Package/StorybookThemeFluent/CONTEXT.md](./Package/StorybookThemeFluent/CONTEXT.md) |
-| Package/Utility | [Package/Utility/CONTEXT.md](./Package/Utility/CONTEXT.md) |
 | Package/Windows | [Package/Windows/CONTEXT.md](./Package/Windows/CONTEXT.md) |
 | Package/WmApi | [Package/WmApi/CONTEXT.md](./Package/WmApi/CONTEXT.md) |
 | Package/WindowsUi | [Package/WindowsUi/CONTEXT.md](./Package/WindowsUi/CONTEXT.md) |

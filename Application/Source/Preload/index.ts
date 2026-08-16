@@ -60,7 +60,7 @@ import {
 } from "../Shared/Update.ts";
 import type { IpcRendererEvent } from "electron";
 import type { RendererLogEntry } from "../Shared/Logging.ts";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import electron from "electron";
 
 const { contextBridge, ipcRenderer } = electron;

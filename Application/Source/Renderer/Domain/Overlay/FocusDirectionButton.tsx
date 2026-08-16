@@ -15,7 +15,7 @@ import { Button, makeStyles, mergeClasses, tokens } from "@fluentui/react-compon
 import { UseDominantColor, UseGuardedHover } from "../../Hook/index.js";
 import type { CSSProperties } from "react";
 import type { OverlayCommandDto } from "../../../Shared/OverlayCommand.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 /** {@inheritDoc FocusDirectionButton} */
 export interface FocusDirectionButtonProps

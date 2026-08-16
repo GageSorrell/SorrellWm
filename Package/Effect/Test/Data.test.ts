@@ -1,7 +1,7 @@
 /**
  * Tagged enum utility tests.
  *
- * @module @sorrell/utility/Test/Data
+ * @module @sorrell/effect/Test/Data
  *
  * @file      Data.test.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -15,7 +15,7 @@ import {
 } from "../Source/Data.js";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-const ShapeTypeId: unique symbol = Symbol.for("@sorrell/utility/Test/Shape");
+const ShapeTypeId: unique symbol = Symbol.for("@sorrell/effect/Test/Shape");
 
 type Shape = TaggedEnum<{
     readonly Circle: { readonly Radius: number };
@@ -71,7 +71,7 @@ describe("taggedEnum", () =>
 
     it("supports string TypeIds", () =>
     {
-        const TypeId = "@sorrell/utility/Test/StringEnum" as const;
+        const TypeId = "@sorrell/effect/Test/StringEnum" as const;
         type StringEnum = TaggedEnum<{
             readonly Empty: { };
             readonly Value: { readonly Value: number };
@@ -87,7 +87,7 @@ describe("taggedEnum", () =>
 
     it("supports Effect-style generic tagged enum definitions", () =>
     {
-        const TypeId: unique symbol = Symbol.for("@sorrell/utility/Test/Option");
+        const TypeId: unique symbol = Symbol.for("@sorrell/effect/Test/Option");
         type Option<A> = TaggedEnum<{
             readonly None: { };
             readonly Some: { readonly Value: A };

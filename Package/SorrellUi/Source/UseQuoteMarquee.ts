@@ -11,7 +11,7 @@
  * @license   MIT
  */
 
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import { useCallback, useEffect, useRef } from "react";
 import type { RefObject } from "react";
 

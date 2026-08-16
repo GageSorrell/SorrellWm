@@ -43,7 +43,7 @@ import {
 } from "@fluentui/react-components";
 import { KeyChip } from "./KeyChip.js";
 import type { ReactNode } from "react";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 const UseStyles = makeStyles({
     Content:

@@ -25,7 +25,7 @@ import type {
 import { Effect, Fiber, Result, pipe } from "effect";
 import { describe, expect, it } from "vitest";
 import { EventEmitter } from "node:events";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 type OpenHandler = (Details: HandlerDetails) => { readonly action: "deny"; };
 

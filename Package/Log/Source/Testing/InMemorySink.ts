@@ -12,7 +12,7 @@
 import { Effect } from "effect";
 import type { LogRecord } from "../LogRecord.js";
 import type { LogSink } from "../Sink.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 /** In-memory sink and observation helpers for deterministic tests. */
 export interface InMemorySink extends LogSink

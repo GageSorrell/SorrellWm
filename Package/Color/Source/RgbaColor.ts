@@ -10,10 +10,10 @@
  */
 
 import { BigDecimal, Function, Option, Predicate, Struct } from "effect";
+import { LinearColor as ConstructLinearColor, type LinearColor as LinearColorRecord } from "./LinearColor.js";
+import { RgbColor as ConstructRgbColor, type RgbColor as RgbColorRecord } from "./RgbColor.js";
 import Convert from "color-convert";
 import { Int } from "@sorrell/math";
-import * as LinearColor from "./LinearColor.ts";
-import * as RgbColor from "./RgbColor.ts";
 
 export/**
        * The type identifier for this module.
@@ -431,8 +431,8 @@ export namespace From
            * @category Constructor
            * @since 2.0.0
            */
-    const FromRgbColor = (
-        Self: RgbColor.RgbColor,
+    const RgbColor = (
+        Self: RgbColorRecord,
         Alpha: ChannelArgument = FullAlpha
     ): RgbaColor => RgbaColor(Self.R, Self.G, Self.B, Alpha);
 
@@ -443,7 +443,7 @@ export namespace From
            * @category Constructor
            * @since 2.0.0
            */
-    const FromLinearColor = (Self: LinearColor.LinearColor): RgbaColor => RgbaColor(
+    const LinearColor = (Self: LinearColorRecord): RgbaColor => RgbaColor(
         BigDecimal.toNumberUnsafe(Self.R) * 255,
         BigDecimal.toNumberUnsafe(Self.G) * 255,
         BigDecimal.toNumberUnsafe(Self.B) * 255,
@@ -459,8 +459,8 @@ export namespace To
            * @category Constructor
            * @since 2.0.0
            */
-    const RgbColorValue = (Self: RgbaColor): RgbColor.RgbColor =>
-        RgbColor.RgbColor(Self.R, Self.G, Self.B);
+    const RgbColor = (Self: RgbaColor): RgbColorRecord =>
+        ConstructRgbColor(Self.R, Self.G, Self.B);
 
     export/**
            * Convert to a `LinearColor`, scaling `{0..255}` channels, including
@@ -469,13 +469,8 @@ export namespace To
            * @category Constructor
            * @since 2.0.0
            */
-    const LinearColorValue = (Self: RgbaColor): LinearColor.LinearColor =>
-        LinearColor.LinearColor(
-            Self.R / 255,
-            Self.G / 255,
-            Self.B / 255,
-            Self.A / 255
-        );
+    const LinearColor = (Self: RgbaColor): LinearColorRecord =>
+        ConstructLinearColor(Self.R / 255, Self.G / 255, Self.B / 255, Self.A / 255);
 }
 
 export namespace Format

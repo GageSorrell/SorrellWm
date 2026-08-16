@@ -93,7 +93,7 @@
         "typecheck": "tsc --noEmit -p ./tsconfig.json && tsc --noEmit -p ./tsconfig.test.json"
     },
     "dependencies": {
-        "@sorrell/utility": "1.1.0",
+        "@sorrell/effect": "1.0.0",
         "chalk": "6.0.0"
     },
     "devDependencies": {

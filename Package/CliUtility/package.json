@@ -44,7 +44,7 @@
     "dependencies": {
         "effect": "^4.0.0-rc.109",
         "@effect/platform-node": "^4.0.0-rc.109",
-        "@sorrell/utility": "1.1.0",
+        "@sorrell/effect": "1.0.0",
         "@sorrell/math": "1.0.0"
     },
     "devDependencies": {

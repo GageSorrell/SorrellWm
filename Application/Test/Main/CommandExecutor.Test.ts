@@ -37,7 +37,7 @@ import {
 } from "../../Source/Shared/OverlayCommand.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen as ElectronScreen } from "electron";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 vi.mock("electron", () =>
 {

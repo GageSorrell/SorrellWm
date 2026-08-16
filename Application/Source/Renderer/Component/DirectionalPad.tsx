@@ -19,13 +19,13 @@ import {
     CaretUpFilled,
     type FluentIcon
 } from "@fluentui/react-icons";
-import { Color as ColorPackage, Contrast } from "@sorrell/color";
+import { RgbColor as ColorPackage, Contrast } from "@sorrell/color";
 import { Option, pipe } from "effect";
 import { ColorScheme } from "../../Shared/Theme.js";
 import { GetShortcutParts } from "./CommandButton.js";
 import { Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../../Shared/Hotkey.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import { UseColorScheme } from "../Hook/UseColorScheme.js";
 import { UseGuardedHover } from "../Hook/UseGuardedHover.js";
 
@@ -203,22 +203,22 @@ const InactiveForegroundColorHex: Readonly<Record<ColorScheme, string>> = {
 export/** How much more contrast an adjusted caret color should have than the baseline. */
 const ContrastMargin = 1.05;
 
-const ParseCssColor = (Value: string): ColorPackage.Color | undefined =>
+const ParseCssColor = (Value: string): ColorPackage.RgbColor | undefined =>
     Option.getOrUndefined(pipe(
         ColorPackage.From.Rgb(Value),
         Option.orElse(() => ColorPackage.From.Hex(Value))
     ));
 
 const MixColor = (
-    GrayColor: ColorPackage.Color,
-    TintColor: ColorPackage.Color,
+    GrayColor: ColorPackage.RgbColor,
+    TintColor: ColorPackage.RgbColor,
     GrayPercent: number
-): ColorPackage.Color =>
+): ColorPackage.RgbColor =>
 {
     const GrayWeight = GrayPercent / 100;
     const TintWeight = 1 - GrayWeight;
 
-    return ColorPackage.Color(
+    return ColorPackage.RgbColor(
         GrayColor.R * GrayWeight + TintColor.R * TintWeight,
         GrayColor.G * GrayWeight + TintColor.G * TintWeight,
         GrayColor.B * GrayWeight + TintColor.B * TintWeight

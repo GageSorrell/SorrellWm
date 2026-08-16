@@ -1,7 +1,7 @@
 /**
+ * Extended forms of exports from effect's `Predicate` module.
  *
- *
- * @module @sorrell/utility/Predicate
+ * @module @sorrell/effect/Predicate
  *
  * @file      Predicate.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -10,6 +10,8 @@
  */
 
 import { Predicate } from "effect";
+
+export * from "effect/Predicate";
 
 export/**
        * Run a parameter-less function, discarding the return value.

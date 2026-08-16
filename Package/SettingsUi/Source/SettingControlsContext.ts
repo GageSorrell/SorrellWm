@@ -12,7 +12,7 @@
 import { createContext } from "react";
 import type { FluentIcon } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 /** The icon, title, and subtitle recorded for one addressable {@link Setting} or {@link SettingGroup}. */
 export interface SettingControlEntry

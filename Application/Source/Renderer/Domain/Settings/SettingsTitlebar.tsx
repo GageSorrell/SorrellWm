@@ -28,7 +28,7 @@ import { DragRegion, NoDragRegion } from "../../Style/AppRegion.js";
 import { SearchSettingControls, type SettingSearchResult } from "./SettingsSearch.js";
 import type { SettingControlEntry } from "@sorrell/settings-ui";
 import { SettingsTitlebarHeight } from "../../../Shared/SettingsWindow.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 /** The native window-control overlay's approximate reserved width, in pixels. */
 const OverlayReservedWidth = 140;

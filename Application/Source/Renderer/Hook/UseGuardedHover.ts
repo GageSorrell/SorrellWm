@@ -12,7 +12,7 @@
  */
 
 import type { MouseEvent as ReactMouseEvent } from "react";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import { useRef } from "react";
 
 /** Mouse handlers to spread onto an element in place of raw `onMouseEnter`/`onMouseLeave`. */

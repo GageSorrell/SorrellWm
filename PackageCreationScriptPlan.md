@@ -37,7 +37,7 @@ as well as the following items, all of which should be optional,
         * `@sorrell/settings-ui`
         * `@sorrell/windows-ui`
     * Utility Packages
-        * `@sorrell/utility`
+        * `@sorrell/effect`
         * `@sorrell/log`
         * `@sorrell/math`
     * `typescript@6.0.2` (devDependency)
@@ -49,7 +49,7 @@ as well as the following items, all of which should be optional,
 such that the following packages are initially selected,
 
 * `effect`
-* `@sorrell/utility`
+* `@sorrell/effect`
 * `typescript`
 * `@sorrell/tsconfig`
 * `@sorrell/eslint-config`

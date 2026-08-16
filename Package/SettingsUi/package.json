@@ -102,6 +102,6 @@
     "npm": ">=12.0.2"
   },
   "dependencies": {
-    "@sorrell/utility": "1.1.0"
+    "@sorrell/effect": "1.0.0"
   }
 }

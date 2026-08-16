@@ -37,7 +37,7 @@ import { DevFeatures } from "./Development/DevFeatures.ts";
 import { SettingsTitlebarHeight } from "../Shared/SettingsWindow.ts";
 import type { Handle as WindowsHandle } from "@sorrell/windows";
 import { join } from "path";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 const TypeId = "~sorrell/wm/Main/BrowserWindow" as const;
 

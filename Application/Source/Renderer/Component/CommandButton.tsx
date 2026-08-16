@@ -18,7 +18,7 @@ import {
 } from "@fluentui/react-components";
 import { Key, Keybind } from "@sorrell/keyboard-ui";
 import type { ShortcutDto } from "../../Shared/Hotkey.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import { UseGuardedHover } from "../Hook/UseGuardedHover.js";
 
 /** Presentation properties for a primary overlay command. */

@@ -9,7 +9,7 @@
  * @license   MIT
  */
 
-import type { AsyncThunk, Thunk } from "@sorrell/utility/Function";
+import type { AsyncThunk, Thunk } from "@sorrell/effect/Function";
 import type {
     FloatingWindowSettingsDto,
     FloatingWindowSettingsPatch,

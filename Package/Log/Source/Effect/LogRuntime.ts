@@ -34,7 +34,7 @@ import {
 } from "../Normalize.js";
 import { Redacted } from "../Redacted.js";
 import type { LogSink } from "../Sink.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import type { ReadonlyRecord } from "effect/Record";
 
 /** Behavior used when the runtime input queue reaches capacity. */

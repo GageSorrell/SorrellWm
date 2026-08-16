@@ -17,7 +17,7 @@ import {
     Validate
 } from "./NativeValidation.js";
 import type { NativeValidationOptions } from "./NativeRecord.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 /** Native callback composition and validation configuration. */
 export interface NativeCallbackOptions extends NativeValidationOptions

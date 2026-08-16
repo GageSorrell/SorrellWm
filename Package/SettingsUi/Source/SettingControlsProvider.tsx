@@ -24,7 +24,7 @@ import
     SettingControlsContext,
     type SettingControlsContextValue
 } from "./SettingControlsContext.js";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 
 /** {@inheritDoc SettingControlsProvider} */
 export interface SettingControlsProviderProps

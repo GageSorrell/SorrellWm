@@ -18,10 +18,6 @@
       "import": "./Distribution/index.js",
       "types": "./Distribution/index.d.ts"
     },
-    "./Color": {
-      "import": "./Distribution/Color.js",
-      "types": "./Distribution/Color.d.ts"
-    },
     "./Contrast": {
       "import": "./Distribution/Contrast.js",
       "types": "./Distribution/Contrast.d.ts"
@@ -29,6 +25,14 @@
     "./LinearColor": {
       "import": "./Distribution/LinearColor.js",
       "types": "./Distribution/LinearColor.d.ts"
+    },
+    "./RgbaColor": {
+      "import": "./Distribution/RgbaColor.js",
+      "types": "./Distribution/RgbaColor.d.ts"
+    },
+    "./RgbColor": {
+      "import": "./Distribution/RgbColor.js",
+      "types": "./Distribution/RgbColor.d.ts"
     },
     "./package.json": "./package.json"
   },

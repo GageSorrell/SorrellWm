@@ -1,7 +1,7 @@
 /**
  * Extended forms of exports from effect's `Data` module.
  *
- * @module @sorrell/utility/Data
+ * @module @sorrell/effect/Data
  *
  * @file      Data.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -13,13 +13,15 @@ import type { Cause, Types } from "effect";
 import { Data, Predicate } from "effect";
 import type { Unify } from "effect/Unify";
 
+export * from "effect/Data";
+
 export/**
        * The type identifier for this module.
        *
        * @category Constant
        * @since 1.1.0
        */
-const TypeId = "~sorrell/utility/Data" as const;
+const TypeId = "~sorrell/effect/Data" as const;
 
 /** {@inheritDoc TypeId:var} */
 export type TypeId = typeof TypeId;
@@ -304,7 +306,6 @@ const TaggedError = <TagType extends string>(Tag: TagType): new<A extends Record
         {
             function Out(Message: string, Cause?: unknown): Base;
             function Out(Cause: unknown): Base;
-            /* eslint-disable-next-line jsdoc/require-jsdoc */
             function Out(MessageOrCause: unknown, Cause: unknown = EmptyParameter): Base
             {
                 const OutError = new Base(Args as any);

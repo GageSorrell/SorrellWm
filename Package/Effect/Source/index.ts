@@ -1,7 +1,7 @@
 /**
- * General-purpose utilities for TypeScript and effect.
+ * Effect-native utilities that extend effect's own core modules.
  *
- * @module @sorrell/utility
+ * @module @sorrell/effect
  *
  * @file      index.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
@@ -13,3 +13,4 @@ export * as Async from "./Async.js";
 export * as Data from "./Data.js";
 export * as Function from "./Function.js";
 export * as Predicate from "./Predicate.js";
+export * as String from "./String.js";

@@ -22,7 +22,7 @@ import {
     makeStyles,
     tokens
 } from "@fluentui/react-components";
-import type { Thunk } from "@sorrell/utility/Function";
+import type { Thunk } from "@sorrell/effect/Function";
 import type { ReactNode } from "react";
 
 /** A trailing link shown at the end of a {@link VersionMessageBar}'s first line. */

@@ -1,14 +1,15 @@
 /**
- * Complementary module to
- * {@link https://effect-ts.github.io/effect/effect/Function.ts.html | effect/Function}.
+ * Extended forms of exports from effect's `Function` module.
  *
- * @module @sorrell/utility/Function
+ * @module @sorrell/effect/Function
  *
  * @file      Function.ts
  * @author    Gage Sorrell <gage@sorrell.sh>
  * @copyright (c) 2026 Gage Sorrell
  * @license   MIT
  */
+
+export * from "effect/Function";
 
 /**
  * A function with side effects, with no argument vector by default.
